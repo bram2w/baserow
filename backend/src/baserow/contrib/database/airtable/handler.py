@@ -508,6 +508,7 @@ class AirtableHandler:
                 fields=exported_fields,
                 views=exported_views,
                 rows=exported_rows,
+                data_sync=None,
             )
             exported_tables.append(exported_table)
             converting_progress.increment(state=AIRTABLE_EXPORT_JOB_CONVERTING)

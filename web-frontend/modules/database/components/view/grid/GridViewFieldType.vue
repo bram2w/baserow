@@ -18,9 +18,19 @@
       class="grid-view__description"
       :class="{ 'grid-view__description--loading': field._.loading }"
     >
-      <i :class="`grid-view__description-icon ${field._.type.iconClass}`"></i>
+      <div class="grid-view__description-icon-container">
+        <i :class="`grid-view__description-icon ${field._.type.iconClass}`"></i>
+        <i
+          v-if="synced"
+          v-tooltip="$t('gridViewFieldType.dataSyncField')"
+          class="grid-view__description-icon-synced iconoir-data-transfer-down"
+        ></i>
+      </div>
 
-      <div class="grid-view__description-name" :title="field.name">
+      <div
+        class="grid-view__description-name"
+        :title="field.name + (synced ? ' (synced)' : '')"
+      >
         <span ref="quickEditLink" @dblclick="handleQuickEdit()">
           {{ field.name }}
         </span>
@@ -367,6 +377,14 @@ export default {
           this.database.workspace.id
         )
       )
+    },
+    synced() {
+      if (!this.table.data_sync) {
+        return false
+      }
+      return this.table.data_sync.synced_properties.some((p) => {
+        return p.field_id === this.field.id
+      })
     },
   },
   beforeCreate() {

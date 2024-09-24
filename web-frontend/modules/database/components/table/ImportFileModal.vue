@@ -1,8 +1,9 @@
 <template>
   <Modal
-    :right-sidebar="!isTableCreation"
+    :right-sidebar="true"
     :right-sidebar-scrollable="true"
     :close-button="false"
+    :can-close="!importInProgress"
     @show=";[(importer = ''), reset()]"
     @hide="stopPollIfRunning()"
   >
@@ -10,18 +11,12 @@
       <div class="import-modal__header">
         <h2 class="import-modal__title">
           {{
-            isTableCreation
-              ? $t('importFileModal.title')
-              : $t('importFileModal.additionalImportTitle', {
-                  table: table.name,
-                })
+            $t('importFileModal.additionalImportTitle', {
+              table: table.name,
+            })
           }}
         </h2>
-        <div class="modal__actions">
-          <a v-if="isTableCreation" class="modal__close" @click="hide()">
-            <i class="iconoir-cancel"></i>
-          </a>
-        </div>
+        <div class="modal__actions"></div>
       </div>
 
       <div class="control margin-bottom-2">
@@ -31,20 +26,6 @@
           required
         >
           <ul class="choice-items margin-top-1">
-            <li v-if="isTableCreation">
-              <a
-                class="choice-items__link"
-                :class="{ active: importer === '' }"
-                @click=";[(importer = ''), reset()]"
-              >
-                <i class="choice-items__icon iconoir-copy"></i>
-                <span>{{ $t('importFileModal.newTable') }}</span>
-                <i
-                  v-if="importer === ''"
-                  class="choice-items__icon-active iconoir-check-circle"
-                ></i>
-              </a>
-            </li>
             <li v-for="importerType in importerTypes" :key="importerType.type">
               <a
                 class="choice-items__link"
@@ -66,13 +47,7 @@
         </FormGroup>
       </div>
 
-      <TableForm
-        ref="tableForm"
-        class="margin-top-3 margin-bottom-2"
-        :default-name="getDefaultName()"
-        :creation="isTableCreation"
-        @submitted="submitted"
-      >
+      <div class="margin-bottom-2">
         <component
           :is="importerComponent"
           :disabled="importInProgress"
@@ -81,30 +56,12 @@
           @data="onData($event)"
           @getData="onGetData($event)"
         />
-      </TableForm>
+      </div>
 
-      <Error :error="error"></Error>
-      <Alert v-if="errorReport.length > 0 && error.visible" type="warning">
-        <template #title>{{
-          $t('importFileModal.reportTitleFailure')
-        }}</template>
-
-        {{ $t('importFileModal.reportMessage') }} {{ errorReport.join(', ') }}
-      </Alert>
-      <Alert v-if="errorReport.length > 0 && !error.visible" type="warning">
-        <template #title>
-          {{ $t('importFileModal.reportTitleSuccess') }}</template
-        >
-
-        {{ $t('importFileModal.reportMessage') }}
-        {{ errorReport.join(', ') }}
-      </Alert>
+      <ImportErrorReport :job="job" :error="error"></ImportErrorReport>
 
       <Tabs v-if="dataLoaded" no-padding>
-        <Tab
-          v-if="!isTableCreation"
-          :title="$t('importFileModal.importPreview')"
-        >
+        <Tab :title="$t('importFileModal.importPreview')">
           <SimpleGrid
             class="import-modal__preview"
             :rows="previewImportData"
@@ -120,10 +77,7 @@
         </Tab>
       </Tabs>
 
-      <div
-        v-if="!jobHasSucceeded || errorReport.length === 0"
-        class="modal-progress__actions"
-      >
+      <div v-if="!hasErrors" class="modal-progress__actions">
         <ProgressBar
           v-if="importInProgress && showProgressBar"
           :value="progressPercentage"
@@ -139,13 +93,9 @@
               !canBeSubmitted ||
               (jobHasSucceeded && !isTableCreated)
             "
-            @click="$refs.tableForm.submit()"
+            @click="submitted"
           >
-            {{
-              isTableCreation
-                ? $t('importFileModal.addButton')
-                : $t('importFileModal.importButton')
-            }}
+            {{ $t('importFileModal.importButton') }}
           </Button>
         </div>
       </div>
@@ -156,19 +106,17 @@
           :loading="!isTableCreated"
           @click="openTable()"
         >
-          {{
-            isTableCreation
-              ? $t('importFileModal.openCreatedTable')
-              : $t('importFileModal.showTable')
-          }}
+          {{ $t('importFileModal.showTable') }}
         </Button>
       </div>
     </template>
-    <template v-if="!isTableCreation" #sidebar>
+    <template #sidebar>
       <div class="import-modal__field-mapping">
         <div v-if="header.length > 0" class="import-modal__field-mapping-body">
           <h3>{{ $t('importFileModal.fieldMappingTitle') }}</h3>
-          <p>{{ $t('importFileModal.fieldMappingDescription') }}</p>
+          <p>
+            {{ $t('importFileModal.fieldMappingDescription') }}
+          </p>
           <FormGroup
             v-for="(head, index) in header"
             :key="head"
@@ -223,12 +171,11 @@ import SimpleGrid from '@baserow/modules/database/components/view/grid/SimpleGri
 import _ from 'lodash'
 
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
-
-import TableForm from './TableForm'
+import ImportErrorReport from '@baserow/modules/database/components/table/ImportErrorReport.vue'
 
 export default {
   name: 'ImportFileModal',
-  components: { TableForm, SimpleGrid },
+  components: { ImportErrorReport, SimpleGrid },
   mixins: [modal, error, jobProgress],
   props: {
     database: {
@@ -260,9 +207,6 @@ export default {
     }
   },
   computed: {
-    isTableCreation() {
-      return this.table === null
-    },
     isTableCreated() {
       if (!this.job?.table_id) {
         return false
@@ -271,11 +215,10 @@ export default {
     },
     canBeSubmitted() {
       return (
-        this.isTableCreation ||
-        (this.importer &&
-          Object.values(this.mapping).some(
-            (value) => this.fieldIndexMap[value] !== undefined
-          ))
+        this.importer &&
+        Object.values(this.mapping).some(
+          (value) => this.fieldIndexMap[value] !== undefined
+        )
       )
     },
     fieldTypes() {
@@ -294,7 +237,8 @@ export default {
      */
     writableFields() {
       return this.fields.filter(
-        ({ type }) => !this.fieldTypes[type].getIsReadOnly()
+        ({ type, read_only: readOnly }) =>
+          !this.fieldTypes[type].getIsReadOnly() && !readOnly
       )
     },
     /**
@@ -324,12 +268,6 @@ export default {
         .map(([importIndex, targetFieldId]) => {
           return [importIndex, this.fieldIndexMap[targetFieldId]]
         })
-    },
-    // Template row with default values
-    defaultRow() {
-      return this.writableFields.map((field) =>
-        this.fieldTypes[field.type].getEmptyValue(field)
-      )
     },
     previewFileData() {
       return this.previewData.map((row) => {
@@ -417,14 +355,8 @@ export default {
           return this.jobHumanReadableState
       }
     },
-    errorReport() {
-      if (this.job && Object.keys(this.job.report.failing_rows).length > 0) {
-        return Object.keys(this.job.report.failing_rows)
-          .map((key) => parseInt(key, 10) + 1)
-          .sort((a, b) => a - b)
-      } else {
-        return []
-      }
+    hasErrors() {
+      return this.job && Object.keys(this.job.report.failing_rows).length > 0
     },
   },
   beforeDestroy() {
@@ -481,11 +413,10 @@ export default {
      * header setting from the values. An importer could have added those, but they
      * need to be removed from the values.
      */
-    async submitted(formValues) {
+    async submitted() {
       this.showProgressBar = false
       this.reset(false)
       let data = null
-      const values = { ...formValues }
 
       if (typeof this.getData === 'function') {
         try {
@@ -494,59 +425,53 @@ export default {
           await this.$ensureRender()
 
           data = await this.getData()
-
-          if (!this.isTableCreation) {
-            const fieldMapping = Object.entries(this.mapping)
-              .filter(
-                ([, targetFieldId]) =>
-                  !!targetFieldId ||
-                  // Check if we have an id from a removed field
-                  this.fieldIndexMap[targetFieldId] !== undefined
-              )
-              .map(([importIndex, targetFieldId]) => {
-                return [importIndex, this.fieldIndexMap[targetFieldId]]
-              })
-
-            // Template row with default values
-            const defaultRow = this.writableFields.map((field) =>
-              this.fieldTypes[field.type].getEmptyValue(field)
+          const fieldMapping = Object.entries(this.mapping)
+            .filter(
+              ([, targetFieldId]) =>
+                !!targetFieldId ||
+                // Check if we have an id from a removed field
+                this.fieldIndexMap[targetFieldId] !== undefined
             )
+            .map(([importIndex, targetFieldId]) => {
+              return [importIndex, this.fieldIndexMap[targetFieldId]]
+            })
 
-            // Precompute the prepare value function for each field
-            const prepareValueByField = this.writableFields.map(
-              (field) => (value) =>
-                this.fieldTypes[field.type].prepareValueForUpdate(
+          // Template row with default values
+          const defaultRow = this.writableFields.map((field) =>
+            this.fieldTypes[field.type].getEmptyValue(field)
+          )
+
+          // Precompute the prepare value function for each field
+          const prepareValueByField = this.writableFields.map(
+            (field) => (value) =>
+              this.fieldTypes[field.type].prepareValueForUpdate(
+                field,
+                this.fieldTypes[field.type].prepareValueForPaste(
                   field,
-                  this.fieldTypes[field.type].prepareValueForPaste(
-                    field,
-                    `${value}`,
-                    value
-                  )
+                  `${value}`,
+                  value
                 )
-            )
-
-            // Processes the data by chunk to avoid UI freezes
-            const result = []
-            for (const chunk of _.chunk(data, 1000)) {
-              result.push(
-                chunk.map((row) => {
-                  const newRow = clone(defaultRow)
-                  fieldMapping.forEach(([importIndex, targetIndex]) => {
-                    newRow[targetIndex] = prepareValueByField[targetIndex](
-                      row[importIndex]
-                    )
-                  })
-
-                  return newRow
-                })
               )
-              await this.$ensureRender()
-            }
-            data = result.flat()
-          } else {
-            // Add the header in case of table creation
-            data = [this.header, ...data]
+          )
+
+          // Processes the data by chunk to avoid UI freezes
+          const result = []
+          for (const chunk of _.chunk(data, 1000)) {
+            result.push(
+              chunk.map((row) => {
+                const newRow = clone(defaultRow)
+                fieldMapping.forEach(([importIndex, targetIndex]) => {
+                  newRow[targetIndex] = prepareValueByField[targetIndex](
+                    row[importIndex]
+                  )
+                })
+
+                return newRow
+              })
+            )
+            await this.$ensureRender()
           }
+          data = result.flat()
         } catch (error) {
           this.reset()
           this.handleError(error, 'application')
@@ -563,27 +488,14 @@ export default {
           this.showProgressBar = true
         }
 
-        if (this.isTableCreation) {
-          const { data: job } = await TableService(this.$client).create(
-            this.database.id,
-            values,
-            data,
-            true,
-            {
-              onUploadProgress,
-            }
-          )
-          this.startJobPoller(job)
-        } else {
-          const { data: job } = await TableService(this.$client).importData(
-            this.table.id,
-            data,
-            {
-              onUploadProgress,
-            }
-          )
-          this.startJobPoller(job)
-        }
+        const { data: job } = await TableService(this.$client).importData(
+          this.table.id,
+          data,
+          {
+            onUploadProgress,
+          }
+        )
+        this.startJobPoller(job)
       } catch (error) {
         this.stopPollAndHandleError(error, {
           ERROR_MAX_JOB_COUNT_EXCEEDED: new ResponseErrorMessage(
@@ -612,28 +524,12 @@ export default {
       })
       this.hide()
     },
-    async onJobDone() {
-      if (this.isTableCreation) {
-        // Let's add the table to the store...
-        const { data: table } = await TableService(this.$client).get(
-          this.job.table_id
-        )
-
-        await this.$store.dispatch('table/forceUpsert', {
-          database: this.database,
-          data: table,
-        })
-
-        if (this.errorReport.length === 0) {
-          await this.openTable()
-        }
-      } else {
-        this.$bus.$emit('table-refresh', {
-          tableId: this.job.table_id,
-        })
-        if (this.errorReport.length === 0) {
-          this.hide()
-        }
+    onJobDone() {
+      this.$bus.$emit('table-refresh', {
+        tableId: this.job.table_id,
+      })
+      if (!this.hasErrors) {
+        this.hide()
       }
     },
     onJobFailed() {

@@ -51,6 +51,7 @@ from baserow.core.exceptions import CannotCalculateIntermediateOrder
 from baserow.core.handler import CoreHandler
 from baserow.core.telemetry.utils import baserow_trace_methods
 from baserow.core.trash.handler import TrashHandler
+from baserow.core.trash.registries import trash_item_type_registry
 from baserow.core.utils import Progress, get_non_unique_values, grouper
 
 from ..search.handler import SearchHandler
@@ -1083,13 +1084,16 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             before_row.
         :param model: If the correct model has already been generated it can be provided
             so that it does not have to be generated for a second time.
-        :param send_signal: If set to false then it is up to the caller to send the
-            rows_created or similar signal. Defaults to True.
+        :param send_realtime_update: If set to false then it is up to the caller to
+            send the rows_created or similar signal. Defaults to True.
+        :param send_webhook_events: If set the false then the webhooks will not be
+            triggered. Defaults to true.
         :param generate_error_report: When set to True the return
-        :param skip_search_update: If you want to to instead trigger the search handler
-            cells update later on after many create_rows calls then set this to True but
-            make sure you trigger it eventually.
+        :param skip_search_update: If you want to instead trigger the search handler
+            cells update later on after many create_rows calls then set this to True
+            but make sure you trigger it eventually.
         :return: The created row instances.
+
         """
 
         if model is None:
@@ -1228,13 +1232,16 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             the before_row.
         :param model: If the correct model has already been generated it can be
             provided so that it does not have to be generated for a second time.
-        :param send_signal: If set to false then it is up to the caller to send the
-            rows_created or similar signal. Defaults to True.
+        :param send_realtime_update: If set to false then it is up to the caller to
+            send the rows_created or similar signal. Defaults to True.
+        :param send_webhook_events: If set the false then the webhooks will not be
+            triggered. Defaults to true.
         :param generate_error_report: When set to True the return
-        :param skip_search_update: If you want to to instead
-            trigger the search handler cells update later on after many create_rows
-            calls then set this to True but make sure you trigger it eventually.
+        :param skip_search_update: If you want to instead trigger the search handler
+            cells update later on after many create_rows calls then set this to True
+            but make sure you trigger it eventually.
         :return: The created row instances.
+
         """
 
         workspace = table.database.workspace
@@ -1519,6 +1526,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             field_object["field"]
             for field_object in model._field_objects.values()
             if not field_object["type"].read_only
+            and not field_object["field"].read_only
         ]
 
         # Sort by order then by id
@@ -1651,6 +1659,9 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         rows_values: List[Dict[str, Any]],
         model: Optional[Type[GeneratedTableModel]] = None,
         rows_to_update: Optional[RowsForUpdate] = None,
+        send_realtime_update: bool = True,
+        send_webhook_events: bool = True,
+        skip_search_update: bool = False,
     ) -> UpdatedRowsWithOldValuesAndMetadata:
         """
         Updates field values in batch based on provided rows with the new
@@ -1661,6 +1672,14 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         :param rows_values: The list of rows with new values that should be set.
         :param model: If the correct model has already been generated it can be
             provided so that it does not have to be generated for a second time.
+        :param send_realtime_update: If set to false then it is up to the caller to
+            send the rows_created or similar signal. Defaults to True.
+        :param send_webhook_events: If set the false then the webhooks will not be
+            triggered. Defaults to true.
+        :param skip_search_update: If you want to instead trigger the search handler
+            cells update later on after many create_rows calls then set this to True
+            but make sure you trigger it eventually.
+
         :param rows_to_update: If the rows to update have already been generated
             it can be provided so that it does not have to be generated for a
             second time.
@@ -1846,7 +1865,9 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 bulk_update_fields.append(field_name)
 
         if len(bulk_update_fields) > 0:
-            model.objects.bulk_update(rows_to_update, bulk_update_fields)
+            model.objects.bulk_update(
+                rows_to_update, bulk_update_fields, batch_size=2000
+            )
             rows_updated_counter.add(len(rows_to_update))
 
         dependant_fields = self.update_dependencies_of_rows_updated(
@@ -1856,7 +1877,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         from baserow.contrib.database.views.handler import ViewHandler
 
         ViewHandler().field_value_updated(updated_fields + dependant_fields)
-        SearchHandler.field_value_updated_or_created(table)
+        if not skip_search_update:
+            SearchHandler.field_value_updated_or_created(table)
 
         updated_rows_to_return = list(
             model.objects.all().enhance_by_fields().filter(id__in=row_ids)
@@ -1871,6 +1893,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             before_return=before_return,
             updated_field_ids=updated_field_ids,
             m2m_change_tracker=m2m_change_tracker,
+            send_realtime_update=send_realtime_update,
+            send_webhook_events=send_webhook_events,
         )
 
         fields_metadata_by_row_id = self.get_fields_metadata_for_rows(
@@ -1890,6 +1914,9 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         rows_values: List[Dict[str, Any]],
         model: Optional[Type[GeneratedTableModel]] = None,
         rows_to_update: Optional[RowsForUpdate] = None,
+        send_realtime_update: bool = True,
+        send_webhook_events: bool = True,
+        skip_search_update: bool = False,
     ) -> UpdatedRowsWithOldValuesAndMetadata:
         """
         Updates field values in batch based on provided rows with the new
@@ -1903,6 +1930,13 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         :param rows_to_update: If the rows to update have already been generated
             it can be provided so that it does not have to be generated for a
             second time.
+        :param send_realtime_update: If set to false then it is up to the caller to
+            send the rows_created or similar signal. Defaults to True.
+        :param send_webhook_events: If set the false then the webhooks will not be
+            triggered. Defaults to true.
+        :param skip_search_update: If you want to instead trigger the search handler
+            cells update later on after many create_rows calls then set this to True
+            but make sure you trigger it eventually.
         :raises RowIdsNotUnique: When trying to update the same row multiple
             times.
         :raises RowDoesNotExist: When any of the rows don't exist.
@@ -1917,7 +1951,16 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             context=table,
         )
 
-        return self.force_update_rows(user, table, rows_values, model, rows_to_update)
+        return self.force_update_rows(
+            user,
+            table,
+            rows_values,
+            model,
+            rows_to_update,
+            send_realtime_update,
+            send_webhook_events,
+            skip_search_update,
+        )
 
     def get_rows(
         self, model: GeneratedTableModel, row_ids: List[int]
@@ -2051,6 +2094,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         table: Table,
         row_id: int,
         model: Optional[Type[GeneratedTableModel]] = None,
+        send_realtime_update: bool = True,
+        send_webhook_events: bool = True,
     ):
         """
         Deletes an existing row of the given table and with row_id.
@@ -2060,6 +2105,10 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         :param row_id: The id of the row that must be deleted.
         :param model: If the correct model has already been generated, it can be
             provided so that it does not have to be generated for a second time.
+        :param send_realtime_update: If set to false then it is up to the caller to
+            send the rows_deleted or similar signal. Defaults to True.
+        :param send_webhook_events: If set the false then the webhooks will not be
+            triggered. Defaults to true.
         :raises RowDoesNotExist: When the row with the provided id does not exist.
         """
 
@@ -2068,7 +2117,14 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         with transaction.atomic():
             row = self.get_row(user, table, row_id, model=model)
-            self.delete_row(user, table, row, model=model)
+            self.delete_row(
+                user,
+                table,
+                row,
+                model=model,
+                send_realtime_update=send_realtime_update,
+                send_webhook_events=send_webhook_events,
+            )
 
     def delete_row(
         self,
@@ -2076,6 +2132,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         table: Table,
         row: GeneratedTableModelForUpdate,
         model: Optional[Type[GeneratedTableModel]] = None,
+        send_realtime_update: bool = True,
+        send_webhook_events: bool = True,
     ):
         """
         Deletes an existing row of the given table and with row_id.
@@ -2085,6 +2143,10 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         :param row: The row that must be deleted.
         :param model: If the correct model has already been generated, it can be
             provided so that it does not have to be generated for a second time.
+        :param send_realtime_update: If set to false then it is up to the caller to
+            send the rows_deleted or similar signal. Defaults to True.
+        :param send_webhook_events: If set the false then the webhooks will not be
+            triggered. Defaults to true.
         """
 
         workspace = table.database.workspace
@@ -2121,6 +2183,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             table=table,
             model=model,
             before_return=before_return,
+            send_realtime_update=send_realtime_update,
+            send_webhook_events=send_webhook_events,
         )
 
     def update_dependencies_of_rows_deleted(self, table, row, model):
@@ -2163,6 +2227,9 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         table: Table,
         row_ids: List[int],
         model: Optional[Type[GeneratedTableModel]] = None,
+        send_realtime_update: bool = True,
+        send_webhook_events: bool = True,
+        permanently_delete: bool = False,
     ) -> TrashedRows:
         """
         Trashes existing rows of the given table based on row_ids.
@@ -2170,9 +2237,14 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         :param user: The user of whose behalf the change is made.
         :param table: The table for which the row must be deleted.
         :param row_ids: The ids of the rows that must be deleted.
-        :param model:
         :param model: If the correct model has already been generated, it can be
             provided so that it does not have to be generated for a second time.
+         :param send_realtime_update: If set to false then it is up to the caller to
+            send the rows_created or similar signal. Defaults to True.
+        :param send_webhook_events: If set the false then the webhooks will not be
+            triggered. Defaults to true.
+        :param permanently_delete: If `true` the rows will be permanently deleted
+            instead of trashed.
         :raises RowDoesNotExist: When the row with the provided id does not exist.
         """
 
@@ -2201,13 +2273,23 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             self, rows=rows, user=user, table=table, model=model
         )
 
-        trashed_rows = TrashedRows.objects.create(row_ids=row_ids, table=table)
-        # It's a bit on a hack, but we're storing the fetched row objects on the
-        # trashed_rows object, so that they can optionally be used later. This is for
-        # example used when storing the names in the trash.
-        trashed_rows.rows = rows
+        if permanently_delete:
+            trashed_rows = TrashedRows(row_ids=row_ids, table=table, table_id=table.id)
+            # It's a bit of hack, but because the `trashed_rows` is never actually
+            # created, it also doesn't have to be deleted in the
+            # `permanently_delete_item` method.
+            trashed_rows.delete = lambda *a, **k: None
+            trash_item_type = trash_item_type_registry.get_by_model(trashed_rows)
+            trash_item_type.permanently_delete_item(trashed_rows)
+        else:
+            trashed_rows = TrashedRows.objects.create(row_ids=row_ids, table=table)
+            # It's a bit on a hack, but we're storing the fetched row objects on the
+            # trashed_rows object, so that they can optionally be used later. This is
+            # for example used when storing the names in the trash.
+            trashed_rows.rows = rows
 
-        TrashHandler.trash(user, workspace, table.database, trashed_rows)
+            TrashHandler.trash(user, workspace, table.database, trashed_rows)
+
         rows_deleted_counter.add(
             len(row_ids),
         )
@@ -2254,6 +2336,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             table=table,
             model=model,
             before_return=before_return,
+            send_realtime_update=send_realtime_update,
+            send_webhook_events=send_webhook_events,
         )
 
         return trashed_rows

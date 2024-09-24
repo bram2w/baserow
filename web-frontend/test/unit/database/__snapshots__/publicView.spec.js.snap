@@ -376,9 +376,15 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                   <div
                     class="grid-view__description"
                   >
-                    <i
-                      class="grid-view__description-icon iconoir-text"
-                    />
+                    <div
+                      class="grid-view__description-icon-container"
+                    >
+                      <i
+                        class="grid-view__description-icon iconoir-text"
+                      />
+                       
+                      <!---->
+                    </div>
                      
                     <div
                       class="grid-view__description-name"
@@ -416,9 +422,15 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                   <div
                     class="grid-view__description"
                   >
-                    <i
-                      class="grid-view__description-icon iconoir-align-left"
-                    />
+                    <div
+                      class="grid-view__description-icon-container"
+                    >
+                      <i
+                        class="grid-view__description-icon iconoir-align-left"
+                      />
+                       
+                      <!---->
+                    </div>
                      
                     <div
                       class="grid-view__description-name"
@@ -456,9 +468,15 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                   <div
                     class="grid-view__description"
                   >
-                    <i
-                      class="grid-view__description-icon baserow-icon-circle-checked"
-                    />
+                    <div
+                      class="grid-view__description-icon-container"
+                    >
+                      <i
+                        class="grid-view__description-icon baserow-icon-circle-checked"
+                      />
+                       
+                      <!---->
+                    </div>
                      
                     <div
                       class="grid-view__description-name"
@@ -496,9 +514,15 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                   <div
                     class="grid-view__description"
                   >
-                    <i
-                      class="grid-view__description-icon iconoir-text"
-                    />
+                    <div
+                      class="grid-view__description-icon-container"
+                    >
+                      <i
+                        class="grid-view__description-icon iconoir-text"
+                      />
+                       
+                      <!---->
+                    </div>
                      
                     <div
                       class="grid-view__description-name"

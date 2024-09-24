@@ -117,7 +117,12 @@ def public_before_rows_delete(sender, rows, user, table, model, **kwargs):
 
 @receiver(row_signals.rows_deleted)
 @baserow_trace(tracer)
-def public_rows_deleted(sender, rows, user, table, model, before_return, **kwargs):
+def public_rows_deleted(
+    sender, rows, user, table, model, before_return, send_realtime_update=True, **kwargs
+):
+    if not send_realtime_update:
+        return
+
     public_views = dict(before_return)[public_before_rows_delete][
         "deleted_rows_public_views"
     ]
@@ -151,8 +156,19 @@ def public_before_rows_update(
 @receiver(row_signals.rows_updated)
 @baserow_trace(tracer)
 def public_rows_updated(
-    sender, rows, user, table, model, before_return, updated_field_ids, **kwargs
+    sender,
+    rows,
+    user,
+    table,
+    model,
+    before_return,
+    updated_field_ids,
+    send_realtime_update=True,
+    **kwargs,
 ):
+    if not send_realtime_update:
+        return
+
     before_return_dict = dict(before_return)[public_before_rows_update]
     serialized_old_rows = dict(before_return)[serialize_rows_values]
     serialized_updated_rows = serialize_rows_for_response(rows, model)

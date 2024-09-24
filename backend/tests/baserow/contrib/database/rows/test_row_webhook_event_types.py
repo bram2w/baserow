@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -57,6 +59,27 @@ def test_rows_created_event_type(data_fixture):
             }
         ],
     }
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.contrib.database.webhooks.registries.call_webhook")
+def test_rows_created_event_type_without_webhook_event(mock_call_webhook, data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    webhook = data_fixture.create_table_webhook(
+        user=user,
+        table=table,
+        url="http://localhost/",
+        include_all_events=False,
+        events=["rows.created"],
+        headers={"Baserow-header-1": "Value 1"},
+    )
+
+    RowHandler().create_rows(
+        user=user, table=table, rows_values=[{}], send_webhook_events=False
+    )
+
+    mock_call_webhook.delay.assert_not_called()
 
 
 @pytest.mark.django_db()
@@ -210,6 +233,35 @@ def test_rows_updated_event_type(data_fixture):
     }
 
 
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.contrib.database.webhooks.registries.call_webhook")
+def test_rows_updated_event_type_without_webhook_event(mock_call_webhook, data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    webhook = data_fixture.create_table_webhook(
+        user=user,
+        table=table,
+        url="http://localhost/",
+        include_all_events=False,
+        events=["rows.updated"],
+        headers={"Baserow-header-1": "Value 1"},
+    )
+    model = table.get_model()
+    row = model.objects.create()
+
+    RowHandler().update_rows(
+        user,
+        table,
+        [
+            {"id": row.id},
+        ],
+        rows_to_update=[row],
+        send_webhook_events=False,
+    )
+
+    mock_call_webhook.delay.assert_not_called()
+
+
 @pytest.mark.django_db()
 def test_rows_updated_event_type_test_payload(data_fixture):
     user = data_fixture.create_user()
@@ -278,6 +330,27 @@ def test_rows_deleted_event_type(data_fixture):
         "event_type": "rows.deleted",
         "row_ids": [row.id],
     }
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.contrib.database.webhooks.registries.call_webhook")
+def test_rows_deleted_event_type_without_webhook_event(mock_call_webhook, data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    webhook = data_fixture.create_table_webhook(
+        user=user,
+        table=table,
+        url="http://localhost/",
+        include_all_events=False,
+        events=["rows.deleted"],
+        headers={"Baserow-header-1": "Value 1"},
+    )
+    model = table.get_model()
+    row = model.objects.create()
+
+    RowHandler().delete_rows(user, table, row_ids=[row.id], send_webhook_events=False)
+
+    mock_call_webhook.delay.assert_not_called()
 
 
 @pytest.mark.django_db()

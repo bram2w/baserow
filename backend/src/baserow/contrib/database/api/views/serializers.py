@@ -11,7 +11,6 @@ from rest_framework import serializers
 from baserow.api.utils import serialize_validation_errors_recursive
 from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
 from baserow.contrib.database.api.fields.serializers import FieldSerializer
-from baserow.contrib.database.api.serializers import TableSerializer
 from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_AND,
     FILTER_TYPE_OR,
@@ -36,6 +35,7 @@ from baserow.contrib.database.views.registries import (
     view_type_registry,
 )
 
+from ..tables.serializers import TableWithoutDataSyncSerializer
 from .exceptions import FiltersParamValidationException
 
 
@@ -370,7 +370,7 @@ class CreateViewDecorationSerializer(serializers.ModelSerializer):
 
 class ViewSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField()
-    table = TableSerializer()
+    table = TableWithoutDataSyncSerializer()
     filters = ViewFilterSerializer(many=True, source="viewfilter_set", required=False)
     filter_groups = ViewFilterGroupSerializer(many=True, required=False)
     sortings = ViewSortSerializer(many=True, source="viewsort_set", required=False)

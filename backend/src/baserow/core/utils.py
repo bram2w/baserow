@@ -1101,3 +1101,14 @@ def lighten_color(hex_color: str, factor: float):
 
     # Convert the lightened RGBA color back to hex
     return rgba_to_hex(lightened_rgba)
+
+
+def remove_duplicates(input_list):
+    """
+    Removes duplicates from the input list while preserving the order of elements.
+
+    :param input_list: List containing the items that must be deduplicated.
+    """
+
+    seen = set()
+    return [x for x in input_list if not (x in seen or seen.add(x))]

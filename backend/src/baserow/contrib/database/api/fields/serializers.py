@@ -42,11 +42,15 @@ class FieldSerializer(serializers.ModelSerializer):
             "type",
             "primary",
             "read_only",
+            "immutable_type",
+            "immutable_properties",
             "description",
         )
         extra_kwargs = {
             "id": {"read_only": True},
             "table_id": {"read_only": True},
+            "immutable_type": {"read_only": True},
+            "immutable_properties": {"read_only": True},
             "description": {
                 "required": False,
                 "default": None,
@@ -61,7 +65,10 @@ class FieldSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(OpenApiTypes.BOOL)
     def get_read_only(self, instance):
-        return field_type_registry.get_by_model(instance.specific_class).read_only
+        return (
+            field_type_registry.get_by_model(instance.specific_class).read_only
+            or instance.read_only
+        )
 
 
 class RelatedFieldsSerializer(serializers.Serializer):
@@ -126,6 +133,19 @@ class UpdateFieldSerializer(serializers.ModelSerializer):
                 "allow_null": True,
                 "allow_blank": True,
             },
+        }
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        # Only include fields that were provided in the input data. This allows 'None'
+        # if 'None' was explicitly set, but removes fields that weren't in input.
+        # This is needed so that values are not accidentally overwritten if they're
+        # not provided when updating the field.
+        return {
+            key: representation[key]
+            for key in representation.keys()
+            if key in self.initial_data
         }
 
 

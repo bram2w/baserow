@@ -8,7 +8,7 @@
       required
       :helper-text="$t('tablePasteImporter.pasteDescription')"
     >
-      <FormTextarea rows="10" @input="changed($event)"></FormTextarea>
+      <FormTextarea :rows="10" @input="changed($event)"></FormTextarea>
 
       <template #error>{{ $t('error.requiredField') }}</template>
     </FormGroup>

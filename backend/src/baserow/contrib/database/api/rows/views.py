@@ -41,6 +41,8 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_ORDER_BY_FIELD_NOT_POSSIBLE,
 )
 from baserow.contrib.database.api.rows.errors import (
+    ERROR_CANNOT_CREATE_ROWS_IN_TABLE,
+    ERROR_CANNOT_DELETE_ROWS_IN_TABLE,
     ERROR_INVALID_JOIN_PARAMETER,
     ERROR_ROW_DOES_NOT_EXIST,
     ERROR_ROW_IDS_NOT_UNIQUE,
@@ -76,7 +78,12 @@ from baserow.contrib.database.rows.actions import (
     MoveRowActionType,
     UpdateRowsActionType,
 )
-from baserow.contrib.database.rows.exceptions import RowDoesNotExist, RowIdsNotUnique
+from baserow.contrib.database.rows.exceptions import (
+    CannotCreateRowsInTable,
+    CannotDeleteRowsInTable,
+    RowDoesNotExist,
+    RowIdsNotUnique,
+)
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.history import RowHistoryHandler
 from baserow.contrib.database.rows.operations import (
@@ -538,6 +545,7 @@ class RowsView(APIView):
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
             RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
+            CannotCreateRowsInTable: ERROR_CANNOT_CREATE_ROWS_IN_TABLE,
         }
     )
     @validate_query_parameters(CreateRowQueryParamsSerializer)
@@ -949,6 +957,7 @@ class RowView(APIView):
             RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
             CannotDeleteAlreadyDeletedItem: ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM,
+            CannotDeleteRowsInTable: ERROR_CANNOT_DELETE_ROWS_IN_TABLE,
         }
     )
     def delete(self, request, table_id, row_id):
@@ -1149,6 +1158,7 @@ class BatchRowsView(APIView):
             RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
             RowIdsNotUnique: ERROR_ROW_IDS_NOT_UNIQUE,
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
+            CannotCreateRowsInTable: ERROR_CANNOT_CREATE_ROWS_IN_TABLE,
         }
     )
     @validate_query_parameters(BatchCreateRowsQueryParamsSerializer)
@@ -1358,6 +1368,7 @@ class BatchDeleteRowsView(APIView):
             RowIdsNotUnique: ERROR_ROW_IDS_NOT_UNIQUE,
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
             CannotDeleteAlreadyDeletedItem: ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM,
+            CannotDeleteRowsInTable: ERROR_CANNOT_DELETE_ROWS_IN_TABLE,
         }
     )
     def post(self, request: Request, table_id: int, data: Dict[str, Any]) -> Response:

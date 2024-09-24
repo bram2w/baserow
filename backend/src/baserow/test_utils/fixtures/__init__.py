@@ -5,6 +5,7 @@ from .app_auth_provider import AppAuthProviderFixtures
 from .application import ApplicationFixtures
 from .auth_provider import AuthProviderFixtures
 from .data_source import DataSourceFixtures
+from .data_sync import DataSyncFixtures
 from .domain import DomainFixtures
 from .element import ElementFixtures
 from .field import FieldFixtures
@@ -61,6 +62,7 @@ class Fixtures(
     AppAuthProviderFixtures,
     UserSourceUserFixtures,
     GenerativeAIFixtures,
+    DataSyncFixtures,
 ):
     def __init__(self, fake=None):
         self.fake = fake

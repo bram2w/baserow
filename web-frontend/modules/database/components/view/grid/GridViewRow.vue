@@ -94,7 +94,7 @@
         :all-fields-in-table="allFieldsInTable"
         :state="state"
         :multi-select-position="getMultiSelectPosition(row.id, field)"
-        :read-only="readOnly"
+        :read-only="readOnly || field.read_only"
         :store-prefix="storePrefix"
         :group-end="groupEnd"
         :style="{

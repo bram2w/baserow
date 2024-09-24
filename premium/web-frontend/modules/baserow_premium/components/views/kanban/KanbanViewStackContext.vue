@@ -22,6 +22,7 @@
       <li
         v-if="
           option !== null &&
+          !singleSelectField.immutable_properties &&
           $hasPermission(
             'database.table.field.update',
             singleSelectField,
@@ -49,6 +50,7 @@
       <li
         v-if="
           option !== null &&
+          !singleSelectField.immutable_properties &&
           $hasPermission(
             'database.table.field.update',
             singleSelectField,

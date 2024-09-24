@@ -223,6 +223,8 @@ def test_when_field_unhidden_in_public_view_force_refresh_sent(
                             "text_default": "",
                             "read_only": False,
                             "description": None,
+                            "immutable_properties": False,
+                            "immutable_type": False,
                         }
                     ],
                     "view": view_serialized["view"],
@@ -300,6 +302,8 @@ def test_when_only_field_options_updated_in_public_grid_view_force_refresh_sent(
                             "text_default": "",
                             "read_only": False,
                             "description": None,
+                            "immutable_properties": False,
+                            "immutable_type": False,
                         }
                     ],
                     "view": view_serialized["view"],

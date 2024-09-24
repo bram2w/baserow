@@ -15,6 +15,7 @@ from baserow.contrib.database.api.fields.errors import ERROR_FIELD_NOT_IN_TABLE
 from baserow.contrib.database.api.views.form.errors import (
     ERROR_FORM_VIEW_FIELD_OPTIONS_CONDITION_GROUP_DOES_NOT_EXIST,
     ERROR_FORM_VIEW_FIELD_TYPE_IS_NOT_SUPPORTED,
+    ERROR_FORM_VIEW_READ_ONLY_FIELD_IS_NOT_SUPPORTED,
 )
 from baserow.contrib.database.api.views.form.exceptions import (
     FormViewFieldOptionsConditionGroupDoesNotExist,
@@ -42,6 +43,7 @@ from baserow.core.user_files.models import UserFile
 
 from .exceptions import (
     FormViewFieldTypeIsNotSupported,
+    FormViewReadOnlyFieldIsNotSupported,
     GridViewAggregationDoesNotSupportField,
 )
 from .handler import ViewHandler
@@ -588,6 +590,7 @@ class FormViewType(ViewType):
     }
     api_exceptions_map = {
         FormViewFieldTypeIsNotSupported: ERROR_FORM_VIEW_FIELD_TYPE_IS_NOT_SUPPORTED,
+        FormViewReadOnlyFieldIsNotSupported: ERROR_FORM_VIEW_READ_ONLY_FIELD_IS_NOT_SUPPORTED,
         FormViewFieldOptionsConditionGroupDoesNotExist: ERROR_FORM_VIEW_FIELD_OPTIONS_CONDITION_GROUP_DOES_NOT_EXIST,
     }
 
@@ -619,6 +622,8 @@ class FormViewType(ViewType):
             field = fields_dict.get(int(field_id), None)
             if options.get("enabled") and field:
                 field_type = field_type_registry.get_by_model(field.specific_class)
+                if field.read_only:
+                    raise FormViewReadOnlyFieldIsNotSupported(field.name)
                 if not field_type.can_be_in_form_view:
                     raise FormViewFieldTypeIsNotSupported(field_type.type)
 

@@ -1567,6 +1567,8 @@ def test_get_public_kanban_without_with_single_select_and_cover(
                 "type": "text",
                 "read_only": False,
                 "description": None,
+                "immutable_properties": False,
+                "immutable_type": False,
             },
         ],
         "view": {
@@ -1648,6 +1650,8 @@ def test_get_public_kanban_view_with_single_select_and_cover(
                 "type": "single_select",
                 "read_only": False,
                 "description": None,
+                "immutable_properties": False,
+                "immutable_type": False,
             },
             {
                 "id": cover_field.id,
@@ -1658,6 +1662,8 @@ def test_get_public_kanban_view_with_single_select_and_cover(
                 "type": "file",
                 "read_only": False,
                 "description": None,
+                "immutable_properties": False,
+                "immutable_type": False,
             },
             {
                 "id": public_field.id,
@@ -1669,6 +1675,8 @@ def test_get_public_kanban_view_with_single_select_and_cover(
                 "type": "text",
                 "read_only": False,
                 "description": None,
+                "immutable_properties": False,
+                "immutable_type": False,
             },
         ],
         "view": {

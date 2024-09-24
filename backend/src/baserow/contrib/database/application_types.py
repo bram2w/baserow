@@ -34,6 +34,7 @@ from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import ChildProgressBuilder, grouper
 
 from .constants import IMPORT_SERIALIZED_IMPORTING, IMPORT_SERIALIZED_IMPORTING_TABLE
+from .data_sync.registries import data_sync_type_registry
 from .db.atomic import read_repeatable_single_database_atomic_transaction
 from .export_serialized import DatabaseExportSerializedStructure
 from .fields.utils import DeferredFieldImporter, DeferredForeignKeyUpdater
@@ -141,6 +142,12 @@ class DatabaseApplicationType(ApplicationType):
                     )
                 serialized_rows.append(serialized_row)
 
+            serialized_data_sync = None
+            if hasattr(table, "data_sync"):
+                data_sync = table.data_sync.specific
+                data_sync_type = data_sync_type_registry.get_by_model(data_sync)
+                serialized_data_sync = data_sync_type.export_serialized(data_sync)
+
             structure = DatabaseExportSerializedStructure.table(
                 id=table.id,
                 name=table.name,
@@ -148,6 +155,7 @@ class DatabaseApplicationType(ApplicationType):
                 fields=serialized_fields,
                 views=serialized_views,
                 rows=serialized_rows,
+                data_sync=serialized_data_sync,
             )
 
             for serialized_structure in serialization_processor_registry.get_all():
@@ -171,20 +179,25 @@ class DatabaseApplicationType(ApplicationType):
         be imported via the `import_serialized`.
         """
 
-        tables = database.table_set.all().prefetch_related(
-            Prefetch("field_set", queryset=specific_queryset(Field.objects.all())),
-            "field_set__select_options",
-            Prefetch(
-                "view_set",
-                queryset=specific_queryset(
-                    View.objects.all().select_related("owned_by")
+        tables = (
+            database.table_set.all()
+            .select_related("data_sync")
+            .prefetch_related(
+                Prefetch("field_set", queryset=specific_queryset(Field.objects.all())),
+                "field_set__select_options",
+                Prefetch(
+                    "view_set",
+                    queryset=specific_queryset(
+                        View.objects.all().select_related("owned_by")
+                    ),
                 ),
-            ),
-            "view_set__viewfilter_set",
-            "view_set__filter_groups",
-            "view_set__viewsort_set",
-            "view_set__viewgroupby_set",
-            "view_set__viewdecoration_set",
+                "view_set__viewfilter_set",
+                "view_set__filter_groups",
+                "view_set__viewsort_set",
+                "view_set__viewgroupby_set",
+                "view_set__viewdecoration_set",
+                "data_sync__synced_properties",
+            )
         )
 
         serialized_tables = self.export_tables_serialized(
@@ -517,6 +530,8 @@ class DatabaseApplicationType(ApplicationType):
         # metadata is imported too.
         self._import_extra_metadata(serialized_tables, id_mapping, import_export_config)
 
+        self._import_data_sync(serialized_tables, id_mapping)
+
         return imported_tables
 
     def _import_extra_metadata(
@@ -533,6 +548,15 @@ class DatabaseApplicationType(ApplicationType):
                 serialized_structure_processor.import_serialized(
                     source_workspace, table, serialized_table, import_export_config
                 )
+
+    def _import_data_sync(self, serialized_tables, id_mapping):
+        for serialized_table in serialized_tables:
+            if not serialized_table.get("data_sync", None):
+                continue
+            table = serialized_table["_object"]
+            serialized_data_sync = serialized_table["data_sync"]
+            data_sync_type = data_sync_type_registry.get(serialized_data_sync["type"])
+            data_sync_type.import_serialized(table, serialized_data_sync, id_mapping)
 
     def _import_table_rows(
         self,
@@ -904,4 +928,8 @@ class DatabaseApplicationType(ApplicationType):
         return database
 
     def enhance_queryset(self, queryset):
-        return queryset.prefetch_related("table_set")
+        return queryset.prefetch_related(
+            "table_set",
+            "table_set__data_sync",
+            "table_set__data_sync__synced_properties",
+        )

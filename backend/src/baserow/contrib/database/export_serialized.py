@@ -4,7 +4,7 @@ class DatabaseExportSerializedStructure:
         return {"tables": tables}
 
     @staticmethod
-    def table(id, name, order, fields, views, rows):
+    def table(id, name, order, fields, views, rows, data_sync):
         return {
             "id": id,
             "name": name,
@@ -12,6 +12,7 @@ class DatabaseExportSerializedStructure:
             "fields": fields,
             "views": views,
             "rows": rows,
+            "data_sync": data_sync,
         }
 
     @staticmethod

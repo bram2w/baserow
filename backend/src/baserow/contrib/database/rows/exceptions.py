@@ -24,3 +24,15 @@ class ReportMaxErrorCountExceeded(Exception):
     def __init__(self, report, *args, **kwargs):
         self.report = report
         super().__init__("Too many errors", *args, **kwargs)
+
+
+class CannotCreateRowsInTable(Exception):
+    """
+    Raised when it's not possible to create rows in the table.
+    """
+
+
+class CannotDeleteRowsInTable(Exception):
+    """
+    Raised when it's not possible to delete rows in the table.
+    """

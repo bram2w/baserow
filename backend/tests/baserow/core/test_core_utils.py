@@ -25,6 +25,7 @@ from baserow.core.utils import (
     get_value_at_path,
     grouper,
     random_string,
+    remove_duplicates,
     remove_invalid_surrogate_characters,
     remove_special_characters,
     set_allowed_attrs,
@@ -640,3 +641,7 @@ def test_get_baserow_saas_base_url_with_debug():
         "http://baserow-saas-backend:8000",
         {"Host": "localhost"},
     )
+
+
+def test_remove_duplicates():
+    assert remove_duplicates([1, 2, 2, 3]) == [1, 2, 3]

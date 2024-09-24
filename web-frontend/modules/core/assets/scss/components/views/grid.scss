@@ -612,8 +612,22 @@
     color: $color-neutral-600;
   }
 
+  .grid-view__description-icon-container {
+    position: relative;
+  }
+
   .grid-view__description-icon {
     font-size: 16px;
+  }
+
+  .grid-view__description-icon-synced {
+    content: '';
+    font-size: 8px;
+    padding: 1px;
+    color: $palette-neutral-1200;
+    background-color: $color-neutral-100;
+
+    @include absolute(auto, -4px, -2px, auto);
   }
 
   .grid-view__description-icon-error {

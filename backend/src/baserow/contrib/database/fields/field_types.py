@@ -2150,7 +2150,7 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
 
             search_values = []
             for name, row_ids in name_map.items():
-                if primary_field["type"].read_only:
+                if primary_field["type"].read_only or primary_field["field"].read_only:
                     search_values.append(name)
                 else:
                     try:

@@ -167,3 +167,13 @@ ERROR_TABLE_HAS_NO_PRIMARY_FIELD = (
     HTTP_400_BAD_REQUEST,
     "The provided table does not have a primary field.",
 )
+ERROR_IMMUTABLE_FIELD_TYPE = (
+    "ERROR_IMMUTABLE_FIELD_TYPE",
+    HTTP_400_BAD_REQUEST,
+    "The field type is immutable.",
+)
+ERROR_IMMUTABLE_FIELD_PROPERTIES = (
+    "ERROR_IMMUTABLE_FIELD_PROPERTIES",
+    HTTP_400_BAD_REQUEST,
+    "The field properties are immutable.",
+)

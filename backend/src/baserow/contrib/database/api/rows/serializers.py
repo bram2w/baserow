@@ -2,6 +2,7 @@ from copy import deepcopy
 from typing import Dict, List
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db.models.base import ModelBase
 
 from loguru import logger
@@ -31,6 +32,10 @@ def serialize_rows_for_response(rows, model, user_field_names=False, many=True):
         is_response=True,
         user_field_names=user_field_names,
     )(rows, many=many).data
+
+
+def is_read_only(value):
+    raise ValidationError(message="This field is read_only", code="read_only")
 
 
 def get_row_serializer_class(
@@ -97,6 +102,15 @@ def get_row_serializer_class(
         if field_id_matches and field_name_matches:
             name = field["field"].name if user_field_names else field["name"]
             extra_kwargs = field_kwargs.get(field["name"], {})
+            # If the field is configured to be read-only, then we want the API to
+            # respond with an error if the key is provided. It should be possible to
+            # update the cell value via handlers because the value is then managed by
+            # something internally.
+            if field["field"].read_only:
+                if "validators" not in extra_kwargs:
+                    extra_kwargs["validators"] = []
+                extra_kwargs["validators"].append(is_read_only)
+                extra_kwargs.pop("required", None)
 
             if field["name"] != name:
                 # If we are building a serializer with names which do not match the

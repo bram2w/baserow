@@ -1,0 +1,7 @@
+{
+  "type": "feature",
+  "message": "Introduced read_only, immutable_type, and immutable_properties state for the field.",
+  "issue_number": 2278,
+  "bullet_points": [],
+  "created_at": "2024-09-13"
+}

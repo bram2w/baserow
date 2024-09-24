@@ -1030,6 +1030,34 @@ def test_import_rows(
 
 
 @pytest.mark.django_db
+def test_import_rows_with_read_only_field(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    name_field = data_fixture.create_text_field(
+        table=table, name="Name", text_default="Test", order=1, read_only=True
+    )
+
+    handler = RowHandler()
+
+    rows, report = handler.import_rows(
+        user=user,
+        table=table,
+        data=[
+            [
+                "Tesla",
+            ],
+        ],
+        send_realtime_update=False,
+    )
+
+    model = table.get_model()
+    rows = list(model.objects.all())
+    assert len(rows) == 0
+
+
+@pytest.mark.django_db
 @patch("baserow.contrib.database.rows.signals.rows_updated.send")
 @patch("baserow.contrib.database.rows.signals.before_rows_update.send")
 def test_move_row(before_send_mock, send_mock, data_fixture):
@@ -1136,6 +1164,23 @@ def test_delete_row(before_send_mock, send_mock, data_fixture):
     assert send_mock.call_args[1]["table"].id == table.id
     assert send_mock.call_args[1]["model"]._generated_table_model
     assert send_mock.call_args[1]["before_return"] == before_send_mock.return_value
+
+
+@pytest.mark.django_db
+def test_delete_rows_permanently_delete(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    data_fixture.create_text_field(table=table, name="Name", text_default="Test")
+
+    handler = RowHandler()
+    row = handler.create_row(user=user, table=table)
+    row2 = handler.create_row(user=user, table=table)
+
+    handler.delete_rows(
+        user=user, table=table, row_ids=[row.id, row2.id], permanently_delete=True
+    )
+    model = table.get_model()
+    assert model.objects.all().count() == 0
 
 
 @pytest.mark.django_db

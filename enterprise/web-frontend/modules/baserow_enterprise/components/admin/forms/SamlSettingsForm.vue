@@ -55,7 +55,7 @@
       <FormTextarea
         ref="metadata"
         v-model="values.metadata"
-        rows="12"
+        :rows="12"
         :error="fieldHasErrors('metadata') || serverErrors.metadata"
         :placeholder="$t('samlSettingsForm.metadataPlaceholder')"
         @input="serverErrors.metadata = null"

@@ -43,6 +43,8 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_FIELD_NOT_IN_TABLE,
     ERROR_FIELD_SELF_REFERENCE,
     ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS,
+    ERROR_IMMUTABLE_FIELD_PROPERTIES,
+    ERROR_IMMUTABLE_FIELD_TYPE,
     ERROR_INCOMPATIBLE_FIELD_TYPE_FOR_UNIQUE_VALUES,
     ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE,
     ERROR_INVALID_BASEROW_FIELD_NAME,
@@ -75,6 +77,8 @@ from baserow.contrib.database.fields.exceptions import (
     FieldIsAlreadyPrimary,
     FieldNotInTable,
     FieldWithSameNameAlreadyExists,
+    ImmutableFieldProperties,
+    ImmutableFieldType,
     IncompatibleFieldTypeForUniqueValues,
     IncompatiblePrimaryFieldTypeError,
     InvalidBaserowFieldName,
@@ -411,6 +415,8 @@ class FieldView(APIView):
             SelfReferenceFieldDependencyError: ERROR_FIELD_SELF_REFERENCE,
             CircularFieldDependencyError: ERROR_FIELD_CIRCULAR_REFERENCE,
             FailedToLockFieldDueToConflict: ERROR_FAILED_TO_LOCK_FIELD_DUE_TO_CONFLICT,
+            ImmutableFieldType: ERROR_IMMUTABLE_FIELD_TYPE,
+            ImmutableFieldProperties: ERROR_IMMUTABLE_FIELD_PROPERTIES,
         }
     )
     def patch(self, request, field_id):

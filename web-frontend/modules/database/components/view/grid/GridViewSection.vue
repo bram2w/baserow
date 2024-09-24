@@ -99,6 +99,7 @@
           <GridViewRowAdd
             v-if="
               !readOnly &&
+              !table.data_sync &&
               (includeRowDetails || visibleFields.length > 0) &&
               $hasPermission(
                 'database.table.create_row',
