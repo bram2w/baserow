@@ -19,7 +19,7 @@
 import PageHeader from '@baserow/modules/builder/components/page/header/PageHeader'
 import PagePreview from '@baserow/modules/builder/components/page/PagePreview'
 import PageSidePanels from '@baserow/modules/builder/components/page/PageSidePanels'
-import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
+import ApplicationBuilderFormulaInput from '@baserow/modules/builder/components/ApplicationBuilderFormulaInput'
 import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
 import _ from 'lodash'
 
@@ -34,7 +34,7 @@ export default {
       builder: this.builder,
       page: this.page,
       mode,
-      formulaComponent: InjectedFormulaInput,
+      formulaComponent: ApplicationBuilderFormulaInput,
       applicationContext: { builder: this.builder, page: this.page, mode },
     }
   },
