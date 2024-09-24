@@ -2,7 +2,10 @@
   <li class="context__menu-item">
     <a
       class="context__menu-item-link"
-      :class="{ disabled: !modelAvailable || !hasPremium }"
+      :class="{
+        disabled: !modelAvailable || !hasPremium,
+        'context__menu-item-link--loading': loading,
+      }"
       @click.prevent.stop="generateAIFieldValues()"
     >
       <i class="context__menu-item-icon iconoir-magic-wand"></i>
@@ -22,8 +25,8 @@ export default {
       type: Object,
       required: true,
     },
-    rows: {
-      type: Array,
+    getRows: {
+      type: Function,
       required: true,
     },
     storePrefix: {
@@ -34,6 +37,11 @@ export default {
       type: Object,
       required: true,
     },
+  },
+  data() {
+    return {
+      loading: false,
+    }
   },
   computed: {
     workspace() {
@@ -61,7 +69,19 @@ export default {
         return
       }
 
-      const rowIds = this.rows.map((row) => row.id)
+      this.loading = true
+      let rows = []
+
+      try {
+        rows = await this.getRows()
+      } catch (error) {
+        notifyIf(error, 'rows')
+        return
+      }
+
+      const rowIds = rows.map((row) => row.id)
+      this.loading = false
+
       const fieldId = this.field.id
       this.$store.dispatch(
         this.storePrefix + 'view/grid/setPendingFieldOperations',
