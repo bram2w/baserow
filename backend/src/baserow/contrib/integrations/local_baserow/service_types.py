@@ -14,33 +14,14 @@ from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db.models import QuerySet
 
-from drf_spectacular.types import OPENAPI_TYPE_MAPPING
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError as DRFValidationError
-from rest_framework.fields import (
-    BooleanField,
-    CharField,
-    ChoiceField,
-    DateField,
-    DateTimeField,
-    DecimalField,
-    Field,
-    FloatField,
-    IntegerField,
-    SerializerMethodField,
-    TimeField,
-    UUIDField,
-)
 from rest_framework.response import Response
-from rest_framework.serializers import ListSerializer, Serializer
 
 from baserow.contrib.builder.data_providers.exceptions import (
     DataProviderChunkInvalidException,
 )
-from baserow.contrib.database.api.fields.serializers import (
-    DurationFieldSerializer,
-    FieldSerializer,
-)
+from baserow.contrib.database.api.fields.serializers import FieldSerializer
 from baserow.contrib.database.api.rows.serializers import (
     RowSerializer,
     get_row_serializer_class,
@@ -76,6 +57,10 @@ from baserow.contrib.integrations.local_baserow.models import (
     LocalBaserowTableServiceFilter,
     LocalBaserowTableServiceSort,
     LocalBaserowUpsertRow,
+)
+from baserow.contrib.integrations.local_baserow.utils import (
+    guess_cast_function_from_response_serializer_field,
+    guess_json_type_from_response_serializer_field,
 )
 from baserow.core.formula import resolve_formula
 from baserow.core.formula.registries import formula_runtime_function_registry
@@ -129,76 +114,6 @@ class LocalBaserowServiceType(ServiceType):
                 "title": self.get_schema_name(service),
                 "type": "object",
             }
-
-    def guess_json_type_from_response_serialize_field(
-        self, serializer_field: Union[Field, Serializer]
-    ) -> Dict[str, Any]:
-        """
-        Responsible for taking a serializer field, and guessing what its JSON
-        type will be. If the field is a ListSerializer, and it has a child serializer,
-        we add the child's type as well.
-
-        :param serializer_field: The serializer field.
-        :return: A dictionary to add to our schema.
-        """
-
-        if isinstance(
-            serializer_field, (UUIDField, CharField, DecimalField, FloatField)
-        ):
-            # DecimalField/FloatField values are returned as strings from the API.
-            base_type = "string"
-        elif isinstance(
-            serializer_field,
-            (DateTimeField, DateField, TimeField, DurationFieldSerializer),
-        ):
-            base_type = "string"
-        elif isinstance(serializer_field, ChoiceField):
-            base_type = "string"
-        elif isinstance(serializer_field, IntegerField):
-            base_type = "number"
-        elif isinstance(serializer_field, BooleanField):
-            base_type = "boolean"
-        elif isinstance(serializer_field, ListSerializer):
-            # ListSerializer.child is required, so add its subtype.
-            sub_type = self.guess_json_type_from_response_serialize_field(
-                serializer_field.child
-            )
-            return {"type": "array", "items": sub_type}
-        elif isinstance(serializer_field, SerializerMethodField):
-            # Try to guess the json type of SerializerMethodField based on the
-            # OpenAPI annotations.
-            #
-            # When a method serializer uses @extend_schema_field decorator it will
-            # include a dictionary called "_spectacular_annotation" that contains
-            # the type of the field to return.
-            #
-            # NOTE: This only works for primitive types (e.g, string, boolean, etc.)
-            # and not for composite ones (e.g, object, lists, etc.).
-            base_type = None
-            method = getattr(serializer_field.parent, serializer_field.method_name)
-            if hasattr(method, "_spectacular_annotation"):
-                field = method._spectacular_annotation.get("field")
-                mapping = OPENAPI_TYPE_MAPPING.get(field)
-                if isinstance(mapping, dict):
-                    base_type = mapping.get("type", None)
-
-        elif issubclass(serializer_field.__class__, Serializer):
-            properties = {}
-            for name, child_serializer in serializer_field.fields.items():
-                guessed_type = self.guess_json_type_from_response_serialize_field(
-                    child_serializer
-                )
-                if guessed_type["type"] is not None:
-                    properties[name] = {
-                        "title": name,
-                        **guessed_type,
-                    }
-
-            return {"type": "object", "properties": properties}
-        else:
-            base_type = None
-
-        return {"type": base_type}
 
 
 class LocalBaserowTableServiceType(LocalBaserowServiceType):
@@ -570,7 +485,7 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
         """
         Responsible for taking a `Field` and `FieldType`, getting the field type's
         response serializer field, and passing it into our serializer to JSON type
-        mapping method, `guess_json_type_from_response_serialize_field`.
+        mapping method, `guess_json_type_from_response_serializer_field`.
 
         :param field: The Baserow Field we want a type for.
         :param field_type: The Baserow FieldType we want a type for.
@@ -578,7 +493,7 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
         """
 
         serializer_field = field_type.get_response_serializer_field(field)
-        return self.guess_json_type_from_response_serialize_field(serializer_field)
+        return guess_json_type_from_response_serializer_field(serializer_field)
 
 
 class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
@@ -1547,8 +1462,14 @@ class LocalBaserowUpsertRowServiceType(
             # Transform and validate the resolved value with the field type's DRF field.
             serializer_field = field_type.get_serializer_field(field.specific)
             try:
+                # Automatically cast the resolved value to the serializer field type
+                cast_function = guess_cast_function_from_response_serializer_field(
+                    serializer_field
+                )
+                if cast_function:
+                    resolved_value = cast_function(resolved_value)
                 resolved_value = serializer_field.run_validation(resolved_value)
-            except DRFValidationError as exc:
+            except (ValidationError, DRFValidationError) as exc:
                 raise ServiceImproperlyConfigured(
                     "The result value of the formula is not valid for the "
                     f"field `{field.name} ({field.db_column})`: {str(exc)}"
