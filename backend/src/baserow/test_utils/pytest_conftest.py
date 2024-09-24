@@ -1,11 +1,16 @@
 import asyncio
 import contextlib
 import os
+import sys
+import threading
+from contextlib import contextmanager
+from functools import partial
 from pathlib import Path
 from typing import Any, Dict, Optional
 from unittest.mock import patch
 
 from django.conf import settings as django_settings
+from django.core import cache
 from django.core.files.storage import Storage
 from django.core.management import call_command
 from django.db import DEFAULT_DB_ALIAS, OperationalError, connection
@@ -14,6 +19,7 @@ from django.test.utils import CaptureQueriesContext
 
 import pytest
 from faker import Faker
+from loguru import logger
 from pygments import highlight
 from pygments.formatters import TerminalFormatter
 from pygments.lexers import PostgresLexer
@@ -24,6 +30,7 @@ from sqlparse import format
 from baserow.contrib.database.application_types import DatabaseApplicationType
 from baserow.core.context import clear_current_workspace_id
 from baserow.core.exceptions import PermissionDenied
+from baserow.core.jobs.registries import job_type_registry
 from baserow.core.permission_manager import CorePermissionManagerType
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.trash.trash_types import WorkspaceTrashableItemType
@@ -202,6 +209,14 @@ def mutable_builder_workflow_action_registry():
     yield builder_workflow_action_type_registry
     builder_workflow_action_type_registry.get_for_class.cache_clear()
     builder_workflow_action_type_registry.registry = before
+
+
+@pytest.fixture()
+def mutable_job_type_registry():
+    with patch.object(job_type_registry, "registry", {}):
+        job_type_registry.get_for_class.cache_clear()
+        yield job_type_registry
+        job_type_registry.get_for_class.cache_clear()
 
 
 @pytest.fixture()
@@ -676,6 +691,35 @@ def enable_singleton_testing(settings):
 
 
 @pytest.fixture
+def enable_locmem_testing(settings):
+    """
+    Enables in-memory cache and redis for a test
+
+    :param settings:
+    :return:
+    """
+
+    # celery-singleton uses redis to store the lock state
+    # so we need to mock redis to make sure the tests don't fail
+    settings.CACHES = {
+        **django_settings.CACHES,
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "testloc",
+        },
+    }
+    from fakeredis import FakeRedis, FakeServer
+
+    fake_redis_server = FakeServer()
+    with patch(
+        "baserow.celery_singleton_backend.get_redis_connection",
+        lambda *a, **kw: FakeRedis(server=fake_redis_server),
+    ):
+        yield
+        cache.cache.clear()
+
+
+@pytest.fixture
 def stubbed_storage(monkeypatch):
     class StubbedStorage(Storage):
         def __init__(self, *args, **kwargs):
@@ -740,3 +784,75 @@ class FakeDispatchContext(DispatchContext):
             return "999"
 
         return get_value_at_path(self.context, key)
+
+
+@pytest.fixture()
+def test_thread():
+    """
+    Run a side thread with an arbitrary function.
+
+    This fixture allows to run a helper thread with an arbitrary function
+    to test concurrent flows, i.e. in-Celery-task state changes.
+
+    This fixture will increase min thread switching granularity for the test to
+    to 0.00001s.
+
+    It's advised to use threading primitives to communicate with the helper thread.
+
+    A callable will be wrapped to log any error ocurred during the execution.
+
+    A Thread object yielded from this fixture has .thread_stopped Event attached to
+    simplify synchronization with the test code. This event is set when a
+    callable finished it's work.
+
+    >>> def test_x(test_thread):
+        evt_start = threading.Event()
+        evt_end = threading.Event()
+        evt_can_end = threading.Event()
+
+        def callable(*args, **kwargs):
+            evt_start.set()
+            assert evt_can_end(timeout=0.01)
+            evt_end.set()
+
+        with test_thread(callable, foo='bar') as t:
+             # pick a moment to start
+             t.start()
+             evt_can_end.set()
+
+             # wait for the callable to finish
+             assert t.thread_stopped.wait(0.1)
+
+        assert evt_start.is_set()
+        assert evt_end.is_set()
+
+    :return:
+    """
+
+    thread_stopped = threading.Event()
+
+    def wrapper(c, *args, **kwargs):
+        try:
+            logger.info(f"running callable {c} with args {args} {kwargs}")
+            return c(*args, **kwargs)
+        except Exception as err:
+            logger.error(f"error when running {c}: {err}", exc_info=True)
+            raise
+        finally:
+            thread_stopped.set()
+
+    @contextmanager
+    def run_callable(callable, *args, **kwargs):
+        t = threading.Thread(target=partial(wrapper, callable, *args, **kwargs))
+        t.thread_stopped = thread_stopped
+        switch_interval = 0.00001
+        orig_switch_interval = sys.getswitchinterval()
+        try:
+            sys.setswitchinterval(switch_interval)
+            yield t
+        finally:
+            while t.is_alive():
+                t.join(0.01)
+            sys.setswitchinterval(orig_switch_interval)
+
+    yield run_callable

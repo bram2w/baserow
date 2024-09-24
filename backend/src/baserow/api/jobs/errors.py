@@ -10,3 +10,9 @@ ERROR_MAX_JOB_COUNT_EXCEEDED = (
     HTTP_400_BAD_REQUEST,
     "Max running job count for this type is exceeded.",
 )
+
+ERROR_JOB_NOT_CANCELLABLE = (
+    "ERROR_JOB_NOT_CANCELLABLE",
+    HTTP_400_BAD_REQUEST,
+    "The job cannot be cancelled",
+)

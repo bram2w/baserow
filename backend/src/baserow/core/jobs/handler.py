@@ -3,15 +3,17 @@ from typing import List, Optional, Type
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Q, QuerySet
 
 from baserow.core.utils import Progress
 
-from .cache import job_progress_key
-from .constants import JOB_FAILED, JOB_PENDING
-from .exceptions import JobDoesNotExist, MaxJobCountExceeded
+from .exceptions import (
+    JobCancelled,
+    JobDoesNotExist,
+    JobNotCancellable,
+    MaxJobCountExceeded,
+)
 from .models import Job
 from .registries import job_type_registry
 from .tasks import run_async_job
@@ -19,7 +21,30 @@ from .types import AnyJob
 
 
 class JobHandler:
-    def run(self, job: AnyJob):
+    @classmethod
+    def cancel_job(cls, job: AnyJob) -> Job | None:
+        """
+        Marks a job for cancellation. It will mark the job as cancelled, but won't
+        cancel a Celery task directly. The task's responsible to drop job's processing
+        as soon as it detects the marker.
+
+        :param job: The job to cancel.
+        :return: The job that was marked for cancellation.
+        :raises JobNotCancellable: If the job is already finished and cannot be
+            cancelled.
+        """
+
+        if job.cancelled:
+            return
+        if job.finished:
+            raise JobNotCancellable()
+
+        job.set_state_cancelled()
+        job.save()
+        return job
+
+    @classmethod
+    def run(cls, job: AnyJob):
         def progress_updated(percentage, state):
             """
             Every time the progress of the job changes, this callback function is
@@ -27,39 +52,36 @@ class JobHandler:
             """
 
             nonlocal job
-            changed = False
 
-            if job.progress_percentage != percentage:
-                job.progress_percentage = percentage
-                changed = True
+            # Periodically check for a job cancellation marker. Users can cancel jobs
+            # via the UI, but this won't stop tasks already running in Celery. To handle
+            # cancellations within a worker, the JobType.run method should periodically
+            # check for a cancellation marker, either manually or whenever Progress
+            # methods are called.
+            if job.cancelled:
+                raise JobCancelled()
+            job.progress_percentage = percentage
 
-            if state is not None and job.state != state:
-                job.state = state
-                changed = True
-
-            if changed:
-                # The progress must also be stored in the Redis cache. Because we're
-                # currently in a transaction, other database connections don't know
-                # about the progress and this way, we can still communicate it to
-                # the user.
-                cache.set(
-                    job_progress_key(job.id),
-                    {
-                        "progress_percentage": job.progress_percentage,
-                        "state": job.state,
-                    },
-                    timeout=None,
-                )
-                job.save()
+            if state:
+                job.set_state(state)
+            job.set_cached_state()
 
         progress = Progress(100)
         progress.register_updated_event(progress_updated)
 
         job_type = job_type_registry.get_by_model(job)
-        return job_type.run(job, progress)
+        out = job_type.run(job, progress)
 
-    @staticmethod
+        # Final check if the job was cancelled because we don't want to overwrite the
+        # state if the `job_type.run` didn't notice the cancellation.
+        if job.cancelled:
+            raise JobCancelled()
+
+        return out
+
+    @classmethod
     def get_job(
+        cls,
         user: AbstractUser,
         job_id: int,
         job_model: Optional[Type[AnyJob]] = None,
@@ -86,8 +108,9 @@ class JobHandler:
         except Job.DoesNotExist:
             raise JobDoesNotExist(f"The job with id {job_id} does not exist.")
 
+    @classmethod
     def get_jobs_for_user(
-        self,
+        cls,
         user: AbstractUser,
         filter_states: Optional[List[str]],
         filter_ids: Optional[List[int]],
@@ -121,8 +144,9 @@ class JobHandler:
 
         return queryset.select_related("content_type")
 
+    @classmethod
     def get_pending_or_running_jobs(
-        self,
+        cls,
         job_type_name: str,
     ) -> QuerySet:
         """
@@ -165,7 +189,7 @@ class JobHandler:
             )
 
         job_values = job_type.prepare_values(kwargs, user)
-        job = model_class.objects.create(user=user, **job_values)
+        job: AnyJob = model_class.objects.create(user=user, **job_values)
         job_type.after_job_creation(job, kwargs)
 
         if sync:
@@ -180,11 +204,10 @@ class JobHandler:
                     run_async_job.delay(job.id)
                 except BaseException as e:
                     job.refresh_from_db()
-                    if job.state == JOB_PENDING:
-                        job.state = JOB_FAILED
-                        job.error = str(e)
-                        job.human_readable_error = (
-                            f"Something went wrong during the job({job.id}) execution."
+                    if job.pending:
+                        job.set_state_failed(
+                            str(e),
+                            f"Something went wrong during the job({job.id}) execution.",
                         )
                         job.save()
                     raise
@@ -199,30 +222,50 @@ class JobHandler:
         """
 
         # Delete old job
-        limit_date = datetime.now(tz=timezone.utc) - timedelta(
+        now = datetime.now(tz=timezone.utc)
+        limit_date = now - timedelta(
             minutes=(settings.BASEROW_JOB_EXPIRATION_TIME_LIMIT)
         )
         for job_to_delete in Job.objects.filter(
             created_on__lte=limit_date
         ).is_finished():
-            job_type = job_type_registry.get_by_model(job_to_delete.specific)
-            job_type.before_delete(job_to_delete.specific)
-            job_to_delete.delete()
+            self.delete_job(job_to_delete.specific)
 
         # Expire non expired jobs
-        limit_date = datetime.now(tz=timezone.utc) - timedelta(
-            seconds=(settings.BASEROW_JOB_SOFT_TIME_LIMIT + 1)
-        )
+        limit_date = now - timedelta(seconds=(settings.BASEROW_JOB_SOFT_TIME_LIMIT + 1))
 
-        (
-            Job.objects.filter(created_on__lte=limit_date)
-            .is_pending_or_running()
-            .update(
-                state=JOB_FAILED,
-                human_readable_error=(
-                    "Something went wrong during the file_import job execution."
-                ),
-                error="Unknown error",
-                updated_on=datetime.now(tz=timezone.utc),
+        #  Use updated_on instead of created_on to verify the last update date
+        # but use the cache since the DB is not updated until the end of the transaction
+        jobs_to_update = []
+        for job in Job.objects.filter(
+            created_on__lte=limit_date
+        ).is_pending_or_running():
+            if (
+                last_updated_on := job.last_updated_on
+            ) and last_updated_on < limit_date:
+                job.set_state_failed(
+                    "Timeout error",
+                    "Something went wrong during the job execution.",
+                )
+                # Set the updated_on manually because it won't be set by bulk_update
+                job.updated_on = now
+                jobs_to_update.append(job)
+        if jobs_to_update:
+            Job.objects.bulk_update(
+                jobs_to_update,
+                fields=["updated_on", "state", "error", "human_readable_error"],
             )
-        )
+
+    @classmethod
+    def delete_job(cls, job: Type[Job]):
+        """
+        Deletes a job, calls the job type's before_delete method and clears the job
+        cache.
+
+        :param job: The specific job to delete.
+        """
+
+        job_type = job_type_registry.get_by_model(job)
+        job_type.before_delete(job)
+        job.clear_job_cache()
+        job.delete()

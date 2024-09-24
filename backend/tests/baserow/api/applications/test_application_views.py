@@ -554,7 +554,7 @@ def test_duplicate_application_schedule_job(
     assert job["state"] == "pending"
     assert job["type"] == "duplicate_application"
 
-    job = JobHandler().get_job(user_2, job["id"])
+    job = JobHandler.get_job(user_2, job["id"])
     assert job.user_id == user_2.id
     assert job.progress_percentage == 0
     assert job.state == "pending"

@@ -44,10 +44,11 @@ def test_run_task(mock_get_by_model, data_fixture):
     def run(job, progress):
         progress.increment(50, "test")
 
-        # Check if the job has updated in the transaction
-        job.refresh_from_db()
-        assert job.progress_percentage == 50
-        assert job.state == "test"
+        # use job's cached state to determine current state/progress_percentage
+        # as this can be updated from another process. A task will not write
+        # a job state to db until it's finished correctly.
+        assert job.get_cached_state() == "test"
+        assert job.get_cached_progress_percentage() == 50
 
         # We're using the second connection to check if we can get the most recent
         # progress value while the transaction is still active.

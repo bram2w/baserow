@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.shortcuts import reverse
 
 import pytest
@@ -11,6 +13,8 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
+from baserow.core.jobs.constants import JOB_STARTED
+from baserow.core.jobs.models import JOB_STATES_RUNNING
 from baserow.test_utils.helpers import is_dict_subset
 
 # Create
@@ -491,3 +495,133 @@ def test_delete_snapshot(api_client, data_fixture):
     )
 
     assert response.status_code == HTTP_204_NO_CONTENT
+
+
+@pytest.mark.django_db(transaction=True)
+def test_get_current_snapshot_job(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    workspace_1 = data_fixture.create_workspace(user=user)
+    application_1 = data_fixture.create_database_application(
+        workspace=workspace_1, order=1
+    )
+
+    url = reverse("api:snapshots:list", kwargs={"application_id": application_1.id})
+    snapshot_name = "Test snapshot name"
+
+    with patch("baserow.core.jobs.tasks.run_async_job.delay"):
+        response = api_client.post(
+            url,
+            {"name": snapshot_name},
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+        assert response.status_code == HTTP_202_ACCEPTED
+        assert is_dict_subset(
+            {
+                "human_readable_error": "",
+                "progress_percentage": 0,
+                "state": "pending",
+                "type": "create_snapshot",
+            },
+            response.json(),
+        )
+
+    url = reverse("api:jobs:list")
+
+    response = api_client.get(
+        url,
+        {"state": JOB_STARTED},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    resp = response.json()
+    assert isinstance(resp, dict)
+    assert "jobs" in resp
+    resp = resp["jobs"]
+    assert isinstance(resp, list)
+    assert len(resp) == 1
+    assert isinstance(resp[0], dict)
+    assert is_dict_subset(
+        {
+            "snapshot": {
+                "name": "Test snapshot name",
+            }
+        },
+        resp[0],
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+def test_get_current_snapshot_job_cancelled(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    workspace_1 = data_fixture.create_workspace(user=user)
+    application_1 = data_fixture.create_database_application(
+        workspace=workspace_1, order=1
+    )
+
+    url = reverse("api:snapshots:list", kwargs={"application_id": application_1.id})
+    snapshot_name = "Test snapshot name"
+
+    with patch("baserow.core.jobs.tasks.run_async_job.delay"):
+        response = api_client.post(
+            url,
+            {"name": snapshot_name},
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+        assert response.status_code == HTTP_202_ACCEPTED
+        assert is_dict_subset(
+            {
+                "human_readable_error": "",
+                "progress_percentage": 0,
+                "state": "pending",
+                "type": "create_snapshot",
+            },
+            response.json(),
+        )
+
+    # list jobs to match with a snapshot
+    url = reverse("api:jobs:list")
+    response = api_client.get(
+        url,
+        {"state": JOB_STATES_RUNNING},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    resp = response.json()
+    assert isinstance(resp, dict)
+    assert "jobs" in resp
+    resp = resp["jobs"]
+    assert len(resp) == 1
+    assert isinstance(resp[0], dict)
+
+    assert isinstance(resp[0].get("snapshot"), dict)
+    assert is_dict_subset({"name": snapshot_name}, resp[0].get("snapshot"))
+
+    job_id = resp[0]["id"]
+
+    url = reverse("api:jobs:cancel", kwargs={"job_id": job_id})
+
+    response = api_client.post(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    url = reverse("api:snapshots:list", kwargs={"application_id": application_1.id})
+
+    response = api_client.get(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    resp = response.json()
+    assert resp == []

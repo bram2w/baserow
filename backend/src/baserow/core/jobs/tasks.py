@@ -3,6 +3,7 @@ from datetime import timedelta
 from django.conf import settings
 
 from baserow.config.celery import app
+from baserow.core.jobs.exceptions import JobCancelled
 from baserow.core.jobs.registries import job_type_registry
 
 
@@ -14,30 +15,33 @@ from baserow.core.jobs.registries import job_type_registry
 def run_async_job(self, job_id: int):
     """Run the job task asynchronously"""
 
-    from django.core.cache import cache
-
     from celery.exceptions import SoftTimeLimitExceeded
 
-    from baserow.core.jobs.constants import JOB_FAILED, JOB_FINISHED, JOB_STARTED
     from baserow.core.jobs.handler import JobHandler
     from baserow.core.jobs.models import Job
 
-    from .cache import job_progress_key
-
     job = Job.objects.get(id=job_id).specific
+    if job.cancelled:
+        return  # Job cancelled before it started. No need to run it.
+
     job_type = job_type_registry.get_by_model(job)
-    job.state = JOB_STARTED
-    job.save(update_fields=("state",))
+    job.set_state_started()
+    job.save()
 
     try:
         with job_type.transaction_atomic_context(job):
-            JobHandler().run(job)
+            JobHandler.run(job)
 
-        job.state = JOB_FINISHED
-        # Don't override the other properties that have been set during the
-        # progress update.
-        job.save(update_fields=("state",))
-    except BaseException as e:  # We also want to catch SystemExit exception here.
+        job.set_state_finished()
+        job.save()
+    except JobCancelled:
+        # It shouldn't be necessary because the JobHandler shouldn't call job.save(),
+        # but this guarantees that the job is in the cancelled state at the end.
+        job.set_state_cancelled()
+        job.save()
+    except BaseException as e:
+        # We also want to catch SystemExit exception here and all other possible
+        # exceptions to set the job state in a failed state.
         error = f"Something went wrong during the {job_type.type} job execution."
 
         exception_mapping = {
@@ -51,28 +55,14 @@ def run_async_job(self, job_id: int):
                 error = error_message.format(e=e)
                 break
 
-        job.state = JOB_FAILED
-        job.error = str(e)
-        job.human_readable_error = error
-
-        # Don't override the other properties that have been set during the
-        # progress update.
-        job.save(
-            update_fields=(
-                "state",
-                "error",
-                "human_readable_error",
-            )
-        )
-
-        # Allow a job_type to modify job after an error
-        job_type.on_error(job.specific, e)
+        job.set_state_failed(str(e), error)
+        job.save()
 
         raise
     finally:
         # Delete the import job cached entry because the transaction has been committed
         # and the Job entry now contains the latest data.
-        cache.delete(job_progress_key(job.id))
+        job.clear_job_cache()
 
 
 # noinspection PyUnusedLocal

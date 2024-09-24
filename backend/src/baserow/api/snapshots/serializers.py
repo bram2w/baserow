@@ -14,10 +14,16 @@ class SnapshotSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Snapshot
-        fields = ["id", "name", "snapshot_from_application", "created_by", "created_at"]
+        fields = [
+            "id",
+            "name",
+            "snapshot_from_application",
+            "created_at",
+            "created_by",
+        ]
         read_only_fields = [
             "id",
             "snapshot_from_application",
-            "created_by",
             "created_at",
+            "created_by",
         ]

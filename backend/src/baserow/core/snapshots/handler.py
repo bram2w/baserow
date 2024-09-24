@@ -3,8 +3,8 @@ from datetime import datetime, timedelta, timezone
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.files.storage import default_storage
-from django.db import IntegrityError, OperationalError
-from django.db.models.query import QuerySet
+from django.db import OperationalError
+from django.db.models import QuerySet
 
 from baserow.contrib.database.exceptions import (
     DatabaseSnapshotMaxLocksExceededException,
@@ -49,9 +49,11 @@ class SnapshotHandler:
         :param workspace: The workspace for which to count the snapshots.
         """
 
-        return Snapshot.objects.filter(
-            snapshot_from_application__workspace=workspace, mark_for_deletion=False
-        ).count()
+        return (
+            Snapshot.objects.restorable()
+            .filter(snapshot_from_application__workspace=workspace)
+            .count()
+        )
 
     def _check_is_in_use(self, snapshot: Snapshot) -> None:
         """
@@ -65,8 +67,7 @@ class SnapshotHandler:
         """
 
         restoring_jobs_count = (
-            JobHandler()
-            .get_pending_or_running_jobs(RestoreSnapshotJobType.type)
+            JobHandler.get_pending_or_running_jobs(RestoreSnapshotJobType.type)
             .filter(snapshot=snapshot)
             .count()
         )
@@ -113,11 +114,8 @@ class SnapshotHandler:
         )
 
         return (
-            Snapshot.objects.filter(
-                snapshot_from_application__id=application_id,
-                snapshot_to_application__isnull=False,
-                mark_for_deletion=False,
-            )
+            Snapshot.objects.restorable()
+            .filter(snapshot_from_application__id=application_id)
             .select_related("created_by")
             .order_by("-created_at", "-id")
         )
@@ -197,16 +195,23 @@ class SnapshotHandler:
         if creating_jobs_count > 0:
             raise SnapshotIsBeingCreated()
 
-        try:
-            snapshot = Snapshot.objects.create(
+        if (
+            Snapshot.objects.restorable()
+            .filter(
                 snapshot_from_application=application,
                 created_by=performed_by,
                 name=name,
             )
-        except IntegrityError as e:
-            if "unique constraint" in e.args[0]:
-                raise SnapshotNameNotUnique()
-            raise e
+            .exists()
+        ):
+            raise SnapshotNameNotUnique()
+
+        snapshot = Snapshot.objects.create(
+            snapshot_from_application=application,
+            created_by=performed_by,
+            name=name,
+        )
+
         return snapshot
 
     def start_restore_job(

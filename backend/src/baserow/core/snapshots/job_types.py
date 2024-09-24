@@ -31,6 +31,16 @@ class CreateSnapshotJobType(JobType):
         DatabaseSnapshotMaxLocksExceededException: DatabaseSnapshotMaxLocksExceededException.message
     }
 
+    serializer_field_names = ["snapshot"]
+
+    @property
+    def serializer_field_overrides(self):
+        from baserow.api.snapshots.serializers import SnapshotSerializer
+
+        return {
+            "snapshot": SnapshotSerializer(),
+        }
+
     def transaction_atomic_context(self, job: CreateSnapshotJob):
         application = (
             CoreHandler()
@@ -47,9 +57,10 @@ class CreateSnapshotJobType(JobType):
             job.user, job.snapshot, progress
         )
 
-    def on_error(self, job: CreateSnapshotJob, error: Exception):
-        if job.snapshot:
-            # avoid dangling snapshot entries
+    def before_delete(self, job):
+        # Delete the dangling snapshot if it didn't finish correctly but the snapshot is
+        # still there.
+        if not job.finished and job.snapshot_id is not None:
             job.snapshot.delete()
 
 
@@ -62,6 +73,16 @@ class RestoreSnapshotJobType(JobType):
         UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         SnapshotDoesNotExist: ERROR_SNAPSHOT_DOES_NOT_EXIST,
     }
+
+    serializer_field_names = ["snapshot"]
+
+    @property
+    def serializer_field_overrides(self):
+        from baserow.api.snapshots.serializers import SnapshotSerializer
+
+        return {
+            "snapshot": SnapshotSerializer(),
+        }
 
     def run(self, job: RestoreSnapshotJob, progress):
         from .actions import RestoreSnapshotActionType

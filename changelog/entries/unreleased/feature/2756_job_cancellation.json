@@ -1,0 +1,7 @@
+{
+  "type": "feature",
+  "message": "Allow to cancel a job (i.e. a database snapshot).",
+  "issue_number": 2756,
+  "bullet_points": [],
+  "created_at": "2024-07-28"
+}

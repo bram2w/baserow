@@ -23,3 +23,15 @@ class JobTypeAlreadyRegistered(InstanceTypeAlreadyRegistered):
     Raised when trying to register a job type that exists
     already.
     """
+
+
+class JobCancelled(Exception):
+    """
+    Raised when a job has been canceled while running.
+    """
+
+
+class JobNotCancellable(Exception):
+    """
+    Raised when a job cannot be cancelled.
+    """
