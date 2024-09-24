@@ -9,6 +9,9 @@ export default (client) => {
     get(jobId) {
       return client.get(`/jobs/${jobId}/`)
     },
+    async cancel(jobId) {
+      return await client.post(`/jobs/${jobId}/cancel/`)
+    },
     fetchAll(filters = {}) {
       const { states, jobIds } = filters
       const params = new URLSearchParams()

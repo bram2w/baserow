@@ -1,12 +1,20 @@
 import sys
+import threading
+from time import sleep
 from unittest.mock import patch
 
 import pytest
 
-from baserow.core.jobs.exceptions import JobDoesNotExist, MaxJobCountExceeded
+from baserow.core.jobs.constants import JOB_CANCELLED
+from baserow.core.jobs.exceptions import (
+    JobDoesNotExist,
+    JobNotCancellable,
+    MaxJobCountExceeded,
+)
 from baserow.core.jobs.handler import JobHandler
 from baserow.core.jobs.models import Job
-from baserow.core.jobs.registries import JobType, job_type_registry
+from baserow.core.jobs.registries import JobType
+from baserow.core.jobs.tasks import run_async_job
 
 
 @pytest.mark.django_db(transaction=True)
@@ -70,15 +78,15 @@ def test_get_job(data_fixture):
     job_2 = data_fixture.create_fake_job(type="tmp_job_type_1")
 
     with pytest.raises(JobDoesNotExist):
-        JobHandler().get_job(user, job_2.id)
+        JobHandler.get_job(user, job_2.id)
 
-    job = JobHandler().get_job(user, job_1.id)
+    job = JobHandler.get_job(user, job_1.id)
     assert isinstance(job, Job)
     assert job.id == job_1.id
 
 
 @pytest.mark.django_db
-def test_job_progress_changed_bug_regression(data_fixture):
+def test_job_progress_changed_bug_regression(data_fixture, mutable_job_type_registry):
     """
     Small regression test for an undefined variable in JobHandler.run
     """
@@ -93,22 +101,266 @@ def test_job_progress_changed_bug_regression(data_fixture):
                 progress,
             )
 
-    with patch.object(job_type_registry, "registry", {}):
-        job_type_registry.get_for_class.cache_clear()
-        job_type_registry.register(IdlingJobType())
+    mutable_job_type_registry.register(IdlingJobType())
 
-        user = data_fixture.create_user()
+    user = data_fixture.create_user()
 
-        job_1 = data_fixture.create_fake_job(user=user, type=IdlingJobType.type)
+    job_1 = data_fixture.create_fake_job(user=user, type=IdlingJobType.type)
 
-        _job, _progress = JobHandler().run(job_1)
+    job, progress = JobHandler().run(job_1)
 
-        assert _job
-        assert _progress
+    assert job
+    assert progress
 
-        _job.progress = 1
-        _job.save()
-        _progress.set_progress(1, None)
-        assert _job.progress == 1
-        # in old code this will fail with UnboundLocalError
-        _progress.set_progress(1, None)
+    job.progress = 1
+    job.save()
+    progress.set_progress(1, None)
+    assert job.progress == 1
+    # in old code this will fail with UnboundLocalError
+    progress.set_progress(1, None)
+
+
+@pytest.mark.django_db(transaction=True)
+def test_job_cancel_before_run(
+    data_fixture, test_thread, mutable_job_type_registry, enable_locmem_testing
+):
+    # marker that the job started
+    m_start = threading.Event()
+
+    # marker for job to stop
+    m_set_stop = threading.Event()
+
+    # marker that job finished
+    m_end = threading.Event()
+
+    class IdlingJobType(JobType):
+        type = "idling_job_b"
+        model_class = Job
+        max_count = 1
+
+        def run(self, job, progress):
+            m_start.set()
+            m_set_stop.wait(0.003)
+            progress.set_progress(10)
+            m_end.set()
+
+    jh = JobHandler()
+    mutable_job_type_registry.register(IdlingJobType())
+
+    user = data_fixture.create_user()
+    with patch("baserow.core.jobs.tasks.run_async_job.delay"):
+        job = jh.create_and_start_job(user, IdlingJobType.type, sync=False)
+    assert job.user_id == user.id
+    assert job.get_cached_progress_percentage() == 0
+    assert job.pending
+    assert job.error == ""
+    with test_thread(run_async_job.apply, args=(job.id,)) as t:
+        assert job.pending
+        assert job.progress_percentage == 0
+        jh.cancel_job(job)
+        t.start()
+        sleep(0.005)
+        # Job.run should not be called so markers are not set
+        assert not m_start.is_set()
+        assert not m_end.is_set()
+
+    job.refresh_from_db()
+    assert job.cancelled, (
+        job.get_cached_state(),
+        job.state,
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+def test_job_cancel_when_running(
+    data_fixture, test_thread, mutable_job_type_registry, enable_locmem_testing
+):
+    # marker that the job started
+    m_start = threading.Event()
+
+    # marker for job to stop
+    m_set_stop = threading.Event()
+
+    # marker that job finished
+    m_end = threading.Event()
+
+    class IdlingJobType(JobType):
+        type = "idling_job_b"
+        model_class = Job
+        max_count = 1
+
+        def run(self, job, progress):
+            progress.set_progress(11)
+            m_start.set()
+            progress.set_progress(11)
+            assert m_set_stop.wait(0.05)
+            progress.set_progress(12)
+            m_end.set()
+
+    jh = JobHandler()
+
+    mutable_job_type_registry.register(IdlingJobType())
+
+    user = data_fixture.create_user()
+
+    with patch("baserow.core.jobs.tasks.run_async_job.delay"):
+        job = jh.create_and_start_job(user, IdlingJobType.type, sync=False)
+    assert job.user_id == user.id
+    assert job.get_cached_progress_percentage() == 0
+    assert job.pending
+    assert job.error == ""
+    with test_thread(run_async_job.apply, args=(job.id,)) as t:
+        assert job.pending
+        assert job.get_cached_progress_percentage() == 0
+
+        t.start()
+        assert m_start.wait(0.02)
+        assert job.started, job.get_cached_state()
+        assert (
+            job.get_cached_progress_percentage() == 11
+        ), job.get_cached_progress_percentage()
+
+        jh.cancel_job(job)
+        m_set_stop.set()
+        assert not m_end.wait(0.05)
+
+    job.refresh_from_db()
+    # progress percentage is set from model's state, not from cache,
+    # so this is a different value than one set from .run method
+    assert job.cancelled
+    assert job.state == JOB_CANCELLED
+
+
+@pytest.mark.django_db(transaction=True)
+def test_job_cancel_failed(
+    data_fixture, test_thread, mutable_job_type_registry, enable_locmem_testing
+):
+    # marker that the job started
+    m_start = threading.Event()
+
+    class IdlingJobType(JobType):
+        type = "idling_job_b"
+        model_class = Job
+        max_count = 1
+
+        def run(self, job, progress):
+            m_start.set()
+            raise ValueError()
+
+    jh = JobHandler()
+    mutable_job_type_registry.register(IdlingJobType())
+
+    user = data_fixture.create_user()
+    with patch("baserow.core.jobs.tasks.run_async_job.delay"):
+        job = jh.create_and_start_job(user, IdlingJobType.type, sync=False)
+    assert job.user_id == user.id
+    assert job.get_cached_progress_percentage() == 0
+    assert job.pending
+    assert job.error == ""
+    with test_thread(run_async_job.apply, args=(job.id,)) as t:
+        assert job.pending
+        assert job.get_cached_progress_percentage() == 0
+
+        t.start()
+        assert t.is_alive()
+        assert m_start.wait(0.05)
+
+    # a job failed, so we can't cancel it
+    job.refresh_from_db()
+    assert job.failed
+    out = jh.cancel_job(job)
+    assert isinstance(out, Job)
+    assert job.cancelled
+
+
+@pytest.mark.django_db(transaction=True)
+def test_job_cancel_finished(
+    data_fixture, test_thread, mutable_job_type_registry, enable_locmem_testing
+):
+    m_start = threading.Event()
+    m_set_stop = threading.Event()
+    m_end = threading.Event()
+
+    class IdlingJobType(JobType):
+        type = "idling_job_b"
+        model_class = Job
+        max_count = 1
+
+        def run(self, job, progress):
+            m_start.set()
+            assert m_set_stop.wait(0.05)
+            m_end.set()
+
+    jh = JobHandler()
+    mutable_job_type_registry.register(IdlingJobType())
+
+    user = data_fixture.create_user()
+    with patch("baserow.core.jobs.tasks.run_async_job.delay"):
+        job = jh.create_and_start_job(user, IdlingJobType.type, sync=False)
+    assert job.user_id == user.id
+    assert job.get_cached_progress_percentage() == 0
+    assert job.pending
+    assert job.error == ""
+    with test_thread(run_async_job, job.id) as t:
+        assert job.pending
+        assert job.get_cached_progress_percentage() == 0
+
+        t.start()
+        assert t.is_alive()
+        assert m_start.wait(0.05)
+        m_set_stop.set()
+        assert m_end.wait(0.05)
+
+    job.refresh_from_db()
+    with pytest.raises(JobNotCancellable):
+        assert job.finished, job.get_cached_state()
+        jh.cancel_job(job)
+
+
+@pytest.mark.django_db(transaction=True)
+def test_job_cancel_cancelled(
+    data_fixture, test_thread, mutable_job_type_registry, enable_locmem_testing
+):
+    m_start = threading.Event()
+    m_set_stop = threading.Event()
+    m_end = threading.Event()
+
+    class IdlingJobType(JobType):
+        type = "idling_job_b"
+        model_class = Job
+        max_count = 1
+
+        def run(self, job, progress):
+            m_start.set()
+            progress.set_progress(10)
+            assert m_set_stop.wait(0.05)
+            progress.set_progress(20)
+            m_end.set()
+            progress.set_progress(30)
+
+    jh = JobHandler()
+    mutable_job_type_registry.register(IdlingJobType())
+
+    user = data_fixture.create_user()
+    with patch("baserow.core.jobs.tasks.run_async_job.delay"):
+        job = jh.create_and_start_job(user, IdlingJobType.type, sync=False)
+    assert job.user_id == user.id
+    assert job.get_cached_progress_percentage() == 0
+    assert job.pending
+    assert job.error == ""
+    with test_thread(run_async_job, job.id) as t:
+        assert job.pending
+        assert job.get_cached_progress_percentage() == 0
+
+        t.start()
+        assert t.is_alive()
+        assert m_start.wait(0.05)
+        out = JobHandler.cancel_job(job)
+        assert isinstance(out, Job)
+        m_set_stop.set()
+
+    job.refresh_from_db()
+    assert job.cancelled, job.state
+    out = JobHandler.cancel_job(job)
+    # won't cancel already cancelled
+    assert out is None

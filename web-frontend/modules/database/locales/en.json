@@ -772,6 +772,7 @@
     "descriptionLimits": "You can have a maximum of {n} snapshots per workspace. | You can have a maximum of {n} snapshot per workspace. | You can have a maximum of {n} snapshots per workspace.",
     "createLabel": "Create a new snapshot",
     "create": "Create snapshot",
+    "cancel": "Cancel",
     "snapshotRestoredErrorTitle": "Error occurred",
     "snapshotRestoredErrorMessage": "The snapshot couldn't be restored. please try again later.",
     "snapshotDeletedErrorTitle": "Error occurred",
@@ -779,7 +780,8 @@
     "limitReached": "The limit of maximum snapshots has been reached.",
     "snapshot": "Snapshot",
     "importingState": "Creating",
-    "reset": "Create another"
+    "reset": "Create another",
+    "noSnapshots": "No snapshots for this application yet."
   },
   "deleteSnapshotModal": {
     "title": "Delete snapshot",

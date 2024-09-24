@@ -656,8 +656,8 @@ def test_get_airtable_import_job(data_fixture):
     job_2 = data_fixture.create_airtable_import_job()
 
     with pytest.raises(JobDoesNotExist):
-        JobHandler().get_job(user, job_2.id)
+        JobHandler.get_job(user, job_2.id)
 
-    job = JobHandler().get_job(user, job_1.id, job_model=AirtableImportJob)
+    job = JobHandler.get_job(user, job_1.id, job_model=AirtableImportJob)
     assert isinstance(job, AirtableImportJob)
     assert job.id == job_1.id

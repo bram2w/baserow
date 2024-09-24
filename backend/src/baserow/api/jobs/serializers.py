@@ -4,11 +4,21 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from baserow.core.jobs.constants import JOB_FAILED, JOB_FINISHED, JOB_PENDING
+from baserow.core.jobs.constants import (
+    JOB_CANCELLED,
+    JOB_FAILED,
+    JOB_FINISHED,
+    JOB_PENDING,
+)
 from baserow.core.jobs.models import Job
 from baserow.core.jobs.registries import job_type_registry
 
-VALID_JOB_STATES = [JOB_PENDING, JOB_FINISHED, JOB_FAILED]
+VALID_JOB_STATES = [
+    JOB_PENDING,
+    JOB_FINISHED,
+    JOB_FAILED,
+    JOB_CANCELLED,
+]
 
 
 class JobSerializer(serializers.ModelSerializer):

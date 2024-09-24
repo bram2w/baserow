@@ -1,7 +1,7 @@
 import JobService from '@baserow/modules/core/services/job'
 import _ from 'lodash'
 
-const FINISHED_STATES = ['finished', 'failed']
+const FINISHED_STATES = ['finished', 'failed', 'cancelled']
 const STARTING_TIMEOUT_MS = 200
 const MAX_POLLING_ATTEMPTS = 100
 
@@ -180,6 +180,18 @@ export const actions = {
   create({ dispatch }, job) {
     dispatch('forceCreate', job)
     dispatch('tryScheduleNextUpdate')
+  },
+
+  /**
+   * Cancels a scheduled or running job.
+   */
+  async cancel({ dispatch, commit }, job) {
+    try {
+      const { data } = await JobService(this.$client).cancel(job.id)
+      commit('UPDATE_ITEM', { id: data.id, values: data })
+    } finally {
+      await dispatch('tryScheduleNextUpdate')
+    }
   },
   /**
    * Forcefully create an item in the store without making a call to the server.

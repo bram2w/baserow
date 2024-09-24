@@ -522,6 +522,8 @@
     "stateStarted": "Started...",
     "stateFinished": "Finished",
     "stateFailed": "Failed",
+    "errorJobCannotBeCancelledTitle": "Could not cancel",
+    "errorJobCannotBeCancelledDescription": "It’s not possible to cancel the job as it has already been completed.\nPlease delete the first snapshot in the list below to remove it.",
     "errorJobAlreadyRunningTitle": "Already running",
     "errorJobAlreadyRunningDescription": "Another import job is already running. You need to wait for that one to finish before starting another."
   },

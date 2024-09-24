@@ -23,40 +23,64 @@
       <CreateSnapshotForm
         v-if="!limitReached"
         ref="form"
+        :application-name="application.name"
         :snapshots="snapshots"
         @submitted="submitted"
       >
         <template v-if="jobIsRunning || jobHasSucceeded" #input>
-          <ProgressBar
-            :value="job.progress_percentage"
-            :status="jobHumanReadableState"
-          />
+          <div class="margin-right-2">
+            <ProgressBar
+              :value="job.progress_percentage"
+              :status="jobHumanReadableState"
+            />
+          </div>
         </template>
         <template #default>
           <Button
             v-if="!createFinished"
             size="large"
             :loading="createLoading"
-            :disabled="createLoading"
+            :disabled="createLoading || snapshotsLoading"
           >
             {{ $t('snapshotsModal.create') }}
           </Button>
           <Button v-else type="secondary" tag="a" size="large" @click="reset()">
-            {{ $t('snapshotsModal.reset') }}</Button
+            {{ $t('snapshotsModal.reset') }}
+          </Button>
+        </template>
+        <template #cancel-action>
+          <ButtonText
+            v-if="jobIsRunning || cancelLoading"
+            tag="a"
+            type="secondary"
+            class="snapshots-modal__cancel-button"
+            :loading="cancelLoading"
+            @click="cancelJob(job.id)"
           >
+            {{ $t('snapshotsModal.cancel') }}
+          </ButtonText>
         </template>
       </CreateSnapshotForm>
       <div v-else>
         {{ $t('snapshotsModal.limitReached') }}
       </div>
-      <div v-if="snapshotsLoading" class="loading"></div>
-      <div v-if="snapshots.length > 0" class="snapshots-modal__list">
-        <SnapshotListItem
-          v-for="snapshot in snapshots"
-          :key="snapshot.id"
-          :snapshot="snapshot"
-          @snapshot-deleted="snapshotDeleted"
-        ></SnapshotListItem>
+      <div class="snapshots-modal__list">
+        <div
+          v-if="snapshotsLoading"
+          class="loading snapshots-modal__list--loading"
+        ></div>
+        <div v-else-if="snapshots.length > 0">
+          <SnapshotListItem
+            v-for="snapshot in snapshots"
+            ref="snapshotsList"
+            :key="snapshot.id"
+            :snapshot="snapshot"
+            @snapshot-deleted="snapshotDeleted"
+          ></SnapshotListItem>
+        </div>
+        <div v-else>
+          {{ $t('snapshotsModal.noSnapshots') }}
+        </div>
       </div>
     </div>
   </Modal>
@@ -68,8 +92,8 @@ import error from '@baserow/modules/core/mixins/error'
 import CreateSnapshotForm from '@baserow/modules/core/components/snapshots/CreateSnapshotForm'
 import SnapshotListItem from '@baserow/modules/core/components/snapshots/SnapshotListItem'
 import SnapshotsService from '@baserow/modules/core/services/snapshots'
-import jobProgress from '@baserow/modules/core/mixins/jobProgress'
-import { notifyIf } from '@baserow/modules/core/utils/error'
+import job from '@baserow/modules/core/mixins/job'
+import { CreateSnapshotJobType } from '@baserow/modules/core/jobTypes'
 
 export default {
   name: 'SnapshotsModal',
@@ -77,7 +101,7 @@ export default {
     CreateSnapshotForm,
     SnapshotListItem,
   },
-  mixins: [modal, error, jobProgress],
+  mixins: [modal, error, job],
   props: {
     application: {
       type: Object,
@@ -112,9 +136,6 @@ export default {
         .filter((component) => component !== null)
     },
   },
-  beforeDestroy() {
-    this.stopPollIfRunning()
-  },
   methods: {
     show(...args) {
       this.hideError()
@@ -125,55 +146,84 @@ export default {
       this.createLoading = true
       this.hideError()
       try {
-        const { data } = await SnapshotsService(this.$client).create(
+        const { data: job } = await SnapshotsService(this.$client).create(
           this.application.id,
           values
         )
-        this.startJobPoller(data)
+        this.job = job
+        await this.createAndMonitorJob(job)
       } catch (error) {
         this.createLoading = false
         this.handleError(error)
       }
     },
-    async onJobDone() {
+    onJobDone() {
       this.createLoading = false
       this.createFinished = true
-      await this.loadSnapshots()
+      if (
+        this.job.snapshot &&
+        this.job.type === CreateSnapshotJobType.getType()
+      ) {
+        this.snapshots.unshift(this.job.snapshot)
+        this.refreshSnapshots()
+      }
     },
-    // eslint-disable-next-line require-await
-    async onJobFailed() {
+    onJobFailed() {
       this.createLoading = false
       this.showError(
         this.$t('clientHandler.notCompletedTitle'),
         this.job.human_readable_error
       )
     },
-    // eslint-disable-next-line require-await
-    async onJobPollingError(error) {
+    onJobCancelled() {
       this.createLoading = false
-      notifyIf(error)
+    },
+    /**
+     * This should be called if .snapshots list was changed without an API call issued.
+     *
+     * Each SnapshotListItem displays time elapsed from snapshot's creation. When an
+     * item is added to snapshots list, only that element will be freshly rendered.
+     * Other items won't recalculate time elapsed, so we need to do a force refresh
+     * from the parent component.
+     */
+    refreshSnapshots() {
+      this.$forceUpdate()
     },
     async loadSnapshots() {
       this.snapshotsLoading = true
-      this.snapshots = []
+
       try {
-        const { data } = await SnapshotsService(this.$client).list(
+        const { data: snapshots } = await SnapshotsService(this.$client).list(
           this.application.id
         )
-        this.snapshots = data
+        this.snapshots = snapshots
       } catch (error) {
         this.handleError(error)
       } finally {
         this.snapshotsLoading = false
       }
+      this.loadRunningJob()
     },
     snapshotDeleted(deletedSnapshot) {
       this.snapshots = this.snapshots.filter(
         (snapshot) => snapshot.id !== deletedSnapshot.id
       )
     },
+    loadRunningJob() {
+      const runningJob = this.$store.getters['job/getUnfinishedJobs'].find(
+        (job) => {
+          return (
+            job.type === CreateSnapshotJobType.getType() &&
+            job.snapshot.snapshot_from_application === this.application.id
+          )
+        }
+      )
+      if (runningJob) {
+        this.job = runningJob
+        this.createLoading = true
+      }
+    },
     reset() {
-      this.stopPollIfRunning()
       this.job = null
       this.createFinished = false
       this.createLoading = false

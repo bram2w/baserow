@@ -7,7 +7,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from django.db.models import Q, UniqueConstraint
+from django.db.models import Q, QuerySet, UniqueConstraint
+from django.db.models.manager import BaseManager
 
 from baserow.core.jobs.mixins import (
     JobWithUndoRedoIds,
@@ -51,7 +52,6 @@ __all__ = [
     "Notification",
     "BlacklistedToken",
 ]
-
 
 User = get_user_model()
 
@@ -583,6 +583,31 @@ class DuplicateApplicationJob(
     )
 
 
+class SnapshotManager(BaseManager.from_queryset(QuerySet)):
+    def restorable(self) -> QuerySet:
+        """
+        Returns a queryset with Snapshots that can be restored.
+
+        :return: A queryset with Snapshots that can be restored.
+        """
+
+        return self.get_queryset().filter(
+            snapshot_to_application__isnull=False, mark_for_deletion=False
+        )
+
+    def unusable(self) -> QuerySet:
+        """
+        Returns a queryset with Snapshots that cannot be restored.
+
+        :returns: A queryset with Snapshots that cannot be restored because they are
+            either not associated with an application or are marked for deletion.
+        """
+
+        return self.get_queryset().filter(
+            Q(snapshot_to_application__isnull=True) | Q(mark_for_deletion=True)
+        )
+
+
 class Snapshot(HierarchicalModelMixin, models.Model):
     name = models.CharField(max_length=160)
     snapshot_from_application = models.ForeignKey(
@@ -595,11 +620,10 @@ class Snapshot(HierarchicalModelMixin, models.Model):
     created_by = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        unique_together = ("name", "snapshot_from_application")
-
     def get_parent(self):
         return self.snapshot_from_application
+
+    objects = SnapshotManager()
 
 
 class InstallTemplateJob(

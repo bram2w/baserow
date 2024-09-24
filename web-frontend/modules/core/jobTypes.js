@@ -234,3 +234,23 @@ export class InstallTemplateJobType extends JobType {
     await this.app.store.dispatch('job/forceDelete', job)
   }
 }
+
+export class CreateSnapshotJobType extends JobType {
+  static getType() {
+    return 'create_snapshot'
+  }
+
+  getName() {
+    return 'createSnapshot'
+  }
+}
+
+export class RestoreSnapshotJobType extends JobType {
+  static getType() {
+    return 'restore_snapshot'
+  }
+
+  getName() {
+    return 'restoreSnapshot'
+  }
+}

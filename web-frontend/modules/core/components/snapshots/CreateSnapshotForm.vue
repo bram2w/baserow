@@ -21,6 +21,7 @@
         <slot></slot>
       </template>
     </FormGroup>
+    <slot name="cancel-action"></slot>
   </form>
 </template>
 
@@ -33,6 +34,10 @@ export default {
   name: 'CreateSnapshotForm',
   mixins: [form],
   props: {
+    applicationName: {
+      type: String,
+      required: true,
+    },
     snapshots: {
       type: Array,
       required: true,
@@ -47,8 +52,8 @@ export default {
   },
   methods: {
     getDefaultName() {
-      const datetime = moment().utc().format('YYYY-MM-DD HH:mm')
-      return `${this.$t('snapshotsModal.snapshot')} ${datetime} UTC`
+      const datetime = moment().format('YYYY-MM-DD HH:mm:ss')
+      return `${this.applicationName} - ${datetime}`
     },
     resetName() {
       this.values.name = this.getDefaultName()
