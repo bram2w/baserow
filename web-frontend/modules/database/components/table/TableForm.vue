@@ -1,7 +1,6 @@
 <template>
   <form @submit.prevent="submit">
     <FormGroup
-      v-if="creation"
       :error="fieldHasErrors('name')"
       required
       small-label
@@ -15,7 +14,6 @@
         v-model="values.name"
         size="large"
         :error="fieldHasErrors('name')"
-        :disabled="!creation"
         @focus.once="$event.target.select()"
         @blur="$v.values.name.$touch()"
       >
@@ -42,34 +40,24 @@ export default {
       required: false,
       default: '',
     },
-    creation: {
-      type: Boolean,
-      required: false,
-      default: true,
-    },
   },
   data() {
     return {
+      allowedValues: ['name'],
       values: {
         name: this.defaultName,
       },
     }
   },
   mounted() {
-    if (this.creation) {
-      this.$refs.name.focus()
-    }
+    this.$refs.name.focus()
   },
   validations: {
     values: {
       name: {
         // No object-shorthand here to access vm properties
-
         required: function (value) {
-          if (this.creation) {
-            return required(value)
-          }
-          return true
+          return required(value)
         },
       },
     },

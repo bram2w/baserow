@@ -466,6 +466,13 @@ export class ViewType extends Registerable {
   getSharedViewText() {
     return this.app.i18n.t('shareViewLink.shareViewText')
   }
+
+  /**
+   * Indicates whether the view is compatible with a data sync.
+   */
+  isCompatibleWithDataSync(dataSync) {
+    return true
+  }
 }
 
 export class GridViewType extends ViewType {
@@ -1169,5 +1176,13 @@ export class FormViewType extends ViewType {
 
   getInitialFieldOptionsForView(view) {
     return null
+  }
+
+  /**
+   * It's not possible to create rows in a data sync table, so there is no point in
+   * letting the user create one.
+   */
+  isCompatibleWithDataSync(dataSync) {
+    return false
   }
 }

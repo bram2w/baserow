@@ -67,7 +67,10 @@
   },
   "sidebarItem": {
     "exportTable": "Export table",
-    "webhooks": "Webhooks"
+    "webhooks": "Webhooks",
+    "lastSynced": "Last synced",
+    "notSynced": "not synced",
+    "sync": "Sync table"
   },
   "duplicateTableJobType": {
     "duplicating": "Duplicating",
@@ -395,27 +398,37 @@
     "firstRowHeader": "First row is header",
     "limitError": "It is not possible to import more than {limit} rows."
   },
-  "importFileModal": {
+  "createTableModal": {
     "title": "Create new table",
     "defaultName": "Table",
-    "changeImporterType": "Change import type",
+    "importLabel": "Would you like to import existing data?",
+    "newTable": "Start with a new table"
+  },
+  "createTable": {
+    "showTable": "show table",
+    "addButton": "Add table",
+    "uploading": "Uploading...",
+    "preparing": "Preparing data...",
+    "importError": "Something went wrong during the file import",
+    "stateRowCreation": "Importing...",
+    "statePreValidation": "Validating data...",
+    "stateCreateTable": "Creating table..."
+  },
+  "importErrorReport": {
+    "reportTitleFailure": "Failing rows",
+    "reportTitleSuccess": "Import successful but...",
+    "reportMessage": "The following row indexes couldn't be imported:"
+  },
+  "importFileModal": {
+    "defaultName": "Table",
     "additionalImportTitle": "Import into {table}",
     "importLabel": "Would you like to import existing data?",
     "newTable": "Start with a new table",
-    "addButton": "Add table",
     "showTable": "show table",
     "importButton": "Import",
     "uploading": "Uploading...",
     "preparing": "Preparing data...",
     "importError": "Something went wrong during the file import",
-    "openCreatedTable": "Open created table",
-    "showReport": "Show error report",
-    "reportTitleFailure": "Failing rows",
-    "reportTitleSuccess": "Import successful but...",
-    "reportMessage": "The following row indexes couldn't be imported:",
-    "stateRowCreation": "Importing...",
-    "statePreValidation": "Validating data...",
-    "stateCreateTable": "Creating table...",
     "fieldMappingTitle": "Field mapping",
     "fieldMappingDescription": "We have automatically mapped the columns of the Baserow fields in your table. You can change them below. Any incompatible cell will remain empty after the import.",
     "selectImportMessage": "Please select data to import.",
@@ -478,6 +491,9 @@
   "createViewModal": {
     "createNew": "Create new {view}",
     "add": "Add {view}"
+  },
+  "createViewLink": {
+    "inCompatibleWithDataSync": "This view type is not compatible with a data sync table."
   },
   "shareViewLink": {
     "shareViewText": "Private shareable link allows anyone to see the data in this view.",
@@ -592,7 +608,8 @@
     "createFilter": "Create filter",
     "duplicate": "Duplicate field",
     "sortField": "Sort",
-    "hideField": "Hide field"
+    "hideField": "Hide field",
+    "dataSyncField": "The field is read only and part of the table's data sync."
   },
   "gridViewRow": {
     "rowNotMatchingFilters": "Row does not match filters",
@@ -953,5 +970,24 @@
   "ViewFilterTypeDateUpgradeToMultiStep": {
     "migrateButtonText": "Migrate to multi-step date filter",
     "migrateButtonTooltip": "New filter available. Click to upgrade. It works the same."
+  },
+  "dataSyncType": {
+    "icalCalendar": "Sync iCal feed"
+  },
+  "iCalCalendarDataSync": {
+    "name": "iCal URL",
+    "description": "The iCal calendar sync, synchronizes automatically with the entries in the calendar file of the URL. It only supports the ICS (Internet Calendar and Scheduling) file type."
+  },
+  "createDataSync": {
+    "next": "Next",
+    "fields": "Select the fields you would like to sync",
+    "create": "Create and sync table",
+    "error": "Something went wrong during the sync"
+  },
+  "syncTableModal": {
+    "title": "Sync {name}",
+    "description": "This table is linked to a data sync. When you click the sync button, the data will be synchronized with the source. During this process, a lock is placed on the updated rows, which may temporarily slow down API requests or table modifications.",
+    "sync": "Sync table",
+    "hide": "Hide"
   }
 }

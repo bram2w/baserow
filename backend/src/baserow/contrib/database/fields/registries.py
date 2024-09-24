@@ -899,6 +899,9 @@ class FieldType(
             "name": field.name,
             "order": field.order,
             "primary": field.primary,
+            "read_only": field.read_only,
+            "immutable_type": field.immutable_type,
+            "immutable_properties": field.immutable_properties,
         }
 
         if include_allowed_fields:

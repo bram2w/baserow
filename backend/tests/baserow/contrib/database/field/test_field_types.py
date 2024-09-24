@@ -51,6 +51,41 @@ def test_import_export_text_field(data_fixture):
 
 
 @pytest.mark.django_db
+def test_import_export_immutable_field(data_fixture):
+    id_mapping = {}
+
+    text_field = data_fixture.create_text_field(
+        name="Text name",
+        text_default="Text default",
+        read_only=True,
+        immutable_type=True,
+        immutable_properties=True,
+    )
+    text_field_type = field_type_registry.get_by_model(text_field)
+    text_serialized = text_field_type.export_serialized(text_field)
+    text_field_imported = text_field_type.import_serialized(
+        text_field.table,
+        text_serialized,
+        ImportExportConfig(include_permission_data=True),
+        id_mapping,
+        DeferredForeignKeyUpdater(),
+    )
+    assert text_field.id != text_field_imported.id
+    assert text_field.name == text_field_imported.name
+    assert text_field.order == text_field_imported.order
+    assert text_field.primary == text_field_imported.primary
+    assert text_field.text_default == text_field_imported.text_default
+    assert text_field.immutable_type is text_field_imported.immutable_type is True
+    assert (
+        text_field.immutable_properties
+        is text_field_imported.immutable_properties
+        is True
+    )
+    assert text_field.read_only == text_field_imported.read_only is True
+    assert id_mapping["database_fields"][text_field.id] == text_field_imported.id
+
+
+@pytest.mark.django_db
 def test_import_export_formula_field(data_fixture, api_client):
     user, token = data_fixture.create_user_and_token()
     first_table = data_fixture.create_database_table(user=user)

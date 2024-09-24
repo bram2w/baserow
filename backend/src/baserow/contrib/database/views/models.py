@@ -742,7 +742,9 @@ class FormView(View):
     @property
     def active_field_options(self):
         return (
-            FormViewFieldOptions.objects.filter(form_view=self, enabled=True)
+            FormViewFieldOptions.objects.filter(
+                form_view=self, enabled=True, field__read_only=False
+            )
             .select_related("field")
             .prefetch_related("conditions", "condition_groups")
             .order_by("order")

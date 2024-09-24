@@ -180,6 +180,10 @@ export class ClientErrorMap {
         app.i18n.t('clientHandler.incompatiblePrimaryFieldTypeTitle'),
         app.i18n.t('clientHandler.incompatiblePrimaryFieldTypeDescription')
       ),
+      ERROR_CANNOT_CREATE_ROWS_IN_TABLE: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.cannotCreateRowsInTableTitle'),
+        app.i18n.t('clientHandler.cannotCreateRowsInTableDescription')
+      ),
     }
   }
 

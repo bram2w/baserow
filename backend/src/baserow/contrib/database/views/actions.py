@@ -15,6 +15,7 @@ from baserow.contrib.database.action.scopes import (
 from baserow.contrib.database.fields.exceptions import FieldDoesNotExist
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
+from baserow.contrib.database.rows.exceptions import CannotCreateRowsInTable
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import GeneratedTableModel, Table
 from baserow.contrib.database.views.exceptions import ViewDoesNotExist, ViewNotInTable
@@ -2275,6 +2276,11 @@ class SubmitFormActionType(ActionType):
             not provided, the field options will be fetched from the form view.
         :return: The created row instance.
         """
+
+        if hasattr(form.table, "data_sync") and form.table.data_sync is not None:
+            raise CannotCreateRowsInTable(
+                "Can't create rows because it has a data sync."
+            )
 
         if model is None:
             model = form.table.get_model()

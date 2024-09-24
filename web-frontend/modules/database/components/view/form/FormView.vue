@@ -97,12 +97,16 @@ export default {
     },
     disabledFields() {
       return this.sortedFields.filter((field) => {
-        return !this.getFieldOption(field.id, 'enabled', false)
+        return (
+          !this.getFieldOption(field.id, 'enabled', false) || field.read_only
+        )
       })
     },
     enabledFields() {
       return this.sortedFields.filter((field) => {
-        return this.getFieldOption(field.id, 'enabled', false)
+        return (
+          this.getFieldOption(field.id, 'enabled', false) && !field.read_only
+        )
       })
     },
   },

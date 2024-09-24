@@ -426,6 +426,17 @@ export default {
         return
       }
 
+      // If the field is read_only, it's not possible to move between stacks because
+      // they would change the read_only value.
+      if (this.singleSelectField.read_only) {
+        const target = this.$store.getters[
+          this.storePrefix + 'view/kanban/findStackIdAndIndex'
+        ](row.id)
+        if (target[0] !== this.draggingOriginalStackId) {
+          return
+        }
+      }
+
       const rect = event.target.getBoundingClientRect()
       const top = event.clientY - rect.top
       const half = rect.height / 2

@@ -234,7 +234,10 @@ export default {
     withoutReadOnly() {
       return Object.fromEntries(
         Object.entries(this.fieldData).map(([key, fields]) => {
-          return [key, fields.filter((field) => !field._.isReadOnly)]
+          return [
+            key,
+            fields.filter((field) => !field._.isReadOnly && !field.read_only),
+          ]
         })
       )
     },

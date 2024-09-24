@@ -342,7 +342,12 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         # field type.
         field_type = field_type_registry.get(type_name)
         model_class = field_type.model_class
-        allowed_fields = ["name"] + field_type.allowed_fields
+        allowed_fields = [
+            "name",
+            "read_only",
+            "immutable_type",
+            "immutable_properties",
+        ] + field_type.allowed_fields
         field_values = extract_allowed(kwargs, allowed_fields)
         last_order = model_class.get_last_order(table)
 
@@ -526,7 +531,13 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         else:
             to_field_type = from_field_type
 
-        allowed_fields = ["name", "description"] + to_field_type.allowed_fields
+        allowed_fields = [
+            "name",
+            "description",
+            "read_only",
+            "immutable_type",
+            "immutable_properties",
+        ] + to_field_type.allowed_fields
         field_values = extract_allowed(kwargs, allowed_fields)
 
         if field.primary and not to_field_type.can_be_primary_field(field_values):
@@ -789,8 +800,16 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             [serialized_field.pop("name")],
         )
 
-        # remove properties that are unqiue to the field
-        for key in ["id", "order", "primary"]:
+        # Remove properties that are unqiue to the field and that must be persistent
+        # when copying.
+        for key in [
+            "id",
+            "order",
+            "primary",
+            "read_only",
+            "immutable_type",
+            "immutable_properties",
+        ]:
             serialized_field.pop(key, None)
 
         new_field, updated_fields = self.create_field(
@@ -881,6 +900,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             field_id=field.id,
             field=field,
             user=user,
+            allow_deleting_primary=allow_deleting_primary,
         )
 
         FieldDependencyHandler.break_dependencies_delete_dependants(field)

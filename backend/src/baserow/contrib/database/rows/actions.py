@@ -10,6 +10,10 @@ from baserow.contrib.database.action.scopes import (
     TABLE_ACTION_CONTEXT,
     TableActionScopeType,
 )
+from baserow.contrib.database.rows.exceptions import (
+    CannotCreateRowsInTable,
+    CannotDeleteRowsInTable,
+)
 from baserow.contrib.database.rows.handler import (
     GeneratedTableModelForUpdate,
     RowHandler,
@@ -74,6 +78,11 @@ class CreateRowActionType(UndoableActionType):
             Baserow field name (field_1,field_2 etc) or by the user field names.
         :return: The created row instance.
         """
+
+        if hasattr(table, "data_sync") and table.data_sync is not None:
+            raise CannotCreateRowsInTable(
+                "Can't create rows because it has a data sync."
+            )
 
         row = RowHandler().create_row(
             user,
@@ -157,6 +166,11 @@ class CreateRowsActionType(UndoableActionType):
         :return: The created list of rows instances.
         """
 
+        if hasattr(table, "data_sync") and table.data_sync is not None:
+            raise CannotCreateRowsInTable(
+                "Can't create rows because it has a data sync."
+            )
+
         rows = RowHandler().create_rows(
             user, table, rows_values, before_row=before_row, model=model
         )
@@ -237,6 +251,11 @@ class ImportRowsActionType(UndoableActionType):
         :param progress: An optional progress object to track the task progress.
         :return: The created list of rows instances and the error report.
         """
+
+        if hasattr(table, "data_sync") and table.data_sync is not None:
+            raise CannotCreateRowsInTable(
+                "Can't create rows because it has a data sync."
+            )
 
         created_rows, error_report = RowHandler().import_rows(
             user, table, data, progress=progress
@@ -319,6 +338,11 @@ class DeleteRowActionType(UndoableActionType):
         :raises RowDoesNotExist: When the row with the provided id does not exist.
         """
 
+        if hasattr(table, "data_sync") and table.data_sync is not None:
+            raise CannotDeleteRowsInTable(
+                "Can't delete rows because it has a data sync."
+            )
+
         RowHandler().delete_row_by_id(user, table, row_id, model=model)
 
         database = table.database
@@ -385,6 +409,11 @@ class DeleteRowsActionType(UndoableActionType):
             provided so that it does not have to be generated for a second time.
         :raises RowDoesNotExist: When the row with the provided id does not exist.
         """
+
+        if hasattr(table, "data_sync") and table.data_sync is not None:
+            raise CannotDeleteRowsInTable(
+                "Can't delete rows because it has a data sync."
+            )
 
         trashed_rows_entry = RowHandler().delete_rows(user, table, row_ids, model=model)
 

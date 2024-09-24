@@ -137,18 +137,22 @@ describe('Table Component Tests', () => {
         name: 'Name',
         type: 'text',
         primary: true,
+        read_only: false,
       },
       {
         name: 'Last name',
         type: 'text',
+        read_only: false,
       },
       {
         name: 'Notes',
         type: 'long_text',
+        read_only: false,
       },
       {
         name: 'Active',
         type: 'boolean',
+        read_only: false,
       },
     ])
 

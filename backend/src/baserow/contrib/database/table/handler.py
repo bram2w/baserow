@@ -379,7 +379,9 @@ class TableHandler(metaclass=baserow_trace_methods(tracer)):
             base_queryset = Table.objects
 
         try:
-            table = base_queryset.select_related("database__workspace").get(id=table_id)
+            table = base_queryset.select_related(
+                "database__workspace", "data_sync"
+            ).get(id=table_id)
         except Table.DoesNotExist:
             raise TableDoesNotExist(f"The table with id {table_id} does not exist.")
 

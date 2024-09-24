@@ -14,6 +14,11 @@ ERROR_FORM_VIEW_FIELD_TYPE_IS_NOT_SUPPORTED = (
     HTTP_400_BAD_REQUEST,
     "The {e.field_type} field type is not compatible with the form view.",
 )
+ERROR_FORM_VIEW_READ_ONLY_FIELD_IS_NOT_SUPPORTED = (
+    "ERROR_FORM_VIEW_READ_ONLY_FIELD_IS_NOT_SUPPORTED",
+    HTTP_400_BAD_REQUEST,
+    "The {e.field_name} field is read only and not compatible with the form view.",
+)
 ERROR_NO_PERMISSION_TO_PUBLICLY_SHARED_FORM = (
     "ERROR_NO_PERMISSION_TO_PUBLICLY_SHARED_FORM",
     HTTP_401_UNAUTHORIZED,

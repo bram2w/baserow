@@ -60,6 +60,7 @@ from baserow.contrib.builder.workflow_actions.operations import (
 from baserow.contrib.database.airtable.operations import (
     RunAirtableImportJobOperationType,
 )
+from baserow.contrib.database.data_sync.operations import SyncTableOperationType
 from baserow.contrib.database.export.operations import ExportTableOperationType
 from baserow.contrib.database.fields.operations import (
     CreateFieldOperationType,
@@ -431,6 +432,7 @@ default_roles[BUILDER_ROLE_UID].extend(
         OrderDomainsBuilderOperationType,
         UpdateBuilderWorkflowActionOperationType,
         OrderBuilderWorkflowActionOperationType,
+        SyncTableOperationType,
     ]
 )
 default_roles[ADMIN_ROLE_UID].extend(

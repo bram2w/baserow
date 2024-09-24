@@ -206,6 +206,24 @@ def test_batch_create_rows_field_validation(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_cannot_batch_create_rows_with_data_sync(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    data_fixture.create_ical_data_sync(table=table)
+
+    url = reverse("api:database:rows:batch", kwargs={"table_id": table.id})
+    request_body = {"items": [{}]}
+    response = api_client.post(
+        url,
+        request_body,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_CANNOT_CREATE_ROWS_IN_TABLE"
+
+
+@pytest.mark.django_db
 @pytest.mark.api_rows
 def test_batch_create_rows(api_client, data_fixture):
     user, jwt_token = data_fixture.create_user_and_token()
@@ -609,6 +627,36 @@ def test_batch_create_rows_dependent_fields(api_client, data_fixture):
 
     assert response.status_code == HTTP_200_OK
     assert is_dict_subset(expected_response_body, response.json())
+
+
+@pytest.mark.django_db
+def test_batch_create_rows_with_read_only_field(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(
+        table=table, order=0, name="Color", text_default="", read_only=True
+    )
+
+    url = reverse("api:database:rows:batch", kwargs={"table_id": table.id})
+    response = api_client.post(
+        url,
+        {
+            "items": [
+                {
+                    f"field_{text_field.id}": "Green",
+                }
+            ]
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json_row_1 = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json_row_1["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert (
+        response_json_row_1["detail"]["items"]["0"][f"field_{text_field.id}"][0]["code"]
+        == "read_only"
+    )
 
 
 @pytest.mark.django_db
@@ -1028,6 +1076,40 @@ def test_batch_update_rows_repeated_row_ids(api_client, data_fixture):
     assert (
         response.json()["detail"]
         == f"The provided row ids {str([repeated_row_id])} are not unique."
+    )
+
+
+@pytest.mark.django_db
+def test_batch_update_rows_with_read_only_field(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(
+        table=table, order=0, name="Color", text_default="", read_only=True
+    )
+
+    model = table.get_model()
+    row_1 = model.objects.create()
+
+    url = reverse("api:database:rows:batch", kwargs={"table_id": table.id})
+    response = api_client.patch(
+        url,
+        {
+            "items": [
+                {
+                    "id": row_1.id,
+                    f"field_{text_field.id}": "Green",
+                }
+            ]
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json_row_1 = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json_row_1["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert (
+        response_json_row_1["detail"]["items"]["0"][f"field_{text_field.id}"][0]["code"]
+        == "read_only"
     )
 
 
@@ -1959,6 +2041,27 @@ def test_batch_delete_rows_trash_them(api_client, data_fixture):
     assert getattr(row_1, "trashed") is True
     assert getattr(row_2, "trashed") is True
     assert getattr(row_3, "trashed") is False
+
+
+@pytest.mark.django_db
+def test_cannot_batch_delete_rows_with_data_sync(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    data_fixture.create_ical_data_sync(table=table)
+
+    model = table.get_model()
+    row_1 = model.objects.create()
+    url = reverse("api:database:rows:batch-delete", kwargs={"table_id": table.id})
+    request_body = {"items": [row_1.id]}
+
+    response = api_client.post(
+        url,
+        request_body,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_CANNOT_DELETE_ROWS_IN_TABLE"
 
 
 @pytest.mark.django_db

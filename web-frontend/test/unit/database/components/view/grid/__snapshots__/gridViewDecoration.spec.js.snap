@@ -191,9 +191,15 @@ exports[`GridView component with decoration Default component with first_cell de
           <div
             class="grid-view__description"
           >
-            <i
-              class="grid-view__description-icon iconoir-text"
-            />
+            <div
+              class="grid-view__description-icon-container"
+            >
+              <i
+                class="grid-view__description-icon iconoir-text"
+              />
+               
+              <!---->
+            </div>
              
             <div
               class="grid-view__description-name"
@@ -236,9 +242,15 @@ exports[`GridView component with decoration Default component with first_cell de
           <div
             class="grid-view__description"
           >
-            <i
-              class="grid-view__description-icon iconoir-text"
-            />
+            <div
+              class="grid-view__description-icon-container"
+            >
+              <i
+                class="grid-view__description-icon iconoir-text"
+              />
+               
+              <!---->
+            </div>
              
             <div
               class="grid-view__description-name"
@@ -281,9 +293,15 @@ exports[`GridView component with decoration Default component with first_cell de
           <div
             class="grid-view__description"
           >
-            <i
-              class="grid-view__description-icon iconoir-text"
-            />
+            <div
+              class="grid-view__description-icon-container"
+            >
+              <i
+                class="grid-view__description-icon iconoir-text"
+              />
+               
+              <!---->
+            </div>
              
             <div
               class="grid-view__description-name"
@@ -643,9 +661,15 @@ exports[`GridView component with decoration Default component with row wrapper d
           <div
             class="grid-view__description"
           >
-            <i
-              class="grid-view__description-icon iconoir-text"
-            />
+            <div
+              class="grid-view__description-icon-container"
+            >
+              <i
+                class="grid-view__description-icon iconoir-text"
+              />
+               
+              <!---->
+            </div>
              
             <div
               class="grid-view__description-name"
@@ -688,9 +712,15 @@ exports[`GridView component with decoration Default component with row wrapper d
           <div
             class="grid-view__description"
           >
-            <i
-              class="grid-view__description-icon iconoir-text"
-            />
+            <div
+              class="grid-view__description-icon-container"
+            >
+              <i
+                class="grid-view__description-icon iconoir-text"
+              />
+               
+              <!---->
+            </div>
              
             <div
               class="grid-view__description-name"
@@ -733,9 +763,15 @@ exports[`GridView component with decoration Default component with row wrapper d
           <div
             class="grid-view__description"
           >
-            <i
-              class="grid-view__description-icon iconoir-text"
-            />
+            <div
+              class="grid-view__description-icon-container"
+            >
+              <i
+                class="grid-view__description-icon iconoir-text"
+              />
+               
+              <!---->
+            </div>
              
             <div
               class="grid-view__description-name"
@@ -1098,9 +1134,15 @@ exports[`GridView component with decoration Default component with unavailable d
           <div
             class="grid-view__description"
           >
-            <i
-              class="grid-view__description-icon iconoir-text"
-            />
+            <div
+              class="grid-view__description-icon-container"
+            >
+              <i
+                class="grid-view__description-icon iconoir-text"
+              />
+               
+              <!---->
+            </div>
              
             <div
               class="grid-view__description-name"
@@ -1143,9 +1185,15 @@ exports[`GridView component with decoration Default component with unavailable d
           <div
             class="grid-view__description"
           >
-            <i
-              class="grid-view__description-icon iconoir-text"
-            />
+            <div
+              class="grid-view__description-icon-container"
+            >
+              <i
+                class="grid-view__description-icon iconoir-text"
+              />
+               
+              <!---->
+            </div>
              
             <div
               class="grid-view__description-name"
@@ -1188,9 +1236,15 @@ exports[`GridView component with decoration Default component with unavailable d
           <div
             class="grid-view__description"
           >
-            <i
-              class="grid-view__description-icon iconoir-text"
-            />
+            <div
+              class="grid-view__description-icon-container"
+            >
+              <i
+                class="grid-view__description-icon iconoir-text"
+              />
+               
+              <!---->
+            </div>
              
             <div
               class="grid-view__description-name"
