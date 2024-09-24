@@ -426,6 +426,65 @@ def test_local_baserow_upsert_row_service_dispatch_data_incompatible_value(
 
 
 @pytest.mark.django_db
+def test_local_baserow_upsert_row_service_dispatch_data_convert_value(data_fixture):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+    database = data_fixture.create_database_application(
+        workspace=page.builder.workspace
+    )
+    related_table = data_fixture.create_database_table(user=user, database=database)
+    related_table_model = related_table.get_model(attribute_names=True)
+    related_table_model.objects.create()
+    table = TableHandler().create_table_and_fields(
+        user=user,
+        database=database,
+        name=data_fixture.fake.name(),
+        fields=[
+            ("boolean", "boolean", {}),
+            ("text", "text", {}),
+            ("array", "link_row", {"link_row_table": related_table}),
+        ],
+    )
+
+    service = data_fixture.create_local_baserow_upsert_row_service(
+        table=table,
+        integration=integration,
+    )
+    service_type = service.get_type()
+
+    service.field_mappings.create(
+        field=table.field_set.get(name="boolean"), value="'true'"
+    )
+    service.field_mappings.create(
+        field=table.field_set.get(name="text"), value="'text'"
+    )
+    service.field_mappings.create(field=table.field_set.get(name="array"), value="1")
+
+    dispatch_context = FakeDispatchContext()
+    dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
+    dispatch_data = service_type.dispatch_data(
+        service, dispatch_values, dispatch_context
+    )
+    serialized_row = service_type.dispatch_transform(dispatch_data)
+
+    assert dict(serialized_row) == {
+        "id": 1,
+        "order": "1.00000000000000000000",
+        # The string 'true' was converted to a boolean value
+        table.field_set.get(name="boolean").db_column: True,
+        # The string 'text' is unchanged
+        table.field_set.get(name="text").db_column: "text",
+        # The string '1' is converted to a list with a single item
+        table.field_set.get(name="array").db_column: [
+            {"id": 1, "value": "unnamed row 1"}
+        ],
+    }
+
+
+@pytest.mark.django_db
 def test_local_baserow_upsert_row_service_resolve_service_formulas(
     data_fixture,
 ):
