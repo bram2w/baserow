@@ -230,7 +230,7 @@ def test_newly_created_gallery_view(data_fixture):
         .order_by("field_id")
         .values_list("hidden", flat=True)
     )
-    assert list(all_field_options) == [False, False, False, False]
+    assert list(all_field_options) == [False, False, False, True]
 
 
 @pytest.mark.django_db
@@ -547,8 +547,10 @@ def test_import_export_view_ownership_type_not_in_registry(data_fixture):
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("view_type", ["grid", "gallery"])
-def test_new_fields_are_hidden_by_default_in_views_if_public(view_type, data_fixture):
+@pytest.mark.parametrize("view_type, default", [("grid", False), ("gallery", True)])
+def test_new_fields_are_hidden_by_default_in_views_if_public(
+    view_type, default, data_fixture
+):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     data_fixture.create_text_field(table=table)
@@ -569,39 +571,39 @@ def test_new_fields_are_hidden_by_default_in_views_if_public(view_type, data_fix
     assert len(options) == 0
     options = private_view.get_field_options(create_if_missing=True)
     assert len(options) == 1
-    assert options[0].hidden is False
+    assert options[0].hidden is default
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("view_type", ["grid", "gallery"])
+@pytest.mark.parametrize("view_type,default", [("grid", False), ("gallery", True)])
 def test_new_fields_are_hidden_by_default_in_views_if_other_fields_are_hidden(
-    view_type, data_fixture
+    view_type, default, data_fixture
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     data_fixture.create_text_field(table=table)
 
-    create_view_func = getattr(data_fixture, f"create_{view_type}_view")
-    view = create_view_func(table=table, create_options=False)
+    # let's use the handler here because options are set to visible in the view_created
+    # view type callback
+    view = ViewHandler().create_view(user, table, type_name=view_type)
 
     options = view.get_field_options(create_if_missing=True)
     assert len(options) == 1
     assert options[0].hidden is False
 
-    # If we create another field now, the new field will be visible
     data_fixture.create_text_field(table=table)
     options = view.get_field_options(create_if_missing=True)
     assert len(options) == 2
     assert options[0].hidden is False
-    assert options[1].hidden is False
+    assert options[1].hidden is default
 
     # If we hide a field, a new field will be hidden by default
-    options[0].hidden = True
-    options[0].save()
+    options[1].hidden = True
+    options[1].save()
 
     data_fixture.create_text_field(table=table)
     options = view.get_field_options(create_if_missing=True)
     assert len(options) == 3
-    assert options[0].hidden is True
-    assert options[1].hidden is False
+    assert options[0].hidden is False
+    assert options[1].hidden is True
     assert options[2].hidden is True

@@ -6,14 +6,22 @@ from zoneinfo import ZoneInfo
 from django.db.models import Count, Q, QuerySet
 
 from baserow_premium.views.exceptions import CalendarViewHasNoDateField
-from baserow_premium.views.models import OWNERSHIP_TYPE_PERSONAL
+from baserow_premium.views.models import OWNERSHIP_TYPE_PERSONAL, TimelineView
+from baserow_premium.views.view_types import TimelineViewType
+from rest_framework.request import Request
 
+from baserow.contrib.database.api.views.utils import (
+    PublicViewFilteredQuerySet,
+    get_public_view_filtered_queryset,
+    get_view_filtered_queryset,
+)
 from baserow.contrib.database.fields.models import Field, SingleSelectField
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.table.models import GeneratedTableModel
 from baserow.contrib.database.views.filters import AdHocFilters
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import View
+from baserow.contrib.database.views.registries import view_type_registry
 
 
 def get_rows_grouped_by_single_select_field(
@@ -260,6 +268,50 @@ def get_rows_grouped_by_date_field(
         rows[key]["count"] = value
 
     return rows
+
+
+def get_timeline_view_filtered_queryset(
+    view: TimelineView,
+    adhoc_filters: Optional[AdHocFilters] = None,
+    order_by: Optional[str] = None,
+    query_params: Optional[Dict[str, str]] = None,
+) -> QuerySet:
+    """
+    Checks if the provided timeline view has a valid date field and raises an exception
+    if it doesn't. If the date fields are valid, then the filtered queryset is returned.
+
+    :param view: The timeline view where to fetch the fields from.
+    :param adhoc_filters: The optional ad hoc filters if they should be used
+        instead of view filters.
+    :param order_by: The order by fields and directions.
+    :param query_params: The query parameters that can be used to filter the rows.
+    :return: The filtered queryset.
+    """
+
+    timeline_view_type: TimelineViewType = view_type_registry.get_by_model(view)
+    timeline_view_type.raise_if_invalid_date_settings(view)
+
+    return get_view_filtered_queryset(view, adhoc_filters, order_by, query_params)
+
+
+def get_public_timeline_view_filtered_queryset(
+    view: TimelineView, request: Request, query_params: Optional[Dict[str, str]] = None
+) -> PublicViewFilteredQuerySet:
+    """
+    Validates the provided timeline view and raises an exception if it's invalid. If the
+    view is valid, then the public filtered queryset is returned.
+
+    :param view: The timeline view where to fetch the fields from.
+    :param request: The request object.
+    :param query_params: The validated query parameters that can be used to filter the
+        rows.
+    :return: The public filtered queryset.
+    """
+
+    timeline_view_type: TimelineViewType = view_type_registry.get_by_model(view)
+    timeline_view_type.raise_if_invalid_date_settings(view)
+
+    return get_public_view_filtered_queryset(view, request, query_params)
 
 
 def to_midnight(dt: datetime) -> datetime:

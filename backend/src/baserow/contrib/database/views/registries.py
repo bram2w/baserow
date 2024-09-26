@@ -821,8 +821,12 @@ class ViewType(
         ).all()
         existing_options_field_ids = [option.field_id for option in view_field_options]
 
-        hidden_field_ids = self.get_hidden_fields(view, existing_options_field_ids)
-        hidden = view.public or bool(hidden_field_ids)
+        model_class_default = options_model_class._meta.get_field("hidden").default
+        hidden = (
+            model_class_default
+            or view.public
+            or bool(self.get_hidden_fields(view, existing_options_field_ids))
+        )
 
         return options_model_class(
             **{
