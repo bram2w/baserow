@@ -297,7 +297,7 @@ class CannotCalculateIntermediateOrder(Exception):
     """
 
 
-class FeatureDisabled(Exception):
+class FeatureDisabledException(Exception):
     """
     Raised when a feature is disabled.
     """

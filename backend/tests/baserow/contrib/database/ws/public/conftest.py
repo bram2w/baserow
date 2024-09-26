@@ -100,9 +100,9 @@ class GalleryViewPublicWebsocketTester(PublicWebsocketTester[GalleryView]):
     params=[
         t.type
         for t in view_type_registry.get_all()
-        # `kanban` is premium view type and must not be tested here.
+        # premium view types must not be tested here.
         if t.when_shared_publicly_requires_realtime_events
-        and t.type not in ["kanban", "calendar"]
+        and t.type not in ["kanban", "calendar", "timeline"]
         and t.can_share
     ]
 )
@@ -131,7 +131,7 @@ def public_realtime_view_tester(request, data_fixture):
             pytest.skip("Skipping tests without the once_per_day_in_ci marker.")
     else:
         raise Exception(
-            "You must implement ViewTester and add a clause in this text "
-            "fixture returning it for your new view type to test its "
-            "public websocket signals."
+            "You need to implement the `ViewTester` class and add a clause "
+            "in this test fixture to return it for your new view type. "
+            "This will allow you to test its public WebSocket signals."
         )

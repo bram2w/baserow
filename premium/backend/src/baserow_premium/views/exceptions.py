@@ -15,3 +15,9 @@ class CalendarViewHasNoDateField(Exception):
     """
     Raised when the calendar does not have a date field.
     """
+
+
+class TimelineViewHasInvalidDateSettings(Exception):
+    """
+    Raised when the timeline does not have a start date field.
+    """

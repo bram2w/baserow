@@ -462,7 +462,7 @@ class GalleryViewType(ViewType):
         """
 
         field_options = view.get_field_options(create_if_missing=True).order_by(
-            "field__id"
+            "-field__primary", "field__id"
         )
         ids_to_update = [f.id for f in field_options[0:3]]
 

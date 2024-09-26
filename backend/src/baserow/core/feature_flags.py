@@ -1,8 +1,9 @@
 from django.conf import settings
 
-from baserow.core.exceptions import FeatureDisabled
+from baserow.core.exceptions import FeatureDisabledException
 
 FF_EXPORT_WORKSPACE = "export_workspace"
+FF_TIMELINE_VIEW = "timeline_view"
 FF_ENABLE_ALL = "*"
 
 
@@ -14,6 +15,8 @@ def feature_flag_is_enabled(feature_flag: str, raise_if_disabled=False) -> bool:
     is_enabled = feature_flag.lower() in settings.FEATURE_FLAGS
 
     if not is_enabled and raise_if_disabled:
-        raise FeatureDisabled(f"The feature flag {feature_flag} is not enabled.")
+        raise FeatureDisabledException(
+            f"The feature flag {feature_flag} is not enabled."
+        )
 
     return is_enabled
