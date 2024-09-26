@@ -193,6 +193,141 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
           </li>
            
           <li
+            class="header__filter-item"
+          >
+            <div>
+              <a
+                class="header__filter-link"
+              >
+                <i
+                  class="header__filter-icon iconoir-table-rows"
+                />
+                 
+                <span
+                  class="header__filter-name"
+                >
+                  gridViewRowHeight.name
+                </span>
+              </a>
+               
+              <div
+                class="dropdown dropdown--floating"
+                tabindex="0"
+              >
+                <!---->
+                 
+                <div
+                  class="dropdown__items hidden"
+                >
+                  <!---->
+                   
+                  <ul
+                    class="select__items"
+                    tabindex="-1"
+                  >
+                    <li
+                      class="select__item select__item--no-options"
+                    >
+                      <a
+                        class="select__item-link"
+                      >
+                        <div
+                          class="select__item-name"
+                        >
+                          <!---->
+                           
+                          <!---->
+                           
+                          <!---->
+                           
+                          <span
+                            class="select__item-name-text"
+                            title="gridViewRowHeight.small"
+                          >
+                            gridViewRowHeight.small
+                          </span>
+                        </div>
+                         
+                        <!---->
+                      </a>
+                       
+                      <i
+                        class="select__item-active-icon iconoir-check"
+                      />
+                    </li>
+                     
+                    <li
+                      class="select__item select__item--no-options"
+                    >
+                      <a
+                        class="select__item-link"
+                      >
+                        <div
+                          class="select__item-name"
+                        >
+                          <!---->
+                           
+                          <!---->
+                           
+                          <!---->
+                           
+                          <span
+                            class="select__item-name-text"
+                            title="gridViewRowHeight.medium"
+                          >
+                            gridViewRowHeight.medium
+                          </span>
+                        </div>
+                         
+                        <!---->
+                      </a>
+                       
+                      <i
+                        class="select__item-active-icon iconoir-check"
+                      />
+                    </li>
+                     
+                    <li
+                      class="select__item select__item--no-options"
+                    >
+                      <a
+                        class="select__item-link"
+                      >
+                        <div
+                          class="select__item-name"
+                        >
+                          <!---->
+                           
+                          <!---->
+                           
+                          <!---->
+                           
+                          <span
+                            class="select__item-name-text"
+                            title="gridViewRowHeight.large"
+                          >
+                            gridViewRowHeight.large
+                          </span>
+                        </div>
+                         
+                        <!---->
+                      </a>
+                       
+                      <i
+                        class="select__item-active-icon iconoir-check"
+                      />
+                    </li>
+                  </ul>
+                   
+                  <!---->
+                   
+                  <!---->
+                </div>
+              </div>
+            </div>
+          </li>
+           
+          <li
             class="header__filter-item header__filter-item--right"
           >
             <div>
@@ -216,7 +351,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
         class="layout__col-2-2 content"
       >
         <div
-          class="grid-view"
+          class="grid-view grid-view--row-height-undefined"
         >
           <div
             class="scrollbars"
@@ -258,7 +393,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                 >
                   <div
                     class="grid-view__placeholder"
-                    style="height: 33px; width: 72px;"
+                    style="width: 72px;"
                   >
                     <div
                       class="grid-view__placeholder-groups"
@@ -271,44 +406,8 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                    
                   <div
                     class="grid-view__rows"
-                    style="transform: translateY(0px) translateX(0px); left: 0px;"
-                  >
-                    <div
-                      class="grid-view__row"
-                    >
-                      <!---->
-                       
-                      <div
-                        class="grid-view__column grid-view__column--no-border-right"
-                        style="width: 72px;"
-                      >
-                        <div
-                          class="grid-view__row-info"
-                        >
-                          <div
-                            class="grid-view__row-count"
-                            title="1"
-                          >
-                            
-            1
-          
-                          </div>
-                           
-                          <!---->
-                           
-                          <a
-                            class="grid-view__row-more"
-                          >
-                            <i
-                              class="iconoir-expand"
-                            />
-                          </a>
-                           
-                        </div>
-                      </div>
-                       
-                    </div>
-                  </div>
+                    style="transform: translateY(NaNpx) translateX(0px); left: 0px;"
+                  />
                    
                   <div
                     class="grid-view__row-placeholder"
@@ -564,7 +663,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                 >
                   <div
                     class="grid-view__placeholder"
-                    style="height: 33px; width: 800px;"
+                    style="width: 800px;"
                   >
                     <!---->
                      
@@ -590,43 +689,8 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                    
                   <div
                     class="grid-view__rows"
-                    style="transform: translateY(0px) translateX(0px); left: 0px;"
-                  >
-                    <div
-                      class="grid-view__row"
-                    >
-                      <!---->
-                       
-                      <div
-                        class="grid-view__column"
-                        style="width: 200px;"
-                      >
-                        <div
-                          class="grid-view__cell"
-                        >
-                          <div
-                            class="grid-field-text"
-                          >
-                            name
-                          </div>
-                        </div>
-                      </div>
-                      <div
-                        class="grid-view__column"
-                        style="width: 200px;"
-                      >
-                        <div
-                          class="grid-view__cell grid-field-long-text__cell"
-                        >
-                          <div
-                            class="grid-field-long-text"
-                          >
-                            last_name
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                    style="transform: translateY(NaNpx) translateX(0px); left: 0px;"
+                  />
                    
                   <div
                     class="grid-view__row-placeholder"

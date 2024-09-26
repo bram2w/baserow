@@ -72,7 +72,7 @@ class GridViewType(ViewType):
     has_public_info = True
     can_group_by = True
     when_shared_publicly_requires_realtime_events = True
-    allowed_fields = ["row_identifier_type"]
+    allowed_fields = ["row_identifier_type", "row_height_size"]
     field_options_allowed_fields = [
         "width",
         "hidden",
@@ -80,7 +80,7 @@ class GridViewType(ViewType):
         "aggregation_type",
         "aggregation_raw_type",
     ]
-    serializer_field_names = ["row_identifier_type"]
+    serializer_field_names = ["row_identifier_type", "row_height_size"]
 
     api_exceptions_map = {
         GridViewAggregationDoesNotSupportField: ERROR_AGGREGATION_DOES_NOT_SUPPORTED_FIELD,
@@ -106,6 +106,7 @@ class GridViewType(ViewType):
 
         serialized = super().export_serialized(grid, cache, files_zip, storage)
         serialized["row_identifier_type"] = grid.row_identifier_type
+        serialized["row_height_size"] = grid.row_height_size
 
         serialized_field_options = []
         for field_option in grid.get_field_options():

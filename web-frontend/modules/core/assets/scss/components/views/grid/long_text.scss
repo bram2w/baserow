@@ -15,8 +15,26 @@
   @extend %ellipsis;
   @include fixed-height(32px, 13px);
 
-  padding: 0 10px;
+  padding: 5px 10px;
   user-select: none;
+  line-height: 22px;
+
+  .grid-view--row-height-medium &,
+  .grid-view--row-height-large & {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    white-space: pre-line;
+  }
+
+  .grid-view--row-height-medium & {
+    height: $grid-view-row-height-medium - 1px;
+    -webkit-line-clamp: 2;
+  }
+
+  .grid-view--row-height-large & {
+    height: $grid-view-row-height-large - 1px;
+    -webkit-line-clamp: 4;
+  }
 }
 
 .grid-field-long-text__textarea,

@@ -24,6 +24,6 @@ import linkURLField from '@baserow/modules/database/mixins/linkURLField'
 export default {
   name: 'RowCardFieldButton',
   mixins: [linkURLField],
-  height: 16,
+  height: 26,
 }
 </script>

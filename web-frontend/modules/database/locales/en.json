@@ -989,5 +989,11 @@
     "description": "This table is linked to a data sync. When you click the sync button, the data will be synchronized with the source. During this process, a lock is placed on the updated rows, which may temporarily slow down API requests or table modifications.",
     "sync": "Sync table",
     "hide": "Hide"
+  },
+  "gridViewRowHeight": {
+    "name": "Height",
+    "small": "Small",
+    "medium": "Medium",
+    "large": "Large"
   }
 }

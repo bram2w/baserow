@@ -969,6 +969,7 @@ def test_user_with_password_can_get_info_about_a_public_password_protected_view(
             },
             "type": "grid",
             "row_identifier_type": grid_view.row_identifier_type,
+            "row_height_size": grid_view.row_height_size,
             "show_logo": grid_view.show_logo,
         },
     }
@@ -997,6 +998,7 @@ def test_user_with_password_can_get_info_about_a_public_password_protected_view(
             },
             "type": "grid",
             "row_identifier_type": grid_view.row_identifier_type,
+            "row_height_size": grid_view.row_height_size,
             "show_logo": grid_view.show_logo,
         },
     }

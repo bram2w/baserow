@@ -1,6 +1,15 @@
+.grid-field-many-to-many__list.grid-field-multiple-select__list {
+  padding: 6px 3px;
+
+  .grid-view--row-height-medium &,
+  .grid-view--row-height-large & {
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+}
+
 .grid-field-multiple-select__item {
   white-space: nowrap;
-  margin: 6px 4px 4px;
   overflow: unset;
 
   @include select-option-style(flex, true, false);

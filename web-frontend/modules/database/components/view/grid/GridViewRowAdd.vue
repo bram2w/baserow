@@ -1,6 +1,9 @@
 <template>
-  <div class="grid-view__row" :style="{ width: width + 'px' }">
-    <div class="grid-view__column" :style="{ width: width + 'px' }">
+  <div class="grid-view__row" :style="{ width: width + 'px', height: '33px' }">
+    <div
+      class="grid-view__column"
+      :style="{ width: width + 'px', height: '33px' }"
+    >
       <a
         class="grid-view__add-row"
         :class="{ hover: addHover }"

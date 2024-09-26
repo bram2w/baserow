@@ -9,6 +9,14 @@
         :store-prefix="storePrefix"
       ></GridViewHide>
     </li>
+    <li class="header__filter-item">
+      <GridViewRowHeight
+        :database="database"
+        :view="view"
+        :store-prefix="storePrefix"
+        :read-only="readOnly"
+      ></GridViewRowHeight>
+    </li>
     <li class="header__filter-item header__filter-item--right">
       <ViewSearch
         :view="view"
@@ -23,12 +31,13 @@
 <script>
 import { mapState } from 'vuex'
 
+import GridViewRowHeight from '@baserow/modules/database/components/view/grid/GridViewRowHeight'
 import GridViewHide from '@baserow/modules/database/components/view/grid/GridViewHide'
 import ViewSearch from '@baserow/modules/database/components/view/ViewSearch'
 
 export default {
   name: 'GridViewHeader',
-  components: { GridViewHide, ViewSearch },
+  components: { GridViewRowHeight, GridViewHide, ViewSearch },
   props: {
     database: {
       type: Object,
