@@ -1183,6 +1183,6 @@ export class FormViewType extends ViewType {
    * letting the user create one.
    */
   isCompatibleWithDataSync(dataSync) {
-    return false
+    return !dataSync
   }
 }
