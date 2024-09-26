@@ -1,6 +1,9 @@
 <template>
   <div ref="cell" class="grid-view__cell grid-field-many-to-many__cell active">
-    <div ref="dropdownLink" class="grid-field-many-to-many__list">
+    <div
+      ref="dropdownLink"
+      class="grid-field-many-to-many__list grid-field-multiple-select__list"
+    >
       <div
         v-for="item in value"
         :key="item.id"

@@ -297,6 +297,7 @@ def test_to_baserow_database_export():
             "name": "Grid",
             "order": 1,
             "row_identifier_type": "id",
+            "row_height_size": "small",
             "filter_type": "AND",
             "filters_disabled": False,
             "filters": [],

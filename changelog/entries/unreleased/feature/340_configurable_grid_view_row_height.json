@@ -1,0 +1,7 @@
+{
+  "type": "feature",
+  "message": "Introduced configurable row height in the grid view.",
+  "issue_number": 340,
+  "bullet_points": [],
+  "created_at": "2024-09-22"
+}

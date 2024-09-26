@@ -5,13 +5,10 @@
   flex-wrap: wrap;
   list-style: none;
   margin: 0;
+  gap: 4px;
 
   .array-field__item {
     height: auto;
-
-    &:not(:last-child) {
-      margin-right: 4px;
-    }
   }
 
   .array-field__multiple-select-option {

@@ -2,9 +2,14 @@
   overflow: clip;
   list-style: none;
   margin: 0;
-  padding: 0 0 0 4px;
+  padding: 5px 3px;
   user-select: none;
   display: flex;
+  flex-flow: row;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  align-content: flex-start;
+  gap: 4px;
 
   &.active {
     height: auto;
@@ -13,7 +18,14 @@
     bottom: auto;
     min-width: calc(100% + 4px);
     min-height: calc(100% + 4px);
-    padding: 0 4px;
+  }
+
+  .grid-view--row-height-medium &,
+  .grid-view--row-height-large & {
+    height: auto;
+    flex-wrap: wrap;
+    padding-top: 3px;
+    padding-bottom: 3px;
   }
 
   .grid-view__column--matches-search & {

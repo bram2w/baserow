@@ -14,6 +14,7 @@ import {
 } from '@baserow/modules/database/utils/view'
 import { clone } from '@baserow/modules/core/utils/object'
 import { getDefaultSearchModeFromEnv } from '@baserow/modules/database/utils/search'
+import { GRID_VIEW_SIZE_TO_ROW_HEIGHT_MAPPING } from '@baserow/modules/database/constants'
 
 export const maxPossibleOrderValue = 32767
 
@@ -526,6 +527,10 @@ export class GridViewType extends ViewType {
       database.workspace,
       view,
       isPublic
+    )
+    await store.dispatch(
+      storePrefix + 'view/grid/setRowHeight',
+      GRID_VIEW_SIZE_TO_ROW_HEIGHT_MAPPING[view.row_height_size]
     )
     await store.dispatch(storePrefix + 'view/grid/fetchInitial', {
       gridId: view.id,

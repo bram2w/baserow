@@ -2,7 +2,12 @@
   <div
     v-scroll="scroll"
     class="grid-view"
-    :class="{ 'grid-view--disable-selection': isMultiSelectActive }"
+    :class="[
+      {
+        'grid-view--disable-selection': isMultiSelectActive,
+      },
+      'grid-view--row-height-' + view.row_height_size,
+    ]"
   >
     <Scrollbars
       ref="scrollbars"
@@ -374,6 +379,7 @@ import { clone } from '@baserow/modules/core/utils/object'
 import copyPasteHelper from '@baserow/modules/database/mixins/copyPasteHelper'
 import GridViewRowsAddContext from '@baserow/modules/database/components/view/grid/fields/GridViewRowsAddContext'
 import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
+import { GRID_VIEW_SIZE_TO_ROW_HEIGHT_MAPPING } from '@baserow/modules/database/constants'
 
 export default {
   name: 'GridView',
@@ -539,6 +545,17 @@ export default {
           })
         }
       },
+    },
+    'view.row_height_size'(value, oldValue) {
+      if (value === oldValue) {
+        return
+      }
+      this.$store.dispatch(
+        this.storePrefix + 'view/grid/setRowHeight',
+        GRID_VIEW_SIZE_TO_ROW_HEIGHT_MAPPING[value]
+      )
+      this.onWindowResize()
+      this.$emit('refresh')
     },
   },
   beforeCreate() {

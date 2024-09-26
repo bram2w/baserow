@@ -3,20 +3,19 @@
   width: 100%;
   justify-content: space-between;
   gap: 8px;
-  padding-left: 10px;
-  padding-right: 10px;
+  padding: 0 10px;
 }
 
 %grid-field-date-date {
   width: 100%;
   max-width: 78px;
-  padding: 0;
+  padding: 5px 0;
 }
 
 %grid-field-date-time {
   width: 100%;
   max-width: 65px;
-  padding: 0;
+  padding: 5px 0;
   flex-shrink: 2;
   text-align: center;
 }
@@ -35,7 +34,7 @@
   @extend %grid-field-text;
 
   flex-shrink: 5;
-  padding: 0;
+  padding: 5px 0;
   color: $color-neutral-500;
   font-size: 0.8em;
   width: 100%;

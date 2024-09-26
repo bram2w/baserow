@@ -624,6 +624,9 @@ export const mutations = {
       }
     })
   },
+  UPDATE_ROW_HEIGHT(state, value) {
+    state.rowHeight = value
+  },
 }
 
 // Contains the info needed for the delayed scroll top action.
@@ -2993,6 +2996,9 @@ export const actions = {
       },
       { root: true }
     )
+  },
+  setRowHeight({ commit, dispatch }, value) {
+    commit('UPDATE_ROW_HEIGHT', value)
   },
 }
 
