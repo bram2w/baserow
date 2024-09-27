@@ -269,6 +269,7 @@
     "sso": "Single Sign On",
     "rbac": "Role-based access control",
     "auditLogs": "Audit logs",
+    "dataSync": "Data sync",
     "coBranding": "Co-branding logo replacement",
     "support": "Direct support"
   },
@@ -331,5 +332,15 @@
     "emailPlaceholder": "Enter your email...",
     "passwordPlaceholder": "Enter your password...",
     "selectOrConfigureUserSourceFirst": "Choose a user source to begin using this login element."
+  },
+  "enterpriseDataSyncType": {
+    "localBaserowTable": "Sync Baserow table"
+  },
+  "localBaserowTableDataSync": {
+    "name": "Source table ID",
+    "authorizing": "You're authorizing your account to select the data from the source table.",
+    "workspace": "Workspace",
+    "database": "Database",
+    "table": "Table"
   }
 }

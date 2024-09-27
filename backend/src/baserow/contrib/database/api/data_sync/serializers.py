@@ -15,15 +15,20 @@ class DataSyncSyncedPropertySerializer(serializers.ModelSerializer):
 
 class DataSyncSerializer(serializers.ModelSerializer):
     synced_properties = DataSyncSyncedPropertySerializer(many=True)
+    type = serializers.SerializerMethodField()
 
     class Meta:
         model = DataSync
         fields = (
             "id",
+            "type",
             "synced_properties",
             "last_sync",
             "last_error",
         )
+
+    def get_type(self, instance):
+        return data_sync_type_registry.get_by_model(instance.specific_class).type
 
 
 class CreateDataSyncSerializer(serializers.ModelSerializer):

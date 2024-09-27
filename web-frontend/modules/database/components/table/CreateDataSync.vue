@@ -120,6 +120,7 @@ export default {
       this.formValues = formValues
 
       this.loadingProperties = true
+      this.hideError()
 
       try {
         const { data } = await DataSyncService(this.$client).fetchProperties(
@@ -152,6 +153,7 @@ export default {
       formValues.synced_properties = this.syncedProperties
 
       this.creatingTable = true
+      this.hideError()
 
       try {
         const { data } = await DataSyncService(this.$client).create(

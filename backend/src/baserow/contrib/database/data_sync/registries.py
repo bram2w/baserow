@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, Iterable, List
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 
 from baserow.contrib.database.data_sync.export_serialized import (
     DataSyncExportSerializedStructure,
@@ -74,6 +75,24 @@ class DataSyncProperty(ABC):
 class DataSyncType(
     ModelInstanceMixin, CustomFieldsInstanceMixin, ImportExportMixin, Instance, ABC
 ):
+    def prepare_values(self, user: AbstractUser, values: Dict) -> Dict:
+        """
+        A hook that can validate or changes the provided values.
+
+        :param user: The user on whose behalf the data sync is created or updated.
+        :param values: The values that were provided.
+        :return: The values that were validated and updates by the data sync type.
+        """
+
+        return values
+
+    def prepare_sync_job_values(self, instance: "DataSync"):
+        """
+        A hook that's called in the `prepare_values` of the job.
+
+        :param instance: The related data sync instance.
+        """
+
     @abstractmethod
     def get_properties(self, instance: "DataSync") -> List[DataSyncProperty]:
         """

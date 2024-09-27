@@ -43,6 +43,20 @@ export class DataSyncType extends Registerable {
       name: this.getName(),
     }
   }
+
+  /**
+   * Indicates whether the data sync is deactivated.
+   */
+  isDeactivated(workspaceId) {
+    return false
+  }
+
+  /**
+   * When the disabled data sync is clicked, this modal will be shown.
+   */
+  getDeactivatedClickModal() {
+    return null
+  }
 }
 
 export class ICalCalendarDataSyncType extends DataSyncType {

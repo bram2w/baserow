@@ -181,6 +181,15 @@ class BaserowEnterpriseConfig(AppConfig):
 
         element_type_registry.register(AuthFormElementType())
 
+        from baserow.contrib.database.data_sync.registries import (
+            data_sync_type_registry,
+        )
+        from baserow_enterprise.data_sync.data_sync_types import (
+            LocalBaserowTableDataSyncType,
+        )
+
+        data_sync_type_registry.register(LocalBaserowTableDataSyncType())
+
         # Create default roles
         post_migrate.connect(sync_default_roles_after_migrate, sender=self)
 
