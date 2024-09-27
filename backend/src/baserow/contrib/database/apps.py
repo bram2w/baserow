@@ -487,20 +487,14 @@ class DatabaseConfig(AppConfig):
         register_formula_functions(formula_function_registry)
 
         from .rows.webhook_event_types import (
-            RowCreatedEventType,
-            RowDeletedEventType,
             RowsCreatedEventType,
             RowsDeletedEventType,
             RowsUpdatedEventType,
-            RowUpdatedEventType,
         )
 
         webhook_event_type_registry.register(RowsCreatedEventType())
-        webhook_event_type_registry.register(RowCreatedEventType())
         webhook_event_type_registry.register(RowsUpdatedEventType())
-        webhook_event_type_registry.register(RowUpdatedEventType())
         webhook_event_type_registry.register(RowsDeletedEventType())
-        webhook_event_type_registry.register(RowDeletedEventType())
 
         from .airtable.airtable_column_types import (
             CheckboxAirtableColumnType,
