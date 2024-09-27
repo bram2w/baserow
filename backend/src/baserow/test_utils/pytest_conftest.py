@@ -11,7 +11,6 @@ from unittest.mock import patch
 
 from django.conf import settings as django_settings
 from django.core import cache
-from django.core.files.storage import Storage
 from django.core.management import call_command
 from django.db import DEFAULT_DB_ALIAS, OperationalError, connection
 from django.db.migrations.executor import MigrationExecutor
@@ -717,20 +716,6 @@ def enable_locmem_testing(settings):
     ):
         yield
         cache.cache.clear()
-
-
-@pytest.fixture
-def stubbed_storage(monkeypatch):
-    class StubbedStorage(Storage):
-        def __init__(self, *args, **kwargs):
-            pass
-
-        def save(self, name, content, **kwargs):
-            return name
-
-    storage_instance = StubbedStorage()
-    monkeypatch.setattr("django.core.files.storage.default_storage", storage_instance)
-    return storage_instance
 
 
 @pytest.fixture(autouse=True)

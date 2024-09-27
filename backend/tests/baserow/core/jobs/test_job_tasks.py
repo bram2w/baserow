@@ -175,7 +175,7 @@ def test_run_task_with_exception_mapping(mock_get_by_model, data_fixture):
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_cleanup_file_import_job(storage_mock, data_fixture, settings):
     now = datetime.now(tz=timezone.utc)
     time_before_expiration = now - timedelta(

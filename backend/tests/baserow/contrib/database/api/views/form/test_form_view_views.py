@@ -2687,7 +2687,11 @@ def test_upload_file_view(api_client, data_fixture, tmpdir):
 
     storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
 
-    with patch("baserow.core.user_files.handler.default_storage", new=storage):
+    with patch(
+        "baserow.core.user_files.handler.get_default_storage"
+    ) as get_storage_mock:
+        get_storage_mock.return_value = storage
+
         with freeze_time("2020-01-01 12:00"):
             file = SimpleUploadedFile("test.txt", b"Hello World")
             token = data_fixture.generate_token(user)
@@ -2719,7 +2723,11 @@ def test_upload_file_view(api_client, data_fixture, tmpdir):
     file_path = tmpdir.join("user_files", user_file.name)
     assert file_path.isfile()
 
-    with patch("baserow.core.user_files.handler.default_storage", new=storage):
+    with patch(
+        "baserow.core.user_files.handler.get_default_storage"
+    ) as get_storage_mock:
+        get_storage_mock.return_value = storage
+
         token = data_fixture.generate_token(user)
         file = SimpleUploadedFile("test.txt", b"Hello World")
         response_2 = api_client.post(
@@ -2742,7 +2750,11 @@ def test_upload_file_view(api_client, data_fixture, tmpdir):
     image.save(file, format="PNG")
     file.seek(0)
 
-    with patch("baserow.core.user_files.handler.default_storage", new=storage):
+    with patch(
+        "baserow.core.user_files.handler.get_default_storage"
+    ) as get_storage_mock:
+        get_storage_mock.return_value = storage
+
         response = api_client.post(
             reverse(
                 "api:database:views:form:upload_file",
@@ -2783,7 +2795,7 @@ def test_upload_file_view_with_no_public_file_field(api_client, data_fixture, tm
     data_fixture.create_form_view_field_option(view, field=file_field, enabled=False)
 
     storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
-    with patch("baserow.core.user_files.handler.default_storage", new=storage):
+    with patch("baserow.core.storage.get_default_storage", new=storage):
         with freeze_time("2020-01-01 12:00"):
             file = SimpleUploadedFile("test.txt", b"Hello World")
             response = api_client.post(
@@ -2812,7 +2824,7 @@ def test_upload_file_view_with_a_rich_text_field_is_possible(
     )
 
     storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
-    with patch("baserow.core.user_files.handler.default_storage", new=storage):
+    with patch("baserow.core.storage.get_default_storage", new=storage):
         with freeze_time("2020-01-01 12:00"):
             file = SimpleUploadedFile("test.txt", b"Hello World")
             response = api_client.post(
@@ -2830,7 +2842,7 @@ def test_upload_file_view_with_a_rich_text_field_is_possible(
 @pytest.mark.django_db
 def test_upload_file_form_view_does_not_exist(api_client, data_fixture, tmpdir):
     storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
-    with patch("baserow.core.user_files.handler.default_storage", new=storage):
+    with patch("baserow.core.storage.get_default_storage", new=storage):
         with freeze_time("2020-01-01 12:00"):
             file = SimpleUploadedFile("test.txt", b"Hello World")
             response = api_client.post(
@@ -2854,7 +2866,7 @@ def test_upload_file_view_form_is_password_protected(api_client, data_fixture, t
     data_fixture.create_form_view_field_option(view, field=file_field, enabled=True)
 
     storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
-    with patch("baserow.core.user_files.handler.default_storage", new=storage):
+    with patch("baserow.core.storage.get_default_storage", new=storage):
         with freeze_time("2020-01-01 12:00"):
             file = SimpleUploadedFile("test.txt", b"Hello World")
             response = api_client.post(
@@ -2880,7 +2892,7 @@ def test_upload_file_view_form_is_password_protected(api_client, data_fixture, t
     assert public_view_token is not None
 
     storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
-    with patch("baserow.core.user_files.handler.default_storage", new=storage):
+    with patch("baserow.core.storage.get_default_storage", new=storage):
         with freeze_time("2020-01-01 12:00"):
             file = SimpleUploadedFile("test.txt", b"Hello World")
             response = api_client.post(

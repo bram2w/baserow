@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from typing import List
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
@@ -50,8 +50,11 @@ def _parse_date(date):
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.default_storage")
-def test_hidden_fields_are_excluded(storage_mock, data_fixture):
+@patch("baserow.contrib.database.export.handler.get_default_storage")
+def test_hidden_fields_are_excluded(get_storage_mock, data_fixture):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
+
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     text_field = data_fixture.create_text_field(table=table, name="text_field", order=1)
@@ -76,8 +79,10 @@ def test_hidden_fields_are_excluded(storage_mock, data_fixture):
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.default_storage")
-def test_csv_is_sorted_by_sorts(storage_mock, data_fixture):
+@patch("baserow.contrib.database.export.handler.get_default_storage")
+def test_csv_is_sorted_by_sorts(get_storage_mock, data_fixture):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     text_field = data_fixture.create_text_field(table=table, name="text_field")
@@ -101,8 +106,10 @@ def test_csv_is_sorted_by_sorts(storage_mock, data_fixture):
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.default_storage")
-def test_csv_is_filtered_by_filters(storage_mock, data_fixture):
+@patch("baserow.contrib.database.export.handler.get_default_storage")
+def test_csv_is_filtered_by_filters(get_storage_mock, data_fixture):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     text_field = data_fixture.create_text_field(table=table, name="text_field")
@@ -128,8 +135,12 @@ def test_csv_is_filtered_by_filters(storage_mock, data_fixture):
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.default_storage")
-def test_exporting_table_ignores_view_filters_sorts_hides(storage_mock, data_fixture):
+@patch("baserow.contrib.database.export.handler.get_default_storage")
+def test_exporting_table_ignores_view_filters_sorts_hides(
+    get_storage_mock, data_fixture
+):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     text_field = data_fixture.create_text_field(table=table, name="text_field", order=1)
@@ -168,8 +179,10 @@ def test_exporting_table_ignores_view_filters_sorts_hides(storage_mock, data_fix
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.default_storage")
-def test_columns_are_exported_by_order_then_field_id(storage_mock, data_fixture):
+@patch("baserow.contrib.database.export.handler.get_default_storage")
+def test_columns_are_exported_by_order_then_field_id(get_storage_mock, data_fixture):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     field_a = data_fixture.create_text_field(table=table, name="field_a")
@@ -210,10 +223,12 @@ def test_columns_are_exported_by_order_then_field_id(storage_mock, data_fixture)
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.default_storage")
+@patch("baserow.contrib.database.export.handler.get_default_storage")
 def test_can_export_every_interesting_different_field_to_csv(
-    storage_mock, data_fixture
+    get_storage_mock, data_fixture
 ):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
     contents = run_export_job_over_interesting_table(
         data_fixture, storage_mock, {"exporter_type": "csv"}
     )
@@ -270,10 +285,12 @@ def run_export_job_over_interesting_table(data_fixture, storage_mock, options):
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.default_storage")
+@patch("baserow.contrib.database.export.handler.get_default_storage")
 def test_can_export_special_characters_in_arabic_encoding_to_csv(
-    storage_mock, data_fixture
+    get_storage_mock, data_fixture
 ):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)
     table = data_fixture.create_database_table(database=database)
@@ -331,10 +348,12 @@ def test_creating_a_new_export_job_will_cancel_any_already_running_jobs_for_that
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.default_storage")
+@patch("baserow.contrib.database.export.handler.get_default_storage")
 def test_a_complete_export_job_which_has_expired_will_have_its_file_deleted(
-    storage_mock, data_fixture, settings
+    get_storage_mock, data_fixture, settings
 ):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
     handler = ExportHandler()
     job_start = datetime.now(tz=timezone.utc)
     half_file_duration = timedelta(minutes=int(settings.EXPORT_FILE_EXPIRE_MINUTES / 2))
@@ -365,12 +384,14 @@ def test_a_complete_export_job_which_has_expired_will_have_its_file_deleted(
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.default_storage")
+@patch("baserow.contrib.database.export.handler.get_default_storage")
 def test_a_pending_job_which_has_expired_will_be_cleaned_up(
-    storage_mock,
+    get_storage_mock,
     data_fixture,
     settings,
 ):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
     user = data_fixture.create_user()
     other_user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -404,10 +425,12 @@ def test_a_pending_job_which_has_expired_will_be_cleaned_up(
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.default_storage")
+@patch("baserow.contrib.database.export.handler.get_default_storage")
 def test_a_running_export_job_which_has_expired_will_be_stopped(
-    storage_mock, data_fixture, settings
+    get_storage_mock, data_fixture, settings
 ):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
     user = data_fixture.create_user()
     other_user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -524,11 +547,13 @@ def test_attempting_to_export_a_view_for_a_type_which_doesnt_support_it_fails(
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.default_storage")
+@patch("baserow.contrib.database.export.handler.get_default_storage")
 def test_an_export_job_which_fails_will_be_marked_as_a_failed_job(
-    storage_mock,
+    get_storage_mock,
     data_fixture,
 ):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     handler = ExportHandler()
@@ -585,8 +610,11 @@ def test_an_export_job_which_fails_will_be_marked_as_a_failed_job(
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.default_storage")
-def test_can_export_csv_without_header(storage_mock, data_fixture):
+@patch("baserow.contrib.database.export.handler.get_default_storage")
+def test_can_export_csv_without_header(get_storage_mock, data_fixture):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
+
     _, contents = setup_table_and_run_export_decoding_result(
         data_fixture,
         storage_mock,
@@ -602,8 +630,11 @@ def test_can_export_csv_without_header(storage_mock, data_fixture):
 
 @pytest.mark.django_db
 @pytest.mark.once_per_day_in_ci
-@patch("baserow.contrib.database.export.handler.default_storage")
-def test_can_export_csv_with_different_charsets(storage_mock, data_fixture):
+@patch("baserow.contrib.database.export.handler.get_default_storage")
+def test_can_export_csv_with_different_charsets(get_storage_mock, data_fixture):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
+
     for _, charset in SUPPORTED_EXPORT_CHARSETS:
         _, contents = setup_table_and_run_export_decoding_result(
             data_fixture,
@@ -623,8 +654,13 @@ def test_can_export_csv_with_different_charsets(storage_mock, data_fixture):
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.default_storage")
-def test_can_export_csv_with_different_column_separators(storage_mock, data_fixture):
+@patch("baserow.contrib.database.export.handler.get_default_storage")
+def test_can_export_csv_with_different_column_separators(
+    get_storage_mock, data_fixture
+):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
+
     for _, col_sep in SUPPORTED_CSV_COLUMN_SEPARATORS:
         _, contents = setup_table_and_run_export_decoding_result(
             data_fixture,
@@ -646,10 +682,12 @@ def test_can_export_csv_with_different_column_separators(storage_mock, data_fixt
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.default_storage")
+@patch("baserow.contrib.database.export.handler.get_default_storage")
 def test_adding_more_rows_doesnt_increase_number_of_queries_run(
-    storage_mock, data_fixture, django_assert_num_queries
+    get_storage_mock, data_fixture, django_assert_num_queries
 ):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
     add_row, add_linked_row, user, table, grid_view = setup_testing_table(data_fixture)
 
     # Ensure we test with linked rows and select options as they are the fields which
@@ -717,6 +755,9 @@ def run_export_job_with_mock_storage(
 
     if "export_charset" not in options:
         options["export_charset"] = "utf-8"
+
+    storage_instance = MagicMock()
+    storage_mock.return_value = storage_instance
 
     stub_file = BytesIO()
     storage_mock.open.return_value = stub_file
@@ -838,10 +879,12 @@ def setup_table_and_run_export_decoding_result(
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.default_storage")
+@patch("baserow.contrib.database.export.handler.get_default_storage")
 def test_a_column_without_a_grid_view_option_has_an_option_made_and_is_exported(
-    storage_mock, data_fixture
+    get_storage_mock, data_fixture
 ):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     field_with_an_option = data_fixture.create_text_field(table=table, name="field_a")
@@ -873,8 +916,10 @@ def test_a_column_without_a_grid_view_option_has_an_option_made_and_is_exported(
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.default_storage")
-def test_action_done_is_emitted_when_the_export_finish(storage_mock, data_fixture):
+@patch("baserow.contrib.database.export.handler.get_default_storage")
+def test_action_done_is_emitted_when_the_export_finish(get_storage_mock, data_fixture):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
 
@@ -898,8 +943,10 @@ def test_action_done_is_emitted_when_the_export_finish(storage_mock, data_fixtur
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.default_storage")
-def test_csv_is_escaped(storage_mock, data_fixture):
+@patch("baserow.contrib.database.export.handler.get_default_storage")
+def test_csv_is_escaped(get_storage_mock, data_fixture):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     text_field = data_fixture.create_text_field(table=table, name="text_field")

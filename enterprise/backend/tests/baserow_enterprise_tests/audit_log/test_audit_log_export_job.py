@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from io import BytesIO
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from django.test.utils import override_settings
 
@@ -16,10 +16,12 @@ from baserow_enterprise.audit_log.job_types import AuditLogExportJobType
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-@patch("baserow.contrib.database.export.handler.default_storage")
+@patch("baserow.contrib.database.export.handler.get_default_storage")
 def test_audit_log_export_csv_correctly(
-    storage_mock, enterprise_data_fixture, synced_roles
+    get_storage_mock, enterprise_data_fixture, synced_roles
 ):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
     user, _ = enterprise_data_fixture.create_enterprise_admin_user_and_token()
 
     with freeze_time("2023-01-01 12:00:00"):
@@ -94,12 +96,14 @@ def test_audit_log_export_csv_correctly(
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.default_storage")
+@patch("baserow.contrib.database.export.handler.get_default_storage")
 @override_settings(DEBUG=True)
 @pytest.mark.skip("Need to re-build the translations first.")
 def test_audit_log_export_csv_in_the_user_language(
-    storage_mock, enterprise_data_fixture, synced_roles
+    get_storage_mock, enterprise_data_fixture, synced_roles
 ):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
     user, _ = enterprise_data_fixture.create_enterprise_admin_user_and_token(
         language="it"
     )
@@ -136,11 +140,13 @@ def test_audit_log_export_csv_in_the_user_language(
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.default_storage")
+@patch("baserow.contrib.database.export.handler.get_default_storage")
 @override_settings(DEBUG=True)
 def test_deleting_audit_log_export_job_also_delete_exported_file(
-    storage_mock, enterprise_data_fixture, synced_roles
+    get_storage_mock, enterprise_data_fixture, synced_roles
 ):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
     user, _ = enterprise_data_fixture.create_enterprise_admin_user_and_token()
     csv_settings = {
         "csv_column_separator": ",",
@@ -163,19 +169,26 @@ def test_deleting_audit_log_export_job_also_delete_exported_file(
     # ensure the clean_job method will delete the file
     assert csv_export_job.exported_file_name is not None
 
-    with patch("django.core.files.storage.default_storage.delete") as remove_mock:
+    with patch(
+        "baserow_enterprise.audit_log.job_types.get_default_storage"
+    ) as get_remove_mock:
+        remove_mock = storage_mock
+        get_remove_mock.return_value = remove_mock
         AuditLogExportJobType().before_delete(csv_export_job)
-        remove_mock.assert_called_once_with(
+        remove_mock.delete.assert_called_once_with(
             ExportHandler.export_file_path(csv_export_job.exported_file_name)
         )
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.default_storage")
+@patch("baserow.contrib.database.export.handler.get_default_storage")
 @override_settings(DEBUG=True)
 def test_audit_log_export_filters_work_correctly(
-    storage_mock, enterprise_data_fixture, synced_roles
+    get_storage_mock, enterprise_data_fixture, synced_roles
 ):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
+
     user, _ = enterprise_data_fixture.create_enterprise_admin_user_and_token()
 
     with freeze_time("2023-01-01 12:00:00"):
@@ -224,10 +237,12 @@ def test_audit_log_export_filters_work_correctly(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-@patch("baserow.contrib.database.export.handler.default_storage")
+@patch("baserow.contrib.database.export.handler.get_default_storage")
 def test_audit_log_export_workspace_csv_correctly(
-    storage_mock, enterprise_data_fixture, synced_roles
+    get_storage_mock, enterprise_data_fixture, synced_roles
 ):
+    storage_mock = MagicMock()
+    get_storage_mock.return_value = storage_mock
     user, _ = enterprise_data_fixture.create_enterprise_admin_user_and_token()
     workspace = enterprise_data_fixture.create_workspace(user=user)
 
