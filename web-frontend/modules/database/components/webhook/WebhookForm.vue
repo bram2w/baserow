@@ -1,6 +1,6 @@
 <template>
   <form @submit.prevent="submit" @input="$emit('formchange')">
-    <div v-if="!isDeprecated">
+    <div>
       <Alert v-if="!values.active" type="info-primary">
         <template #title> {{ $t('webhookForm.deactivated.title') }} </template>
         <p>{{ $t('webhookForm.deactivated.content') }}</p>
@@ -223,22 +223,6 @@
       <slot></slot>
       <TestWebhookModal ref="testModal" />
     </div>
-    <div v-else>
-      <Alert type="error">
-        <template #title>
-          {{ $t('webhookForm.deprecatedEventType.title') }}</template
-        >
-        <p>{{ $t('webhookForm.deprecatedEventType.description') }}</p>
-        <template #actions>
-          <button
-            class="alert__actions-button-text"
-            @click="convertFromDeprecated"
-          >
-            {{ $t('webhookForm.deprecatedEventType.convert') }}
-          </button>
-        </template>
-      </Alert>
-    </div>
   </form>
 </template>
 
@@ -304,11 +288,6 @@ export default {
   computed: {
     webhookEventTypes() {
       return this.$registry.getAll('webhookEvent')
-    },
-    isDeprecated() {
-      return this.values.events.some((eventName) =>
-        ['row.created', 'row.updated', 'row.deleted'].includes(eventName)
-      )
     },
     /**
      * Generates an example payload of the webhook event based on the chosen webhook
@@ -414,12 +393,6 @@ export default {
     },
     lastHeader(index) {
       return index === this.headers.length
-    },
-    convertFromDeprecated() {
-      this.values.events = this.values.events.map((eventName) =>
-        eventName.replace('row.', 'rows.')
-      )
-      this.submit()
     },
   },
 }

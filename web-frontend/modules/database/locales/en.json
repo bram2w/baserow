@@ -43,11 +43,6 @@
       "title": "Webhook is deactivated",
       "content": "This webhook has been deactivated because there have been too many consecutive failures. Please check the call log for more details. Click on the button below to activate it again. Don't forgot to save the webhook after activating.",
       "activate": "Activate"
-    },
-    "deprecatedEventType": {
-      "title": "Deprecated event type",
-      "description": "This webhook doesn't receive information about all changed rows at once. Please convert it to batch-style event type. This changes the JSON body payload to a format that contains multiple rows.",
-      "convert": "Convert"
     }
   },
   "webhook": {

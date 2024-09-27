@@ -58,23 +58,6 @@ class RowsCreatedEventType(RowsEventType):
         return payload
 
 
-class RowCreatedEventType(RowsCreatedEventType):
-    """
-    Handling of deprecated single row.created webhook
-    """
-
-    type = "row.created"
-    signal = rows_created
-    should_trigger_when_all_event_types_selected = False
-
-    def get_payload(self, *args, **kwargs):
-        payload = super().get_payload(*args, **kwargs)
-        payload["row_id"] = payload["items"][0]["id"]
-        payload["values"] = payload["items"][0]
-        del payload["items"]
-        return payload
-
-
 class RowsUpdatedEventType(RowsEventType):
     type = "rows.updated"
     signal = rows_updated
@@ -109,29 +92,6 @@ class RowsUpdatedEventType(RowsEventType):
         return payload
 
 
-class RowUpdatedEventType(RowsUpdatedEventType):
-    """
-    Handling of deprecated single row.updated webhook
-    """
-
-    type = "row.updated"
-    signal = rows_updated
-    should_trigger_when_all_event_types_selected = False
-
-    def get_payload(
-        self, event_id, webhook, model, table, rows, before_return, **kwargs
-    ):
-        payload = super().get_payload(
-            event_id, webhook, model, table, rows, before_return, **kwargs
-        )
-        payload["row_id"] = payload["items"][0]["id"]
-        payload["values"] = payload["items"][0]
-        payload["old_values"] = payload["old_items"][0]
-        del payload["items"]
-        del payload["old_items"]
-        return payload
-
-
 class RowsDeletedEventType(RespectSendWebhookEvents, WebhookEventType):
     type = "rows.deleted"
     signal = rows_deleted
@@ -151,20 +111,4 @@ class RowsDeletedEventType(RespectSendWebhookEvents, WebhookEventType):
             table=table,
             rows=rows,
         )
-        return payload
-
-
-class RowDeletedEventType(RowsDeletedEventType):
-    """
-    Handling of deprecated single row.deleted webhook
-    """
-
-    type = "row.deleted"
-    signal = rows_deleted
-    should_trigger_when_all_event_types_selected = False
-
-    def get_payload(self, event_id, webhook, rows, **kwargs):
-        payload = super().get_payload(event_id, webhook, rows, **kwargs)
-        payload["row_id"] = rows[0].id
-        del payload["row_ids"]
         return payload
