@@ -20,7 +20,7 @@ def forward(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("database", "0165_datasync_icalcalendardatasync_syncdatasynctablejob_and_more"),
+        ("database", "0166_gridview_row_height_size"),
     ]
 
     operations = [

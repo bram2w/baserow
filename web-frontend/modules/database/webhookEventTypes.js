@@ -85,3 +85,137 @@ export class RowsDeletedWebhookEventType extends WebhookEventType {
     return payload
   }
 }
+
+// Unfortunately, we don't have an example of the field object in the web-frontend, so
+// we would need to hardcode it here.
+const fieldExample = {
+  id: 1,
+  table_id: 1,
+  name: 'Field',
+  order: 0,
+  type: 'text',
+  primary: false,
+  read_only: false,
+  description: '',
+}
+
+export class FieldCreatedWebhookEventType extends WebhookEventType {
+  static getType() {
+    return 'field.created'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('webhook.eventType.fieldCreated')
+  }
+
+  getExamplePayload(database, table, rowExample) {
+    const payload = super.getExamplePayload(database, table, rowExample)
+    payload.field = fieldExample
+    return payload
+  }
+}
+
+export class FieldUpdatedWebhookEventType extends WebhookEventType {
+  static getType() {
+    return 'field.updated'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('webhook.eventType.fieldUpdated')
+  }
+
+  getExamplePayload(database, table, rowExample) {
+    const payload = super.getExamplePayload(database, table, rowExample)
+    payload.field = fieldExample
+    return payload
+  }
+}
+
+export class FieldDeletedWebhookEventType extends WebhookEventType {
+  static getType() {
+    return 'field.deleted'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('webhook.eventType.fieldDeleted')
+  }
+
+  getExamplePayload(database, table, rowExample) {
+    const payload = super.getExamplePayload(database, table, rowExample)
+    payload.field_id = 1
+    return payload
+  }
+}
+
+// Unfortunately, we don't have an example of the field object in the web-frontend, so
+// we would need to hardcode it here.
+const viewExample = {
+  id: 0,
+  table_id: 0,
+  name: 'View',
+  order: 1,
+  type: 'grid',
+  table: null,
+  filter_type: 'AND',
+  filters_disabled: false,
+  public_view_has_password: false,
+  show_logo: true,
+  ownership_type: 'collaborative',
+  owned_by_id: null,
+  row_identifier_type: 'id',
+  public: false,
+}
+
+export class ViewCreatedWebhookEventType extends WebhookEventType {
+  static getType() {
+    return 'view.created'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('webhook.eventType.viewCreated')
+  }
+
+  getExamplePayload(database, table, rowExample) {
+    const payload = super.getExamplePayload(database, table, rowExample)
+    payload.view = viewExample
+    return payload
+  }
+}
+
+export class ViewUpdatedWebhookEventType extends WebhookEventType {
+  static getType() {
+    return 'view.updated'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('webhook.eventType.viewUpdated')
+  }
+
+  getExamplePayload(database, table, rowExample) {
+    const payload = super.getExamplePayload(database, table, rowExample)
+    payload.view = viewExample
+    return payload
+  }
+}
+
+export class ViewDeletedWebhookEventType extends WebhookEventType {
+  static getType() {
+    return 'view.deleted'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('webhook.eventType.viewDeleted')
+  }
+
+  getExamplePayload(database, table, rowExample) {
+    const payload = super.getExamplePayload(database, table, rowExample)
+    payload.view_id = 1
+    return payload
+  }
+}
