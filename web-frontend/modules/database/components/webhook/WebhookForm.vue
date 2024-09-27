@@ -113,15 +113,12 @@
         </RadioGroup>
       </FormGroup>
 
-      <div
-        v-if="!values.include_all_events"
-        class="webhook__types margin-bottom-2"
-      >
+      <div v-if="!values.include_all_events" class="webhook__types">
         <Checkbox
           v-for="webhookEvent in webhookEventTypes"
           :key="webhookEvent.type"
           :checked="values.events.includes(webhookEvent.type)"
-          class="webhook__type"
+          class="webhook__type margin-bottom-2"
           @input="
             $event
               ? values.events.push(webhookEvent.type)

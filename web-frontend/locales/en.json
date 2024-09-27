@@ -294,7 +294,13 @@
       "rowUpdated": "When a row is updated",
       "rowsUpdated": "Rows are updated",
       "rowDeleted": "When a row is deleted",
-      "rowsDeleted": "Rows are deleted"
+      "rowsDeleted": "Rows are deleted",
+      "fieldCreated": "Field is created",
+      "fieldUpdated": "Field is updated",
+      "fieldDeleted": "Field is deleted",
+      "viewCreated": "View is created",
+      "viewUpdated": "View is updated",
+      "viewDeleted": "View is deleted"
     }
   },
   "clientHandler": {

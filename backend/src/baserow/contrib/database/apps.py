@@ -496,6 +496,26 @@ class DatabaseConfig(AppConfig):
         webhook_event_type_registry.register(RowsUpdatedEventType())
         webhook_event_type_registry.register(RowsDeletedEventType())
 
+        from .fields.webhook_event_types import (
+            FieldCreatedEventType,
+            FieldDeletedEventType,
+            FieldUpdatedEventType,
+        )
+
+        webhook_event_type_registry.register(FieldCreatedEventType())
+        webhook_event_type_registry.register(FieldUpdatedEventType())
+        webhook_event_type_registry.register(FieldDeletedEventType())
+
+        from .views.webhook_event_types import (
+            ViewCreatedEventType,
+            ViewDeletedEventType,
+            ViewUpdatedEventType,
+        )
+
+        webhook_event_type_registry.register(ViewCreatedEventType())
+        webhook_event_type_registry.register(ViewUpdatedEventType())
+        webhook_event_type_registry.register(ViewDeletedEventType())
+
         from .airtable.airtable_column_types import (
             CheckboxAirtableColumnType,
             CountAirtableColumnType,
