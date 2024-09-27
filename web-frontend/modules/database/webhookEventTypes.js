@@ -32,6 +32,23 @@ export class WebhookEventType extends Registerable {
       event_type: this.getType(),
     }
   }
+
+  /**
+   * If `true`, then a dropdown will be shown next to the field type allowing the user
+   * to choose related fields. This can for example for an event that's restricted to
+   * certain field updates.
+   */
+  getHasRelatedFields() {
+    return false
+  }
+
+  getRelatedFieldsPlaceholder() {
+    return null
+  }
+
+  getRelatedFieldsHelpText() {
+    return null
+  }
 }
 
 export class RowsCreatedWebhookEventType extends WebhookEventType {
@@ -66,6 +83,20 @@ export class RowsUpdatedWebhookEventType extends WebhookEventType {
     payload.items = [rowExample]
     payload.old_items = [rowExample]
     return payload
+  }
+
+  getHasRelatedFields() {
+    return true
+  }
+
+  getRelatedFieldsPlaceholder() {
+    const { i18n } = this.app
+    return i18n.t('webhookForm.triggerWhenFieldsHaveChanged')
+  }
+
+  getRelatedFieldsHelpText() {
+    const { i18n } = this.app
+    return i18n.t('webhookForm.helpTriggerWhenFieldsHaveChanged')
   }
 }
 

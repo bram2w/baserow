@@ -7,6 +7,7 @@ from baserow.contrib.database.api.rows.serializers import (
 from baserow.contrib.database.webhooks.registries import WebhookEventType
 from baserow.contrib.database.ws.rows.signals import serialize_rows_values
 
+from ..webhooks.exceptions import SkipWebhookCall
 from .signals import rows_created, rows_deleted, rows_updated
 
 
@@ -63,8 +64,35 @@ class RowsUpdatedEventType(RowsEventType):
     signal = rows_updated
 
     def get_payload(
-        self, event_id, webhook, model, table, rows, before_return, **kwargs
+        self,
+        event_id,
+        webhook,
+        model,
+        table,
+        rows,
+        before_return,
+        updated_field_ids,
+        **kwargs,
     ):
+        # Check if any related field has been set in the event_config of the
+        # webhook configuration. If so, then set those field ids to
+        # `trigger_on_field_ids`, to make sure the webhook is only triggered whenever
+        # one of those fields has been updated.
+        if webhook.id:
+            trigger_on_field_ids = None
+            events = webhook.events.all()
+            for event in events:
+                if event.event_type == self.type and len(event.fields.all()) > 0:
+                    trigger_on_field_ids = {field.id for field in event.fields.all()}
+
+            if trigger_on_field_ids is not None and updated_field_ids is not None:
+                updated_field_ids_in_trigger_field_ids = any(
+                    updated_field_id in trigger_on_field_ids
+                    for updated_field_id in updated_field_ids
+                )
+                if not updated_field_ids_in_trigger_field_ids:
+                    raise SkipWebhookCall
+
         payload = super().get_payload(event_id, webhook, model, table, rows, **kwargs)
 
         old_items = dict(before_return)[serialize_rows_values]
@@ -88,6 +116,7 @@ class RowsUpdatedEventType(RowsEventType):
             table=table,
             rows=rows,
             before_return=before_return,
+            updated_field_ids=None,
         )
         return payload
 
