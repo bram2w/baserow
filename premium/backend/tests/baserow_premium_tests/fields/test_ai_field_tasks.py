@@ -1,13 +1,12 @@
 from io import BytesIO
 from unittest.mock import patch
 
-from django.core.files.storage import default_storage
-
 import pytest
 from baserow_premium.fields.tasks import generate_ai_values_for_rows
 
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.generative_ai.exceptions import GenerativeAIPromptError
+from baserow.core.storage import get_default_storage
 from baserow.core.user_files.handler import UserFileHandler
 
 
@@ -165,6 +164,8 @@ def test_generate_ai_field_value_view_generative_ai_invalid_prompt(
 def test_generate_ai_field_value_view_generative_ai_with_files(
     patched_rows_updated, premium_data_fixture
 ):
+    storage = get_default_storage()
+
     premium_data_fixture.register_fake_generate_ai_type()
     user = premium_data_fixture.create_user(
         email="test@test.nl", password="password", first_name="Test1"
@@ -185,7 +186,7 @@ def test_generate_ai_field_value_view_generative_ai_with_files(
     )
     table_model = table.get_model()
     user_file_1 = UserFileHandler().upload_user_file(
-        user, "aifile.txt", BytesIO(b"Text in file"), storage=default_storage
+        user, "aifile.txt", BytesIO(b"Text in file"), storage=storage
     )
     values = {f"field_{file_field.id}": [{"name": user_file_1.name}]}
     row = RowHandler().force_create_row(

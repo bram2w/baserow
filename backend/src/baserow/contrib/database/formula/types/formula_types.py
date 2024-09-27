@@ -4,7 +4,6 @@ from decimal import Decimal
 from typing import Any, List, Optional, Set, Type, Union
 
 from django.contrib.postgres.fields import ArrayField, JSONField
-from django.core.files.storage import default_storage
 from django.db import models
 from django.db.models import Expression, F, Func, Q, QuerySet, TextField, Value
 from django.db.models.functions import Cast, Concat
@@ -50,6 +49,7 @@ from baserow.contrib.database.formula.types.formula_type import (
     BaserowFormulaValidType,
     UnTyped,
 )
+from baserow.core.storage import get_default_storage
 from baserow.core.utils import list_to_comma_separated_string
 
 
@@ -921,8 +921,10 @@ class BaserowFormulaSingleFileType(BaserowJSONBObjectBaseType):
         elif "name" in file:
             from baserow.core.user_files.handler import UserFileHandler
 
+            storage = get_default_storage()
+
             path = UserFileHandler().user_file_path(file["name"])
-            url = default_storage.url(path)
+            url = storage.url(path)
         else:
             url = None
 

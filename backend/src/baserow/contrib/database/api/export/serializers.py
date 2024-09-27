@@ -1,4 +1,3 @@
-from django.core.files.storage import default_storage
 from django.utils.functional import lazy
 
 from drf_spectacular.types import OpenApiTypes
@@ -9,6 +8,7 @@ from baserow.contrib.database.export.handler import ExportHandler
 from baserow.contrib.database.export.models import ExportJob
 from baserow.contrib.database.export.registries import table_exporter_registry
 from baserow.core.context import clear_current_workspace_id, set_current_workspace_id
+from baserow.core.storage import get_default_storage
 
 # This is a map from the front end supported charsets to the internal python supported
 # charset value as they do not always match up.
@@ -88,7 +88,8 @@ class ExportedFileURLSerializerMixin(serializers.Serializer):
         name = self.get_instance_attr(instance, "exported_file_name")
         if name:
             path = ExportHandler().export_file_path(name)
-            return default_storage.url(path)
+            storage = get_default_storage()
+            return storage.url(path)
         else:
             return None
 

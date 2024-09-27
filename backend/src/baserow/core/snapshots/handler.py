@@ -2,7 +2,6 @@ from datetime import datetime, timedelta, timezone
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.core.files.storage import default_storage
 from django.db import OperationalError
 from django.db.models import QuerySet
 
@@ -28,6 +27,7 @@ from baserow.core.snapshots.exceptions import (
     SnapshotIsBeingRestored,
     SnapshotNameNotUnique,
 )
+from baserow.core.storage import get_default_storage
 from baserow.core.utils import Progress
 
 from .job_types import CreateSnapshotJobType, RestoreSnapshotJobType
@@ -373,6 +373,8 @@ class SnapshotHandler:
             as the application.
         """
 
+        storage = get_default_storage()
+
         if snapshot is None:
             raise SnapshotDoesNotExist()
 
@@ -395,7 +397,7 @@ class SnapshotHandler:
         )
         try:
             exported_application = application_type.export_serialized(
-                application, snapshot_import_export_config, None, default_storage
+                application, snapshot_import_export_config, None, storage
             )
         except OperationalError as e:
             # Detect if this `OperationalError` is due to us exceeding the
@@ -418,7 +420,7 @@ class SnapshotHandler:
             snapshot_import_export_config,
             id_mapping,
             None,
-            default_storage,
+            storage,
             progress_builder=progress.create_child_builder(represents_progress=50),
         )
 
@@ -434,6 +436,8 @@ class SnapshotHandler:
             as the application.
         :returns: Application that is a copy of the snapshot.
         """
+
+        storage = get_default_storage()
 
         if snapshot is None:
             raise SnapshotDoesNotExist()
@@ -456,7 +460,7 @@ class SnapshotHandler:
         # be correctly set during the import process.
         application.workspace = workspace
         exported_application = application_type.export_serialized(
-            application, restore_snapshot_import_export_config, None, default_storage
+            application, restore_snapshot_import_export_config, None, storage
         )
         progress.increment(by=50)
 
@@ -466,7 +470,7 @@ class SnapshotHandler:
             restore_snapshot_import_export_config,
             {},
             None,
-            default_storage,
+            storage,
             progress_builder=progress.create_child_builder(represents_progress=50),
         )
         imported_application.name = CoreHandler().find_unused_application_name(

@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 from typing import Iterable, List, cast
 
-from django.core.files.storage import default_storage
 from django.db.models import QuerySet
 from django.db.utils import IntegrityError
 
@@ -17,6 +16,7 @@ from baserow.contrib.builder.models import Builder
 from baserow.core.db import specific_iterator
 from baserow.core.exceptions import IdDoesNotExist
 from baserow.core.registries import ImportExportConfig, application_type_registry
+from baserow.core.storage import get_default_storage
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import Progress, extract_allowed
 
@@ -205,6 +205,8 @@ class DomainHandler:
         import_export_config = ImportExportConfig(
             include_permission_data=True, reduce_disk_space_usage=False
         )
+
+        default_storage = get_default_storage()
 
         exported_builder = builder_application_type.export_serialized(
             builder, import_export_config, None, default_storage

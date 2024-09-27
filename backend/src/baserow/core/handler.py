@@ -11,7 +11,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser, AnonymousUser
-from django.core.files.storage import Storage, default_storage
+from django.core.files.storage import Storage
 from django.db import OperationalError, transaction
 from django.db.models import Count, Prefetch, Q, QuerySet
 from django.utils import translation
@@ -103,6 +103,7 @@ from .signals import (
     workspace_user_updated,
     workspaces_reordered,
 )
+from .storage import get_default_storage
 from .telemetry.utils import baserow_trace_methods, disable_instrumentation
 from .trash.handler import TrashHandler
 from .types import (
@@ -1629,8 +1630,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         :rtype: list
         """
 
-        if not storage:
-            storage = default_storage
+        storage = storage or get_default_storage()
 
         with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:
             exported_applications = []
@@ -1679,8 +1679,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             progress_builder, len(exported_applications) * 1000
         )
 
-        if not storage:
-            storage = default_storage
+        storage = storage or get_default_storage()
 
         with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:
             id_mapping: Dict[str, Any] = {}
