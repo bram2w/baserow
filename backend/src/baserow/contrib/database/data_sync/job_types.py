@@ -25,6 +25,7 @@ from .actions import SyncDataSyncTableActionType
 from .handler import DataSyncHandler
 from .models import SyncDataSyncTableJob
 from .operations import SyncTableOperationType
+from .registries import data_sync_type_registry
 
 
 class SyncDataSyncTableJobType(JobType):
@@ -61,6 +62,9 @@ class SyncDataSyncTableJobType(JobType):
 
     def prepare_values(self, values, user):
         data_sync = DataSyncHandler().get_data_sync(values["data_sync_id"])
+        data_sync_type_registry.get_by_model(data_sync).prepare_sync_job_values(
+            data_sync
+        )
         CoreHandler().check_permissions(
             user,
             SyncTableOperationType.type,

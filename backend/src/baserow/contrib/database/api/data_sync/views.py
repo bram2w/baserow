@@ -24,6 +24,7 @@ from baserow.contrib.database.data_sync.actions import CreateDataSyncTableAction
 from baserow.contrib.database.data_sync.exceptions import (
     DataSyncDoesNotExist,
     PropertyNotFound,
+    SyncError,
 )
 from baserow.contrib.database.data_sync.job_types import SyncDataSyncTableJobType
 from baserow.contrib.database.data_sync.registries import data_sync_type_registry
@@ -35,7 +36,11 @@ from baserow.core.jobs.handler import JobHandler
 from baserow.core.jobs.registries import job_type_registry
 from baserow.core.utils import extract_allowed
 
-from .errors import ERROR_DATA_SYNC_DOES_NOT_EXIST, ERROR_PROPERTY_NOT_FOUND
+from .errors import (
+    ERROR_DATA_SYNC_DOES_NOT_EXIST,
+    ERROR_PROPERTY_NOT_FOUND,
+    ERROR_SYNC_ERROR,
+)
 from .serializers import (
     CreateDataSyncSerializer,
     ListDataSyncPropertiesRequestSerializer,
@@ -81,6 +86,7 @@ class DataSyncsView(APIView):
                 [
                     "ERROR_USER_NOT_IN_GROUP",
                     "ERROR_REQUEST_BODY_VALIDATION",
+                    "ERROR_SYNC_ERROR",
                 ]
             ),
             404: get_error_schema(["ERROR_APPLICATION_DOES_NOT_EXIST"]),
@@ -97,6 +103,7 @@ class DataSyncsView(APIView):
             ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
             UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             PropertyNotFound: ERROR_PROPERTY_NOT_FOUND,
+            SyncError: ERROR_SYNC_ERROR,
         }
     )
     def post(
@@ -187,12 +194,18 @@ class DataSyncPropertiesView(APIView):
             200: ListDataSyncPropertySerializer(many=True),
             400: get_error_schema(
                 [
+                    "ERROR_SYNC_ERROR",
                     "ERROR_REQUEST_BODY_VALIDATION",
                 ]
             ),
         },
     )
     @transaction.atomic
+    @map_exceptions(
+        {
+            SyncError: ERROR_SYNC_ERROR,
+        }
+    )
     @validate_body_custom_fields(
         data_sync_type_registry,
         base_serializer_class=ListDataSyncPropertiesRequestSerializer,
@@ -214,6 +227,7 @@ class DataSyncPropertiesView(APIView):
 
         allowed_fields = [] + data_sync_type.allowed_fields
         values = extract_allowed(data, allowed_fields)
+        values = data_sync_type.prepare_values(request.user, values)
 
         data_sync_instance = model_class(**values)
         data_sync_properties = data_sync_type.get_properties(data_sync_instance)

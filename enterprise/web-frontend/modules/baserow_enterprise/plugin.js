@@ -38,6 +38,7 @@ import {
   NoAccessRoleType,
   NoRoleLowPriorityRoleType,
 } from '@baserow_enterprise/roleTypes'
+import { LocalBaserowTableDataSyncType } from '@baserow_enterprise/dataSyncTypes'
 
 export default (context) => {
   const { app, isDev, store } = context
@@ -117,4 +118,6 @@ export default (context) => {
   app.$registry.register('roles', new NoRoleLowPriorityRoleType(context))
 
   app.$registry.register('element', new AuthFormElementType(context))
+
+  app.$registry.register('dataSync', new LocalBaserowTableDataSyncType(context))
 }

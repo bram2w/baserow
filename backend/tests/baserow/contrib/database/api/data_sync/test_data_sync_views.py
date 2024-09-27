@@ -219,6 +219,7 @@ def test_create_data_sync(data_fixture, api_client):
         "database_id": database.id,
         "data_sync": {
             "id": data_sync.id,
+            "type": "ical_calendar",
             "synced_properties": [
                 {
                     "field_id": properties[0].field_id,

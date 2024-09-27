@@ -93,6 +93,7 @@ class DataSyncHandler:
 
         allowed_fields = [] + data_sync_type.allowed_fields
         values = extract_allowed(kwargs, allowed_fields)
+        values = data_sync_type.prepare_values(user, values)
 
         data_sync_instance = model_class(**values)
         data_sync_properties = data_sync_type.get_properties(data_sync_instance)
