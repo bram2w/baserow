@@ -32,6 +32,7 @@ from baserow.contrib.database.views.view_filters import (
     DateIsWithinMultiStepFilterType,
     DateMultiStepViewFilterType,
 )
+from baserow.test_utils.helpers import setup_interesting_test_table
 
 
 @pytest.mark.django_db
@@ -7601,3 +7602,28 @@ def test_duplicate_table_with_two_nested_filter_groups(data_fixture):
     assert len(filter_groups) == 2
     assert filter_groups[0].parent_group is None
     assert filter_groups[1].parent_group_id == filter_groups[0].id
+
+
+@pytest.mark.django_db
+def test_all_view_filters_can_accept_strings_as_filter_value(data_fixture):
+    table, user, row, _, context = setup_interesting_test_table(data_fixture)
+    view = data_fixture.create_grid_view(table=table)
+    fields = context["fields"]
+    for field in fields.values():
+        for view_filter_type in view_filter_type_registry.get_all():
+            if not view_filter_type.field_is_compatible(field):
+                continue
+
+            data_fixture.create_view_filter(
+                view=view,
+                field=field,
+                type=view_filter_type.type,
+                value="test",
+            )
+
+    # We should be able to load the view without any errors
+    handler = ViewHandler()
+    try:
+        handler.get_queryset(view)
+    except Exception as e:
+        pytest.fail(f"Exception raised: {e}")

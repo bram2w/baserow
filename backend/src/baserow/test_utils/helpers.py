@@ -151,6 +151,7 @@ def setup_interesting_test_table(
         primary=True,
     )
     handler = FieldHandler()
+    fields = {}
     for field_type_name, all_possible_kwargs in all_possible_kwargs_per_type.items():
         for kwargs in all_possible_kwargs:
             field = handler.create_field(
@@ -162,6 +163,7 @@ def setup_interesting_test_table(
             )
             i += 1
             name_to_field_id[kwargs["name"]] = field.id
+            fields[field.id] = field
     row_handler = RowHandler()
 
     datetime = _parse_datetime("2020-02-01 01:23")
@@ -386,7 +388,7 @@ def setup_interesting_test_table(
             },
         )
 
-    context = {"user2": user2, "user3": user3}
+    context = {"user2": user2, "user3": user3, "fields": fields}
 
     return table, user, row, blank_row, context
 
