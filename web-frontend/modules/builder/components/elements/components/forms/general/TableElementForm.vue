@@ -82,7 +82,7 @@
     </FormGroup>
 
     <FormSection class="margin-bottom-2" :title="$t('tableElementForm.fields')">
-      <template v-if="elementHasContent.length">
+      <template v-if="values.fields?.length">
         <ButtonText
           v-show="selectedDataSourceReturnsList"
           type="primary"
