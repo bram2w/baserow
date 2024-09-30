@@ -7,6 +7,7 @@ from enum import Enum
 from math import ceil, floor
 from typing import Any, Dict, NamedTuple, Optional, Tuple, Union
 
+from django.core.exceptions import ValidationError
 from django.db.models import DateField, DateTimeField, IntegerField, Q, Value
 from django.db.models.expressions import F, Func
 from django.db.models.fields.json import JSONField
@@ -1266,19 +1267,22 @@ class LinkRowContainsViewFilterType(ViewFilterType):
             related_primary_field
         )
 
-        subquery = (
-            FilterBuilder(FILTER_TYPE_AND)
-            .filter(
-                related_primary_field_type.contains_query(
-                    f"{field_name}__{related_primary_field.db_column}",
-                    value,
-                    related_primary_field_model_field,
-                    related_primary_field,
+        try:
+            subquery = (
+                FilterBuilder(FILTER_TYPE_AND)
+                .filter(
+                    related_primary_field_type.contains_query(
+                        f"{field_name}__{related_primary_field.db_column}",
+                        value,
+                        related_primary_field_model_field,
+                        related_primary_field,
+                    )
                 )
+                .apply_to_queryset(model.objects)
+                .values_list("id", flat=True)
             )
-            .apply_to_queryset(model.objects)
-            .values_list("id", flat=True)
-        )
+        except (ValueError, ValidationError):
+            subquery = []
 
         return Q(
             **{f"id__in": subquery},
@@ -1400,7 +1404,10 @@ class UserIsViewFilterType(ViewFilterType):
         if not value:
             return Q()
         value = value.strip()
-        return Q(**{f"{field_name}__id": int(value)})
+        try:
+            return Q(**{f"{field_name}__id": int(value)})
+        except ValueError:
+            return Q()
 
     def get_export_serialized_value(self, value, id_mapping):
         if self.USER_KEY not in id_mapping:
