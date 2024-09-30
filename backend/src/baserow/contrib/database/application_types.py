@@ -60,6 +60,9 @@ class DatabaseApplicationType(ApplicationType):
     # the polymorphic request serializer will try and serialize tables.
     request_serializer_field_names = []
 
+    # Database applications are imported first.
+    import_application_priority = 2
+
     def pre_delete(self, database):
         """
         When a database is deleted we must also delete the related tables via the table

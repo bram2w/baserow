@@ -26,17 +26,33 @@ from baserow.contrib.builder.workflow_actions.handler import (
     BuilderWorkflowActionHandler,
 )
 from baserow.contrib.builder.workflow_actions.models import EventTypes
+from baserow.contrib.database.application_types import DatabaseApplicationType
 from baserow.core.action.models import Action
 from baserow.core.action.registries import action_type_registry
 from baserow.core.actions import CreateApplicationActionType
 from baserow.core.db import specific_iterator
-from baserow.core.registries import ImportExportConfig
+from baserow.core.registries import ImportExportConfig, application_type_registry
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.user_sources.registries import DEFAULT_USER_ROLE_PREFIX
 from baserow_enterprise.integrations.local_baserow.user_source_types import (
     LocalBaserowUserSourceType,
 )
+
+
+def test_builder_application_type_import_application_priority():
+    database_type = application_type_registry.get(DatabaseApplicationType.type)
+    builder_type = application_type_registry.get(BuilderApplicationType.type)
+    manual_ordering = [database_type, builder_type]
+    expected_ordering = sorted(
+        application_type_registry.get_all(),
+        key=lambda element_type: element_type.import_application_priority,
+        reverse=True,
+    )
+    assert manual_ordering == expected_ordering, (
+        "The application types ordering are expected to be: "
+        "databases first, then applications, then everything else."
+    )
 
 
 @pytest.mark.django_db

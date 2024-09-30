@@ -62,6 +62,8 @@ from baserow.contrib.builder.elements.registries import (
 from baserow.contrib.builder.elements.service import ElementService
 from baserow.contrib.builder.pages.service import PageService
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.core.handler import CoreHandler
+from baserow.core.registries import ImportExportConfig
 from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.user_sources.registries import DEFAULT_USER_ROLE_PREFIX
 from baserow.core.utils import MirrorDict
@@ -1366,3 +1368,65 @@ def test_record_element_is_valid(data_fixture):
     )
     with pytest.raises(FormDataProviderChunkInvalidException):
         RecordSelectorElementType().is_valid(element, "-1", dispatch_context)
+
+
+@pytest.mark.django_db(transaction=True)
+def test_repeat_element_import_export(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    builder = data_fixture.create_builder_application(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
+
+    table = data_fixture.create_database_table(database=database)
+    multiple_select_field = data_fixture.create_multiple_select_field(
+        table=table, name="option_field", order=1, primary=True
+    )
+    data_fixture.create_select_option(
+        field=multiple_select_field, value="A", color="blue", order=0
+    )
+
+    page = data_fixture.create_builder_page(builder=builder)
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        page=page
+    )
+
+    outer_repeat = data_fixture.create_builder_repeat_element(
+        data_source=data_source, page=page
+    )
+    data_fixture.create_builder_repeat_element(
+        page=page,
+        data_source=None,
+        parent_element_id=outer_repeat.id,
+        schema_property=multiple_select_field.db_column,
+    )
+
+    config = ImportExportConfig(include_permission_data=False)
+    exported_applications = CoreHandler().export_workspace_applications(
+        workspace, BytesIO(), config
+    )
+
+    # Ensure the values are json serializable
+    try:
+        json.dumps(exported_applications)
+    except Exception as e:
+        pytest.fail(f"Exported applications are not json serializable: {e}")
+
+    imported_applications, _ = CoreHandler().import_applications_to_workspace(
+        workspace, exported_applications, BytesIO(), config, None
+    )
+    imported_database, imported_builder = imported_applications
+
+    # Pluck out the imported database records.
+    imported_table = imported_database.table_set.get()
+    imported_field = imported_table.field_set.get()
+
+    # Pluck out the imported builder records.
+    imported_page = imported_builder.page_set.all()[0]
+    imported_data_source = imported_page.datasource_set.get()
+    imported_root_repeat = imported_page.element_set.get(
+        parent_element_id=None
+    ).specific
+    imported_nested_repeat = imported_root_repeat.children.get().specific
+
+    assert imported_root_repeat.data_source_id == imported_data_source.id
+    assert imported_nested_repeat.schema_property == imported_field.db_column
