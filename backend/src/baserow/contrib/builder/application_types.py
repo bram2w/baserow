@@ -51,6 +51,9 @@ class BuilderApplicationType(ApplicationType):
     request_serializer_field_names = ["favicon_file"]
     serializer_mixins = [lazy_get_instance_serializer_class]
 
+    # Builder applications are imported second.
+    import_application_priority = 1
+
     @property
     def serializer_field_overrides(self):
         from baserow.api.user_files.serializers import UserFileField

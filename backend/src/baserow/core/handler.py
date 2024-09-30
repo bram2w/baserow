@@ -1681,11 +1681,24 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
         storage = storage or get_default_storage()
 
+        # Sort the serialized applications so that we import:
+        # Database first
+        # Applications second
+        # Everything else after that.
+        def application_priority_sort(application_to_sort):
+            return application_type_registry.get(
+                application_to_sort["type"]
+            ).import_application_priority
+
+        prioritized_applications = sorted(
+            exported_applications, key=application_priority_sort, reverse=True
+        )
+
         with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:
             id_mapping: Dict[str, Any] = {}
             imported_applications = []
             next_application_order_value = Application.get_last_order(workspace)
-            for application in exported_applications:
+            for application in prioritized_applications:
                 application_type = application_type_registry.get(application["type"])
                 imported_application = application_type.import_serialized(
                     workspace,
