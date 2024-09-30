@@ -404,7 +404,13 @@ export const actions = {
    */
   async update(
     { commit, dispatch },
-    { view, values, readOnly = false, refreshFromFetch = false }
+    {
+      view,
+      values,
+      readOnly = false,
+      refreshFromFetch = false,
+      optimisticUpdate = true,
+    }
   ) {
     commit('SET_ITEM_LOADING', { view, value: true })
     const oldValues = {}
@@ -433,7 +439,9 @@ export const actions = {
       })
     }
 
-    dispatch('forceUpdate', { view, values: newValues, repopulate: true })
+    if (optimisticUpdate) {
+      dispatch('forceUpdate', { view, values: newValues, repopulate: true })
+    }
     try {
       if (!readOnly) {
         dispatch(
@@ -447,7 +455,7 @@ export const actions = {
         const newValues = (
           await ViewService(this.$client).update(view.id, values)
         ).data
-        if (refreshFromFetch) {
+        if (refreshFromFetch || !optimisticUpdate) {
           dispatch('forceUpdate', { view, values: newValues, repopulate: true })
         }
 
