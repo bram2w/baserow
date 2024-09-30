@@ -151,11 +151,6 @@ export default {
       const table = this.tablesWhereFieldsCanBeCreated.find(
         (table) => table.id === newValueType
       )
-      console.log(
-        newValueType,
-        oldValue,
-        this.values.link_row_limit_selection_view_id
-      )
       if (newValueType !== oldValue) {
         this.loadViewsIfNeeded()
       }

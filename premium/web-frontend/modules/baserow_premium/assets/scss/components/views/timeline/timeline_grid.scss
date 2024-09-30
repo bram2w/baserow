@@ -1,0 +1,42 @@
+%timeline-grid {
+  position: relative;
+  top: 0;
+}
+
+.timeline-grid {
+  @extend %timeline-grid;
+}
+
+%timeline-grid-column {
+  position: absolute;
+  height: 100%;
+}
+
+.timeline-grid__column {
+  @extend %timeline-grid-column;
+
+  border-right: 1px solid $color-neutral-200;
+}
+
+.timeline-grid__now-cursor {
+  position: absolute;
+  border-left: 2px solid $palette-blue-500;
+  height: 100%;
+}
+
+.timeline-grid__now-cursor::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-60%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 8px solid $palette-blue-500;
+}
+
+.timeline-grid__column--weekend {
+  background-color: $palette-neutral-100;
+}

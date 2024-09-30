@@ -280,6 +280,12 @@ export default ({ service, customPopulateRow }) => {
 
   const actions = {
     /**
+     * Set the view id for the view.
+     */
+    setViewId({ commit }, { viewId }) {
+      commit('SET_VIEW_ID', viewId)
+    },
+    /**
      * This action fetches the initial set of rows via the provided service. After
      * that it will fill the state with the newly fetched rows and the rest will be
      * un-fetched `null` objects.

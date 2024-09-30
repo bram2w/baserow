@@ -1,35 +1,34 @@
 import bufferedRows from '@baserow/modules/database/store/view/bufferedRows'
 import fieldOptions from '@baserow/modules/database/store/view/fieldOptions'
-import GalleryService from '@baserow/modules/database/services/view/gallery'
+import TimelineService from '@baserow_premium/services/views/timeline'
 
 export function populateRow(row, metadata = {}) {
   row._ = {
     metadata,
-    dragging: false,
   }
   return row
 }
 
-const galleryBufferedRows = bufferedRows({
-  service: GalleryService,
+const timelineBufferedRows = bufferedRows({
+  service: TimelineService,
   populateRow,
 })
 
-const galleryFieldOptions = fieldOptions()
+const timelineFieldOptions = fieldOptions()
 
 export const state = () => ({
-  ...galleryBufferedRows.state(),
-  ...galleryFieldOptions.state(),
+  ...timelineBufferedRows.state(),
+  ...timelineFieldOptions.state(),
 })
 
 export const mutations = {
-  ...galleryBufferedRows.mutations,
-  ...galleryFieldOptions.mutations,
+  ...timelineBufferedRows.mutations,
+  ...timelineFieldOptions.mutations,
 }
 
 export const actions = {
-  ...galleryBufferedRows.actions,
-  ...galleryFieldOptions.actions,
+  ...timelineBufferedRows.actions,
+  ...timelineFieldOptions.actions,
   async fetchInitial(
     { dispatch },
     { viewId, fields, adhocFiltering, adhocSorting }
@@ -37,7 +36,10 @@ export const actions = {
     const data = await dispatch('fetchInitialRows', {
       viewId,
       fields,
-      initialRowArguments: { includeFieldOptions: true },
+      initialRowArguments: {
+        includeFieldOptions: true,
+        includeRowMetadata: false,
+      },
       adhocFiltering,
       adhocSorting,
     })
@@ -46,8 +48,8 @@ export const actions = {
 }
 
 export const getters = {
-  ...galleryBufferedRows.getters,
-  ...galleryFieldOptions.getters,
+  ...timelineBufferedRows.getters,
+  ...timelineFieldOptions.getters,
 }
 
 export default {
