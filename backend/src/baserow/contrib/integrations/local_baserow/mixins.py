@@ -73,7 +73,8 @@ class LocalBaserowTableServiceFilterableMixin:
     def deserialize_filters(self, value, id_mapping):
         """
         Deserializes the filters by mapping the field_id to the new field_id if it
-        exists in the id_mapping.
+        exists in the id_mapping. If the value is a digit, try and map the value to
+        the new field select option id.
 
         :param value: the value of this property.
         :param id_mapping: the id mapping dict.
@@ -87,6 +88,14 @@ class LocalBaserowTableServiceFilterableMixin:
                     id_mapping["database_fields"][f["field_id"]]
                     if "database_fields" in id_mapping
                     else f["field_id"]
+                ),
+                "value": (
+                    id_mapping["database_field_select_options"].get(
+                        int(f["value"]), f["value"]
+                    )
+                    if "database_field_select_options" in id_mapping
+                    and f["value"].isdigit()
+                    else f["value"]
                 ),
             }
             for f in value
