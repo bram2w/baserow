@@ -1,4 +1,5 @@
 import json
+from io import BytesIO
 from unittest.mock import Mock
 
 from django.db import transaction
@@ -16,6 +17,8 @@ from baserow.contrib.integrations.local_baserow.mixins import (
 from baserow.contrib.integrations.local_baserow.service_types import (
     LocalBaserowTableServiceType,
 )
+from baserow.core.handler import CoreHandler
+from baserow.core.registries import ImportExportConfig
 from baserow.test_utils.pytest_conftest import FakeDispatchContext
 
 
@@ -97,6 +100,90 @@ def test_local_baserow_table_service_filterable_mixin_get_queryset(
             service, table, dispatch_context, table_model
         )
     ] == [alexandra.id]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_local_baserow_table_service_filterable_mixin_import_export(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    builder = data_fixture.create_builder_application(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
+
+    table = data_fixture.create_database_table(database=database)
+    text_field = data_fixture.create_text_field(name="Text", table=table)
+    single_select_field = data_fixture.create_single_select_field(
+        table=table, name="Single", order=1
+    )
+    single_option = data_fixture.create_select_option(
+        field=single_select_field, value="A", color="blue"
+    )
+    page = data_fixture.create_builder_page(builder=builder)
+    integration = data_fixture.create_local_baserow_integration(application=builder)
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        page=page, table=table, integration=integration
+    )
+    data_fixture.create_local_baserow_table_service_filter(
+        service=data_source.service, field=text_field, value="foobar", order=0
+    )
+    data_fixture.create_local_baserow_table_service_filter(
+        service=data_source.service, field=text_field, value="123", order=1
+    )
+    data_fixture.create_local_baserow_table_service_filter(
+        service=data_source.service,
+        field=single_select_field,
+        value=single_option.id,
+        order=2,
+    )
+    data_fixture.create_builder_table_element(
+        page=page,
+        data_source=data_source,
+        fields=[
+            {
+                "name": "Click me",
+                "type": "button",
+                "config": {"label": "'Click'"},
+            },
+        ],
+    )
+
+    config = ImportExportConfig(include_permission_data=False)
+    exported_applications = CoreHandler().export_workspace_applications(
+        workspace, BytesIO(), config
+    )
+
+    # Ensure the values are json serializable
+    try:
+        json.dumps(exported_applications)
+    except Exception as e:
+        pytest.fail(f"Exported applications are not json serializable: {e}")
+
+    imported_applications, _ = CoreHandler().import_applications_to_workspace(
+        workspace, exported_applications, BytesIO(), config, None
+    )
+    imported_database, imported_builder = imported_applications
+
+    # Pluck out the imported database records.
+    imported_table = imported_database.table_set.get()
+    imported_text_field = imported_table.field_set.get(name="Text")
+    imported_single_select_field = imported_table.field_set.get(name="Single").specific
+    imported_select_option = imported_single_select_field.select_options.get()
+
+    # Pluck out the imported builder records.
+    imported_page = imported_builder.page_set.get()
+    imported_datasource = imported_page.datasource_set.get()
+    imported_filters = [
+        {"field_id": sf.field_id, "value": sf.value}
+        for sf in imported_datasource.service.service_filters.all()
+    ]
+
+    assert imported_filters == [
+        {"field_id": imported_text_field.id, "value": "foobar"},
+        {"field_id": imported_text_field.id, "value": "123"},
+        {
+            "field_id": imported_single_select_field.id,
+            "value": str(imported_select_option.id),
+        },
+    ]
 
 
 @pytest.mark.django_db
