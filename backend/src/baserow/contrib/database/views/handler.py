@@ -2763,6 +2763,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         model: Union[GeneratedTableModel, None] = None,
         with_total: bool = False,
         adhoc_filters: Optional[AdHocFilters] = None,
+        combine_filters: bool = False,
         search: Optional[str] = None,
         search_mode: Optional[SearchModes] = None,
         skip_perm_check: bool = False,
@@ -2782,8 +2783,10 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             automatically.
         :param with_total: Whether the total row count should be returned in the
             result.
-        :param adhoc_filters: The filters that can be optionally applied
-            instead of the view's own filters.
+        :param adhoc_filters: The filters that can be optionally applied.
+        :param combine_filters: If set to True, the adhoc filters will be used
+            together with the view filters. Otherwise ad hoc filters will be
+            used if provided.
         :param search: the search string to considerate. If the search parameter is
             defined, we don't use the cache so we recompute aggregation on the fly.
         :param search_mode: the search mode that the search is using.
@@ -2866,6 +2869,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
                 model,
                 with_total=with_total,
                 adhoc_filters=adhoc_filters,
+                combine_filters=combine_filters,
                 search=search,
                 search_mode=search_mode,
                 skip_perm_check=skip_perm_check,
@@ -2906,6 +2910,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         model: Union[GeneratedTableModel, None] = None,
         with_total: bool = False,
         adhoc_filters: Optional[AdHocFilters] = None,
+        combine_filters: bool = False,
         search: Optional[str] = None,
         search_mode: Optional[SearchModes] = None,
         skip_perm_check: bool = False,
@@ -2924,8 +2929,10 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             automatically.
         :param with_total: Whether the total row count should be returned in the
             result.
-        :param adhoc_filters: The filters that can be optionally applied
-            instead of the view's own filters.
+        :param adhoc_filters: The filters that can be optionally applied.
+        :param combine_filters: If set to True, the adhoc filters will be used
+            together with the view filters. Otherwise ad hoc filters will be
+            used if provided.
         :param search: the search string to consider.
         :param search: the mode that the search is in.
         :param skip_perm_check: Skips the permission check if not necessary.
@@ -2964,11 +2971,15 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
 
         # Apply filters and search to have accurate aggregations
         if view_type.can_filter:
-            queryset = (
-                adhoc_filters.apply_to_queryset(model, queryset)
-                if adhoc_filters.has_any_filters
-                else self.apply_filters(view, queryset)
-            )
+            if combine_filters:
+                queryset = self.apply_filters(view, queryset)
+                queryset = adhoc_filters.apply_to_queryset(model, queryset)
+            else:
+                queryset = (
+                    adhoc_filters.apply_to_queryset(model, queryset)
+                    if adhoc_filters.has_any_filters
+                    else self.apply_filters(view, queryset)
+                )
 
         if search is not None:
             queryset = queryset.search_all_fields(

@@ -655,6 +655,7 @@ class PublicGridViewFieldAggregationsView(APIView):
             search=search,
             search_mode=search_mode,
             adhoc_filters=adhoc_filters,
+            combine_filters=True,
             skip_perm_check=True,
         )
 
