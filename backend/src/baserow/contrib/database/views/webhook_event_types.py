@@ -1,3 +1,5 @@
+from django.contrib.auth.models import AnonymousUser
+
 from baserow.contrib.database.api.views.serializers import ViewSerializer
 from baserow.contrib.database.webhooks.registries import WebhookEventType
 
@@ -7,18 +9,18 @@ from .signals import view_created, view_deleted, view_updated
 
 
 class ViewEventType(WebhookEventType):
-    def get_payload(self, event_id, webhook, view, **kwargs):
+    def get_payload(self, event_id, webhook, view, user, **kwargs):
         payload = super().get_payload(event_id, webhook, **kwargs)
-        serializer = view_type_registry.get_serializer(view, ViewSerializer)
+        serializer = view_type_registry.get_serializer(
+            view, ViewSerializer, context={"user": user}
+        )
         payload["view"] = serializer.data
         return payload
 
     def get_test_call_payload(self, table, model, event_id, webhook):
         view = GridView(id=0, name="View", table_id=0, order=1)
         payload = self.get_payload(
-            event_id=event_id,
-            webhook=webhook,
-            view=view,
+            event_id=event_id, webhook=webhook, view=view, user=AnonymousUser
         )
         return payload
 
