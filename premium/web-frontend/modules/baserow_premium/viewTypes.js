@@ -267,7 +267,7 @@ export class CalendarViewType extends PremiumViewType {
   }
 
   canFilter() {
-    return false
+    return true
   }
 
   canSort() {
@@ -295,10 +295,19 @@ export class CalendarViewType extends PremiumViewType {
   }
 
   async fetch({ store }, database, view, fields, storePrefix = '') {
+    const isPublic = store.getters[storePrefix + 'view/public/getIsPublic']
+    const adhocFiltering = isAdhocFiltering(
+      this.app,
+      database.workspace,
+      view,
+      isPublic
+    )
+
     await store.dispatch(storePrefix + 'view/calendar/resetAndFetchInitial', {
       calendarId: view.id,
       dateFieldId: view.date_field,
       fields,
+      adhocFiltering,
     })
   }
 
@@ -323,11 +332,19 @@ export class CalendarViewType extends PremiumViewType {
     ) {
       return
     }
+    const isPublic = store.getters[storePrefix + 'view/public/getIsPublic']
+    const adhocFiltering = isAdhocFiltering(
+      this.app,
+      database.workspace,
+      view,
+      isPublic
+    )
     await store.dispatch(storePrefix + 'view/calendar/refreshAndFetchInitial', {
       calendarId: view.id,
       dateFieldId: view.date_field,
       fields,
       includeFieldOptions,
+      adhocFiltering,
     })
   }
 

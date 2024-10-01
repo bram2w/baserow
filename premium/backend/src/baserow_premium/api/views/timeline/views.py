@@ -27,6 +27,7 @@ from baserow.api.search.serializers import SearchQueryParamSerializer
 from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.contrib.database.api.constants import (
     ADHOC_FILTERS_API_PARAMS,
+    ADHOC_FILTERS_API_PARAMS_NO_COMBINE,
     ADHOC_SORTING_API_PARAM,
     EXCLUDE_FIELDS_API_PARAM,
     INCLUDE_FIELDS_API_PARAM,
@@ -114,7 +115,7 @@ class TimelineViewView(APIView):
             ),
             ONLY_COUNT_API_PARAM,
             *PAGINATION_API_PARAMS,
-            *ADHOC_FILTERS_API_PARAMS,
+            *ADHOC_FILTERS_API_PARAMS_NO_COMBINE,
             ADHOC_SORTING_API_PARAM,
             INCLUDE_FIELDS_API_PARAM,
             EXCLUDE_FIELDS_API_PARAM,
