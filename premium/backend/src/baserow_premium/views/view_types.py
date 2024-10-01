@@ -557,6 +557,7 @@ class TimelineViewType(ViewType):
         FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
         TimelineViewHasInvalidDateSettings: ERROR_TIMELINE_VIEW_HAS_INVALID_DATE_SETTINGS,
     }
+    can_decorate = True
     can_share = True
     has_public_info = True
 

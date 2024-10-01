@@ -12,10 +12,10 @@
         <div class="control__elements">
           <Dropdown
             v-model="values.startDateFieldId"
+            fixed-items
             :show-search="true"
             :disabled="readOnly"
             :placeholder="readOnly ? ' ' : $t('action.makeChoice')"
-            :fixed-items="true"
           >
             <DropdownItem :key="null" name="" :value="null">
               <div :style="{ height: '15px' }"></div>
@@ -47,9 +47,9 @@
         <div class="control__elements">
           <Dropdown
             v-model="values.endDateFieldId"
+            fixed-items
             :show-search="true"
             :disabled="readOnly"
-            :fixed-items="true"
           >
             <DropdownItem :key="null" name="" :value="null">
               <div :style="{ height: '15px' }"></div>

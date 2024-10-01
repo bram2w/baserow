@@ -522,19 +522,19 @@ export class TimelineViewType extends BaseBufferedRowViewTypeMixin(
   }
 
   canFilter() {
-    return false
+    return true
   }
 
   canSort() {
-    return false
+    return true
   }
 
   canShare() {
-    return false
+    return true
   }
 
   canShowRowModal() {
-    return false
+    return true
   }
 
   getPublicRoute() {

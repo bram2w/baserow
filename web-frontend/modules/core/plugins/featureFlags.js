@@ -1,6 +1,5 @@
 const FF_ENABLE_ALL = '*'
 export const FF_EXPORT_WORKSPACE = 'export_workspace'
-export const FF_TIMELINE_VIEW = 'timeline_view'
 
 /**
  * A comma separated list of feature flags used to enable in-progress or not ready

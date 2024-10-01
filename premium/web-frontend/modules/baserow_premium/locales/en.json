@@ -237,6 +237,9 @@
   "calendarMonthDayExpanded": {
     "tryAgain": "try again"
   },
+  "timelineGridRow": {
+    "days": "0 | 1 day | {count} days"
+  },
   "dashboard": {
     "title": "Dashboard",
     "totals": "Totals",

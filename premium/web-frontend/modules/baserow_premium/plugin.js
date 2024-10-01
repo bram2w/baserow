@@ -52,7 +52,6 @@ import {
   AIFieldType,
   PremiumFormulaFieldType,
 } from '@baserow_premium/fieldTypes'
-import { FF_TIMELINE_VIEW } from '@baserow/modules/core/plugins/featureFlags'
 
 export default (context) => {
   const { store, app, isDev } = context
@@ -106,9 +105,7 @@ export default (context) => {
   app.$registry.register('field', new PremiumFormulaFieldType(context))
   app.$registry.register('view', new KanbanViewType(context))
   app.$registry.register('view', new CalendarViewType(context))
-  if (app.$featureFlagIsEnabled(FF_TIMELINE_VIEW)) {
-    app.$registry.register('view', new TimelineViewType(context))
-  }
+  app.$registry.register('view', new TimelineViewType(context))
 
   app.$registry.register(
     'viewDecorator',
