@@ -23,7 +23,6 @@
   flex: 1 1;
   min-height: 0;
   width: 100%;
-  overflow: auto;
-  overflow-y: hidden;
+  overflow: scroll;
   position: relative;
 }

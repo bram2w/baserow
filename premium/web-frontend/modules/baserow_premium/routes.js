@@ -36,4 +36,9 @@ export const routes = [
     path: '/public/calendar/:slug',
     component: '@baserow/modules/database/pages/publicView.vue',
   },
+  {
+    name: 'database-public-timeline-view',
+    path: '/public/timeline/:slug',
+    component: '@baserow/modules/database/pages/publicView.vue',
+  },
 ]

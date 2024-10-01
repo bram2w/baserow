@@ -34,7 +34,10 @@ export default {
   },
   computed: {
     timezone() {
-      return this.startDateField ? getFieldTimezone(this.startDateField) : null
+      const tz = this.startDateField
+        ? getFieldTimezone(this.startDateField)
+        : null
+      return tz || 'UTC'
     },
     canChangeDateSettings() {
       return (

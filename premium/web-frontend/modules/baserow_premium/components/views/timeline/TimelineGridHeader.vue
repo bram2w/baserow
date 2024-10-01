@@ -1,14 +1,14 @@
 <template>
-  <div class="timeline-grid-header" :style="{ width: `${gridWidth}px` }">
+  <div class="timeline-grid__header" :style="{ width: `${gridWidth}px` }">
     <template v-for="(slot, index) in columnsBuffer">
       <div
         v-show="slot.item !== undefined"
         :key="`h-${index}`"
         :style="{
-          transform: `translateX(${slot.position.left || 0}px)`,
+          left: `${slot.position.left || 0}px`,
           width: `${columnWidth}px`,
         }"
-        class="timeline-grid-header__column"
+        class="timeline-grid__header-column"
       >
         <div>{{ formatDate(slot.item.date) }}</div>
       </div>

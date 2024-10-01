@@ -16,46 +16,199 @@
       <TimelineGridHeader
         v-if="gridReady"
         :columns-buffer="columnsBuffer"
-        :column-count="columns.length"
+        :column-count="columnCount"
         :column-width="columnWidth"
+        :date-format="columnHeaderFormat"
       />
     </div>
-    <div ref="gridBody" class="timeline-container__grid-body">
+    <div
+      ref="gridBody"
+      v-auto-scroll="{
+        enabled: () => enableAutoScroll,
+        orientation: 'horizontal',
+        speed: 5,
+        padding: 20,
+      }"
+      class="timeline-container__grid-body"
+    >
       <TimelineGrid
         v-if="gridReady"
         :columns-buffer="columnsBuffer"
         :column-width="columnWidth"
-        :column-count="columns.length"
-        :min-height="gridHeight"
+        :column-count="columnCount"
+        :column-unit="unit"
+        :rows-buffer="rowsBuffer"
+        :row-count="rowCount"
+        :row-height="rowHeight"
+        :min-grid-height="gridHeight"
+        :start-date-field="startDateField"
+        :end-date-field="endDateField"
+        :visible-fields="visibleFields"
+        :first-available-date="firstAvailableDate"
+        :read-only="
+          readOnly ||
+          !$hasPermission(
+            'database.table.update_row',
+            table,
+            database.workspace.id
+          )
+        "
+        :decorations-by-place="decorationsByPlace"
+        :scroll-left="prevScrollLeft"
+        @scroll-to-date="scrollDateIntoView"
+        @edit-row="openRowEditModal($event)"
+        @updating-row="enableAutoScroll = $event.value"
+        @update-row="updateRowDates($event)"
       />
     </div>
+    <ButtonFloating
+      v-if="
+        !readOnly &&
+        $hasPermission(
+          'database.table.create_row',
+          table,
+          database.workspace.id
+        )
+      "
+      icon="iconoir-plus"
+      position="fixed"
+      @click="$refs.rowCreateModal.show()"
+    >
+    </ButtonFloating>
+    <RowEditModal
+      ref="rowEditModal"
+      enable-navigation
+      :database="database"
+      :table="table"
+      :view="view"
+      :all-fields-in-table="fields"
+      :primary-is-sortable="true"
+      :visible-fields="visibleFields"
+      :hidden-fields="hiddenFields"
+      :rows="rows"
+      :read-only="
+        readOnly ||
+        !$hasPermission(
+          'database.table.update_row',
+          table,
+          database.workspace.id
+        )
+      "
+      :show-hidden-fields="showHiddenFieldsInRowModal"
+      @hidden="$emit('selected-row', undefined)"
+      @toggle-hidden-fields-visibility="
+        showHiddenFieldsInRowModal = !showHiddenFieldsInRowModal
+      "
+      @update="updateValue"
+      @order-fields="orderFields"
+      @toggle-field-visibility="toggleFieldVisibility"
+      @field-updated="$emit('refresh', $event)"
+      @field-deleted="$emit('refresh')"
+      @field-created="showFieldCreated"
+      @field-created-callback-done="afterFieldCreatedUpdateFieldOptions"
+      @navigate-previous="$emit('navigate-previous', $event, activeSearchTerm)"
+      @navigate-next="$emit('navigate-next', $event, activeSearchTerm)"
+      @refresh-row="refreshRow"
+    >
+    </RowEditModal>
+    <RowCreateModal
+      v-if="
+        !readOnly &&
+        $hasPermission(
+          'database.table.create_row',
+          table,
+          database.workspace.id
+        )
+      "
+      ref="rowCreateModal"
+      :database="database"
+      :table="table"
+      :view="view"
+      :primary-is-sortable="true"
+      :visible-fields="visibleFields"
+      :hidden-fields="hiddenFields"
+      :show-hidden-fields="showHiddenFieldsInRowModal"
+      :all-fields-in-table="fields"
+      @toggle-hidden-fields-visibility="
+        showHiddenFieldsInRowModal = !showHiddenFieldsInRowModal
+      "
+      @created="createRow"
+      @order-fields="orderFields"
+      @toggle-field-visibility="toggleFieldVisibility"
+      @field-updated="$emit('refresh', $event)"
+      @field-deleted="$emit('refresh')"
+    ></RowCreateModal>
   </div>
 </template>
 <script>
 import { mapGetters } from 'vuex'
-import ResizeObserver from 'resize-observer-polyfill'
 import debounce from 'lodash/debounce'
 import moment from '@baserow/modules/core/moment'
 import {
   recycleSlots,
   orderSlots,
 } from '@baserow/modules/database/utils/virtualScrolling'
+import {
+  sortFieldsByOrderAndIdFunction,
+  filterVisibleFieldsFunction,
+  filterHiddenFieldsFunction,
+} from '@baserow/modules/database/utils/view'
 import ViewDateIndicator from '@baserow_premium/components/views/ViewDateIndicator'
 import ViewDateSelector from '@baserow_premium/components/views/ViewDateSelector'
 import TimelineGridHeader from '@baserow_premium/components/views/timeline/TimelineGridHeader'
 import TimelineGrid from '@baserow_premium/components/views/timeline/TimelineGrid'
 import viewHelpers from '@baserow/modules/database/mixins/viewHelpers'
 import timelineViewHelpers from '@baserow_premium/mixins/timelineViewHelpers'
+import RowCreateModal from '@baserow/modules/database/components/row/RowCreateModal'
+import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
+import { populateRow } from '@baserow/modules/database/store/view/grid'
+import { clone } from '@baserow/modules/core/utils/object'
+import { notifyIf } from '@baserow/modules/core/utils/error'
+import ResizeObserver from 'resize-observer-polyfill'
+import viewDecoration from '@baserow/modules/database/mixins/viewDecoration'
+import { getRowDateValue } from '@baserow_premium/utils/timeline'
+
+const timescales = {
+  week: () => ({
+    unit: 'day',
+    timescale: 'week',
+    visibleColumnCount: 7,
+    columnHeaderFormat: 'ddd D',
+    firstDate: (timezone) =>
+      moment.tz(timezone).subtract(1, 'year').startOf('year'),
+    lastDate: (timezone) => moment.tz(timezone).add(1, 'year').endOf('year'),
+  }),
+  month: () => ({
+    unit: 'day',
+    timescale: 'month',
+    visibleColumnCount: 31,
+    columnHeaderFormat: 'D',
+    firstDate: (timezone) =>
+      moment.tz(timezone).subtract(1, 'year').startOf('year'),
+    lastDate: (timezone) => moment.tz(timezone).add(1, 'year').endOf('year'),
+  }),
+  year: () => ({
+    unit: 'month',
+    timescale: 'year',
+    visibleColumnCount: 12,
+    columnHeaderFormat: 'MMM',
+    firstDate: (timezone) =>
+      moment.tz(timezone).subtract(10, 'year').startOf('year'),
+    lastDate: (timezone) => moment.tz(timezone).add(10, 'year').endOf('year'),
+  }),
+}
 
 export default {
   name: 'TimelineContainer',
   components: {
+    RowCreateModal,
+    RowEditModal,
     TimelineGridHeader,
     TimelineGrid,
     ViewDateIndicator,
     ViewDateSelector,
   },
-  mixins: [viewHelpers, timelineViewHelpers],
+  mixins: [viewHelpers, timelineViewHelpers, viewDecoration],
   props: {
     view: {
       type: Object,
@@ -84,53 +237,142 @@ export default {
   },
   data() {
     return {
+      // columns
       minColumnWidth: 32,
-      columnWidth: null,
+      columnWidth: 0,
       columnsBuffer: [],
-      columns: [],
-      prevScrollLeft: null,
-      gridWidth: null,
-      gridHeight: null,
-      firstVisibleDate: null,
+      prevScrollLeft: 0,
+      gridWidth: 0,
+      columnHeaderFormat: null,
+      // rows
+      rowHeight: 33,
+      rowsBuffer: [],
+      prevScrollTop: 0,
+      gridHeight: 0,
       // timescale settings
       unit: null,
       timescale: null,
       visibleColumnCount: null,
       firstAvailableDate: null,
       lastAvailableDate: null,
+      //
+      showHiddenFieldsInRowModal: false,
+      enableAutoScroll: false,
     }
   },
   computed: {
+    columnCount() {
+      return this.lastAvailableDate.diff(this.firstAvailableDate, this.unit)
+    },
+    rows() {
+      return this.$store.getters[this.storePrefix + 'view/timeline/getRows']
+    },
+    rowCount() {
+      return this.rows.length
+    },
+    containerHeight() {
+      return this.rowsCount * this.rowHeight
+    },
     scrollAreaElement() {
       return this.$refs.gridBody
     },
-    gridBodyHeightOffset() {
-      return this.viewHeaderHeight + this.gridHeaderHeight
-    },
     gridReady() {
-      return this.columnWidth !== null
+      return this.columnWidth > 0
     },
     activeSearchTerm() {
       return this.$store.getters[
         `${this.storePrefix}view/timeline/getActiveSearchTerm`
       ]
     },
+    fieldOptions() {
+      return this.$store.getters[
+        `${this.storePrefix}view/timeline/getAllFieldOptions`
+      ]
+    },
+    visibleFields() {
+      const fieldOptions = this.fieldOptions
+      return this.fields
+        .filter(filterVisibleFieldsFunction(fieldOptions))
+        .sort(sortFieldsByOrderAndIdFunction(fieldOptions))
+    },
+    hiddenFields() {
+      const fieldOptions = this.fieldOptions
+      return this.fields
+        .filter(filterHiddenFieldsFunction(fieldOptions))
+        .sort(sortFieldsByOrderAndIdFunction(fieldOptions))
+    },
+    ...mapGetters({
+      row: 'rowModalNavigation/getRow',
+    }),
+    firstVisibleDate() {
+      if (this.columnsBuffer.length === 0) {
+        return null
+      }
+      // The first fully visible column date
+      return this.columnsBuffer[1].item?.date
+    },
+  },
+  watch: {
+    rows() {
+      this.$nextTick(() => {
+        const { startIndex, endIndex } = this.getVisibleRowsRange()
+        this.updateRowsBuffer(startIndex, endIndex)
+      })
+    },
+    row: {
+      deep: true,
+      handler(row, oldRow) {
+        if (this.$refs.rowEditModal) {
+          if (
+            (oldRow === null && row !== null) ||
+            (oldRow && row && oldRow.id !== row.id)
+          ) {
+            this.populateAndEditRow(row)
+          } else if (oldRow !== null && row === null) {
+            // Pass emit=false as argument into the hide function because that will
+            // prevent emitting another `hidden` event of the `RowEditModal` which can
+            // result in the route changing twice.
+            this.$refs.rowEditModal.hide(false)
+          }
+        }
+      },
+    },
   },
   mounted() {
-    // Sets the initial grid dimensions and initializes the grid columns
-    // with dates based on the timescale settings.
-    this.initTimescale()
-    this.initGridColumns()
+    this.initGrid()
+    this.$nextTick(() => {
+      // show today in the selected timescale
+      const startOfTimescale = moment.tz(this.timezone).startOf(this.timescale)
+      this.scrollDateIntoView(startOfTimescale, 'instant')
+
+      this.scrollAreaElement.addEventListener('scrollend', onScrollEnd)
+    })
 
     // Setup the scroll event listener to update the grid when the user scrolls.
-    const setupGridDebounced = debounce(this.onResizeUpdateGridColumns, 100)
+    // TODO: Use scroll speed to fetch more rows smartly (i.e. gallery view)
+    const fetchAndUpdateVisibleRowsDebounced = debounce(async () => {
+      await this.fetchAndUpdateVisibleRows()
+    }, 80)
     const onScroll = () => {
       const el = this.scrollAreaElement
 
-      // horizontal scrolling
-      if (el.scrollLeft !== this.prevScrollLeft) {
-        this.onHorizontalScrollUpdateGridColumns()
-        this.$refs.gridHeader.scroll({ left: el.scrollLeft })
+      if (Math.abs(el.scrollTop - this.prevScrollTop) > 1) {
+        this.prevScrollTop = el.scrollTop
+        fetchAndUpdateVisibleRowsDebounced()
+      }
+
+      if (Math.abs(el.scrollLeft - this.prevScrollLeft) > 1) {
+        this.prevScrollLeft = el.scrollLeft
+        this.$refs.gridHeader.scrollLeft = el.scrollLeft
+        this.updateVisibleColumns()
+      }
+    }
+    const onScrollEnd = (event) => {
+      const tgt = event.target
+      const atStart = tgt.scrollLeft === 0
+      const atEnd = tgt.scrollLeft + tgt.clientWidth === tgt.scrollWidth
+      if (atStart || atEnd) {
+        this.extendAvailableDateRange(event, atStart, atEnd)
       }
     }
 
@@ -138,44 +380,49 @@ export default {
     el.addEventListener('scroll', onScroll)
     this.$once('hook:beforeDestroy', () => {
       el.removeEventListener('scroll', onScroll)
+      el.removeEventListener('scrollend', onScrollEnd)
     })
 
     // Setup the resize observer to update the grid when the size of the container changes.
+    const setupGridDebounced = debounce(() => {
+      this.onResizeUpdateGrid()
+    }, 100)
     const resizeObserver = new ResizeObserver(() => {
       setupGridDebounced()
     })
-    resizeObserver.observe(el)
+    resizeObserver.observe(this.$el)
     this.$once('hook:beforeDestroy', () => {
-      resizeObserver.unobserve(el)
+      resizeObserver.disconnect()
     })
-  },
-  beforeCreate() {
-    this.$options.computed = {
-      ...(this.$options.computed || {}),
-      ...mapGetters({
-        fieldOptions:
-          this.$options.propsData.storePrefix +
-          'view/timeline/getAllFieldOptions',
-      }),
+
+    // Open the row edit modal if the row is set.
+    if (this.row !== null) {
+      this.populateAndEditRow(this.row)
     }
   },
   methods: {
     /*
-     * Initializes the timescale settings for the timeline view. For now, the timescale
-     * is fixed to a month view with 31 columns and a day unit.
+     * Initializes the grid by setting the timescale, columns, and rows.
+     */
+    initGrid() {
+      this.initTimescale()
+      this.updateGridDimensions()
+      this.updateVisibleColumns()
+      this.fetchAndUpdateVisibleRows()
+    },
+    /*
+     * Initializes the timescale settings for the timeline view. These settings
+     * determine the unit of time for the columns, the timescale, the number of
+     * visible columns, and the format of the column headers.
      */
     initTimescale() {
-      this.unit = 'day'
-      this.timescale = 'month'
-      this.visibleColumnCount = 31
-      this.firstAvailableDate = moment
-        .tz(this.timezone)
-        .subtract(1, 'year')
-        .startOf('year')
-      this.lastAvailableDate = moment
-        .tz(this.timezone)
-        .add(1, 'year')
-        .endOf('year')
+      const timescale = timescales.month()
+      this.unit = timescale.unit
+      this.timescale = timescale.timescale
+      this.visibleColumnCount = timescale.visibleColumnCount
+      this.columnHeaderFormat = timescale.columnHeaderFormat
+      this.firstAvailableDate = timescale.firstDate(this.timezone)
+      this.lastAvailableDate = timescale.lastDate(this.timezone)
     },
     /*
      * Returns the difference between two dates in the specified unit.
@@ -183,6 +430,9 @@ export default {
     dateDiff(startDate, endDate, unit = this.unit, round = false) {
       return endDate.diff(startDate, unit, !round)
     },
+
+    // Columns
+
     /*
      * Updates the grid based on the current scroll position.
      * If the column width has changed, we update it and recalculate the scroll offset
@@ -204,85 +454,284 @@ export default {
      */
     getVisibleColumnsRange() {
       const el = this.scrollAreaElement
-      if (!el) {
-        return { startIndex: 0, endIndex: 0 }
-      }
-      let startIndex = Math.floor(el.scrollLeft / this.columnWidth)
-      let endIndex = startIndex + this.visibleColumnCount + 1
-      if (endIndex > this.columns.length) {
-        endIndex = this.columns.length
-        startIndex = Math.max(0, endIndex - this.visibleColumnCount)
-      }
+      const startIndex = Math.floor(el.scrollLeft / this.columnWidth)
+      const endIndex = startIndex + this.visibleColumnCount + 1
       return { startIndex, endIndex }
     },
+    createColumn(index) {
+      const date = moment(this.firstAvailableDate).add(index, this.unit)
+      return {
+        id: date.format(),
+        date,
+        isWeekend: this.unit === 'day' && date.isoWeekday() > 5,
+      }
+    },
     /*
-     * Initialize the grid columns with dates based on the timescale settings.
+     * Extend the available date range when the user scrolls to the start or end of the
+     * grid by setting a new first or last available date and scrolling to the same
+     * position as before.
      */
-    initGridColumns() {
-      this.columns = Array.from(
-        {
-          length:
-            this.dateDiff(this.firstAvailableDate, this.lastAvailableDate) + 1,
-        },
-        (_, i) => {
-          const date = moment(this.firstAvailableDate).add(i, this.unit)
-          return {
-            id: i,
-            date,
-            isWeekend: date.isoWeekday() > 5,
-          }
-        }
-      )
+    extendAvailableDateRange(event, atStart = false, atEnd = false) {
+      const colsCount = this.visibleColumnCount * 2
+      const scrollOffset = this.columnWidth * colsCount
+      if (atStart) {
+        this.firstAvailableDate = this.firstAvailableDate
+          .clone()
+          .subtract(colsCount, this.unit)
+          .startOf(this.timescales)
+        this.scrollLeft(scrollOffset, 'instant')
+      } else if (atEnd) {
+        this.lastAvailableDate = this.lastAvailableDate
+          .clone()
+          .add(colsCount, this.unit)
+          .endOf(this.timescale)
+        this.scrollLeft(event.target.scrollLeft - scrollOffset, 'instant')
+      }
     },
     /**
      * Updates the grid columns when the container is resized. It also scrolls the grid
-     * to the first visible date to ensure the user keeps their context.
+     * to the same position as before the resize.
      */
-    onResizeUpdateGridColumns() {
-      this.updateGridDimensions()
+    onResizeUpdateGrid() {
+      const el = this.scrollAreaElement
+      const prevPos = el.scrollLeft / el.scrollWidth
 
-      // If the firstVisibleDate is not set yet, initialize it to the first date of the
-      // current timescale.
-      if (this.firstVisibleDate === null) {
-        const firstDate = moment.tz(this.timezone).startOf(this.timescale)
-        this.firstVisibleDate = firstDate
-        this.$nextTick(() => {
-          this.scrollDateIntoView(firstDate, 'instant')
-        })
-      }
+      this.updateGridDimensions()
+      this.fetchAndUpdateVisibleRows()
+
+      this.$nextTick(() => {
+        // Use the proportion of the previous scroll position to calculate the new scroll
+        // because the date can be rounded to the nearest unit.
+        this.scrollLeft(prevPos * el.scrollWidth, 'instant')
+      })
     },
     /**
      * Updates the grid columns when the user scrolls horizontally. Updates the
      * columnsBuffer to show the right columns and updates the firstVisibleDate to
      * follow the scroll.
      */
-    onHorizontalScrollUpdateGridColumns() {
+    updateVisibleColumns() {
       const { startIndex, endIndex } = this.getVisibleColumnsRange()
-      const visibleColumns = this.columns.slice(startIndex, endIndex)
+      const length = endIndex - startIndex
+      const visibleColumns = Array.from({ length }, (_, i) =>
+        this.createColumn(startIndex + i)
+      )
       const getPosition = (col, pos) => ({
         left: (startIndex + pos) * this.columnWidth,
       })
       recycleSlots(this.columnsBuffer, visibleColumns, getPosition)
       orderSlots(this.columnsBuffer, visibleColumns)
-      // Pick index 1 because the startIndex is floored and we want to show the
-      // first column entirely visible.
-      this.firstVisibleDate = this.columnsBuffer[1].item.date
     },
     /**
-     * Scrolls the grid horizontally to the specified position. It scrolls both the
-     * grid body and the grid header to keep them in sync.
+     * Scrolls the grid horizontally to the specified offset.
      */
     scrollLeft(left, behavior = 'instant') {
       this.scrollAreaElement.scroll({ left, behavior })
-      this.$refs.gridHeader.scroll({ left, behavior })
     },
     /**
      * Scrolls the grid horizontally to the specified date.
      */
     scrollDateIntoView(date, behaviour = 'smooth') {
+      if (date.isBefore(this.firstAvailableDate)) {
+        this.firstAvailableDate = date.clone().startOf(this.timescale)
+      } else if (date.isAfter(this.lastAvailableDate)) {
+        this.lastAvailableDate = date.clone().endOf(this.timescale)
+      }
       const firstDate = this.firstAvailableDate
       const columnIndex = this.dateDiff(firstDate, date)
       this.scrollLeft(columnIndex * this.columnWidth, behaviour)
+    },
+
+    // Rows
+
+    /**
+     * Fetches the missing rows in the given range from the store.
+     */
+    async fetchMissingRows(startIndex, endIndex) {
+      await this.$store.dispatch(
+        this.storePrefix + 'view/timeline/fetchMissingRowsInNewRange',
+        { startIndex, endIndex }
+      )
+    },
+    /**
+     * Returns the range of visible rows based on the current vertical scroll position.
+     */
+    getVisibleRowsRange() {
+      const el = this.scrollAreaElement
+      const elHeight = el.clientHeight
+      const minRowsToRender = Math.ceil(elHeight / this.rowHeight) + 1
+      let startIndex = Math.floor(el.scrollTop / this.rowHeight)
+      let endIndex = startIndex + minRowsToRender
+      if (endIndex > this.rowsCount) {
+        endIndex = this.rowsCount
+        startIndex = Math.max(0, endIndex - minRowsToRender)
+      }
+      return { startIndex, endIndex }
+    },
+    ensureRowsAreInAvailableRange(visibleRows) {
+      // make sure the dates are within the available range
+      let firstAvailableDate = this.firstAvailableDate
+      let lastAvailableDate = this.lastAvailableDate
+      visibleRows.forEach((row) => {
+        const startDate = getRowDateValue(
+          this.$registry,
+          row,
+          this.startDateField
+        )
+        const endDate = getRowDateValue(this.$registry, row, this.endDateField)
+        if (startDate && startDate.isBefore(firstAvailableDate)) {
+          firstAvailableDate = startDate
+        }
+        if (endDate && endDate.isAfter(lastAvailableDate)) {
+          lastAvailableDate = endDate
+        }
+      })
+      if (firstAvailableDate.isBefore(this.firstAvailableDate)) {
+        this.firstAvailableDate = firstAvailableDate.startOf(this.timescale)
+      }
+      if (lastAvailableDate.isAfter(this.lastAvailableDate)) {
+        this.lastAvailableDate = lastAvailableDate.endOf(this.timescale)
+      }
+    },
+    /**
+     * Updates the rowsBuffer with the specified range of rows.
+     */
+    updateRowsBuffer(startIndex, endIndex) {
+      const visibleRows = this.rows.slice(startIndex, endIndex)
+
+      this.ensureRowsAreInAvailableRange(visibleRows)
+
+      const getPosition = (row, pos) => ({
+        top: (startIndex + pos) * this.rowHeight,
+      })
+      const rowsToRender = endIndex - startIndex
+      recycleSlots(this.rowsBuffer, visibleRows, getPosition, rowsToRender)
+      orderSlots(this.rowsBuffer, visibleRows)
+    },
+    async fetchAndUpdateVisibleRows() {
+      const { startIndex, endIndex } = this.getVisibleRowsRange()
+      await this.fetchMissingRows(startIndex, endIndex)
+      this.updateRowsBuffer(startIndex, endIndex)
+    },
+
+    //
+
+    /**
+     * Creates a new row in the store and calls the callback when done.
+     */
+    async createRow({ row, callback }) {
+      try {
+        await this.$store.dispatch(
+          this.storePrefix + 'view/timeline/createNewRow',
+          {
+            view: this.view,
+            table: this.table,
+            fields: this.fields,
+            values: row,
+          }
+        )
+        callback()
+      } catch (error) {
+        callback(error)
+      }
+    },
+    /**
+     * Updates the value of a field in the store.
+     */
+    async updateValue({ field, row, value, oldValue }) {
+      try {
+        await this.$store.dispatch(
+          this.storePrefix + 'view/timeline/updateRowValue',
+          {
+            table: this.table,
+            view: this.view,
+            fields: this.fields,
+            row,
+            field,
+            value,
+            oldValue,
+          }
+        )
+      } catch (error) {
+        notifyIf(error, 'field')
+      }
+    },
+    /**
+     * Update date fields in the store. This method is called when a row
+     * is dragged and dropped to a new date range or when the user manually
+     * changes the start or end date of a row with the resize handle.
+     */
+    async updateRowDates({ row, start, end }) {
+      const values = {}
+      const oldValues = {}
+
+      if (start) {
+        values[this.startDateField.id] = start
+        oldValues[this.startDateField.id] =
+          row[`field_${this.startDateField.id}`]
+      }
+      if (end) {
+        values[this.endDateField.id] = end
+        oldValues[this.endDateField.id] = row[`field_${this.endDateField.id}`]
+      }
+
+      if (!Object.keys(values).length) {
+        return
+      }
+
+      try {
+        await this.$store.dispatch(
+          this.storePrefix + 'view/timeline/updateRowValues',
+          {
+            table: this.table,
+            view: this.view,
+            fields: this.fields,
+            row,
+            values,
+            oldValues,
+          }
+        )
+      } catch (error) {
+        notifyIf(error, 'row')
+      }
+    },
+    /**
+     * Calls action in the store to refresh row directly from the backend - f. ex.
+     * when editing row from a different table, when editing is complete, we need
+     * to refresh the 'main' row that's 'under' the RowEdit modal.
+     */
+    async refreshRow(row) {
+      try {
+        await this.$store.dispatch(
+          this.storePrefix + 'view/timeline/refreshRowFromBackend',
+          { table: this.table, row }
+        )
+      } catch (error) {
+        notifyIf(error, 'row')
+      }
+    },
+    /**
+     * Calls the fieldCreated callback and shows the hidden fields section
+     * because new fields are hidden by default.
+     */
+    showFieldCreated({ fetchNeeded, ...context }) {
+      this.fieldCreated({ fetchNeeded, ...context })
+      this.showHiddenFieldsInRowModal = true
+    },
+    /**
+     * Opens the row edit modal for the given row.
+     */
+    openRowEditModal(row) {
+      this.$refs.rowEditModal.show(row.id)
+      this.$emit('selected-row', row)
+    },
+    /**
+     * Populates a new row and opens the row edit modal
+     * to edit the row.
+     */
+    populateAndEditRow(row) {
+      const rowClone = populateRow(clone(row))
+      this.$refs.rowEditModal.show(row.id, rowClone)
     },
   },
 }

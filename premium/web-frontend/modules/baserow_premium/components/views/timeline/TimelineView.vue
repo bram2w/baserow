@@ -15,6 +15,10 @@
       :database="database"
       :read-only="readOnly"
       :store-prefix="storePrefix"
+      @selected-row="$emit('selected-row', $event)"
+      @refresh="$emit('refresh', $event)"
+      @navigate-previous="$emit('navigate-previous', $event)"
+      @navigate-next="$emit('navigate-next', $event)"
     />
   </div>
 </template>

@@ -49,3 +49,21 @@ export const dateFieldsAreCompatible = (startDateField, endDateField) => {
     ((startHasTime && startTz === endTz) || !startHasTime)
   )
 }
+
+/**
+ * Returns the date value of a row field, parsed by the field type and the field
+ * options.
+ */
+export const getRowDateValue = ($registry, row, field) => {
+  if (!row) {
+    return null
+  }
+
+  const fieldType = $registry.get('field', field.type)
+  const value = row[`field_${field.id}`]
+  if (!value) {
+    return null
+  }
+
+  return fieldType.parseInputValue(field, value)
+}
