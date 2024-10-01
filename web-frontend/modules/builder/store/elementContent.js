@@ -5,6 +5,11 @@ const state = {}
 
 const mutations = {
   SET_CONTENT(state, { element, value, range = null }) {
+    // Return early when value is null since there is nothing to set.
+    if (value === null) {
+      return
+    }
+
     // If we have no range, then the `value` is the full content for `element`,
     // we'll apply it and return early. This will happen if we are setting the
     // content of a collection element's `schema_property`.
