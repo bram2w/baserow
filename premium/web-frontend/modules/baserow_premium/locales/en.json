@@ -218,7 +218,7 @@
   "timelineDateSettingsForm": {
     "startDateField": "Start date",
     "endDateField": "End date",
-    "noCompatibleDateFields": "Date fields are missing in the table. Please create a start and date date field in the table first.",
+    "noCompatibleDateFields": "Date fields are missing in the table. Please create a start and end date field in the table first.",
     "incompatibleFieldsErrorTitle": "Incompatible fields",
     "incompatibleFieldsErrorMessage": "Fields are not compatible. Please choose two valid date fields in the table that use the same settings for 'include time' and use the same timezone for all collaborators.",
     "forceTimezone": "{timezone}",
