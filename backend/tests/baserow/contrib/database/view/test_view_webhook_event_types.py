@@ -1,3 +1,5 @@
+from django.contrib.auth.models import AnonymousUser
+
 import pytest
 
 from baserow.contrib.database.webhooks.registries import webhook_event_type_registry
@@ -16,7 +18,7 @@ def test_view_created_event_type(data_fixture):
         use_user_field_names=False,
     )
     payload = webhook_event_type_registry.get("view.created").get_payload(
-        event_id="1", webhook=webhook, view=view, table=table
+        event_id="1", webhook=webhook, view=view, table=table, user=AnonymousUser
     )
     assert payload == {
         "table_id": table.id,
@@ -109,6 +111,7 @@ def test_view_updated_event_type(data_fixture):
         view=view,
         old_view=view,
         table=table,
+        user=AnonymousUser,
     )
     assert payload == {
         "table_id": table.id,
@@ -196,10 +199,7 @@ def test_view_deleted_event_type(data_fixture):
         use_user_field_names=False,
     )
     payload = webhook_event_type_registry.get("view.deleted").get_payload(
-        event_id="1",
-        webhook=webhook,
-        view_id=view.id,
-        table=table,
+        event_id="1", webhook=webhook, view_id=view.id, table=table, user=AnonymousUser
     )
 
     assert payload == {

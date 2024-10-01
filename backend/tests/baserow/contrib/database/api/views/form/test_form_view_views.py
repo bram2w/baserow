@@ -27,7 +27,11 @@ from baserow.contrib.database.views.models import (
     FormViewFieldOptionsConditionGroup,
 )
 from baserow.core.user_files.models import UserFile
-from baserow.test_utils.helpers import AnyInt, setup_interesting_test_table
+from baserow.test_utils.helpers import (
+    AnyInt,
+    is_dict_subset,
+    setup_interesting_test_table,
+)
 
 ICAL_FEED_WITH_ONE_ITEMS = """BEGIN:VCALENDAR
 VERSION:2.0
@@ -182,6 +186,77 @@ def test_create_form_view(api_client, data_fixture):
     assert response_json["mode"] == "form"
     assert response_json["cover_image"] is None
     assert response_json["logo_image"]["name"] == user_file_2.name
+
+
+@pytest.mark.django_db(transaction=True)
+def test_create_form_view_with_webhooks(api_client, data_fixture):
+    """
+    Test create form handling with webhooks attached to check if the payload is
+    rendered correctly.
+
+    In case of regression, this is a test for a fix for an error:
+
+    File "/baserow/backend/src/baserow/contrib/database/api/views/form/serializers.py",
+        line 175, in get_receive_notification_on_submit
+
+        logged_user_id = self.context["user"].id
+                     ~~~~~~~~~~~~^^^^^^^^
+    KeyError: 'user'
+    """
+
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+
+    data_fixture.create_table_webhook(
+        table=table,
+        user=user,
+        request_method="POST",
+        url="http://localhost",
+        use_user_field_names=False,
+        events=["view.created", "view.updated", "view.deleted"],
+    )
+
+    # a transaction should be commited and webhooks after_commit hook should be called
+    # here.
+    with patch("baserow.contrib.database.webhooks.registries.call_webhook.delay") as m:
+        response = api_client.post(
+            reverse("api:database:views:list", kwargs={"table_id": table.id}),
+            {
+                "name": "Test Form",
+                "type": "form",
+            },
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+        assert m.called
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["slug"]) == 43
+    assert response_json["type"] == "form"
+    assert response_json["name"] == "Test Form"
+    assert response_json["mode"] == "form"
+    assert response_json["table_id"] == table.id
+    call_args = m.call_args.kwargs
+    assert call_args.get("event_type") == "view.created"
+    assert is_dict_subset(
+        {
+            "event_type": "view.created",
+            "payload": {
+                "view": {
+                    "table_id": table.id,
+                    "type": "form",
+                    "name": "Test Form",
+                    "id": response_json["id"],
+                }
+            },
+        },
+        call_args,
+    ), call_args
+
+    assert "receive_notification_on_submit" in call_args["payload"]["view"], call_args[
+        "payload"
+    ]["view"]
 
 
 @pytest.mark.django_db
