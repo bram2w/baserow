@@ -109,13 +109,12 @@ from baserow.contrib.database.views.exceptions import (
 from baserow.contrib.database.views.filters import AdHocFilters
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import View
-from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.handler import CoreHandler
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 
-from ..constants import SEARCH_MODE_API_PARAM
+from ..constants import ADHOC_FILTERS_API_PARAMS, SEARCH_MODE_API_PARAM
 from .example_serializers import example_pagination_row_serializer_class
 from .schemas import row_names_response_schema
 from .serializers import (
@@ -180,59 +179,7 @@ class RowsView(APIView):
                 "A backslash can be used to escape field names which contain "
                 'double quotes like so: `order_by=My Field,Field with \\"`.',
             ),
-            OpenApiParameter(
-                name="filters",
-                location=OpenApiParameter.QUERY,
-                type=OpenApiTypes.STR,
-                description=(
-                    "A JSON serialized string containing the filter tree to apply "
-                    "to this view. The filter tree is a nested structure containing "
-                    "the filters that need to be applied. \n\n"
-                    "Please note that if this parameter is provided, all other "
-                    "`filter__{field}__{filter}` will be ignored, "
-                    "as well as the `filter_type` parameter. \n\n"
-                    "An example of a valid filter tree is the following:"
-                    '`{"filter_type": "AND", "filters": [{"field": 1, "type": "equal", '
-                    '"value": "test"}]}`. The `field` value must be the ID of the '
-                    "field to filter on, or the name of the field if "
-                    "`user_field_names` is true.\n\n"
-                    f"The following filters are available: "
-                    f'{", ".join(view_filter_type_registry.get_types())}.'
-                ),
-            ),
-            OpenApiParameter(
-                name="filter__{field}__{filter}",
-                location=OpenApiParameter.QUERY,
-                type=OpenApiTypes.STR,
-                description=(
-                    f"The rows can optionally be filtered by the same view filters "
-                    f"available for the views. Multiple filters can be provided if "
-                    f"they follow the same format. The field and filter variable "
-                    f"indicate how to filter and the value indicates where to filter "
-                    f"on.\n\n"
-                    f"Please note that if the `filters` parameter is provided, this "
-                    f"parameter will be ignored. \n\n"
-                    f"For example if you provide the following GET parameter "
-                    f"`filter__field_1__equal=test` then only rows where the value of "
-                    f"field_1 is equal to test are going to be returned.\n\n"
-                    f"The following filters are available: "
-                    f'{", ".join(view_filter_type_registry.get_types())}.'
-                ),
-            ),
-            OpenApiParameter(
-                name="filter_type",
-                location=OpenApiParameter.QUERY,
-                type=OpenApiTypes.STR,
-                description=(
-                    "`AND`: Indicates that the rows must match all the provided "
-                    "filters.\n"
-                    "`OR`: Indicates that the rows only have to match one of the "
-                    "filters.\n\n"
-                    "This works only if two or more filters are provided."
-                    "Please note that if the `filters` parameter is provided, "
-                    "this parameter will be ignored. \n\n"
-                ),
-            ),
+            *ADHOC_FILTERS_API_PARAMS,
             OpenApiParameter(
                 name="include",
                 location=OpenApiParameter.QUERY,
