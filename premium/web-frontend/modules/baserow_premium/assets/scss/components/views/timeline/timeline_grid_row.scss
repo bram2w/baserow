@@ -20,6 +20,10 @@
     border: 2px dashed $palette-neutral-300;
     background-color: $palette-neutral-200;
   }
+
+  &.timeline-grid-row--tiny {
+    width: 12px;
+  }
 }
 
 .timeline-grid-row__spacer {
@@ -31,6 +35,11 @@
   width: calc(100% - 24px);
   align-items: center;
   height: 100%;
+
+  &.timeline-grid-row__label-container--tiny {
+    width: 100%;
+    padding-left: 12px;
+  }
 }
 
 .timeline-grid-row__label {

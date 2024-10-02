@@ -1,21 +1,49 @@
 <template>
-  <div class="view-date-indicator">{{ selectedMonth }}</div>
+  <div class="view-date-indicator">{{ formattedDate }}</div>
 </template>
 
 <script>
-import { getCapitalizedMonthName } from '@baserow/modules/core/utils/date'
+import { mapGetters } from 'vuex'
+import moment from 'moment'
 
 export default {
   name: 'ViewDateIndicator',
   props: {
-    selectedDate: {
+    date: {
       type: Object, // a moment object
       required: true,
     },
+    format: {
+      type: String,
+      default: 'MMMM YYYY',
+    },
+  },
+  data() {
+    return {
+      formattedDate: '',
+    }
   },
   computed: {
-    selectedMonth() {
-      return getCapitalizedMonthName(this.selectedDate)
+    ...mapGetters({
+      language: 'auth/getLanguage',
+    }),
+  },
+  watch: {
+    date: {
+      handler() {
+        this.updateFormattedDate()
+      },
+      immediate: true,
+    },
+    language() {
+      this.updateFormattedDate()
+    },
+  },
+  methods: {
+    updateFormattedDate() {
+      this.formattedDate = moment(this.date)
+        .locale(this.language)
+        .format(this.format)
     },
   },
 }

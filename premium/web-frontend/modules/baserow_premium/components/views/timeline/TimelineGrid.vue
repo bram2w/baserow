@@ -17,18 +17,23 @@
           height: `${gridHeight}px`,
         }"
         class="timeline-grid__column"
-        :class="{ 'timeline-grid__column--weekend': col?.isWeekend }"
+        :class="{ 'timeline-grid__column--alt': col?.altColor }"
       ></div>
     </template>
 
     <div
       v-if="offsetNow"
       :style="{
-        transform: `translateX(${offsetNow}px)`,
-        height: `${minGridHeight}px`,
+        position: 'absolute',
+        left: `${offsetNow}px`,
+        height: `${gridHeight}px`,
       }"
-      class="timeline-grid__now-cursor"
-    ></div>
+    >
+      <div
+        :style="{ height: `${minGridHeight}px` }"
+        class="timeline-grid__now-cursor"
+      ></div>
+    </div>
 
     <template v-for="({ position, item: row }, index) in rowsBuffer">
       <div
@@ -49,7 +54,7 @@
             :timezone="timezone"
             :start-date-field-read-only="readOnly || startDateFieldReadOnly"
             :end-date-field-read-only="readOnly || endDateFieldReadOnly"
-            :include-end-date="onlyDateFields"
+            :date-only-fields="dateOnlyFields"
             v-bind="getRowStyleProps(row)"
             @edit-row="$emit('edit-row', row)"
             @updating-row="$emit('updating-row', { row, value: $event })"
@@ -138,6 +143,10 @@ export default {
       type: Object, // a moment object
       required: true,
     },
+    lastAvailableDate: {
+      type: Object, // a moment object
+      required: true,
+    },
     startDateField: {
       type: Object,
       required: true,
@@ -161,6 +170,10 @@ export default {
     scrollLeft: {
       type: Number,
       default: 0,
+    },
+    step: {
+      type: String, // the step unit of the timeline. I.e. 'hour' in a daily view
+      required: true,
     },
   },
   computed: {
@@ -206,8 +219,14 @@ export default {
     wrapperDecorations() {
       return this.decorationsByPlace?.wrapper || []
     },
-    onlyDateFields() {
-      return !this.startDate?.include_time
+    dateOnlyFields() {
+      return !this.startDateField?.date_include_time
+    },
+    // The width of the step in pixels
+    stepPx() {
+      const ratio =
+        moment.duration(1, this.step) / moment.duration(1, this.columnUnit)
+      return ratio * this.columnWidth
     },
   },
   methods: {
@@ -240,7 +259,7 @@ export default {
       let left = 0
       let width = 0
       const minWidth = this.columnWidth / 2
-      const columnWidth = this.columnWidth
+      const step = this.stepPx
       const leftPadding = 2
       const rightPadding = 3
       const backgroundColor = this.backgroundColorForRow(row)
@@ -249,7 +268,7 @@ export default {
       if (row && this.isValidRow(row)) {
         const startDate = this.getRowDateValue(row, this.startDateField)
         let endDate = this.getRowDateValue(row, this.endDateField)
-        if (this.onlyDateFields) {
+        if (this.dateOnlyFields) {
           // include the whole day for date only fields
           endDate = endDate.clone().add(1, 'day')
         }
@@ -262,7 +281,7 @@ export default {
         left,
         width,
         minWidth,
-        columnWidth,
+        step,
         leftPadding,
         rightPadding,
         backgroundColor,
@@ -284,19 +303,11 @@ export default {
     },
     /*
      * Returns true if the given row is valid. A row is valid if it has a start and end
-     * date.
+     * date, the end date is after the start date, and the row is within the available
+     * date range.
      */
     isValidRow(row) {
-      const startDate = this.getRowDateValue(row, this.startDateField)
-      const endDate = this.getRowDateValue(row, this.endDateField)
-      return startDate && endDate && endDate.isSameOrAfter(startDate, 'minute')
-    },
-    /*
-     * Returns true if the goto start date is not visible in the current view so that
-     * the user can scroll to it.
-     */
-    showGotoStartButton(row) {
-      if (!this.firstVisibleDate) {
+      if (this.firstVisibleDate === null || this.lastVisibleDate === null) {
         return false
       }
       const startDate = this.getRowDateValue(row, this.startDateField)
@@ -304,23 +315,37 @@ export default {
       return (
         startDate &&
         endDate &&
-        startDate
-          .clone()
-          .subtract(1, this.columnUnit)
-          .isBefore(this.firstVisibleDate)
+        endDate.isSameOrAfter(startDate) &&
+        startDate.isSameOrAfter(this.firstAvailableDate) &&
+        endDate.isSameOrBefore(this.lastAvailableDate)
       )
+    },
+    /*
+     * Returns true if the goto start date is not visible in the current view so that
+     * the user can scroll to it.
+     */
+    showGotoStartButton(row) {
+      if (!this.isValidRow(row)) {
+        return false
+      }
+      const startDate = this.getRowDateValue(row, this.startDateField)
+      return startDate
+        .clone()
+        .subtract(1, this.columnUnit)
+        .isBefore(this.firstVisibleDate)
     },
     /*
      * Returns true if the goto end date is not visible in the current view so that
      * the user can scroll to it.
      */
     showGotoEndButton(row) {
-      if (!this.lastVisibleDate) {
+      if (!this.isValidRow(row)) {
         return false
       }
-      const startDate = this.getRowDateValue(row, this.startDateField)
       const endDate = this.getRowDateValue(row, this.endDateField)
-      return startDate && endDate && endDate.isAfter(this.lastVisibleDate)
+      return endDate.isAfter(
+        this.lastVisibleDate.clone().add(1, this.columnUnit)
+      )
     },
     /*
      * Calculate the date to scroll to when the user clicks on the goto start button.
@@ -377,21 +402,21 @@ export default {
     updateRow(row, { startOffset, endOffset }) {
       let field, start, end
       if (startOffset !== 0) {
-        const numberOfUnits = Math.round(startOffset / this.columnWidth)
+        const numberOfUnits = Math.round(startOffset / this.stepPx)
         field = this.startDateField
         const fieldType = this.$registry.get('field', field.type)
         const newDate = this.getRowDateValue(row, field)
           .clone()
-          .add(numberOfUnits, this.columnUnit)
+          .add(numberOfUnits, this.step)
         start = fieldType.formatValue(field, newDate)
       }
       if (endOffset !== 0) {
-        const numberOfUnits = Math.round(endOffset / this.columnWidth)
+        const numberOfUnits = Math.round(endOffset / this.stepPx)
         field = this.endDateField
         const fieldType = this.$registry.get('field', field.type)
         const newDate = this.getRowDateValue(row, field)
           .clone()
-          .add(numberOfUnits, this.columnUnit)
+          .add(numberOfUnits, this.step)
         end = fieldType.formatValue(field, newDate)
       }
       this.$emit('update-row', { row, start, end })

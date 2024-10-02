@@ -3,7 +3,7 @@
     <div v-if="timezoneAndDateLoaded(fields)" class="calendar-month">
       <div class="calendar-month__header">
         <ViewDateIndicator
-          :selected-date="selectedDate(fields)"
+          :date="selectedDate(fields)"
           class="calendar-month__header-selected-month"
         />
         <ViewDateSelector

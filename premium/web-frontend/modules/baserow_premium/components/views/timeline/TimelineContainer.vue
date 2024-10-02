@@ -1,16 +1,31 @@
 <template>
   <div class="timeline-container">
-    <div class="timeline-container__header">
-      <ViewDateIndicator
-        v-if="firstVisibleDate"
-        :selected-date="firstVisibleDate"
-      />
-      <ViewDateSelector
-        v-if="firstVisibleDate"
-        :selected-date="firstVisibleDate"
-        :unit="timescale"
-        @date-selected="scrollDateIntoView"
-      />
+    <div v-if="firstVisibleDate" class="timeline-container__header">
+      <ViewDateIndicator :date="firstVisibleDate" :format="headerFormat" />
+      <div class="timeline-container__header-right">
+        <ViewDateSelector
+          :selected-date="firstVisibleDate"
+          :unit="timescale"
+          @date-selected="scrollDateIntoView"
+        />
+        <Button
+          type="secondary"
+          class="timeline-container__header-timescale"
+          size="large"
+          :icon="`iconoir-nav-arrow-${
+            $refs.timescaleContext?.isOpen() ? 'up' : 'down'
+          }`"
+          @click="toggleTimescaleContext"
+        >
+          {{ $t(`timelineTimescaleContext.${view.timescale}`) }}
+        </Button>
+        <TimelineTimescaleContext
+          ref="timescaleContext"
+          :timescale="view.timescale"
+          :start-date-field="startDateField"
+          @select="updateTimescale"
+        />
+      </div>
     </div>
     <div ref="gridHeader" class="timeline-container__grid-header">
       <TimelineGridHeader
@@ -24,7 +39,8 @@
     <div
       ref="gridBody"
       v-auto-scroll="{
-        enabled: () => enableAutoScroll,
+        enabled: () =>
+          enableAutoScroll && $refs.gridBody.scrollLeft < scrollLeftLimit,
         orientation: 'horizontal',
         speed: 5,
         padding: 20,
@@ -45,6 +61,8 @@
         :end-date-field="endDateField"
         :visible-fields="visibleFields"
         :first-available-date="firstAvailableDate"
+        :last-available-date="lastAvailableDate"
+        :step="step"
         :read-only="
           readOnly ||
           !$hasPermission(
@@ -157,6 +175,7 @@ import ViewDateIndicator from '@baserow_premium/components/views/ViewDateIndicat
 import ViewDateSelector from '@baserow_premium/components/views/ViewDateSelector'
 import TimelineGridHeader from '@baserow_premium/components/views/timeline/TimelineGridHeader'
 import TimelineGrid from '@baserow_premium/components/views/timeline/TimelineGrid'
+import TimelineTimescaleContext from '@baserow_premium/components/views/timeline/TimelineTimescaleContext'
 import viewHelpers from '@baserow/modules/database/mixins/viewHelpers'
 import timelineViewHelpers from '@baserow_premium/mixins/timelineViewHelpers'
 import RowCreateModal from '@baserow/modules/database/components/row/RowCreateModal'
@@ -166,35 +185,57 @@ import { clone } from '@baserow/modules/core/utils/object'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import ResizeObserver from 'resize-observer-polyfill'
 import viewDecoration from '@baserow/modules/database/mixins/viewDecoration'
-import { getRowDateValue } from '@baserow_premium/utils/timeline'
 
 const timescales = {
+  day: () => ({
+    headerFormat: 'll',
+    columnHeaderFormat: 'HH',
+    unit: 'hour',
+    timescale: 'day',
+    visibleColumnCount: 24,
+    firstDate: (timezone) =>
+      moment().tz(timezone).subtract(4, 'year').startOf('year'),
+    lastDate: (timezone) => moment().tz(timezone).add(10, 'year').endOf('year'),
+    step: () => 'hour',
+    altColor: (date) => date.hour() % 12 === 0,
+  }),
   week: () => ({
+    headerFormat: 'MMMM YYYY',
+    columnHeaderFormat: 'ddd D',
     unit: 'day',
     timescale: 'week',
     visibleColumnCount: 7,
-    columnHeaderFormat: 'ddd D',
     firstDate: (timezone) =>
-      moment.tz(timezone).subtract(1, 'year').startOf('year'),
-    lastDate: (timezone) => moment.tz(timezone).add(1, 'year').endOf('year'),
+      moment().tz(timezone).subtract(30, 'year').startOf('week'),
+    lastDate: (timezone) => moment().tz(timezone).add(70, 'year').endOf('week'),
+    altColor: (date) => date.isoWeekday() > 5,
+    step: () => 'day',
   }),
   month: () => ({
+    headerFormat: 'MMMM YYYY',
+    columnHeaderFormat: 'D',
     unit: 'day',
     timescale: 'month',
     visibleColumnCount: 31,
-    columnHeaderFormat: 'D',
     firstDate: (timezone) =>
-      moment.tz(timezone).subtract(1, 'year').startOf('year'),
-    lastDate: (timezone) => moment.tz(timezone).add(1, 'year').endOf('year'),
+      moment().tz(timezone).subtract(100, 'years').startOf('year'),
+    lastDate: (timezone) =>
+      moment().tz(timezone).add(500, 'years').endOf('year'),
+    altColor: (date) => date.isoWeekday() > 5,
+    step: () => 'day',
   }),
   year: () => ({
+    headerFormat: 'YYYY',
+    columnHeaderFormat: 'MMM',
     unit: 'month',
     timescale: 'year',
     visibleColumnCount: 12,
-    columnHeaderFormat: 'MMM',
     firstDate: (timezone) =>
-      moment.tz(timezone).subtract(10, 'year').startOf('year'),
-    lastDate: (timezone) => moment.tz(timezone).add(10, 'year').endOf('year'),
+      moment().tz(timezone).subtract(130, 'years').startOf('year'),
+    lastDate: (timezone) =>
+      moment().tz(timezone).add(1500, 'years').endOf('year'),
+    altColor: (date) => date.month() % 3 === 0,
+    step: () => 'day',
   }),
 }
 
@@ -205,6 +246,7 @@ export default {
     RowEditModal,
     TimelineGridHeader,
     TimelineGrid,
+    TimelineTimescaleContext,
     ViewDateIndicator,
     ViewDateSelector,
   },
@@ -250,8 +292,10 @@ export default {
       prevScrollTop: 0,
       gridHeight: 0,
       // timescale settings
+      headerFormat: '',
       unit: null,
       timescale: null,
+      step: null,
       visibleColumnCount: null,
       firstAvailableDate: null,
       lastAvailableDate: null,
@@ -262,7 +306,7 @@ export default {
   },
   computed: {
     columnCount() {
-      return this.lastAvailableDate.diff(this.firstAvailableDate, this.unit)
+      return this.lastAvailableDate.diff(this.firstAvailableDate, this.unit) + 1
     },
     rows() {
       return this.$store.getters[this.storePrefix + 'view/timeline/getRows']
@@ -311,6 +355,9 @@ export default {
       // The first fully visible column date
       return this.columnsBuffer[1].item?.date
     },
+    scrollLeftLimit() {
+      return (this.columnCount - this.visibleColumnCount) * this.columnWidth
+    },
   },
   watch: {
     rows() {
@@ -337,6 +384,27 @@ export default {
         }
       },
     },
+    'view.timescale'() {
+      // Update the timescale as soon as it changes in the store.
+      let currDate = this.firstVisibleDate
+        .clone()
+        .add(Math.floor(this.visibleColumnCount / 2), this.unit)
+
+      this.setupGrid()
+
+      if (currDate.isBefore(this.firstAvailableDate)) {
+        currDate = this.firstAvailableDate.clone()
+      } else if (currDate.isAfter(this.lastAvailableDate)) {
+        currDate = this.lastAvailableDate
+          .clone()
+          .subtract(this.visibleColumnCount, this.unit)
+      }
+
+      this.$nextTick(() => {
+        this.updateVisibleColumns()
+        this.scrollDateIntoView(currDate, 'instant')
+      })
+    },
   },
   mounted() {
     this.initGrid()
@@ -344,15 +412,13 @@ export default {
       // show today in the selected timescale
       const startOfTimescale = moment.tz(this.timezone).startOf(this.timescale)
       this.scrollDateIntoView(startOfTimescale, 'instant')
-
-      this.scrollAreaElement.addEventListener('scrollend', onScrollEnd)
     })
 
-    // Setup the scroll event listener to update the grid when the user scrolls.
-    // TODO: Use scroll speed to fetch more rows smartly (i.e. gallery view)
+    // Setup the scroll event listener to update the grid when the user scrolls
+
     const fetchAndUpdateVisibleRowsDebounced = debounce(async () => {
       await this.fetchAndUpdateVisibleRows()
-    }, 80)
+    }, 80) // TODO: Use scroll speed to fetch more rows smartly (i.e. gallery view)
     const onScroll = () => {
       const el = this.scrollAreaElement
 
@@ -361,18 +427,16 @@ export default {
         fetchAndUpdateVisibleRowsDebounced()
       }
 
-      if (Math.abs(el.scrollLeft - this.prevScrollLeft) > 1) {
-        this.prevScrollLeft = el.scrollLeft
-        this.$refs.gridHeader.scrollLeft = el.scrollLeft
-        this.updateVisibleColumns()
+      const lastLeftPos = this.scrollLeftLimit
+      if (el.scrollLeft > lastLeftPos) {
+        el.scrollLeft = lastLeftPos
       }
-    }
-    const onScrollEnd = (event) => {
-      const tgt = event.target
-      const atStart = tgt.scrollLeft === 0
-      const atEnd = tgt.scrollLeft + tgt.clientWidth === tgt.scrollWidth
-      if (atStart || atEnd) {
-        this.extendAvailableDateRange(event, atStart, atEnd)
+      this.$refs.gridHeader.scrollLeft = el.scrollLeft
+
+      const hasMoveLeft = Math.abs(el.scrollLeft - this.prevScrollLeft) > 1
+      if (hasMoveLeft) {
+        this.prevScrollLeft = el.scrollLeft
+        this.updateVisibleColumns()
       }
     }
 
@@ -380,7 +444,6 @@ export default {
     el.addEventListener('scroll', onScroll)
     this.$once('hook:beforeDestroy', () => {
       el.removeEventListener('scroll', onScroll)
-      el.removeEventListener('scrollend', onScrollEnd)
     })
 
     // Setup the resize observer to update the grid when the size of the container changes.
@@ -405,10 +468,13 @@ export default {
      * Initializes the grid by setting the timescale, columns, and rows.
      */
     initGrid() {
+      this.setupGrid()
+      this.fetchAndUpdateVisibleRows()
+    },
+    setupGrid() {
       this.initTimescale()
       this.updateGridDimensions()
       this.updateVisibleColumns()
-      this.fetchAndUpdateVisibleRows()
     },
     /*
      * Initializes the timescale settings for the timeline view. These settings
@@ -416,13 +482,17 @@ export default {
      * visible columns, and the format of the column headers.
      */
     initTimescale() {
-      const timescale = timescales.month()
-      this.unit = timescale.unit
-      this.timescale = timescale.timescale
-      this.visibleColumnCount = timescale.visibleColumnCount
-      this.columnHeaderFormat = timescale.columnHeaderFormat
-      this.firstAvailableDate = timescale.firstDate(this.timezone)
-      this.lastAvailableDate = timescale.lastDate(this.timezone)
+      const timescale = this.view.timescale || 'month'
+      const settings = timescales[timescale]()
+      this.unit = settings.unit
+      this.timescale = settings.timescale
+      this.visibleColumnCount = settings.visibleColumnCount
+      this.headerFormat = settings.headerFormat
+      this.columnHeaderFormat = settings.columnHeaderFormat
+      this.firstAvailableDate = settings.firstDate(this.timezone)
+      this.lastAvailableDate = settings.lastDate(this.timezone)
+      this.step = settings.step(this.startDateField)
+      this.altColor = settings.altColor
     },
     /*
      * Returns the difference between two dates in the specified unit.
@@ -463,29 +533,7 @@ export default {
       return {
         id: date.format(),
         date,
-        isWeekend: this.unit === 'day' && date.isoWeekday() > 5,
-      }
-    },
-    /*
-     * Extend the available date range when the user scrolls to the start or end of the
-     * grid by setting a new first or last available date and scrolling to the same
-     * position as before.
-     */
-    extendAvailableDateRange(event, atStart = false, atEnd = false) {
-      const colsCount = this.visibleColumnCount * 2
-      const scrollOffset = this.columnWidth * colsCount
-      if (atStart) {
-        this.firstAvailableDate = this.firstAvailableDate
-          .clone()
-          .subtract(colsCount, this.unit)
-          .startOf(this.timescales)
-        this.scrollLeft(scrollOffset, 'instant')
-      } else if (atEnd) {
-        this.lastAvailableDate = this.lastAvailableDate
-          .clone()
-          .add(colsCount, this.unit)
-          .endOf(this.timescale)
-        this.scrollLeft(event.target.scrollLeft - scrollOffset, 'instant')
+        altColor: this.altColor(date),
       }
     },
     /**
@@ -568,38 +616,11 @@ export default {
       }
       return { startIndex, endIndex }
     },
-    ensureRowsAreInAvailableRange(visibleRows) {
-      // make sure the dates are within the available range
-      let firstAvailableDate = this.firstAvailableDate
-      let lastAvailableDate = this.lastAvailableDate
-      visibleRows.forEach((row) => {
-        const startDate = getRowDateValue(
-          this.$registry,
-          row,
-          this.startDateField
-        )
-        const endDate = getRowDateValue(this.$registry, row, this.endDateField)
-        if (startDate && startDate.isBefore(firstAvailableDate)) {
-          firstAvailableDate = startDate
-        }
-        if (endDate && endDate.isAfter(lastAvailableDate)) {
-          lastAvailableDate = endDate
-        }
-      })
-      if (firstAvailableDate.isBefore(this.firstAvailableDate)) {
-        this.firstAvailableDate = firstAvailableDate.startOf(this.timescale)
-      }
-      if (lastAvailableDate.isAfter(this.lastAvailableDate)) {
-        this.lastAvailableDate = lastAvailableDate.endOf(this.timescale)
-      }
-    },
     /**
      * Updates the rowsBuffer with the specified range of rows.
      */
     updateRowsBuffer(startIndex, endIndex) {
       const visibleRows = this.rows.slice(startIndex, endIndex)
-
-      this.ensureRowsAreInAvailableRange(visibleRows)
 
       const getPosition = (row, pos) => ({
         top: (startIndex + pos) * this.rowHeight,
@@ -732,6 +753,40 @@ export default {
     populateAndEditRow(row) {
       const rowClone = populateRow(clone(row))
       this.$refs.rowEditModal.show(row.id, rowClone)
+    },
+    /**
+     * Toggles the visibility of a field in the row edit modal.
+     */
+    toggleTimescaleContext(event) {
+      this.$refs.timescaleContext.toggle(
+        event.currentTarget,
+        'bottom',
+        'right',
+        4
+      )
+    },
+    /**
+     * Updates the timescale of the view, saving the new value in the backend if the
+     * user has permission to do so. The timescale refresh happens in a watcher, so we
+     * can use the optimistic update there and immediately update the view.
+     */
+    async updateTimescale(value) {
+      this.$refs.timescaleContext.hide()
+
+      const payload = {
+        view: this.view,
+        values: { timescale: value },
+      }
+
+      if (this.canChangeDateSettings) {
+        try {
+          await this.$store.dispatch('view/update', payload)
+        } catch (error) {
+          notifyIf(error, 'view')
+        }
+      } else {
+        await this.$store.dispatch('view/forceUpdate', payload)
+      }
     },
   },
 }

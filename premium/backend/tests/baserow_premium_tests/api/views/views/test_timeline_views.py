@@ -1175,6 +1175,7 @@ def test_get_public_timeline_view(api_client, premium_data_fixture):
             "type": "timeline",
             "start_date_field": start_date_field.id,
             "end_date_field": end_date_field.id,
+            "timescale": "month",
         },
     }
 

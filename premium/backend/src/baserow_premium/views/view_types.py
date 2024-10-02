@@ -535,9 +535,9 @@ class TimelineViewType(ViewType):
     model_class = TimelineView
     field_options_model_class = TimelineViewFieldOptions
     field_options_serializer_class = TimelineViewFieldOptionsSerializer
-    allowed_fields = ["start_date_field", "end_date_field"]
+    allowed_fields = ["start_date_field", "end_date_field", "timescale"]
     field_options_allowed_fields = ["hidden", "order"]
-    serializer_field_names = ["start_date_field", "end_date_field"]
+    serializer_field_names = ["start_date_field", "end_date_field", "timescale"]
     serializer_field_overrides = {
         "start_date_field": PrimaryKeyRelatedField(
             queryset=Field.objects.all(),

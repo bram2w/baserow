@@ -123,7 +123,7 @@ export default {
 
     el.tooltipMouseMoveEvent = (event) => {
       const position = el.getAttribute('tooltip-position') || 'bottom'
-      if (position === 'bottom-cursor') {
+      if (position === 'bottom-cursor' && el.tooltipElement) {
         el.updatePositionEvent(event)
       }
     }
