@@ -10,36 +10,40 @@
     ></div>
     <div
       class="timeline-grid-row"
-      :class="`background-color--${backgroundColor || 'white'}`"
-      :style="{
-        left: `${left + deltaLeft + padLeft}px`,
-        width: `${width + deltaWidth - padWidth}px`,
+      :class="{
+        [`background-color--${backgroundColor || 'white'}`]: true,
+        'timeline-grid-row--tiny': tooTiny,
       }"
+      :style="rowStyle"
       @mousedown="start"
       @mouseup="!resizing ? up : null"
       @mouseover="hovering = true"
       @mouseleave="hovering = false"
     >
-      <div
-        v-if="leftBorderColor"
-        class="left-border-decorator"
-        :class="`background-color--${leftBorderColor}`"
-      ></div>
-      <div v-else class="timeline-grid-row__spacer"></div>
+      <template v-if="!tooTiny">
+        <div
+          v-if="leftBorderColor"
+          class="left-border-decorator"
+          :class="`background-color--${leftBorderColor}`"
+        ></div>
+        <div v-else class="timeline-grid-row__spacer"></div>
+      </template>
 
       <div
         v-tooltip="tooltipText"
         class="timeline-grid-row__label-container"
+        :class="{ 'timeline-grid-row__label-container--tiny': tooTiny }"
         tooltip-position="bottom-cursor"
       >
         <div class="timeline-grid-row__label">
           {{ label }}
         </div>
       </div>
-      <div class="timeline-grid-row__spacer"></div>
+
+      <div v-if="!tooTiny" class="timeline-grid-row__spacer"></div>
 
       <HorizontalResize
-        v-show="!startDateFieldReadOnly && hovering && !dragging"
+        v-show="!startDateFieldReadOnly && hovering && !dragging && !tooTiny"
         class="timeline-grid-row__resize-handle timeline-grid-row__resize-handle--start"
         :class="{
           'timeline-grid-row__resize-handle--white': backgroundColor === 'gray',
@@ -53,7 +57,7 @@
       </HorizontalResize>
 
       <HorizontalResize
-        v-show="!endDateFieldReadOnly && hovering && !dragging"
+        v-show="!endDateFieldReadOnly && hovering && !dragging && !tooTiny"
         class="timeline-grid-row__resize-handle timeline-grid-row__resize-handle--end"
         :class="{
           'timeline-grid-row__resize-handle--white': backgroundColor === 'gray',
@@ -100,9 +104,10 @@ export default {
       type: Boolean,
       required: true,
     },
-    includeEndDate: {
+    // use to decide if include the end date in the duration calculation
+    dateOnlyFields: {
       type: Boolean,
-      default: false, // whether to include the end date in the duration
+      default: false,
     },
     leftBorderColor: {
       type: String,
@@ -136,7 +141,7 @@ export default {
       type: Number,
       default: 0,
     },
-    columnWidth: {
+    step: {
       type: Number,
       required: true,
     },
@@ -152,25 +157,47 @@ export default {
     }
   },
   computed: {
+    tooTiny() {
+      return this.width < this.minWidth
+    },
+    rowStyle() {
+      const style = {
+        left: `${this.left + this.deltaLeft + this.padLeft}px`,
+      }
+      if (!this.tooTiny) {
+        style.width = `${this.width + this.deltaWidth - this.padWidth}px`
+      }
+      return style
+    },
     tooltipText() {
-      if (!this.startMoment || !this.endMoment) {
-        return ''
+      if (
+        !this.startMoment ||
+        !this.endMoment ||
+        this.resizing ||
+        this.dragging
+      ) {
+        return null
       }
 
       let start, end
       if (this.startMoment.isSame(this.endMoment, 'year')) {
-        start = this.startMoment.format('MMM D')
-        end = this.endMoment.format('MMM D')
+        const format = this.dateOnlyFields ? 'MMM D' : 'MMM D, HH:mm'
+        start = this.startMoment.format(format)
+        end = this.endMoment.format(format)
       } else {
-        start = this.startMoment.format('MMM D, YYYY')
-        end = this.endMoment.format('MMM D, YYYY')
+        const format = this.dateOnlyFields
+          ? 'MMM D, YYYY'
+          : 'MMM D, YYYY, HH:mm'
+        start = this.startMoment.format(format)
+        end = this.endMoment.format(format)
       }
       let count = this.endMoment.diff(this.startMoment, 'days')
-      if (this.includeEndDate) {
+      if (this.dateOnlyFields) {
         count += 1
       }
       const duration = this.$tc('timelineGridRow.days', count, { count })
-      return `${start} - ${end} (${duration})`
+      const label = this.tooTiny ? `${this.label} | ` : ''
+      return `${label}${start} - ${end} (${duration})`
     },
     startMoment() {
       return this.startDate ? moment(this.startDate).tz(this.timezone) : null
@@ -256,10 +283,8 @@ export default {
      */
     updateRow() {
       // round the offset to the nearest column
-      this.startOffset =
-        Math.round(this.startOffset / this.columnWidth) * this.columnWidth
-      this.endOffset =
-        Math.round(this.endOffset / this.columnWidth) * this.columnWidth
+      this.startOffset = Math.round(this.startOffset / this.step) * this.step
+      this.endOffset = Math.round(this.endOffset / this.step) * this.step
 
       this.$emit('update-row', {
         startOffset: this.startOffset,

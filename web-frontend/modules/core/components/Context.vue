@@ -507,6 +507,9 @@ export default {
 
       return { vertical, horizontal }
     },
+    isOpen() {
+      return this.open
+    },
   },
 }
 </script>

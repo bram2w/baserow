@@ -26,3 +26,17 @@
   overflow: scroll;
   position: relative;
 }
+
+.timeline-container__header-right {
+  display: flex;
+  align-items: center;
+  margin-right: 24px;
+}
+
+.timeline-container__header-timescale {
+  width: 100px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: start;
+}

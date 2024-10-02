@@ -225,6 +225,15 @@
     "includeTime": "date and time",
     "dateOnly": "date only"
   },
+  "timelineTimescaleContext": {
+    "hour": "Hour",
+    "day": "Day",
+    "week": "Week",
+    "month": "Month",
+    "quarter": "Quarter",
+    "year": "Year",
+    "disabledTooltip": "This option is available only for date fields with `include time` enabled."
+  },
   "initTimelineViewSettings": {
     "settings": "Date settings"
   },

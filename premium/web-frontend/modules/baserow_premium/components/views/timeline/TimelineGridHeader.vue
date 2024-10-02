@@ -2,7 +2,7 @@
   <div class="timeline-grid__header" :style="{ width: `${gridWidth}px` }">
     <template v-for="(slot, index) in columnsBuffer">
       <div
-        v-show="slot.item !== undefined"
+        v-if="slot.item"
         :key="`h-${index}`"
         :style="{
           left: `${slot.position.left || 0}px`,
@@ -13,6 +13,8 @@
         <div>{{ formatDate(slot.item.date) }}</div>
       </div>
     </template>
+    <!-- spare column to compensate the scrollbar of the body -->
+    <div class="timeline-grid__header-column"></div>
   </div>
 </template>
 
@@ -41,7 +43,9 @@ export default {
   },
   computed: {
     gridWidth() {
-      return this.columnCount * this.columnWidth
+      // +1 for a spare column to compensate the scrollbar of the body
+      // the scrollLeft will be kept in sync with the body
+      return (this.columnCount + 1) * this.columnWidth
     },
   },
   methods: {
