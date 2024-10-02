@@ -1,5 +1,59 @@
 # Changelog
 
+## Released 1.28.0
+
+### New features
+* Add the timeline view. [#1262](https://gitlab.com/baserow/baserow/-/issues/1262)
+* Allow to filter calendar view [#1633](https://gitlab.com/baserow/baserow/-/issues/1633)
+* Add data sync backend. [#2278](https://gitlab.com/baserow/baserow/-/issues/2278)
+* Introduced create data sync table frontend. [#2278](https://gitlab.com/baserow/baserow/-/issues/2278)
+* Introduced the ability to sync with a local Baserow table. [#2278](https://gitlab.com/baserow/baserow/-/issues/2278)
+* Optionally prevent sending row realtime update signals. [#2278](https://gitlab.com/baserow/baserow/-/issues/2278)
+* Introduced read_only, immutable_type, and immutable_properties state for the field. [#2278](https://gitlab.com/baserow/baserow/-/issues/2278)
+* Introduced the ability to manually trigger a sync. [#2278](https://gitlab.com/baserow/baserow/-/issues/2278)
+* [Builder] Add related record selector element [#2396](https://gitlab.com/baserow/baserow/-/issues/2396)
+* Allow to cancel a job (i.e. a database snapshot). [#2756](https://gitlab.com/baserow/baserow/-/issues/2756)
+* [Builder] Add link/button variant to table element links [#2767](https://gitlab.com/baserow/baserow/-/issues/2767)
+* Trigger row update webhook only when chosen field cell value changes. [#2877](https://gitlab.com/baserow/baserow/-/issues/2877)
+* Introduced configurable row height in the grid view. [#340](https://gitlab.com/baserow/baserow/-/issues/340)
+* Introduced view and filter created, updated, and deleted webhooks.
+
+### Bug fixes
+* [Builder] Automatic cast values for local baserow integration actions [#2542](https://gitlab.com/baserow/baserow/-/issues/2542)
+* [Builder] Restore refresh token endpoint for published websites [#2631](https://gitlab.com/baserow/baserow/-/issues/2631)
+* [Builder] Ensure that the create and update row workflow actions can resolve a formula referring to a current record's index. [#2735](https://gitlab.com/baserow/baserow/-/issues/2735)
+* Fix Aggregations do not filter records in public shared views [#2760](https://gitlab.com/baserow/baserow/-/issues/2760)
+* [Builder] Fix permission denied in preview when dispatching an action of an element visible only to loggued out visitors [#2912](https://gitlab.com/baserow/baserow/-/issues/2912)
+* [Builder] Fix bug where ordering of List Rows and Get Rows service types could be inconsistent. [#2964](https://gitlab.com/baserow/baserow/-/issues/2964)
+* [Builder] Tweaked the data source filter input styles. [#2967](https://gitlab.com/baserow/baserow/-/issues/2967)
+* [Builder] Ensure that navigating to the current page doesn't cause an error. [#2973](https://gitlab.com/baserow/baserow/-/issues/2973)
+* [Builder] Fix Choice element error when using integer as option value [#2977](https://gitlab.com/baserow/baserow/-/issues/2977)
+* Fix selecting more than 120 rows when triggering AI value generation. [#2979](https://gitlab.com/baserow/baserow/-/issues/2979)
+* [Builder] Allow email address to be case insensitive during login. [#2989](https://gitlab.com/baserow/baserow/-/issues/2989)
+* Fix text wrapping for longer toast messages [#2998](https://gitlab.com/baserow/baserow/-/issues/2998)
+* [Builder] Fix bug where calculating missingIndexes could sometimes raise a TypeError. [#3004](https://gitlab.com/baserow/baserow/-/issues/3004)
+* Fix webhook list crashing if call response is empty. [#3024](https://gitlab.com/baserow/baserow/-/issues/3024)
+* Fix survey mode view with rich text by not automatically focussing. [#3025](https://gitlab.com/baserow/baserow/-/issues/3025)
+* [Builder] Ensure that data source filters can be imported and exported across workspaces when they contain single select options. [#3029](https://gitlab.com/baserow/baserow/-/issues/3029)
+* [Builder] Fix record selector bug when using a data source sort [#3030](https://gitlab.com/baserow/baserow/-/issues/3030)
+* [Builder] Safely check if property selector is available. [#3033](https://gitlab.com/baserow/baserow/-/issues/3033)
+* Fixed a problem that caused form creation to be disabled for unsynced tables [#3051](https://gitlab.com/baserow/baserow/-/issues/3051)
+* Handle long radio label [#3052](https://gitlab.com/baserow/baserow/-/issues/3052)
+* [Builder] Resolved an issue where a table element's form would not display its columns if the table had no content. [#3055](https://gitlab.com/baserow/baserow/-/issues/3055)
+* [Builder] Ensure that database applications are imported before builder applications. Resolved an issue where a nested repeat element's field was not migrated properly when imported into a new workspace. [#3057](https://gitlab.com/baserow/baserow/-/issues/3057)
+* Fix a bug causing the backend to fail hard when creating a `user is` view filter with a non-digit filter value. [#3061](https://gitlab.com/baserow/baserow/-/issues/3061)
+* Fix a bug causing Tab navigation to not work properly with forms in Survey mode. [#3064](https://gitlab.com/baserow/baserow/-/issues/3064)
+* [Builder] Fix application builder template broken as soon as an element was selected
+* Fix broken links in our website docs
+* [Builder] Make empty data sources content less cramped
+
+### Refactors
+* Removed the deprecated webhook event types. [#2547](https://gitlab.com/baserow/baserow/-/issues/2547)
+* Use dblclick event instead of checking ellapsed time for double-click. [#2628](https://gitlab.com/baserow/baserow/-/issues/2628)
+* Upgrade to Django 5.X [#2864](https://gitlab.com/baserow/baserow/-/issues/2864)
+* [Builder] Allow more elements to be nested in the column, form and repeat elements. [#2972](https://gitlab.com/baserow/baserow/-/issues/2972)
+
+
 ## Released 1.27.2
 
 ### Bug fixes
