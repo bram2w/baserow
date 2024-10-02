@@ -270,7 +270,8 @@
         "rbac": "Control de acceso basado en funciones",
         "auditLogs": "Registros de auditoría",
         "coBranding": "Sustitución del logotipo de marca compartida",
-        "support": "Apoyo directo"
+        "support": "Apoyo directo",
+        "dataSync": "Sincronizar datos"
     },
     "chatwootSupportSidebarWorkspace": {
         "directSupport": "Apoyo directo"
@@ -335,5 +336,15 @@
         "emailPlaceholder": "Introduce tu correo electrónico...",
         "passwordPlaceholder": "Introduce tu contraseña...",
         "selectOrConfigureUserSourceFirst": "Elige un origen de usuario para empezar a utilizar este elemento de inicio de sesión."
+    },
+    "localBaserowTableDataSync": {
+        "name": "ID de la tabla de origen",
+        "authorizing": "Está autorizando a su cuenta a seleccionar los datos de la tabla de origen.",
+        "database": "Base de datos",
+        "table": "Tabla",
+        "workspace": "Espacio de trabajo"
+    },
+    "enterpriseDataSyncType": {
+        "localBaserowTable": "Sincronizar tabla Baserow"
     }
 }

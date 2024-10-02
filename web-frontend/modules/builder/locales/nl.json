@@ -83,7 +83,9 @@
         "repeat": "Herhaal",
         "repeatDescription": "Een herhaalbare reeks elementen",
         "choice": "Keuze",
-        "choiceDescription": "Voor enkele/meervoudige waarde selectie"
+        "choiceDescription": "Voor enkele/meervoudige waarde selectie",
+        "recordSelector": "Recordkiezer",
+        "recordSelectorDescription": "Een gerelateerde recordkiezer"
     },
     "addElementButton": {
         "label": "Element"
@@ -303,7 +305,8 @@
         "orientation": "Oriëntatie",
         "orientationHorizontal": "Horizontaal",
         "orientationVertical": "Verticaal",
-        "buttonLoadMoreLabel": "Toon meer label"
+        "buttonLoadMoreLabel": "Toon meer label",
+        "propertySelectorMissingArrays": "Geen velden met meerdere waarden gevonden om als rijen te gebruiken."
     },
     "linkFieldForm": {
         "fieldLinkNamePlaceholder": "Waarde invoeren...",
@@ -430,7 +433,8 @@
     },
     "currentRecordDataProviderType": {
         "index": "Index",
-        "firstPartName": "Gegevensbron: {name}"
+        "firstPartName": "Gegevensbron: {name}",
+        "schemaProperty": "{prefixName}: {schemaProperty}"
     },
     "domainForm": {
         "notUniqueDomain": "De opgegeven domeinnaam is al in gebruik",
@@ -450,7 +454,9 @@
         "text": "Tekst",
         "link": "Link",
         "boolean": "Boolean",
-        "tags": "Tags"
+        "tags": "Tags",
+        "button": "Knop",
+        "image": "Afbeelding"
     },
     "createUserSourceForm": {
         "userSourceName": "Naam",
@@ -629,7 +635,8 @@
         "itemsPerPagePlaceholder": "Waarde invoeren...",
         "itemsPerRowLabel": "Items per rij",
         "buttonLoadMoreLabel": "Toon meer label",
-        "toggleEditorRepetitionsLabel": "Herhalingen tijdelijk uitschakelen"
+        "toggleEditorRepetitionsLabel": "Herhalingen tijdelijk uitschakelen",
+        "propertySelectorMissingArrays": "Geen velden met meerdere waarden gevonden om mee te herhalen."
     },
     "userDataProviderType": {
         "isAuthenticated": "Is ingelogd",
@@ -644,7 +651,8 @@
     "repeatElement": {
         "showMore": "Meer tonen",
         "missingDataSourceTooltip": "Kies een gegevensbron om te beginnen met het toevoegen van elementen.",
-        "empty": "Er zijn geen items gevonden."
+        "empty": "Er zijn geen items gevonden.",
+        "missingSchemaPropertyTooltip": "Kies een eigenschap om te beginnen met het toevoegen van elementen."
     },
     "tagsFieldForm": {
         "fieldValuesLabel": "Waarden",
@@ -807,7 +815,8 @@
         "empty": "Geen opties beschikbaar"
     },
     "abTable": {
-        "empty": "Er zijn geen items gevonden."
+        "empty": "Er zijn geen items gevonden.",
+        "loading": "Aan het laden..."
     },
     "localBaserowServiceForm": {
         "rowIdPlaceholder": "Selecteer een rij ID",
@@ -817,5 +826,35 @@
     "fieldMappingContext": {
         "enableField": "Veld inschakelen",
         "disableField": "Veld uitschakelen"
+    },
+    "collectionElementForm": {
+        "noSchemaPropertyMessage": "Kies een eigenschap in de gegevensbron om te gebruiken als de lijstgegevens van je element.",
+        "noDataSourceMessage": "Kies een gegevensbron met meerdere rijen om alle resultaten weer te geven, of een gegevensbron met één rij om een eigenschap in deze rij te kiezen."
+    },
+    "imageFieldForm": {
+        "fieldAltHelp": "Wordt gebruikt door schermlezers en weergegeven als de afbeelding niet kan worden geladen",
+        "fieldSrcPlaceholder": "Waarde invoeren",
+        "fieldSrcLabel": "Afbeelding bron",
+        "fieldAltLabel": "Alt tekst",
+        "fieldAltPlaceholder": "Waarde invoeren..."
+    },
+    "serviceSchemaPropertySelector": {
+        "label": "Eigenschap",
+        "noProperties": "Geen eigenschappen beschikbaar"
+    },
+    "dataSourceDropdown": {
+        "noDataSources": "Geen gegevensbronnen beschikbaar",
+        "label": "Gegevensbron"
+    },
+    "recordSelectorElementForm": {
+        "selectRecordsFrom": "Records selecteren uit",
+        "optionNameSuffix": "Optie naam achtervoegsel",
+        "optionNameSuffixPlaceholder": "Voer een achtervoegsel in...",
+        "optionNameSuffixHelper": "Dit achtervoegsel wordt toegevoegd aan elke optienaam wanneer je de vervolgkeuzelijst opent en helpt om ze te onderscheiden.",
+        "itemsPerPage": "Items per pagina",
+        "record": "Record {id}",
+        "noDataSourceMessage": "Kies een gegevensbron met meerdere rijen om alle resultaten te vermelden.",
+        "itemsPerPagePlaceholder": "Waarde invoeren...",
+        "multipleLabel": "Meerdere waarden toestaan"
     }
 }

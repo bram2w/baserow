@@ -269,7 +269,8 @@
         "rbac": "Contrôle d’accès basé sur les rôles",
         "coBranding": "Remplacement du logo de co-branding",
         "auditLogs": "Journaux d'audit",
-        "support": "Assistance en ligne"
+        "support": "Assistance en ligne",
+        "dataSync": "Synchronisation de données"
     },
     "chatwootSupportSidebarWorkspace": {
         "directSupport": "Assistance"
@@ -335,5 +336,15 @@
         "userSource": "Source d'utilisateur",
         "loginButtonLabelPlaceholder": "Saisissez le libellé...",
         "loginButtonLabel": "Libéllé du bouton de connexion"
+    },
+    "enterpriseDataSyncType": {
+        "localBaserowTable": "Synchroniser la table Baserow"
+    },
+    "localBaserowTableDataSync": {
+        "name": "ID table source",
+        "authorizing": "Vous autorisez votre compte à sélectionner les données de la table source.",
+        "workspace": "Projet",
+        "table": "Table",
+        "database": "Base de données"
     }
 }

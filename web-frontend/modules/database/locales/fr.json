@@ -48,7 +48,9 @@
             "convert": "Convertir",
             "title": "Type d'événement obsolète",
             "description": "Ce webhook ne reçoit pas d'informations sur les lignes modifiées en une seule opération. Veuillez le convertir en un type d'événement de type lot. Cette opération modifie le contenu JSON pour un format qui permet de contenir plusieurs lignes."
-        }
+        },
+        "triggerWhenFieldsHaveChanged": "Déclencher en cas de modification des champs",
+        "helpTriggerWhenFieldsHaveChanged": "Ne sera déclenché que si la valeur de la cellule des champs choisis change."
     },
     "webhook": {
         "details": "détails",
@@ -67,7 +69,10 @@
     },
     "sidebarItem": {
         "exportTable": "Exporter la table",
-        "webhooks": "Webhooks"
+        "webhooks": "Webhooks",
+        "notSynced": "non synchronisé",
+        "lastSynced": "Dernière synchronisation",
+        "sync": "Synchroniser la table"
     },
     "apiToken": {
         "create": "créer",
@@ -494,7 +499,8 @@
         "hideField": "Cacher un champ",
         "insertRight": "Insérer à droite",
         "insertLeft": "Insérer à gauche",
-        "duplicate": "Dupliquer le champ"
+        "duplicate": "Dupliquer le champ",
+        "dataSyncField": "Le champ est en lecture seule et fait partie de la synchronisation des données de la table."
     },
     "gridViewRow": {
         "rowNotMatchingFilters": "La ligne est filtrée",
@@ -705,7 +711,9 @@
         "snapshot": "Sauvegarde",
         "importingState": "En cours de création",
         "snapshotRestoredErrorTitle": "Une erreur s'est produite",
-        "reset": "Créer une autre"
+        "reset": "Créer une autre",
+        "cancel": "Annuler",
+        "noSnapshots": "Il n'y a pas encore de sauvegarde pour cette application."
     },
     "deleteSnapshotModal": {
         "content": "Êtes-vous sûr·e de vouloir supprimer définitivement la sauvegarde {nom} ?",
@@ -974,5 +982,54 @@
         "fieldBoolean": "Terminé",
         "fieldDuration": "Durée",
         "fieldUrl": "URL"
+    },
+    "createTableModal": {
+        "title": "Créer une nouvelle table",
+        "defaultName": "Table",
+        "importLabel": "Souhaitez vous importer des données existantes ?",
+        "newTable": "Démarrer avec une nouvelle table"
+    },
+    "createTable": {
+        "showTable": "afficher la table",
+        "uploading": "Envoi…",
+        "preparing": "Préparation des données...",
+        "stateRowCreation": "Import en cours...",
+        "statePreValidation": "Validation des données...",
+        "stateCreateTable": "Création d'une table...",
+        "addButton": "Ajouter une table",
+        "importError": "Un problème est survenu lors de l'import du fichier"
+    },
+    "importErrorReport": {
+        "reportTitleFailure": "Lignes en erreur",
+        "reportTitleSuccess": "Importation réussie mais...",
+        "reportMessage": "Les index de ligne suivants n'ont pas pu être importés :"
+    },
+    "dataSyncType": {
+        "icalCalendar": "Synchronisation du flux iCal"
+    },
+    "createDataSync": {
+        "next": "Suivant",
+        "fields": "Sélectionnez les champs que vous souhaitez synchroniser",
+        "create": "Créer et synchroniser une table",
+        "error": "Un problème s'est produit lors de la synchronisation"
+    },
+    "syncTableModal": {
+        "sync": "Synchroniser la table",
+        "hide": "Cacher",
+        "description": "Cette table est liée à une synchronisation de données. Lorsque vous cliquez sur le bouton de synchronisation, les données sont synchronisées avec la source. Au cours de ce processus, un verrou est placé sur les lignes mises à jour, ce qui peut ralentir temporairement les demandes d'API ou les modifications de la table.",
+        "title": "Synchroniser {name}"
+    },
+    "gridViewRowHeight": {
+        "name": "Hauteur",
+        "small": "Petite",
+        "medium": "Moyenne",
+        "large": "Grande"
+    },
+    "createViewLink": {
+        "inCompatibleWithDataSync": "Ce type de vue n'est pas compatible avec une table de synchronisation des données."
+    },
+    "iCalCalendarDataSync": {
+        "name": "URL iCal",
+        "description": "Le calendrier iCal se synchronise automatiquement avec les entrées du fichier de calendrier de l'URL. Elle ne prend en charge que le type de fichier ICS (Internet Calendar and Scheduling)."
     }
 }

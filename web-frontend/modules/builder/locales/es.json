@@ -50,13 +50,14 @@
         "itemsPerPagePlaceholder": "Introducir valor...",
         "fields": "Campos",
         "buttonColor": "Color de los botones",
-        "selectSourceFirst": "Elige una fuente de datos de lista para empezar a configurar tus campos.",
+        "selectSourceFirst": "Elige un origen para los datos y/o propiedad para comenzar a configurar tus campos.",
         "refreshFieldsFromDataSource": "Actualizar los campos de la fuente de datos",
         "name": "Nombre",
         "orientation": "Orientación",
         "orientationHorizontal": "Horizontal",
         "orientationVertical": "Vertical",
-        "buttonLoadMoreLabel": "Mostrar más etiqueta"
+        "buttonLoadMoreLabel": "Mostrar más etiqueta",
+        "propertySelectorMissingArrays": "No se encontró que se utilizaran campos de múltiples valores como datos."
     },
     "linkElementForm": {
         "paramPlaceholder": "Introduce un valor...",
@@ -144,7 +145,9 @@
         "repeat": "Repetir",
         "repeatDescription": "Un conjunto repetible de elementos",
         "choice": "Selección",
-        "choiceDescription": "Para la selección de uno o varios valores"
+        "choiceDescription": "Para la selección de uno o varios valores",
+        "recordSelector": "Selector de registro",
+        "recordSelectorDescription": "Un selector de registros relacionados"
     },
     "verticalAlignmentSelector": {
         "alignmentTop": "Arriba",
@@ -342,7 +345,8 @@
     },
     "currentRecordDataProviderType": {
         "index": "Índice",
-        "firstPartName": "Fuente de datos: {nombre}"
+        "firstPartName": "Fuente de datos: {nombre}",
+        "schemaProperty": "{prefixName}: {schemaProperty}"
     },
     "pageSidePanelType": {
         "visibility": "Visibilidad",
@@ -389,7 +393,9 @@
         "text": "Texto",
         "link": "Enlace",
         "boolean": "Booleano",
-        "tags": "Etiquetas"
+        "tags": "Etiquetas",
+        "image": "Imagen",
+        "button": "Botón"
     },
     "elementsContext": {
         "searchPlaceholder": "Buscar elementos",
@@ -600,7 +606,8 @@
     "repeatElement": {
         "empty": "No se ha encontrado ningún artículo.",
         "missingDataSourceTooltip": "Elige una fuente de datos para empezar a añadir elementos.",
-        "showMore": "Ver más"
+        "showMore": "Ver más",
+        "missingSchemaPropertyTooltip": "Elige una propiedad para comenzar a agregar elementos."
     },
     "repeatElementForm": {
         "dataSource": "Fuente de datos",
@@ -612,7 +619,8 @@
         "itemsPerRowDescription": "Número de columnas por fila y tipo de dispositivo.",
         "orientationVertical": "Vertical",
         "buttonLoadMoreLabel": "Mostrar más etiqueta",
-        "toggleEditorRepetitionsLabel": "Desactivar temporalmente las repeticiones"
+        "toggleEditorRepetitionsLabel": "Desactivar temporalmente las repeticiones",
+        "propertySelectorMissingArrays": "No se encontraron campos de valores múltiples para crear los patrones."
     },
     "tagsFieldForm": {
         "fieldValuesLabel": "Valores",
@@ -786,7 +794,8 @@
         "horizontalSeparatorSize": "Tamaño horizontal"
     },
     "abTable": {
-        "empty": "No se ha encontrado ningún artículo."
+        "empty": "No se ha encontrado ningún artículo.",
+        "loading": "Cargando..."
     },
     "localBaserowServiceForm": {
         "integrationDropdownLabel": "Integración",
@@ -799,5 +808,35 @@
     },
     "dropdown": {
         "empty": "No hay opciones disponibles"
+    },
+    "collectionElementForm": {
+        "noSchemaPropertyMessage": "Elige una propiedad de origen de datos para usarla como el origen de los datos para tu elemento.",
+        "noDataSourceMessage": "Elige una fuente de datos con varias filas para enumerar todos los resultados, o un origen para los datos de una sola fila para elegir una propiedad dentro de esta fila."
+    },
+    "imageFieldForm": {
+        "fieldAltLabel": "Texto alternativo",
+        "fieldAltPlaceholder": "Introducir valor...",
+        "fieldSrcLabel": "Origen de la imagen",
+        "fieldSrcPlaceholder": "Introducir valor",
+        "fieldAltHelp": "Es utilizado por los lectores de pantalla y se muestra si la imagen no se puede cargar"
+    },
+    "serviceSchemaPropertySelector": {
+        "label": "Propiedad",
+        "noProperties": "No hay propiedades disponibles"
+    },
+    "dataSourceDropdown": {
+        "label": "Origen de los datos",
+        "noDataSources": "Sin origen para los datos disponibles"
+    },
+    "recordSelectorElementForm": {
+        "selectRecordsFrom": "Seleccionar registros de",
+        "noDataSourceMessage": "Elija una fuente de datos con múltiples filas para listar todos los resultados.",
+        "optionNameSuffix": "Sufijo del nombre de la opción",
+        "optionNameSuffixPlaceholder": "Introduce un sufijo...",
+        "optionNameSuffixHelper": "Este sufijo se añade a cada nombre de opción al abrir el desplegable y ayuda a distinguirlas.",
+        "itemsPerPagePlaceholder": "Introduce el valor...",
+        "multipleLabel": "Permitir varios valores",
+        "record": "Registro {id}",
+        "itemsPerPage": "Artículos por página"
     }
 }
