@@ -546,6 +546,11 @@ class GridView(View):
         ID = "id"
         count = "count"
 
+    class RowHeightSizes(models.TextChoices):
+        small = "small"
+        medium = "medium"
+        large = "large"
+
     # `field_options` is a very misleading name
     # it should probably be more like `fields_with_field_options`
     # since this field will return instances of `Field` not of
@@ -554,6 +559,12 @@ class GridView(View):
     field_options = models.ManyToManyField(Field, through="GridViewFieldOptions")
     row_identifier_type = models.CharField(
         choices=RowIdentifierTypes.choices, default="id", max_length=10
+    )
+    row_height_size = models.CharField(
+        choices=RowHeightSizes.choices,
+        default="small",
+        max_length=10,
+        db_default="small",
     )
 
 
@@ -742,7 +753,9 @@ class FormView(View):
     @property
     def active_field_options(self):
         return (
-            FormViewFieldOptions.objects.filter(form_view=self, enabled=True)
+            FormViewFieldOptions.objects.filter(
+                form_view=self, enabled=True, field__read_only=False
+            )
             .select_related("field")
             .prefetch_related("conditions", "condition_groups")
             .order_by("order")

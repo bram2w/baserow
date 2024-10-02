@@ -42,6 +42,9 @@
           v-model="values.type"
           :class="{ 'dropdown--error': $v.values.type.$error }"
           :fixed-items="true"
+          :disabled="
+            defaultValues.immutable_type || defaultValues.immutable_properties
+          "
           small
           @hide="$v.values.type.$touch()"
         >
@@ -82,7 +85,7 @@
         <template #error> {{ $t('error.requiredField') }}</template>
       </FormGroup>
 
-      <template v-if="hasFormComponent">
+      <template v-if="hasFormComponent && !defaultValues.immutable_properties">
         <component
           :is="getFormComponent(values.type)"
           ref="childForm"

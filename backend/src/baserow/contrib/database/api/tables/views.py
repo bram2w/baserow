@@ -142,7 +142,12 @@ class TablesView(APIView):
             context=database,
         )
 
-        tables = Table.objects.filter(database=database).prefetch_related("import_jobs")
+        tables = (
+            Table.objects.filter(database=database)
+            .select_related("data_sync")
+            .prefetch_related("import_jobs")
+            .prefetch_related("data_sync__synced_properties")
+        )
 
         tables = CoreHandler().filter_queryset(
             request.user,

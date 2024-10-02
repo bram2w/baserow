@@ -7,7 +7,7 @@ from baserow.contrib.builder.workflow_actions.operations import (
     ListBuilderWorkflowActionsPageOperationType,
 )
 from baserow.core.registries import PermissionManagerType
-from baserow.core.subjects import AnonymousUserSubjectType, UserSubjectType
+from baserow.core.subjects import AnonymousUserSubjectType
 from baserow.core.user_sources.subjects import UserSourceUserSubjectType
 
 from .models import Element
@@ -28,7 +28,6 @@ class ElementVisibilityPermissionManager(PermissionManagerType):
     type = "element_visibility"
     supported_actor_types = [
         UserSourceUserSubjectType.type,
-        UserSubjectType.type,
         AnonymousUserSubjectType.type,
     ]
 
@@ -203,9 +202,6 @@ class ElementVisibilityPermissionManager(PermissionManagerType):
         workspace=None,
     ):
         """Filters out invisible elements and their workflow actions."""
-
-        if isinstance(actor, User):
-            return queryset
 
         if operation_name == ListElementsPageOperationType.type:
             if getattr(actor, "is_authenticated", False):

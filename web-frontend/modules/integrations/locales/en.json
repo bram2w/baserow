@@ -13,7 +13,7 @@
   },
   "serviceType": {
     "localBaserowGetRow": "Get {singleRow}",
-    "localBaserowListRows": "Get {multipleRows}"
+    "localBaserowListRows": "List {multipleRows}"
   },
   "userSourceType": {
     "localBaserow": "Baserow table authentication"

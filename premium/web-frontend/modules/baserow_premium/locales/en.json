@@ -14,6 +14,7 @@
     },
     "viewType": {
       "kanban": "Kanban",
+      "timeline": "Timeline",
       "calendar": "Calendar"
     },
     "exporterType": {
@@ -207,7 +208,36 @@
     "displayedBy": "Displayed by “{fieldName}” field",
     "labels": "Labels"
   },
-  "calendarDateSelector": {
+  "timelineViewHeader": {
+    "dateSettings": "Date settings",
+    "labels": "Labels"
+  },
+  "selectDateFieldContext": {
+    "save": "Save"
+  },
+  "timelineDateSettingsForm": {
+    "startDateField": "Start date",
+    "endDateField": "End date",
+    "noCompatibleDateFields": "Date fields are missing in the table. Please create a start and end date field in the table first.",
+    "incompatibleFieldsErrorTitle": "Incompatible fields",
+    "incompatibleFieldsErrorMessage": "Fields are not compatible. Please choose two valid date fields in the table that use the same settings for 'include time' and use the same timezone for all collaborators.",
+    "forceTimezone": "{timezone}",
+    "includeTime": "date and time",
+    "dateOnly": "date only"
+  },
+  "timelineTimescaleContext": {
+    "hour": "Hour",
+    "day": "Day",
+    "week": "Week",
+    "month": "Month",
+    "quarter": "Quarter",
+    "year": "Year",
+    "disabledTooltip": "This option is available only for date fields with `include time` enabled."
+  },
+  "initTimelineViewSettings": {
+    "settings": "Date settings"
+  },
+  "viewDateSelector": {
     "today": "Today"
   },
   "calendarMonthDay": {
@@ -215,6 +245,9 @@
   },
   "calendarMonthDayExpanded": {
     "tryAgain": "try again"
+  },
+  "timelineGridRow": {
+    "days": "0 | 1 day | {count} days"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -236,6 +269,7 @@
     "rowComments": "Row comments",
     "kanbanView": "Kanban view",
     "calendarView": "Calendar view",
+    "timelineView": "Timeline view",
     "exports": "JSON and XML export",
     "admin": "Admin functionality",
     "rowColoring": "Row coloring",

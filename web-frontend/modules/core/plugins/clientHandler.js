@@ -180,6 +180,10 @@ export class ClientErrorMap {
         app.i18n.t('clientHandler.incompatiblePrimaryFieldTypeTitle'),
         app.i18n.t('clientHandler.incompatiblePrimaryFieldTypeDescription')
       ),
+      ERROR_CANNOT_CREATE_ROWS_IN_TABLE: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.cannotCreateRowsInTableTitle'),
+        app.i18n.t('clientHandler.cannotCreateRowsInTableDescription')
+      ),
     }
   }
 
@@ -520,7 +524,11 @@ const prepareRequestHeaders = (store) => (config) => {
     // Here we are logged as a user source user
     const userSourceToken =
       store.getters['userSourceUser/accessToken'](application)
-    config.headers.Authorization = `JWT ${userSourceToken}`
+    // We don't want to add the user source token if we are refreshing as the token
+    // won't be accepted.
+    if (!store.getters['userSourceUser/isRefreshing'](application)) {
+      config.headers.Authorization = `JWT ${userSourceToken}`
+    }
   }
   if (store.getters['auth/webSocketId'] !== null) {
     const webSocketId = store.getters['auth/webSocketId']

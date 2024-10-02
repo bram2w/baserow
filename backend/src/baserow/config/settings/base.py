@@ -1,9 +1,8 @@
-import datetime
 import importlib
 import json
 import os
 import re
-import sys
+from datetime import timedelta
 from decimal import Decimal
 from ipaddress import ip_network
 from pathlib import Path
@@ -35,15 +34,6 @@ from baserow.version import VERSION
 FEATURE_FLAGS = [
     flag.strip().lower() for flag in os.getenv("FEATURE_FLAGS", "").split(",")
 ]
-
-
-class Everything(object):
-    def __contains__(self, other):
-        return True
-
-
-if "*" in FEATURE_FLAGS or "pytest" in sys.modules:
-    FEATURE_FLAGS = Everything()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -457,10 +447,10 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
     USER_SOURCE_AUTHENTICATION_HEADER,
 ]
 
-ACCESS_TOKEN_LIFETIME = datetime.timedelta(
+ACCESS_TOKEN_LIFETIME = timedelta(
     minutes=int(os.getenv("BASEROW_ACCESS_TOKEN_LIFETIME_MINUTES", 10))  # 10 minutes
 )
-REFRESH_TOKEN_LIFETIME = datetime.timedelta(
+REFRESH_TOKEN_LIFETIME = timedelta(
     hours=int(os.getenv("BASEROW_REFRESH_TOKEN_LIFETIME_HOURS", 24 * 7))  # 7 days
 )
 
@@ -486,7 +476,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/baserow/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.27.2",
+    "VERSION": "1.28.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},

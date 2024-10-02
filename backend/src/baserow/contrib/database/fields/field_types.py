@@ -16,7 +16,7 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.postgres.aggregates import StringAgg
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
-from django.core.files.storage import Storage, default_storage
+from django.core.files.storage import Storage
 from django.db import OperationalError, connection, models
 from django.db.models import (
     Case,
@@ -117,6 +117,7 @@ from baserow.core.formula.parser.exceptions import FormulaFunctionTypeDoesNotExi
 from baserow.core.handler import CoreHandler
 from baserow.core.models import UserFile, WorkspaceUser
 from baserow.core.registries import ImportExportConfig
+from baserow.core.storage import get_default_storage
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.utils import list_to_comma_separated_string
@@ -2150,7 +2151,7 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
 
             search_values = []
             for name, row_ids in name_map.items():
-                if primary_field["type"].read_only:
+                if primary_field["type"].read_only or primary_field["field"].read_only:
                     search_values.append(name)
                 else:
                     try:
@@ -3295,11 +3296,12 @@ class FileFieldType(FieldType):
         )
 
     def get_export_value(self, value, field_object, rich_value=False):
+        storage = get_default_storage()
         files = []
         for file in value:
             if "name" in file:
                 path = UserFileHandler().user_file_path(file["name"])
-                url = default_storage.url(path)
+                url = storage.url(path)
             else:
                 url = None
 

@@ -1,6 +1,4 @@
-from datetime import timedelta
-
-from django.utils import timezone
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -43,7 +41,7 @@ def test_remove_unused_personal_views(
 
     user.profile.to_be_deleted = True
     user.profile.save()
-    user.last_login = timezone.now() - timedelta(weeks=100)
+    user.last_login = datetime.now(tz=timezone.utc) - timedelta(weeks=100)
     user.save()
 
     UserHandler().delete_expired_users_and_related_workspaces_if_last_admin(

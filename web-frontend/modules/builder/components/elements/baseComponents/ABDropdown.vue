@@ -69,6 +69,7 @@
         class="select__items"
         :class="{ 'select__items--no-max-height': fixedItemsImmutable }"
         tabindex="-1"
+        @scroll="$emit('scroll', $event)"
       >
         <slot></slot>
       </ul>

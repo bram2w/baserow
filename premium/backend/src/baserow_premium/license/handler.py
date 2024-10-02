@@ -2,7 +2,7 @@ import base64
 import binascii
 import hashlib
 import json
-from datetime import timezone
+from datetime import datetime, timezone
 from os.path import dirname, join
 from typing import Any, Dict, List, Optional, Union
 
@@ -11,7 +11,6 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.db import DatabaseError, transaction
 from django.db.models import Q
-from django.utils.timezone import now
 
 import requests
 from baserow_premium.api.user.user_data_types import ActiveLicensesDataType
@@ -393,7 +392,7 @@ class LicenseHandler:
                     summary.seats_taken, license_object
                 )
 
-            license_object.last_check = now()
+            license_object.last_check = datetime.now(tz=timezone.utc)
             license_object.save()
 
         return license_objects
@@ -468,7 +467,7 @@ class LicenseHandler:
             tzinfo=timezone.utc
         )
 
-        if valid_through < now():
+        if valid_through < datetime.now(tz=timezone.utc):
             raise LicenseHasExpiredError(
                 "Cannot add the license because it has already expired."
             )

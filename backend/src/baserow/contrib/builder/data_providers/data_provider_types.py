@@ -242,6 +242,13 @@ class CurrentRecordDataProviderType(DataProviderType):
         except KeyError:
             return None
 
+        # If we want the current record index, and nothing else, then
+        # return the `current_record` from the dispatch context. The
+        # index isn't a value that can be returned by the data source
+        # provider's `get_data_chunk`.
+        if len(path) == 1 and path[0] == "__idx__":
+            return current_record
+
         first_collection_element_ancestor = ElementHandler().get_first_ancestor_of_type(
             dispatch_context.workflow_action.element_id,
             CollectionElementTypeMixin,
@@ -249,7 +256,7 @@ class CurrentRecordDataProviderType(DataProviderType):
         data_source_id = first_collection_element_ancestor.specific.data_source_id
 
         # Narrow down our range to just our record index.
-        dispatch_context = BuilderDispatchContext.from_context(
+        dispatch_context = dispatch_context.from_context(
             dispatch_context,
             offset=current_record,
             count=1,

@@ -55,8 +55,9 @@
       <a
         v-if="
           !readOnly &&
+          !singleSelectField.immutable_properties &&
           $hasPermission(
-            'database.table.create_row',
+            'database.table.field.update',
             table,
             database.workspace.id
           )

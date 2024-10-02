@@ -7,7 +7,6 @@ from zoneinfo import ZoneInfo
 
 from django.core.files.storage import FileSystemStorage
 from django.urls import reverse
-from django.utils import timezone as django_timezone
 
 import pytest
 from baserow_premium.ical_utils import build_calendar
@@ -182,7 +181,7 @@ def test_calendar_view_created(premium_data_fixture):
         .order_by("field_id")
         .values_list("hidden", flat=True)
     )
-    assert list(all_field_options) == [False, False, False, False]
+    assert list(all_field_options) == [False, True, True, True]
 
 
 @pytest.mark.django_db
@@ -223,8 +222,8 @@ def test_calendar_view_convert_date_field_to_another(premium_data_fixture):
         get_rows_grouped_by_date_field(
             calendar_view,
             date_field,
-            from_timestamp=django_timezone.now(),
-            to_timestamp=django_timezone.now() + django_timezone.timedelta(days=1),
+            from_timestamp=datetime.now(tz=timezone.utc),
+            to_timestamp=datetime.now(tz=timezone.utc) + timedelta(days=1),
             user_timezone="UTC",
         )
 
@@ -705,13 +704,13 @@ def test_to_midnight_with_tz_on_dst_boundary():
 def test_generate_per_day_intervals_backwards_to_from():
     melbourne_tz = ZoneInfo("Australia/Melbourne")
     dt = datetime(2012, 4, 1, 3, 0, 0, 0, tzinfo=melbourne_tz)
-    assert generate_per_day_intervals(dt, dt - django_timezone.timedelta(hours=1)) == []
+    assert generate_per_day_intervals(dt, dt - timedelta(hours=1)) == []
 
 
 @pytest.mark.view_calendar
 def test_generate_per_day_intervals_same_date_without_tz():
     dt = datetime(2012, 4, 1, 3, 0, 0, 0)
-    assert generate_per_day_intervals(dt, dt + django_timezone.timedelta(hours=1)) == [
+    assert generate_per_day_intervals(dt, dt + timedelta(hours=1)) == [
         (
             datetime(2012, 4, 1, 3, 0),
             datetime(2012, 4, 1, 4, 0),
@@ -723,7 +722,7 @@ def test_generate_per_day_intervals_same_date_without_tz():
 def test_generate_per_day_intervals_same_date_with_tz():
     melbourne_tz = ZoneInfo("Australia/Melbourne")
     dt = datetime(2012, 4, 1, 3, 0, 0, 0, tzinfo=melbourne_tz)
-    assert generate_per_day_intervals(dt, dt + django_timezone.timedelta(hours=1)) == [
+    assert generate_per_day_intervals(dt, dt + timedelta(hours=1)) == [
         (
             datetime(2012, 4, 1, 3, 0, tzinfo=melbourne_tz),
             datetime(2012, 4, 1, 4, 0, tzinfo=melbourne_tz),
@@ -735,7 +734,7 @@ def test_generate_per_day_intervals_same_date_with_tz():
 def test_generate_per_day_intervals_crossing_one_midnight_with_tz():
     melbourne_tz = ZoneInfo("Australia/Melbourne")
     dt = datetime(2012, 3, 31, 23, 0, 0, 0, tzinfo=melbourne_tz)
-    assert generate_per_day_intervals(dt, dt + django_timezone.timedelta(hours=2)) == [
+    assert generate_per_day_intervals(dt, dt + timedelta(hours=2)) == [
         (
             datetime(
                 2012,
@@ -779,7 +778,7 @@ def test_generate_per_day_intervals_crossing_one_midnight_with_tz():
 def test_generate_per_day_intervals_crossing_two_midnights_with_tz():
     melbourne_tz = ZoneInfo("Australia/Melbourne")
     dt = datetime(2012, 3, 31, 23, 0, 0, 0, tzinfo=melbourne_tz)
-    assert generate_per_day_intervals(dt, dt + django_timezone.timedelta(hours=26)) == [
+    assert generate_per_day_intervals(dt, dt + timedelta(hours=26)) == [
         (
             datetime(
                 2012,
@@ -840,7 +839,7 @@ def test_generate_per_day_intervals_crossing_two_midnights_with_tz():
 @pytest.mark.view_calendar
 def test_generate_per_day_intervals_for_dates():
     dt = date(2012, 3, 31)
-    assert generate_per_day_intervals(dt, dt + django_timezone.timedelta(days=2)) == [
+    assert generate_per_day_intervals(dt, dt + timedelta(days=2)) == [
         (
             date(
                 2012,

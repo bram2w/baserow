@@ -44,11 +44,8 @@ export class ThemeStyle {
   }
 
   addColorRecommendationIfExists(theme, propName, styleName) {
-    return this.addIfExists(
-      theme,
-      propName,
-      styleName,
-      (v) => (v) => colorRecommendation(resolveColor(v, this.colorVariables))
+    return this.addIfExists(theme, propName, styleName, (v) =>
+      colorRecommendation(resolveColor(v, this.colorVariables))
     )
   }
 
@@ -546,11 +543,10 @@ export class InputThemeConfigBlockType extends ThemeConfigBlockType {
     style.addPixelValueIfExists(theme, `label_font_size`)
 
     style.addColorIfExists(theme, 'input_text_color')
-    style.addIfExists(
+    style.addColorRecommendationIfExists(
       theme,
       'input_text_color',
-      '--input-text-color-complement',
-      (v) => colorRecommendation(resolveColor(v, colorVariables))
+      '--input-text-color-complement'
     )
     style.addFontFamilyIfExists(theme, `input_font_family`)
     style.addPixelValueIfExists(theme, `input_font_size`)
@@ -570,6 +566,7 @@ export class InputThemeConfigBlockType extends ThemeConfigBlockType {
     style.addPixelValueIfExists(theme, `input_border_size`)
     style.addPixelValueIfExists(theme, `input_horizontal_padding`)
     style.addPixelValueIfExists(theme, `input_vertical_padding`)
+
     return style.toObject()
   }
 

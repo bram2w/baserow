@@ -8,6 +8,7 @@ from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import (
     CollectionField,
     Element,
+    LinkElement,
     TableElement,
 )
 from baserow.contrib.builder.elements.registries import element_type_registry
@@ -207,6 +208,7 @@ def test_duplicate_table_element_with_current_record_formulas(data_fixture):
                     "navigate_to_url": f"get('current_record.field_{fields[0].id}')",
                     "link_name": f"get('current_record.field_{fields[0].id}')",
                     "target": "self",
+                    "variant": LinkElement.VARIANTS.BUTTON,
                 },
             },
         ],
@@ -223,6 +225,7 @@ def test_duplicate_table_element_with_current_record_formulas(data_fixture):
             "navigate_to_url": f"get('current_record.field_{fields[0].id}')",
             "link_name": f"get('current_record.field_{fields[0].id}')",
             "target": "self",
+            "variant": LinkElement.VARIANTS.BUTTON,
         },
     ]
 
@@ -275,6 +278,7 @@ def test_import_table_element_with_current_record_formulas_with_update(data_fixt
                     "navigate_to_url": f"get('current_record.field_42')",
                     "link_name": f"get('current_record.field_42')",
                     "target": "self",
+                    "variant": LinkElement.VARIANTS.BUTTON,
                 },
                 "type": "link",
                 "uid": uuids[1],
@@ -302,6 +306,7 @@ def test_import_table_element_with_current_record_formulas_with_update(data_fixt
             "navigate_to_url": f"get('current_record.field_{fields[0].id}')",
             "link_name": f"get('current_record.field_{fields[0].id}')",
             "target": "self",
+            "variant": LinkElement.VARIANTS.BUTTON,
         },
     ]
 

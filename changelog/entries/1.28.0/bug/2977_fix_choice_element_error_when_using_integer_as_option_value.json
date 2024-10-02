@@ -1,0 +1,7 @@
+{
+  "type": "bug",
+  "message": "[Builder] Fix Choice element error when using integer as option value",
+  "issue_number": 2977,
+  "bullet_points": [],
+  "created_at": "2024-09-10"
+}

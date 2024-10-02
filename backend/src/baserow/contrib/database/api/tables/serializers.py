@@ -1,17 +1,32 @@
 from rest_framework import serializers
 
+from baserow.contrib.database.api.data_sync.serializers import DataSyncSerializer
 from baserow.contrib.database.table.models import Table
 
 
 class TableSerializer(serializers.ModelSerializer):
+    data_sync = DataSyncSerializer()
+
     class Meta:
         model = Table
-        fields = ("id", "name", "order", "database_id")
+        fields = ("id", "name", "order", "database_id", "data_sync")
         extra_kwargs = {
             "id": {"read_only": True},
             "database_id": {"read_only": True},
             "order": {"help_text": "Lowest first."},
         }
+
+
+class TableWithoutDataSyncSerializer(TableSerializer):
+    data_sync = None
+
+    class Meta(TableSerializer.Meta):
+        fields = (
+            "id",
+            "name",
+            "order",
+            "database_id",
+        )
 
 
 class TableCreateSerializer(serializers.ModelSerializer):

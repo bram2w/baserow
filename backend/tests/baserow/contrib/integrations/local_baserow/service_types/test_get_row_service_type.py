@@ -1,11 +1,8 @@
 from collections import defaultdict
-from unittest.mock import Mock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from baserow.contrib.builder.data_sources.builder_dispatch_context import (
-    BuilderDispatchContext,
-)
 from baserow.contrib.builder.data_sources.service import DataSourceService
 from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.elements.service import ElementService
@@ -198,7 +195,7 @@ def test_local_baserow_get_row_service_dispatch_transform(data_fixture):
     )
 
     service = data_fixture.create_local_baserow_get_row_service(
-        integration=integration, view=view, table=table, row_id="get('test')"
+        integration=integration, view=view, table=table, row_id="'2'"
     )
     service_type = LocalBaserowGetRowUserServiceType()
 
@@ -350,14 +347,15 @@ def test_local_baserow_get_row_service_dispatch_data_permission_denied(
     )
 
     service = data_fixture.create_local_baserow_get_row_service(
-        integration=integration, table=table, row_id="get('test')"
+        integration=integration, table=table, row_id="'2'"
     )
 
+    dispatch_context = FakeDispatchContext()
     with stub_check_permissions(raise_permission_denied=True), pytest.raises(
         PermissionException
     ):
         LocalBaserowGetRowUserServiceType().dispatch_data(
-            service, {"table": table}, FakeDispatchContext()
+            service, {"table": table}, dispatch_context
         )
 
 
@@ -370,27 +368,29 @@ def test_local_baserow_get_row_service_dispatch_validation_error(data_fixture):
         application=page.builder, user=user
     )
 
+    dispatch_context = FakeDispatchContext()
+
     service = data_fixture.create_local_baserow_get_row_service(
         integration=integration, table=None, row_id="1"
     )
     service_type = LocalBaserowGetRowUserServiceType()
 
     with pytest.raises(ServiceImproperlyConfigured):
-        service_type.dispatch(service, FakeDispatchContext())
+        service_type.dispatch(service, dispatch_context)
 
     service = data_fixture.create_local_baserow_get_row_service(
-        integration=integration, table=table, row_id="get('test2')"
+        integration=integration, table=table, row_id="''"
     )
 
     with pytest.raises(ServiceImproperlyConfigured):
-        service_type.dispatch(service, FakeDispatchContext())
+        service_type.dispatch(service, dispatch_context)
 
     service = data_fixture.create_local_baserow_get_row_service(
         integration=integration, table=table, row_id="wrong formula"
     )
 
     with pytest.raises(ServiceImproperlyConfigured):
-        service_type.dispatch(service, FakeDispatchContext())
+        service_type.dispatch(service, dispatch_context)
 
 
 @pytest.mark.django_db
@@ -403,7 +403,7 @@ def test_local_baserow_get_row_service_dispatch_data_row_not_exist(data_fixture)
     )
 
     service = data_fixture.create_local_baserow_get_row_service(
-        integration=integration, table=table, row_id="get('test999')"
+        integration=integration, table=table, row_id="'999'"
     )
     service_type = service.get_type()
 
@@ -448,10 +448,9 @@ def test_local_baserow_get_row_service_dispatch_data_no_row_id(data_fixture):
     # If the `row_id` is a formula, and its resolved value is blank, ensure we're
     # raising `ServiceImproperlyConfigured`. We don't want to use the "no row ID"
     # behaviour of returning the first row if we're using formulas.
-    fake_request = Mock()
-    fake_request.data = {"page_parameter": {"id": ""}}
     service.row_id = 'get("page_parameter.id")'
-    dispatch_context = BuilderDispatchContext(fake_request, page)
+    service.save()
+    dispatch_context = FakeDispatchContext(context={"page_parameter": {"id": ""}})
     with pytest.raises(ServiceImproperlyConfigured) as exc:
         service_type.resolve_service_formulas(service, dispatch_context)
 
@@ -654,3 +653,80 @@ def test_local_baserow_get_row_user_service_type_import_path(
     result = service_type.import_path(path, id_mapping)
 
     assert result == expected
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.integrations.local_baserow.service_types.CoreHandler")
+@pytest.mark.parametrize(
+    "view_sorts",
+    (
+        [],
+        ["foo"],
+        ["foo", "bar"],
+        ["foo", "bar", "baz"],
+    ),
+)
+def test_order_by_is_applied_depending_on_views_sorts(
+    mock_core_handler, view_sorts, data_fixture
+):
+    """
+    Test to ensure that the queryset's order_by() is only applied if
+    view_sorts has items.
+
+    If view_sorts is empty, order_by() should never be called.
+    """
+
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    table, _, _ = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("My Color", "text"),
+        ],
+        rows=[
+            ["BMW", "Blue"],
+            ["Audi", "Orange"],
+        ],
+    )
+    view = data_fixture.create_grid_view(user, table=table)
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+
+    service = data_fixture.create_local_baserow_list_rows_service(
+        integration=integration,
+        view=view,
+        table=table,
+    )
+
+    service_type = LocalBaserowGetRowUserServiceType()
+
+    mock_queryset = MagicMock()
+
+    mock_objects = MagicMock()
+    mock_objects.enhance_by_fields.return_value = mock_queryset
+
+    mock_model = MagicMock()
+    mock_objects = mock_model.objects.all.return_value = mock_objects
+
+    mock_table = MagicMock()
+    mock_table.get_model.return_value = mock_model
+
+    resolved_values = {
+        "table": mock_table,
+    }
+
+    service_type.get_dispatch_search = MagicMock(return_value=None)
+    service_type.get_dispatch_filters = MagicMock(return_value=mock_queryset)
+    service_type.get_dispatch_sorts = MagicMock(
+        return_value=(view_sorts, mock_queryset)
+    )
+
+    dispatch_context = FakeDispatchContext()
+    service_type.dispatch_data(service, resolved_values, dispatch_context)
+
+    if view_sorts:
+        mock_queryset.order_by.assert_called_once_with(*view_sorts)
+    else:
+        mock_queryset.order_by.assert_not_called()

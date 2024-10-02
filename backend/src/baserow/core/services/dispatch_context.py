@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
 from baserow.core.formula.runtime_formula_context import RuntimeFormulaContext
 from baserow.core.services.models import Service
@@ -40,3 +41,24 @@ class DispatchContext(RuntimeFormulaContext, ABC):
         new_context.cache = {**context.cache}
 
         return new_context
+
+    @abstractmethod
+    def search_query(self) -> Optional[str]:
+        """
+        Responsible for returning the on-demand search query, depending
+        on which module the `DispatchContext` is used by.
+        """
+
+    @abstractmethod
+    def filters(self) -> Optional[str]:
+        """
+        Responsible for returning the on-demand filters, depending
+        on which module the `DispatchContext` is used by.
+        """
+
+    @abstractmethod
+    def sortings(self) -> Optional[str]:
+        """
+        Responsible for returning the on-demand sortings, depending
+        on which module the `DispatchContext` is used by.
+        """

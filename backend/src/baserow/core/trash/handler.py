@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from django.conf import settings
@@ -5,7 +6,6 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.db import IntegrityError, OperationalError, transaction
 from django.db.models import Q, QuerySet
-from django.utils import timezone
 
 from loguru import logger
 from opentelemetry import trace
@@ -214,9 +214,9 @@ class TrashHandler(metaclass=baserow_trace_methods(tracer)):
         deletion. Does not perform the deletion itself.
         """
 
-        now = timezone.now()
+        now = datetime.now(tz=timezone.utc)
         hours = settings.HOURS_UNTIL_TRASH_PERMANENTLY_DELETED
-        cutoff = now - timezone.timedelta(hours=hours)
+        cutoff = now - timedelta(hours=hours)
         updated_count = TrashEntry.objects.filter(trashed_at__lte=cutoff).update(
             should_be_permanently_deleted=True
         )

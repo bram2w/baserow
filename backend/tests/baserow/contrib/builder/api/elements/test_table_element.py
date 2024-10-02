@@ -5,6 +5,8 @@ from django.urls import reverse
 import pytest
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
+from baserow.contrib.builder.elements.models import LinkElement
+
 
 @pytest.mark.django_db
 def test_can_get_a_table_element(api_client, data_fixture):
@@ -68,6 +70,7 @@ def test_can_update_a_table_element_fields(api_client, data_fixture):
                     "navigate_to_url": "get('test2')",
                     "link_name": "get('test3')",
                     "target": "self",
+                    "variant": LinkElement.VARIANTS.BUTTON,
                     "uid": uuids[1],
                 },
                 {
@@ -101,6 +104,7 @@ def test_can_update_a_table_element_fields(api_client, data_fixture):
             "navigate_to_url": "get('test2')",
             "link_name": "get('test3')",
             "target": "self",
+            "variant": LinkElement.VARIANTS.BUTTON,
             "styles": {},
             "uid": uuids[1],
         },

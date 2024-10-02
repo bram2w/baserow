@@ -1,7 +1,6 @@
-from datetime import datetime, time, timedelta
+from datetime import datetime, time, timedelta, timezone
 
 from django.conf import settings
-from django.utils import timezone
 
 from baserow.config.celery import app
 
@@ -18,7 +17,9 @@ def clean_up_audit_log_entries(self):
     older_than_days = timedelta(
         days=settings.BASEROW_ENTERPRISE_AUDIT_LOG_RETENTION_DAYS
     )
-    entries_older_than = datetime.combine(timezone.now() - older_than_days, time.min)
+    entries_older_than = datetime.combine(
+        datetime.now(tz=timezone.utc) - older_than_days, time.min
+    )
     AuditLogHandler.delete_entries_older_than(entries_older_than)
 
 

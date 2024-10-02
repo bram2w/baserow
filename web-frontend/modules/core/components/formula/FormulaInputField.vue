@@ -99,7 +99,6 @@ export default {
       content: null,
       isFormulaInvalid: false,
       dataNodeSelected: null,
-      valueUpdateTimeout: null,
       isFocused: false,
       ignoreNextBlur: false,
     }

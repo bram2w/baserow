@@ -1,11 +1,10 @@
 import dataclasses
 import itertools
 import sys
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
-from django.utils import timezone
 
 from faker import Faker
 from tqdm import tqdm
@@ -161,7 +160,7 @@ def record_row_history(table, model, row, user, use_cache=False, skip_action=Fal
             user,
             "uuid",
             dataclasses.asdict(params),
-            timezone.now(),
+            datetime.now(tz=timezone.utc),
             ActionCommandType.DO,
         )
     else:
@@ -169,7 +168,7 @@ def record_row_history(table, model, row, user, use_cache=False, skip_action=Fal
 
 
 def overwrite_timestamps(table, row, limit):
-    now = timezone.now()
+    now = datetime.now(tz=timezone.utc)
     day_ago = now - timedelta(days=1)
     two_days_ago = now - timedelta(days=2)
     three_days_ago = now - timedelta(days=3)

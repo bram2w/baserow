@@ -14,7 +14,8 @@
         },
         "viewType": {
             "kanban": "Kanban",
-            "calendar": "Kalender"
+            "calendar": "Kalender",
+            "timeline": "Tijdlijn"
         },
         "exporterType": {
             "json": "Exporteren naar JSON",
@@ -402,5 +403,40 @@
         "sharedViewDisableSyncToExternalCalendar": "Externe sync uitschakelen",
         "sharedViewDescription": "Plak deze link in uw kalendertoepassing",
         "sharedViewTitle": "Sync met een externe agenda"
+    },
+    "timelineViewHeader": {
+        "dateSettings": "Datum instellingen",
+        "labels": "Labels"
+    },
+    "selectDateFieldContext": {
+        "save": "Opslaan"
+    },
+    "timelineDateSettingsForm": {
+        "startDateField": "Startdatum",
+        "endDateField": "Einddatum",
+        "noCompatibleDateFields": "Er ontbreken datumvelden in de tabel. Maak eerst een start- en eind datumveld in de tabel.",
+        "incompatibleFieldsErrorTitle": "Incompatibele velden",
+        "incompatibleFieldsErrorMessage": "Velden zijn niet compatibel. Kies twee geldige datumvelden in de tabel die dezelfde instellingen gebruiken voor 'inclusief tijd' en dezelfde tijdzone gebruiken voor alle medewerkers.",
+        "forceTimezone": "{timezone}",
+        "includeTime": "datum en tijd",
+        "dateOnly": "alleen datum"
+    },
+    "initTimelineViewSettings": {
+        "settings": "Datum instellingen"
+    },
+    "viewDateSelector": {
+        "today": "Vandaag"
+    },
+    "timelineGridRow": {
+        "days": "0 | 1 dag | {count} dagen"
+    },
+    "timelineTimescaleContext": {
+        "quarter": "Kwartaal",
+        "year": "Jaar",
+        "disabledTooltip": "Deze optie is alleen beschikbaar voor datumvelden met `inclusief tijd` ingeschakeld.",
+        "hour": "Uur",
+        "day": "Dag",
+        "week": "Week",
+        "month": "Maand"
     }
 }

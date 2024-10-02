@@ -1,12 +1,11 @@
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
-from django.utils import timezone
 
 from celery.exceptions import SoftTimeLimitExceeded
 from celery.schedules import crontab
@@ -162,7 +161,7 @@ def send_daily_notifications_email_to_users(now: Optional[datetime] = None):
     from .handler import NotificationHandler as handler
 
     if now is None:
-        now = timezone.now()
+        now = datetime.now(tz=timezone.utc)
 
     timezones_to_send_notifications = filter_timezones_matching_hour_and_day(
         now, settings.EMAIL_NOTIFICATIONS_DAILY_HOUR_OF_DAY
@@ -192,7 +191,7 @@ def send_weekly_notifications_email_to_users(now: Optional[datetime] = None):
     from .handler import NotificationHandler as handler
 
     if now is None:
-        now = timezone.now()
+        now = datetime.now(tz=timezone.utc)
 
     hour_of_day = settings.EMAIL_NOTIFICATIONS_DAILY_HOUR_OF_DAY
     day_of_week = settings.EMAIL_NOTIFICATIONS_WEEKLY_DAY_OF_WEEK

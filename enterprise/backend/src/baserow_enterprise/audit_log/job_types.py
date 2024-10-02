@@ -2,7 +2,6 @@ from collections import OrderedDict
 from typing import Dict
 from uuid import uuid4
 
-from django.core.files.storage import default_storage
 from django.core.paginator import Paginator
 from django.utils.functional import lazy
 from django.utils.translation import gettext as _
@@ -25,6 +24,7 @@ from baserow.contrib.database.export.handler import (
 )
 from baserow.core.action.registries import action_type_registry
 from baserow.core.jobs.registries import JobType
+from baserow.core.storage import get_default_storage
 from baserow.core.utils import ChildProgressBuilder
 from baserow_enterprise.features import AUDIT_LOG
 
@@ -189,9 +189,11 @@ class AuditLogExportJobType(JobType):
         if not job.exported_file_name:
             return
 
+        storage = get_default_storage()
         storage_location = ExportHandler.export_file_path(job.exported_file_name)
+        print("before delete ===", storage)
         try:
-            default_storage.delete(storage_location)
+            storage.delete(storage_location)
         except FileNotFoundError:
             logger.error(
                 "Could not delete file %s for 'audit_log_export' job %s",

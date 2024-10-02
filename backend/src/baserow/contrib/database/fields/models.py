@@ -125,6 +125,28 @@ class Field(
     description = models.TextField(
         help_text="Field description", default=None, null=True
     )
+    # TODO Remove null=True in a future release.
+    read_only = models.BooleanField(
+        null=True,
+        default=False,
+        help_text="Indicates whether the field is read-only regardless of the field "
+        "type. If true, then it won't be possible to update the cell value via the "
+        "API.",
+    )
+    # TODO Remove null=True in a future release.
+    immutable_type = models.BooleanField(
+        null=True,
+        default=False,
+        help_text="Indicates whether the field type is immutable. If true, then it "
+        "won't be possible to change the field type via the API.",
+    )
+    # TODO Remove null=True in a future release.
+    immutable_properties = models.BooleanField(
+        null=True,
+        default=False,
+        help_text="Indicates whether the field properties are immutable. If true, "
+        "then it won't be possible to change the properties and the type via the API.",
+    )
 
     class Meta:
         ordering = (

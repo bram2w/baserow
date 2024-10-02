@@ -14,7 +14,8 @@
         },
         "viewType": {
             "kanban": "tabla kanban",
-            "calendar": "Calendario"
+            "calendar": "Calendario",
+            "timeline": "Línea de tiempo"
         },
         "exporterType": {
             "json": "Exportar a JSON",
@@ -403,5 +404,31 @@
         "sharedViewDisableSyncToExternalCalendar": "Desactivar sincronización externa",
         "sharedViewDescription": "Pega este enlace en tu aplicación de calendario",
         "sharedViewTitle": "Sincronizar con un calendario externo"
+    },
+    "timelineViewHeader": {
+        "dateSettings": "Ajustes de la fecha",
+        "labels": "Etiquetas"
+    },
+    "selectDateFieldContext": {
+        "save": "Guardar"
+    },
+    "timelineDateSettingsForm": {
+        "startDateField": "Fecha de inicio",
+        "endDateField": "Fecha de finalización",
+        "incompatibleFieldsErrorTitle": "Campos incompatibles",
+        "noCompatibleDateFields": "Faltan campos de fecha en la tabla. Por favor, crea primero un campo con la fecha de inicio y fin en la tabla.",
+        "incompatibleFieldsErrorMessage": "Los campos no son compatibles. Por favor, elija dos campos de fecha válidos en la tabla que utilicen la misma configuración para 'incluir hora' y utilicen la misma zona horaria para todos los colaboradores.",
+        "forceTimezone": "{timezone}",
+        "includeTime": "fecha y hora",
+        "dateOnly": "solo la fecha"
+    },
+    "initTimelineViewSettings": {
+        "settings": "Ajustes de la fecha"
+    },
+    "viewDateSelector": {
+        "today": "Hoy"
+    },
+    "timelineGridRow": {
+        "days": "0 | 1 día | {count} días"
     }
 }

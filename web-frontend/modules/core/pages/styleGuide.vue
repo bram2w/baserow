@@ -31,7 +31,7 @@
             placeholder="Textarea"
             class="margin-bottom-2"
             value=""
-            rows="6"
+            :rows="6"
           />
 
           <FormTextarea

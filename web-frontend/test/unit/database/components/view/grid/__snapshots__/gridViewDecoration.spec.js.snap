@@ -2,7 +2,7 @@
 
 exports[`GridView component with decoration Default component with first_cell decoration 1`] = `
 <div
-  class="grid-view"
+  class="grid-view grid-view--row-height-small"
 >
   <div
     class="scrollbars"
@@ -113,11 +113,11 @@ exports[`GridView component with decoration Default component with first_cell de
            
           <div
             class="grid-view__row"
-            style="width: 72px;"
+            style="width: 72px; height: 33px;"
           >
             <div
               class="grid-view__column"
-              style="width: 72px;"
+              style="width: 72px; height: 33px;"
             >
               <a
                 class="grid-view__add-row"
@@ -191,9 +191,15 @@ exports[`GridView component with decoration Default component with first_cell de
           <div
             class="grid-view__description"
           >
-            <i
-              class="grid-view__description-icon iconoir-text"
-            />
+            <div
+              class="grid-view__description-icon-container"
+            >
+              <i
+                class="grid-view__description-icon iconoir-text"
+              />
+               
+              <!---->
+            </div>
              
             <div
               class="grid-view__description-name"
@@ -236,9 +242,15 @@ exports[`GridView component with decoration Default component with first_cell de
           <div
             class="grid-view__description"
           >
-            <i
-              class="grid-view__description-icon iconoir-text"
-            />
+            <div
+              class="grid-view__description-icon-container"
+            >
+              <i
+                class="grid-view__description-icon iconoir-text"
+              />
+               
+              <!---->
+            </div>
              
             <div
               class="grid-view__description-name"
@@ -281,9 +293,15 @@ exports[`GridView component with decoration Default component with first_cell de
           <div
             class="grid-view__description"
           >
-            <i
-              class="grid-view__description-icon iconoir-text"
-            />
+            <div
+              class="grid-view__description-icon-container"
+            >
+              <i
+                class="grid-view__description-icon iconoir-text"
+              />
+               
+              <!---->
+            </div>
              
             <div
               class="grid-view__description-name"
@@ -404,11 +422,11 @@ exports[`GridView component with decoration Default component with first_cell de
            
           <div
             class="grid-view__row"
-            style="width: 600px;"
+            style="width: 600px; height: 33px;"
           >
             <div
               class="grid-view__column"
-              style="width: 600px;"
+              style="width: 600px; height: 33px;"
             >
               <a
                 class="grid-view__add-row"
@@ -494,7 +512,7 @@ exports[`GridView component with decoration Default component with first_cell de
 
 exports[`GridView component with decoration Default component with row wrapper decoration 1`] = `
 <div
-  class="grid-view"
+  class="grid-view grid-view--row-height-small"
 >
   <div
     class="scrollbars"
@@ -565,11 +583,11 @@ exports[`GridView component with decoration Default component with row wrapper d
            
           <div
             class="grid-view__row"
-            style="width: 72px;"
+            style="width: 72px; height: 33px;"
           >
             <div
               class="grid-view__column"
-              style="width: 72px;"
+              style="width: 72px; height: 33px;"
             >
               <a
                 class="grid-view__add-row"
@@ -643,9 +661,15 @@ exports[`GridView component with decoration Default component with row wrapper d
           <div
             class="grid-view__description"
           >
-            <i
-              class="grid-view__description-icon iconoir-text"
-            />
+            <div
+              class="grid-view__description-icon-container"
+            >
+              <i
+                class="grid-view__description-icon iconoir-text"
+              />
+               
+              <!---->
+            </div>
              
             <div
               class="grid-view__description-name"
@@ -688,9 +712,15 @@ exports[`GridView component with decoration Default component with row wrapper d
           <div
             class="grid-view__description"
           >
-            <i
-              class="grid-view__description-icon iconoir-text"
-            />
+            <div
+              class="grid-view__description-icon-container"
+            >
+              <i
+                class="grid-view__description-icon iconoir-text"
+              />
+               
+              <!---->
+            </div>
              
             <div
               class="grid-view__description-name"
@@ -733,9 +763,15 @@ exports[`GridView component with decoration Default component with row wrapper d
           <div
             class="grid-view__description"
           >
-            <i
-              class="grid-view__description-icon iconoir-text"
-            />
+            <div
+              class="grid-view__description-icon-container"
+            >
+              <i
+                class="grid-view__description-icon iconoir-text"
+              />
+               
+              <!---->
+            </div>
              
             <div
               class="grid-view__description-name"
@@ -825,11 +861,11 @@ exports[`GridView component with decoration Default component with row wrapper d
            
           <div
             class="grid-view__row"
-            style="width: 600px;"
+            style="width: 600px; height: 33px;"
           >
             <div
               class="grid-view__column"
-              style="width: 600px;"
+              style="width: 600px; height: 33px;"
             >
               <a
                 class="grid-view__add-row"
@@ -915,7 +951,7 @@ exports[`GridView component with decoration Default component with row wrapper d
 
 exports[`GridView component with decoration Default component with unavailable decoration 1`] = `
 <div
-  class="grid-view"
+  class="grid-view grid-view--row-height-small"
 >
   <div
     class="scrollbars"
@@ -1020,11 +1056,11 @@ exports[`GridView component with decoration Default component with unavailable d
            
           <div
             class="grid-view__row"
-            style="width: 72px;"
+            style="width: 72px; height: 33px;"
           >
             <div
               class="grid-view__column"
-              style="width: 72px;"
+              style="width: 72px; height: 33px;"
             >
               <a
                 class="grid-view__add-row"
@@ -1098,9 +1134,15 @@ exports[`GridView component with decoration Default component with unavailable d
           <div
             class="grid-view__description"
           >
-            <i
-              class="grid-view__description-icon iconoir-text"
-            />
+            <div
+              class="grid-view__description-icon-container"
+            >
+              <i
+                class="grid-view__description-icon iconoir-text"
+              />
+               
+              <!---->
+            </div>
              
             <div
               class="grid-view__description-name"
@@ -1143,9 +1185,15 @@ exports[`GridView component with decoration Default component with unavailable d
           <div
             class="grid-view__description"
           >
-            <i
-              class="grid-view__description-icon iconoir-text"
-            />
+            <div
+              class="grid-view__description-icon-container"
+            >
+              <i
+                class="grid-view__description-icon iconoir-text"
+              />
+               
+              <!---->
+            </div>
              
             <div
               class="grid-view__description-name"
@@ -1188,9 +1236,15 @@ exports[`GridView component with decoration Default component with unavailable d
           <div
             class="grid-view__description"
           >
-            <i
-              class="grid-view__description-icon iconoir-text"
-            />
+            <div
+              class="grid-view__description-icon-container"
+            >
+              <i
+                class="grid-view__description-icon iconoir-text"
+              />
+               
+              <!---->
+            </div>
              
             <div
               class="grid-view__description-name"
@@ -1311,11 +1365,11 @@ exports[`GridView component with decoration Default component with unavailable d
            
           <div
             class="grid-view__row"
-            style="width: 600px;"
+            style="width: 600px; height: 33px;"
           >
             <div
               class="grid-view__column"
-              style="width: 600px;"
+              style="width: 600px; height: 33px;"
             >
               <a
                 class="grid-view__add-row"

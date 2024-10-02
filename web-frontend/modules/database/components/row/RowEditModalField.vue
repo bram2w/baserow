@@ -54,7 +54,7 @@
       :workspace-id="database.workspace.id"
       :field="field"
       :value="row['field_' + field.id]"
-      :read-only="readOnly"
+      :read-only="readOnly || field.read_only"
       :row-is-created="!!row.id"
       :row="row"
       :all-fields-in-table="allFieldsInTable"

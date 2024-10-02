@@ -11,19 +11,38 @@
   flex-flow: row;
   flex-wrap: nowrap;
   list-style: none;
+  align-items: flex-start;
+  align-content: flex-start;
   margin: 0;
-  padding: 0 4px;
+  padding: 5px 3px;
+  gap: 4px;
   user-select: none;
+
+  .grid-view--row-height-medium &,
+  .grid-view--row-height-large & {
+    height: auto;
+    flex-wrap: wrap;
+    padding-top: 3px;
+    padding-bottom: 3px;
+  }
+
+  .grid-view--row-height-medium & {
+    max-height: $grid-view-row-height-medium - 1px;
+  }
+
+  .grid-view--row-height-large & {
+    max-height: $grid-view-row-height-large - 1px;
+  }
 
   .grid-field-many-to-many__cell.active & {
     height: auto;
+    max-height: initial;
     flex-wrap: wrap;
   }
 }
 
 .grid-field-many-to-many__item {
   white-space: nowrap;
-  margin: 5px 4px;
   padding: 0 5px;
   background-color: $color-neutral-100;
   display: flex;

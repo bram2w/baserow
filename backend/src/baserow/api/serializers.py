@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from baserow.core.utils import split_comma_separated_string
+
 
 def get_example_pagination_serializer_class(
     results_serializer_class,
@@ -85,3 +87,17 @@ class NaturalKeyRelatedField(serializers.ListField):
                 )
             else:
                 raise e
+
+
+class CommaSeparatedIntegerValuesField(serializers.Field):
+    """A serializer field that accepts a CSV string containing a list of integers."""
+
+    def to_representation(self, value):
+        return ",".join(value)
+
+    def to_internal_value(self, data):
+        record_ids = split_comma_separated_string(data)
+        if not all([record.isdigit() for record in record_ids]):
+            raise serializers.ValidationError("The provided record ids are not valid.")
+
+        return record_ids

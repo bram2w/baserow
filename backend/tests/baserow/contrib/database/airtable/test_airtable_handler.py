@@ -245,6 +245,9 @@ def test_to_baserow_database_export():
         "order": 0,
         "primary": True,
         "text_default": "",
+        "read_only": False,
+        "immutable_type": False,
+        "immutable_properties": False,
     }
     assert baserow_database_export["tables"][0]["fields"][1] == {
         "type": "email",
@@ -252,6 +255,9 @@ def test_to_baserow_database_export():
         "name": "Email",
         "order": 1,
         "primary": False,
+        "read_only": False,
+        "immutable_type": False,
+        "immutable_properties": False,
     }
     assert len(baserow_database_export["tables"][0]["rows"]) == 3
     assert baserow_database_export["tables"][0]["rows"][0] == {
@@ -291,6 +297,7 @@ def test_to_baserow_database_export():
             "name": "Grid",
             "order": 1,
             "row_identifier_type": "id",
+            "row_height_size": "small",
             "filter_type": "AND",
             "filters_disabled": False,
             "filters": [],
@@ -356,6 +363,9 @@ def test_to_baserow_database_export_without_primary_value():
             "order": 32767,
             "primary": True,
             "text_default": "",
+            "read_only": False,
+            "immutable_type": False,
+            "immutable_properties": False,
         }
     ]
 
@@ -656,8 +666,8 @@ def test_get_airtable_import_job(data_fixture):
     job_2 = data_fixture.create_airtable_import_job()
 
     with pytest.raises(JobDoesNotExist):
-        JobHandler().get_job(user, job_2.id)
+        JobHandler.get_job(user, job_2.id)
 
-    job = JobHandler().get_job(user, job_1.id, job_model=AirtableImportJob)
+    job = JobHandler.get_job(user, job_1.id, job_model=AirtableImportJob)
     assert isinstance(job, AirtableImportJob)
     assert job.id == job_1.id

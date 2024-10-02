@@ -14,6 +14,10 @@
     </li>
     <li class="premium-features__feature">
       <i class="iconoir-check premium-features__feature-icon"></i>
+      {{ $t('premiumFeatures.timelineView') }}
+    </li>
+    <li class="premium-features__feature">
+      <i class="iconoir-check premium-features__feature-icon"></i>
       {{ $t('premiumFeatures.exports') }}
     </li>
     <li class="premium-features__feature">

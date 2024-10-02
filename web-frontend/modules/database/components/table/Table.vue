@@ -493,7 +493,7 @@ export default {
       const type = this.$registry.get('view', this.view.type)
       try {
         await type.refresh(
-          { store: this.$store },
+          { store: this.$store, app: this },
           this.database,
           this.view,
           fieldsToRefresh,

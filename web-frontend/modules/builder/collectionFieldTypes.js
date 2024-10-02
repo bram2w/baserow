@@ -20,6 +20,7 @@ import resolveElementUrl from '@baserow/modules/builder/utils/urlResolution'
 import { pathParametersInError } from '@baserow/modules/builder/utils/params'
 import { ClickEvent } from '@baserow/modules/builder/eventTypes'
 import { ThemeConfigBlockType } from '@baserow/modules/builder/themeConfigBlockTypes'
+import { LINK_VARIANTS } from '@baserow/modules/builder/enums'
 
 export class CollectionFieldType extends Registerable {
   get name() {
@@ -144,6 +145,7 @@ export class LinkCollectionFieldType extends CollectionFieldType {
       navigationType: field.navigation_type || '',
       linkName: ensureString(resolveFormula(field.link_name)),
       target: field.target || 'self',
+      variant: field.variant || LINK_VARIANTS.LINK,
     }
     try {
       return {

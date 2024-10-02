@@ -311,6 +311,11 @@
     text-decoration: none;
   }
 
+  &.select__footer-create-link--disabled {
+    color: $palette-neutral-1000;
+    cursor: inherit;
+  }
+
   &:not(.select__footer-create-link--disabled):hover {
     text-decoration: none;
     background-color: rgba($palette-neutral-1300, 0.04);

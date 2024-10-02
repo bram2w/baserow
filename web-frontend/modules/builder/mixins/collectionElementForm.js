@@ -49,7 +49,7 @@ export default {
      * @returns {boolean} - Whether the paging options are available.
      */
     pagingOptionsAvailable() {
-      return this.selectedDataSourceType?.returnsList
+      return this.selectedDataSourceReturnsList
     },
     /**
      * In collection element forms, the ability to choose a data source
@@ -76,10 +76,7 @@ export default {
       if (!this.hasCollectionAncestor) {
         // If we don't have a data source, or
         // We do, and it returns a list, then the schema selector isn't available.
-        if (
-          !this.selectedDataSource ||
-          this.selectedDataSourceType.returnsList
-        ) {
+        if (!this.selectedDataSource || this.selectedDataSourceReturnsList) {
           return false
         }
       }
@@ -90,7 +87,9 @@ export default {
      * @returns {Array} - The data sources the page designer can choose from.
      */
     dataSources() {
-      return this.$store.getters['dataSource/getPageDataSources'](this.page)
+      return this.$store.getters['dataSource/getPageDataSources'](
+        this.page
+      ).filter((dataSource) => dataSource.type)
     },
     selectedDataSource() {
       if (!this.values.data_source_id) {

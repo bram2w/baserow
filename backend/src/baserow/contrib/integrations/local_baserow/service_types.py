@@ -1,35 +1,27 @@
-from typing import Any, Dict, Generator, List, Optional, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+)
 
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
+from django.db.models import QuerySet
 
-from drf_spectacular.types import OPENAPI_TYPE_MAPPING
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError as DRFValidationError
-from rest_framework.fields import (
-    BooleanField,
-    CharField,
-    ChoiceField,
-    DateField,
-    DateTimeField,
-    DecimalField,
-    Field,
-    FloatField,
-    IntegerField,
-    SerializerMethodField,
-    TimeField,
-    UUIDField,
-)
 from rest_framework.response import Response
-from rest_framework.serializers import ListSerializer, Serializer
 
 from baserow.contrib.builder.data_providers.exceptions import (
     DataProviderChunkInvalidException,
 )
-from baserow.contrib.database.api.fields.serializers import (
-    DurationFieldSerializer,
-    FieldSerializer,
-)
+from baserow.contrib.database.api.fields.serializers import FieldSerializer
 from baserow.contrib.database.api.rows.serializers import (
     RowSerializer,
     get_row_serializer_class,
@@ -39,8 +31,6 @@ from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.exceptions import RowDoesNotExist
 from baserow.contrib.database.rows.handler import RowHandler
-from baserow.contrib.database.rows.operations import ReadDatabaseRowOperationType
-from baserow.contrib.database.search.handler import SearchHandler
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.operations import ListRowsDatabaseTableOperationType
@@ -62,10 +52,15 @@ from baserow.contrib.integrations.local_baserow.models import (
     LocalBaserowDeleteRow,
     LocalBaserowGetRow,
     LocalBaserowListRows,
+    LocalBaserowTableService,
     LocalBaserowTableServiceFieldMapping,
     LocalBaserowTableServiceFilter,
     LocalBaserowTableServiceSort,
     LocalBaserowUpsertRow,
+)
+from baserow.contrib.integrations.local_baserow.utils import (
+    guess_cast_function_from_response_serializer_field,
+    guess_json_type_from_response_serializer_field,
 )
 from baserow.core.formula import resolve_formula
 from baserow.core.formula.registries import formula_runtime_function_registry
@@ -73,7 +68,11 @@ from baserow.core.handler import CoreHandler
 from baserow.core.registry import Instance
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
-from baserow.core.services.registries import DispatchTypes, ServiceType
+from baserow.core.services.registries import (
+    DispatchTypes,
+    ListServiceTypeMixin,
+    ServiceType,
+)
 from baserow.core.services.types import (
     ServiceDict,
     ServiceFilterDictSubClass,
@@ -81,6 +80,9 @@ from baserow.core.services.types import (
     ServiceSubClass,
 )
 from baserow.core.utils import atomic_if_not_already
+
+if TYPE_CHECKING:
+    from baserow.contrib.database.table.models import GeneratedTableModel, Table
 
 
 class LocalBaserowServiceType(ServiceType):
@@ -113,76 +115,6 @@ class LocalBaserowServiceType(ServiceType):
                 "type": "object",
             }
 
-    def guess_json_type_from_response_serialize_field(
-        self, serializer_field: Union[Field, Serializer]
-    ) -> Dict[str, Any]:
-        """
-        Responsible for taking a serializer field, and guessing what its JSON
-        type will be. If the field is a ListSerializer, and it has a child serializer,
-        we add the child's type as well.
-
-        :param serializer_field: The serializer field.
-        :return: A dictionary to add to our schema.
-        """
-
-        if isinstance(
-            serializer_field, (UUIDField, CharField, DecimalField, FloatField)
-        ):
-            # DecimalField/FloatField values are returned as strings from the API.
-            base_type = "string"
-        elif isinstance(
-            serializer_field,
-            (DateTimeField, DateField, TimeField, DurationFieldSerializer),
-        ):
-            base_type = "string"
-        elif isinstance(serializer_field, ChoiceField):
-            base_type = "string"
-        elif isinstance(serializer_field, IntegerField):
-            base_type = "number"
-        elif isinstance(serializer_field, BooleanField):
-            base_type = "boolean"
-        elif isinstance(serializer_field, ListSerializer):
-            # ListSerializer.child is required, so add its subtype.
-            sub_type = self.guess_json_type_from_response_serialize_field(
-                serializer_field.child
-            )
-            return {"type": "array", "items": sub_type}
-        elif isinstance(serializer_field, SerializerMethodField):
-            # Try to guess the json type of SerializerMethodField based on the
-            # OpenAPI annotations.
-            #
-            # When a method serializer uses @extend_schema_field decorator it will
-            # include a dictionary called "_spectacular_annotation" that contains
-            # the type of the field to return.
-            #
-            # NOTE: This only works for primitive types (e.g, string, boolean, etc.)
-            # and not for composite ones (e.g, object, lists, etc.).
-            base_type = None
-            method = getattr(serializer_field.parent, serializer_field.method_name)
-            if hasattr(method, "_spectacular_annotation"):
-                field = method._spectacular_annotation.get("field")
-                mapping = OPENAPI_TYPE_MAPPING.get(field)
-                if isinstance(mapping, dict):
-                    base_type = mapping.get("type", None)
-
-        elif issubclass(serializer_field.__class__, Serializer):
-            properties = {}
-            for name, child_serializer in serializer_field.fields.items():
-                guessed_type = self.guess_json_type_from_response_serialize_field(
-                    child_serializer
-                )
-                if guessed_type["type"] is not None:
-                    properties[name] = {
-                        "title": name,
-                        **guessed_type,
-                    }
-
-            return {"type": "object", "properties": properties}
-        else:
-            base_type = None
-
-        return {"type": base_type}
-
 
 class LocalBaserowTableServiceType(LocalBaserowServiceType):
     """
@@ -206,6 +138,43 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
 
     class SerializedDict(ServiceDict):
         table_id: int
+
+    def build_queryset(
+        self,
+        service: LocalBaserowTableService,
+        table: "Table",
+        dispatch_context: DispatchContext,
+        model: Optional[Type["GeneratedTableModel"]] = None,
+    ) -> QuerySet:
+        """
+        Build the queryset for this table, checking for the appropriate permissions.
+        """
+
+        integration = service.integration.specific
+
+        CoreHandler().check_permissions(
+            integration.authorized_user,
+            ListRowsDatabaseTableOperationType.type,
+            workspace=table.database.workspace,
+            context=table,
+        )
+
+        if not model:
+            model = table.get_model()
+
+        queryset = self.get_queryset(service, table, dispatch_context, model)
+        return queryset
+
+    def get_queryset(
+        self,
+        service: ServiceSubClass,
+        table: "Table",
+        dispatch_context: DispatchContext,
+        model: Type["GeneratedTableModel"],
+    ):
+        """Return the queryset for this model."""
+
+        return model.objects.all().enhance_by_fields()
 
     def enhance_queryset(self, queryset):
         return queryset.select_related(
@@ -516,7 +485,7 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
         """
         Responsible for taking a `Field` and `FieldType`, getting the field type's
         response serializer field, and passing it into our serializer to JSON type
-        mapping method, `guess_json_type_from_response_serialize_field`.
+        mapping method, `guess_json_type_from_response_serializer_field`.
 
         :param field: The Baserow Field we want a type for.
         :param field_type: The Baserow FieldType we want a type for.
@@ -524,7 +493,7 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
         """
 
         serializer_field = field_type.get_response_serializer_field(field)
-        return self.guess_json_type_from_response_serialize_field(serializer_field)
+        return guess_json_type_from_response_serializer_field(serializer_field)
 
 
 class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
@@ -650,9 +619,10 @@ class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
 
 
 class LocalBaserowListRowsUserServiceType(
+    ListServiceTypeMixin,
+    LocalBaserowTableServiceSearchableMixin,
     LocalBaserowTableServiceFilterableMixin,
     LocalBaserowTableServiceSortableMixin,
-    LocalBaserowTableServiceSearchableMixin,
     LocalBaserowViewServiceType,
 ):
     """
@@ -664,7 +634,6 @@ class LocalBaserowListRowsUserServiceType(
     type = "local_baserow_list_rows"
     model_class = LocalBaserowListRows
     max_result_limit = 200
-    returns_list = True
     dispatch_type = DispatchTypes.DISPATCH_DATA_SOURCE
 
     @property
@@ -852,32 +821,7 @@ class LocalBaserowListRowsUserServiceType(
         """
 
         table = resolved_values["table"]
-
-        integration = service.integration.specific
-
-        CoreHandler().check_permissions(
-            integration.authorized_user,
-            ListRowsDatabaseTableOperationType.type,
-            workspace=table.database.workspace,
-            context=table,
-        )
-
-        model = table.get_model()
-        queryset = model.objects.all().enhance_by_fields()
-
-        # Apply the search query to this Service's View.
-        search_query = self.get_dispatch_search(service, dispatch_context)
-        if search_query:
-            search_mode = SearchHandler.get_default_search_mode_for_table(table)
-            queryset = queryset.search_all_fields(search_query, search_mode=search_mode)
-
-        # Find filters applicable to this service.
-        queryset = self.get_dispatch_filters(service, queryset, model, dispatch_context)
-
-        # Find sorts applicable to this service.
-        view_sorts, queryset = self.get_dispatch_sorts(service, queryset, model)
-        if view_sorts is not None:
-            queryset = queryset.order_by(*view_sorts)
+        queryset = self.build_queryset(service, table, dispatch_context)
 
         offset, count = dispatch_context.range(service)
 
@@ -892,7 +836,7 @@ class LocalBaserowListRowsUserServiceType(
         return {
             "results": rows[:-1] if has_next_page else rows,
             "has_next_page": has_next_page,
-            "baserow_table_model": model,
+            "baserow_table_model": table.get_model(),
         }
 
     def dispatch_transform(
@@ -918,11 +862,45 @@ class LocalBaserowListRowsUserServiceType(
             "has_next_page": dispatch_data["has_next_page"],
         }
 
+    def get_record_names(
+        self,
+        service: LocalBaserowListRows,
+        record_ids: List[int],
+        dispatch_context: DispatchContext,
+    ) -> Dict[str, str]:
+        """
+        Return the record name associated with each one of the provided record ids.
+
+        :param service: The table service.
+        :param record_ids: A list containing the record identifiers.
+        :param dispatch_context: The context used for the dispatch.
+        :return: A dictionary mapping each record id to its name.
+        :raises ServiceImproperlyConfigured: When service has no associated table.
+        :raises ServiceImproperlyConfigured: When the table is trashed.
+        """
+
+        if not service.table_id:
+            raise ServiceImproperlyConfigured("The table property is missing.")
+        try:
+            table = TableHandler().get_table(service.table_id)
+            # NOTE: This is an expensive operation, so in the future we need to
+            # calculate the list of used fields for searching/sorting/filtering
+            # and pass them to `get_model`.
+            # See: https://gitlab.com/baserow/baserow/-/issues/3062
+            model = table.get_model()
+            queryset = self.build_queryset(
+                service, table, dispatch_context, model
+            ).filter(pk__in=record_ids)
+            record_names = {row.id: str(row) for row in queryset}
+            return record_names
+        except TableDoesNotExist as e:
+            raise ServiceImproperlyConfigured("The specified table is trashed") from e
+
 
 class LocalBaserowGetRowUserServiceType(
+    LocalBaserowTableServiceSearchableMixin,
     LocalBaserowTableServiceFilterableMixin,
     LocalBaserowTableServiceSortableMixin,
-    LocalBaserowTableServiceSearchableMixin,
     LocalBaserowTableServiceSpecificRowMixin,
     LocalBaserowViewServiceType,
 ):
@@ -1125,31 +1103,8 @@ class LocalBaserowGetRowUserServiceType(
         """
 
         table = resolved_values["table"]
-        integration = service.integration.specific
-
-        CoreHandler().check_permissions(
-            integration.authorized_user,
-            ReadDatabaseRowOperationType.type,
-            workspace=table.database.workspace,
-            context=table,
-        )
-
         model = table.get_model()
-        queryset = model.objects.all()
-
-        # Apply the search query to this Service's View.
-        search_query = self.get_dispatch_search(service, dispatch_context)
-        if search_query:
-            search_mode = SearchHandler.get_default_search_mode_for_table(table)
-            queryset = queryset.search_all_fields(search_query, search_mode=search_mode)
-
-        # Find the `filters` applicable to this Service's View.
-        queryset = self.get_dispatch_filters(service, queryset, model, dispatch_context)
-
-        # Find sorts applicable to this service.
-        view_sorts, queryset = self.get_dispatch_sorts(service, queryset, model)
-        if view_sorts is not None:
-            queryset = queryset.order_by(*view_sorts)
+        queryset = self.build_queryset(service, table, dispatch_context, model)
 
         # If no row id is provided return the first item from the queryset
         # This is useful when we want to use filters to specifically choose one
@@ -1508,8 +1463,14 @@ class LocalBaserowUpsertRowServiceType(
             # Transform and validate the resolved value with the field type's DRF field.
             serializer_field = field_type.get_serializer_field(field.specific)
             try:
+                # Automatically cast the resolved value to the serializer field type
+                cast_function = guess_cast_function_from_response_serializer_field(
+                    serializer_field
+                )
+                if cast_function:
+                    resolved_value = cast_function(resolved_value)
                 resolved_value = serializer_field.run_validation(resolved_value)
-            except DRFValidationError as exc:
+            except (ValidationError, DRFValidationError) as exc:
                 raise ServiceImproperlyConfigured(
                     "The result value of the formula is not valid for the "
                     f"field `{field.name} ({field.db_column})`: {str(exc)}"

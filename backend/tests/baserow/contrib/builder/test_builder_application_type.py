@@ -16,6 +16,7 @@ from baserow.contrib.builder.elements.models import (
     ColumnElement,
     Element,
     HeadingElement,
+    LinkElement,
     TableElement,
     TextElement,
 )
@@ -25,17 +26,33 @@ from baserow.contrib.builder.workflow_actions.handler import (
     BuilderWorkflowActionHandler,
 )
 from baserow.contrib.builder.workflow_actions.models import EventTypes
+from baserow.contrib.database.application_types import DatabaseApplicationType
 from baserow.core.action.models import Action
 from baserow.core.action.registries import action_type_registry
 from baserow.core.actions import CreateApplicationActionType
 from baserow.core.db import specific_iterator
-from baserow.core.registries import ImportExportConfig
+from baserow.core.registries import ImportExportConfig, application_type_registry
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.user_sources.registries import DEFAULT_USER_ROLE_PREFIX
 from baserow_enterprise.integrations.local_baserow.user_source_types import (
     LocalBaserowUserSourceType,
 )
+
+
+def test_builder_application_type_import_application_priority():
+    database_type = application_type_registry.get(DatabaseApplicationType.type)
+    builder_type = application_type_registry.get(BuilderApplicationType.type)
+    manual_ordering = [database_type, builder_type]
+    expected_ordering = sorted(
+        application_type_registry.get_all(),
+        key=lambda element_type: element_type.import_application_priority,
+        reverse=True,
+    )
+    assert manual_ordering == expected_ordering, (
+        "The application types ordering are expected to be: "
+        "databases first, then applications, then everything else."
+    )
 
 
 @pytest.mark.django_db
@@ -144,6 +161,9 @@ def test_builder_application_export(data_fixture):
 
     element4 = data_fixture.create_builder_table_element(
         page=page2, data_source=datasource3, items_per_page=42
+    )
+    element4.property_options.create(
+        schema_property="location", filterable=True, sortable=True, searchable=False
     )
 
     workflow_action_1 = data_fixture.create_notification_workflow_action(
@@ -463,6 +483,15 @@ def test_builder_application_export(data_fixture):
                                 "styles": {},
                             }
                             for f in element4.fields.all()
+                        ],
+                        "property_options": [
+                            {
+                                "schema_property": po.schema_property,
+                                "filterable": po.filterable,
+                                "sortable": po.sortable,
+                                "searchable": po.searchable,
+                            }
+                            for po in element4.property_options.all()
                         ],
                     },
                 ],
@@ -881,6 +910,14 @@ def test_builder_application_export(data_fixture):
                             "desktop": "horizontal",
                             "smartphone": "horizontal",
                         },
+                        "property_options": [
+                            {
+                                "schema_property": "location",
+                                "filterable": True,
+                                "sortable": True,
+                                "searchable": False,
+                            }
+                        ],
                     },
                 ],
                 "data_sources": [
@@ -1133,9 +1170,11 @@ IMPORT_REFERENCE = {
                                 "navigate_to_url": "get('current_record.field_25')",
                                 "link_name": "'Test'",
                                 "target": "self",
+                                "variant": LinkElement.VARIANTS.BUTTON,
                             },
                         },
                     ],
+                    "property_options": [],
                 },
                 {
                     "id": 502,

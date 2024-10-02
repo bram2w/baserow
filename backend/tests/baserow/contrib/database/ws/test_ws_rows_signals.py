@@ -53,6 +53,23 @@ def test_row_created(mock_broadcast_to_channel_group, data_fixture):
 
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
+def test_row_created_without_sending_realtime_update(
+    mock_broadcast_to_channel_group, data_fixture
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_text_field(table=table)
+    RowHandler().create_rows(
+        user=user,
+        table=table,
+        rows_values=[{f"field_{field.id}": "Test"}],
+        send_realtime_update=False,
+    )
+    mock_broadcast_to_channel_group.delay.assert_not_called()
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_row_created_with_metadata(mock_broadcast_to_channel_group, data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -134,6 +151,28 @@ def test_row_updated(mock_broadcast_to_channel_group, data_fixture):
 
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
+def test_row_updated_without_sending_realtime_update(
+    mock_broadcast_to_channel_group, data_fixture
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_text_field(table=table)
+    row = table.get_model().objects.create()
+    RowHandler().update_rows(
+        user,
+        table,
+        [
+            {"id": row.id, f"field_{field.id}": "test"},
+        ],
+        rows_to_update=[row],
+        send_realtime_update=False,
+    )
+
+    mock_broadcast_to_channel_group.delay.assert_not_called()
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_row_updated_with_metadata(mock_broadcast_to_channel_group, data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -182,6 +221,19 @@ def test_row_deleted(mock_broadcast_to_channel_group, data_fixture):
     assert args[0][1]["table_id"] == table.id
     assert args[0][1]["rows"][0]["id"] == row_id
     assert args[0][1]["rows"][0][f"field_{field.id}"] == "Value"
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.ws.registries.broadcast_to_channel_group")
+def test_row_deleted_without_sending_realtime_update(
+    mock_broadcast_to_channel_group, data_fixture
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    row = table.get_model().objects.create()
+    RowHandler().delete_rows(user, table, row_ids=[row.id], send_realtime_update=False)
+
+    mock_broadcast_to_channel_group.delay.assert_not_called()
 
 
 @pytest.mark.django_db(transaction=True)

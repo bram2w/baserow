@@ -57,12 +57,12 @@
           )
         "
         class="tree__sub-add"
-        @click="$refs.importFileModal.show()"
+        @click="$refs.createTableModal.show()"
       >
         <i class="tree__sub-add-icon iconoir-plus"></i>
         {{ $t('sidebar.createTable') }}
       </a>
-      <ImportFileModal ref="importFileModal" :database="application" />
+      <CreateTableModal ref="createTableModal" :database="application" />
     </template>
   </SidebarApplication>
 </template>
@@ -71,15 +71,15 @@
 import { mapGetters } from 'vuex'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import SidebarItem from '@baserow/modules/database/components/sidebar/SidebarItem'
-import ImportFileModal from '@baserow/modules/database/components/table/ImportFileModal'
 import SidebarApplication from '@baserow/modules/core/components/sidebar/SidebarApplication'
+import CreateTableModal from '@baserow/modules/database/components/table/CreateTableModal'
 
 export default {
   name: 'Sidebar',
   components: {
+    CreateTableModal,
     SidebarApplication,
     SidebarItem,
-    ImportFileModal,
   },
   props: {
     application: {

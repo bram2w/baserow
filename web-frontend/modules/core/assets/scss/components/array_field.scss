@@ -1,5 +1,4 @@
 .array-field__item {
-  margin: 5px 4px;
   padding: 0 5px;
   background-color: $color-neutral-100;
   display: inline-flex;
@@ -15,7 +14,6 @@
 
   .row-modal__field-item &,
   .grid-view-array-field.active & {
-    margin: 5px 4px;
     max-width: calc(100% - 8px);
     white-space: initial;
     display: flex;
@@ -37,8 +35,6 @@
 }
 
 .array-field__button {
-  margin: 3px 4px;
-
   .row-modal__field-item &,
   .active & {
     max-width: calc(100% - 8px);
@@ -49,20 +45,22 @@
   }
 }
 
+.array-field__button-button {
+  height: 22px;
+}
+
 .array-field__multiple-select-container {
-  display: inline-flex;
+  display: contents;
 
   .row-modal__field-item &,
   .grid-view-array-field.active & {
-    display: contents;
-    flex-wrap: wrap;
     max-width: 100%;
   }
 }
 
 .array-field__single-option {
   white-space: nowrap;
-  margin: 6px 4px 4px;
+  margin-top: 1px;
   overflow: unset;
   flex-wrap: nowrap;
 
@@ -84,21 +82,20 @@
   .grid-view-array-field.active & {
     display: flex;
     overflow: auto;
-
-    &:last-child {
-      margin-right: 4px;
-    }
   }
 }
 
 .array-field__file {
   white-space: nowrap;
-  margin: 5px 3px;
   display: flex;
   height: 22px;
 
   &:last-child {
     margin-right: 0;
+  }
+
+  .grid-view--row-height-large & {
+    height: 26px;
   }
 }
 
@@ -137,7 +134,7 @@
 }
 
 .array-field__boolean {
-  height: 32px;
+  height: 22px;
   display: flex;
 }
 

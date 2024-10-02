@@ -5,6 +5,7 @@ from baserow.contrib.builder.api.data_sources.views import (
     DataSourceView,
     DispatchDataSourcesView,
     DispatchDataSourceView,
+    GetRecordNamesView,
     MoveDataSourceView,
 )
 
@@ -35,5 +36,10 @@ urlpatterns = [
         r"data_source/(?P<data_source_id>[0-9]+)/move/$",
         MoveDataSourceView.as_view(),
         name="move",
+    ),
+    re_path(
+        r"data-source/(?P<data_source_id>[0-9]+)/record-names/$",
+        GetRecordNamesView.as_view(),
+        name="record-names",
     ),
 ]

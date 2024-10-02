@@ -67,6 +67,7 @@
       <li
         v-if="
           !field.primary &&
+          !syncedUniquePrimary &&
           $hasPermission(
             'database.table.field.delete',
             field,
@@ -128,6 +129,16 @@ export default {
     return {
       deleteLoading: false,
     }
+  },
+  computed: {
+    syncedUniquePrimary() {
+      if (!this.table.data_sync) {
+        return false
+      }
+      return this.table.data_sync.synced_properties.some((p) => {
+        return p.field_id === this.field.id && p.unique_primary
+      })
+    },
   },
   methods: {
     // Allows other components to toggle the `FieldContext`

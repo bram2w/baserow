@@ -1,8 +1,7 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 from django.test import override_settings
-from django.utils import timezone as django_timezone
 
 import pytest
 from freezegun import freeze_time
@@ -248,7 +247,7 @@ def test_workspace_updated_last_will_be_updated_first_this_time(data_fixture, se
         return table.get_model(), formula_field
 
     # when the workspace is created the now field is set to the current time
-    now = django_timezone.now()
+    now = datetime.now(tz=timezone.utc)
     workspace_updated_most_recently = data_fixture.create_workspace(user=user)
     workspace_updated_most_recently.now = now
     workspace_updated_most_recently.save()
@@ -257,7 +256,7 @@ def test_workspace_updated_last_will_be_updated_first_this_time(data_fixture, se
     )
     row = table_model.objects.create()
 
-    a_day_ago = django_timezone.now() - django_timezone.timedelta(days=1)
+    a_day_ago = datetime.now(tz=timezone.utc) - timedelta(days=1)
     workspace_that_should_be_updated_first_this_time = data_fixture.create_workspace(
         user=user
     )
@@ -303,7 +302,7 @@ def test_one_formula_failing_doesnt_block_others(data_fixture, settings):
         return table.get_model(), formula_field
 
     # when the workspace is created the now field is set to the current time
-    now = django_timezone.now()
+    now = datetime.now(tz=timezone.utc)
     second_updated_workspace = data_fixture.create_workspace(user=user)
     second_updated_workspace.now = now
     second_updated_workspace.save()
@@ -314,7 +313,7 @@ def test_one_formula_failing_doesnt_block_others(data_fixture, settings):
         user=user, table=table_model.baserow_table, model=table_model
     )
 
-    a_day_ago = django_timezone.now() - django_timezone.timedelta(days=1)
+    a_day_ago = datetime.now(tz=timezone.utc) - timedelta(days=1)
     first_updated_workspace = data_fixture.create_workspace(user=user)
     first_updated_workspace.now = a_day_ago
     first_updated_workspace.save()

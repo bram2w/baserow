@@ -2567,30 +2567,62 @@ def test_public_view_aggregations_no_adhoc_filtering_uses_view_filters(
 
 
 @pytest.mark.django_db
-def test_public_view_aggregations_adhoc_filtering_overrides_existing_filters(
+def test_public_view_aggregations_adhoc_filtering_combineswith_existing_filters(
     api_client, data_fixture
 ):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
-    text_field = data_fixture.create_text_field(table=table, name="text_field")
+    text_field_for_view_filter = data_fixture.create_text_field(
+        table=table, name="text_field"
+    )
+    text_field_for_adhoc_filter = data_fixture.create_text_field(
+        table=table, name="text_field_adhoc"
+    )
     grid_view = data_fixture.create_grid_view(
         table=table, user=user, public=True, create_options=False
     )
-    # in usual scenario this filter would filtered out all rows
-    equal_filter = data_fixture.create_view_filter(
-        view=grid_view, field=text_field, type="equal", value="y"
+    data_fixture.create_grid_view_field_option(
+        grid_view, text_field_for_view_filter, hidden=False
     )
-    RowHandler().create_row(
-        user, table, values={"text_field": "a"}, user_field_names=True
+    data_fixture.create_grid_view_field_option(
+        grid_view, text_field_for_adhoc_filter, hidden=False
     )
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view, field=text_field_for_view_filter, type="not_equal", value="y"
+    )
+    # visible
     RowHandler().create_row(
-        user, table, values={"text_field": "b"}, user_field_names=True
+        user,
+        table,
+        values={"text_field": "a", "text_field_adhoc": "a"},
+        user_field_names=True,
+    )
+    # hidden by adhoc filter
+    RowHandler().create_row(
+        user,
+        table,
+        values={"text_field": "b", "text_field_adhoc": "b"},
+        user_field_names=True,
+    )
+    # hidden by view filter
+    RowHandler().create_row(
+        user,
+        table,
+        values={"text_field": "y", "text_field_adhoc": "a"},
+        user_field_names=True,
+    )
+    # hidden by view filter
+    RowHandler().create_row(
+        user,
+        table,
+        values={"text_field": "y", "text_field_adhoc": "a"},
+        user_field_names=True,
     )
     view_handler = ViewHandler()
     view_handler.update_field_options(
         view=grid_view,
         field_options={
-            text_field.id: {
+            text_field_for_view_filter.id: {
                 "hidden": False,
                 "aggregation_type": "unique_count",
                 "aggregation_raw_type": "unique_count",
@@ -2607,17 +2639,18 @@ def test_public_view_aggregations_adhoc_filtering_overrides_existing_filters(
         "filter_type": "AND",
         "filters": [
             {
-                "field": text_field.id,
+                "field": text_field_for_adhoc_filter.id,
                 "type": "equal",
                 "value": "a",
             },
         ],
     }
+
     get_params = [f"filters={json.dumps(advanced_filters)}"]
     response = api_client.get(f'{url}?{"&".join(get_params)}')
-    assert response.status_code == HTTP_200_OK
+    assert response.status_code == HTTP_200_OK, response.json()
     response_json = response.json()
-    assert response_json == {text_field.db_column: 1}
+    assert response_json == {text_field_for_view_filter.db_column: 1}
 
 
 @pytest.mark.django_db
@@ -3240,6 +3273,8 @@ def test_get_public_grid_view(api_client, data_fixture):
                 "type": "text",
                 "read_only": False,
                 "description": None,
+                "immutable_properties": False,
+                "immutable_type": False,
             }
         ],
         "view": {
@@ -3273,6 +3308,7 @@ def test_get_public_grid_view(api_client, data_fixture):
             },
             "type": "grid",
             "row_identifier_type": grid_view.row_identifier_type,
+            "row_height_size": grid_view.row_height_size,
             "show_logo": True,
         },
     }

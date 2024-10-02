@@ -1,9 +1,9 @@
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 from django.conf import settings
 from django.db import connection
 from django.urls import reverse
-from django.utils import timezone
 
 import pytest
 from freezegun import freeze_time
@@ -1226,8 +1226,8 @@ def test_perm_delete_lookup_row_field(data_fixture, api_client):
         through_field_id=link_field_1.id,
         target_field_id=customers_primary_field.id,
     )
-    trashed_at = timezone.now()
-    plus_one_hour_over = timezone.timedelta(
+    trashed_at = datetime.now(tz=timezone.utc)
+    plus_one_hour_over = timedelta(
         hours=settings.HOURS_UNTIL_TRASH_PERMANENTLY_DELETED + 1
     )
     with freeze_time(trashed_at):

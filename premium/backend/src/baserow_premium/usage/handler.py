@@ -1,6 +1,5 @@
+from datetime import datetime, timezone
 from typing import Optional
-
-from django.utils import timezone
 
 from baserow_premium.license.plugin import LicensePlugin
 from baserow_premium.plugins import PremiumPlugin
@@ -31,7 +30,7 @@ class PremiumUsageHandler:
         )
 
         for workspaces in grouper(chunk_size, workspaces_queryset):
-            now = timezone.now()
+            now = datetime.now(tz=timezone.utc)
             for workspace in workspaces:
                 workspace.seats_taken = cls.calculate_seats_taken_for_workspace(
                     cached_license_plugin, workspace

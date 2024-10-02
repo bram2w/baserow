@@ -1,5 +1,6 @@
 from typing import Any, Dict, Generator, List, Optional, Type
 
+from django.db import IntegrityError
 from django.db.models import Q, QuerySet
 from django.utils.translation import gettext_lazy as _
 
@@ -7,14 +8,21 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from baserow.api.exceptions import RequestBodyValidationException
-from baserow.contrib.builder.api.elements.serializers import CollectionFieldSerializer
+from baserow.contrib.builder.api.elements.serializers import (
+    CollectionElementPropertyOptionsSerializer,
+    CollectionFieldSerializer,
+)
 from baserow.contrib.builder.data_providers.exceptions import (
     FormDataProviderChunkInvalidException,
 )
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
+from baserow.contrib.builder.elements.exceptions import (
+    CollectionElementPropertyOptionsNotUnique,
+)
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import (
     CollectionElement,
+    CollectionElementPropertyOptions,
     CollectionField,
     ContainerElement,
     Element,
@@ -29,6 +37,7 @@ from baserow.contrib.builder.elements.types import CollectionElementSubClass
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.types import ElementDict
 from baserow.core.registry import Instance
+from baserow.core.services.dispatch_context import DispatchContext
 
 
 class ContainerElementTypeMixin:
@@ -126,6 +135,7 @@ class CollectionElementTypeMixin:
         "data_source_id",
         "items_per_page",
         "button_load_more_label",
+        "property_options",
     ]
 
     class SerializedDict(ElementDict):
@@ -133,6 +143,36 @@ class CollectionElementTypeMixin:
         items_per_page: int
         button_load_more_label: str
         schema_property: str
+        property_options: List[Dict]
+
+    def enhance_queryset(self, queryset):
+        return queryset.prefetch_related("property_options")
+
+    def after_update(self, instance: CollectionElementSubClass, values):
+        """
+        After the element has been updated we need to update the property options.
+
+        :param instance: The instance of the element that has been updated.
+        :param values: The values that have been updated.
+        :return: None
+        """
+
+        if "property_options" in values:
+            instance.property_options.all().delete()
+            try:
+                CollectionElementPropertyOptions.objects.bulk_create(
+                    [
+                        CollectionElementPropertyOptions(
+                            **option,
+                            element=instance,
+                        )
+                        for option in values["property_options"]
+                    ]
+                )
+            except IntegrityError as e:
+                if "unique constraint" in e.args[0]:
+                    raise CollectionElementPropertyOptionsNotUnique()
+                raise e
 
     @property
     def serializer_field_overrides(self):
@@ -165,6 +205,11 @@ class CollectionElementTypeMixin:
                 required=False,
                 allow_blank=True,
                 default="",
+            ),
+            "property_options": CollectionElementPropertyOptionsSerializer(
+                many=True,
+                required=False,
+                help_text="The schema property options that can be set for the collection element.",
             ),
         }
 
@@ -211,6 +256,40 @@ class CollectionElementTypeMixin:
                 values["data_source"] = None
 
         return super().prepare_value_for_db(values, instance)
+
+    def serialize_property(
+        self,
+        element: CollectionElementSubClass,
+        prop_name: str,
+        files_zip=None,
+        storage=None,
+        cache=None,
+        **kwargs,
+    ):
+        """
+        You can customize the behavior of the serialization of a property with this
+        hook.
+        """
+
+        if prop_name == "property_options":
+            return [
+                {
+                    "schema_property": po.schema_property,
+                    "filterable": po.filterable,
+                    "sortable": po.sortable,
+                    "searchable": po.searchable,
+                }
+                for po in element.property_options.all()
+            ]
+
+        return super().serialize_property(
+            element,
+            prop_name,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            **kwargs,
+        )
 
     def deserialize_property(
         self,
@@ -269,6 +348,46 @@ class CollectionElementTypeMixin:
             data_source_id=actual_data_source_id,
             **kwargs,
         )
+
+    def create_instance_from_serialized(
+        self,
+        serialized_values: Dict[str, Any],
+        id_mapping,
+        files_zip=None,
+        storage=None,
+        cache=None,
+        **kwargs,
+    ) -> CollectionElementSubClass:
+        """
+        Responsible for creating the property options from the serialized values.
+
+        :param serialized_values: The serialized values of the element.
+        :param id_mapping: A dictionary containing the mapping of the old and new ids.
+        :param files_zip: The zip file containing the files that can be used.
+        :param storage: The storage that can be used to store files.
+        :param cache: A dictionary that can be used to cache data.
+        :param kwargs: Additional keyword arguments.
+        :return: The created instance.
+        """
+
+        property_options = serialized_values.pop("property_options", [])
+
+        instance = super().create_instance_from_serialized(
+            serialized_values,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            **kwargs,
+        )
+
+        # Create property options
+        options = [CollectionElementPropertyOptions(**po) for po in property_options]
+        CollectionElementPropertyOptions.objects.bulk_create(options)
+
+        instance.property_options.add(*options)
+
+        return instance
 
 
 class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
@@ -364,6 +483,14 @@ class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
         instance.fields.add(*created_fields)
 
     def after_update(self, instance: CollectionElementSubClass, values):
+        """
+        After the element has been updated we need to update the fields.
+
+        :param instance: The instance of the element that has been updated.
+        :param values: The values that have been updated.
+        :return: None
+        """
+
         if "fields" in values:
             # If the collection element contains fields that are being deleted,
             # we also need to delete the associated workflow actions.
@@ -386,6 +513,8 @@ class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
                 ]
             )
             instance.fields.add(*created_fields)
+
+        super().after_update(instance, values)
 
     def before_delete(self, instance: CollectionElementSubClass):
         # Call the before_delete hook of all fields
@@ -443,13 +572,19 @@ class FormElementTypeMixin:
     # Form element types are imported second, after containers.
     import_element_priority = 1
 
-    def is_valid(self, element: Type[FormElement], value: Any) -> bool:
+    def is_valid(
+        self,
+        element: Type[FormElement],
+        value: Any,
+        dispatch_context: DispatchContext,
+    ) -> bool:
         """
         Given an element and form data value, returns whether it's valid.
         Used by `FormDataProviderType` to determine if form data is valid.
 
         :param element: The element we're trying to use form data in.
         :param value: The form data value, which may be invalid.
+        :param dispatch_context: The dispatch context of the request.
         :return: Whether the value is valid or not for this element.
         """
 

@@ -1,7 +1,7 @@
+from datetime import datetime, timedelta, timezone
 from unittest.mock import Mock, patch
 
 from django.core.cache import cache
-from django.utils import timezone
 
 import pytest
 from celery.exceptions import SoftTimeLimitExceeded
@@ -44,10 +44,11 @@ def test_run_task(mock_get_by_model, data_fixture):
     def run(job, progress):
         progress.increment(50, "test")
 
-        # Check if the job has updated in the transaction
-        job.refresh_from_db()
-        assert job.progress_percentage == 50
-        assert job.state == "test"
+        # use job's cached state to determine current state/progress_percentage
+        # as this can be updated from another process. A task will not write
+        # a job state to db until it's finished correctly.
+        assert job.get_cached_state() == "test"
+        assert job.get_cached_progress_percentage() == 50
 
         # We're using the second connection to check if we can get the most recent
         # progress value while the transaction is still active.
@@ -174,10 +175,10 @@ def test_run_task_with_exception_mapping(mock_get_by_model, data_fixture):
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_cleanup_file_import_job(storage_mock, data_fixture, settings):
-    now = timezone.now()
-    time_before_expiration = now - timezone.timedelta(
+    now = datetime.now(tz=timezone.utc)
+    time_before_expiration = now - timedelta(
         minutes=settings.BASEROW_JOB_EXPIRATION_TIME_LIMIT + 1
     )
     with freeze_time(now):

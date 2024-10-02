@@ -1,5 +1,5 @@
 <template>
-  <ABLink variant="button" :url="url" :target="target">
+  <ABLink :variant="variant" :url="url" :target="target">
     {{ realLinkName }}
   </ABLink>
 </template>
@@ -20,6 +20,10 @@ export default {
       required: true,
     },
     target: {
+      type: String,
+      required: true,
+    },
+    variant: {
       type: String,
       required: true,
     },

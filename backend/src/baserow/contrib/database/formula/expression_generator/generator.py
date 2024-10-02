@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Dict, List, Optional, Tuple, Type
 
 from django.contrib.postgres.aggregates import JSONBAgg
@@ -135,9 +136,16 @@ class WrappedExpressionWithMetadata:
         join_ids: Optional[JoinIdsType] = None,
     ):
         self.expression = expression
-        self.pre_annotations: Dict[str, FilteredRelation] = pre_annotations or {}
+        self._pre_annotations: Dict[str, FilteredRelation] = pre_annotations or {}
         self.aggregate_filters: List[Expression] = aggregate_filters or []
         self.join_ids: JoinIdsType = join_ids or []
+
+    @property
+    def pre_annotations(self) -> Dict[str, FilteredRelation]:
+        # For some reason (possibly a Django bug), pre_annotations will be modified when
+        # passed into annotate() call but we need to pass the same into multiple
+        # annotate() calls.
+        return deepcopy(self._pre_annotations)
 
     @classmethod
     def from_args(cls, expr, child_args: List["WrappedExpressionWithMetadata"]):

@@ -295,7 +295,13 @@
             "rowDeleted": "Cuando se elimina una fila",
             "rowsCreated": "Se crearon las filas",
             "rowsUpdated": "Las filas fueron actualizadas",
-            "rowsDeleted": "Se han eliminado las filas"
+            "rowsDeleted": "Se han eliminado las filas",
+            "fieldUpdated": "Campo actualizado",
+            "viewUpdated": "Vista actualizada",
+            "viewDeleted": "Vista borrada",
+            "viewCreated": "Vista creada",
+            "fieldDeleted": "Campo borrado",
+            "fieldCreated": "Campo creado"
         },
         "form": {
             "invalidURLTitle": "URL inválida.",
@@ -384,7 +390,9 @@
         "fieldIsAlreadyPrimaryTitle": "El campo ya es primario",
         "incompatiblePrimaryFieldTypeTitle": "El campo no es compatible",
         "fieldIsAlreadyPrimaryDescription": "El nuevo campo primario elegido ya es el campo primario.",
-        "incompatiblePrimaryFieldTypeDescription": "El campo elegido no puede ser el campo primario porque es incompatible."
+        "incompatiblePrimaryFieldTypeDescription": "El campo elegido no puede ser el campo primario porque es incompatible.",
+        "cannotCreateRowsInTableTitle": "No se pueden crear filas",
+        "cannotCreateRowsInTableDescription": "No es posible crear filas en esta tabla."
     },
     "importerType": {
         "csv": "Importar un archivo CSV",

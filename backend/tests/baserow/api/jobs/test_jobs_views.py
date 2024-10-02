@@ -1,3 +1,4 @@
+import threading
 from unittest.mock import patch
 
 from django.urls import reverse
@@ -5,7 +6,11 @@ from django.urls import reverse
 import pytest
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
+from baserow.core.jobs.constants import JOB_CANCELLED
 from baserow.core.jobs.models import Job
+from baserow.core.jobs.registries import JobType
+from baserow.core.jobs.tasks import run_async_job
+from baserow.test_utils.helpers import is_dict_subset
 
 
 @pytest.mark.django_db(transaction=True)
@@ -171,7 +176,8 @@ def test_list_jobs(data_fixture, api_client):
             "states": [
                 {
                     "error": "State importing is not a valid state. "
-                    "Valid states are: pending, finished, failed.",
+                    "Valid states are: pending, finished, failed, "
+                    "cancelled.",
                     "code": "invalid",
                 }
             ],
@@ -263,3 +269,238 @@ def test_get_job(data_fixture, api_client):
         "human_readable_error": "Wrong",
         "test_field": 42,
     }
+
+
+@pytest.mark.django_db(transaction=True)
+def test_cancel_job_running(
+    data_fixture,
+    api_client,
+    test_thread,
+    mutable_job_type_registry,
+    enable_locmem_testing,
+):
+    # marker that the job started
+    m_start = threading.Event()
+
+    # marker for job to stop
+    m_set_stop = threading.Event()
+    # confirmation of m_set_stop
+    m_stop_wait = threading.Event()
+
+    # marker that job finished
+    m_end = threading.Event()
+
+    class IdlingJobType(JobType):
+        type = "idling_job_b"
+        model_class = Job
+        max_count = 1
+
+        def run(self, job, progress):
+            m_start.set()
+            progress.set_progress(1)
+            assert m_set_stop.wait(2)
+            progress.set_progress(2)
+            m_end.set()
+            progress.set_progress(3)
+
+    mutable_job_type_registry.register(IdlingJobType())
+
+    user, token = data_fixture.create_user_and_token()
+
+    with patch("baserow.core.jobs.tasks.run_async_job.delay"):
+        response = api_client.post(
+            reverse("api:jobs:list"),
+            {
+                "type": IdlingJobType.type,
+            },
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+    assert response.status_code == HTTP_200_OK
+    resp = response.json()
+    job = Job.objects.get(id=resp["id"]).specific
+
+    assert job
+    assert job.id
+    assert job.specific
+    assert resp == {
+        "id": job.id,
+        "type": IdlingJobType.type,
+        "state": "pending",
+        "progress_percentage": 0,
+        "human_readable_error": "",
+    }
+
+    with test_thread(run_async_job.apply, args=(job.id,)) as t:
+        assert job.pending, job.get_cached_state()
+        t.start()
+        assert m_start.wait(0.5)
+        assert job.started, job.get_cached_state()
+
+        response = api_client.post(
+            reverse("api:jobs:cancel", args=(job.id,)),
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+        assert response.status_code == HTTP_200_OK
+        resp = response.json()
+        assert is_dict_subset(
+            {"state": "cancelled", "id": job.id, "type": IdlingJobType.type}, resp
+        )
+        m_set_stop.set()
+
+        assert t.thread_stopped.wait(2)
+        job.refresh_from_db()
+        assert job.cancelled, job.get_cached_state()
+
+    assert not m_end.is_set()
+    assert response.status_code == HTTP_200_OK
+
+    job_data = response.json()
+    assert job_data["state"] == JOB_CANCELLED
+
+
+@pytest.mark.django_db(transaction=True)
+def test_cancel_job_pending(
+    data_fixture,
+    api_client,
+    test_thread,
+    mutable_job_type_registry,
+    enable_locmem_testing,
+):
+    # marker that the job started
+    m_start = threading.Event()
+
+    # marker for job to stop
+    m_set_stop = threading.Event()
+
+    # marker that job finished
+    m_end = threading.Event()
+
+    class IdlingJobType(JobType):
+        type = "idling_job_b"
+        model_class = Job
+        max_count = 1
+
+        def run(self, job, progress):
+            m_start.set()
+            progress.set_progress(1)
+            assert m_set_stop.wait(1)
+            progress.set_progress(2)
+            m_end.set()
+
+    mutable_job_type_registry.register(IdlingJobType())
+
+    user, token = data_fixture.create_user_and_token()
+
+    with patch("baserow.core.jobs.tasks.run_async_job.delay"):
+        response = api_client.post(
+            reverse("api:jobs:list"),
+            {
+                "type": IdlingJobType.type,
+            },
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+    assert response.status_code == HTTP_200_OK
+    resp = response.json()
+    job = Job.objects.get(id=resp["id"]).specific
+
+    assert job
+    assert job.id
+    assert job.specific
+    assert resp == {
+        "id": job.id,
+        "type": IdlingJobType.type,
+        "state": "pending",
+        "progress_percentage": 0,
+        "human_readable_error": "",
+    }
+
+    with test_thread(run_async_job.apply, args=(job.id,)) as t:
+        assert job.pending, job.get_cached_state()
+        response = api_client.post(
+            reverse("api:jobs:cancel", args=(job.id,)),
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+        assert response.status_code == HTTP_200_OK
+        t.start()
+        assert job.cancelled, job.get_cached_state()
+
+    assert not m_start.is_set()
+    assert not m_end.is_set()
+    job_data = response.json()
+    assert job_data["state"] == JOB_CANCELLED
+
+
+@pytest.mark.django_db(transaction=True)
+def test_cancel_job_finished(
+    data_fixture,
+    api_client,
+    test_thread,
+    mutable_job_type_registry,
+    enable_locmem_testing,
+):
+    # marker that the job started
+    m_start = threading.Event()
+
+    # marker for job to stop
+    m_set_stop = threading.Event()
+
+    # marker that job finished
+    m_end = threading.Event()
+
+    class IdlingJobType(JobType):
+        type = "idling_job_b"
+        model_class = Job
+        max_count = 1
+
+        def run(self, job, progress):
+            m_start.set()
+            progress.set_progress(1)
+            assert m_set_stop.wait(1)
+            progress.set_progress(2)
+            m_end.set()
+
+    mutable_job_type_registry.register(IdlingJobType())
+
+    user, token = data_fixture.create_user_and_token()
+
+    with patch("baserow.core.jobs.tasks.run_async_job.delay"):
+        response = api_client.post(
+            reverse("api:jobs:list"),
+            {
+                "type": IdlingJobType.type,
+            },
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+    assert response.status_code == HTTP_200_OK
+    resp = response.json()
+    job = Job.objects.get(id=resp["id"]).specific
+
+    assert job
+    assert job.id
+    assert job.specific
+    assert resp == {
+        "id": job.id,
+        "type": IdlingJobType.type,
+        "state": "pending",
+        "progress_percentage": 0,
+        "human_readable_error": "",
+    }
+
+    with test_thread(run_async_job.apply, args=(job.id,)) as t:
+        assert job.pending, job.get_cached_state()
+
+        t.start()
+        assert m_start.wait(0.1)
+        m_set_stop.set()
+        assert m_end.wait(0.1)
+
+        response = api_client.post(
+            reverse("api:jobs:cancel", args=(job.id,)),
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    resp = response.json()
+    assert resp.get("error") == "ERROR_JOB_NOT_CANCELLABLE"

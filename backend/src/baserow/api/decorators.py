@@ -9,11 +9,16 @@ from rest_framework import serializers, status
 from rest_framework.exceptions import APIException
 
 from baserow.api.errors import (
+    ERROR_FEATURE_DISABLED,
     ERROR_MAX_LOCKS_PER_TRANSACTION_EXCEEDED,
     ERROR_PERMISSION_DENIED,
 )
 from baserow.api.exceptions import RequestBodyValidationException
-from baserow.core.exceptions import PermissionException, is_max_lock_exceeded_exception
+from baserow.core.exceptions import (
+    FeatureDisabledException,
+    PermissionException,
+    is_max_lock_exceeded_exception,
+)
 
 from .exceptions import QueryParameterValidationException
 from .utils import ExceptionMappingType, get_request
@@ -88,6 +93,9 @@ def map_exceptions(exceptions: ExceptionMappingType = None):
     # Add globally permission denied exception mapping if missing
     if PermissionException not in exceptions:
         exceptions[PermissionException] = ERROR_PERMISSION_DENIED
+
+    if FeatureDisabledException not in exceptions:
+        exceptions[FeatureDisabledException] = ERROR_FEATURE_DISABLED
 
     # Add global `OperationalError` exception mapping if missing.
     # This is used to detect if `max_locks_per_transaction` has

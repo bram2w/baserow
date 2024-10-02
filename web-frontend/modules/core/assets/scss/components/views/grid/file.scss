@@ -26,9 +26,29 @@
   flex-flow: row;
   flex-wrap: nowrap;
   list-style: none;
+  align-items: flex-start;
+  align-content: flex-start;
+  gap: 2px;
   margin: 0;
-  padding: 0 5px;
+  padding: 5px;
   user-select: none;
+
+  .grid-view--row-height-medium &,
+  .grid-view--row-height-large & {
+    height: auto;
+    flex-wrap: wrap;
+  }
+
+  .grid-view--row-height-medium & {
+    height: $grid-view-row-height-medium - 1px;
+    gap: 3px;
+    padding: 4px 5px;
+  }
+
+  .grid-view--row-height-large & {
+    height: $grid-view-row-height-large - 1px;
+    gap: 5px;
+  }
 
   .grid-field-file__cell.active & {
     height: auto;
@@ -48,9 +68,12 @@
 
 .grid-field-file__item {
   white-space: nowrap;
-  margin: 5px 3px;
   display: flex;
   height: 22px;
+
+  .grid-view--row-height-large & {
+    height: 26px;
+  }
 }
 
 .grid-field-file__link {
@@ -68,6 +91,10 @@
   display: block;
   width: auto;
   height: 22px;
+
+  .grid-view--row-height-large & {
+    height: 26px;
+  }
 }
 
 .grid-field-file__icon {
@@ -79,6 +106,11 @@
   color: $color-neutral-600;
   width: 22px;
   height: 22px;
+
+  .grid-view--row-height-large & {
+    width: 26px;
+    height: 26px;
+  }
 }
 
 .grid-field-file__loading {
@@ -105,12 +137,16 @@
   justify-content: center;
 
   @include rounded($rounded);
+  @include flex-align-items;
 
   .grid-view__column--matches-search & {
     background-color: $color-primary-200;
   }
 
-  @include flex-align-items;
+  .grid-view--row-height-large & {
+    width: 26px;
+    height: 26px;
+  }
 
   &:hover {
     background-color: $color-primary-200;

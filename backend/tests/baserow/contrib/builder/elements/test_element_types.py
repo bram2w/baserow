@@ -2,11 +2,11 @@ import json
 from collections import defaultdict
 from io import BytesIO
 from tempfile import tempdir
-from unittest.mock import MagicMock
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.storage import FileSystemStorage
+from django.http import HttpRequest
 
 import pytest
 from rest_framework.exceptions import ValidationError
@@ -22,12 +22,14 @@ from baserow.contrib.builder.elements.element_types import (
     ButtonElementType,
     CheckboxElementType,
     ChoiceElementType,
+    ColumnElementType,
     FormContainerElementType,
     HeadingElementType,
     IFrameElementType,
     ImageElementType,
     InputTextElementType,
     LinkElementType,
+    RecordSelectorElementType,
     TextElementType,
     collection_element_types,
 )
@@ -49,6 +51,7 @@ from baserow.contrib.builder.elements.models import (
     ImageElement,
     InputTextElement,
     LinkElement,
+    RecordSelectorElement,
     TableElement,
     TextElement,
 )
@@ -59,6 +62,8 @@ from baserow.contrib.builder.elements.registries import (
 from baserow.contrib.builder.elements.service import ElementService
 from baserow.contrib.builder.pages.service import PageService
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.core.handler import CoreHandler
+from baserow.core.registries import ImportExportConfig
 from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.user_sources.registries import DEFAULT_USER_ROLE_PREFIX
 from baserow.core.utils import MirrorDict
@@ -193,6 +198,7 @@ def test_link_collection_field_import_export_formula(data_fixture):
                 },
             ],
             "target": "",
+            "variant": LinkElement.VARIANTS.BUTTON,
         },
     )
     table_element.fields.add(field)
@@ -273,6 +279,18 @@ def test_form_container_element_import_export_formula(data_fixture):
 
     expected_formula = f"get('data_source.{data_source_2.id}.field_1')"
     assert imported_element.submit_button_label == expected_formula
+
+
+@pytest.mark.parametrize(
+    "allowed_element_type",
+    [
+        element_type.type
+        for element_type in element_type_registry.get_all()
+        if element_type.type != FormContainerElementType.type
+    ],
+)
+def test_form_container_child_types_allowed(allowed_element_type):
+    assert allowed_element_type in FormContainerElementType().child_types_allowed
 
 
 @pytest.mark.django_db
@@ -608,12 +626,12 @@ def test_choice_element_is_valid_formula_data_source(data_fixture):
     )
 
     # Call is_valid with an option that is not present in the list raises an exception
-    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=20)
+    dispatch_context = BuilderDispatchContext(HttpRequest(), page, offset=0, count=20)
     with pytest.raises(FormDataProviderChunkInvalidException):
         ChoiceElementType().is_valid(choice, "Invalid", dispatch_context)
 
     # Call is_valid with a valid option simply returns its value
-    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=20)
+    dispatch_context = BuilderDispatchContext(HttpRequest(), page, offset=0, count=20)
     assert ChoiceElementType().is_valid(choice, "BMW", dispatch_context) == "BMW"
 
 
@@ -653,12 +671,11 @@ def test_choice_element_is_valid_formula_context(data_fixture):
     )
 
     # Call is_valid with an option that is not present in the list raises an exception
-    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=20)
+    dispatch_context = BuilderDispatchContext(HttpRequest(), page, offset=0, count=20)
     with pytest.raises(FormDataProviderChunkInvalidException):
         ChoiceElementType().is_valid(choice, "Invalid", dispatch_context)
 
     # Call is_valid with a valid option simply returns its value
-    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=20)
     assert (
         ChoiceElementType().is_valid(choice, "Germany", dispatch_context) == "Germany"
     )
@@ -1228,7 +1245,188 @@ def test_choice_element_integer_option_values(data_fixture):
     )
 
     expected_choices = [row.id for row in rows]
-    dispatch_context = BuilderDispatchContext(MagicMock(), page, offset=0, count=20)
+    dispatch_context = BuilderDispatchContext(HttpRequest(), page, offset=0, count=20)
     for value in expected_choices:
         dispatch_context.reset_call_stack()
         assert ChoiceElementType().is_valid(choice, value, dispatch_context) is value
+
+
+@pytest.mark.parametrize(
+    "allowed_element_type",
+    [
+        element_type.type
+        for element_type in element_type_registry.get_all()
+        if element_type.type != ColumnElementType.type
+    ],
+)
+def test_column_container_child_types_allowed(allowed_element_type):
+    assert allowed_element_type in ColumnElementType().child_types_allowed
+
+
+@pytest.mark.django_db
+def test_record_element_is_valid(data_fixture):
+    user = data_fixture.create_user()
+
+    # There must exist one database with a primary column for the record name
+    table = data_fixture.create_database_table(user=user)
+    data_fixture.create_text_field(name="Name", table=table, primary=True)
+
+    model = table.get_model(attribute_names=True)
+    row_ids = [
+        model.objects.create(name="BMW").id,
+        model.objects.create(name="Audi").id,
+        model.objects.create(name="2Cv").id,
+        model.objects.create(name="Tesla").id,
+    ]
+
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        table=table,
+    )
+
+    dispatch_context = BuilderDispatchContext(HttpRequest(), page)
+
+    # Record selector with no data sources is invalid
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        element = RecordSelectorElement()
+        RecordSelectorElementType().is_valid(element, "", dispatch_context)
+
+    # Record selector that is required should not accept empty values
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        element = RecordSelectorElement(data_source=data_source, required=True)
+        RecordSelectorElementType().is_valid(element, "", dispatch_context)
+
+    # Record selector that is required should accept only valid values
+    element = RecordSelectorElement(data_source=data_source, required=True)
+    for row_id in row_ids:
+        assert (
+            RecordSelectorElementType().is_valid(element, row_id, dispatch_context)
+            == row_id
+        )
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        RecordSelectorElementType().is_valid(element, "-1", dispatch_context)
+
+    # Record selector that is not required should accept empty values
+    element = RecordSelectorElement(data_source=data_source, required=False)
+    assert RecordSelectorElementType().is_valid(element, "", dispatch_context) == ""
+
+    # Record selector that is not required should accept only valid values
+    element = RecordSelectorElement(data_source=data_source, required=False)
+    for row_id in row_ids:
+        assert (
+            RecordSelectorElementType().is_valid(element, row_id, dispatch_context)
+            == row_id
+        )
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        RecordSelectorElementType().is_valid(element, "-1", dispatch_context)
+
+    # Record selector that is multiple and required should not accept empty values
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        element = RecordSelectorElement(
+            data_source=data_source, required=True, multiple=True
+        )
+        RecordSelectorElementType().is_valid(element, "", dispatch_context)
+
+    # Record selector that is multiple should not accept invalid values
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        element = RecordSelectorElement(
+            data_source=data_source, required=False, multiple=True
+        )
+        RecordSelectorElementType().is_valid(element, ["invalid", ""], dispatch_context)
+
+    # Record selector that is multiple and required should accept only valid values
+    element = RecordSelectorElement(
+        data_source=data_source, required=True, multiple=True
+    )
+    assert (
+        RecordSelectorElementType().is_valid(element, row_ids, dispatch_context)
+        == row_ids
+    )
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        RecordSelectorElementType().is_valid(element, [], dispatch_context)
+
+    # Record selector that is multiple and not required should accept empty values
+    element = RecordSelectorElement(
+        data_source=data_source, required=False, multiple=True
+    )
+    assert RecordSelectorElementType().is_valid(element, "", dispatch_context) == ""
+
+    # Record selector that is multiple and not required should accept only valid values
+    element = RecordSelectorElement(
+        data_source=data_source, required=False, multiple=True
+    )
+    assert (
+        RecordSelectorElementType().is_valid(element, row_ids, dispatch_context)
+        == row_ids
+    )
+    with pytest.raises(FormDataProviderChunkInvalidException):
+        RecordSelectorElementType().is_valid(element, "-1", dispatch_context)
+
+
+@pytest.mark.django_db(transaction=True)
+def test_repeat_element_import_export(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    builder = data_fixture.create_builder_application(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
+
+    table = data_fixture.create_database_table(database=database)
+    multiple_select_field = data_fixture.create_multiple_select_field(
+        table=table, name="option_field", order=1, primary=True
+    )
+    data_fixture.create_select_option(
+        field=multiple_select_field, value="A", color="blue", order=0
+    )
+
+    page = data_fixture.create_builder_page(builder=builder)
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        page=page
+    )
+
+    outer_repeat = data_fixture.create_builder_repeat_element(
+        data_source=data_source, page=page
+    )
+    data_fixture.create_builder_repeat_element(
+        page=page,
+        data_source=None,
+        parent_element_id=outer_repeat.id,
+        schema_property=multiple_select_field.db_column,
+    )
+
+    config = ImportExportConfig(include_permission_data=False)
+    exported_applications = CoreHandler().export_workspace_applications(
+        workspace, BytesIO(), config
+    )
+
+    # Ensure the values are json serializable
+    try:
+        json.dumps(exported_applications)
+    except Exception as e:
+        pytest.fail(f"Exported applications are not json serializable: {e}")
+
+    imported_applications, _ = CoreHandler().import_applications_to_workspace(
+        workspace, exported_applications, BytesIO(), config, None
+    )
+    imported_database, imported_builder = imported_applications
+
+    # Pluck out the imported database records.
+    imported_table = imported_database.table_set.get()
+    imported_field = imported_table.field_set.get()
+
+    # Pluck out the imported builder records.
+    imported_page = imported_builder.page_set.all()[0]
+    imported_data_source = imported_page.datasource_set.get()
+    imported_root_repeat = imported_page.element_set.get(
+        parent_element_id=None
+    ).specific
+    imported_nested_repeat = imported_root_repeat.children.get().specific
+
+    assert imported_root_repeat.data_source_id == imported_data_source.id
+    assert imported_nested_repeat.schema_property == imported_field.db_column

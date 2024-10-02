@@ -1,6 +1,6 @@
 import json
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type, Union
 
 from django.utils.functional import lazy
 
@@ -11,7 +11,6 @@ from rest_framework import serializers
 from baserow.api.utils import serialize_validation_errors_recursive
 from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
 from baserow.contrib.database.api.fields.serializers import FieldSerializer
-from baserow.contrib.database.api.serializers import TableSerializer
 from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_AND,
     FILTER_TYPE_OR,
@@ -36,6 +35,7 @@ from baserow.contrib.database.views.registries import (
     view_type_registry,
 )
 
+from ..tables.serializers import TableWithoutDataSyncSerializer
 from .exceptions import FiltersParamValidationException
 
 
@@ -370,7 +370,7 @@ class CreateViewDecorationSerializer(serializers.ModelSerializer):
 
 class ViewSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField()
-    table = TableSerializer()
+    table = TableWithoutDataSyncSerializer()
     filters = ViewFilterSerializer(many=True, source="viewfilter_set", required=False)
     filter_groups = ViewFilterGroupSerializer(many=True, required=False)
     sortings = ViewSortSerializer(many=True, source="viewsort_set", required=False)
@@ -674,6 +674,21 @@ class PublicViewFilterSerializer(serializers.Serializer):
     type = serializers.CharField(help_text="The filter type.")
     value = serializers.CharField(allow_blank=True, help_text="The filter value.")
 
+    def to_internal_value(self, data: Dict[str, any]):
+        """
+        Ensures that the `value` is sanitized of characters which can
+        result in an error upon insertion to the database, such as the
+        NUL character.
+
+        :param data: the prepared dict before `value` sanitization.
+        :return: the prepared dict, with the `value` sanitized.
+        """
+
+        from baserow.contrib.database.views.filters import sanitize_adhoc_filter_value
+
+        data["value"] = sanitize_adhoc_filter_value(data["value"])
+        return super().to_internal_value(data)
+
 
 class PublicViewFilterUserFieldNamesSerializer(PublicViewFilterSerializer):
     field = serializers.CharField(help_text="The name of the field to filter on.")
@@ -708,9 +723,10 @@ class PublicViewFiltersSerializer(serializers.Serializer):
 
 
 def validate_api_grouped_filters(
-    serialized_api_filters: str,
+    api_filters: Union[str, Dict],
     exception_to_raise: Type[Exception] = FiltersParamValidationException,
     user_field_names: Optional[bool] = False,
+    deserialize_filters: bool = True,
 ) -> Dict[str, Any]:
     """
     Validates the provided serialized view filters and returns the validated
@@ -719,24 +735,29 @@ def validate_api_grouped_filters(
     filters can nest other groups of filters. Look at
     `PublicViewFiltersSerializer` for more info about the structure.
 
-    :param serialized_api_filters: The serialized view filters that need to be
-        validated.
+    :param api_filters: A serialized JSON string, or a deserialized dictionary,
+        depending on the value of `deserialize_filters`.
     :param exception_to_raise: The exception that should be raised if the
         provided filters are not valid.
     :param user_field_names: Use field names instead of field ids in the
         serialized filters.
+    :param deserialize_filters: If True, the provided `api_filters` will be
+        deserialized into a dictionary. If False, the provided `api_filters`
+        will be used as is.
     :return: The validated dict containing the filters and the filter groups.
     """
 
-    try:
-        advanced_filters = json.loads(serialized_api_filters)
-    except json.JSONDecodeError:
-        raise exception_to_raise(
-            {
-                "error": "The provided filters are not valid JSON.",
-                "code": "invalid_json",
-            }
-        )
+    advanced_filters = api_filters
+    if deserialize_filters:
+        try:
+            advanced_filters = json.loads(api_filters)
+        except json.JSONDecodeError:
+            raise exception_to_raise(
+                {
+                    "error": "The provided filters are not valid JSON.",
+                    "code": "invalid_json",
+                }
+            )
 
     serializer = PublicViewFiltersSerializer(
         data=advanced_filters, context={"user_field_names": user_field_names}

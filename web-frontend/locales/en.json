@@ -294,7 +294,13 @@
       "rowUpdated": "When a row is updated",
       "rowsUpdated": "Rows are updated",
       "rowDeleted": "When a row is deleted",
-      "rowsDeleted": "Rows are deleted"
+      "rowsDeleted": "Rows are deleted",
+      "fieldCreated": "Field is created",
+      "fieldUpdated": "Field is updated",
+      "fieldDeleted": "Field is deleted",
+      "viewCreated": "View is created",
+      "viewUpdated": "View is updated",
+      "viewDeleted": "View is deleted"
     }
   },
   "clientHandler": {
@@ -379,7 +385,9 @@
     "fieldIsAlreadyPrimaryTitle": "Field is already primary",
     "fieldIsAlreadyPrimaryDescription": "The chose new primary field is already the primary field.",
     "incompatiblePrimaryFieldTypeTitle": "Field is not compatible",
-    "incompatiblePrimaryFieldTypeDescription": "The chose field can't be the primary field because it's incompatible."
+    "incompatiblePrimaryFieldTypeDescription": "The chosen field can't be the primary field because it's incompatible.",
+    "cannotCreateRowsInTableTitle": "Can't create rows",
+    "cannotCreateRowsInTableDescription": "It's not possible to create rows in this table."
   },
   "importerType": {
     "csv": "Import a CSV file",

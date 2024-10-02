@@ -1,21 +1,27 @@
 from collections import defaultdict
-from datetime import date, datetime
+from datetime import date, datetime, timedelta, timezone
 from typing import Dict, List, Optional, Tuple, Union
 from zoneinfo import ZoneInfo
 
 from django.db.models import Count, Q, QuerySet
-from django.utils import timezone
-from django.utils.timezone import utc
 
 from baserow_premium.views.exceptions import CalendarViewHasNoDateField
-from baserow_premium.views.models import OWNERSHIP_TYPE_PERSONAL
+from baserow_premium.views.models import OWNERSHIP_TYPE_PERSONAL, TimelineView
+from baserow_premium.views.view_types import TimelineViewType
+from rest_framework.request import Request
 
+from baserow.contrib.database.api.views.utils import (
+    PublicViewFilteredQuerySet,
+    get_public_view_filtered_queryset,
+    get_view_filtered_queryset,
+)
 from baserow.contrib.database.fields.models import Field, SingleSelectField
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.table.models import GeneratedTableModel
 from baserow.contrib.database.views.filters import AdHocFilters
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import View
+from baserow.contrib.database.views.registries import view_type_registry
 
 
 def get_rows_grouped_by_single_select_field(
@@ -159,6 +165,8 @@ def get_rows_grouped_by_date_field(
     offset: int = 0,
     model: Optional[GeneratedTableModel] = None,
     base_queryset: Optional[QuerySet] = None,
+    adhoc_filters: Optional[AdHocFilters] = None,
+    combine_filters: bool = False,
 ) -> Dict[str, Dict[str, Union[int, list]]]:
     """
     This method fetches the rows grouped into per day buckets given the row's values
@@ -181,6 +189,12 @@ def get_rows_grouped_by_date_field(
     :param base_queryset: Optionally an alternative base queryset can be provided
         that will be used to fetch the rows. This should be provided if additional
         filters and/or sorts must be added.
+    :param adhoc_filters: The optional ad hoc filters. Depending on `combine_filters`
+        they will be added on top of or replace view filters.
+    :param combine_filters: If set to `True`, both view filters and adhoc filters will
+        be applied. If set to `False` adhoc filters will be applied instead of view
+        filters, if present. This flag should be set by a caller depending on a view's
+        publicity status.
     :return: The fetched rows including the total count.
     """
 
@@ -201,7 +215,20 @@ def get_rows_grouped_by_date_field(
         )
     if search is not None:
         base_queryset = base_queryset.search_all_fields(search, search_mode=search_mode)
-    base_option_queryset = ViewHandler().apply_filters(view, base_queryset)
+
+    if combine_filters:
+        base_option_queryset = ViewHandler().apply_filters(view, base_queryset)
+        if adhoc_filters and adhoc_filters.has_any_filters:
+            base_option_queryset = adhoc_filters.apply_to_queryset(
+                model, base_option_queryset
+            )
+
+    else:
+        if adhoc_filters and adhoc_filters.has_any_filters:
+            base_option_queryset = adhoc_filters.apply_to_queryset(model, base_queryset)
+        else:
+            base_option_queryset = ViewHandler().apply_filters(view, base_queryset)
+
     all_filters = Q()
     count_aggregates = {}
 
@@ -216,12 +243,12 @@ def get_rows_grouped_by_date_field(
     else:
         # If our field is just representing dates, then it makes no sense to split it
         # by timezone as a date on its own cannot have a timezone.
-        target_timezone_info = utc
+        target_timezone_info = timezone.utc
         # We are querying upto but not including to_timestamp, so if someone
         # queries to_timestamp=2023-01-01 00:00 we should include rows with dates
         # on the 1st, however if we don't add one day django with query for
         # date < 2023-01-01 so we add one to make sure to include those.
-        to_timestamp = (to_timestamp + timezone.timedelta(days=1)).date()
+        to_timestamp = (to_timestamp + timedelta(days=1)).date()
         from_timestamp = from_timestamp.date()
 
     for start, end in generate_per_day_intervals(from_timestamp, to_timestamp):
@@ -264,14 +291,58 @@ def get_rows_grouped_by_date_field(
     return rows
 
 
+def get_timeline_view_filtered_queryset(
+    view: TimelineView,
+    adhoc_filters: Optional[AdHocFilters] = None,
+    order_by: Optional[str] = None,
+    query_params: Optional[Dict[str, str]] = None,
+) -> QuerySet:
+    """
+    Checks if the provided timeline view has a valid date field and raises an exception
+    if it doesn't. If the date fields are valid, then the filtered queryset is returned.
+
+    :param view: The timeline view where to fetch the fields from.
+    :param adhoc_filters: The optional ad hoc filters if they should be used
+        instead of view filters.
+    :param order_by: The order by fields and directions.
+    :param query_params: The query parameters that can be used to filter the rows.
+    :return: The filtered queryset.
+    """
+
+    timeline_view_type: TimelineViewType = view_type_registry.get_by_model(view)
+    timeline_view_type.raise_if_invalid_date_settings(view)
+
+    return get_view_filtered_queryset(view, adhoc_filters, order_by, query_params)
+
+
+def get_public_timeline_view_filtered_queryset(
+    view: TimelineView, request: Request, query_params: Optional[Dict[str, str]] = None
+) -> PublicViewFilteredQuerySet:
+    """
+    Validates the provided timeline view and raises an exception if it's invalid. If the
+    view is valid, then the public filtered queryset is returned.
+
+    :param view: The timeline view where to fetch the fields from.
+    :param request: The request object.
+    :param query_params: The validated query parameters that can be used to filter the
+        rows.
+    :return: The public filtered queryset.
+    """
+
+    timeline_view_type: TimelineViewType = view_type_registry.get_by_model(view)
+    timeline_view_type.raise_if_invalid_date_settings(view)
+
+    return get_public_view_filtered_queryset(view, request, query_params)
+
+
 def to_midnight(dt: datetime) -> datetime:
     """
     Converts a date time to midnight on that date.
     """
 
-    return timezone.datetime.combine(
+    return datetime.combine(
         dt.date(),
-        timezone.datetime.min.time(),
+        datetime.min.time(),
         tzinfo=dt.tzinfo,
     )
 
@@ -303,7 +374,7 @@ def generate_per_day_intervals(
 
     interval_start = from_timestamp
     while interval_start < to_timestamp:
-        start_plus_day = interval_start + timezone.timedelta(days=1)
+        start_plus_day = interval_start + timedelta(days=1)
         if isinstance(start_plus_day, datetime):
             next_midnight = to_midnight(start_plus_day)
         else:

@@ -1,8 +1,8 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from operator import attrgetter
 from zoneinfo import ZoneInfo
 
-from django.utils.timezone import override, utc
+from django.utils.timezone import override
 
 import pytest
 from baserow_premium.ical_utils import (
@@ -80,9 +80,9 @@ def test_ical_generation_with_datetime(
         elm = evt.get("DTSTART")
         # elm.dt is a date
         assert isinstance(elm.dt, datetime)
-        assert elm.dt.astimezone(utc) == (
+        assert elm.dt.astimezone(timezone.utc) == (
             start + timedelta(days=1, hours=idx)
-        ).astimezone(utc)
+        ).astimezone(timezone.utc)
 
 
 def test_ical_generation_with_datetime_with_tz(
@@ -145,9 +145,9 @@ def test_ical_generation_with_datetime_with_tz(
         elm = evt.get("DTSTART")
         # elm.dt is a date
         assert isinstance(elm.dt, datetime)
-        assert elm.dt.astimezone(utc) == (
+        assert elm.dt.astimezone(timezone.utc) == (
             start + timedelta(days=1, hours=idx)
-        ).astimezone(utc)
+        ).astimezone(timezone.utc)
 
 
 def test_ical_generation_with_date(db, premium_data_fixture, api_client, data_fixture):

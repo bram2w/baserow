@@ -76,7 +76,9 @@
         "repeat": "Répétition",
         "repeatDescription": "Répète des éléments",
         "choice": "Sélecteur",
-        "choiceDescription": "Pour la sélection d'une ou plusieurs valeurs"
+        "choiceDescription": "Pour la sélection d'une ou plusieurs valeurs",
+        "recordSelector": "Sélecteur d'enregistrement",
+        "recordSelectorDescription": "Pour sélectionner les enregistrements d'une source"
     },
     "elementMenu": {
         "moveDown": "Descendre",
@@ -327,14 +329,15 @@
         "fields": "Colonnes",
         "fieldType": "Type",
         "fieldDefaultName": "Colonne",
-        "selectSourceFirst": "Choisissez une source de données de type liste pour commencer à configurer vos champs.",
+        "selectSourceFirst": "Choisissez une source de données et/ou une propriété pour commencer à configurer vos champs.",
         "buttonColor": "Couleur du bouton",
         "refreshFieldsFromDataSource": "Réinitialiser les champs à partir de la source de données",
         "name": "Nom",
         "orientation": "Orientation",
         "orientationHorizontal": "Horizontale",
         "orientationVertical": "Verticale",
-        "buttonLoadMoreLabel": "Libellé « afficher plus »"
+        "buttonLoadMoreLabel": "Libellé « afficher plus »",
+        "propertySelectorMissingArrays": "Aucun champ à valeurs multiples n'a été trouvé pour être utilisé comme données."
     },
     "mainThemeConfigBlock": {
         "colorsLabel": "Couleurs",
@@ -377,7 +380,8 @@
     },
     "currentRecordDataProviderType": {
         "index": "Index",
-        "firstPartName": "Source de données : {nom}"
+        "firstPartName": "Source de données : {nom}",
+        "schemaProperty": "{prefixName} : {schemaProperty}"
     },
     "domainForm": {
         "notUniqueDomain": "Le domaine fourni est déjà utilisé",
@@ -483,7 +487,9 @@
         "text": "Texte",
         "link": "Lien",
         "boolean": "Booléen",
-        "tags": "Étiquettes"
+        "tags": "Étiquettes",
+        "button": "Bouton",
+        "image": "Image"
     },
     "createUserSourceForm": {
         "userSourceName": "Nom",
@@ -624,7 +630,8 @@
     "repeatElement": {
         "showMore": "Afficher plus",
         "empty": "Aucun résultat n'a été trouvée.",
-        "missingDataSourceTooltip": "Choisissez une source de données pour commencer à ajouter des éléments."
+        "missingDataSourceTooltip": "Choisissez une source de données pour commencer à ajouter des éléments.",
+        "missingSchemaPropertyTooltip": "Choisissez une propriété pour commencer à ajouter des éléments."
     },
     "repeatElementForm": {
         "dataSource": "Source de données",
@@ -636,7 +643,8 @@
         "orientationVertical": "Verticale",
         "orientationHorizontal": "Horizontale",
         "buttonLoadMoreLabel": "Libellé « afficher plus »",
-        "toggleEditorRepetitionsLabel": "Désactiver temporairement les répétitions"
+        "toggleEditorRepetitionsLabel": "Désactiver temporairement les répétitions",
+        "propertySelectorMissingArrays": "Aucun champ à valeurs multiples n'a été trouvé pour créer les répétitions."
     },
     "userDataProviderType": {
         "isAuthenticated": "Est authentifié",
@@ -818,6 +826,37 @@
         "empty": "Aucune option disponible"
     },
     "abTable": {
-        "empty": "Aucun résultat n'a été trouvée."
+        "empty": "Aucun résultat n'a été trouvée.",
+        "loading": "Chargement..."
+    },
+    "collectionElementForm": {
+        "noDataSourceMessage": "Choisissez une source de données retournant plusieurs lignes pour lister tous les résultats, ou une source de données retournant une seule ligne pour choisir une propriété à l'intérieur de cette ligne.",
+        "noSchemaPropertyMessage": "Choisissez une propriété de la source de données à utiliser comme source de données pour votre élément."
+    },
+    "imageFieldForm": {
+        "fieldSrcLabel": "Source de l'image",
+        "fieldSrcPlaceholder": "Saisir la valeur",
+        "fieldAltPlaceholder": "Saisir la valeur...",
+        "fieldAltLabel": "Texte Alt",
+        "fieldAltHelp": "Est utilisé par les lecteurs d'écran et affiché si l'image ne peut pas être chargée"
+    },
+    "dataSourceDropdown": {
+        "noDataSources": "Aucune source de données disponible",
+        "label": "Source des données"
+    },
+    "serviceSchemaPropertySelector": {
+        "label": "Propriété",
+        "noProperties": "Aucune propriété disponible"
+    },
+    "recordSelectorElementForm": {
+        "selectRecordsFrom": "Sélectionner les enregistrements de...",
+        "record": "Option {id}",
+        "noDataSourceMessage": "Choisir une source de données avec plusieurs lignes pour lister tous les résultats.",
+        "optionNameSuffix": "Suffixe des options",
+        "optionNameSuffixPlaceholder": "Saisir un suffixe...",
+        "optionNameSuffixHelper": "Ce suffixe est ajouté à chaque nom d'option lorsque vous ouvrez la liste déroulante et permet de les distinguer.",
+        "itemsPerPage": "Éléments par page",
+        "itemsPerPagePlaceholder": "Saisir une valeur...",
+        "multipleLabel": "Autoriser plusieurs valeurs"
     }
 }

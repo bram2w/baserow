@@ -65,8 +65,12 @@ def rows_updated(
     model,
     before_return,
     updated_field_ids,
+    send_realtime_update=True,
     **kwargs,
 ):
+    if not send_realtime_update:
+        return
+
     table_page_type = page_registry.get("table")
     before_rows_values = dict(before_return)[serialize_rows_values]
     transaction.on_commit(
@@ -115,7 +119,12 @@ def before_rows_delete(sender, rows, user, table, model, **kwargs):
 
 
 @receiver(row_signals.rows_deleted)
-def rows_deleted(sender, rows, user, table, model, before_return, **kwargs):
+def rows_deleted(
+    sender, rows, user, table, model, before_return, send_realtime_update=True, **kwargs
+):
+    if not send_realtime_update:
+        return
+
     table_page_type = page_registry.get("table")
     transaction.on_commit(
         lambda: table_page_type.broadcast(

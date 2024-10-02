@@ -13,6 +13,8 @@ from baserow.core.models import Application
 def delete_application_snapshot(self, application_id: int):
     """
     A job that will delete an application.
+
+    :param application_id: The id of the application that must be deleted.
     """
 
     from baserow.core.trash.handler import TrashHandler

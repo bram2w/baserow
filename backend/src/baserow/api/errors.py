@@ -1,6 +1,7 @@
 from rest_framework.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
+    HTTP_403_FORBIDDEN,
     HTTP_404_NOT_FOUND,
 )
 
@@ -48,4 +49,9 @@ ERROR_INVALID_FILTER_ATTRIBUTE = (
     "ERROR_INVALID_FILTER_ATTRIBUTE",
     HTTP_400_BAD_REQUEST,
     "Invalid attribute name provided to filter by.",
+)
+ERROR_FEATURE_DISABLED = (
+    "ERROR_FEATURE_DISABLED",
+    HTTP_403_FORBIDDEN,
+    "This feature is disabled.",
 )

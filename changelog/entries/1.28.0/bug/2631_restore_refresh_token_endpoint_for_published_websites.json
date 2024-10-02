@@ -1,0 +1,7 @@
+{
+  "type": "bug",
+  "message": "[Builder] Restore refresh token endpoint for published websites",
+  "issue_number": 2631,
+  "bullet_points": [],
+  "created_at": "2024-09-05"
+}

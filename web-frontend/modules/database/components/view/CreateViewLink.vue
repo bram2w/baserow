@@ -1,8 +1,12 @@
 <template>
   <a
     ref="createViewLink"
-    v-tooltip="deactivated ? deactivatedText : null"
+    v-tooltip="tooltipText"
     class="select__footer-create-link"
+    :class="{
+      'select__footer-create-link--disabled':
+        !viewType.isCompatibleWithDataSync(table.data_sync),
+    }"
     @click="select"
   >
     <i class="select__footer-create-icon" :class="viewType.iconClass"></i>
@@ -51,6 +55,15 @@ export default {
     },
   },
   computed: {
+    tooltipText() {
+      if (!this.viewType.isCompatibleWithDataSync(this.table.data_sync)) {
+        return this.$t('createViewLink.inCompatibleWithDataSync')
+      } else if (this.deactivated) {
+        return this.deactivatedText
+      }
+
+      return null
+    },
     deactivatedText() {
       return this.viewType.getDeactivatedText()
     },
@@ -63,7 +76,10 @@ export default {
   },
   methods: {
     select() {
-      if (!this.deactivated) {
+      if (!this.viewType.isCompatibleWithDataSync(this.table.data_sync)) {
+        // Don't do anything in case the view type not compatible with a data sync
+        // table.
+      } else if (!this.deactivated) {
         this.$refs.createModal.show(this.$refs.createViewLink)
       } else if (this.deactivated && this.deactivatedClickModal) {
         this.$refs.deactivatedClickModal.show()

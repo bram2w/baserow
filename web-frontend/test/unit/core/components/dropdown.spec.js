@@ -143,4 +143,40 @@ describe('Dropdown component', () => {
 
     expect(wrapper.element).toMatchSnapshot()
   })
+
+  test('test children', async () => {
+    let wrapper = await mountComponent()
+    let children = await wrapper.vm.getDropdownItemComponents()
+    expect(children).toEqual([])
+
+    wrapper = await mountComponent({
+      slots: {
+        default: `
+          <DropdownItem value="a" name="A"/>
+          <DropdownItem value="b" name="B"/>
+          <DropdownItem value="c" name="C"/>
+          <DropdownItem value="d" name="D"/>
+        `,
+      },
+    })
+    children = await wrapper.vm.getDropdownItemComponents()
+    expect(children.length).toEqual(4)
+
+    wrapper = await mountComponent({
+      slots: {
+        default: `
+          <div id="group-1">
+            <DropdownItem value="a" name="A"/>
+            <DropdownItem value="b" name="B"/>
+          </div>
+          <div id="group-2">
+            <DropdownItem value="c" name="C"/>
+            <DropdownItem value="d" name="D"/>
+          </div>
+        `,
+      },
+    })
+    children = await wrapper.vm.getDropdownItemComponents()
+    expect(children.length).toEqual(4)
+  })
 })

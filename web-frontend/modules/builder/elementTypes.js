@@ -14,6 +14,7 @@ import TableElementForm from '@baserow/modules/builder/components/elements/compo
 import {
   ensureArray,
   ensureBoolean,
+  ensureInteger,
   ensureString,
   ensureStringOrInteger,
 } from '@baserow/modules/core/utils/validator'
@@ -41,8 +42,10 @@ import IFrameElement from '@baserow/modules/builder/components/elements/componen
 import IFrameElementForm from '@baserow/modules/builder/components/elements/components/forms/general/IFrameElementForm.vue'
 import RepeatElement from '@baserow/modules/builder/components/elements/components/RepeatElement'
 import RepeatElementForm from '@baserow/modules/builder/components/elements/components/forms/general/RepeatElementForm'
+import RecordSelectorElement from '@baserow/modules/builder/components/elements/components/RecordSelectorElement.vue'
 import { pathParametersInError } from '@baserow/modules/builder/utils/params'
 import { isNumeric, isValidEmail } from '@baserow/modules/core/utils/string'
+import RecordSelectorElementForm from '@baserow/modules/builder/components/elements/components/forms/general/RecordSelectorElementForm.vue'
 
 export class ElementType extends Registerable {
   get name() {
@@ -616,14 +619,16 @@ export class FormContainerElementType extends ContainerElementTypeMixin(
   }
 
   /**
-   * Exclude element types which are not a form element.
+   * Only disallow form containers as nested elements.
    * @param {object} page - The page the element belongs to.
    * @param {Object} element The element in question, it can be used to
    *  determine in a more dynamic way if specific children are permitted.
-   * @returns {Array} An array of non-form element types.
+   * @returns {Array} An array containing the `FormContainerElementType`.
    */
   childElementTypesForbidden(page, element) {
-    return this.elementTypesAll.filter((type) => !type.isFormElement)
+    return this.elementTypesAll.filter(
+      (elementType) => elementType.type === this.getType()
+    )
   }
 
   get childStylesForbidden() {
@@ -678,15 +683,15 @@ export class ColumnElementType extends ContainerElementTypeMixin(ElementType) {
   }
 
   /**
-   * Exclude element types which are containers.
+   * Only disallow column elements as nested elements.
    * @param {object} page - The page the element belongs to.
    * @param {Object} element The element in question, it can be used to
    *  determine in a more dynamic way if specific children are permitted.
-   * @returns {Array} An array of container element types.
+   * @returns {Array} An array containing the `ColumnElementType`.
    */
   childElementTypesForbidden(page, element) {
     return this.elementTypesAll.filter(
-      (elementType) => elementType.isContainerElement
+      (elementType) => elementType.type === this.getType()
     )
   }
 
@@ -785,6 +790,14 @@ export class ColumnElementType extends ContainerElementTypeMixin(ElementType) {
 const CollectionElementTypeMixin = (Base) =>
   class extends Base {
     isCollectionElement = true
+
+    /**
+     * By default collection element will load their content at loading time
+     * but if you don't want that you can return false here.
+     */
+    get fetchAtLoad() {
+      return true
+    }
 
     hasCollectionAncestor(page, element) {
       return this.app.store.getters['element/getAncestors'](page, element).some(
@@ -904,6 +917,58 @@ const CollectionElementTypeMixin = (Base) =>
         }
       }
     }
+
+    /**
+     * A collection element is in error if:
+     *
+     * - No parent (including self) collection elements have a valid data_source_id.
+     * - The parent with the valid data_source_id points to a data_source
+     *   that !returnsList and `schema_property` is blank.
+     * - It is nested in another collection element, and we don't have a `schema_property`.
+     * @param {Object} page - The page the repeat element belongs to.
+     * @param {Object} element - The repeat element
+     * @returns {Boolean} - Whether the element is in error.
+     */
+    isInError({ page, element }) {
+      // We get all parents with a valid data_source_id
+      const collectionAncestorsWithDataSource = this.app.store.getters[
+        'element/getAncestors'
+      ](page, element, {
+        predicate: (ancestor) =>
+          this.app.$registry.get('element', ancestor.type)
+            .isCollectionElement && ancestor.data_source_id,
+        includeSelf: true,
+      })
+
+      // No parent with a data_source_id means we are in error
+      if (collectionAncestorsWithDataSource.length === 0) {
+        return true
+      }
+
+      // We consider the closest parent collection element with a data_source_id
+      // The closest parent might be the current element itself
+      const parentWithDataSource = collectionAncestorsWithDataSource.at(-1)
+
+      // We now check if the parent element configuration is correct.
+      const dataSource = this.app.store.getters[
+        'dataSource/getPageDataSourceById'
+      ](page, parentWithDataSource.data_source_id)
+      const serviceType = this.app.$registry.get('service', dataSource.type)
+
+      // If the data source type doesn't return a list, we should have a schema_property
+      if (!serviceType.returnsList && !parentWithDataSource.schema_property) {
+        return true
+      }
+
+      // If the current element is not the one with the data source it should have
+      // a schema_property
+      if (parentWithDataSource.id !== element.id && !element.schema_property) {
+        return true
+      }
+
+      // Otherwise it's not in error.
+      return false
+    }
   }
 
 export class TableElementType extends CollectionElementTypeMixin(ElementType) {
@@ -951,18 +1016,24 @@ export class TableElementType extends CollectionElementTypeMixin(ElementType) {
       .flat()
   }
 
-  isInError({ element, builder }) {
-    const collectionFieldsInError = element.fields.map((collectionField) => {
-      const collectionFieldType = this.app.$registry.get(
-        'collectionField',
-        collectionField.type
-      )
-      return collectionFieldType.isInError({
-        field: collectionField,
-        builder,
+  /**
+   * The table is in error if the configuration is invalid (see collection element
+   * mixin) or if one of the field is in error.
+   */
+  isInError({ element, page, builder }) {
+    return (
+      super.isInError({ element, page, builder }) ||
+      element.fields.some((collectionField) => {
+        const collectionFieldType = this.app.$registry.get(
+          'collectionField',
+          collectionField.type
+        )
+        return collectionFieldType.isInError({
+          field: collectionField,
+          builder,
+        })
       })
-    })
-    return collectionFieldsInError.includes(true)
+    )
   }
 }
 
@@ -994,25 +1065,6 @@ export class RepeatElementType extends ContainerElementTypeMixin(
   }
 
   /**
-   * The repeat elements will allow all non-collection elements without restrictions.
-   * Collection elements can be nested, but only one level deep.
-   * @param {object} page - The page the element belongs to.
-   * @param {Object} element The element in question, it can be used to
-   *  determine in a more dynamic way if specific children are permitted.
-   * @returns {Array} An array of disallowed child element types.
-   */
-  childElementTypesForbidden(page, element) {
-    const repeatAncestorCount = this.app.store.getters['element/getAncestors'](
-      page,
-      element
-    ).filter(({ type }) => type === this.getType()).length
-    if (repeatAncestorCount !== 2) {
-      return []
-    }
-    return this.elementTypesAll.filter((type) => type.isCollectionElement)
-  }
-
-  /**
    * Return an array of placements that are disallowed for the elements to move
    * in their container.
    *
@@ -1030,52 +1082,6 @@ export class RepeatElementType extends ContainerElementTypeMixin(
   }
 
   /**
-   * A repeat element is in error if:
-   *
-   * - The first collection element ancestor doesn't have a data source.
-   * - It is nested in another repeat element, and we don't have a `schema_property`.
-   * - It is not nested in another repeat, and:
-   *     - It points to a data_source that !returnsList and `schema_property` is blank.
-   * @param {Object} page - The page the repeat element belongs to.
-   * @param {Object} element - The repeat element
-   * @param {Object} builder - The builder application.
-   * @returns {Boolean} - Whether the element is in error.
-   */
-  isInError({ page, element, builder }) {
-    const isNested = this.hasAncestorOfType(page, element, this.getType())
-
-    let targetElement = element
-    if (isNested) {
-      if (!element.schema_property) {
-        // If we're nested, and this element doesn't
-        // have a `schema_property`, then we're in error.
-        return true
-      }
-      const ancestorsWithDataSource = this.app.store.getters[
-        'element/getAncestors'
-      ](page, element, {
-        predicate: (ancestor) =>
-          this.app.$registry.get('element', ancestor.type)
-            .isCollectionElement && ancestor.data_source_id !== null,
-      })
-      if (ancestorsWithDataSource.length === 0) {
-        // If we can't find any ancestors with a data source, then we're in error.
-        return true
-      }
-      targetElement = ancestorsWithDataSource[0]
-    }
-
-    if (targetElement.data_source_id === null) {
-      return true
-    }
-    const dataSource = this.app.store.getters[
-      'dataSource/getPageDataSourceById'
-    ](page, targetElement.data_source_id)
-    const serviceType = this.app.$registry.get('service', dataSource.type)
-    return !serviceType.returnsList && targetElement.schema_property === null
-  }
-
-  /**
    * Responsible for extending the element store's `populateElement`
    * `_` object with repeat element specific properties.
    * @returns {Object} - An object containing the properties to be added.
@@ -1084,6 +1090,7 @@ export class RepeatElementType extends ContainerElementTypeMixin(
     return { collapsed: false }
   }
 }
+
 /**
  * This class serves as a parent class for all form element types. Form element types
  * are all elements that can be used as part of a form. So in simple terms, any element
@@ -1115,7 +1122,7 @@ export class FormElementType extends ElementType {
    * @returns {any} - The initial data that's supposed to be stored
    */
   getInitialFormDataValue(element, applicationContext) {
-    throw new Error('.getInitialFormData needs to be implemented')
+    throw new Error('.getInitialFormDataValue needs to be implemented')
   }
 
   /**
@@ -1534,7 +1541,7 @@ export class ChoiceElementType extends FormElementType {
               element,
               ...applicationContext,
             })
-          ).map(ensureString)
+          ).map(ensureStringOrInteger)
         : this.choiceOptions(element)
 
     const validOption = element.multiple
@@ -1649,5 +1656,113 @@ export class IFrameElementType extends ElementType {
       return resolvedName || this.name
     }
     return this.name
+  }
+}
+
+export class RecordSelectorElementType extends CollectionElementTypeMixin(
+  FormElementType
+) {
+  static getType() {
+    return 'record_selector'
+  }
+
+  get fetchAtLoad() {
+    return false
+  }
+
+  get name() {
+    return this.app.i18n.t('elementType.recordSelector')
+  }
+
+  get description() {
+    return this.app.i18n.t('elementType.recordSelectorDescription')
+  }
+
+  get iconClass() {
+    return 'iconoir-select-window'
+  }
+
+  get component() {
+    return RecordSelectorElement
+  }
+
+  get generalFormComponent() {
+    return RecordSelectorElementForm
+  }
+
+  formDataType(element) {
+    return element.multiple ? 'array' : 'number'
+  }
+
+  getInitialFormDataValue(element, applicationContext) {
+    try {
+      const resolvedFormula = this.resolveFormula(element.default_value, {
+        ...applicationContext,
+        element,
+      })
+      if (element.multiple) {
+        return ensureArray(resolvedFormula).map(ensureInteger)
+      } else {
+        return ensureInteger(resolvedFormula)
+      }
+    } catch {
+      return element.multiple ? [] : null
+    }
+  }
+
+  getDisplayName(element, applicationContext) {
+    const displayValue =
+      element.label || element.default_value || element.placeholder
+
+    if (displayValue) {
+      const resolvedName = ensureString(
+        this.resolveFormula(displayValue, applicationContext)
+      ).trim()
+      return resolvedName || this.name
+    }
+    return this.name
+  }
+
+  isValid(element, value, applicationContext) {
+    if (!element.data_source_id) {
+      return !element.required
+    }
+
+    if (element.required) {
+      if (element.multiple && value.length === 0) {
+        return false
+      }
+      if (!element.multiple && value === null) {
+        return false
+      }
+    }
+
+    return true
+  }
+
+  /**
+   * This element is a special collection element. It's in error if it's data_source_id
+   * is null.
+   * @param {*} param0
+   * @returns
+   */
+  isInError({ element }) {
+    return !element.data_source_id
+  }
+
+  getDataSchema(element) {
+    const type = this.formDataType(element)
+    if (type === 'number') {
+      return {
+        type: 'number',
+      }
+    } else if (type === 'array') {
+      return {
+        type: 'array',
+        items: {
+          type: 'number',
+        },
+      }
+    }
   }
 }

@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 from django.core.files.base import ContentFile
 from django.db import transaction
@@ -127,6 +128,25 @@ class FileImportJobType(JobType):
 
         return read_committed_single_table_transaction(job.table_id)
 
+    def cleanup_job(self, job: FileImportJob, error_report: dict[str, Any]):
+        """
+        Removes the data file to save space and save the error report.
+
+        This will be executed when a job finished successfully.
+        :param job: The job instance.
+        :param error_report: The error report that should be saved.
+        """
+
+        job.data_file.delete(save=False)
+        job.report = {"failing_rows": error_report}
+        job.save(
+            update_fields=(
+                "report",
+                "data_file",
+                "updated_on",
+            )
+        )
+
     def run(self, job, progress):
         """
         Fills the provided table with the normalized data that needs to be created upon
@@ -136,36 +156,46 @@ class FileImportJobType(JobType):
         with job.data_file.open("r") as fin:
             data = json.load(fin)
 
-        if job.table is None:
-            new_table, error_report = action_type_registry.get_by_type(
-                CreateTableActionType
-            ).do(
-                job.user,
-                job.database,
-                name=job.name,
-                data=data,
-                first_row_header=job.first_row_header,
-                progress=progress,
-            )
+        try:
+            if job.table is None:
+                new_table, error_report = action_type_registry.get_by_type(
+                    CreateTableActionType
+                ).do(
+                    job.user,
+                    job.database,
+                    name=job.name,
+                    data=data,
+                    first_row_header=job.first_row_header,
+                    progress=progress,
+                )
 
-            job.table = new_table
-            job.save(update_fields=("table",))
-        else:
-            _, error_report = action_type_registry.get_by_type(ImportRowsActionType).do(
-                job.user,
-                table=job.table,
-                data=data,
-                progress=progress,
-            )
+                job.table = new_table
+                job.save(update_fields=("table",))
+            else:
+                _, error_report = action_type_registry.get_by_type(
+                    ImportRowsActionType
+                ).do(
+                    job.user,
+                    table=job.table,
+                    data=data,
+                    progress=progress,
+                )
+        # when a job handler fails, celery worker will not commit and `after_commit`
+        # won't be called. That's why we need to catch this specific error and
+        # perform a bit of cleanup on the job.
+        except ReportMaxErrorCountExceeded as err:
+            self.cleanup_job(job, err.report)
+            raise
+        except Exception:
+            raise
 
         def after_commit():
             """
             Removes the data file to save space and save the error report.
+
+            This will be executed when a job finished successfully.
             """
 
-            job.refresh_from_db()
-            job.data_file.delete(save=False)
-            job.report = {"failing_rows": error_report}
-            job.save(update_fields=("report", "data_file"))
+            self.cleanup_job(job, error_report)
 
         transaction.on_commit(after_commit)

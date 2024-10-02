@@ -58,6 +58,12 @@ export class OpenPageWorkflowActionType extends WorkflowActionType {
     if (mode === 'editing' || !url) {
       return
     }
+
+    if (url === this.app.router.history.current?.fullPath) {
+      // Return early because the user is already on the page.
+      return
+    }
+
     if (workflowAction.target !== 'blank') {
       if (!url.startsWith('/')) {
         window.location.href = url

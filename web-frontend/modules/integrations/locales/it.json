@@ -44,7 +44,7 @@
         "localBaserowWarning": "L'autorizzazione del tuo account fornisce a chiunque abbia autorizzazioni di modifica per l'applicazione l'accesso completo ai dati a cui hai accesso. È possibile creare un secondo utente, fornire i permessi corretti e utilizzare quest'ultimo."
     },
     "serviceType": {
-        "localBaserowGetRow": "Riga singola",
+        "localBaserowGetRow": "Leggi {singleRow}",
         "localBaserowListRows": "Righe multiple"
     },
     "userSourceType": {
@@ -68,5 +68,9 @@
         "localBaserowSummary": "Baserow Locale - {name}, {username}",
         "localBaserowNoUser": "Baserow Locale - Non configurato",
         "localBaserowWarning": "Autorizzare il tuo account consente a chiunque abbia i permessi di modifica sull'applicazione di avere pieno accesso ai dati a cui hai accesso tu. È possibile creare un secondo utente, assegnare i permessi appropriati e utilizzare quello."
+    },
+    "integrationsCommon": {
+        "singleRow": "Singola riga",
+        "multipleRows": "Più righe"
     }
 }

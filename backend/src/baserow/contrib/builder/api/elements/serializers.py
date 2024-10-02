@@ -14,6 +14,7 @@ from baserow.contrib.builder.api.workflow_actions.serializers import (
 )
 from baserow.contrib.builder.elements.models import (
     ChoiceElementOption,
+    CollectionElementPropertyOptions,
     CollectionField,
     Element,
 )
@@ -353,3 +354,9 @@ class ChoiceOptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChoiceElementOption
         fields = ["id", "value", "name"]
+
+
+class CollectionElementPropertyOptionsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CollectionElementPropertyOptions
+        fields = ["schema_property", "filterable", "sortable", "searchable"]

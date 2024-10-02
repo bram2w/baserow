@@ -464,7 +464,9 @@
         "stateStarted": "Empezó...",
         "stateFinished": "Terminado",
         "stateFailed": "Fallido",
-        "errorJobAlreadyRunningTitle": "Ya está corriendo"
+        "errorJobAlreadyRunningTitle": "Ya está corriendo",
+        "errorJobCannotBeCancelledTitle": "No se pudo anular",
+        "errorJobCannotBeCancelledDescription": "No es posible cancelar el trabajo porque ya se ha completado.\nPor favor, borra la primera instantánea de la lista para eliminarla."
     },
     "datetime": {
         "daysAgo": "Hace 0 días | Hace 1 día | Hace {n} días",

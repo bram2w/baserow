@@ -12,10 +12,15 @@ import {
 import rowCommentsStore from '@baserow_premium/store/row_comments'
 import kanbanStore from '@baserow_premium/store/view/kanban'
 import calendarStore from '@baserow_premium/store/view/calendar'
+import timelineStore from '@baserow_premium/store/view/timeline'
 import impersonatingStore from '@baserow_premium/store/impersonating'
 import { PremiumDatabaseApplicationType } from '@baserow_premium/applicationTypes'
 import { registerRealtimeEvents } from '@baserow_premium/realtime'
-import { KanbanViewType, CalendarViewType } from '@baserow_premium/viewTypes'
+import {
+  KanbanViewType,
+  CalendarViewType,
+  TimelineViewType,
+} from '@baserow_premium/viewTypes'
 
 import {
   LeftBorderColorViewDecoratorType,
@@ -83,8 +88,10 @@ export default (context) => {
   store.registerModule('row_comments', rowCommentsStore)
   store.registerModule('page/view/kanban', kanbanStore)
   store.registerModule('page/view/calendar', calendarStore)
+  store.registerModule('page/view/timeline', timelineStore)
   store.registerModule('template/view/kanban', kanbanStore)
   store.registerModule('template/view/calendar', calendarStore)
+  store.registerModule('template/view/timeline', timelineStore)
   store.registerModule('impersonating', impersonatingStore)
 
   app.$registry.register('plugin', new PremiumPlugin(context))
@@ -98,6 +105,7 @@ export default (context) => {
   app.$registry.register('field', new PremiumFormulaFieldType(context))
   app.$registry.register('view', new KanbanViewType(context))
   app.$registry.register('view', new CalendarViewType(context))
+  app.$registry.register('view', new TimelineViewType(context))
 
   app.$registry.register(
     'viewDecorator',

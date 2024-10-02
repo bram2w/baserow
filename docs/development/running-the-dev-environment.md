@@ -61,12 +61,6 @@ First we have to clone the repository. Execute the following commands to clone t
 master branch. If you are not familiar with git clone, this will download a copy of
 Baserow's code to your computer.
 
-> Note that if you have already started the
-> [running baserow locally guide](../delete/running-baserow-locally.md) once, you might
-> need to rebuild the images for the development environment by using the command
-> `docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build`
-> or just `./dev.sh build_only` because they have container name conflicts.
-
 ```
 $ cd ~/baserow
 $ git clone --branch master https://gitlab.com/baserow/baserow.git
@@ -124,9 +118,7 @@ bash history to get the original command to restart the containers main process.
 
 ## Other useful commands
 
-See the [docker how to guide](../delete/baserow-docker-how-to.md) for a larger collection of
-useful operations and commands, below is a quick example of some of the more common
-ones:
+Below is a quick example of some of the more common useful operations and commands:
 
 ```bash
 $ # View the logs 

@@ -95,7 +95,7 @@ export function extractRowReadOnlyValues(row, allFields, registry) {
     const fieldType = registry.get('field', field.type)
     const fieldKey = `field_${field.id}`
     if (
-      fieldType.getIsReadOnly() &&
+      (fieldType.getIsReadOnly() || field.read_only) &&
       Object.prototype.hasOwnProperty.call(row, fieldKey)
     ) {
       readOnlyValues[fieldKey] = row[fieldKey]

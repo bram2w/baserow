@@ -14,7 +14,8 @@
         },
         "viewType": {
             "kanban": "Kanban",
-            "calendar": "Calendrier"
+            "calendar": "Calendrier",
+            "timeline": "Chronologie"
         },
         "exporterType": {
             "json": "Exporter vers JSON",
@@ -402,5 +403,31 @@
         "sharedViewDescription": "Copier-Coller ce lien dans votre application de calendrier",
         "sharedViewTitle": "Synchronisation vers un calendrier externe",
         "sharedViewText": "Permettre à quiconque de consulter les données de cette vue ou synchroniser les événements avec un calendrier externe."
+    },
+    "timelineViewHeader": {
+        "dateSettings": "Paramètres de date",
+        "labels": "Étiquettes"
+    },
+    "selectDateFieldContext": {
+        "save": "Enregistrer"
+    },
+    "timelineDateSettingsForm": {
+        "startDateField": "Date de début",
+        "endDateField": "Date de fin",
+        "incompatibleFieldsErrorTitle": "Champs incomptabiles",
+        "includeTime": "date et heure",
+        "dateOnly": "date seulement",
+        "noCompatibleDateFields": "Aucun champs date dans la table. Ajoutez un champs date de début et de fin dans la table pour commencer.",
+        "incompatibleFieldsErrorMessage": "Les champs sont incompatibles.Choisissez deux champs dates valides qui utilisent le même paramètre d'inclusion de l'heure et la même timezone pour tous les collaborateurs.",
+        "forceTimezone": "{timezone}"
+    },
+    "initTimelineViewSettings": {
+        "settings": "Paramètres de date"
+    },
+    "viewDateSelector": {
+        "today": "Aujourd'hui"
+    },
+    "timelineGridRow": {
+        "days": "0 | 1 jour | {count} jours"
     }
 }

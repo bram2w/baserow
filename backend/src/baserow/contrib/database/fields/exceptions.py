@@ -276,3 +276,16 @@ class TableHasNoPrimaryField(Exception):
     """
     Raised when the table doesn't have a primary field.
     """
+
+
+class ImmutableFieldType(Exception):
+    """
+    Raised when trying to change the field type and the field type immutable.
+    """
+
+
+class ImmutableFieldProperties(Exception):
+    """
+    Raised when trying to change any of the field properties and the field properties
+    are immutable.
+    """

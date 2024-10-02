@@ -1,5 +1,6 @@
 from django.urls import include, path
 
+from .data_sync import urls as data_sync_urls
 from .export import urls as export_urls
 from .fields import urls as field_urls
 from .formula import urls as formula_urls
@@ -20,4 +21,5 @@ urlpatterns = [
     path("tokens/", include(token_urls, namespace="tokens")),
     path("export/", include(export_urls, namespace="export")),
     path("formula/", include(formula_urls, namespace="formula")),
+    path("data-sync/", include(data_sync_urls, namespace="data_sync")),
 ]

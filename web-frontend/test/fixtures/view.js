@@ -73,6 +73,7 @@ export function createGridView(
     filters_disabled: false,
     public: publicView,
     row_identifier_type: 'id',
+    row_height_size: 'small',
     filters,
     sortings,
     group_bys: groupBys,

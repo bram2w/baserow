@@ -143,7 +143,7 @@ def test_import_export_kanban_view(premium_data_fixture, tmpdir):
 
 
 @pytest.mark.django_db
-def test_newly_created_view(premium_data_fixture):
+def test_newly_created_kanban_view(premium_data_fixture):
     user = premium_data_fixture.create_user(has_active_premium_license=True)
     table = premium_data_fixture.create_database_table(user=user)
     premium_data_fixture.create_text_field(table=table, primary=True)
@@ -159,7 +159,7 @@ def test_newly_created_view(premium_data_fixture):
         .order_by("field_id")
         .values_list("hidden", flat=True)
     )
-    assert list(all_field_options) == [False, False, False, False]
+    assert list(all_field_options) == [False, False, False, True]
 
 
 @pytest.mark.django_db

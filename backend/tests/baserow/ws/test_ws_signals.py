@@ -1,8 +1,7 @@
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 from django.db import transaction
-from django.utils import timezone
 
 import pytest
 from pytest_unordered import unordered
@@ -90,7 +89,7 @@ def test_user_permanently_deleted(
     user = data_fixture.create_user(first_name="Albert", password="albert")
     user.profile.to_be_deleted = True
     user.profile.save()
-    user.last_login = timezone.now() - timedelta(weeks=100)
+    user.last_login = datetime.now(tz=timezone.utc) - timedelta(weeks=100)
     user.save()
     workspace_user = CoreHandler().create_workspace(user=user, name="Test")
     workspace_user_2 = CoreHandler().create_workspace(user=user, name="Test 2")

@@ -14,6 +14,7 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
+from baserow.contrib.database.data_sync.handler import DataSyncHandler
 from baserow.contrib.database.file_import.models import FileImportJob
 from baserow.contrib.database.table.models import Table
 from baserow.test_utils.helpers import (
@@ -61,6 +62,59 @@ def test_list_tables(api_client, data_fixture):
     response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_APPLICATION_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+def test_list_tables_with_data_sync(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    database = data_fixture.create_database_application(user=user)
+
+    data_sync_1 = DataSyncHandler().create_data_sync_table(
+        user=user,
+        database=database,
+        table_name="Test",
+        type_name="ical_calendar",
+        synced_properties=["uid", "dtstart", "dtend", "summary"],
+        ical_url="https://localhost",
+    )
+    fields = data_sync_1.table.field_set.all().order_by("id")
+
+    with CaptureQueriesContext(connection) as query_for_n_tables:
+        url = reverse("api:database:tables:list", kwargs={"database_id": database.id})
+        response = api_client.get(url, HTTP_AUTHORIZATION=f"JWT {token}")
+        response_json = response.json()
+        assert response.status_code == HTTP_200_OK
+        assert len(response_json) == 1
+        assert response_json[0]["data_sync"] == {
+            "id": data_sync_1.id,
+            "type": "ical_calendar",
+            "last_sync": None,
+            "last_error": None,
+            "synced_properties": [
+                {"field_id": fields[0].id, "key": "uid", "unique_primary": True},
+                {"field_id": fields[1].id, "key": "dtstart", "unique_primary": False},
+                {"field_id": fields[2].id, "key": "dtend", "unique_primary": False},
+                {"field_id": fields[3].id, "key": "summary", "unique_primary": False},
+            ],
+        }
+
+    DataSyncHandler().create_data_sync_table(
+        user=user,
+        database=database,
+        table_name="Test",
+        type_name="ical_calendar",
+        synced_properties=["uid", "dtstart", "dtend", "summary"],
+        ical_url="https://localhost",
+    )
+
+    with CaptureQueriesContext(connection) as query_for_n_plus_one_tables:
+        url = reverse("api:database:tables:list", kwargs={"database_id": database.id})
+        response = api_client.get(url, HTTP_AUTHORIZATION=f"JWT {token}")
+        assert response.status_code == HTTP_200_OK
+
+    assert len(query_for_n_tables.captured_queries) >= len(
+        query_for_n_plus_one_tables.captured_queries
+    )
 
 
 @pytest.mark.django_db

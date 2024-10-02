@@ -1,6 +1,7 @@
 import JobService from '@baserow/modules/core/services/job'
 
 /**
+ * DEPRECATED in favor of job.js.
  * To use this mixin you need to create the following methods on your component:
  * - `getCustomHumanReadableJobState(state)` returns the human readable message your
  *   custom state values.

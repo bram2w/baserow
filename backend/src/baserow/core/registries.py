@@ -270,6 +270,11 @@ class ApplicationType(
 
     supports_user_sources = False
 
+    # The order in which this application type is imported in
+    # `import_applications_to_workspace`. By default, the priority is `0`, the lowest
+    # value. If this property is not overridden, then the instance is imported last.
+    import_application_priority = 0
+
     def pre_delete(self, application):
         """
         A hook that is called before the application instance is deleted.

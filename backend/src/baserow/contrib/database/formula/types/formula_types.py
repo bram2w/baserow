@@ -1,14 +1,12 @@
-import datetime
 from abc import ABC
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any, List, Optional, Set, Type, Union
 
 from django.contrib.postgres.fields import ArrayField, JSONField
-from django.core.files.storage import default_storage
 from django.db import models
 from django.db.models import Expression, F, Func, Q, QuerySet, TextField, Value
 from django.db.models.functions import Cast, Concat
-from django.utils import timezone
 
 from dateutil import parser
 from rest_framework import serializers
@@ -51,6 +49,7 @@ from baserow.contrib.database.formula.types.formula_type import (
     BaserowFormulaValidType,
     UnTyped,
 )
+from baserow.core.storage import get_default_storage
 from baserow.core.utils import list_to_comma_separated_string
 
 
@@ -595,7 +594,7 @@ class BaserowFormulaDateIntervalType(
             return str(human_readable_value)
 
     def placeholder_empty_value(self):
-        return Value(datetime.timedelta(hours=0), output_field=models.DurationField())
+        return Value(timedelta(hours=0), output_field=models.DurationField())
 
     def placeholder_empty_baserow_expression(
         self,
@@ -699,7 +698,7 @@ class BaserowFormulaDurationType(
         )
 
     def placeholder_empty_value(self):
-        return Value(datetime.timedelta(hours=0), output_field=models.DurationField())
+        return Value(timedelta(hours=0), output_field=models.DurationField())
 
     def placeholder_empty_baserow_expression(
         self,
@@ -826,7 +825,7 @@ class BaserowFormulaDateType(BaserowFormulaValidType):
         else:
             field = models.DateField()
 
-        return Value(timezone.now(), output_field=field)
+        return Value(datetime.now(tz=timezone.utc), output_field=field)
 
     def get_search_expression_in_array(self, field, queryset):
         def transform_value_to_text_func(x):
@@ -922,8 +921,10 @@ class BaserowFormulaSingleFileType(BaserowJSONBObjectBaseType):
         elif "name" in file:
             from baserow.core.user_files.handler import UserFileHandler
 
+            storage = get_default_storage()
+
             path = UserFileHandler().user_file_path(file["name"])
-            url = default_storage.url(path)
+            url = storage.url(path)
         else:
             url = None
 
@@ -1241,7 +1242,7 @@ class BaserowFormulaArrayType(
                 # a string, we need to parse them back first before
                 # giving the duration field type.
                 total_seconds = postgres_interval_to_seconds(list_item)
-                list_item = datetime.timedelta(seconds=total_seconds)
+                list_item = timedelta(seconds=total_seconds)
             export_value = map_func(list_item)
             if export_value is None:
                 export_value = ""

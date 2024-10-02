@@ -5,7 +5,7 @@
       tag="a"
       size="tiny"
       type="secondary"
-      class="forced-pointer-events-auto"
+      class="forced-pointer-events-auto array-field__button-button"
       :href="props.value && props.value.url"
       target="_blank"
       rel="nofollow noopener noreferrer"

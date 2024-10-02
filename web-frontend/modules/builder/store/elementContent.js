@@ -5,6 +5,11 @@ const state = {}
 
 const mutations = {
   SET_CONTENT(state, { element, value, range = null }) {
+    // Return early when value is null since there is nothing to set.
+    if (value === null) {
+      return
+    }
+
     // If we have no range, then the `value` is the full content for `element`,
     // we'll apply it and return early. This will happen if we are setting the
     // content of a collection element's `schema_property`.
@@ -81,8 +86,12 @@ const actions = {
      *      - Parent collection element (this `element`!) with a schema property.
      */
     if (dataSource === null) {
-      if (element.schema_property === null) {
-        // We've been given no data source, and there's no schema property to use.
+      if (!element.schema_property) {
+        // We have a collection element that supports schema properties, and
+        // we have A) no data source and B) no schema property
+        // or,
+        // We have a collection element that doesn't support schema properties
+        // (record selector), and there's no data source.
         commit('SET_LOADING', { element, value: false })
         return
       }
@@ -92,11 +101,10 @@ const actions = {
       // Collect all collection element ancestors, with a `data_source_id`.
       const collectionAncestors = this.app.store.getters[
         'element/getAncestors'
-      ](page, element, (ancestor) => {
-        const ancestorType = this.app.$registry.get('element', ancestor.type)
-        return (
-          ancestorType.isCollectionElement && ancestor.data_source_id !== null
-        )
+      ](page, element, {
+        predicate: (ancestor) =>
+          this.app.$registry.get('element', ancestor.type)
+            .isCollectionElement && ancestor.data_source_id !== null,
       })
 
       // Pluck out the root ancestor, which has a data source.
@@ -172,6 +180,7 @@ const actions = {
 
           // Everything is already loaded we can quit now
           if (!rangeToFetch) {
+            commit('SET_LOADING', { element, value: false })
             return
           }
           rangeToFetch = [rangeToFetch[0], rangeToFetch[1] - rangeToFetch[0]]

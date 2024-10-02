@@ -14,6 +14,10 @@ from baserow.contrib.database.fields.backup_handler import (
     BackupData,
     FieldDataBackupHandler,
 )
+from baserow.contrib.database.fields.exceptions import (
+    ImmutableFieldProperties,
+    ImmutableFieldType,
+)
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field, SpecificFieldForUpdate
 from baserow.contrib.database.fields.registries import field_type_registry
@@ -90,7 +94,23 @@ class UpdateFieldActionType(UndoableActionCustomCleanupMixin, UndoableActionType
 
         from_field_type = field_type_registry.get_by_model(field)
         from_field_type_name = from_field_type.type
+
+        # If the field has an immutable type, then it should not be possible to
+        # change the properties.
+        if field.immutable_type and new_type_name != from_field_type_name:
+            raise ImmutableFieldType("The field type is immutable.")
+
         to_field_type_name = new_type_name or from_field_type_name
+        to_field_type = field_type_registry.get(to_field_type_name)
+
+        # If the field has immutable properties, then strip all the allowed fields
+        # from the kwargs, so that they're not passed into the `update_field` method
+        # call.
+        if field.immutable_properties and (
+            any(item in kwargs for item in to_field_type.allowed_fields)
+            or new_type_name != from_field_type_name
+        ):
+            raise ImmutableFieldProperties("The field properties are immutable.")
 
         backup_uuid = str(uuid4()).replace("-", "")
         original_exported_values = cls._get_prepared_field_attrs(

@@ -97,7 +97,9 @@
     "authForm": "Login form",
     "authFormDescription": "A user login form",
     "repeat": "Repeat",
-    "repeatDescription": "A repeatable set of elements"
+    "repeatDescription": "A repeatable set of elements",
+    "recordSelector": "Record selector",
+    "recordSelectorDescription": "A related record selector"
   },
   "addElementButton": {
     "label": "Element"
@@ -561,6 +563,17 @@
     "buttonLoadMoreLabel": "Show more label",
     "toggleEditorRepetitionsLabel": "Temporarily disable repetitions",
     "propertySelectorMissingArrays": "No multiple valued fields found to repeat with."
+  },
+  "recordSelectorElementForm": {
+    "selectRecordsFrom": "Select records from",
+    "noDataSourceMessage": "Choose a data source with multiple rows to list all results.",
+    "optionNameSuffix": "Option name suffix",
+    "optionNameSuffixPlaceholder": "Enter a suffix...",
+    "optionNameSuffixHelper": "This suffix is appended to each option name when you open the dropdown and helps to distinguish them.",
+    "itemsPerPage": "Items per page",
+    "itemsPerPagePlaceholder": "Enter value...",
+    "multipleLabel": "Allow multiple values",
+    "record": "Record {id}"
   },
   "currentRecordDataProviderType": {
     "index": "Index",

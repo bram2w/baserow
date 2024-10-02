@@ -3,8 +3,10 @@ import Vue from 'vue'
 import { Registry } from '@baserow/modules/core/registry'
 import { PasswordAuthProviderType } from '@baserow/modules/core/authProviderTypes'
 import {
+  CreateSnapshotJobType,
   DuplicateApplicationJobType,
   InstallTemplateJobType,
+  RestoreSnapshotJobType,
 } from '@baserow/modules/core/jobTypes'
 
 import {
@@ -187,6 +189,8 @@ export default (context, inject) => {
   registry.register('authProvider', new PasswordAuthProviderType(context))
   registry.register('job', new DuplicateApplicationJobType(context))
   registry.register('job', new InstallTemplateJobType(context))
+  registry.register('job', new CreateSnapshotJobType(context))
+  registry.register('job', new RestoreSnapshotJobType(context))
 
   registry.register(
     'workspaceSettingsPage',

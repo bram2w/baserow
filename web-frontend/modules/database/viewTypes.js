@@ -14,6 +14,7 @@ import {
 } from '@baserow/modules/database/utils/view'
 import { clone } from '@baserow/modules/core/utils/object'
 import { getDefaultSearchModeFromEnv } from '@baserow/modules/database/utils/search'
+import { GRID_VIEW_SIZE_TO_ROW_HEIGHT_MAPPING } from '@baserow/modules/database/constants'
 
 export const maxPossibleOrderValue = 32767
 
@@ -466,6 +467,13 @@ export class ViewType extends Registerable {
   getSharedViewText() {
     return this.app.i18n.t('shareViewLink.shareViewText')
   }
+
+  /**
+   * Indicates whether the view is compatible with a data sync.
+   */
+  isCompatibleWithDataSync(dataSync) {
+    return true
+  }
 }
 
 export class GridViewType extends ViewType {
@@ -519,6 +527,10 @@ export class GridViewType extends ViewType {
       database.workspace,
       view,
       isPublic
+    )
+    await store.dispatch(
+      storePrefix + 'view/grid/setRowHeight',
+      GRID_VIEW_SIZE_TO_ROW_HEIGHT_MAPPING[view.row_height_size]
     )
     await store.dispatch(storePrefix + 'view/grid/fetchInitial', {
       gridId: view.id,
@@ -774,194 +786,221 @@ export class GridViewType extends ViewType {
  * enable real time collaboration and will make sure that the rows are in the store
  * are updated properly.
  */
-class BaseBufferedRowView extends ViewType {
-  getDefaultFieldOptionValues() {
-    return {}
-  }
+export const BaseBufferedRowViewTypeMixin = (Base) =>
+  class extends Base {
+    getDefaultFieldOptionValues() {
+      return {}
+    }
 
-  async fetch({ store }, database, view, fields, storePrefix = '') {
-    const isPublic = store.getters[storePrefix + 'view/public/getIsPublic']
-    const adhocFiltering = isAdhocFiltering(
-      this.app,
-      database.workspace,
+    /**
+     * If the view settings are not correct, this function will prevent fetching the
+     * rows, to prevent unnecessary requests that are going to fail anyway.
+     */
+    canFetch(context, database, view, fields) {
+      return true
+    }
+
+    async fetch(context, database, view, fields, storePrefix = '') {
+      const { store } = context
+      if (!this.canFetch(context, database, view, fields)) {
+        // Set the viewId so the refresh will work when the view can fetch rows.
+        await store.dispatch(`${storePrefix}view/${this.getType()}/setViewId`, {
+          viewId: view.id,
+        })
+        return
+      }
+      const isPublic = store.getters[storePrefix + 'view/public/getIsPublic']
+      const adhocFiltering = isAdhocFiltering(
+        this.app,
+        database.workspace,
+        view,
+        isPublic
+      )
+      const adhocSorting = isAdhocSorting(
+        this.app,
+        database.workspace,
+        view,
+        isPublic
+      )
+      await store.dispatch(
+        `${storePrefix}view/${this.getType()}/fetchInitial`,
+        {
+          viewId: view.id,
+          fields,
+          adhocFiltering,
+          adhocSorting,
+        }
+      )
+    }
+
+    async refresh(
+      context,
+      database,
       view,
-      isPublic
-    )
-    const adhocSorting = isAdhocSorting(
-      this.app,
-      database.workspace,
-      view,
-      isPublic
-    )
-    await store.dispatch(`${storePrefix}view/${this.getType()}/fetchInitial`, {
-      viewId: view.id,
       fields,
-      adhocFiltering,
-      adhocSorting,
-    })
-  }
+      storePrefix = '',
+      includeFieldOptions = false,
+      sourceEvent = null
+    ) {
+      const { store } = context
+      if (!this.canFetch(context, database, view, fields)) {
+        return
+      }
+      const isPublic = store.getters[storePrefix + 'view/public/getIsPublic']
+      const adhocFiltering = isAdhocFiltering(
+        this.app,
+        database.workspace,
+        view,
+        isPublic
+      )
+      const adhocSorting = isAdhocSorting(
+        this.app,
+        database.workspace,
+        view,
+        isPublic
+      )
+      await store.dispatch(
+        storePrefix + 'view/' + this.getType() + '/refresh',
+        {
+          fields,
+          includeFieldOptions,
+          adhocFiltering,
+          adhocSorting,
+        }
+      )
+    }
 
-  async refresh(
-    { store },
-    database,
-    view,
-    fields,
-    storePrefix = '',
-    includeFieldOptions = false,
-    sourceEvent = null
-  ) {
-    const isPublic = store.getters[storePrefix + 'view/public/getIsPublic']
-    const adhocFiltering = isAdhocFiltering(
-      this.app,
-      database.workspace,
-      view,
-      isPublic
-    )
-    const adhocSorting = isAdhocSorting(
-      this.app,
-      database.workspace,
-      view,
-      isPublic
-    )
-    await store.dispatch(storePrefix + 'view/' + this.getType() + '/refresh', {
-      fields,
-      includeFieldOptions,
-      adhocFiltering,
-      adhocSorting,
-    })
-  }
-
-  async fieldRestored(
-    { dispatch },
-    table,
-    selectedView,
-    field,
-    fieldType,
-    storePrefix = ''
-  ) {
-    // There might be new filters and sorts associated with the restored field,
-    // ensure we create them. They will be included on the field data object if present.
-    await dispatch(
-      'view/fieldRestored',
-      { field, fieldType, view: selectedView },
-      { root: true }
-    )
-  }
-
-  shouldRefreshWhenFieldCreated(registry, store, field, storePrefix) {
-    const searchTerm =
-      store.getters[
-        storePrefix + 'view/' + this.getType() + '/getActiveSearchTerm'
-      ]
-    const searchMode = getDefaultSearchModeFromEnv(this.app.$config)
-    return newFieldMatchesActiveSearchTerm(
-      searchMode,
-      registry,
+    async fieldRestored(
+      { dispatch },
+      table,
+      selectedView,
       field,
-      searchTerm
-    )
-  }
+      fieldType,
+      storePrefix = ''
+    ) {
+      // There might be new filters and sorts associated with the restored field,
+      // ensure we create them. They will be included on the field data object if present.
+      await dispatch(
+        'view/fieldRestored',
+        { field, fieldType, view: selectedView },
+        { root: true }
+      )
+    }
 
-  async afterFieldCreated(
-    { dispatch },
-    table,
-    field,
-    fieldType,
-    storePrefix = ''
-  ) {
-    const value = fieldType.getEmptyValue(field)
-    await dispatch(
-      storePrefix + 'view/' + this.getType() + '/addField',
-      { field, value },
-      { root: true }
-    )
-    await dispatch(
-      storePrefix + 'view/' + this.getType() + '/setFieldOptionsOfField',
-      {
+    shouldRefreshWhenFieldCreated(registry, store, field, storePrefix) {
+      const searchTerm =
+        store.getters[
+          storePrefix + 'view/' + this.getType() + '/getActiveSearchTerm'
+        ]
+      const searchMode = getDefaultSearchModeFromEnv(this.app.$config)
+      return newFieldMatchesActiveSearchTerm(
+        searchMode,
+        registry,
         field,
-        values: this.getDefaultFieldOptionValues(),
-      },
-      { root: true }
-    )
-  }
+        searchTerm
+      )
+    }
 
-  async afterFieldDeleted({ dispatch }, field, fieldType, storePrefix = '') {
-    await dispatch(
-      storePrefix + 'view/' + this.getType() + '/forceDeleteFieldOptions',
-      field.id,
-      {
-        root: true,
+    async afterFieldCreated(
+      { dispatch },
+      table,
+      field,
+      fieldType,
+      storePrefix = ''
+    ) {
+      const value = fieldType.getEmptyValue(field)
+      await dispatch(
+        storePrefix + 'view/' + this.getType() + '/addField',
+        { field, value },
+        { root: true }
+      )
+      await dispatch(
+        storePrefix + 'view/' + this.getType() + '/setFieldOptionsOfField',
+        {
+          field,
+          values: this.getDefaultFieldOptionValues(),
+        },
+        { root: true }
+      )
+    }
+
+    async afterFieldDeleted({ dispatch }, field, fieldType, storePrefix = '') {
+      await dispatch(
+        storePrefix + 'view/' + this.getType() + '/forceDeleteFieldOptions',
+        field.id,
+        {
+          root: true,
+        }
+      )
+    }
+
+    async fieldOptionsUpdated({ store }, view, fieldOptions, storePrefix) {
+      await store.dispatch(
+        storePrefix + 'view/' + this.getType() + '/forceUpdateAllFieldOptions',
+        fieldOptions,
+        {
+          root: true,
+        }
+      )
+    }
+
+    async rowCreated(
+      { store },
+      tableId,
+      fields,
+      values,
+      metadata,
+      storePrefix = ''
+    ) {
+      if (this.isCurrentView(store, tableId)) {
+        await store.dispatch(
+          storePrefix + 'view/' + this.getType() + '/afterNewRowCreated',
+          {
+            view: store.getters['view/getSelected'],
+            fields,
+            values,
+          }
+        )
       }
-    )
-  }
+    }
 
-  async fieldOptionsUpdated({ store }, view, fieldOptions, storePrefix) {
-    await store.dispatch(
-      storePrefix + 'view/' + this.getType() + '/forceUpdateAllFieldOptions',
-      fieldOptions,
-      {
-        root: true,
+    async rowUpdated(
+      { store },
+      tableId,
+      fields,
+      row,
+      values,
+      metadata,
+      storePrefix = ''
+    ) {
+      if (this.isCurrentView(store, tableId)) {
+        await store.dispatch(
+          storePrefix + 'view/' + this.getType() + '/afterExistingRowUpdated',
+          {
+            view: store.getters['view/getSelected'],
+            fields,
+            row,
+            values,
+          }
+        )
       }
-    )
-  }
+    }
 
-  async rowCreated(
-    { store },
-    tableId,
-    fields,
-    values,
-    metadata,
-    storePrefix = ''
-  ) {
-    if (this.isCurrentView(store, tableId)) {
-      await store.dispatch(
-        storePrefix + 'view/' + this.getType() + '/afterNewRowCreated',
-        {
-          view: store.getters['view/getSelected'],
-          fields,
-          values,
-        }
-      )
+    async rowDeleted({ store }, tableId, fields, row, storePrefix = '') {
+      if (this.isCurrentView(store, tableId)) {
+        await store.dispatch(
+          storePrefix + 'view/' + this.getType() + '/afterExistingRowDeleted',
+          {
+            view: store.getters['view/getSelected'],
+            fields,
+            row,
+          }
+        )
+      }
     }
   }
 
-  async rowUpdated(
-    { store },
-    tableId,
-    fields,
-    row,
-    values,
-    metadata,
-    storePrefix = ''
-  ) {
-    if (this.isCurrentView(store, tableId)) {
-      await store.dispatch(
-        storePrefix + 'view/' + this.getType() + '/afterExistingRowUpdated',
-        {
-          view: store.getters['view/getSelected'],
-          fields,
-          row,
-          values,
-        }
-      )
-    }
-  }
-
-  async rowDeleted({ store }, tableId, fields, row, storePrefix = '') {
-    if (this.isCurrentView(store, tableId)) {
-      await store.dispatch(
-        storePrefix + 'view/' + this.getType() + '/afterExistingRowDeleted',
-        {
-          view: store.getters['view/getSelected'],
-          fields,
-          row,
-        }
-      )
-    }
-  }
-}
-
-export class GalleryViewType extends BaseBufferedRowView {
+export class GalleryViewType extends BaseBufferedRowViewTypeMixin(ViewType) {
   static getType() {
     return 'gallery'
   }
@@ -1169,5 +1208,13 @@ export class FormViewType extends ViewType {
 
   getInitialFieldOptionsForView(view) {
     return null
+  }
+
+  /**
+   * It's not possible to create rows in a data sync table, so there is no point in
+   * letting the user create one.
+   */
+  isCompatibleWithDataSync(dataSync) {
+    return !dataSync
   }
 }

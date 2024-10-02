@@ -1,5 +1,4 @@
-import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from urllib.parse import urljoin, urlparse
 
@@ -11,7 +10,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Count, Q, QuerySet
 from django.db.utils import IntegrityError
-from django.utils import timezone, translation
+from django.utils import translation
 from django.utils.translation import gettext as _
 
 import requests
@@ -435,7 +434,7 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
 
         # Update the last password change timestamp to invalidate old authentication
         # tokens.
-        user.profile.last_password_change = timezone.now()
+        user.profile.last_password_change = datetime.now(tz=timezone.utc)
         user.profile.email_verified = True
         user.profile.save()
 
@@ -476,7 +475,7 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
 
         # Update the last password change timestamp to invalidate old authentication
         # tokens.
-        user.profile.last_password_change = timezone.now()
+        user.profile.last_password_change = datetime.now(tz=timezone.utc)
         user.profile.save()
 
         user_password_changed.send(
@@ -505,7 +504,7 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         :param user: The user that has just signed in.
         """
 
-        now = timezone.now()
+        now = datetime.now(tz=timezone.utc)
         if user.last_login is None or (now - user.last_login) > LAST_LOGIN_UPDATE_DELAY:
             update_last_login(None, user)
 
@@ -619,7 +618,7 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
                 timedelta(days=core_settings.account_deletion_grace_delay),
             )
 
-        limit_date = timezone.now() - grace_delay
+        limit_date = datetime.now(tz=timezone.utc) - grace_delay
 
         users_to_delete = User.objects.filter(
             profile__to_be_deleted=True, last_login__lt=limit_date
@@ -673,9 +672,7 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
             is_active=True,
         )
 
-    def blacklist_refresh_token(
-        self, refresh_token: str, expires_at: datetime.datetime
-    ):
+    def blacklist_refresh_token(self, refresh_token: str, expires_at: datetime):
         """
         Blacklists the provided refresh token. This results in not being able to
         generate access tokens anymore. The access does remain working until it expires.
@@ -729,7 +726,7 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         """
 
         signer = self._get_email_verification_signer()
-        expires_at = datetime.datetime.now(datetime.timezone.utc) + timedelta(days=1)
+        expires_at = datetime.now(timezone.utc) + timedelta(days=1)
         return signer.dumps(
             {
                 "user_id": user.id,
@@ -755,9 +752,9 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         signer = self._get_email_verification_signer()
         token_data = signer.loads(token)
 
-        if datetime.datetime.fromisoformat(
-            token_data["expires_at"]
-        ) < datetime.datetime.now(tz=timezone.utc):
+        if datetime.fromisoformat(token_data["expires_at"]) < datetime.now(
+            tz=timezone.utc
+        ):
             raise InvalidVerificationToken()
 
         try:

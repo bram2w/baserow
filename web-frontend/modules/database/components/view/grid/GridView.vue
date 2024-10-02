@@ -2,7 +2,12 @@
   <div
     v-scroll="scroll"
     class="grid-view"
-    :class="{ 'grid-view--disable-selection': isMultiSelectActive }"
+    :class="[
+      {
+        'grid-view--disable-selection': isMultiSelectActive,
+      },
+      'grid-view--row-height-' + view.row_height_size,
+    ]"
   >
     <Scrollbars
       ref="scrollbars"
@@ -159,7 +164,7 @@
           v-for="(contextItemComponent, index) in getMultiSelectContextItems()"
           :key="index"
           :field="getSelectedField()"
-          :rows="getSelectedRows()"
+          :get-rows="getSelectedRowsFunction"
           :store-prefix="storePrefix"
           :database="database"
           @click=";[$refs.rowContext.hide()]"
@@ -176,6 +181,7 @@
         <li
           v-if="
             !readOnly &&
+            !table.data_sync &&
             $hasPermission(
               'database.table.delete_row',
               table,
@@ -207,6 +213,7 @@
         <li
           v-if="
             !readOnly &&
+            !table.data_sync &&
             $hasPermission(
               'database.table.create_row',
               table,
@@ -226,6 +233,7 @@
         <li
           v-if="
             !readOnly &&
+            !table.data_sync &&
             $hasPermission(
               'database.table.create_row',
               table,
@@ -245,6 +253,7 @@
         <li
           v-if="
             !readOnly &&
+            !table.data_sync &&
             $hasPermission(
               'database.table.create_row',
               table,
@@ -285,6 +294,7 @@
         <li
           v-if="
             !readOnly &&
+            !table.data_sync &&
             $hasPermission(
               'database.table.delete_row',
               table,
@@ -369,6 +379,7 @@ import { clone } from '@baserow/modules/core/utils/object'
 import copyPasteHelper from '@baserow/modules/database/mixins/copyPasteHelper'
 import GridViewRowsAddContext from '@baserow/modules/database/components/view/grid/fields/GridViewRowsAddContext'
 import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
+import { GRID_VIEW_SIZE_TO_ROW_HEIGHT_MAPPING } from '@baserow/modules/database/constants'
 
 export default {
   name: 'GridView',
@@ -534,6 +545,17 @@ export default {
           })
         }
       },
+    },
+    'view.row_height_size'(value, oldValue) {
+      if (value === oldValue) {
+        return
+      }
+      this.$store.dispatch(
+        this.storePrefix + 'view/grid/setRowHeight',
+        GRID_VIEW_SIZE_TO_ROW_HEIGHT_MAPPING[value]
+      )
+      this.onWindowResize()
+      this.$emit('refresh')
     },
   },
   beforeCreate() {
@@ -1562,11 +1584,12 @@ export default {
       ](this.fields)
       return selectedFields.length === 1 ? selectedFields[0] : null
     },
-    /**
-     * Returns the selected rows if any rows are selected, otherwise returns an empty array.
-     */
-    getSelectedRows() {
-      return this.$store.getters[this.storePrefix + 'view/grid/getSelectedRows']
+    async getSelectedRowsFunction() {
+      const fieldsAndRows = await this.$store.dispatch(
+        this.storePrefix + 'view/grid/getCurrentSelection',
+        { fields: this.fields }
+      )
+      return fieldsAndRows[1]
     },
   },
 }

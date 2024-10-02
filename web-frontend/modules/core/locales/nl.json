@@ -460,7 +460,9 @@
         "stateFinished": "Afgerond",
         "stateFailed": "Mislukt",
         "errorJobAlreadyRunningTitle": "Al aan de gang",
-        "errorJobAlreadyRunningDescription": "Er loopt al een andere importjob. U moet wachten tot die klaar is voordat u een andere start."
+        "errorJobAlreadyRunningDescription": "Er loopt al een andere importjob. U moet wachten tot die klaar is voordat u een andere start.",
+        "errorJobCannotBeCancelledTitle": "Kan niet annuleren",
+        "errorJobCannotBeCancelledDescription": "Het is niet mogelijk om de taak te annuleren omdat deze al is voltooid.\nVerwijder de eerste snapshot in de onderstaande lijst om deze te verwijderen."
     },
     "pastingNotification": {
         "title": "Plakken...",

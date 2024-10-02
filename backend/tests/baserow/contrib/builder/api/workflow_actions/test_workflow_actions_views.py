@@ -23,6 +23,7 @@ from baserow.contrib.builder.workflow_actions.workflow_action_types import (
     NotificationWorkflowActionType,
     UpdateRowWorkflowActionType,
 )
+from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.integrations.local_baserow.service_types import (
     LocalBaserowUpsertRowServiceType,
 )
@@ -608,6 +609,56 @@ def test_dispatch_local_baserow_update_row_workflow_action(api_client, data_fixt
     assert response_json["id"] == first_row.id
     assert response_json[color_field.db_column] == "Blue"
     assert response_json[animal_field.db_column] == "Horse"
+
+
+@pytest.mark.django_db
+def test_dispatch_local_baserow_upsert_row_workflow_action_with_current_record(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    builder = data_fixture.create_builder_application(workspace=workspace)
+    table = TableHandler().create_table_and_fields(
+        user=user,
+        database=database,
+        name=data_fixture.fake.name(),
+        fields=[
+            ("Index", "text", {}),
+        ],
+    )
+    index = table.field_set.get(name="Index")
+    page = data_fixture.create_builder_page(builder=builder)
+    element = data_fixture.create_builder_button_element(page=page)
+    integration = data_fixture.create_local_baserow_integration(
+        application=builder, user=user, authorized_user=user
+    )
+    service = data_fixture.create_local_baserow_upsert_row_service(
+        table=table,
+        integration=integration,
+    )
+    service.field_mappings.create(
+        field=index, value='concat("Index ", get("current_record.__idx__"))'
+    )
+    workflow_action = data_fixture.create_local_baserow_create_row_workflow_action(
+        page=page, service=service, element=element, event=EventTypes.CLICK
+    )
+
+    url = reverse(
+        "api:builder:workflow_action:dispatch",
+        kwargs={"workflow_action_id": workflow_action.id},
+    )
+
+    response = api_client.post(
+        url,
+        {"current_record": 123},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json[index.db_column] == "Index 123"
 
 
 @pytest.mark.django_db

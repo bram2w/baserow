@@ -79,4 +79,8 @@
   &--expandable-plain-text {
     white-space: pre-wrap;
   }
+
+  &--align-right {
+    transform: translateX(calc(50% - 20px));
+  }
 }

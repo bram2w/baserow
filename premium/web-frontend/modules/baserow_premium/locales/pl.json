@@ -10,7 +10,7 @@
             "dashboard": "Dashboard",
             "users": "Użytkownicy",
             "workspaces": "Grupy",
-            "licenses": "Licencje"
+            "licenses": "Zarządzaj licencjami"
         },
         "viewType": {
             "kanban": "Tablica Kanban",
@@ -362,7 +362,10 @@
         "AIModel": "Model AI",
         "premiumFeature": "Pole AI jest funkcją premium",
         "AIType": "Typ AI",
-        "prompt": "Prompt"
+        "prompt": "Prompt",
+        "fileFieldHelp": "Pierwszy zgodny plik w polu zostanie użyty jako baza wiedzy dla monitu. Plik musi być plikiem tekstowym z obsługiwanym rozszerzeniem, takim jak .txt, .md, .pdf, .docx.",
+        "promptPlaceholder": "Czym jest Baserow?",
+        "emptyFileField": "Brak"
     },
     "rowEditFieldAI": {
         "generate": "Generuj",
@@ -370,10 +373,29 @@
     },
     "gridViewFieldAI": {
         "generate": "Generuj",
-        "regenerate": "Ponowne generowanie"
+        "regenerate": "Regeneracja"
     },
     "rowCommentNotification": {
         "title": "{sender} opublikował komentarz w wierszu {row} w {table}",
         "deletedUser": "Usunięty użytkownik"
+    },
+    "aiFormulaModal": {
+        "noModels": "Twoja instancja Baserow i obszar roboczy nie mają skonfigurowanych żadnych modeli AI. Kliknij trzy kropki obok obszaru roboczego, a następnie ustawienia, aby je skonfigurować.",
+        "title": "Generowanie formuły przy użyciu sztucznej inteligencji",
+        "description": "Należy pamiętać, że wygenerowane formuły mogą nie zawsze działać zgodnie z oczekiwaniami. Konstruujemy monit dla modelu i ładujemy dane wyjściowe do wejścia formuły. Działa to najlepiej z modelem o wysokich parametrach, takim jak gpt-4-turbo-preview.",
+        "label": "Prompt",
+        "labelDescription": "Opisz formułę, którą chcesz wygenerować",
+        "generate": "Generuj"
+    },
+    "calendarViewType": {
+        "sharedViewTitle": "Synchronizacja z kalendarzem zewnętrznym",
+        "sharedViewText": "Zezwalaj każdemu na wyświetlanie danych w tym widoku lub synchronizuj wydarzenia z zewnętrznym kalendarzem.",
+        "sharedViewEnableSyncToExternalCalendar": "Synchronizacja z kalendarzem zewnętrznym",
+        "sharedViewDisableSyncToExternalCalendar": "Wyłącz synchronizację zewnętrzną",
+        "sharedViewDescription": "Wklej ten link do aplikacji kalendarza"
+    },
+    "formulaFieldAI": {
+        "generateWithAI": "Generowanie przy użyciu sztucznej inteligencji",
+        "featureName": "Wzór generacyjny przy użyciu AI"
     }
 }

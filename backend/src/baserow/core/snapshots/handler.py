@@ -1,11 +1,9 @@
-import datetime
+from datetime import datetime, timedelta, timezone
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.core.files.storage import default_storage
-from django.db import IntegrityError, OperationalError
-from django.db.models.query import QuerySet
-from django.utils import timezone
+from django.db import OperationalError
+from django.db.models import QuerySet
 
 from baserow.contrib.database.exceptions import (
     DatabaseSnapshotMaxLocksExceededException,
@@ -29,6 +27,7 @@ from baserow.core.snapshots.exceptions import (
     SnapshotIsBeingRestored,
     SnapshotNameNotUnique,
 )
+from baserow.core.storage import get_default_storage
 from baserow.core.utils import Progress
 
 from .job_types import CreateSnapshotJobType, RestoreSnapshotJobType
@@ -50,9 +49,11 @@ class SnapshotHandler:
         :param workspace: The workspace for which to count the snapshots.
         """
 
-        return Snapshot.objects.filter(
-            snapshot_from_application__workspace=workspace, mark_for_deletion=False
-        ).count()
+        return (
+            Snapshot.objects.restorable()
+            .filter(snapshot_from_application__workspace=workspace)
+            .count()
+        )
 
     def _check_is_in_use(self, snapshot: Snapshot) -> None:
         """
@@ -66,8 +67,7 @@ class SnapshotHandler:
         """
 
         restoring_jobs_count = (
-            JobHandler()
-            .get_pending_or_running_jobs(RestoreSnapshotJobType.type)
+            JobHandler.get_pending_or_running_jobs(RestoreSnapshotJobType.type)
             .filter(snapshot=snapshot)
             .count()
         )
@@ -114,11 +114,8 @@ class SnapshotHandler:
         )
 
         return (
-            Snapshot.objects.filter(
-                snapshot_from_application__id=application_id,
-                snapshot_to_application__isnull=False,
-                mark_for_deletion=False,
-            )
+            Snapshot.objects.restorable()
+            .filter(snapshot_from_application__id=application_id)
             .select_related("created_by")
             .order_by("-created_at", "-id")
         )
@@ -198,16 +195,23 @@ class SnapshotHandler:
         if creating_jobs_count > 0:
             raise SnapshotIsBeingCreated()
 
-        try:
-            snapshot = Snapshot.objects.create(
+        if (
+            Snapshot.objects.restorable()
+            .filter(
                 snapshot_from_application=application,
                 created_by=performed_by,
                 name=name,
             )
-        except IntegrityError as e:
-            if "unique constraint" in e.args[0]:
-                raise SnapshotNameNotUnique()
-            raise e
+            .exists()
+        ):
+            raise SnapshotNameNotUnique()
+
+        snapshot = Snapshot.objects.create(
+            snapshot_from_application=application,
+            created_by=performed_by,
+            name=name,
+        )
+
         return snapshot
 
     def start_restore_job(
@@ -348,7 +352,7 @@ class SnapshotHandler:
         BASEROW_SNAPSHOT_EXPIRATION_TIME_DAYS and schedules their deletion.
         """
 
-        threshold = timezone.now() - datetime.timedelta(
+        threshold = datetime.now(tz=timezone.utc) - timedelta(
             days=settings.BASEROW_SNAPSHOT_EXPIRATION_TIME_DAYS
         )
         expired_snapshots = Snapshot.objects.filter(
@@ -368,6 +372,8 @@ class SnapshotHandler:
         :raises UserNotInWorkspace: When the user doesn't belong to the same workspace
             as the application.
         """
+
+        storage = get_default_storage()
 
         if snapshot is None:
             raise SnapshotDoesNotExist()
@@ -391,7 +397,7 @@ class SnapshotHandler:
         )
         try:
             exported_application = application_type.export_serialized(
-                application, snapshot_import_export_config, None, default_storage
+                application, snapshot_import_export_config, None, storage
             )
         except OperationalError as e:
             # Detect if this `OperationalError` is due to us exceeding the
@@ -414,7 +420,7 @@ class SnapshotHandler:
             snapshot_import_export_config,
             id_mapping,
             None,
-            default_storage,
+            storage,
             progress_builder=progress.create_child_builder(represents_progress=50),
         )
 
@@ -430,6 +436,8 @@ class SnapshotHandler:
             as the application.
         :returns: Application that is a copy of the snapshot.
         """
+
+        storage = get_default_storage()
 
         if snapshot is None:
             raise SnapshotDoesNotExist()
@@ -452,7 +460,7 @@ class SnapshotHandler:
         # be correctly set during the import process.
         application.workspace = workspace
         exported_application = application_type.export_serialized(
-            application, restore_snapshot_import_export_config, None, default_storage
+            application, restore_snapshot_import_export_config, None, storage
         )
         progress.increment(by=50)
 
@@ -462,7 +470,7 @@ class SnapshotHandler:
             restore_snapshot_import_export_config,
             {},
             None,
-            default_storage,
+            storage,
             progress_builder=progress.create_child_builder(represents_progress=50),
         )
         imported_application.name = CoreHandler().find_unused_application_name(

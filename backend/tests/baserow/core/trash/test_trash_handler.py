@@ -1,5 +1,6 @@
+from datetime import datetime, timedelta, timezone
+
 from django.db import OperationalError, connection
-from django.utils import timezone
 
 import pytest
 from freezegun import freeze_time
@@ -61,11 +62,9 @@ def test_a_trash_entry_older_than_setting_gets_marked_for_permanent_deletion(
     user = data_fixture.create_user()
     workspace_to_delete = data_fixture.create_workspace(user=user)
 
-    trashed_at = timezone.now()
-    half_time = timezone.timedelta(
-        hours=settings.HOURS_UNTIL_TRASH_PERMANENTLY_DELETED / 2
-    )
-    plus_one_hour_over = timezone.timedelta(
+    trashed_at = datetime.now(tz=timezone.utc)
+    half_time = timedelta(hours=settings.HOURS_UNTIL_TRASH_PERMANENTLY_DELETED / 2)
+    plus_one_hour_over = timedelta(
         hours=settings.HOURS_UNTIL_TRASH_PERMANENTLY_DELETED + 1
     )
     with freeze_time(trashed_at):
@@ -96,8 +95,8 @@ def test_a_trash_entry_marked_for_permanent_deletion_gets_deleted_by_task(
     user = data_fixture.create_user()
     workspace_to_delete = data_fixture.create_workspace(user=user)
 
-    trashed_at = timezone.now()
-    plus_one_hour_over = timezone.timedelta(
+    trashed_at = datetime.now(tz=timezone.utc)
+    plus_one_hour_over = timedelta(
         hours=settings.HOURS_UNTIL_TRASH_PERMANENTLY_DELETED + 1
     )
     with freeze_time(trashed_at):

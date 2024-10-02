@@ -1,12 +1,8 @@
 from io import BytesIO
-from unittest.mock import Mock
 
 import pytest
 from rest_framework.exceptions import ValidationError
 
-from baserow.contrib.builder.data_sources.builder_dispatch_context import (
-    BuilderDispatchContext,
-)
 from baserow.contrib.builder.data_sources.service import DataSourceService
 from baserow.contrib.builder.workflow_actions.models import EventTypes
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -22,6 +18,7 @@ from baserow.contrib.integrations.local_baserow.service_types import (
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import ImportExportConfig
 from baserow.core.services.exceptions import ServiceImproperlyConfigured
+from baserow.test_utils.pytest_conftest import FakeDispatchContext
 
 
 @pytest.mark.django_db
@@ -53,17 +50,16 @@ def test_local_baserow_upsert_row_service_dispatch_data_without_row_id(
     service_type = service.get_type()
     service.field_mappings.create(field=ingredient, value='get("page_parameter.id")')
 
-    fake_request = Mock()
-    fake_request.data = {"page_parameter": {"id": 2}}
+    formula_context = {"page_parameter": {"id": 2}}
+    dispatch_context = FakeDispatchContext(context=formula_context)
 
-    dispatch_context = BuilderDispatchContext(fake_request, page)
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
     dispatch_data = service_type.dispatch_data(
         service, dispatch_values, dispatch_context
     )
 
     assert getattr(dispatch_data["data"], ingredient.db_column) == str(
-        fake_request.data["page_parameter"]["id"]
+        formula_context["page_parameter"]["id"]
     )
 
 
@@ -102,10 +98,9 @@ def test_local_baserow_upsert_row_service_dispatch_data_with_row_id(
     service_type = service.get_type()
     service.field_mappings.create(field=cost, value='get("page_parameter.id")')
 
-    fake_request = Mock()
-    fake_request.data = {"page_parameter": {"id": 10}}
+    formula_context = {"page_parameter": {"id": 10}}
 
-    dispatch_context = BuilderDispatchContext(fake_request, page)
+    dispatch_context = FakeDispatchContext(context=formula_context)
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
     dispatch_data = service_type.dispatch_data(
         service, dispatch_values, dispatch_context
@@ -113,27 +108,26 @@ def test_local_baserow_upsert_row_service_dispatch_data_with_row_id(
 
     assert (
         getattr(dispatch_data["data"], cost.db_column)
-        == fake_request.data["page_parameter"]["id"]
+        == formula_context["page_parameter"]["id"]
     )
 
     row.refresh_from_db()
-    assert getattr(row, cost.db_column) == fake_request.data["page_parameter"]["id"]
+    assert getattr(row, cost.db_column) == formula_context["page_parameter"]["id"]
 
     # Same test but the page parameter is a string instead.
-    fake_request.data = {"page_parameter": {"id": "10"}}
+    formula_context = {"page_parameter": {"id": "10"}}
+    dispatch_context = FakeDispatchContext(context=formula_context)
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
     dispatch_data = service_type.dispatch_data(
         service, dispatch_values, dispatch_context
     )
 
     assert getattr(dispatch_data["data"], cost.db_column) == int(
-        fake_request.data["page_parameter"]["id"]
+        formula_context["page_parameter"]["id"]
     )
 
     row.refresh_from_db()
-    assert getattr(row, cost.db_column) == int(
-        fake_request.data["page_parameter"]["id"]
-    )
+    assert getattr(row, cost.db_column) == int(formula_context["page_parameter"]["id"])
 
 
 @pytest.mark.django_db
@@ -183,8 +177,7 @@ def test_local_baserow_upsert_row_service_dispatch_data_disabled_field_mapping_f
     service.field_mappings.create(field=last_name_field, value="", enabled=False)
     service.field_mappings.create(field=location_field, value="", enabled=False)
 
-    fake_request = Mock()
-    dispatch_context = BuilderDispatchContext(fake_request, page)
+    dispatch_context = FakeDispatchContext()
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
     service_type.dispatch_data(service, dispatch_values, dispatch_context)
 
@@ -239,17 +232,23 @@ def test_local_baserow_upsert_row_service_dispatch_data_with_multiple_formulas(
         field=name, value=f'get("data_source.{data_source.id}.{name.db_column}")'
     )
 
-    fake_request = Mock()
-    fake_request.data = {"page_parameter": {"id": 10}}
+    formula_context = {
+        "data_source": {
+            str(data_source.id): {
+                cost.db_column: 5,
+                name.db_column: "test",
+                "id": row.id,
+            }
+        },
+    }
 
-    dispatch_context = BuilderDispatchContext(fake_request, page)
+    dispatch_context = FakeDispatchContext(context=formula_context)
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
-    dispatch_data = service_type.dispatch_data(
-        service, dispatch_values, dispatch_context
-    )
+    service_type.dispatch_data(service, dispatch_values, dispatch_context)
 
     row.refresh_from_db()
     assert getattr(row, cost.db_column) == 5
+    assert getattr(row, name.db_column) == "test"
 
 
 @pytest.mark.django_db
@@ -268,7 +267,7 @@ def test_local_baserow_upsert_row_service_dispatch_data_with_unknown_row_id(
         integration=integration,
     )
     service_type = service.get_type()
-    dispatch_context = BuilderDispatchContext(Mock(), page)
+    dispatch_context = FakeDispatchContext()
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
     with pytest.raises(ServiceImproperlyConfigured) as exc:
         service_type.dispatch_data(service, dispatch_values, dispatch_context)
@@ -309,7 +308,7 @@ def test_local_baserow_upsert_row_service_dispatch_data_with_read_only_table_fie
     )
     service.field_mappings.create(field=ingredient, value="'Potato'")
 
-    dispatch_context = BuilderDispatchContext(Mock(), page)
+    dispatch_context = FakeDispatchContext()
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
     dispatch_data = service_type.dispatch_data(
         service, dispatch_values, dispatch_context
@@ -351,10 +350,8 @@ def test_local_baserow_upsert_row_service_dispatch_transform(
     service_type = service.get_type()
     service.field_mappings.create(field=ingredient, value='get("page_parameter.id")')
 
-    fake_request = Mock()
-    fake_request.data = {"page_parameter": {"id": 2}}
+    dispatch_context = FakeDispatchContext(context={"page_parameter": {"id": 2}})
 
-    dispatch_context = BuilderDispatchContext(fake_request, page)
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
     dispatch_data = service_type.dispatch_data(
         service, dispatch_values, dispatch_context
@@ -364,7 +361,7 @@ def test_local_baserow_upsert_row_service_dispatch_transform(
     assert dict(serialized_row) == {
         "id": dispatch_data["data"].id,
         "order": "1.00000000000000000000",
-        ingredient.db_column: str(fake_request.data["page_parameter"]["id"]),
+        ingredient.db_column: str(2),
     }
 
 
@@ -403,7 +400,7 @@ def test_local_baserow_upsert_row_service_dispatch_data_incompatible_value(
         integration=integration,
     )
     service_type = service.get_type()
-    dispatch_context = BuilderDispatchContext(Mock(), page)
+    dispatch_context = FakeDispatchContext()
 
     field_mapping = service.field_mappings.create(field=boolean_field, value="'Horse'")
     with pytest.raises(ServiceImproperlyConfigured) as exc:
@@ -426,6 +423,65 @@ def test_local_baserow_upsert_row_service_dispatch_data_incompatible_value(
         f"field `{single_field.name} ({single_field.db_column})`: "
         "The provided select option value '99999999999' is not a valid select option."
     )
+
+
+@pytest.mark.django_db
+def test_local_baserow_upsert_row_service_dispatch_data_convert_value(data_fixture):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+    database = data_fixture.create_database_application(
+        workspace=page.builder.workspace
+    )
+    related_table = data_fixture.create_database_table(user=user, database=database)
+    related_table_model = related_table.get_model(attribute_names=True)
+    related_table_model.objects.create()
+    table = TableHandler().create_table_and_fields(
+        user=user,
+        database=database,
+        name=data_fixture.fake.name(),
+        fields=[
+            ("boolean", "boolean", {}),
+            ("text", "text", {}),
+            ("array", "link_row", {"link_row_table": related_table}),
+        ],
+    )
+
+    service = data_fixture.create_local_baserow_upsert_row_service(
+        table=table,
+        integration=integration,
+    )
+    service_type = service.get_type()
+
+    service.field_mappings.create(
+        field=table.field_set.get(name="boolean"), value="'true'"
+    )
+    service.field_mappings.create(
+        field=table.field_set.get(name="text"), value="'text'"
+    )
+    service.field_mappings.create(field=table.field_set.get(name="array"), value="1")
+
+    dispatch_context = FakeDispatchContext()
+    dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
+    dispatch_data = service_type.dispatch_data(
+        service, dispatch_values, dispatch_context
+    )
+    serialized_row = service_type.dispatch_transform(dispatch_data)
+
+    assert dict(serialized_row) == {
+        "id": 1,
+        "order": "1.00000000000000000000",
+        # The string 'true' was converted to a boolean value
+        table.field_set.get(name="boolean").db_column: True,
+        # The string 'text' is unchanged
+        table.field_set.get(name="text").db_column: "text",
+        # The string '1' is converted to a list with a single item
+        table.field_set.get(name="array").db_column: [
+            {"id": 1, "value": "unnamed row 1"}
+        ],
+    }
 
 
 @pytest.mark.django_db
@@ -454,7 +510,7 @@ def test_local_baserow_upsert_row_service_resolve_service_formulas(
     )
     service_type = service.get_type()
 
-    dispatch_context = BuilderDispatchContext(Mock(), page)
+    dispatch_context = FakeDispatchContext()
 
     # We're creating a row.
     assert service.row_id == ""

@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 from zipfile import ZipFile
 
 from django.conf import settings
-from django.core.files.storage import Storage, default_storage
+from django.core.files.storage import Storage
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.models import QuerySet
 from django.utils.http import parse_header_parameters
@@ -20,7 +20,7 @@ from PIL import Image, ImageOps
 from requests.exceptions import RequestException
 
 from baserow.core.models import UserFile
-from baserow.core.storage import OverwritingStorageHandler
+from baserow.core.storage import OverwritingStorageHandler, get_default_storage
 from baserow.core.utils import random_string, sha256_hash, stream_size, truncate_middle
 
 from .exceptions import (
@@ -148,7 +148,7 @@ class UserFileHandler:
         if not user_file.is_image:
             raise ValueError("The provided user file is not an image.")
 
-        storage = storage or default_storage
+        storage = storage or get_default_storage()
         image_width = user_file.image_width
         image_height = user_file.image_height
 
@@ -211,7 +211,7 @@ class UserFileHandler:
                 "The provided file is too large.",
             )
 
-        storage = storage or default_storage
+        storage = storage or get_default_storage()
         stream_hash = sha256_hash(stream)
         file_name = truncate_middle(file_name, 64)
 
@@ -377,7 +377,7 @@ class UserFileHandler:
         if cache is None:
             cache = {}
 
-        storage = storage or default_storage
+        storage = storage or get_default_storage()
 
         if not user_file:
             return None

@@ -8,16 +8,13 @@
   >
     <slot />
     <div
-      v-show="currentCount < maxCount"
+      v-show="hasMore"
       ref="loadingWrapper"
       class="infinite-scroll__loading-wrapper"
     >
       <div v-if="loading" class="loading"></div>
     </div>
-    <slot
-      v-if="renderEnd && currentCount >= maxCount && wrapperHasScrollbar"
-      name="end"
-    >
+    <slot v-if="renderEnd && !hasMore && wrapperHasScrollbar" name="end">
       <div class="infinite-scroll__end-line"></div>
     </slot>
   </section>
@@ -29,6 +26,11 @@
  * Provide it with the currentCount of loaded items and the maxCount that is available
  * from the server and it will emit 'load-next-page' events when the user scrolls to
  * the end of the current items.
+ *
+ * If the maxCount is not available, the hasMore prop should be used to indicate
+ * whether to load the next page.
+ * Both maxCount and hasMore are mutually exclusive, meaning only one of them should
+ * be set.
  *
  * If reverse is set then the list of items is rendered bottom to top and when the user
  * scrolls to the top the next page is loaded.
@@ -44,7 +46,13 @@ export default {
     },
     maxCount: {
       type: Number,
-      required: true,
+      required: false,
+      default: 0,
+    },
+    hasMorePage: {
+      type: Boolean,
+      required: false,
+      default: null,
     },
     pageSize: {
       type: Number,
@@ -75,6 +83,13 @@ export default {
       // a scrollbar and can be calculated as such.
       wrapperHasScrollbar: false,
     }
+  },
+  computed: {
+    hasMore() {
+      return this.hasMorePage !== null
+        ? this.hasMorePage
+        : this.currentCount < this.maxCount
+    },
   },
   watch: {
     currentCount() {
@@ -122,7 +137,7 @@ export default {
      * and we aren't already loading.
      */
     loadNextPage() {
-      if (this.currentCount < this.maxCount && !this.loading) {
+      if (this.hasMore && !this.loading) {
         const nextPage = Math.ceil(this.currentCount / this.pageSize) + 1
         this.$emit('load-next-page', nextPage)
       }
