@@ -295,7 +295,13 @@
             "rowDeleted": "Wanneer een rij is verwijderd",
             "rowsCreated": "Rijen zijn gemaakt",
             "rowsDeleted": "Rijen zijn verwijderd",
-            "rowsUpdated": "Rijen zijn bijgewerkt"
+            "rowsUpdated": "Rijen zijn bijgewerkt",
+            "fieldCreated": "Veld is aangemaakt",
+            "fieldUpdated": "Field is bijgewerkt",
+            "fieldDeleted": "Veld is verwijderd",
+            "viewCreated": "Weergave is gemaakt",
+            "viewUpdated": "Weergave is bijgewerkt",
+            "viewDeleted": "Weergave is verwijderd"
         },
         "form": {
             "invalidURLTitle": "Ongeldige URL.",
@@ -384,7 +390,9 @@
         "incompatiblePrimaryFieldTypeDescription": "Het gekozen veld kan niet het primaire veld zijn omdat het onverenigbaar is.",
         "fieldIsAlreadyPrimaryDescription": "Het gekozen nieuwe primaire veld is al het primaire veld.",
         "fieldIsAlreadyPrimaryTitle": "Veld is al primair",
-        "incompatiblePrimaryFieldTypeTitle": "Veld is niet compatibel"
+        "incompatiblePrimaryFieldTypeTitle": "Veld is niet compatibel",
+        "cannotCreateRowsInTableTitle": "Kan geen rijen maken",
+        "cannotCreateRowsInTableDescription": "Het is niet mogelijk om rijen te maken in deze tabel."
     },
     "importerType": {
         "csv": "Een CSV-bestand importeren",

@@ -10,11 +10,12 @@
             "dashboard": "Dashboard",
             "users": "Utenti",
             "workspaces": "Progetti",
-            "licenses": "Licenze"
+            "licenses": "Gestisci le licenze"
         },
         "viewType": {
             "kanban": "Kanban",
-            "calendar": "Calendario"
+            "calendar": "Calendario",
+            "timeline": "Timeline"
         },
         "exporterType": {
             "json": "Esporta in JSON",
@@ -374,7 +375,8 @@
         "premiumFeature": "Il campo IA è una caratteristica premium",
         "AIType": "Tipo IA",
         "emptyFileField": "Nessuno",
-        "fileFieldHelp": "Verrà utilizzato il primo file compatibile. I file compatibili sono file di testo con estensioni .txt, .md, .pdf, .docx."
+        "fileFieldHelp": "Verrà utilizzato il primo file compatibile. I file compatibili sono file di testo con estensioni .txt, .md, .pdf, .docx.",
+        "promptPlaceholder": "Cos'è Baserow?"
     },
     "rowEditFieldAI": {
         "createRowBefore": "Il valore IA può essere generato dopo che la riga è stata creata.",
@@ -395,5 +397,38 @@
     "formulaFieldAI": {
         "generateWithAI": "Genera usando l'AI",
         "featureName": "Genera usando l'AI"
+    },
+    "calendarViewType": {
+        "sharedViewText": "Permetti a chiunque di vedere i dati in quest vista o sincronizza gli eventi con calendari esterni.",
+        "sharedViewEnableSyncToExternalCalendar": "Sincronizza un calendario esterno",
+        "sharedViewDisableSyncToExternalCalendar": "Disabilita la sincronizzazione",
+        "sharedViewDescription": "Incolla questo link nella tua applicazione di gestione del calendario",
+        "sharedViewTitle": "Sincronizza con un calendario esterno"
+    },
+    "timelineViewHeader": {
+        "labels": "Etichette",
+        "dateSettings": "Impostazioni date"
+    },
+    "selectDateFieldContext": {
+        "save": "Salva"
+    },
+    "timelineDateSettingsForm": {
+        "startDateField": "Data di inizio",
+        "endDateField": "Data di fine",
+        "incompatibleFieldsErrorTitle": "Campi incompatibili",
+        "forceTimezone": "{timezone}",
+        "includeTime": "data e ora",
+        "dateOnly": "solo data",
+        "noCompatibleDateFields": "Non ci sono campi per date in questa tabella. Per favore, crea dei campi per la data di inizio e la data di fine per usare questa vista.",
+        "incompatibleFieldsErrorMessage": "I campi non sono compatibili. Per favore, scegli due campi con la stessa impostazione di \"mostra orario\" e lo stesso fuso orario."
+    },
+    "initTimelineViewSettings": {
+        "settings": "Impostazioni date"
+    },
+    "viewDateSelector": {
+        "today": "Oggi"
+    },
+    "timelineGridRow": {
+        "days": "0 | 1 giorno | {count} giorni"
     }
 }

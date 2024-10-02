@@ -460,7 +460,9 @@
         "errorJobAlreadyRunningDescription": "Une autre tâche d'importation est déjà en cours. Vous devez attendre que celle-ci se termine avant d'en lancer une autre.",
         "statePending": "En attente…",
         "stateStarted": "Démarré…",
-        "stateFinished": "Terminé"
+        "stateFinished": "Terminé",
+        "errorJobCannotBeCancelledTitle": "Impossible d'annuler",
+        "errorJobCannotBeCancelledDescription": "Il n'est pas possible d'annuler le travail car il a déjà été effectué.\nVeuillez supprimer la première sauvegarde ci-dessous pour le supprimer."
     },
     "clearingNotification": {
         "content": "Préparation des données",

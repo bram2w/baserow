@@ -26,7 +26,14 @@
         "trash": "Cestino",
         "settings": "Impostazioni",
         "members": "Membri",
-        "notifications": "Notifiche"
+        "notifications": "Notifiche",
+        "addNewWorkspace": "Aggiungi un nuovo workspace",
+        "adminTools": "Strumenti da amministratore",
+        "home": "Pagina principale",
+        "adminSettings": "Impostazioni di amministrazione",
+        "general": "Generale",
+        "people": "Persone",
+        "licenses": "Licenze"
     },
     "accountForm": {
         "nameLabel": "Il tuo nome",
@@ -185,10 +192,14 @@
         "retry": "Riprova"
     },
     "createApplicationContext": {
-        "fromTemplate": "Da modello"
+        "fromTemplate": "Da modello",
+        "fromTemplateDesc": "Inizia rapidamente con uno dei nostri template",
+        "table": "Tabella",
+        "tableDesc": "Crea un posto per organizzare i dati del tuo database."
     },
     "applicationForm": {
-        "nameLabel": "Nome"
+        "nameLabel": "Nome",
+        "namePlaceholder": "Inserisci il nome..."
     },
     "connectingNotification": {
         "title": "Riconnessione in corso",
@@ -217,7 +228,7 @@
     "dashboard": {
         "title": "Dashboard",
         "alertTitle": "Aiutaci!",
-        "alertText": "Se trovi che Baserow sia utile, ci farebbe molto piacere se potessi condividere la tua opinione. Il tuo feedback è importante per noi, perchè ci aiuta a migliorare il prodotto e a renderlo migliore per te.",
+        "alertText": "Il tuo feedback è importante per noi, per aiutarci a migliorare il prodotto e a renderlo migliore.",
         "tweetContent": "Dai un'occhiata a @baserow, uno strumento di database open source senza codice e un'alternativa a Airtable!",
         "redditTitle": "Baserow - Un database open source senza codice",
         "noWorkspaceTitle": "Nessun progetto",
@@ -229,7 +240,20 @@
         "shareOnReddit": "Condividi su Reddit",
         "shareOnFacebook": "Condividi su Facebook",
         "shareOnLinkedIn": "Condividi su LinkedIn",
-        "noWorkspaceTextWithoutCreatePermission": "Non sei membro di nessun progetto. Applicazioni come i database appartengono ad un progetto, quindi per crearli richiedi al tuo amministratore di essere invitato ad un progetto."
+        "noWorkspaceTextWithoutCreatePermission": "Non sei membro di nessun progetto. Applicazioni come i database appartengono ad un progetto, quindi per crearli richiedi al tuo amministratore di essere invitato ad un progetto.",
+        "suggestedTemplates": "Template suggeriti",
+        "resources": "Risorse",
+        "knowledgeBase": "Documentazione",
+        "knowledgeBaseMessage": "Trova risposta alle tue domande",
+        "tutorials": "Tutorial",
+        "tutorialsMessage": "Scopri il potenziale di Baserow",
+        "apiDocumentation": "Documentazione API",
+        "apiDocumentationMessage": "Scopri di più sul nostro codice",
+        "emptyWorkspace": "Questo progetto è vuoto",
+        "emptyWorkspaceMessage": "Inizia creando un nuovo database o una nuova applicazione.",
+        "addNew": "Aggiungi nuovo...",
+        "noWorkspace": "Nessun progetto",
+        "noWorkspaceDescription": "Inizia creando un nuovo progetto"
     },
     "login": {
         "title": "Login",
@@ -305,7 +329,9 @@
         "userSettings": "Utente",
         "emailVerificationRecommended": "Raccomandata",
         "emailVerificationDescription": "Controlla se l'indirizzo email deve essere verificato.",
-        "emailVerification": "Verifica email"
+        "emailVerification": "Verifica email",
+        "baserowVersion": "Versione",
+        "baserowVersionDescription": "Il numero di versione dell'applicazione per questa istanza."
     },
     "undoRedoNotification": {
         "undoingTitle": "Annullando..",
@@ -430,7 +456,9 @@
         "stateFinished": "Finito",
         "errorJobAlreadyRunningTitle": "In corso",
         "stateFailed": "Fallito",
-        "errorJobAlreadyRunningDescription": "Un altro processo è già in corso. Devi attendere il termine di quello in corso per iniziarne uno nuovo."
+        "errorJobAlreadyRunningDescription": "Un altro processo è già in corso. Devi attendere il termine di quello in corso per iniziarne uno nuovo.",
+        "errorJobCannotBeCancelledTitle": "Non è possibile cancellare",
+        "errorJobCannotBeCancelledDescription": "Non è possible fermare il processo perchè è già finito nel frattempo.\nPer favore, cancelal il primo elemento dall'elenco se vuoi rimuoverlo."
     },
     "clearingNotification": {
         "content": "Preparando i dati",
@@ -792,5 +820,11 @@
     "imageInput": {
         "labelDescription": "Scegli un immagine da caricare...",
         "labelButton": "Carica"
+    },
+    "dashboardApplication": {
+        "createdAt": "creato"
+    },
+    "templateCard": {
+        "viewMore": "Vedi di più"
     }
 }

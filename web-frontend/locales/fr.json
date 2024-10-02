@@ -295,7 +295,13 @@
             "rowDeleted": "Suppression d'une ligne",
             "rowsCreated": "Des lignes sont créées",
             "rowsUpdated": "Des lignes sont mises à jour",
-            "rowsDeleted": "Des lignes sont supprimées"
+            "rowsDeleted": "Des lignes sont supprimées",
+            "fieldCreated": "Champs ajouté",
+            "fieldUpdated": "Champs mis à jour",
+            "fieldDeleted": "Champs supprimé",
+            "viewCreated": "Vue créée",
+            "viewUpdated": "Vue mise à jour",
+            "viewDeleted": "Vue supprimée"
         },
         "form": {
             "invalidURLTitle": "URL invalide.",
@@ -384,7 +390,9 @@
         "fieldIsAlreadyPrimaryTitle": "Le champ est déjà primaire",
         "fieldIsAlreadyPrimaryDescription": "Le champ choisi est déjà le champ primaire.",
         "incompatiblePrimaryFieldTypeTitle": "Le champ n'est pas compatible",
-        "incompatiblePrimaryFieldTypeDescription": "Le champ choisi ne peut pas être le champ primaire car il est incompatible."
+        "incompatiblePrimaryFieldTypeDescription": "Le champ choisi ne peut pas être le champ primaire car il est incompatible.",
+        "cannotCreateRowsInTableTitle": "Impossible de créer les lignes",
+        "cannotCreateRowsInTableDescription": "Impossible de créer les lignes dans cette table."
     },
     "importerType": {
         "csv": "Importer un fichier CSV",

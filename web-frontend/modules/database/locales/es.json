@@ -48,7 +48,9 @@
             "title": "Tipo de evento obsoleto",
             "description": "Este webhook no recibe información sobre todas las filas modificadas al mismo tiempo. Por favor conviértelo a un tipo de evento de tipo batch. Esto cambia la carga útil del cuerpo JSON a un formato que contiene múltiples filas.",
             "convert": "Convertir"
-        }
+        },
+        "helpTriggerWhenFieldsHaveChanged": "Solo se activará si cambia el valor de la celda de los campos elegidos.",
+        "triggerWhenFieldsHaveChanged": "Activar cuando los campos hayan cambiado"
     },
     "webhook": {
         "details": "detalles",
@@ -67,7 +69,10 @@
     },
     "sidebarItem": {
         "exportTable": "Exportar tabla",
-        "webhooks": "Webhooks"
+        "webhooks": "Webhooks",
+        "lastSynced": "Última sincronización",
+        "notSynced": "No sincronizado",
+        "sync": "Sincronizar tabla"
     },
     "apiToken": {
         "create": "crear",
@@ -494,7 +499,8 @@
         "createFilter": "Crear filtro",
         "sortField": "Clasificar",
         "hideField": "Ocultar campo",
-        "duplicate": "Duplicar campo"
+        "duplicate": "Duplicar campo",
+        "dataSyncField": "El campo es de sólo lectura y forma parte de la sincronización de datos de la tabla."
     },
     "gridViewRow": {
         "rowNotMatchingFilters": "La fila no coincide con los filtros",
@@ -712,7 +718,9 @@
         "snapshot": "Imagen",
         "limitReached": "Se ha alcanzado el límite de imágenes máximas.",
         "importingState": "Creando",
-        "reset": "Crear otra"
+        "reset": "Crear otra",
+        "cancel": "Cancelar",
+        "noSnapshots": "Aún no hay instantáneas de esta aplicación."
     },
     "deleteSnapshotModal": {
         "content": "¿Estás seguro de que quieres eliminar permanentemente la imagen instantánea {nombre}?",
@@ -974,5 +982,54 @@
         "customFieldsDescriptionRow2": "Vitae justo eget magna fermentum iaculis eu non diam.",
         "customFieldsDescriptionRow3": "Convallis tellus id interdum velit laoreet id donec ultrices tincidunt.",
         "customFieldsDescriptionRow1": "Turpis massa tincidunt dui ut ornare lectus sit amet est."
+    },
+    "createTableModal": {
+        "title": "Crear nueva tabla",
+        "defaultName": "Tabla",
+        "newTable": "Empezar con una nueva tabla",
+        "importLabel": "¿Deseas importar datos existentes?"
+    },
+    "createTable": {
+        "showTable": "Mostrar tabla",
+        "addButton": "Añadir tabla",
+        "uploading": "Subiendo...",
+        "preparing": "Preparando los datos...",
+        "importError": "Algo ha ido mal durante la importación del archivo",
+        "stateRowCreation": "Importando...",
+        "statePreValidation": "Validando los datos...",
+        "stateCreateTable": "Creando tabla..."
+    },
+    "importErrorReport": {
+        "reportTitleFailure": "Filas que fallan",
+        "reportMessage": "No se han podido importar los siguientes índices de fila:",
+        "reportTitleSuccess": "Importación exitosa, pero..."
+    },
+    "createViewLink": {
+        "inCompatibleWithDataSync": "Este tipo de vista no es compatible con una tabla de sincronización de datos."
+    },
+    "dataSyncType": {
+        "icalCalendar": "Sincronizar iCal"
+    },
+    "createDataSync": {
+        "next": "Siguiente",
+        "fields": "Selecciona los campos que deseas sincronizar",
+        "create": "Crear y sincronizar tabla",
+        "error": "Algo salió mal durante la sincronización"
+    },
+    "syncTableModal": {
+        "title": "Sincronizar {name}",
+        "sync": "Sincronizar tabla",
+        "hide": "Ocultar",
+        "description": "Esta tabla está vinculada a una sincronización de datos. Al hacer clic en el botón de sincronización, los datos se sincronizarán con la fuente. Durante este proceso, se coloca un bloqueo en las filas actualizadas, lo que puede ralentizar temporalmente las solicitudes de la API o las modificaciones de la tabla."
+    },
+    "gridViewRowHeight": {
+        "name": "Altura",
+        "medium": "Mediano",
+        "large": "Grande",
+        "small": "Pequeño"
+    },
+    "iCalCalendarDataSync": {
+        "name": "URL de iCal",
+        "description": "La sincronización del calendario iCal, se sincroniza automáticamente con las entradas del archivo de calendario de la URL. Solo admite el tipo de archivo ICS (Internet Calendar and Scheduling)."
     }
 }

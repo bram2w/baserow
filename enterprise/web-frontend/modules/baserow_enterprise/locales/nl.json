@@ -240,7 +240,8 @@
         "rbac": "Rol gebaseerde toegangscontrole",
         "auditLogs": "Audit logs",
         "coBranding": "Co-branding logo vervanging",
-        "support": "Directe ondersteuning"
+        "support": "Directe ondersteuning",
+        "dataSync": "Data sync"
     },
     "chatwootSupportSidebarWorkspace": {
         "directSupport": "Directe ondersteuning"
@@ -335,5 +336,15 @@
         "loginButtonLabelPlaceholder": "Voer het label in...",
         "userSource": "Gebruiker bron",
         "loginButtonLabel": "Aanmeldknop label"
+    },
+    "localBaserowTableDataSync": {
+        "name": "Brontabel ID",
+        "workspace": "Werkruimte",
+        "database": "Database",
+        "authorizing": "Je machtigt je account om de gegevens uit de brontabel op te halen.",
+        "table": "Tabel"
+    },
+    "enterpriseDataSyncType": {
+        "localBaserowTable": "Sync Baserow tabel"
     }
 }

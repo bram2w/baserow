@@ -48,7 +48,9 @@
             "title": "Verouderd gebeurtenistype",
             "description": "Deze webhook ontvangt geen informatie over alle gewijzigde rijen tegelijk. Converteer het naar een batch-stijl evenement type. Dit verandert de JSON body payload naar een formaat dat meerdere rijen bevat.",
             "convert": "Omzetten"
-        }
+        },
+        "triggerWhenFieldsHaveChanged": "Voer uit wanneer velden zijn veranderd",
+        "helpTriggerWhenFieldsHaveChanged": "Wordt alleen uitgevoerd als de celwaarde van de gekozen velden verandert."
     },
     "webhook": {
         "details": "details",
@@ -67,7 +69,10 @@
     },
     "sidebarItem": {
         "exportTable": "Tabel exporteren",
-        "webhooks": "Webhooks"
+        "webhooks": "Webhooks",
+        "lastSynced": "Laatst gesynchroniseerd",
+        "notSynced": "niet gesynchroniseerd",
+        "sync": "Sync tabel"
     },
     "apiToken": {
         "create": "aanmaken",
@@ -494,7 +499,8 @@
         "hideField": "Veld verbergen",
         "insertLeft": "Links invoegen",
         "insertRight": "Rechts invoegen",
-        "duplicate": "Dupliceer veld"
+        "duplicate": "Dupliceer veld",
+        "dataSyncField": "Het veld is alleen-lezen en maakt deel uit van de data sync van de tabel."
     },
     "gridViewRow": {
         "rowNotMatchingFilters": "Rij komt niet overeen met filters",
@@ -705,7 +711,9 @@
         "create": "Snapshot maken",
         "snapshotRestoredErrorMessage": "De snapshot kan niet worden hersteld. probeer het later opnieuw.",
         "snapshotDeletedErrorTitle": "Fout opgetreden",
-        "importingState": "Maken"
+        "importingState": "Maken",
+        "cancel": "Annuleren",
+        "noSnapshots": "Er zijn nog geen snapshots voor deze applicatie."
     },
     "deleteSnapshotModal": {
         "title": "Snapshot verwijderen",
@@ -974,5 +982,54 @@
         "projectsNotesRow2": "Onderzoek of de huidige gebruikers van Soylent geïnteresseerd zijn in een nieuw gebruikersportaal.",
         "tasksDetailsRow1": "Het logo moet worden verbeterd om de CTA duidelijker te maken.",
         "tasksDetailsRow3": "De nieuwe voettekst moet onze contactgegevens bevatten en ook een kleine (maar duidelijke) CTA."
+    },
+    "createTableModal": {
+        "title": "Nieuwe tabel maken",
+        "importLabel": "Wil je bestaande gegevens importeren?",
+        "defaultName": "Tabel",
+        "newTable": "Begin met een nieuwe tabel"
+    },
+    "createTable": {
+        "showTable": "toon tabel",
+        "addButton": "Tabel toevoegen",
+        "uploading": "Uploaden...",
+        "stateRowCreation": "Importeren...",
+        "statePreValidation": "Valideren van gegevens...",
+        "importError": "Er is iets misgegaan tijdens het importeren van het bestand",
+        "preparing": "Voorbereiden van data...",
+        "stateCreateTable": "Tabel maken..."
+    },
+    "importErrorReport": {
+        "reportTitleFailure": "Mislukte rijen",
+        "reportTitleSuccess": "Import succesvol, maar...",
+        "reportMessage": "De volgende rij indexen konden'niet worden geïmporteerd:"
+    },
+    "dataSyncType": {
+        "icalCalendar": "Sync iCal feed"
+    },
+    "iCalCalendarDataSync": {
+        "name": "iCal URL",
+        "description": "De iCal kalendersynchronisatie synchroniseert automatisch met de items in het kalenderbestand van de URL. Het ondersteunt alleen het ICS-bestandstype (Internet Calendar and Scheduling)."
+    },
+    "createDataSync": {
+        "fields": "Selecteer de velden die je wilt synchroniseren",
+        "create": "Tabel maken en synchroniseren",
+        "error": "Er is iets misgegaan tijdens de synchronisatie",
+        "next": "Volgende"
+    },
+    "syncTableModal": {
+        "title": "Sync {name}",
+        "sync": "Sync tabel",
+        "hide": "Verberg",
+        "description": "Deze tabel is gekoppeld aan een gegevenssynchronisatie. Wanneer je op de sync knop klikt, worden de gegevens gesynchroniseerd met de bron. Tijdens dit proces wordt een slot geplaatst op de bijgewerkte rijen, wat API verzoeken of tabelwijzigingen tijdelijk kan vertragen."
+    },
+    "gridViewRowHeight": {
+        "name": "Hoogte",
+        "small": "Klein",
+        "medium": "Middel",
+        "large": "Groot"
+    },
+    "createViewLink": {
+        "inCompatibleWithDataSync": "Dit weergavetype is niet compatibel met een data sync tabel."
     }
 }
