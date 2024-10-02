@@ -883,10 +883,11 @@ class LocalBaserowListRowsUserServiceType(
             raise ServiceImproperlyConfigured("The table property is missing.")
         try:
             table = TableHandler().get_table(service.table_id)
-            primary_field = table.field_set.get(primary=True)
-            model = table.get_model(
-                field_ids=[], fields=[primary_field], add_dependencies=False
-            )
+            # NOTE: This is an expensive operation, so in the future we need to
+            # calculate the list of used fields for searching/sorting/filtering
+            # and pass them to `get_model`.
+            # See: https://gitlab.com/baserow/baserow/-/issues/3062
+            model = table.get_model()
             queryset = self.build_queryset(
                 service, table, dispatch_context, model
             ).filter(pk__in=record_ids)
