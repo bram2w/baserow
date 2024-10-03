@@ -7,6 +7,7 @@ from baserow.contrib.builder.data_sources.service import DataSourceService
 from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.elements.service import ElementService
 from baserow.contrib.builder.pages.service import PageService
+from baserow.contrib.database.api.rows.serializers import RowSerializer
 from baserow.contrib.integrations.local_baserow.models import LocalBaserowGetRow
 from baserow.contrib.integrations.local_baserow.service_types import (
     LocalBaserowGetRowUserServiceType,
@@ -195,11 +196,13 @@ def test_local_baserow_get_row_service_dispatch_transform(data_fixture):
     )
 
     service = data_fixture.create_local_baserow_get_row_service(
-        integration=integration, view=view, table=table, row_id="'2'"
+        integration=integration, view=view, table=table, row_id=f"{rows[1].id}"
     )
+
     service_type = LocalBaserowGetRowUserServiceType()
 
     dispatch_context = FakeDispatchContext()
+
     dispatch_values = LocalBaserowUpsertRowServiceType().resolve_service_formulas(
         service, dispatch_context
     )
@@ -246,6 +249,7 @@ def test_local_baserow_get_row_service_dispatch_data_with_view_filter(data_fixtu
     service_type = service.get_type()
 
     dispatch_context = FakeDispatchContext()
+
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
     with pytest.raises(DoesNotExist):
         service_type.dispatch_data(service, dispatch_values, dispatch_context)
@@ -279,6 +283,7 @@ def test_local_baserow_get_row_service_dispatch_data_with_service_search(
     service_type = service.get_type()
 
     dispatch_context = FakeDispatchContext()
+
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
     with pytest.raises(DoesNotExist):
         service_type.dispatch_data(service, dispatch_values, dispatch_context)
@@ -301,6 +306,7 @@ def test_local_baserow_get_row_service_dispatch_data_with_service_integer_search
             ["42"],
         ],
     )
+
     integration = data_fixture.create_local_baserow_integration(
         application=page.builder, user=user
     )
@@ -308,8 +314,8 @@ def test_local_baserow_get_row_service_dispatch_data_with_service_integer_search
     service = data_fixture.create_local_baserow_get_row_service(
         integration=integration, table=table, row_id="", search_query="42"
     )
-    service_type = service.get_type()
 
+    service_type = service.get_type()
     dispatch_context = FakeDispatchContext()
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
 
@@ -730,3 +736,202 @@ def test_order_by_is_applied_depending_on_views_sorts(
         mock_queryset.order_by.assert_called_once_with(*view_sorts)
     else:
         mock_queryset.order_by.assert_not_called()
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.integrations.local_baserow.service_types.CoreHandler")
+@pytest.mark.parametrize(
+    "field_name_checks,expect_only_applied",
+    (
+        [
+            (
+                {"all": ["field_foo", "field_bar"], "external": None, "internal": None},
+                True,
+            ),
+            (
+                {"all": ["field_foo", "field_bar"], "external": [], "internal": []},
+                True,
+            ),
+            (
+                {
+                    "all": ["field_foo", "field_bar"],
+                    "external": ["foo"],
+                    "internal": ["bar"],
+                },
+                True,
+            ),
+            (
+                {"all": None, "external": None, "internal": None},
+                False,
+            ),
+            (
+                {"all": None, "external": [], "internal": []},
+                False,
+            ),
+            (
+                {"all": None, "external": ["field_foo"], "internal": ["field_bar"]},
+                False,
+            ),
+        ]
+    ),
+)
+def test_only_is_applied_to_queryset_if_field_names(
+    mock_core_handler, field_name_checks, expect_only_applied, data_fixture
+):
+    """
+    Test to ensure that the queryset's only() is applied if
+    field_names exists.
+    """
+
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    table, _, _ = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("My Color", "text"),
+        ],
+        rows=[
+            ["BMW", "Blue"],
+            ["Audi", "Orange"],
+        ],
+    )
+    view = data_fixture.create_grid_view(user, table=table)
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+
+    service = data_fixture.create_local_baserow_list_rows_service(
+        integration=integration,
+        view=view,
+        table=table,
+    )
+
+    service_type = LocalBaserowGetRowUserServiceType()
+
+    mock_queryset = MagicMock()
+
+    mock_objects = MagicMock()
+    mock_objects.enhance_by_fields.return_value = mock_queryset
+
+    mock_model = MagicMock()
+    mock_objects = mock_model.objects.all.return_value = mock_objects
+
+    mock_table = MagicMock()
+    mock_table.get_model.return_value = mock_model
+
+    resolved_values = {
+        "table": mock_table,
+    }
+
+    service_type.get_dispatch_search = MagicMock(return_value=None)
+    service_type.get_dispatch_filters = MagicMock(return_value=mock_queryset)
+    service_type.get_dispatch_sorts = MagicMock(return_value=(None, mock_queryset))
+
+    field_names = {"all": {}, "external": {}, "internal": {}}
+    for key, value in field_name_checks.items():
+        field_names[key] = {service.id: value}
+
+    dispatch_context = FakeDispatchContext()
+
+    with patch(
+        "baserow.test_utils.pytest_conftest.FakeDispatchContext.public_formula_fields",
+        None,
+    ):
+        dispatch_context.public_formula_fields = field_names
+        service_type.dispatch_data(service, resolved_values, dispatch_context)
+
+    if expect_only_applied:
+        mock_queryset.only.assert_called_once_with(
+            field_names["all"][service.id][0],
+            field_names["all"][service.id][1],
+        )
+    else:
+        mock_queryset.only.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "field_names",
+    [
+        None,
+        {"external": {1: ["field_123"]}},
+    ],
+)
+@patch(
+    "baserow.contrib.integrations.local_baserow.service_types.get_row_serializer_class"
+)
+def test_dispatch_transform_passes_field_ids(mock_get_serializer, field_names):
+    """
+    Test the LocalBaserowGetRowUserServiceType::dispatch_transform() method.
+
+    Ensure that the field_ids parameter is passed to the serializer class.
+    """
+
+    mock_serializer_instance = MagicMock()
+    mock_serializer_instance.data.return_value = "foo"
+    mock_serializer = MagicMock(return_value=mock_serializer_instance)
+    mock_get_serializer.return_value = mock_serializer
+
+    service_type = LocalBaserowGetRowUserServiceType()
+    service_type.extract_field_ids = MagicMock(return_value=[])
+
+    dispatch_data = {
+        "baserow_table_model": MagicMock(),
+        "data": [],
+    }
+    if field_names:
+        dispatch_data["public_formula_fields"] = field_names
+
+    results = service_type.dispatch_transform(dispatch_data)
+
+    assert results == mock_serializer_instance.data
+    mock_get_serializer.assert_called_once_with(
+        dispatch_data["baserow_table_model"],
+        RowSerializer,
+        is_response=True,
+        field_ids=[],
+    )
+    service_type.extract_field_ids.assert_called_once_with(field_names)
+
+
+@pytest.mark.parametrize(
+    "path,expected",
+    [
+        (
+            [],
+            [],
+        ),
+        (
+            ["foo"],
+            [],
+        ),
+        (
+            ["", "foo"],
+            [],
+        ),
+        (
+            ["field_123"],
+            ["field_123"],
+        ),
+        (
+            ["field_456", ""],
+            ["field_456"],
+        ),
+        (
+            ["field_789", "", ""],
+            ["field_789"],
+        ),
+    ],
+)
+def test_extract_properties(path, expected):
+    """
+    Test the extract_properties() method.
+
+    Given the input path, ensure the expected field name is returned.
+    """
+
+    service_type = LocalBaserowGetRowUserServiceType()
+
+    result = service_type.extract_properties(path)
+
+    assert result == expected

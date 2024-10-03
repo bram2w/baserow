@@ -11,7 +11,7 @@ import string
 from collections import defaultdict, namedtuple
 from decimal import Decimal
 from fractions import Fraction
-from itertools import islice
+from itertools import chain, islice
 from numbers import Number
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, Union
 
@@ -1112,3 +1112,29 @@ def remove_duplicates(input_list):
 
     seen = set()
     return [x for x in input_list if not (x in seen or seen.add(x))]
+
+
+def merge_dicts_no_duplicates(*dicts):
+    """
+    Merges multiple dictionaries by combining the lists of values for any shared keys,
+    removing duplicate elements.
+
+    Parameters:
+        *dicts (dict): Multiple dictionaries with lists as values.
+
+    Returns:
+        dict: A new dictionary with merged values for shared keys, without duplicates.
+    """
+
+    merged_dict = {}
+
+    for dictionary in dicts:
+        for key in dictionary:
+            # Combine the lists and remove duplicates by converting to a set,
+            # then back to a list
+            if key in merged_dict:
+                merged_dict[key] = list(set(chain(merged_dict[key], dictionary[key])))
+            else:
+                merged_dict[key] = dictionary[key]
+
+    return merged_dict

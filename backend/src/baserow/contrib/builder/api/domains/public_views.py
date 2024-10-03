@@ -1,3 +1,5 @@
+from django.db import transaction
+
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework.permissions import AllowAny
@@ -6,13 +8,30 @@ from rest_framework.views import APIView
 
 from baserow.api.applications.errors import ERROR_APPLICATION_DOES_NOT_EXIST
 from baserow.api.decorators import map_exceptions
-from baserow.api.schemas import get_error_schema
-from baserow.api.utils import DiscriminatorCustomFieldsMappingSerializer
+from baserow.api.errors import ERROR_PERMISSION_DENIED
+from baserow.api.schemas import CLIENT_SESSION_ID_SCHEMA_PARAMETER, get_error_schema
+from baserow.api.utils import (
+    DiscriminatorCustomFieldsMappingSerializer,
+    apply_exception_mapping,
+)
+from baserow.contrib.builder.api.data_sources.errors import (
+    ERROR_DATA_DOES_NOT_EXIST,
+    ERROR_DATA_SOURCE_DOES_NOT_EXIST,
+    ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
+)
 from baserow.contrib.builder.api.domains.serializers import PublicBuilderSerializer
 from baserow.contrib.builder.api.pages.errors import ERROR_PAGE_DOES_NOT_EXIST
 from baserow.contrib.builder.api.workflow_actions.serializers import (
     BuilderWorkflowActionSerializer,
 )
+from baserow.contrib.builder.data_sources.builder_dispatch_context import (
+    BuilderDispatchContext,
+)
+from baserow.contrib.builder.data_sources.exceptions import (
+    DataSourceDoesNotExist,
+    DataSourceImproperlyConfigured,
+)
+from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.contrib.builder.data_sources.service import DataSourceService
 from baserow.contrib.builder.domains.service import DomainService
 from baserow.contrib.builder.elements.registries import element_type_registry
@@ -28,7 +47,8 @@ from baserow.contrib.builder.workflow_actions.registries import (
 from baserow.contrib.builder.workflow_actions.service import (
     BuilderWorkflowActionService,
 )
-from baserow.core.exceptions import ApplicationDoesNotExist
+from baserow.core.exceptions import ApplicationDoesNotExist, PermissionException
+from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
 from baserow.core.services.registries import service_type_registry
 
 from .serializers import PublicDataSourceSerializer, PublicElementSerializer
@@ -267,3 +287,129 @@ class PublicBuilderWorkflowActionsView(APIView):
         ]
 
         return Response(data)
+
+
+class PublicDispatchDataSourceView(APIView):
+    permission_classes = (AllowAny,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="data_source_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The id of the data_source you want to call the dispatch "
+                "for",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Builder data sources"],
+        operation_id="dispatch_builder_page_data_source",
+        description=(
+            "Dispatches the service of the related data_source and returns "
+            "the result."
+        ),
+        responses={
+            404: get_error_schema(
+                [
+                    "ERROR_DATA_SOURCE_DOES_NOT_EXIST",
+                    "ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED",
+                    "ERROR_IN_DISPATCH_CONTEXT",
+                    "ERROR_DATA_DOES_NOT_EXIST",
+                ]
+            ),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            DataSourceDoesNotExist: ERROR_DATA_SOURCE_DOES_NOT_EXIST,
+            DataSourceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
+            ServiceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
+            DoesNotExist: ERROR_DATA_DOES_NOT_EXIST,
+        }
+    )
+    def post(self, request, data_source_id: str):
+        """
+        Call the given data_source related service dispatch method.
+        """
+
+        data_source = DataSourceHandler().get_data_source(int(data_source_id))
+        dispatch_context = BuilderDispatchContext(
+            request, data_source.page, only_expose_public_formula_fields=True
+        )
+        response = DataSourceService().dispatch_data_source(
+            request.user, data_source, dispatch_context
+        )
+
+        return Response(response)
+
+
+class PublicDispatchDataSourcesView(APIView):
+    permission_classes = (AllowAny,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="page_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The page we want to dispatch the data source for.",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Builder data sources"],
+        operation_id="dispatch_builder_page_data_sources",
+        description="Dispatches the service of the related page data_sources",
+        responses={
+            404: get_error_schema(
+                [
+                    "ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED",
+                    "ERROR_IN_DISPATCH_CONTEXT",
+                    "ERROR_DATA_DOES_NOT_EXIST",
+                    "ERROR_PAGE_DOES_NOT_EXIST",
+                ]
+            ),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            PageDoesNotExist: ERROR_PAGE_DOES_NOT_EXIST,
+            ServiceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
+            DoesNotExist: ERROR_DATA_DOES_NOT_EXIST,
+        }
+    )
+    def post(self, request, page_id: str):
+        """
+        Call the given data_source related service dispatch method.
+        """
+
+        page = PageHandler().get_page(int(page_id))
+        dispatch_context = BuilderDispatchContext(
+            request, page, only_expose_public_formula_fields=True
+        )
+        service_contents = DataSourceService().dispatch_page_data_sources(
+            request.user, page, dispatch_context
+        )
+
+        responses = {}
+
+        for service_id, content in service_contents.items():
+            if isinstance(content, Exception):
+                _, error, detail = apply_exception_mapping(
+                    {
+                        DataSourceDoesNotExist: ERROR_DATA_SOURCE_DOES_NOT_EXIST,
+                        DataSourceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
+                        ServiceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
+                        DoesNotExist: ERROR_DATA_DOES_NOT_EXIST,
+                        PermissionException: ERROR_PERMISSION_DENIED,
+                    },
+                    content,
+                    with_fallback=True,
+                )
+                responses[service_id] = {"_error": error, "detail": detail}
+            else:
+                responses[service_id] = content
+
+        return Response(responses)

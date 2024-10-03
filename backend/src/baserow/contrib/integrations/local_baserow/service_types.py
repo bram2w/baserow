@@ -163,6 +163,7 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
             model = table.get_model()
 
         queryset = self.get_queryset(service, table, dispatch_context, model)
+
         return queryset
 
     def get_queryset(
@@ -617,6 +618,25 @@ class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
 
         return super().prepare_values(values, user, instance)
 
+    def extract_field_ids(
+        self, field_names: Optional[List[str]]
+    ) -> Optional[List[int]]:
+        """
+        Given a list of field names, e.g. ["field_123"], return a list of
+        IDs, e.g. [123].
+
+        None will be returned if field_names is None.
+        """
+
+        if field_names is None:
+            return None
+
+        return [
+            int(field_name.split("field_")[-1])
+            for field_name in field_names
+            if isinstance(field_name, str) and "field_" in field_name
+        ]
+
 
 class LocalBaserowListRowsUserServiceType(
     ListServiceTypeMixin,
@@ -690,14 +710,9 @@ class LocalBaserowListRowsUserServiceType(
             # can currently import properly, so we return the path as is.
             return path
 
-        # If the `field_dbname` isn't a Baserow `Field.db_column`, then
-        # we don't have anything to map. This can happen if the `field_dbname`
-        # is an `id`, or single/multiple select option.
-        if not field_dbname.startswith("field_"):
-            return path
-
         # If the field_dbname starts with anything other than "field_", it
-        # implies that the path is not a valid one for this service type.
+        # implies that the path is not a valid one for this service type or the name
+        # is the id.
         #
         # E.g. if the Page Designer changes a Data Source service type from
         # List Rows to Get Row, any Element using the Data Source will have
@@ -745,6 +760,46 @@ class LocalBaserowListRowsUserServiceType(
         )
 
         return [f"field_{field_id}", *rest]
+
+    def extract_properties(self, path: List[str], **kwargs) -> List[str]:
+        """
+        Given a list of formula path parts, call the ServiceType's
+        extract_properties() method and return a set of unique field IDs.
+
+        E.g. given that path is: ['*', 'field_5191'], returns the
+        following: ['field_5191']
+
+        Returns None if the Field ID is not found.
+
+        The path can contain one or more parts, depending on the field type
+        and the formula. Some examples of `path` are:
+
+        An element that specifies a specific row and field:
+        ['1', 'field_5439']
+
+        An element that specifies a field and all rows:
+        ['*', 'field_5439']
+
+        An element that uses a Link Row Field formula
+        ['0', 'field_5569', '0', 'value']
+        """
+
+        # If the path length is greater or equal to 1, then we have
+        # the current data source formula format of row and field.
+
+        if len(path) >= 2:
+            row_id, field_dbname, *rest = path
+        else:
+            # In any other scenario, we have a formula that is not a format we
+            # can currently parse properly, so we return an empty list.
+            return []
+
+        # If the field_dbname doesn't start with "field_" and isn't "id" it probably
+        # means that the formula is invalid.
+        if not str(field_dbname).startswith("field_") and field_dbname != "id":
+            return []
+
+        return [field_dbname]
 
     def serialize_property(
         self,
@@ -823,6 +878,19 @@ class LocalBaserowListRowsUserServiceType(
         table = resolved_values["table"]
         queryset = self.build_queryset(service, table, dispatch_context)
 
+        public_formula_fields = None
+
+        if dispatch_context.public_formula_fields is not None:
+            all_field_names = dispatch_context.public_formula_fields.get("all", {}).get(
+                service.id, None
+            )
+            if all_field_names is not None:
+                # Ensure that only the public_formula_fields explicitly used
+                # in the page are fetched from the database.
+                queryset = queryset.only(*all_field_names)
+
+            public_formula_fields = all_field_names
+
         offset, count = dispatch_context.range(service)
 
         # We query one more row to be able to know if there is another page that can be
@@ -837,13 +905,10 @@ class LocalBaserowListRowsUserServiceType(
             "results": rows[:-1] if has_next_page else rows,
             "has_next_page": has_next_page,
             "baserow_table_model": table.get_model(),
+            "public_formula_fields": public_formula_fields,
         }
 
-    def dispatch_transform(
-        self,
-        dispatch_data: Dict[str, Any],
-        **kwargs,
-    ) -> Any:
+    def dispatch_transform(self, dispatch_data: Dict[str, Any]) -> Any:
         """
         Given the rows found in `dispatch_data`, serializes them.
 
@@ -851,10 +916,12 @@ class LocalBaserowListRowsUserServiceType(
         :return: The list of rows.
         """
 
+        field_ids = self.extract_field_ids(dispatch_data.get("public_formula_fields"))
         serializer = get_row_serializer_class(
             dispatch_data["baserow_table_model"],
             RowSerializer,
             is_response=True,
+            field_ids=field_ids,
         )
 
         return {
@@ -1000,6 +1067,33 @@ class LocalBaserowGetRowUserServiceType(
 
         return self.import_path(path, id_mapping)
 
+    def extract_properties(self, path: List[str], **kwargs) -> List[str]:
+        """
+        Given a list of formula path parts, call the ServiceType's
+        extract_properties() method and return a set of unique field names.
+
+        E.g. given that path is: ['field_5191', 'prop1', '*', 'value'], returns the
+        following: ['field_5191']
+
+        Returns an empty list if the field name isn't found.
+        """
+
+        # If the path length is greater or equal to one, then we have
+        # the current data source formula format of field and may be something else.
+        if len(path) >= 1:
+            field_dbname, *rest = path
+        else:
+            # In any other scenario, we have a formula that is not a format we
+            # can currently parse it properly, so we return an empty list.
+            return []
+
+        # If the field_dbname doesn't start with "field_" or isn't "id" it probably
+        # means that the formula is invalid.
+        if not str(field_dbname).startswith("field_") and field_dbname != "id":
+            return []
+
+        return [field_dbname]
+
     def serialize_property(
         self,
         service: ServiceSubClass,
@@ -1051,10 +1145,7 @@ class LocalBaserowGetRowUserServiceType(
             **kwargs,
         )
 
-    def dispatch_transform(
-        self,
-        dispatch_data: Dict[str, Any],
-    ) -> Any:
+    def dispatch_transform(self, dispatch_data: Dict[str, Any]) -> Any:
         """
         Responsible for serializing the `dispatch_data` row.
 
@@ -1062,8 +1153,12 @@ class LocalBaserowGetRowUserServiceType(
         :return:
         """
 
+        field_ids = self.extract_field_ids(dispatch_data.get("public_formula_fields"))
         serializer = get_row_serializer_class(
-            dispatch_data["baserow_table_model"], RowSerializer, is_response=True
+            dispatch_data["baserow_table_model"],
+            RowSerializer,
+            is_response=True,
+            field_ids=field_ids,
         )
         serialized_row = serializer(dispatch_data["data"]).data
 
@@ -1106,17 +1201,37 @@ class LocalBaserowGetRowUserServiceType(
         model = table.get_model()
         queryset = self.build_queryset(service, table, dispatch_context, model)
 
+        public_formula_fields = None
+        if dispatch_context.public_formula_fields is not None:
+            all_field_names = dispatch_context.public_formula_fields.get("all", {}).get(
+                service.id, None
+            )
+            if all_field_names is not None:
+                # Ensure that only the public_formula_fields explicitly used
+                # in the page are fetched from the database.
+                queryset = queryset.only(*all_field_names)
+
+            public_formula_fields = all_field_names
+
         # If no row id is provided return the first item from the queryset
         # This is useful when we want to use filters to specifically choose one
         # row by setting the right condition
         if "row_id" not in resolved_values:
             if not queryset.exists():
                 raise DoesNotExist()
-            return {"data": queryset.first(), "baserow_table_model": model}
+            return {
+                "data": queryset.first(),
+                "baserow_table_model": model,
+                "public_formula_fields": public_formula_fields,
+            }
 
         try:
             row = queryset.get(pk=resolved_values["row_id"])
-            return {"data": row, "baserow_table_model": model}
+            return {
+                "data": row,
+                "baserow_table_model": model,
+                "public_formula_fields": public_formula_fields,
+            }
         except model.DoesNotExist:
             raise DoesNotExist()
 
@@ -1358,10 +1473,7 @@ class LocalBaserowUpsertRowServiceType(
     def enhance_queryset(self, queryset):
         return super().enhance_queryset(queryset).prefetch_related("field_mappings")
 
-    def dispatch_transform(
-        self,
-        dispatch_data: Dict[str, Any],
-    ) -> Any:
+    def dispatch_transform(self, dispatch_data: Dict[str, Any]) -> Any:
         """
         Responsible for serializing the `dispatch_data` row.
 
@@ -1370,7 +1482,9 @@ class LocalBaserowUpsertRowServiceType(
         """
 
         serializer = get_row_serializer_class(
-            dispatch_data["baserow_table_model"], RowSerializer, is_response=True
+            dispatch_data["baserow_table_model"],
+            RowSerializer,
+            is_response=True,
         )
         serialized_row = serializer(dispatch_data["data"]).data
 
@@ -1604,10 +1718,7 @@ class LocalBaserowDeleteRowServiceType(
         resolved_values = super().resolve_service_formulas(service, dispatch_context)
         return self.resolve_row_id(resolved_values, service, dispatch_context)
 
-    def dispatch_transform(
-        self,
-        dispatch_data: Dict[str, Any],
-    ) -> Response:
+    def dispatch_transform(self, dispatch_data: Dict[str, Any]) -> Response:
         """
         The delete row action's `dispatch_data` will contain an empty
         `data` dictionary. When we get to this method and wish to transform

@@ -1,5 +1,5 @@
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.http import HttpRequest
 
@@ -400,7 +400,9 @@ def test_dispatch_data_source(data_fixture):
         row_id="2",
     )
 
-    dispatch_context = BuilderDispatchContext(HttpRequest(), page)
+    dispatch_context = BuilderDispatchContext(
+        HttpRequest(), page, only_expose_public_formula_fields=False
+    )
     result = DataSourceService().dispatch_data_source(
         user, data_source, dispatch_context
     )
@@ -460,7 +462,9 @@ def test_dispatch_page_data_sources(data_fixture):
         row_id="b",
     )
 
-    dispatch_context = BuilderDispatchContext(HttpRequest(), page)
+    dispatch_context = BuilderDispatchContext(
+        HttpRequest(), page, only_expose_public_formula_fields=False
+    )
     result = DataSourceService().dispatch_page_data_sources(
         user, page, dispatch_context
     )
@@ -512,6 +516,8 @@ def test_dispatch_data_source_permission_denied(data_fixture, stub_check_permiss
 
     formula_context = MagicMock()
     formula_context.cache = {}
+    type(formula_context.request).user = PropertyMock(return_value=user)
+    type(formula_context).page = PropertyMock(return_value=page)
 
     with stub_check_permissions(raise_permission_denied=True), pytest.raises(
         PermissionException

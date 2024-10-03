@@ -1,5 +1,7 @@
-from typing import Any, Dict, Generator, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type
+from zipfile import ZipFile
 
+from django.core.files.storage import Storage
 from django.db import IntegrityError
 from django.db.models import Q, QuerySet
 from django.utils.translation import gettext_lazy as _
@@ -33,11 +35,15 @@ from baserow.contrib.builder.elements.registries import (
     element_type_registry,
 )
 from baserow.contrib.builder.elements.signals import elements_moved
-from baserow.contrib.builder.elements.types import CollectionElementSubClass
+from baserow.contrib.builder.elements.types import (
+    CollectionElementSubClass,
+    ElementSubClass,
+)
+from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.types import ElementDict
-from baserow.core.registry import Instance
 from baserow.core.services.dispatch_context import DispatchContext
+from baserow.core.utils import merge_dicts_no_duplicates
 
 
 class ContainerElementTypeMixin:
@@ -314,40 +320,20 @@ class CollectionElementTypeMixin:
             **kwargs,
         )
 
-    def import_serialized(
-        self,
-        parent: Any,
-        serialized_values: Dict[str, Any],
-        id_mapping: Dict[str, Any],
-        files_zip=None,
-        storage=None,
-        cache=None,
-        **kwargs,
-    ):
+    def import_context_addition(self, instance: CollectionElement) -> Dict[str, int]:
         """
-        Here we add the data_source_id to the import process to be able to resolve
-        current_record formulas migration.
+        Given a collection element, adds the data_source_id to the import context.
+
+        The data_source_id is not store in some formulas (current_record ones) so
+        we need the generate this import context for all formulas of this element.
         """
 
-        actual_data_source_id = None
-        if (
-            serialized_values.get("data_source_id", None)
-            and "builder_data_sources" in id_mapping
-        ):
-            actual_data_source_id = id_mapping["builder_data_sources"][
-                serialized_values["data_source_id"]
-            ]
+        results = {"data_source_id": instance.data_source_id}
 
-        return super().import_serialized(
-            parent,
-            serialized_values,
-            id_mapping,
-            files_zip=files_zip,
-            storage=storage,
-            cache=cache,
-            data_source_id=actual_data_source_id,
-            **kwargs,
-        )
+        if instance.schema_property is not None:
+            results["schema_property"] = instance.schema_property
+
+        return results
 
     def create_instance_from_serialized(
         self,
@@ -409,20 +395,6 @@ class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
 
     class SerializedDict(CollectionElementTypeMixin.SerializedDict):
         fields: List[Dict]
-
-    def formula_generator(
-        self, element: "CollectionElementWithFieldsTypeMixin"
-    ) -> Generator[str | Instance, str, None]:
-        """
-        Generator that iterates over formula fields for LinkCollectionFieldType.
-
-        Some formula fields are in the config JSON field, e.g. page_parameters.
-        """
-
-        yield from super().formula_generator(element)
-
-        for collection_field in element.fields.all():
-            yield from collection_field.get_type().formula_generator(collection_field)
 
     def serialize_property(
         self,
@@ -546,7 +518,7 @@ class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
         )
 
         import_field_context = ElementHandler().get_import_context_addition(
-            instance.id, id_mapping, cache.get("imported_element_map")
+            instance.id, cache.get("imported_element_map")
         )
 
         fields = [
@@ -566,6 +538,85 @@ class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
         instance.fields.add(*created_fields)
 
         return instance
+
+    def import_serialized(
+        self,
+        page: Any,
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict[str, Dict[int, int]],
+        files_zip: ZipFile | None = None,
+        storage: Storage | None = None,
+        cache: Dict[str, Any] | None = None,
+        **kwargs,
+    ) -> ElementSubClass:
+        """
+        This method is overridden to ensure that the import_context contains
+        the data sources and correctly imports formulas.
+        """
+
+        # Import the element itself
+        created_instance = super().import_serialized(
+            page,
+            serialized_values,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            **kwargs,
+        )
+
+        # For collection fields, import_context should include the current element
+        import_context = ElementHandler().get_import_context_addition(
+            created_instance.id,
+            element_map=cache.get("imported_element_map", None) if cache else None,
+        )
+
+        # Import the collection field formulas
+        updated_models = []
+        for collection_field in created_instance.fields.all():
+            collection_field.get_type().import_formulas(
+                collection_field,
+                id_mapping,
+                import_formula,
+                **(kwargs | import_context),
+            )
+            updated_models.append(collection_field)
+
+        [m.save() for m in updated_models]
+
+        return created_instance
+
+    def extract_formula_properties(
+        self,
+        instance: CollectionElementSubClass,
+        element_map: Dict[str, Element],
+        **kwargs,
+    ) -> Dict[int, List[str]]:
+        """
+        Extract all formula field names of the collection element instance.
+
+        Returns a dict where keys are the Service ID and values are a list of
+        field names, e.g.: {164: ['field_5440', 'field_5441', 'field_5439']}
+        """
+
+        from baserow.contrib.builder.elements.handler import ElementHandler
+
+        # First get from the current element
+        result = super().extract_formula_properties(instance, element_map, **kwargs)
+
+        # then extract the properties used in the collection field formulas
+        formula_context = ElementHandler().get_import_context_addition(
+            instance.id, element_map
+        )
+        for collection_field in instance.fields.all():
+            result = merge_dicts_no_duplicates(
+                result,
+                collection_field.get_type().extract_formula_properties(
+                    collection_field, **formula_context
+                ),
+            )
+
+        return result
 
 
 class FormElementTypeMixin:

@@ -1,4 +1,4 @@
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
 
 import pytest
 
@@ -9,6 +9,7 @@ from baserow.contrib.integrations.local_baserow.service_types import (
     LocalBaserowListRowsUserServiceType,
     LocalBaserowServiceType,
     LocalBaserowTableServiceType,
+    LocalBaserowViewServiceType,
 )
 from baserow.core.services.exceptions import ServiceImproperlyConfigured
 from baserow.test_utils.helpers import setup_interesting_test_table
@@ -866,3 +867,43 @@ def test_local_baserow_table_service_type_get_context_data_schema(data_fixture):
             },
         },
     }
+
+
+@pytest.mark.parametrize(
+    "field_names,expected",
+    [
+        (
+            None,
+            None,
+        ),
+        (
+            [],
+            [],
+        ),
+        (
+            [""],
+            [],
+        ),
+        (
+            ["", "field_123"],
+            [123],
+        ),
+        (
+            ["", "field_123", "foo", "field_456"],
+            [123, 456],
+        ),
+    ],
+)
+def test_base_service_type_extract_field_ids(field_names, expected):
+    """
+    Test the base implementation of LocalBaserowViewServiceType::extract_field_ids().
+
+    Given the input field_names, ensure the expected list of field IDs are returned.
+    """
+
+    service_type_cls = LocalBaserowViewServiceType
+    service_type_cls.model_class = MagicMock()
+
+    result = service_type_cls().extract_field_ids(field_names)
+
+    assert result == expected

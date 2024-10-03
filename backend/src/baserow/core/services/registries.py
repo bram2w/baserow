@@ -288,6 +288,9 @@ class ServiceType(
 
         return created_instance
 
+    def extract_properties(self, path: List[str], **kwargs) -> List[str]:
+        return []
+
 
 ServiceTypeSubClass = TypeVar("ServiceTypeSubClass", bound=ServiceType)
 

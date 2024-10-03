@@ -1,6 +1,7 @@
 import _ from 'lodash'
 import Vue from 'vue'
 import DataSourceService from '@baserow/modules/builder/services/dataSource'
+import PublishedBuilderService from '@baserow/modules/builder/services/publishedBuilder'
 
 const state = {}
 
@@ -40,10 +41,19 @@ const actions = {
   /**
    * Fetch the content for every data sources of the given page.
    */
-  async fetchPageDataSourceContent({ commit }, { page, data: queryData }) {
+  async fetchPageDataSourceContent(
+    { commit },
+    { page, data: queryData, mode }
+  ) {
     commit('SET_LOADING', { page, value: true })
+
+    let service = DataSourceService
+    if (['preview', 'public'].includes(mode)) {
+      service = PublishedBuilderService
+    }
+
     try {
-      const { data } = await DataSourceService(this.app.$client).dispatchAll(
+      const { data } = await service(this.app.$client).dispatchAll(
         page.id,
         queryData
       )
@@ -65,12 +75,17 @@ const actions = {
 
   async fetchPageDataSourceContentById(
     { commit },
-    { page, dataSourceId, dispatchContext, replace = false }
+    { page, dataSourceId, dispatchContext, mode, replace = false }
   ) {
     commit('SET_LOADING', { page, value: true })
 
+    let service = DataSourceService
+    if (['preview', 'public'].includes(mode)) {
+      service = PublishedBuilderService
+    }
+
     try {
-      const { data } = await DataSourceService(this.app.$client).dispatch(
+      const { data } = await service(this.app.$client).dispatch(
         dataSourceId,
         dispatchContext,
         { range: null }
@@ -91,12 +106,16 @@ const actions = {
     }
   },
 
-  debouncedFetchPageDataSourceContent({ dispatch }, { page, data: queryData }) {
+  debouncedFetchPageDataSourceContent(
+    { dispatch },
+    { page, data: queryData, mode }
+  ) {
     clearTimeout(pageFetchTimeout)
     pageFetchTimeout = setTimeout(() => {
       dispatch('fetchPageDataSourceContent', {
         page,
         data: queryData,
+        mode,
       })
     }, 500)
   },

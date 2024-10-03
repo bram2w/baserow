@@ -145,6 +145,7 @@ export class RefreshDataSourceWorkflowActionType extends WorkflowActionType {
         page: applicationContext.page,
         dataSourceId: workflowAction.data_source_id,
         dispatchContext,
+        mode: applicationContext.mode,
         replace: true,
       }
     )

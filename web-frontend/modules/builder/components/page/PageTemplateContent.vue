@@ -90,6 +90,7 @@ export default {
             {
               page: this.page,
               data: newDispatchContext,
+              mode: this.mode,
             }
           )
         }

@@ -255,7 +255,50 @@ class DataSourceService:
             workspace=data_sources[0].page.builder.workspace,
         )
 
-        return self.handler.dispatch_data_sources(data_sources, dispatch_context)
+        results = self.handler.dispatch_data_sources(data_sources, dispatch_context)
+
+        if dispatch_context.public_formula_fields is None:
+            return results
+
+        # We filter the fields before returning the result
+        for data_source in data_sources:
+            if isinstance(results[data_source.id], Exception):
+                continue
+
+            field_names = dispatch_context.public_formula_fields.get(
+                "external", {}
+            ).get(data_source.service.id, [])
+            if data_source.service.get_type().returns_list:
+                new_result = []
+                for row in results[data_source.id]["results"]:
+                    new_row = {}
+                    for key, value in row.items():
+                        if key in ["id", "order"]:
+                            # Ensure keys like "id" and "order" are included
+                            # in new_row
+                            new_row[key] = value
+                        elif key in field_names:
+                            # Only include the field if it is in the
+                            # external/safe field_names list
+                            new_row[key] = value
+                    new_result.append(new_row)
+                results[data_source.id] = {
+                    **results[data_source.id],
+                    "results": new_result,
+                }
+            else:
+                new_result = {}
+                for key, value in results[data_source.id].items():
+                    if key in ["id", "order"]:
+                        # Ensure keys like "id" and "order" are included in new_row
+                        new_result[key] = value
+                    elif key in field_names:
+                        # Only include the field if it is in the external/safe
+                        # field_names list
+                        new_result[key] = value
+                results[data_source.id] = new_result
+
+        return results
 
     def dispatch_page_data_sources(
         self,
