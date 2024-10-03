@@ -372,7 +372,7 @@ class RepeatElementType(
             **kwargs,
         )
 
-    def import_context_addition(self, instance, id_mapping):
+    def import_context_addition(self, instance):
         return {"data_source_id": instance.data_source_id}
 
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
@@ -488,7 +488,7 @@ class RecordSelectorElementType(
             "option_name_suffix",
         ]
 
-    def import_context_addition(self, instance, id_mapping):
+    def import_context_addition(self, instance):
         return {"data_source_id": instance.data_source_id}
 
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:

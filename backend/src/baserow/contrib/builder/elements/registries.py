@@ -9,13 +9,13 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from baserow.contrib.builder.formula_importer import import_formula
+from baserow.contrib.builder.mixins import BuilderInstanceWithFormulaMixin
 from baserow.contrib.database.db.functions import RandomUUID
 from baserow.core.registry import (
     CustomFieldsInstanceMixin,
     CustomFieldsRegistryMixin,
     EasyImportExportMixin,
     Instance,
-    InstanceWithFormulaMixin,
     ModelInstanceMixin,
     ModelRegistryMixin,
     Registry,
@@ -33,7 +33,7 @@ EXISTING_USER_SOURCE_ROLES = "_existing_user_source_roles"
 
 
 class ElementType(
-    InstanceWithFormulaMixin,
+    BuilderInstanceWithFormulaMixin,
     EasyImportExportMixin[ElementSubClass],
     CustomFieldsInstanceMixin,
     ModelInstanceMixin[ElementSubClass],
@@ -112,16 +112,13 @@ class ElementType(
         :param instance: The to be deleted element instance.
         """
 
-    def import_context_addition(
-        self, instance: ElementSubClass, id_mapping
-    ) -> Dict[str, Any]:
+    def import_context_addition(self, instance: ElementSubClass) -> Dict[str, Any]:
         """
         This hook allow to specify extra context data when importing objects related
         to this one like child elements, collection fields or workflow actions.
         This extra context is then used as import context for these objects.
 
         :param instance: The instance we want the context for.
-        :param id_mapping: The import ID mapping object.
         :return: An object containing the extra context for the import process.
         """
 
@@ -153,7 +150,6 @@ class ElementType(
             ]
             import_context = ElementHandler().get_import_context_addition(
                 imported_parent_element_id,
-                id_mapping,
                 element_map=cache.get("imported_element_map", None),
             )
 
@@ -180,6 +176,7 @@ class ElementType(
             **(kwargs | import_context),
         )
 
+        # Update formulas of the current element
         updated_models = self.import_formulas(
             created_instance, id_mapping, import_formula, **(kwargs | import_context)
         )
@@ -309,6 +306,30 @@ class ElementType(
 
         return value
 
+    def extract_formula_properties(
+        self,
+        instance: Element,
+        element_map: Dict[str, Element],
+        **kwargs,
+    ) -> Dict[int, List[str]]:
+        """
+        Extract all formula field names of the element instance.
+
+        Returns a dict where keys are the Service ID and values are a list of
+        field names, e.g.: {164: ['field_5440', 'field_5441', 'field_5439']}
+        """
+
+        from baserow.contrib.builder.elements.handler import ElementHandler
+
+        # We get the context from the parent elements
+        formula_context = ElementHandler().get_import_context_addition(
+            instance.parent_element_id, element_map
+        )
+
+        return super().extract_formula_properties(
+            instance, **(kwargs | formula_context)
+        )
+
     @abstractmethod
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
         """
@@ -339,7 +360,7 @@ element_type_registry = ElementTypeRegistry()
 
 
 class CollectionFieldType(
-    InstanceWithFormulaMixin,
+    BuilderInstanceWithFormulaMixin,
     CustomFieldsInstanceMixin,
     Instance,
     ABC,

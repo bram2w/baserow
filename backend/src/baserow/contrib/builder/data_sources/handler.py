@@ -366,6 +366,7 @@ class DataSourceHandler:
             service_dispatch = self.service_handler.dispatch_service(
                 data_source.service.specific, dispatch_context
             )
+
             # Cache the dispatch in the formula cache if we have formulas that need
             # it later
             dispatch_context.cache["data_source_contents"][

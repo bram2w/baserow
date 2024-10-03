@@ -1,10 +1,14 @@
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.http import HttpRequest
+from django.shortcuts import reverse
+from django.test import override_settings
 
 import pytest
 
 from baserow.contrib.builder.data_sources.builder_dispatch_context import (
+    FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS,
     BuilderDispatchContext,
 )
 from baserow.contrib.builder.data_sources.exceptions import DataSourceDoesNotExist
@@ -164,7 +168,9 @@ def test_dispatch_data_source(data_fixture):
         row_id="2",
     )
 
-    dispatch_context = BuilderDispatchContext(HttpRequest(), page)
+    dispatch_context = BuilderDispatchContext(
+        HttpRequest(), page, only_expose_public_formula_fields=False
+    )
     result = DataSourceHandler().dispatch_data_source(data_source, dispatch_context)
 
     assert result == {
@@ -222,7 +228,9 @@ def test_dispatch_data_sources(data_fixture):
         row_id="b",
     )
 
-    dispatch_context = BuilderDispatchContext(HttpRequest(), page)
+    dispatch_context = BuilderDispatchContext(
+        HttpRequest(), page, only_expose_public_formula_fields=False
+    )
     result = DataSourceHandler().dispatch_data_sources(
         [data_source, data_source2, data_source3], dispatch_context
     )
@@ -385,3 +393,100 @@ def test_recalculate_full_orders(data_fixture):
 
     assert data_sources[1].id == data_sourceB.id
     assert data_sources[1].order == Decimal("2.00300000000000000000")
+
+
+@override_settings(FEATURE_FLAGS=[FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS])
+@pytest.mark.django_db
+@patch(
+    "baserow.contrib.builder.data_sources.builder_dispatch_context.get_formula_field_names"
+)
+def test_dispatch_data_source_returns_formula_field_names(
+    mock_get_formula_field_names, data_fixture, api_request_factory
+):
+    """
+    Integration test to ensure get_formula_field_names() is called without errors.
+    """
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Food", "text"),
+            ("Spiciness", "number"),
+        ],
+        rows=[
+            ["Paneer Tikka", 5],
+            ["Gobi Manchurian", 8],
+        ],
+    )
+    builder = data_fixture.create_builder_application(user=user, workspace=workspace)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        table=table,
+    )
+    data_fixture.create_builder_table_element(
+        user=user,
+        page=page,
+        data_source=data_source,
+        fields=[
+            {
+                "name": "FieldA",
+                "type": "text",
+                "config": {
+                    "value": f"get('data_source.{data_source.id}.field_{fields[0].id}')"
+                },
+            },
+            {
+                "name": "FieldB",
+                "type": "text",
+                "config": {
+                    "value": f"get('data_source.{data_source.id}.field_{fields[1].id}')"
+                },
+            },
+        ],
+    )
+
+    user_source = data_fixture.create_user_source_with_first_type(application=builder)
+    user_source_user = data_fixture.create_user_source_user(
+        user_source=user_source,
+    )
+
+    token = user_source_user.get_refresh_token().access_token
+    fake_request = api_request_factory.post(
+        reverse("api:builder:domains:public_dispatch_all", kwargs={"page_id": page.id}),
+        {},
+        HTTP_USERSOURCEAUTHORIZATION=f"JWT {token}",
+    )
+    fake_request.user = user_source_user
+    dispatch_context = BuilderDispatchContext(fake_request, page)
+
+    mock_get_formula_field_names.return_value = {
+        "external": {data_source.service.id: [f"field_{field.id}" for field in fields]}
+    }
+
+    result = DataSourceHandler().dispatch_data_source(data_source, dispatch_context)
+
+    assert result == {
+        "has_next_page": False,
+        "results": [
+            {
+                "id": 1,
+                "order": "1.00000000000000000000",
+                f"field_{fields[0].id}": "Paneer Tikka",
+                f"field_{fields[1].id}": "5",
+            },
+            {
+                "id": 2,
+                "order": "2.00000000000000000000",
+                f"field_{fields[0].id}": "Gobi Manchurian",
+                f"field_{fields[1].id}": "8",
+            },
+        ],
+    }

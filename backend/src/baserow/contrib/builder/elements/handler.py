@@ -591,7 +591,6 @@ class ElementHandler:
     def get_import_context_addition(
         self,
         element_id: int,
-        id_mapping: Dict[str, Dict[int, int]],
         element_map: Dict[int, Element] = None,
     ) -> Dict[str, Any]:
         """
@@ -601,7 +600,6 @@ class ElementHandler:
         actions.
 
         :param element_id: The element_id to compute the context for.
-        :param id_mapping: The ID mapping dict used by import process.
         :param element_map: An optional map of already loaded elements to improve
           performances.
         :return: An object that can be used as import context.
@@ -620,9 +618,9 @@ class ElementHandler:
             current_element = self.get_element(element_id)
 
         return current_element.get_type().import_context_addition(
-            current_element, id_mapping
+            current_element
         ) | self.get_import_context_addition(
-            current_element.parent_element_id, id_mapping, element_map
+            current_element.parent_element_id, element_map
         )
 
     def import_element(

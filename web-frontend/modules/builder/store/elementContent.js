@@ -1,4 +1,5 @@
 import DataSourceService from '@baserow/modules/builder/services/dataSource'
+import PublishedBuilderService from '@baserow/modules/builder/services/publishedBuilder'
 import { rangeDiff } from '@baserow/modules/core/utils/range'
 
 const state = {}
@@ -63,7 +64,15 @@ const actions = {
    */
   async fetchElementContent(
     { commit, getters },
-    { page, element, dataSource, range, data: dispatchContext, replace = false }
+    {
+      page,
+      element,
+      dataSource,
+      range,
+      mode,
+      data: dispatchContext,
+      replace = false,
+    }
   ) {
     /**
      * If `dataSource` is `null`, this means that we are trying to fetch the content
@@ -186,7 +195,12 @@ const actions = {
           rangeToFetch = [rangeToFetch[0], rangeToFetch[1] - rangeToFetch[0]]
         }
 
-        const { data } = await DataSourceService(this.app.$client).dispatch(
+        let service = DataSourceService
+        if (['preview', 'public'].includes(mode)) {
+          service = PublishedBuilderService
+        }
+
+        const { data } = await service(this.app.$client).dispatch(
           dataSource.id,
           dispatchContext,
           { range: rangeToFetch }

@@ -165,6 +165,7 @@ export default {
           {
             page: this.page,
             data: this.dispatchContext,
+            mode: this.mode,
           }
         )
       },
@@ -181,6 +182,7 @@ export default {
             {
               page: this.page,
               data: newDispatchContext,
+              mode: this.mode,
             }
           )
         }

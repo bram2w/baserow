@@ -115,6 +115,7 @@ export default {
           dataSource: this.dataSource,
           data: this.dispatchContext,
           range,
+          mode: this.applicationContext.mode,
           replace,
         })
         this.currentOffset += this.element.items_per_page

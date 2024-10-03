@@ -1,8 +1,9 @@
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from django.contrib.auth.models import AbstractUser
 
 from baserow.contrib.builder.formula_importer import import_formula
+from baserow.contrib.builder.mixins import BuilderInstanceWithFormulaMixin
 from baserow.contrib.builder.registries import PublicCustomFieldsInstanceMixin
 from baserow.contrib.builder.workflow_actions.models import BuilderWorkflowAction
 from baserow.core.registry import (
@@ -13,7 +14,9 @@ from baserow.core.registry import (
 from baserow.core.workflow_actions.registries import WorkflowActionType
 
 
-class BuilderWorkflowActionType(WorkflowActionType, PublicCustomFieldsInstanceMixin):
+class BuilderWorkflowActionType(
+    WorkflowActionType, PublicCustomFieldsInstanceMixin, BuilderInstanceWithFormulaMixin
+):
     allowed_fields = ["order", "page", "page_id", "element", "element_id", "event"]
 
     parent_property_name = "page"
@@ -88,7 +91,7 @@ class BuilderWorkflowActionType(WorkflowActionType, PublicCustomFieldsInstanceMi
         if element_id:
             imported_element_id = id_mapping["builder_page_elements"][element_id]
             import_context = ElementHandler().get_import_context_addition(
-                imported_element_id, id_mapping, cache.get("imported_element_map", None)
+                imported_element_id, cache.get("imported_element_map", None)
             )
 
         created_instance = super().import_serialized(
@@ -108,6 +111,29 @@ class BuilderWorkflowActionType(WorkflowActionType, PublicCustomFieldsInstanceMi
         [m.save() for m in updated_models]
 
         return created_instance
+
+    def extract_formula_properties(
+        self,
+        instance: BuilderWorkflowAction,
+        element_map: Dict[str, BuilderWorkflowAction],
+        **kwargs,
+    ) -> Dict[int, List[str]]:
+        """
+        Extract all formula field names of the workflow action instance.
+
+        Returns a dict where keys are the Service ID and values are a list of
+        field names, e.g.: {164: ['field_5440', 'field_5441', 'field_5439']}
+        """
+
+        from baserow.contrib.builder.elements.handler import ElementHandler
+
+        formula_context = ElementHandler().get_import_context_addition(
+            instance.element_id, element_map
+        )
+
+        return super().extract_formula_properties(
+            instance, **(kwargs | formula_context)
+        )
 
 
 class BuilderWorkflowActionTypeRegistry(

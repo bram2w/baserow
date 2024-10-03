@@ -40,6 +40,7 @@ export class DataSourceDataProviderType extends DataProviderType {
           applicationContext
         ),
         dataSources,
+        mode: applicationContext.mode,
       }
     )
   }
@@ -317,6 +318,7 @@ export class CurrentRecordDataProviderType extends DataProviderType {
                   dataSource,
                   data: dispatchContext,
                   range: [0, element.items_per_page],
+                  mode: applicationContext.mode,
                 }
               )
             } catch (e) {

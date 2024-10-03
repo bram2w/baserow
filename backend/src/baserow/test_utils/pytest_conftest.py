@@ -6,7 +6,7 @@ import threading
 from contextlib import contextmanager
 from functools import partial
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from unittest.mock import patch
 
 from django.conf import settings as django_settings
@@ -769,6 +769,10 @@ class FakeDispatchContext(DispatchContext):
             return "999"
 
         return get_value_at_path(self.context, key)
+
+    @property
+    def public_formula_fields(self) -> Optional[Dict[str, Dict[int, List[str]]]]:
+        return {}
 
 
 @pytest.fixture()

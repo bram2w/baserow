@@ -243,6 +243,7 @@ def test_local_baserow_upsert_row_service_dispatch_data_with_multiple_formulas(
     }
 
     dispatch_context = FakeDispatchContext(context=formula_context)
+
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
     service_type.dispatch_data(service, dispatch_values, dispatch_context)
 
@@ -351,7 +352,6 @@ def test_local_baserow_upsert_row_service_dispatch_transform(
     service.field_mappings.create(field=ingredient, value='get("page_parameter.id")')
 
     dispatch_context = FakeDispatchContext(context={"page_parameter": {"id": 2}})
-
     dispatch_values = service_type.resolve_service_formulas(service, dispatch_context)
     dispatch_data = service_type.dispatch_data(
         service, dispatch_values, dispatch_context
