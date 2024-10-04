@@ -1676,6 +1676,11 @@ class FieldType(
 
         return False
 
+    def can_represent_files(self, field):
+        """Indicates whether the field can be used to represent a file."""
+
+        return False
+
     def get_permission_error_when_user_changes_field_to_depend_on_forbidden_field(
         self, user: AbstractUser, changed_field: Field, forbidden_field: Field
     ) -> Exception:

@@ -868,6 +868,7 @@ class BaserowFormulaSingleFileType(BaserowJSONBObjectBaseType):
     can_order_by_in_array = False
     baserow_field_type = None
     item_is_in_nested_value_object_when_in_array = False
+    can_represent_files = True
 
     def is_searchable(self, field):
         return True
@@ -1287,6 +1288,9 @@ class BaserowFormulaArrayType(
     @classmethod
     def formula_array_type_as_str(cls, sub_type):
         return f"array({sub_type})"
+
+    def can_represent_files(self, field):
+        return self.sub_type.can_represent_files(field)
 
 
 class BaserowFormulaSingleSelectType(BaserowJSONBObjectBaseType):
