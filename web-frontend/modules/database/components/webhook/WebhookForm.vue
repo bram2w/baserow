@@ -136,9 +136,14 @@
             class="webhook__type-dropdown-container"
           >
             <Dropdown
-              :value="getEventFields(webhookEvent)"
+              :value="
+                values.events.includes(webhookEvent.type)
+                  ? getEventFields(webhookEvent)
+                  : []
+              "
               :placeholder="webhookEvent.getRelatedFieldsPlaceholder()"
               :multiple="true"
+              :disabled="!values.events.includes(webhookEvent.type)"
               class="dropdown--tiny webhook__type-dropdown"
               @input="setEventFields(webhookEvent, $event)"
             >
