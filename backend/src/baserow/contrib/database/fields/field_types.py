@@ -3190,6 +3190,9 @@ class FileFieldType(FieldType):
             ],
         )
 
+    def can_represent_files(self, field):
+        return True
+
     def _extract_file_names(self, value):
         # Validates the provided object and extract the names from it. We need the name
         # to validate if the file actually exists and to get the 'real' properties
@@ -4943,6 +4946,9 @@ class FormulaFieldType(
 
     def can_represent_date(self, field: "Field") -> bool:
         return self.to_baserow_formula_type(field.specific).can_represent_date
+
+    def can_represent_files(self, field):
+        return self.to_baserow_formula_type(field.specific).can_represent_files
 
     def get_permission_error_when_user_changes_field_to_depend_on_forbidden_field(
         self, user: AbstractUser, changed_field: Field, forbidden_field: Field

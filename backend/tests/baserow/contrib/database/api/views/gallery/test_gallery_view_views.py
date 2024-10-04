@@ -721,10 +721,7 @@ def test_create_gallery_view_invalid_card_card_cover_image_field(
     )
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
-    assert (
-        response_json["detail"]["card_cover_image_field"][0]["code"] == "does_not_exist"
-    )
+    assert response_json["error"] == "ERROR_INCOMPATIBLE_FIELD"
 
     response = api_client.post(
         reverse("api:database:views:list", kwargs={"table_id": table.id}),
@@ -1378,3 +1375,49 @@ def test_list_rows_with_query_param_order(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json["error"] == "ERROR_ORDER_BY_FIELD_NOT_POSSIBLE"
+
+
+@pytest.mark.django_db
+def test_create_gallery_view_with_lookup_as_card_card_cover_image_field(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table_a, table_b, link = data_fixture.create_two_linked_tables(user=user)
+    file_field = data_fixture.create_file_field(table=table_b)
+    lookup_field = data_fixture.create_lookup_field(
+        name="lookup",
+        table=table_a,
+        through_field=link,
+        target_field=file_field,
+        through_field_name=link.name,
+        target_field_name=file_field.name,
+    )
+    formula_single_field = data_fixture.create_formula_field(
+        table=table_a,
+        formula="index(field('lookup'), 0)",
+    )
+
+    response = api_client.post(
+        reverse("api:database:views:list", kwargs={"table_id": table_a.id}),
+        {
+            "name": "Test 2",
+            "type": "gallery",
+            "card_cover_image_field": lookup_field.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    gallery_id = response.json()["id"]
+
+    response = api_client.patch(
+        reverse("api:database:views:item", kwargs={"view_id": gallery_id}),
+        {
+            "name": "Test 2",
+            "type": "gallery",
+            "card_cover_image_field": formula_single_field.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK

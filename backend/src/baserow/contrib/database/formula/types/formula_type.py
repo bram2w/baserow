@@ -243,6 +243,10 @@ class BaserowFormulaType(abc.ABC):
         return False
 
     @property
+    def can_represent_files(self) -> bool:
+        return False
+
+    @property
     def item_is_in_nested_value_object_when_in_array(self) -> bool:
         return True
 
