@@ -309,7 +309,7 @@ export default {
     canFetch() {
       // We want to fetch data only if the dropdown have been opened at least once.
       // It's not necessary otherwise
-      return this.openedOnce
+      return this.openedOnce && this.contentFetchEnabled
     },
     getErrorMessage() {
       return this.displayFormDataError ? this.$t('error.requiredField') : ''

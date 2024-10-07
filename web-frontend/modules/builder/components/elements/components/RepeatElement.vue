@@ -98,7 +98,7 @@
       <ABButton
         v-if="hasMorePage && children.length > 0"
         :style="getStyleOverride('button')"
-        :disabled="contentLoading"
+        :disabled="contentLoading || !contentFetchEnabled"
         :loading="contentLoading"
         @click="loadMore()"
       >

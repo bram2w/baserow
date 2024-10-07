@@ -9,6 +9,7 @@ export default {
       currentOffset: 0,
       errorNotified: false,
       resetTimeout: null,
+      contentFetchEnabled: true,
     }
   },
   computed: {
@@ -120,6 +121,9 @@ export default {
         })
         this.currentOffset += this.element.items_per_page
       } catch (error) {
+        // Handle the HTTP error if needed
+        this.onContentFetchError(error)
+
         // We need to only launch one toast error message per element,
         // not one per element fetch, or we can end up with many error
         // toasts per element sharing a datasource.
@@ -137,7 +141,17 @@ export default {
     },
     /** Overrides this if you want to prevent data fetching */
     canFetch() {
-      return true
+      return this.contentFetchEnabled
+    },
+
+    /** Override this if you want to handle content fetch errors */
+    onContentFetchError(error) {
+      // If the request failed without reaching the server, `error.response`
+      // will be `undefined`, so we need to check that before checking the
+      // HTTP status code
+      if (error.response && [400, 404].includes(error.response.status)) {
+        this.contentFetchEnabled = false
+      }
     },
   },
 }
