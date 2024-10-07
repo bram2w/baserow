@@ -1042,6 +1042,7 @@ class FormViewType(ViewType):
                             "id": condition.id,
                             "field": condition.field_id,
                             "type": condition.type,
+                            "group": condition.group_id,
                             "value": view_filter_type_registry.get(
                                 condition.type
                             ).get_export_serialized_value(condition.value, {}),
@@ -1093,6 +1094,7 @@ class FormViewType(ViewType):
                 id_mapping["database_form_view_field_options"] = {}
 
             condition_objects = []
+            condition_groups = {}
             for field_option in field_options:
                 field_option_copy = field_option.copy()
                 field_option_id = field_option_copy.pop("id")
@@ -1107,12 +1109,22 @@ class FormViewType(ViewType):
                     value = view_filter_type_registry.get(
                         condition["type"]
                     ).set_import_serialized_value(condition["value"], id_mapping)
+                    group = None
+                    if condition["group"] and not (
+                        group := condition_groups.get(condition["group"])
+                    ):
+                        group = FormViewFieldOptionsConditionGroup.objects.create(
+                            field_option=field_option_object
+                        )
+                        condition_groups[condition["group"]] = group
+
                     condition_objects.append(
                         FormViewFieldOptionsCondition(
                             field_option=field_option_object,
                             field_id=id_mapping["database_fields"][condition["field"]],
                             type=condition["type"],
                             value=value,
+                            group=group,
                         )
                     )
                 id_mapping["database_form_view_field_options"][
