@@ -1,4 +1,4 @@
-## Baserow is an open source no-code database tool and Airtable alternative.
+## Baserow is an open-source no-code database tool and an Airtable alternative.
 
 Create your own online database without technical experience. Our user-friendly no-code
 tool gives you the powers of a developer without leaving your browser.
@@ -26,7 +26,7 @@ docker run -v baserow_data:/baserow/data -p 80:80 -p 443:443 baserow/baserow:1.2
 
 **We're hiring remotely**! More information at https://baserow.io/jobs.
 
-Join our forum on https://community.baserow.io/. See
+Join our forum at https://community.baserow.io/. See
 [CONTRIBUTING.md](./CONTRIBUTING.md) on how to become a contributor.
 
 ## Installation
@@ -78,7 +78,7 @@ at [https://baserow.io/docs/development/development-environment](./docs/developm
 ## Plugin development
 
 Because of the modular architecture of Baserow it is possible to create plugins. Make
-your own fields, views, applications, pages or endpoints. We also have a plugin
+your own fields, views, applications, pages, or endpoints. We also have a plugin
 boilerplate to get you started right away. More information can be found in the
 [plugin introduction](./docs/plugins/introduction.md) and in the
 [plugin boilerplate docs](./docs/plugins/boilerplate.md).
