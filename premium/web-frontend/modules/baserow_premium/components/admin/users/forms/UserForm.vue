@@ -66,7 +66,7 @@
       <Checkbox v-model="values.is_staff" :disabled="loading"></Checkbox>
 
       <template #warning>
-        <span v-show="!values.is_active">
+        <span v-show="values.is_staff">
           {{ $t('userForm.warning.userStaff') }}
         </span>
       </template>
