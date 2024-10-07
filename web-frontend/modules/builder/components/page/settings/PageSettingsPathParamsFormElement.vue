@@ -41,7 +41,7 @@ export default {
     pathParams: {
       type: Array,
       required: false,
-      default: () => {},
+      default: () => [],
     },
     disabled: {
       type: Boolean,

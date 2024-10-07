@@ -115,7 +115,7 @@ export default {
     view: {
       type: Object,
       required: false,
-      default: () => {},
+      default: () => undefined,
     },
     isPublicView: {
       type: Boolean,

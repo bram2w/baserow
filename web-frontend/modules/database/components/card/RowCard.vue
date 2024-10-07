@@ -69,12 +69,12 @@ export default {
     decorationsByPlace: {
       type: Object,
       required: false,
-      default: () => {},
+      default: () => undefined,
     },
     row: {
       type: Object,
       required: false,
-      default: () => {},
+      default: () => undefined,
     },
     workspaceId: {
       type: Number,
