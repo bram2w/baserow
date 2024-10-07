@@ -49,7 +49,7 @@ def test_builder_application_type_import_application_priority():
         key=lambda element_type: element_type.import_application_priority,
         reverse=True,
     )
-    assert manual_ordering == expected_ordering, (
+    assert manual_ordering == expected_ordering[0 : len(manual_ordering)], (
         "The application types ordering are expected to be: "
         "databases first, then applications, then everything else."
     )

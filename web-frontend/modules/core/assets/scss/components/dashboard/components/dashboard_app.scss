@@ -1,0 +1,18 @@
+.dashboard-app__content {
+  margin: 24px 20px 24px 24px;
+  background-color: $white;
+  border: 1px solid $palette-neutral-200;
+  box-shadow: 0 1px 2px 0 rgba(7, 8, 16, 0.1);
+
+  @include rounded($rounded);
+}
+
+.dashboard-app__content-header {
+  margin: 56px 80px 0;
+}
+
+.dashboard-app__title {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 32px;
+}
