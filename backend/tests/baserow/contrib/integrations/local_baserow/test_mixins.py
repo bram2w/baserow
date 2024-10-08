@@ -288,6 +288,7 @@ def test_local_baserow_table_service_searchable_mixin_get_queryset(
 
     # Adhoc search queries extend the service search query.
     dispatch_context = Mock()
+    dispatch_context.searchable_fields.return_value = [field.db_column]
     dispatch_context.search_query.return_value = "Alexa"
 
     assert [

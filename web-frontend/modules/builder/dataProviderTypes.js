@@ -25,6 +25,16 @@ export class DataSourceDataProviderType extends DataProviderType {
     return this.app.i18n.t('dataProviderType.dataSource')
   }
 
+  getDataSourceDispatchContext(applicationContext) {
+    const { element } = applicationContext
+    // If the workflow action dispatch comes from a collection element, we
+    // need to pass it to the backend for validating adhoc refinements.
+    if (element) {
+      return { element: element.id }
+    }
+    return null
+  }
+
   async init(applicationContext) {
     const dataSources = this.app.store.getters['dataSource/getPageDataSources'](
       applicationContext.page

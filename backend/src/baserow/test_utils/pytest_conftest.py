@@ -32,6 +32,7 @@ from baserow.core.exceptions import PermissionDenied
 from baserow.core.jobs.registries import job_type_registry
 from baserow.core.permission_manager import CorePermissionManagerType
 from baserow.core.services.dispatch_context import DispatchContext
+from baserow.core.services.utils import ServiceAdhocRefinements
 from baserow.core.trash.trash_types import WorkspaceTrashableItemType
 from baserow.core.utils import get_value_at_path
 
@@ -749,6 +750,9 @@ class FakeDispatchContext(DispatchContext):
     def search_query(self):
         return None
 
+    def searchable_fields(self):
+        return []
+
     def filters(self):
         return None
 
@@ -773,6 +777,11 @@ class FakeDispatchContext(DispatchContext):
     @property
     def public_formula_fields(self) -> Optional[Dict[str, Dict[int, List[str]]]]:
         return {}
+
+    def validate_filter_search_sort_fields(
+        self, fields: List[str], refinement: ServiceAdhocRefinements
+    ):
+        pass
 
 
 @pytest.fixture()

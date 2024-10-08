@@ -129,6 +129,8 @@ class ContainerElementTypeMixin:
 
 
 class CollectionElementTypeMixin:
+    is_collection_element = True
+
     allowed_fields = [
         "data_source",
         "data_source_id",

@@ -422,10 +422,11 @@ def test_public_dispatch_data_source_view(
 
     assert response.status_code == 200
     assert response.json() == mock_response
-    mock_get_data_source.assert_called_once_with(mock_data_source_id)
+    mock_get_data_source.assert_called_once_with(str(mock_data_source_id))
     mock_builder_dispatch_context.assert_called_once_with(
         ANY,
         mock_data_source.page,
+        element=None,
         only_expose_public_formula_fields=True,
     )
     mock_dispatch_data_source.assert_called_once_with(
