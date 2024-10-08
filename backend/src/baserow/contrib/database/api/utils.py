@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from dataclasses import field as dataclass_field
+from typing import List
 
 from django.db.models import QuerySet
 
@@ -113,6 +114,29 @@ def extract_field_names_from_string(value):
         return []
 
     return split_comma_separated_string(value)
+
+
+def extract_field_ids_from_list(
+    list_of_field_names: List[str], strict: bool = True
+) -> List[int]:
+    """
+    Given a list of `Field.db_column`, this function will return a list of field ids.
+    For example if you provide ['field_1', 'field_2'] then [1, 2] is returned.
+
+    :param list_of_field_names: A list of field names.
+    :param strict: If `true`, then the value must be a number or match the `field_3`
+        pattern. If false, then it tries to extract any number from the value.
+    :return: A list of field ids.
+    """
+
+    if not list_of_field_names:
+        return []
+
+    ids = [
+        get_field_id_from_field_key(field_name, strict)
+        for field_name in list_of_field_names
+    ]
+    return [_id for _id in ids if _id is not None]
 
 
 def extract_field_ids_from_string(value):

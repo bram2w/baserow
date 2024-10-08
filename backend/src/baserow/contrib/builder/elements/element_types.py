@@ -77,7 +77,7 @@ def collection_element_types():
     return [
         element_type
         for element_type in element_type_registry.get_all()
-        if issubclass(element_type.__class__, CollectionElementTypeMixin)
+        if getattr(element_type, "is_collection_element", False)
     ]
 
 

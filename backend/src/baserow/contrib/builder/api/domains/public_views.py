@@ -18,6 +18,10 @@ from baserow.contrib.builder.api.data_sources.errors import (
     ERROR_DATA_DOES_NOT_EXIST,
     ERROR_DATA_SOURCE_DOES_NOT_EXIST,
     ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
+    ERROR_DATA_SOURCE_REFINEMENT_FORBIDDEN,
+)
+from baserow.contrib.builder.api.data_sources.serializers import (
+    DispatchDataSourceRequestSerializer,
 )
 from baserow.contrib.builder.api.domains.serializers import PublicBuilderSerializer
 from baserow.contrib.builder.api.pages.errors import ERROR_PAGE_DOES_NOT_EXIST
@@ -30,6 +34,7 @@ from baserow.contrib.builder.data_sources.builder_dispatch_context import (
 from baserow.contrib.builder.data_sources.exceptions import (
     DataSourceDoesNotExist,
     DataSourceImproperlyConfigured,
+    DataSourceRefinementForbidden,
 )
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.contrib.builder.data_sources.service import DataSourceService
@@ -304,11 +309,12 @@ class PublicDispatchDataSourceView(APIView):
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Builder data sources"],
-        operation_id="dispatch_builder_page_data_source",
+        operation_id="dispatch_public_builder_page_data_source",
         description=(
             "Dispatches the service of the related data_source and returns "
             "the result."
         ),
+        request=DispatchDataSourceRequestSerializer,
         responses={
             404: get_error_schema(
                 [
@@ -326,17 +332,31 @@ class PublicDispatchDataSourceView(APIView):
             DataSourceDoesNotExist: ERROR_DATA_SOURCE_DOES_NOT_EXIST,
             DataSourceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
             ServiceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
+            DataSourceRefinementForbidden: ERROR_DATA_SOURCE_REFINEMENT_FORBIDDEN,
             DoesNotExist: ERROR_DATA_DOES_NOT_EXIST,
         }
     )
-    def post(self, request, data_source_id: str):
+    def post(self, request, data_source_id: int):
         """
         Call the given data_source related service dispatch method.
         """
 
-        data_source = DataSourceHandler().get_data_source(int(data_source_id))
+        data_source = DataSourceHandler().get_data_source(data_source_id)
+
+        serializer = DispatchDataSourceRequestSerializer(
+            data=request.data, context={"data_source": data_source}
+        )
+        serializer.is_valid(raise_exception=True)
+
+        # An `element` will be provided if we're dispatching a collection
+        # element's data source with adhoc refinements.
+        element = serializer.validated_data.get("data_source").get("element")
+
         dispatch_context = BuilderDispatchContext(
-            request, data_source.page, only_expose_public_formula_fields=True
+            request,
+            data_source.page,
+            element=element,
+            only_expose_public_formula_fields=True,
         )
         response = DataSourceService().dispatch_data_source(
             request.user, data_source, dispatch_context
@@ -359,7 +379,7 @@ class PublicDispatchDataSourcesView(APIView):
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Builder data sources"],
-        operation_id="dispatch_builder_page_data_sources",
+        operation_id="dispatch_public_builder_page_data_sources",
         description="Dispatches the service of the related page data_sources",
         responses={
             404: get_error_schema(

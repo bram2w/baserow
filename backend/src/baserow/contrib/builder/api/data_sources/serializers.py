@@ -1,8 +1,11 @@
+from typing import Optional
+
 from django.utils.functional import lazy
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from baserow.api.serializers import CommaSeparatedIntegerValuesField
 from baserow.api.services.serializers import (
@@ -11,6 +14,7 @@ from baserow.api.services.serializers import (
     UpdateServiceSerializer,
 )
 from baserow.contrib.builder.data_sources.models import DataSource
+from baserow.contrib.builder.elements.models import Element
 from baserow.core.services.registries import service_type_registry
 
 
@@ -159,3 +163,58 @@ class MoveDataSourceSerializer(serializers.Serializer):
 
 class GetRecordIdsSerializer(serializers.Serializer):
     record_ids = CommaSeparatedIntegerValuesField()
+
+
+class DispatchDataSourceDataSourceContextSerializer(serializers.Serializer):
+    element = serializers.PrimaryKeyRelatedField(
+        required=False,
+        default=None,
+        allow_null=True,
+        queryset=Element.objects.all(),
+        help_text="Optionally provide the data source dispatch endpoint with a "
+        "collection element ID if you wish to apply element-level filters, "
+        "sorts and/or search.",
+    )
+
+    def validate_element(self, value: Optional[Element]) -> Optional[Element]:
+        """
+        Ensure that the provided element is a collection element.
+        :raises ValidationError: If the provided element is not a collection element.
+        :return value: The validated element.
+        """
+
+        if value:
+            element_type = value.get_type()
+            if not getattr(element_type, "is_collection_element", False):
+                raise serializers.ValidationError(
+                    "A data source can only dispatched with an element if it is "
+                    "a collection element.",
+                    code="ELEMENT_NOT_COLLECTION",
+                )
+        return value
+
+
+class DispatchDataSourceRequestSerializer(serializers.Serializer):
+    data_source = DispatchDataSourceDataSourceContextSerializer(
+        required=False,
+        default={},
+        help_text="The data source dispatch context data.",
+    )
+
+    def is_valid(self, *args, **kwargs):
+        """
+        Responsible for validating the data source dispatch request. Ensures that
+        the dispatched element belongs to the same page as the data source.
+        """
+
+        super().is_valid(*args, **kwargs)
+
+        data_source = self.context.get("data_source")
+        element = self.validated_data.get("data_source").get("element")
+        if element:
+            if element.page_id != data_source.page_id:
+                raise ValidationError(
+                    "The dispatched element does not "
+                    "belong to the same page as the data source.",
+                    code="PAGE_MISMATCH",
+                )

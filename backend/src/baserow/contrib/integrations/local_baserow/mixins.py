@@ -6,7 +6,9 @@ from django.db.models import OrderBy, QuerySet
 from baserow.contrib.builder.data_providers.exceptions import (
     DataProviderChunkInvalidException,
 )
+from baserow.contrib.database.api.utils import extract_field_ids_from_list
 from baserow.contrib.database.fields.field_filters import FilterBuilder
+from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.search.handler import SearchHandler
 from baserow.contrib.database.views.filters import AdHocFilters
 from baserow.contrib.database.views.handler import ViewHandler
@@ -28,6 +30,7 @@ from baserow.core.registry import Instance
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.services.exceptions import ServiceImproperlyConfigured
 from baserow.core.services.types import ServiceDict, ServiceSubClass
+from baserow.core.services.utils import ServiceAdhocRefinements
 
 if TYPE_CHECKING:
     from baserow.contrib.database.table.models import GeneratedTableModel, Table
@@ -206,6 +209,16 @@ class LocalBaserowTableServiceFilterableMixin:
             deserialized_filters = AdHocFilters.deserialize_dispatch_filters(
                 dispatch_filters
             )
+            # Next we pluck out the field IDs which the filters point to.
+            field_ids = list(set([f["field"] for f in deserialized_filters["filters"]]))
+            # In bulk fetch the field records.
+            fields = Field.objects.filter(pk__in=field_ids).only("id")
+            # Extract the field db columns names.
+            field_names = [field.db_column for field in fields]
+            # Validate that the fields are filterable.
+            dispatch_context.validate_filter_search_sort_fields(
+                field_names, ServiceAdhocRefinements.FILTER
+            )
             adhoc_filters = AdHocFilters.from_dict(deserialized_filters)
             queryset = adhoc_filters.apply_to_queryset(model, queryset)
         return queryset
@@ -298,6 +311,10 @@ class LocalBaserowTableServiceSortableMixin:
 
         adhoc_sort = dispatch_context.sortings()
         if adhoc_sort is not None:
+            field_names = [field.strip("-") for field in adhoc_sort.split(",")]
+            dispatch_context.validate_filter_search_sort_fields(
+                field_names, ServiceAdhocRefinements.SORT
+            )
             queryset = queryset.order_by_fields_string(adhoc_sort, False)
         else:
             view_sorts, queryset = self.get_dispatch_sorts(service, queryset, model)
@@ -372,8 +389,23 @@ class LocalBaserowTableServiceSearchableMixin:
             )
         adhoc_search_query = dispatch_context.search_query()
         if adhoc_search_query is not None:
+            # This mixin's `get_queryset` method does not validate any adhoc
+            # refinements, as the search query is not a field. We instead
+            # restrict the fields that we search against to only those which
+            # the page designer has marked as searchable.
+            only_search_by_field_names = dispatch_context.searchable_fields()
+            if not only_search_by_field_names:
+                # We've been given an adhoc search to use, but none of the
+                # properties have been flagged as searchable, so we can't
+                # return anything.
+                return queryset.none()
+            only_search_by_field_ids = extract_field_ids_from_list(
+                only_search_by_field_names
+            )
             queryset = queryset.search_all_fields(
-                adhoc_search_query, search_mode=search_mode
+                adhoc_search_query,
+                only_search_by_field_ids=only_search_by_field_ids,
+                search_mode=search_mode,
             )
         return queryset
 

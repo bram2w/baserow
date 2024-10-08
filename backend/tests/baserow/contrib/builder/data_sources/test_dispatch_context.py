@@ -9,6 +9,10 @@ from baserow.contrib.builder.data_sources.builder_dispatch_context import (
     FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS,
     BuilderDispatchContext,
 )
+from baserow.contrib.builder.data_sources.exceptions import (
+    DataSourceRefinementForbidden,
+)
+from baserow.core.services.utils import ServiceAdhocRefinements
 
 
 def test_dispatch_context_page_range():
@@ -71,6 +75,21 @@ def test_dispatch_context_search_query():
     request.GET["search_query"] = "foobar"
     dispatch_context = BuilderDispatchContext(request, None)
     assert dispatch_context.search_query() == "foobar"
+
+
+@pytest.mark.django_db
+def test_dispatch_context_searchable_fields(data_fixture):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    dispatch_context = BuilderDispatchContext(HttpRequest(), page)
+    with pytest.raises(DataSourceRefinementForbidden):
+        dispatch_context.searchable_fields()
+    element = data_fixture.create_builder_table_element(page=page)
+    element.property_options.create(schema_property="name", searchable=True)
+    element.property_options.create(schema_property="location", searchable=True)
+    element.property_options.create(schema_property="top_secret", searchable=False)
+    dispatch_context = BuilderDispatchContext(HttpRequest(), page, element=element)
+    assert dispatch_context.searchable_fields() == ["name", "location"]
 
 
 def test_dispatch_context_filters():
@@ -151,3 +170,82 @@ def test_builder_dispatch_context_field_names_computed_on_feature_flag(
     else:
         assert dispatch_context.public_formula_fields is None
         mock_get_formula_field_names.assert_not_called()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "property_option_params",
+    [
+        {
+            "schema_property": "name",
+            "filterable": True,
+            "sortable": False,
+            "searchable": False,
+        },
+        {
+            "schema_property": "age",
+            "filterable": False,
+            "sortable": True,
+            "searchable": False,
+        },
+        {
+            "schema_property": "location",
+            "filterable": False,
+            "sortable": False,
+            "searchable": True,
+        },
+    ],
+)
+def test_validate_filter_search_sort_fields(data_fixture, property_option_params):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    element = data_fixture.create_builder_table_element(page=page)
+    element.property_options.create(**property_option_params)
+    dispatch_context = BuilderDispatchContext(HttpRequest(), page, element=element)
+    schema_property = property_option_params["schema_property"]
+    for refinement in list(ServiceAdhocRefinements):
+        model_field_name = ServiceAdhocRefinements.to_model_field(refinement)
+        if property_option_params[model_field_name]:
+            dispatch_context.validate_filter_search_sort_fields(
+                [schema_property], refinement
+            )
+        else:
+            with pytest.raises(DataSourceRefinementForbidden) as exc:
+                dispatch_context.validate_filter_search_sort_fields(
+                    [schema_property], refinement
+                )
+            assert (
+                exc.value.args[0]
+                == f"{schema_property} is not a {model_field_name} field."
+            )
+
+
+@pytest.mark.django_db
+def test_get_element_property_options(data_fixture, django_assert_num_queries):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    element = data_fixture.create_builder_table_element(page=page)
+    element.property_options.create(
+        schema_property="name", filterable=True, sortable=False, searchable=False
+    )
+    dispatch_context = BuilderDispatchContext(HttpRequest(), page, element=element)
+    assert dispatch_context.cache == {}
+    with django_assert_num_queries(1):
+        dispatch_context.get_element_property_options()
+    assert dispatch_context.cache["element_property_options"] == {
+        "name": {"filterable": True, "sortable": False, "searchable": False}
+    }
+    with django_assert_num_queries(0):
+        dispatch_context.get_element_property_options()
+
+
+def test_validate_filter_search_sort_fields_without_element():
+    dispatch_context = BuilderDispatchContext(HttpRequest(), None)
+    with pytest.raises(DataSourceRefinementForbidden) as exc:
+        dispatch_context.validate_filter_search_sort_fields(
+            ["name"], ServiceAdhocRefinements.FILTER
+        )
+    assert (
+        exc.value.args[0]
+        == "An element is required to validate filter, search and sort fields."
+    )

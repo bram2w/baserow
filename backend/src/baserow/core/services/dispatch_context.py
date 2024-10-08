@@ -4,6 +4,7 @@ from typing import Dict, List, Optional
 from baserow.core.formula.runtime_formula_context import RuntimeFormulaContext
 from baserow.core.services.models import Service
 from baserow.core.services.types import RuntimeFormulaContextSubClass
+from baserow.core.services.utils import ServiceAdhocRefinements
 
 
 class DispatchContext(RuntimeFormulaContext, ABC):
@@ -50,6 +51,15 @@ class DispatchContext(RuntimeFormulaContext, ABC):
         """
 
     @abstractmethod
+    def searchable_fields(self) -> Optional[List[str]]:
+        """
+        Responsible for returning the on-demand searchable fields, depending
+        on which module the `DispatchContext` is used by.
+        """
+
+        return []
+
+    @abstractmethod
     def filters(self) -> Optional[str]:
         """
         Responsible for returning the on-demand filters, depending
@@ -80,4 +90,18 @@ class DispatchContext(RuntimeFormulaContext, ABC):
         It is used to restrict the queryset as well as to discern which Data
         Source fields are external and safe (user facing) vs internal and
         sensitive (required only by the backend).
+        """
+
+    @abstractmethod
+    def validate_filter_search_sort_fields(
+        self, fields: List[str], refinement: ServiceAdhocRefinements
+    ):
+        """
+        Responsible for ensuring that all fields present in `fields`
+        are allowed as a refinement for the given `refinement`. For example,
+        if the `refinement` is `FILTER`, then all fields in `fields` need
+        to be filterable.
+
+        :param fields: The fields to validate.
+        :param refinement: The refinement to validate.
         """
