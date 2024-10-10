@@ -65,8 +65,8 @@ export class BuilderApplicationType extends ApplicationType {
     if (!values.integrations) {
       values.integrations = []
     }
-    if (!values.userSources) {
-      values.userSources = []
+    if (!values.user_sources) {
+      values.user_sources = []
     }
     values._loadedOnce = false
 
