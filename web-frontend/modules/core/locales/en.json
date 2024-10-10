@@ -127,6 +127,13 @@
     "message": "Are you sure you want to leave the workspace {workspace}? You won't be able to access the related applications anymore and if you want to regain access, one of the admins must invite you again. If you leave the workspace, it will not be deleted. All the other members will still have access to it. It is not possible to leave a workspace if you're the last admin because that will leave it unmaintained.",
     "leave": "Leave workspace"
   },
+  "exportWorkspaceModal": {
+    "title": "Export",
+    "description": "Your data will be exported as a ZIP file, which can be imported into other Baserow instance.",
+    "exportSettings": "Export settings",
+    "export": "Export data",
+    "cancel": "Cancel"
+  },
   "dashboardWorkspace": {
     "createApplication": "Create new"
   },
@@ -165,6 +172,7 @@
   },
   "workspaceContext": {
     "renameWorkspace": "Rename workspace",
+    "exportWorkspace": "Export data",
     "settings": "Settings",
     "members": "Members",
     "auditLog": "Audit log",

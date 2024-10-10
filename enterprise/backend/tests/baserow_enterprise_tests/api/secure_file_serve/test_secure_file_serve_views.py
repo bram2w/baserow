@@ -733,44 +733,41 @@ def test_exporting_csv_writes_file_to_storage_and_its_served_by_the_backend(
     api_client,
     tmpdir,
     django_capture_on_commit_callbacks,
+    use_tmp_media_root,
 ):
     user = enterprise_data_fixture.create_user()
     table = enterprise_data_fixture.create_database_table(user=user)
 
-    storage = dummy_storage(tmpdir)
-
-    with patch("baserow.core.storage.get_default_storage", new=storage):
-        token = enterprise_data_fixture.generate_token(user)
-        with django_capture_on_commit_callbacks(execute=True):
-            response = api_client.post(
-                reverse(
-                    "api:database:export:export_table",
-                    kwargs={"table_id": table.id},
-                ),
-                data={
-                    "exporter_type": "csv",
-                    "export_charset": "utf-8",
-                    "csv_include_header": "True",
-                    "csv_column_separator": ",",
-                },
-                format="json",
-                HTTP_AUTHORIZATION=f"JWT {token}",
-            )
-        response_json = response.json()
-        job_id = response_json["id"]
-        response = api_client.get(
-            reverse("api:database:export:get", kwargs={"job_id": job_id}),
+    token = enterprise_data_fixture.generate_token(user)
+    with django_capture_on_commit_callbacks(execute=True):
+        response = api_client.post(
+            reverse(
+                "api:database:export:export_table",
+                kwargs={"table_id": table.id},
+            ),
+            data={
+                "exporter_type": "csv",
+                "export_charset": "utf-8",
+                "csv_include_header": "True",
+                "csv_column_separator": ",",
+            },
             format="json",
             HTTP_AUTHORIZATION=f"JWT {token}",
         )
-        json = response.json()
+    response_json = response.json()
+    job_id = response_json["id"]
+    response = api_client.get(
+        reverse("api:database:export:get", kwargs={"job_id": job_id}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    json = response.json()
 
     # The file is served by the backend
     assert json["url"].startswith("http://localhost:8000/api/files/")
 
     # download it
-    with patch("baserow.core.storage.get_default_storage", new=storage):
-        response = api_client.get(json["url"].replace("http://localhost:8000", ""))
+    response = api_client.get(json["url"].replace("http://localhost:8000", ""))
 
     assert response.status_code == HTTP_200_OK
 
@@ -791,6 +788,7 @@ def test_audit_log_can_export_to_csv_and_be_served_by_the_backend(
     synced_roles,
     django_capture_on_commit_callbacks,
     tmpdir,
+    use_tmp_media_root,
 ):
     (
         admin_user,
@@ -803,40 +801,37 @@ def test_audit_log_can_export_to_csv_and_be_served_by_the_backend(
         "export_charset": "utf-8",
     }
 
-    storage = dummy_storage(tmpdir)
-    with patch("baserow.core.storage.get_default_storage", new=storage):
-        with django_capture_on_commit_callbacks(execute=True):
-            response = api_client.post(
-                reverse("api:enterprise:audit_log:async_export"),
-                data=csv_settings,
-                format="json",
-                HTTP_AUTHORIZATION=f"JWT {admin_token}",
-            )
-            assert response.status_code == HTTP_202_ACCEPTED, response.json()
-            job = response.json()
-            assert job["id"] is not None
-            assert job["state"] == "pending"
-            assert job["type"] == "audit_log_export"
-
-        admin_token = enterprise_data_fixture.generate_token(admin_user)
-        response = api_client.get(
-            reverse(
-                "api:jobs:item",
-                kwargs={"job_id": job["id"]},
-            ),
+    with django_capture_on_commit_callbacks(execute=True):
+        response = api_client.post(
+            reverse("api:enterprise:audit_log:async_export"),
+            data=csv_settings,
+            format="json",
             HTTP_AUTHORIZATION=f"JWT {admin_token}",
         )
-        assert response.status_code == HTTP_200_OK
+        assert response.status_code == HTTP_202_ACCEPTED, response.json()
         job = response.json()
-        assert job["state"] == "finished"
+        assert job["id"] is not None
+        assert job["state"] == "pending"
         assert job["type"] == "audit_log_export"
+
+    admin_token = enterprise_data_fixture.generate_token(admin_user)
+    response = api_client.get(
+        reverse(
+            "api:jobs:item",
+            kwargs={"job_id": job["id"]},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {admin_token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    job = response.json()
+    assert job["state"] == "finished"
+    assert job["type"] == "audit_log_export"
 
     # The file is served by the backend
     assert job["url"].startswith("http://localhost:8000/api/files/")
 
     # download it
-    with patch("baserow.core.storage.get_default_storage", new=storage):
-        response = api_client.get(job["url"].replace("http://localhost:8000", ""))
+    response = api_client.get(job["url"].replace("http://localhost:8000", ""))
 
     assert response.status_code == HTTP_200_OK
 
@@ -852,51 +847,45 @@ def test_audit_log_can_export_to_csv_and_be_served_by_the_backend(
     },
 )
 def test_files_can_be_downloaded_with_dl_query_param_as_filename(
-    enable_enterprise, enterprise_data_fixture, api_client, tmpdir
+    enable_enterprise, enterprise_data_fixture, api_client, tmpdir, use_tmp_media_root
 ):
     _, token = enterprise_data_fixture.create_user_and_token()
 
-    storage = dummy_storage(tmpdir)
-    with patch("baserow.core.storage.get_default_storage", new=storage):
-        file = SimpleUploadedFile("test.txt", b"Hello World")
-        response = api_client.post(
-            reverse("api:user_files:upload_file"),
-            data={"file": file},
-            format="multipart",
-            HTTP_AUTHORIZATION=f"JWT {token}",
-        )
+    file = SimpleUploadedFile("test.txt", b"Hello World")
+    response = api_client.post(
+        reverse("api:user_files:upload_file"),
+        data={"file": file},
+        format="multipart",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
 
     assert response.status_code == HTTP_200_OK, response.json()
     backend_file_url = response.json()["url"]
     file_name = response.json()["name"]
 
-    with patch("baserow.core.storage.get_default_storage", new=storage):
-        response = api_client.get(
-            backend_file_url.replace("http://localhost:8000", ""),
-        )
+    response = api_client.get(
+        backend_file_url.replace("http://localhost:8000", ""),
+    )
     assert response.status_code == HTTP_200_OK
     assert response.headers["Content-Disposition"] == f'inline; filename="{file_name}"'
 
-    with patch("baserow.core.storage.get_default_storage", new=storage):
-        response = api_client.get(
-            backend_file_url.replace("http://localhost:8000", "") + "?dl=",
-        )
+    response = api_client.get(
+        backend_file_url.replace("http://localhost:8000", "") + "?dl=",
+    )
     assert response.status_code == HTTP_200_OK
     assert response.headers["Content-Disposition"] == f'inline; filename="{file_name}"'
 
-    with patch("baserow.core.storage.get_default_storage", new=storage):
-        response = api_client.get(
-            backend_file_url.replace("http://localhost:8000", "") + "?dl=download.txt",
-        )
+    response = api_client.get(
+        backend_file_url.replace("http://localhost:8000", "") + "?dl=download.txt",
+    )
     assert response.status_code == HTTP_200_OK
     assert (
         response.headers["Content-Disposition"] == 'attachment; filename="download.txt"'
     )
 
-    with patch("baserow.core.storage.get_default_storage", new=storage):
-        response = api_client.get(
-            backend_file_url.replace("http://localhost:8000", "") + "?dl=1",
-        )
+    response = api_client.get(
+        backend_file_url.replace("http://localhost:8000", "") + "?dl=1",
+    )
     assert response.status_code == HTTP_200_OK
     assert response.headers["Content-Disposition"] == 'attachment; filename="1"'
 
@@ -918,6 +907,7 @@ def test_audit_log_can_export_to_csv_and_be_served_by_the_backend_with_workspace
     synced_roles,
     django_capture_on_commit_callbacks,
     tmpdir,
+    use_tmp_media_root,
 ):
     (
         admin_user,
@@ -936,39 +926,36 @@ def test_audit_log_can_export_to_csv_and_be_served_by_the_backend_with_workspace
         "export_charset": "utf-8",
     }
 
-    storage = dummy_storage(tmpdir)
-    with patch("baserow.core.storage.get_default_storage", new=storage):
-        with django_capture_on_commit_callbacks(execute=True):
-            response = api_client.post(
-                reverse("api:enterprise:audit_log:async_export"),
-                data=csv_settings,
-                format="json",
-                HTTP_AUTHORIZATION=f"JWT {wp_admin_token}",
-            )
-            assert response.status_code == HTTP_202_ACCEPTED, response.json()
-            job = response.json()
-            assert job["id"] is not None
-            assert job["state"] == "pending"
-            assert job["type"] == "audit_log_export"
-
-        response = api_client.get(
-            reverse(
-                "api:jobs:item",
-                kwargs={"job_id": job["id"]},
-            ),
+    with django_capture_on_commit_callbacks(execute=True):
+        response = api_client.post(
+            reverse("api:enterprise:audit_log:async_export"),
+            data=csv_settings,
+            format="json",
             HTTP_AUTHORIZATION=f"JWT {wp_admin_token}",
         )
-        assert response.status_code == HTTP_200_OK
+        assert response.status_code == HTTP_202_ACCEPTED, response.json()
         job = response.json()
-        assert job["state"] == "finished"
+        assert job["id"] is not None
+        assert job["state"] == "pending"
         assert job["type"] == "audit_log_export"
+
+    response = api_client.get(
+        reverse(
+            "api:jobs:item",
+            kwargs={"job_id": job["id"]},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {wp_admin_token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    job = response.json()
+    assert job["state"] == "finished"
+    assert job["type"] == "audit_log_export"
 
     # The file is served by the backend
     assert job["url"].startswith("http://localhost:8000/api/files/")
 
     # download it
     with (
-        patch("baserow.core.storage.get_default_storage", new=storage),
         patch(
             "baserow_enterprise.api.secure_file_serve.views.SecureFileServeAuthentication.authenticate",
             side_effect=[(wp_admin_user, None), (other_wp_admin_user, None)],
@@ -998,46 +985,43 @@ def test_exporting_csv_writes_file_to_storage_and_its_served_by_the_backend_with
     api_client,
     tmpdir,
     django_capture_on_commit_callbacks,
+    use_tmp_media_root,
 ):
     user = enterprise_data_fixture.create_user()
     table = enterprise_data_fixture.create_database_table(user=user)
 
     other_user = enterprise_data_fixture.create_user()
 
-    storage = dummy_storage(tmpdir)
-
-    with patch("baserow.core.storage.get_default_storage", new=storage):
-        token = enterprise_data_fixture.generate_token(user)
-        with django_capture_on_commit_callbacks(execute=True):
-            response = api_client.post(
-                reverse(
-                    "api:database:export:export_table",
-                    kwargs={"table_id": table.id},
-                ),
-                data={
-                    "exporter_type": "csv",
-                    "export_charset": "utf-8",
-                    "csv_include_header": "True",
-                    "csv_column_separator": ",",
-                },
-                format="json",
-                HTTP_AUTHORIZATION=f"JWT {token}",
-            )
-        response_json = response.json()
-        job_id = response_json["id"]
-        response = api_client.get(
-            reverse("api:database:export:get", kwargs={"job_id": job_id}),
+    token = enterprise_data_fixture.generate_token(user)
+    with django_capture_on_commit_callbacks(execute=True):
+        response = api_client.post(
+            reverse(
+                "api:database:export:export_table",
+                kwargs={"table_id": table.id},
+            ),
+            data={
+                "exporter_type": "csv",
+                "export_charset": "utf-8",
+                "csv_include_header": "True",
+                "csv_column_separator": ",",
+            },
             format="json",
             HTTP_AUTHORIZATION=f"JWT {token}",
         )
-        json = response.json()
+    response_json = response.json()
+    job_id = response_json["id"]
+    response = api_client.get(
+        reverse("api:database:export:get", kwargs={"job_id": job_id}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    json = response.json()
 
     # The file is served by the backend
     assert json["url"].startswith("http://localhost:8000/api/files/")
 
     # download it
     with (
-        patch("baserow.core.storage.get_default_storage", new=storage),
         patch(
             "baserow_enterprise.api.secure_file_serve.views.SecureFileServeAuthentication.authenticate",
             side_effect=[(user, None), (other_user, None)],

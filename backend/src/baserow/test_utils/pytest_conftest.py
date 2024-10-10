@@ -854,3 +854,8 @@ def test_thread():
             sys.setswitchinterval(orig_switch_interval)
 
     yield run_callable
+
+
+@pytest.fixture()
+def use_tmp_media_root(tmpdir, settings):
+    settings.MEDIA_ROOT = tmpdir

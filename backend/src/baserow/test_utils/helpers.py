@@ -174,8 +174,6 @@ def setup_interesting_test_table(
         .values_list("id", flat=True)
     )
 
-    file_suffix = file_suffix or ""
-
     values = {
         "text": "text",
         "long_text": "long_text",

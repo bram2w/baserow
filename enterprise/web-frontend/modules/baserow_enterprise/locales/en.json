@@ -282,6 +282,9 @@
   "snapshotModalWarning": {
     "message": "Please be aware that a snapshot will include any permissions set on the application and its tables."
   },
+  "exportWorkspaceModalWarning": {
+    "message": "Please be aware that an export will not include any permissions set on the application and its tables."
+  },
   "auditLogSidebarWorkspace": {
     "title": "Audit log"
   },

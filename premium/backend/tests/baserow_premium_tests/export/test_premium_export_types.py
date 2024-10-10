@@ -23,7 +23,7 @@ def _parse_date(date):
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_can_export_every_interesting_different_field_to_json(
     get_storage_mock, premium_data_fixture
 ):
@@ -239,7 +239,7 @@ def test_can_export_every_interesting_different_field_to_json(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_cannot_export_json_without_premium_license(
     get_storage_mock, premium_data_fixture
 ):
@@ -253,7 +253,7 @@ def test_cannot_export_json_without_premium_license(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_cannot_export_json_without_premium_license_for_group(
     get_storage_mock, premium_data_fixture, alternative_per_workspace_license_service
 ):
@@ -271,7 +271,7 @@ def test_cannot_export_json_without_premium_license_for_group(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_if_duplicate_field_names_json_export(get_storage_mock, premium_data_fixture):
     storage_mock = MagicMock()
     get_storage_mock.return_value = storage_mock
@@ -306,7 +306,7 @@ def test_if_duplicate_field_names_json_export(get_storage_mock, premium_data_fix
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_can_export_every_interesting_different_field_to_xml(
     get_storage_mock, premium_data_fixture
 ):
@@ -520,7 +520,7 @@ def test_can_export_every_interesting_different_field_to_xml(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_if_xml_duplicate_name_and_value_are_escaped(
     get_storage_mock, premium_data_fixture
 ):
@@ -566,7 +566,7 @@ def test_if_xml_duplicate_name_and_value_are_escaped(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_cannot_export_xml_without_premium_license(
     get_storage_mock, premium_data_fixture
 ):
@@ -580,7 +580,7 @@ def test_cannot_export_xml_without_premium_license(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_cannot_export_xml_without_premium_license_for_group(
     get_storage_mock, premium_data_fixture, alternative_per_workspace_license_service
 ):
