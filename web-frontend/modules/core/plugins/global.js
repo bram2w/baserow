@@ -53,6 +53,7 @@ import userFileUpload from '@baserow/modules/core/directives/userFileUpload'
 import autoScroll from '@baserow/modules/core/directives/autoScroll'
 import clickOutside from '@baserow/modules/core/directives/clickOutside'
 import Badge from '@baserow/modules/core/components/Badge'
+import BadgeCollaborator from '@baserow/modules/core/components/BadgeCollaborator'
 import Expandable from '@baserow/modules/core/components/Expandable.vue'
 import RadioButton from '@baserow/modules/core/components/RadioButton'
 import Thumbnail from '@baserow/modules/core/components/Thumbnail'
@@ -83,6 +84,7 @@ function setupVue(Vue) {
   Vue.component('List', List)
   Vue.component('HelpIcon', HelpIcon)
   Vue.component('Badge', Badge)
+  Vue.component('BadgeCollaborator', BadgeCollaborator)
   Vue.component('Expandable', Expandable)
   Vue.component('Button', Button)
   Vue.component('ButtonText', ButtonText)
