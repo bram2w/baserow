@@ -1,6 +1,9 @@
 from functools import cached_property
 from typing import TYPE_CHECKING, Dict, List, Optional
 
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.http import HttpRequest
 
 from baserow.contrib.builder.data_providers.registries import (
@@ -11,7 +14,6 @@ from baserow.contrib.builder.data_sources.exceptions import (
 )
 from baserow.contrib.builder.formula_property_extractor import get_formula_field_names
 from baserow.contrib.builder.pages.models import Page
-from baserow.core.feature_flags import feature_flag_is_enabled
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.services.utils import ServiceAdhocRefinements
 
@@ -19,7 +21,9 @@ if TYPE_CHECKING:
     from baserow.contrib.builder.elements.models import CollectionElement
     from baserow.core.workflow_actions.models import WorkflowAction
 
-FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS = "feature-exclude-unused-fields"
+CACHE_KEY_PREFIX = "used_properties_for_page"
+
+User = get_user_model()
 
 
 class BuilderDispatchContext(DispatchContext):
@@ -58,6 +62,63 @@ class BuilderDispatchContext(DispatchContext):
     @property
     def data_provider_registry(self):
         return builder_data_provider_type_registry
+
+    def get_cache_key(self) -> Optional[str]:
+        """
+        Returns a cache key that can be used to key the results of making the
+        expensive function call to get_formula_field_names().
+
+        If the user is a Django user, return None. This is because the Page
+        Designer should always have the latest data in the Preview (e.g. when
+        they are not authenticated). Also, the Django user doesn't have the role
+        attribute, unlike the User Source User.
+        """
+
+        if isinstance(self.request.user, User):
+            return None
+        elif self.request.user.is_anonymous:
+            # When the user is anonymous, only use the prefix + page ID.
+            role = ""
+        else:
+            role = f"_{self.request.user.role}"
+
+        return f"{CACHE_KEY_PREFIX}_{self.page.id}{role}"
+
+    @cached_property
+    def public_formula_fields(self) -> Optional[Dict[str, Dict[int, List[str]]]]:
+        """
+        Return a Dict where keys are ["all", "external", "internal"] and values
+        dicts. The internal dicts' keys are Service IDs and values are a list
+        of Data Source field names.
+
+        Returns None if field names shouldn't be included in the dispatch
+        context. This is mainly to support a feature flag for this new feature.
+
+        The field names are used to improve the security of the backend by
+        ensuring only the minimum necessary data is exposed to the frontend.
+
+        It is used to restrict the queryset as well as to discern which Data
+        Source fields are external and safe (user facing) vs internal and
+        sensitive (required only by the backend).
+        """
+
+        if self.only_expose_public_formula_fields:
+            cache_key = self.get_cache_key()
+
+            formula_fields = cache.get(cache_key) if cache_key else None
+            if formula_fields is None:
+                formula_fields = get_formula_field_names(self.request.user, self.page)
+
+                if cache_key:
+                    cache.set(
+                        cache_key,
+                        formula_fields,
+                        timeout=settings.BUILDER_PUBLICLY_USED_PROPERTIES_CACHE_TTL_SECONDS,
+                    )
+
+            return formula_fields
+
+        return None
 
     def range(self, service):
         """
@@ -195,28 +256,3 @@ class BuilderDispatchContext(DispatchContext):
                 raise DataSourceRefinementForbidden(
                     f"{field_property} is not a {model_field} field."
                 )
-
-    @cached_property
-    def public_formula_fields(self) -> Optional[Dict[str, Dict[int, List[str]]]]:
-        """
-        Return a Dict where keys are ["all", "external", "internal"] and values
-        dicts. The internal dicts' keys are Service IDs and values are a list
-        of Data Source field names.
-
-        Returns None if field names shouldn't be included in the dispatch
-        context. This is mainly to support a feature flag for this new feature.
-
-        The field names are used to improve the security of the backend by
-        ensuring only the minimum necessary data is exposed to the frontend.
-
-        It is used to restrict the queryset as well as to discern which Data
-        Source fields are external and safe (user facing) vs internal and
-        sensitive (required only by the backend).
-        """
-
-        if self.only_expose_public_formula_fields and feature_flag_is_enabled(
-            FEATURE_FLAG_EXCLUDE_UNUSED_FIELDS
-        ):
-            return get_formula_field_names(self.request.user, self.page)
-
-        return None

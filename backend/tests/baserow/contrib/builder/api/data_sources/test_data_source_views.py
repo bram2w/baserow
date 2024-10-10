@@ -15,7 +15,60 @@ from rest_framework.status import (
 
 from baserow.contrib.builder.data_sources.models import DataSource
 from baserow.core.services.models import Service
-from baserow.test_utils.helpers import AnyStr
+from baserow.core.user_sources.user_source_user import UserSourceUser
+from baserow.test_utils.helpers import AnyInt, AnyStr
+from tests.baserow.contrib.builder.api.user_sources.helpers import (
+    create_user_table_and_role,
+)
+
+
+@pytest.fixture
+def data_source_fixture(data_fixture):
+    """A fixture to help test views that rely on a data source."""
+
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("Color", "text"),
+        ],
+        rows=[
+            ["Apple", "Red"],
+            ["Banana", "Yellow"],
+            ["Cherry", "Purple"],
+        ],
+    )
+    builder = data_fixture.create_builder_application(workspace=workspace, user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+
+    user_source, _ = create_user_table_and_role(
+        data_fixture,
+        user,
+        builder,
+        "foo_user_role",
+        integration=integration,
+    )
+    user_source_user = UserSourceUser(
+        user_source, None, 1, "foo_username", "foo@bar.com", role="foo_user_role"
+    )
+    user_source_user_token = user_source_user.get_refresh_token().access_token
+
+    return {
+        "user": user,
+        "token": token,
+        "user_source_user": user_source_user,
+        "user_source_user_token": user_source_user_token,
+        "page": page,
+        "integration": integration,
+        "table": table,
+        "rows": rows,
+        "fields": fields,
+    }
 
 
 @pytest.mark.django_db
@@ -1407,6 +1460,269 @@ def test_get_record_names(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_dispatch_data_sources_list_rows_with_elements(
+    api_client, data_fixture, data_source_fixture
+):
+    """
+    Test the DispatchDataSourcesView endpoint when using a Data Source type
+    of List Rows.
+
+    The API response should only contain field data when the field is
+    referenced in an element via a formula.
+    """
+
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=data_source_fixture["user"],
+        page=data_source_fixture["page"],
+        integration=data_source_fixture["integration"],
+        table=data_source_fixture["table"],
+    )
+
+    field_id = data_source_fixture["fields"][0].id
+
+    # Create an element that uses a formula referencing the data source
+    data_fixture.create_builder_table_element(
+        page=data_source_fixture["page"],
+        data_source=data_source,
+        fields=[
+            {
+                "name": "FieldA",
+                "type": "text",
+                "config": {"value": f"get('current_record.field_{field_id}')"},
+            },
+        ],
+    )
+
+    data_source_fixture["page"].builder.workspace = None
+    data_source_fixture["page"].builder.save()
+    data_fixture.create_builder_custom_domain(
+        published_to=data_source_fixture["page"].builder
+    )
+
+    url = reverse(
+        "api:builder:domains:public_dispatch_all",
+        kwargs={"page_id": data_source_fixture["page"].id},
+    )
+
+    response = api_client.post(
+        url,
+        {},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {data_source_fixture['user_source_user_token']}",
+    )
+
+    expected_results = []
+    rows = data_source_fixture["rows"]
+    for row in rows:
+        expected_results.append(
+            {
+                # Although this Data Source has 2 Fields/Columns, only one is
+                # returned since only one field_id is used by the Table.
+                f"field_{field_id}": getattr(row, f"field_{field_id}"),
+            }
+        )
+
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {
+        str(data_source.id): {
+            "has_next_page": False,
+            "results": expected_results,
+        },
+    }
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    # table_row_id is 1-indexed to reflect the row ID in formulas
+    # db_row_id is 0-indexed to reflect the row ID in the database
+    "table_row_id,db_row_id,",
+    [
+        (1, 0),
+        (2, 1),
+        (3, 2),
+    ],
+)
+def test_dispatch_data_sources_get_row_with_elements(
+    api_client, data_fixture, data_source_fixture, table_row_id, db_row_id
+):
+    """
+    Test the DispatchDataSourcesView endpoint when using a Data Source type
+    of Get Row.
+
+    The API response should only contain field data when the field is
+    referenced in an element via a formula.
+    """
+
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=data_source_fixture["user"],
+        page=data_source_fixture["page"],
+        integration=data_source_fixture["integration"],
+        table=data_source_fixture["table"],
+        row_id=table_row_id,
+    )
+
+    field_id = data_source_fixture["fields"][0].id
+
+    # Create an element that uses a formula referencing the data source
+    data_fixture.create_builder_table_element(
+        page=data_source_fixture["page"],
+        data_source=data_source,
+        fields=[
+            {
+                "name": "FieldA",
+                "type": "text",
+                "config": {
+                    "value": f"get('data_source.{data_source.id}.field_{field_id}')"
+                },
+            },
+        ],
+    )
+
+    data_source_fixture["page"].builder.workspace = None
+    data_source_fixture["page"].builder.save()
+    data_fixture.create_builder_custom_domain(
+        published_to=data_source_fixture["page"].builder
+    )
+
+    url = reverse(
+        "api:builder:domains:public_dispatch_all",
+        kwargs={"page_id": data_source_fixture["page"].id},
+    )
+
+    response = api_client.post(
+        url,
+        {},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {data_source_fixture['user_source_user_token']}",
+    )
+
+    rows = data_source_fixture["rows"]
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {
+        str(data_source.id): {
+            f"field_{field_id}": getattr(rows[db_row_id], f"field_{field_id}"),
+        }
+    }
+
+
+@pytest.mark.django_db
+def test_dispatch_data_sources_get_and_list_rows_with_elements(
+    api_client,
+    data_fixture,
+    data_source_fixture,
+):
+    """
+    Test the DispatchDataSourcesView endpoint when using a mix of Data Source
+    types, i.e. Get Row and List Rows.
+
+    The API response should only contain field data when the field is
+    referenced in an element via a formula.
+    """
+
+    user = data_source_fixture["user"]
+    table_1, fields_1, rows_1 = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Food", "text"),
+        ],
+        rows=[
+            ["Palak Paneer", "Paneer Pakora"],
+        ],
+    )
+    data_source_1 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=data_source_fixture["user"],
+        page=data_source_fixture["page"],
+        integration=data_source_fixture["integration"],
+        table=table_1,
+        row_id=1,
+    )
+
+    table_2, fields_2, rows_2 = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Fruits", "text"),
+        ],
+        rows=[
+            ["Kiwi", "Cherry"],
+        ],
+    )
+    data_source_2 = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=data_source_fixture["page"],
+        integration=data_source_fixture["integration"],
+        table=table_2,
+    )
+
+    # Create an element that uses a concatenation of two "get" formulas; one
+    # using the Get Row and the other using List Row data sources.
+    formula = (
+        f"concat(get('current_record.field_{fields_1[0].id}'),"
+        f"get('data_source.{data_source_1.id}.field_{fields_1[0].id}'))"
+    )
+    data_fixture.create_builder_table_element(
+        page=data_source_fixture["page"],
+        data_source=data_source_1,
+        fields=[
+            {
+                "name": "My Dishes",
+                "type": "text",
+                "config": {"value": formula},
+            },
+        ],
+    )
+
+    # Create another table, this time using the List Row data source
+    data_fixture.create_builder_table_element(
+        page=data_source_fixture["page"],
+        data_source=data_source_2,
+        fields=[
+            {
+                "name": "My Fruits",
+                "type": "text",
+                "config": {"value": f"get('current_record.field_{fields_2[0].id}')"},
+            },
+        ],
+    )
+
+    data_source_fixture["page"].builder.workspace = None
+    data_source_fixture["page"].builder.save()
+    data_fixture.create_builder_custom_domain(
+        published_to=data_source_fixture["page"].builder
+    )
+
+    url = reverse(
+        "api:builder:domains:public_dispatch_all",
+        kwargs={"page_id": data_source_fixture["page"].id},
+    )
+
+    response = api_client.post(
+        url,
+        {},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {data_source_fixture['user_source_user_token']}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {
+        str(data_source_1.id): {
+            f"field_{fields_1[0].id}": getattr(rows_1[0], f"field_{fields_1[0].id}"),
+        },
+        # Although this Data Source has 2 Fields/Columns, only one is returned
+        # since only one field_id is used by the Table.
+        str(data_source_2.id): {
+            "has_next_page": False,
+            "results": [
+                {
+                    f"field_{fields_2[0].id}": getattr(
+                        rows_2[0], f"field_{fields_2[0].id}"
+                    ),
+                },
+            ],
+        },
+    }
+
+
+@pytest.mark.django_db
 @patch(
     "baserow.contrib.builder.api.data_sources.views.DataSourceService.dispatch_data_source"
 )
@@ -1455,6 +1771,75 @@ def test_dispatch_data_source_view(
     mock_dispatch_data_source.assert_called_once_with(
         ANY, mock_data_source, mock_dispatch_context
     )
+
+
+@pytest.mark.django_db
+def test_private_dispatch_data_source_view_returns_all_fields(api_client, data_fixture):
+    """
+    Test the DispatchDataSourceView endpoint.
+
+    This integration test ensures that all field_names are returned in the
+    private view, even if it isn't used by a visible element. This is because
+    the editor needs access to all fields.
+    """
+
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Food", "text"),
+            ("Spiciness", "number"),
+        ],
+        rows=[
+            ["Paneer Tikka", 5],
+            ["Gobi Manchurian", 8],
+        ],
+    )
+    builder = data_fixture.create_builder_application(user=user, workspace=workspace)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        table=table,
+    )
+    # Create a heading element that only uses the first field
+    data_fixture.create_builder_heading_element(
+        page=page,
+        value=f"get('data_source.{data_source.id}.*.field_{fields[0].id}')",
+    )
+
+    url = reverse(
+        "api:builder:data_source:dispatch",
+        kwargs={"data_source_id": data_source.id},
+    )
+    response = api_client.post(url, HTTP_AUTHORIZATION=f"JWT {token}")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "has_next_page": False,
+        "results": [
+            {
+                f"field_{fields[0].id}": "Paneer Tikka",
+                # Although only field_1 is explicitly used by an element in this
+                # page, field_2 is still returned because the Editor page needs
+                # access to all data source fields.
+                f"field_{fields[1].id}": "5",
+                "id": AnyInt(),
+                "order": AnyStr(),
+            },
+            {
+                f"field_{fields[0].id}": "Gobi Manchurian",
+                f"field_{fields[1].id}": "8",
+                "id": AnyInt(),
+                "order": AnyStr(),
+            },
+        ],
+    }
 
 
 @pytest.mark.django_db
