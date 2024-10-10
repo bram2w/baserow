@@ -1,3 +1,6 @@
+from io import BytesIO
+from typing import BinaryIO
+
 from django.core.files.storage import Storage, default_storage
 
 
@@ -21,3 +24,27 @@ class OverwritingStorageHandler:
         if self.storage.exists(name):
             self.storage.delete(name)
         self.storage.save(name, content)
+
+
+def _create_storage_dir_if_missing_and_open(storage_location, storage=None) -> BinaryIO:
+    """
+    Attempts to open the provided storage location in binary overwriting write mode.
+    If it encounters a FileNotFound error will attempt to create the folder structure
+    leading upto to the storage location and then open again.
+
+    :param storage_location: The storage location to open and ensure folders for.
+    :param storage: The storage to use, if None will use the default storage.
+    :return: The open file descriptor for the storage_location
+    """
+
+    storage = storage or get_default_storage()
+
+    try:
+        return storage.open(storage_location, "wb+")
+    except FileNotFoundError:
+        # django's file system storage will not attempt to creating a missing
+        # EXPORT_FILES_DIRECTORY and instead will throw a FileNotFoundError.
+        # So we first save an empty file which will create any missing directories
+        # and then open again.
+        storage.save(storage_location, BytesIO())
+        return storage.open(storage_location, "wb")

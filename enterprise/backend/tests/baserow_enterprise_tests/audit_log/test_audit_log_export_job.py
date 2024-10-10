@@ -17,7 +17,7 @@ from baserow_enterprise.audit_log.job_types import AuditLogExportJobType
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_audit_log_export_csv_correctly(
     get_storage_mock, enterprise_data_fixture, synced_roles
 ):
@@ -97,7 +97,7 @@ def test_audit_log_export_csv_correctly(
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 @override_settings(DEBUG=True)
 @pytest.mark.skip("Need to re-build the translations first.")
 def test_audit_log_export_csv_in_the_user_language(
@@ -141,7 +141,7 @@ def test_audit_log_export_csv_in_the_user_language(
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 @override_settings(DEBUG=True)
 def test_deleting_audit_log_export_job_also_delete_exported_file(
     get_storage_mock, enterprise_data_fixture, synced_roles
@@ -182,7 +182,7 @@ def test_deleting_audit_log_export_job_also_delete_exported_file(
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 @override_settings(DEBUG=True)
 def test_audit_log_export_filters_work_correctly(
     get_storage_mock, enterprise_data_fixture, synced_roles
@@ -238,7 +238,7 @@ def test_audit_log_export_filters_work_correctly(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_audit_log_export_workspace_csv_correctly(
     get_storage_mock, enterprise_data_fixture, synced_roles
 ):

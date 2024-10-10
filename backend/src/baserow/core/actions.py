@@ -17,6 +17,7 @@ from baserow.core.action.scopes import (
     WorkspaceActionScopeType,
 )
 from baserow.core.handler import CoreHandler, WorkspaceForUpdate
+from baserow.core.import_export_handler import ImportExportHandler
 from baserow.core.models import (
     Application,
     Template,
@@ -24,7 +25,7 @@ from baserow.core.models import (
     WorkspaceInvitation,
     WorkspaceUser,
 )
-from baserow.core.registries import application_type_registry
+from baserow.core.registries import ImportExportConfig, application_type_registry
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import ChildProgressBuilder
 
@@ -1135,3 +1136,68 @@ class CreateInitialWorkspaceActionType(ActionType):
     @classmethod
     def scope(cls) -> ActionScopeStr:
         return RootActionScopeType.value()
+
+
+class ExportApplicationsActionType(ActionType):
+    type = "export_applications"
+    description = ActionTypeDescription(
+        _("Export applications"),
+        _('Applications "%(application_names)s" (%(application_ids)s) exported'),
+        WORKSPACE_ACTION_CONTEXT,
+    )
+    analytics_params = [
+        "workspace_id",
+        "application_ids",
+    ]
+
+    @dataclasses.dataclass
+    class Params:
+        workspace_id: int
+        workspace_name: str
+        application_ids: List[int]
+        application_names: List[str]
+
+    @classmethod
+    def do(
+        cls,
+        user: AbstractUser,
+        workspace: Workspace,
+        applications: List[Application],
+        progress_builder: Optional[ChildProgressBuilder] = None,
+    ) -> str:
+        """
+        Export provided Applications set from the given workspace.
+        This action is readonly and is not undoable.
+
+        :param user: The user on whose behalf the application is exported.
+        :param workspace: Workspace instance from which applications are exported.
+        :param applications: List of application instances to be exported
+        :param progress_builder: A progress builder instance that can be used to
+            track the progress of the export.
+        :return: file name of exported applications.
+        """
+
+        cli_import_export_config = ImportExportConfig(
+            include_permission_data=False, reduce_disk_space_usage=False
+        )
+
+        file_name = ImportExportHandler().export_workspace_applications(
+            workspace,
+            import_export_config=cli_import_export_config,
+            applications=applications,
+            progress_builder=progress_builder,
+        )
+
+        params = cls.Params(
+            workspace_id=workspace.id,
+            workspace_name=workspace.name,
+            application_ids=[application.id for application in applications],
+            application_names=[application.name for application in applications],
+        )
+
+        cls.register_action(user, params, cls.scope(workspace.id), workspace=workspace)
+        return file_name
+
+    @classmethod
+    def scope(cls, workspace_id: int) -> ActionScopeStr:
+        return WorkspaceActionScopeType.value(workspace_id)

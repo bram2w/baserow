@@ -231,9 +231,7 @@ def test_exporting_csv_writes_file_to_storage(
     )
     storage = FileSystemStorage(location=(str(tmpdir)), base_url="http://localhost")
 
-    with patch(
-        "baserow.contrib.database.export.handler.get_default_storage"
-    ) as get_storage_mock:
+    with patch("baserow.core.storage.get_default_storage") as get_storage_mock:
         get_storage_mock.return_value = storage
 
         run_time = parse_datetime("2020-02-01 01:00").replace(tzinfo=timezone.utc)
@@ -355,9 +353,7 @@ def test_exporting_csv_table_writes_file_to_storage(
     )
     storage = FileSystemStorage(location=(str(tmpdir)), base_url="http://localhost")
 
-    with patch(
-        "baserow.contrib.database.export.handler.get_default_storage"
-    ) as get_storage_mock:
+    with patch("baserow.core.storage.get_default_storage") as get_storage_mock:
         get_storage_mock.return_value = storage
         run_time = parse_datetime("2020-02-01 01:00").replace(tzinfo=timezone.utc)
         # DRF uses some custom internal date time formatting, use the field itself

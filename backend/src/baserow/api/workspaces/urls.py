@@ -3,6 +3,7 @@ from django.urls import include, path, re_path
 from .invitations import urls as invitation_urls
 from .users import urls as user_urls
 from .views import (
+    AsyncExportWorkspaceApplicationsView,
     CreateInitialWorkspaceView,
     WorkspaceGenerativeAISettingsView,
     WorkspaceLeaveView,
@@ -37,5 +38,10 @@ urlpatterns = [
         r"create-initial-workspace/$",
         CreateInitialWorkspaceView.as_view(),
         name="create_initial_workspace",
+    ),
+    re_path(
+        r"(?P<workspace_id>[0-9]+)/export/async/$",
+        AsyncExportWorkspaceApplicationsView.as_view(),
+        name="export_workspace_async",
     ),
 ]

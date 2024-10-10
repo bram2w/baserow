@@ -1,9 +1,11 @@
+from contextlib import contextmanager
 from typing import Any, Dict, List
 
 from django.contrib.auth.models import AbstractUser
 
 from rest_framework import serializers
 
+from baserow.api.applications.errors import ERROR_APPLICATION_DOES_NOT_EXIST
 from baserow.api.applications.serializers import (
     InstallTemplateJobApplicationsSerializer,
     PolymorphicApplicationResponseSerializer,
@@ -11,8 +13,10 @@ from baserow.api.applications.serializers import (
 from baserow.api.errors import (
     ERROR_GROUP_DOES_NOT_EXIST,
     ERROR_MAX_LOCKS_PER_TRANSACTION_EXCEEDED,
+    ERROR_PERMISSION_DENIED,
     ERROR_USER_NOT_IN_GROUP,
 )
+from baserow.api.export.serializers import ExportWorkspaceExportedFileURLSerializerMixin
 from baserow.api.templates.errors import (
     ERROR_TEMPLATE_DOES_NOT_EXIST,
     ERROR_TEMPLATE_FILE_DOES_NOT_EXIST,
@@ -22,10 +26,13 @@ from baserow.api.workspaces.serializers import WorkspaceSerializer
 from baserow.core.action.registries import action_type_registry
 from baserow.core.actions import (
     DuplicateApplicationActionType,
+    ExportApplicationsActionType,
     InstallTemplateActionType,
 )
 from baserow.core.exceptions import (
+    ApplicationDoesNotExist,
     DuplicateApplicationMaxLocksExceededException,
+    PermissionDenied,
     TemplateDoesNotExist,
     TemplateFileDoesNotExist,
     UserNotInWorkspace,
@@ -33,8 +40,17 @@ from baserow.core.exceptions import (
 )
 from baserow.core.handler import CoreHandler
 from baserow.core.jobs.registries import JobType
-from baserow.core.models import Application, DuplicateApplicationJob, InstallTemplateJob
-from baserow.core.operations import CreateApplicationsWorkspaceOperationType
+from baserow.core.models import (
+    Application,
+    DuplicateApplicationJob,
+    ExportApplicationsJob,
+    InstallTemplateJob,
+)
+from baserow.core.operations import (
+    CreateApplicationsWorkspaceOperationType,
+    ListApplicationsWorkspaceOperationType,
+    ReadWorkspaceOperationType,
+)
 from baserow.core.registries import application_type_registry
 from baserow.core.utils import Progress
 
@@ -188,3 +204,135 @@ class InstallTemplateJobType(JobType):
         job.save(update_fields=("installed_applications",))
 
         return installed_applications
+
+
+class ExportApplicationsJobType(JobType):
+    type = "export_applications"
+    model_class = ExportApplicationsJob
+    max_count = 1
+
+    api_exceptions_map = {
+        UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+        WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
+        ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
+    }
+
+    job_exceptions_map = {PermissionDenied: ERROR_PERMISSION_DENIED}
+
+    request_serializer_field_names = ["workspace_id", "application_ids"]
+    request_serializer_field_overrides = {
+        "application_ids": serializers.ListField(
+            allow_null=True,
+            allow_empty=True,
+            required=False,
+            child=serializers.IntegerField(),
+            help_text=(
+                "The application IDs to export. If not provided, all the applications for "
+                "the workspace will be exported."
+            ),
+        ),
+        "only_structure": serializers.BooleanField(
+            required=False,
+            default=False,
+            help_text=(
+                "If True, only the structure of the applications will be exported. "
+                "If False, the data will be included as well."
+            ),
+        ),
+    }
+
+    serializer_mixins = [ExportWorkspaceExportedFileURLSerializerMixin]
+    serializer_field_names = ["exported_file_name", "url"]
+
+    def transaction_atomic_context(self, job: "DuplicateApplicationJob"):
+        """
+        Each application is isolated, so a single transaction for all of them together
+        is unnecessary and increases the risk of `max_locks_per_transaction`.
+        Instead, the `import_export_handler` creates a transaction for each
+        application in a `repeatable_read` isolation level to guarantee consistency
+        in the data read.
+        """
+
+        @contextmanager
+        def empty_context():
+            yield
+
+        return empty_context()
+
+    def get_workspace_and_applications(self, user, workspace_id, application_ids):
+        handler = CoreHandler()
+        workspace = handler.get_workspace(workspace_id=workspace_id)
+
+        handler.check_permissions(
+            user,
+            ReadWorkspaceOperationType.type,
+            workspace=workspace,
+            context=workspace,
+        )
+
+        applications = Application.objects.filter(
+            workspace=workspace, workspace__trashed=False
+        )
+        if application_ids:
+            applications = applications.filter(id__in=application_ids)
+
+        applications = CoreHandler().filter_queryset(
+            user,
+            ListApplicationsWorkspaceOperationType.type,
+            applications,
+            workspace=workspace,
+        )
+
+        if application_ids and len(application_ids) != len(applications):
+            raise PermissionDenied(
+                "Some of the selected applications do not exist or the user does "
+                "not have access to them."
+            )
+
+        return workspace, applications
+
+    def prepare_values(
+        self, values: Dict[str, Any], user: AbstractUser
+    ) -> Dict[str, Any]:
+        workspace_id = values.get("workspace_id")
+        application_ids = values.get("application_ids")
+
+        self.get_workspace_and_applications(
+            user=user, workspace_id=workspace_id, application_ids=application_ids
+        )
+
+        return {
+            "workspace_id": workspace_id,
+            "application_ids": ",".join(map(str, application_ids))
+            if application_ids
+            else "",
+        }
+
+    def run(self, job: ExportApplicationsJob, progress: Progress) -> str:
+        application_ids = job.application_ids
+        if application_ids:
+            application_ids = application_ids.split(",")
+
+        workspace, applications = self.get_workspace_and_applications(
+            user=job.user,
+            workspace_id=job.workspace_id,
+            application_ids=application_ids,
+        )
+
+        progress_builder = progress.create_child_builder(
+            represents_progress=progress.total
+        )
+
+        exported_file_name = action_type_registry.get_by_type(
+            ExportApplicationsActionType
+        ).do(
+            job.user,
+            workspace=workspace,
+            applications=applications,
+            progress_builder=progress_builder,
+        )
+
+        job.exported_file_name = exported_file_name
+        job.save(update_fields=("exported_file_name",))
+
+        return exported_file_name

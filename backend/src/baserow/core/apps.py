@@ -189,6 +189,7 @@ class CoreConfig(AppConfig):
             DeleteWorkspaceActionType,
             DeleteWorkspaceInvitationActionType,
             DuplicateApplicationActionType,
+            ExportApplicationsActionType,
             InstallTemplateActionType,
             LeaveWorkspaceActionType,
             OrderApplicationsActionType,
@@ -216,6 +217,7 @@ class CoreConfig(AppConfig):
         action_type_registry.register(UpdateWorkspaceInvitationActionType())
         action_type_registry.register(LeaveWorkspaceActionType())
         action_type_registry.register(CreateInitialWorkspaceActionType())
+        action_type_registry.register(ExportApplicationsActionType())
 
         from baserow.core.snapshots.actions import (
             CreateSnapshotActionType,
@@ -271,13 +273,18 @@ class CoreConfig(AppConfig):
 
         from baserow.core.jobs.registries import job_type_registry
 
-        from .job_types import DuplicateApplicationJobType, InstallTemplateJobType
+        from .job_types import (
+            DuplicateApplicationJobType,
+            ExportApplicationsJobType,
+            InstallTemplateJobType,
+        )
         from .snapshots.job_types import CreateSnapshotJobType, RestoreSnapshotJobType
 
         job_type_registry.register(DuplicateApplicationJobType())
         job_type_registry.register(InstallTemplateJobType())
         job_type_registry.register(CreateSnapshotJobType())
         job_type_registry.register(RestoreSnapshotJobType())
+        job_type_registry.register(ExportApplicationsJobType())
 
         from baserow.api.notifications.user_data_types import (
             UnreadUserNotificationsCountPermissionsDataType,
