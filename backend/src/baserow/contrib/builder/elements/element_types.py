@@ -488,6 +488,35 @@ class RecordSelectorElementType(
             "option_name_suffix",
         ]
 
+    def extract_formula_properties(
+        self, instance: Element, element_map: Dict[BaserowFormula, Element], **kwargs
+    ) -> Dict[int, List[BaserowFormula]]:
+        """
+        For the record selector we always need the `id` and the row name property.
+        """
+
+        properties = super().extract_formula_properties(instance, element_map, **kwargs)
+
+        if instance.data_source_id and instance.data_source.service_id:
+            service = instance.data_source.service.specific
+
+            # We need the id for the element
+            id_property = service.get_type().get_id_property(service)
+            if id_property not in properties.setdefault(
+                instance.data_source.service_id, []
+            ):
+                properties[instance.data_source.service_id].append(id_property)
+
+            primary_property = service.get_type().get_name_property(service)
+            if (
+                primary_property is not None
+                and primary_property not in properties[instance.data_source.service_id]
+            ):
+                # And we also need at least the name that identifies the row
+                properties[instance.data_source.service_id].append(primary_property)
+
+        return properties
+
     def import_context_addition(self, instance):
         return {"data_source_id": instance.data_source_id}
 
