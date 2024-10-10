@@ -11,16 +11,12 @@ from typing import Any, Dict, Generator, List, Optional, Type, Union
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.db import connection
-from django.shortcuts import reverse
 from django.utils.dateparse import parse_date, parse_datetime
 
 import psycopg2
 from freezegun import freeze_time
 from pytest_unordered import unordered
 
-from baserow.contrib.builder.data_sources.builder_dispatch_context import (
-    BuilderDispatchContext,
-)
 from baserow.contrib.database.fields.field_helpers import (
     construct_all_possible_field_kwargs,
 )
@@ -633,25 +629,3 @@ class ReplayValues:
         self.stored = []
         self.recorded = []
         self.i = iter(counter_int())
-
-
-def get_dispatch_context(
-    url, data_fixture, api_request_factory, builder, page, data=None
-):
-    """Helper that returns a dispatch context to be used in tests."""
-
-    user_source = data_fixture.create_user_source_with_first_type(application=builder)
-    user_source_user = data_fixture.create_user_source_user(
-        user_source=user_source,
-    )
-    token = user_source_user.get_refresh_token().access_token
-    fake_request = api_request_factory.post(
-        reverse(url, kwargs={"page_id": page.id}),
-        {},
-        HTTP_USERSOURCEAUTHORIZATION=f"JWT {token}",
-    )
-    fake_request.user = user_source_user
-    if data is not None:
-        fake_request.data = data
-
-    return BuilderDispatchContext(fake_request, page)

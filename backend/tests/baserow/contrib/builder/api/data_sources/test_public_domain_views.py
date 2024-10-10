@@ -143,25 +143,11 @@ def test_dispatch_data_sources_list_rows_no_elements(
         HTTP_AUTHORIZATION=f"JWT {data_source_fixture['token']}",
     )
 
-    rows = data_source_fixture["rows"]
     assert response.status_code == HTTP_200_OK
     assert response.json() == {
         str(data_source.id): {
             "has_next_page": False,
-            "results": [
-                {
-                    "id": rows[0].id,
-                    "order": str(rows[0].order),
-                },
-                {
-                    "id": rows[1].id,
-                    "order": str(rows[1].order),
-                },
-                {
-                    "id": rows[2].id,
-                    "order": str(rows[2].order),
-                },
-            ],
+            "results": [],
         },
     }
 
@@ -198,14 +184,8 @@ def test_dispatch_data_sources_get_row_no_elements(
         HTTP_AUTHORIZATION=f"JWT {data_source_fixture['token']}",
     )
 
-    rows = data_source_fixture["rows"]
     assert response.status_code == HTTP_200_OK
-    assert response.json() == {
-        str(data_source.id): {
-            "id": rows[1].id,
-            "order": str(rows[1].order),
-        }
-    }
+    assert response.json() == {str(data_source.id): {}}
 
 
 @pytest.mark.django_db
@@ -254,16 +234,12 @@ def test_dispatch_data_sources_list_rows_with_elements(
         HTTP_AUTHORIZATION=f"JWT {data_source_fixture['token']}",
     )
 
-    expected_results = []
-    rows = data_source_fixture["rows"]
-    for row in rows:
-        expected_results.append(
-            {
-                f"field_{field_id}": getattr(row, f"field_{field_id}"),
-                "id": row.id,
-                "order": str(row.order),
-            }
-        )
+    expected_results = [
+        {
+            f"field_{field_id}": getattr(row, f"field_{field_id}"),
+        }
+        for row in data_source_fixture["rows"]
+    ]
 
     assert response.status_code == HTTP_200_OK
     # Although this Data Source has 2 Fields/Columns, only one is returned
@@ -340,8 +316,6 @@ def test_dispatch_data_sources_get_row_with_elements(
     assert response.json() == {
         str(data_source.id): {
             f"field_{field_id}": getattr(rows[db_row_id], f"field_{field_id}"),
-            "id": rows[db_row_id].id,
-            "order": str(rows[db_row_id].order),
         }
     }
 
@@ -441,8 +415,6 @@ def test_dispatch_data_sources_get_and_list_rows_with_elements(
     assert response.json() == {
         str(data_source_1.id): {
             f"field_{fields_1[0].id}": getattr(rows_1[0], f"field_{fields_1[0].id}"),
-            "id": rows_1[0].id,
-            "order": str(rows_1[0].order),
         },
         # Although this Data Source has 2 Fields/Columns, only one is returned
         # since only one field_id is used by the Table.
@@ -453,8 +425,6 @@ def test_dispatch_data_sources_get_and_list_rows_with_elements(
                     f"field_{fields_2[0].id}": getattr(
                         rows_2[0], f"field_{fields_2[0].id}"
                     ),
-                    "id": rows_2[0].id,
-                    "order": str(rows_2[0].order),
                 },
             ],
         },
@@ -515,6 +485,7 @@ def test_dispatch_data_sources_list_rows_with_elements_and_role(
     )
 
     field_id = data_source_element_roles_fixture["fields"][0].id
+    field_name = f"field_{field_id}"
 
     # Create an element that uses a formula referencing the data source
     data_fixture.create_builder_table_element(
@@ -527,7 +498,7 @@ def test_dispatch_data_sources_list_rows_with_elements_and_role(
             {
                 "name": "FieldA",
                 "type": "text",
-                "config": {"value": f"get('current_record.field_{field_id}')"},
+                "config": {"value": f"get('current_record.{field_name}')"},
             },
         ],
     )
@@ -546,16 +517,11 @@ def test_dispatch_data_sources_list_rows_with_elements_and_role(
 
     expected_results = []
     for row in data_source_element_roles_fixture["rows"]:
-        result = {
-            "id": row.id,
-            "order": str(row.order),
-        }
         if expect_fields:
             # Field should only be visible if the user's role allows them
             # to see the data source fields.
-            result[f"field_{field_id}"] = getattr(row, f"field_{field_id}")
 
-        expected_results.append(result)
+            expected_results.append({field_name: getattr(row, field_name)})
 
     assert response.status_code == HTTP_200_OK
     assert response.json() == {

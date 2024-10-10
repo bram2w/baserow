@@ -54,6 +54,9 @@ if "cachalot" not in INSTALLED_APPS:
     install_cachalot()
 
 CACHALOT_ENABLED = False
+
+BUILDER_PUBLICLY_USED_PROPERTIES_CACHE_TTL_SECONDS = 10
+
 AUTO_INDEX_VIEW_ENABLED = False
 # For ease of testing tests assume this setting is set to this. Set it explicitly to
 # prevent any dev env config from breaking the tests.

@@ -229,6 +229,18 @@ class DataSourceService:
             self, data_source_id=data_source.id, page=page, user=user
         )
 
+    def remove_unused_field_names(
+        self,
+        row: Dict[str, Any],
+        field_names: List[str],
+    ) -> Dict[str, Any]:
+        """
+        Given a row dictionary, return a version of it that only contains keys
+        existing in the field_names list.
+        """
+
+        return {key: value for key, value in row.items() if key in field_names}
+
     def dispatch_data_sources(
         self,
         user,
@@ -257,48 +269,51 @@ class DataSourceService:
 
         results = self.handler.dispatch_data_sources(data_sources, dispatch_context)
 
+        # When public_formula_fields is None, it indicates that filtering
+        # shouldn't be applied, thus the results are returned without changes.
         if dispatch_context.public_formula_fields is None:
             return results
 
         # We filter the fields before returning the result
+        new_results = {}
         for data_source in data_sources:
             if isinstance(results[data_source.id], Exception):
+                new_results[data_source.id] = results[data_source.id]
                 continue
 
             field_names = dispatch_context.public_formula_fields.get(
                 "external", {}
             ).get(data_source.service.id, [])
+
+            # If field_names is empty, that means no fields are allowed so
+            # we should skip this data source altogether.
+            if not field_names:
+                if data_source.service.get_type().returns_list:
+                    new_results[data_source.id] = {
+                        "results": [],
+                        "has_next_page": False,
+                    }
+                else:
+                    new_results[data_source.id] = {}
+
+                # Since field_names is empty, there is nothing to filter for
+                # this data source.
+                continue
+
             if data_source.service.get_type().returns_list:
-                new_result = []
-                for row in results[data_source.id]["results"]:
-                    new_row = {}
-                    for key, value in row.items():
-                        if key in ["id", "order"]:
-                            # Ensure keys like "id" and "order" are included
-                            # in new_row
-                            new_row[key] = value
-                        elif key in field_names:
-                            # Only include the field if it is in the
-                            # external/safe field_names list
-                            new_row[key] = value
-                    new_result.append(new_row)
-                results[data_source.id] = {
+                new_results[data_source.id] = {
                     **results[data_source.id],
-                    "results": new_result,
+                    "results": [
+                        self.remove_unused_field_names(row, field_names)
+                        for row in results[data_source.id]["results"]
+                    ],
                 }
             else:
-                new_result = {}
-                for key, value in results[data_source.id].items():
-                    if key in ["id", "order"]:
-                        # Ensure keys like "id" and "order" are included in new_row
-                        new_result[key] = value
-                    elif key in field_names:
-                        # Only include the field if it is in the external/safe
-                        # field_names list
-                        new_result[key] = value
-                results[data_source.id] = new_result
+                new_results[data_source.id] = self.remove_unused_field_names(
+                    results[data_source.id], field_names
+                )
 
-        return results
+        return new_results
 
     def dispatch_page_data_sources(
         self,
