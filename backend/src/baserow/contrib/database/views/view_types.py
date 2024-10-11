@@ -1110,7 +1110,7 @@ class FormViewType(ViewType):
                         condition["type"]
                     ).set_import_serialized_value(condition["value"], id_mapping)
                     group = None
-                    if condition["group"] and not (
+                    if "group" in condition and not (
                         group := condition_groups.get(condition["group"])
                     ):
                         group = FormViewFieldOptionsConditionGroup.objects.create(
