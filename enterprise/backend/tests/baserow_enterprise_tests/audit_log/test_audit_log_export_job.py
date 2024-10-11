@@ -293,7 +293,7 @@ def test_audit_log_export_workspace_csv_correctly(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_audit_log_export_workspace_csv_correctly_if_feature_is_enable_for_the_user(
     get_storage_mock, enterprise_data_fixture, synced_roles
 ):
