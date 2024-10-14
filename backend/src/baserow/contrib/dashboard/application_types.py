@@ -16,9 +16,8 @@ from baserow.core.utils import ChildProgressBuilder
 class DashboardApplicationType(ApplicationType):
     type = "dashboard"
     model_class = Dashboard
-    serializer_field_names = [
-        "name",
-    ]
+    serializer_field_names = ["name", "description"]
+    allowed_fields = ["description"]
 
     def get_api_urls(self):
         from .api import urls as api_urls
@@ -50,6 +49,7 @@ class DashboardApplicationType(ApplicationType):
             storage=storage,
         )
         return DashboardDict(
+            description=dashboard.description,
             **serialized_dashboard,
         )
 
@@ -78,5 +78,9 @@ class DashboardApplicationType(ApplicationType):
             storage,
             progress.create_child_builder(represents_progress=100),
         )
+
+        if description := serialized_values.pop("description", ""):
+            application.description = description
+            application.save()
 
         return application

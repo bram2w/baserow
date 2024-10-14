@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
@@ -540,6 +540,8 @@ class UpdateApplicationActionType(UndoableActionType):
         application_id: int
         application_name: Optional[str]
         original_application_name: str
+        data: Dict[str, Any]
+        original_data: Dict[str, Any]
 
     @classmethod
     def do(cls, user: AbstractUser, application: Application, **kwargs) -> Application:
@@ -557,7 +559,11 @@ class UpdateApplicationActionType(UndoableActionType):
 
         original_name = application.name
 
-        application = CoreHandler().update_application(user, application, **kwargs)
+        app_updated_result = CoreHandler().update_application(
+            user, application, **kwargs
+        )
+        application = app_updated_result.updated_application_instance
+
         application_type = application_type_registry.get_by_model(
             application.specific_class
         )
@@ -567,6 +573,11 @@ class UpdateApplicationActionType(UndoableActionType):
         # At the moment, the builder application doesn't use actions and need
         # to bypass registering.
         if application_type.supports_actions:
+            # name is stored separately so it will be removed here from
+            # others allowed_values
+            app_updated_result.updated_app_allowed_values.pop("name", None)
+            app_updated_result.original_app_allowed_values.pop("name", None)
+
             params = cls.Params(
                 workspace.id,
                 workspace.name,
@@ -574,6 +585,8 @@ class UpdateApplicationActionType(UndoableActionType):
                 application.id,
                 kwargs.get("name", original_name),
                 original_name,
+                app_updated_result.updated_app_allowed_values,
+                app_updated_result.original_app_allowed_values,
             )
             cls.register_action(
                 user, params, scope=cls.scope(workspace.id), workspace=workspace
@@ -589,14 +602,17 @@ class UpdateApplicationActionType(UndoableActionType):
     def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
         application = CoreHandler().get_application(params.application_id).specific
         CoreHandler().update_application(
-            user, application, name=params.original_application_name
+            user,
+            application,
+            name=params.original_application_name,
+            **params.original_data,
         )
 
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
         application = CoreHandler().get_application(params.application_id).specific
         CoreHandler().update_application(
-            user, application, name=params.application_name
+            user, application, name=params.application_name, **params.data
         )
 
 
