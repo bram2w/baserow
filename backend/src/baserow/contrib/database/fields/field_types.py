@@ -6289,3 +6289,7 @@ class PasswordFieldType(FieldType):
         # We don't want to expose the hash of the password, so we just show `True` or
         # `False` as string depending on whether the value is set.
         return bool(value)
+
+    def is_searchable(self, field: Field) -> bool:
+        # passwords shouldn't be searchable!
+        return False
