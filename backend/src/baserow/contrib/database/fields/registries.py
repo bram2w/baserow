@@ -195,6 +195,10 @@ class FieldType(
         returned value will be used. It is also possible to raise validation errors if
         the value is incorrect.
 
+        Note that a LinkRowFieldType may call this method internally with any value.
+        Field type should validate value's type and contents here and raise a proper
+        ValidationError.
+
         :param instance: The field instance.
         :param value: The value that needs to be inserted or updated.
         :return: The modified value that is going to be saved in the database.

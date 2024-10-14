@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
 from datetime import date, datetime, timedelta, timezone
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from itertools import cycle
 from random import randint, randrange, sample
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Set, Tuple, Union
@@ -529,7 +529,13 @@ class NumberFieldType(FieldType):
 
     def prepare_value_for_db(self, instance, value):
         if value is not None:
-            value = Decimal(value)
+            try:
+                value = Decimal(value)
+            except InvalidOperation:
+                raise ValidationError(
+                    f"The value for field {instance.id} is not a valid number",
+                    code="invalid",
+                )
 
         if value is not None and not instance.number_negative and value < 0:
             raise ValidationError(
@@ -674,8 +680,14 @@ class RatingFieldType(FieldType):
         if not value:
             return 0
 
-        # Ensure the value is an int
-        value = int(value)
+        try:
+            # Ensure the value is an int
+            value = int(value)
+        except (ValueError, TypeError):
+            raise ValidationError(
+                f"The value for field {instance.id} is not a valid number",
+                code="invalid",
+            )
 
         if value < 0:
             raise ValidationError(
@@ -5621,6 +5633,19 @@ class MultipleCollaboratorsFieldType(
         )
 
     def prepare_value_for_db(self, instance, value):
+        if not isinstance(
+            value,
+            (
+                list,
+                set,
+                tuple,
+            ),
+        ) or not all([isinstance(v, dict) for v in value]):
+            raise ValidationError(
+                f"The value for field {instance.id} is not a valid list of dictionaries",
+                code="invalid",
+            )
+
         if value is None:
             return []
 
