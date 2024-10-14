@@ -7,10 +7,11 @@ import it from '@baserow/modules/dashboard/locales/it.json'
 import pl from '@baserow/modules/dashboard/locales/pl.json'
 
 import { DashboardApplicationType } from '@baserow/modules/dashboard/applicationTypes'
+import dashboardApplicationStore from '@baserow/modules/dashboard/store/dashboardApplication'
 import { FF_DASHBOARDS } from '@baserow/modules/core/plugins/featureFlags'
 
 export default (context) => {
-  const { app, isDev } = context
+  const { app, isDev, store } = context
 
   // Allow locale file hot reloading in dev
   if (isDev && app.i18n) {
@@ -23,6 +24,8 @@ export default (context) => {
     i18n.mergeLocaleMessage('it', it)
     i18n.mergeLocaleMessage('pl', pl)
   }
+
+  store.registerModule('dashboardApplication', dashboardApplicationStore)
 
   if (app.$featureFlagIsEnabled(FF_DASHBOARDS)) {
     app.$registry.register('application', new DashboardApplicationType(context))

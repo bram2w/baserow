@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 import re
+from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
 from typing import IO, Any, Dict, List, NewType, Optional, Tuple, Union, cast
@@ -127,6 +128,13 @@ User = get_user_model()
 WorkspaceForUpdate = NewType("WorkspaceForUpdate", Workspace)
 
 tracer = trace.get_tracer(__name__)
+
+
+@dataclass
+class ApplicationUpdatedResult:
+    updated_application_instance: Application
+    original_app_allowed_values: Dict[str, Any]
+    updated_app_allowed_values: Dict[str, Any]
 
 
 class CoreHandler(metaclass=baserow_trace_methods(tracer)):
@@ -1418,7 +1426,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
     def update_application(
         self, user: AbstractUser, application: Application, **kwargs
-    ) -> Application:
+    ) -> ApplicationUpdatedResult:
         """
         Updates an existing application instance.
 
@@ -1436,18 +1444,25 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         )
 
         application_type = application_type_registry.get_by_model(application)
-        allowed_updates = extract_allowed(
+        allowed_values = extract_allowed(
             kwargs, self.default_update_allowed_fields + application_type.allowed_fields
         )
-
-        for key, value in allowed_updates.items():
+        original_allowed_values = {
+            allowed_value: getattr(application, allowed_value)
+            for allowed_value in allowed_values
+        }
+        for key, value in allowed_values.items():
             setattr(application, key, value)
 
         application.save()
 
         application_updated.send(self, application=application, user=user)
 
-        return application
+        return ApplicationUpdatedResult(
+            updated_application_instance=application,
+            original_app_allowed_values=original_allowed_values,
+            updated_app_allowed_values=allowed_values,
+        )
 
     def duplicate_application(
         self,
