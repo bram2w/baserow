@@ -15,7 +15,7 @@
   box-sizing: border-box;
   color: $palette-neutral-1200;
 
-  @include fixed-height(44px, 13px);
+  @include fixed-height(36px, 13px);
   @include rounded($rounded);
   @include flex-align-items(4px);
 
@@ -28,9 +28,8 @@
     border-color: $palette-red-600;
   }
 
-  .dropdown--tiny & {
-    height: 32px;
-    line-height: 32px;
+  .dropdown--large & {
+    @include fixed-height(44px, 13px);
   }
 
   .dropdown--disabled & {
@@ -38,12 +37,6 @@
     color: $palette-neutral-900;
     cursor: not-allowed;
     border-color: $palette-neutral-600;
-  }
-
-  .dropdown.dropdown--small & {
-    padding: 8px 12px;
-
-    @include fixed-height(36px, 13px);
   }
 }
 

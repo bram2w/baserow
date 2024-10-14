@@ -7,7 +7,7 @@
       class="margin-bottom-2"
     >
       <div class="control__elements">
-        <Dropdown v-model="values.data_source_id" :show-search="false" small>
+        <Dropdown v-model="values.data_source_id" :show-search="false">
           <DropdownItem
             v-for="dataSource in dataSources"
             :key="dataSource.id"

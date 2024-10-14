@@ -10,7 +10,6 @@
         v-model="type"
         class="dropdown--floating color-picker-context__color-type"
         :show-search="false"
-        small
       >
         <DropdownItem name="Hex" :value="COLOR_NOTATIONS.HEX"></DropdownItem>
         <DropdownItem name="RGB" :value="COLOR_NOTATIONS.RGB"></DropdownItem>
@@ -65,11 +64,7 @@
       v-if="Object.keys(variables).length > 0"
       class="color-picker-context__variables"
     >
-      <Dropdown
-        :value="selectedVariable?.name || ''"
-        small
-        @input="setVariable"
-      >
+      <Dropdown :value="selectedVariable?.name || ''" @input="setVariable">
         <DropdownItem name="Custom" value=""></DropdownItem>
         <DropdownItem
           v-for="variable in variables"

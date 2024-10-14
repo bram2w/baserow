@@ -19,7 +19,6 @@
           <Dropdown
             v-model="selectedRoleType"
             :placeholder="$t('visibilityForm.roleTypesHint')"
-            small
           >
             <DropdownItem
               v-for="(value, key) in roleTypeOptions"

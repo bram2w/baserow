@@ -53,7 +53,7 @@
             required
             class="margin-bottom-2"
           >
-            <Dropdown v-model="values.request_method" small>
+            <Dropdown v-model="values.request_method">
               <DropdownItem name="GET" value="GET"></DropdownItem>
               <DropdownItem name="POST" value="POST"></DropdownItem>
               <DropdownItem name="PATCH" value="PATCH"></DropdownItem>
@@ -229,7 +229,6 @@
             <Dropdown
               v-model="exampleWebhookEventType"
               class="dropdown--floating-left"
-              small
             >
               <DropdownItem
                 v-for="webhookEvent in webhookEventTypes"

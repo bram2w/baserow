@@ -101,7 +101,6 @@
         >
           <Dropdown
             v-model="values.image_constraint"
-            small
             fixed-items
             :show-search="true"
             class="flex-grow-1"

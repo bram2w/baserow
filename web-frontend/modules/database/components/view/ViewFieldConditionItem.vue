@@ -8,7 +8,6 @@
         :value="filter.field"
         :disabled="disableFilter"
         :fixed-items="true"
-        small
         @input="$emit('updateFilter', { field: $event })"
       >
         <DropdownItem
@@ -25,7 +24,6 @@
         :disabled="disableFilter"
         :value="filter.type"
         :fixed-items="true"
-        small
         @input="$emit('updateFilter', { type: $event })"
       >
         <DropdownItem

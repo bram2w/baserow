@@ -18,12 +18,9 @@
       <Dropdown
         v-model="values.ai_file_field_id"
         class="dropdown--floating"
-        :class="{
-          'dropdown--error': $v.values.ai_file_field_id.$error,
-        }"
+        :error="$v.values.ai_file_field_id.$error"
         :fixed-items="true"
         :show-search="false"
-        small
         @hide="$v.values.ai_file_field_id.$touch()"
       >
         <DropdownItem

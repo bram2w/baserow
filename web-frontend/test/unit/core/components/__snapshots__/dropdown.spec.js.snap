@@ -8,9 +8,16 @@ exports[`Dropdown component Test slots 1`] = `
   <a
     class="dropdown__selected"
   >
-    <p>
-      The value
-    </p>
+    <!---->
+     
+    <!---->
+     
+    <span
+      class="dropdown__selected-text"
+      title="A"
+    >
+      A
+    </span>
      
     <i
       class="dropdown__toggle-icon iconoir-nav-arrow-down"

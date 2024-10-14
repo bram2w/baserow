@@ -6,8 +6,8 @@
       class="margin-bottom-2"
       required
     >
-      <Dropdown v-model="navigateTo" :show-search="false" small>
-        <template #value>
+      <Dropdown v-model="navigateTo" :show-search="false">
+        <template #selectedValue>
           <template v-if="destinationPage">
             {{ destinationPage.name }}
             <span
@@ -20,6 +20,7 @@
             $t('linkNavigationSelection.navigateToCustom')
           }}</span>
         </template>
+
         <DropdownItem
           v-for="pageItem in pages"
           :key="pageItem.id"

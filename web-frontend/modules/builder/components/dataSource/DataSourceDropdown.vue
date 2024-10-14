@@ -5,7 +5,6 @@
     </p>
     <Dropdown
       :value="value"
-      small
       class="data-source-dropdown"
       @input="$emit('input', $event)"
     >

@@ -1,11 +1,12 @@
 <template>
   <div>
+    test1
     <p v-show="value === null" class="margin-bottom-1">
       <slot name="chooseValueState"></slot>
     </p>
     <Dropdown
       :value="value"
-      :small="small"
+      :size="small ? 'regular' : 'large'"
       :placeholder="placeholder"
       :show-search="true"
       @input="$emit('input', $event)"
