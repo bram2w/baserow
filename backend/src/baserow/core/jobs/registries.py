@@ -96,7 +96,7 @@ class JobType(
 
         raise NotImplementedError("The run method must be implemented.")
 
-    def before_delete(self, job):
+    def before_delete(self, job: AnyJob):
         """
         If a job type need to do something before a job deletion, can be done here.
         This method is do nothing by default.
