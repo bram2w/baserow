@@ -49,7 +49,6 @@
               :disabled="disableGroupBy"
               :fixed-items="true"
               class="dropdown--floating"
-              small
               @input="updateGroupBy(groupBy, { field: $event })"
             >
               <DropdownItem

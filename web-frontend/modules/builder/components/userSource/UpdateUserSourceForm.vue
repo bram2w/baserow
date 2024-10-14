@@ -25,9 +25,11 @@
           :application="builder"
           :integrations="integrations"
           :integration-type="userSourceType.integrationType"
+          size="large"
         />
       </FormGroup>
     </FormRow>
+
     <component
       :is="userSourceType.formComponent"
       v-if="integration"

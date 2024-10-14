@@ -9,7 +9,6 @@
       <div class="page-settings-path-params__dropdown">
         <Dropdown
           :value="pathParam.type"
-          small
           :disabled="disabled"
           @input="$emit('update', pathParam.name, $event)"
         >

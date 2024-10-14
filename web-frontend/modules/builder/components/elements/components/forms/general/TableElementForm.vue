@@ -169,7 +169,6 @@
                 <Dropdown
                   :value="field.type"
                   :show-search="false"
-                  small
                   @input="changeFieldType(field, $event)"
                 >
                   <DropdownItem

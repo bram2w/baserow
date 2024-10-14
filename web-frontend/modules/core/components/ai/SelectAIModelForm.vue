@@ -9,12 +9,9 @@
       <Dropdown
         v-model="values.ai_generative_ai_type"
         class="dropdown--floating"
-        :class="{
-          'dropdown--error': $v.values.ai_generative_ai_type.$error,
-        }"
+        :error="$v.values.ai_generative_ai_type.$errors"
         :fixed-items="true"
         :show-search="false"
-        small
         @hide="$v.values.ai_generative_ai_type.$touch()"
         @change="$refs.aiModel.select(aIModelsPerType[0])"
       >
@@ -37,12 +34,9 @@
         ref="aiModel"
         v-model="values.ai_generative_ai_model"
         class="dropdown--floating"
-        :class="{
-          'dropdown--error': $v.values.ai_generative_ai_model.$error,
-        }"
+        :error="$v.values.ai_generative_ai_model.$error"
         :fixed-items="true"
         :show-search="false"
-        small
         @hide="$v.values.ai_generative_ai_model.$touch()"
       >
         <DropdownItem
