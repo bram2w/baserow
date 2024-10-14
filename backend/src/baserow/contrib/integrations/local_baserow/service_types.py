@@ -29,8 +29,16 @@ from baserow.contrib.database.api.rows.serializers import (
 from baserow.contrib.database.fields.exceptions import FieldDoesNotExist
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.rows.exceptions import RowDoesNotExist
-from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.rows.actions import (
+    CreateRowsActionType,
+    DeleteRowsActionType,
+    UpdateRowsActionType,
+)
+from baserow.contrib.database.rows.exceptions import (
+    CannotCreateRowsInTable,
+    CannotDeleteRowsInTable,
+    RowDoesNotExist,
+)
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.operations import ListRowsDatabaseTableOperationType
@@ -1564,7 +1572,7 @@ class LocalBaserowUpsertRowServiceType(
         integration = service.integration.specific
         row_id: Optional[int] = resolved_values.get("row_id", None)
 
-        field_values = {}
+        row_values = {}
         field_mappings = service.field_mappings.select_related("field").filter(
             enabled=True
         )
@@ -1603,7 +1611,7 @@ class LocalBaserowUpsertRowServiceType(
 
             # Then transform and validate the resolved value for prepare value for db.
             try:
-                field_values[field.db_column] = field_type.prepare_value_for_db(
+                row_values[field.db_column] = field_type.prepare_value_for_db(
                     field.specific, resolved_value
                 )
             except ValidationError as exc:
@@ -1612,13 +1620,15 @@ class LocalBaserowUpsertRowServiceType(
                     f"field `{field.name} ({field.db_column})`: {exc.message}"
                 ) from exc
 
+        model = table.get_model()
+
         if row_id:
             try:
-                row = RowHandler().update_row_by_id(
+                (row,) = UpdateRowsActionType.do(
                     integration.authorized_user,
                     table,
-                    row_id=row_id,
-                    values=field_values,
+                    rows_values=[{**row_values, "id": row_id}],
+                    model=model,
                     values_already_prepared=True,
                 )
             except RowDoesNotExist as exc:
@@ -1626,14 +1636,20 @@ class LocalBaserowUpsertRowServiceType(
                     f"The row with id {row_id} does not exist."
                 ) from exc
         else:
-            row = RowHandler().create_row(
-                user=integration.authorized_user,
-                table=table,
-                values=field_values,
-                values_already_prepared=True,
-            )
+            try:
+                (row,) = CreateRowsActionType.do(
+                    user=integration.authorized_user,
+                    table=table,
+                    rows_values=[row_values],
+                    model=model,
+                    values_already_prepared=True,
+                )
+            except CannotCreateRowsInTable as exc:
+                raise ServiceImproperlyConfigured(
+                    f"Cannot create rows in table {table.id} because it has a data sync."
+                ) from exc
 
-        return {"data": row, "baserow_table_model": table.get_model()}
+        return {"data": row, "baserow_table_model": model}
 
     def import_path(self, path, id_mapping):
         """
@@ -1761,17 +1777,20 @@ class LocalBaserowDeleteRowServiceType(
         table = resolved_values["table"]
         integration = service.integration.specific
         row_id: Optional[int] = resolved_values.get("row_id", None)
+        model = table.get_model()
 
         if row_id:
             try:
-                RowHandler().delete_row_by_id(
-                    integration.authorized_user,
-                    table,
-                    row_id,
+                DeleteRowsActionType.do(
+                    integration.authorized_user, table, [row_id], model=model
                 )
             except RowDoesNotExist as exc:
                 raise ServiceImproperlyConfigured(
                     f"The row with id {row_id} does not exist."
                 ) from exc
+            except CannotDeleteRowsInTable as exc:
+                raise ServiceImproperlyConfigured(
+                    f"Cannot delete rows in table {table.id} because it has a data sync."
+                ) from exc
 
-        return {"data": {}, "baserow_table_model": table.get_model()}
+        return {"data": {}, "baserow_table_model": model}
