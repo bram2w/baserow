@@ -8,7 +8,8 @@
     "comingSoon": "Coming soon...",
     "billable": "Billable",
     "all": "All",
-    "beta": "Beta"
+    "beta": "Beta",
+    "summarize": "Summarize"
   },
   "action": {
     "upload": "Upload",

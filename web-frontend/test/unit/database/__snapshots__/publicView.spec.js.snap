@@ -709,7 +709,16 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                   <div
                     class="grid-view-aggregation"
                   >
-                    <!---->
+                    <div
+                      class="grid-view-aggregation__empty"
+                    >
+                      <i
+                        class="grid-view-aggregation__empty-icon iconoir-plus"
+                      />
+                      
+    common.summarize
+  
+                    </div>
                      
                   </div>
                 </div>
@@ -719,7 +728,16 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                   <div
                     class="grid-view-aggregation"
                   >
-                    <!---->
+                    <div
+                      class="grid-view-aggregation__empty"
+                    >
+                      <i
+                        class="grid-view-aggregation__empty-icon iconoir-plus"
+                      />
+                      
+    common.summarize
+  
+                    </div>
                      
                   </div>
                 </div>
@@ -729,7 +747,16 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                   <div
                     class="grid-view-aggregation"
                   >
-                    <!---->
+                    <div
+                      class="grid-view-aggregation__empty"
+                    >
+                      <i
+                        class="grid-view-aggregation__empty-icon iconoir-plus"
+                      />
+                      
+    common.summarize
+  
+                    </div>
                      
                   </div>
                 </div>
@@ -739,7 +766,16 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                   <div
                     class="grid-view-aggregation"
                   >
-                    <!---->
+                    <div
+                      class="grid-view-aggregation__empty"
+                    >
+                      <i
+                        class="grid-view-aggregation__empty-icon iconoir-plus"
+                      />
+                      
+    common.summarize
+  
+                    </div>
                      
                   </div>
                 </div>

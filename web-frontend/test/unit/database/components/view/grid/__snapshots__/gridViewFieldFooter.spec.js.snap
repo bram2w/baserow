@@ -133,7 +133,16 @@ exports[`Field footer component Change type 2`] = `
 <div
   class="grid-view-aggregation"
 >
-  <!---->
+  <div
+    class="grid-view-aggregation__empty"
+  >
+    <i
+      class="grid-view-aggregation__empty-icon iconoir-plus"
+    />
+    
+    common.summarize
+  
+  </div>
    
 </div>
 `;
@@ -165,7 +174,16 @@ exports[`Field footer component Default component 1`] = `
 <div
   class="grid-view-aggregation"
 >
-  <!---->
+  <div
+    class="grid-view-aggregation__empty"
+  >
+    <i
+      class="grid-view-aggregation__empty-icon iconoir-plus"
+    />
+    
+    common.summarize
+  
+  </div>
    
 </div>
 `;
