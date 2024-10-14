@@ -92,6 +92,10 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                   my public grid view name
                 </span>
               </span>
+               
+              <i
+                class="header__sub-icon iconoir-nav-arrow-down"
+              />
             </a>
              
             <!---->
