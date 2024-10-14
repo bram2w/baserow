@@ -874,3 +874,34 @@ def test_tsv_not_created(data_fixture):
         DeferredForeignKeyUpdater(),
     )
     assert text_field_imported.tsvector_column_created is False
+
+
+@pytest.mark.django_db
+@pytest.mark.field_link_row
+def test_field_type_prepare_db_value_with_invalid_values(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table = data_fixture.create_database_table(name="Example", database=database)
+    field_handler = FieldHandler()
+    # those fields require additional configuration or accept any text
+    # so they are not suitable for this test
+    excluded = ["ai", "text", "long_text", "boolean", "link_row", "password"]
+
+    test_payload = "invalid---"
+
+    for field_type in [
+        f
+        for f in field_type_registry.get_all()
+        if not f.read_only and f.type not in excluded
+    ]:
+        field_type_name = field_type.type
+        field_name = f"Field {field_type_name}"
+        field = field_handler.create_field(
+            user=user,
+            table=table,
+            type_name=field_type.type,
+            name=field_name,
+        )
+
+        with pytest.raises(ValidationError):
+            field_type.prepare_value_for_db(field, test_payload)
