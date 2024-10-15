@@ -5,12 +5,17 @@ from typing import Dict, List, Optional
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from django.conf import settings
+from django.contrib.auth.models import AbstractUser
 from django.core.files.base import ContentFile
 from django.core.files.storage import Storage
+from django.db.models import QuerySet
 
 from opentelemetry import trace
 
-from baserow.core.models import Application, Workspace
+from baserow.core.handler import CoreHandler
+from baserow.core.jobs.constants import JOB_FINISHED
+from baserow.core.models import Application, ExportApplicationsJob, Workspace
+from baserow.core.operations import ReadWorkspaceOperationType
 from baserow.core.registries import ImportExportConfig, application_type_registry
 from baserow.core.storage import (
     _create_storage_dir_if_missing_and_open,
@@ -20,6 +25,8 @@ from baserow.core.telemetry.utils import baserow_trace_methods
 from baserow.core.utils import ChildProgressBuilder, Progress
 
 tracer = trace.get_tracer(__name__)
+
+WORKSPACE_EXPORTS_LIMIT = 5
 
 
 class ImportExportHandler(metaclass=baserow_trace_methods(tracer)):
@@ -167,3 +174,34 @@ class ImportExportHandler(metaclass=baserow_trace_methods(tracer)):
                 )
                 progress.increment(by=20)
         return zip_file_name
+
+    def list(self, workspace_id: int, performed_by: AbstractUser) -> QuerySet:
+        """
+        Lists all workspace application exports for the given workspace id
+        if the provided user is in the same workspace.
+
+        :param workspace_id: The workspace ID of which the applications are exported.
+        :param performed_by: The user performing the operation that should
+            have sufficient permissions.
+        :return: A queryset for workspace export jobs that were created for the given
+            workspace.
+        """
+
+        workspace = CoreHandler().get_workspace(workspace_id)
+
+        CoreHandler().check_permissions(
+            performed_by,
+            ReadWorkspaceOperationType.type,
+            workspace=workspace,
+            context=workspace,
+        )
+
+        return (
+            ExportApplicationsJob.objects.filter(
+                workspace_id=workspace_id,
+                state=JOB_FINISHED,
+                user=performed_by,
+            )
+            .select_related("user")
+            .order_by("-updated_on", "-id")[:WORKSPACE_EXPORTS_LIMIT]
+        )

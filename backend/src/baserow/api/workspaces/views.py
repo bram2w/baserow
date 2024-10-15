@@ -44,6 +44,7 @@ from baserow.core.exceptions import (
 )
 from baserow.core.feature_flags import FF_EXPORT_WORKSPACE, feature_flag_is_enabled
 from baserow.core.handler import CoreHandler
+from baserow.core.import_export_handler import ImportExportHandler
 from baserow.core.job_types import ExportApplicationsJobType
 from baserow.core.jobs.exceptions import MaxJobCountExceeded
 from baserow.core.jobs.handler import JobHandler
@@ -71,9 +72,13 @@ ExportApplicationsJobRequestSerializer = job_type_registry.get(
 ExportApplicationsJobResponseSerializer = job_type_registry.get(
     ExportApplicationsJobType.type
 ).get_serializer_class(
-    base_class=serializers.Serializer,
+    base_class=JobSerializer,
     meta_ref_name="SingleExportApplicationsJobRequestSerializer",
 )
+
+
+class ListExportWorkspaceApplicationsSerializer(serializers.Serializer):
+    results = ExportApplicationsJobResponseSerializer(many=True)
 
 
 class WorkspacesView(APIView):
@@ -471,6 +476,47 @@ class CreateInitialWorkspaceView(APIView):
         return Response(WorkspaceUserWorkspaceSerializer(workspace_user).data)
 
 
+class ListExportWorkspaceApplicationsView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="workspace_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The id of the workspace that is being exported.",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Workspaces"],
+        operation_id="list_workspace_exports",
+        description="Lists exports that were created for given workspace.",
+        responses={
+            200: ListExportWorkspaceApplicationsSerializer,
+            400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
+            404: get_error_schema(["ERROR_GROUP_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+        }
+    )
+    def get(self, request, workspace_id):
+        """
+        Lists all available exports created for a given workspace.
+        """
+
+        feature_flag_is_enabled(FF_EXPORT_WORKSPACE, raise_if_disabled=True)
+
+        exports = ImportExportHandler().list(workspace_id, request.user)
+        return Response(
+            ListExportWorkspaceApplicationsSerializer({"results": exports}).data
+        )
+
+
 class AsyncExportWorkspaceApplicationsView(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -484,7 +530,7 @@ class AsyncExportWorkspaceApplicationsView(APIView):
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
-        tags=["Workspace"],
+        tags=["Workspaces"],
         operation_id="export_workspace_applications_async",
         description=(
             "Export workspace or set of applications application if the authorized user is "

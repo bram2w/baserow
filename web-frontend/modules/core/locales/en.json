@@ -132,7 +132,11 @@
     "description": "Your data will be exported as a ZIP file, which can be imported into other Baserow instance.",
     "exportSettings": "Export settings",
     "export": "Export data",
-    "cancel": "Cancel"
+    "reset": "Start new",
+    "cancel": "Cancel",
+    "download":  "Download",
+    "importingState": "Importing",
+    "noExports": "No exports for this workspace yet."
   },
   "dashboardWorkspace": {
     "createApplication": "Create new"
@@ -541,7 +545,9 @@
     "hoursAgo": "0 hours ago | 1 hour ago | {n} hours ago",
     "daysAgo": "0 days ago | 1 day ago | {n} days ago",
     "monthsAgo": "0 months ago | 1 month ago | {n} months ago",
-    "yearsAgo": "0 years ago | 1 year ago | {n} years ago"
+    "yearsAgo": "0 years ago | 1 year ago | {n} years ago",
+    "lessThanMinuteAgo": "less than minute ago",
+    "justNow": "just now"
   },
   "crudTableSearch": {
     "search": "Search"

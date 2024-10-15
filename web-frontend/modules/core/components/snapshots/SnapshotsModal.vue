@@ -75,6 +75,7 @@
             ref="snapshotsList"
             :key="snapshot.id"
             :snapshot="snapshot"
+            :last-updated="snapshot.created_at"
             @snapshot-deleted="snapshotDeleted"
           ></SnapshotListItem>
         </div>
@@ -165,7 +166,6 @@ export default {
         this.job.type === CreateSnapshotJobType.getType()
       ) {
         this.snapshots.unshift(this.job.snapshot)
-        this.refreshSnapshots()
       }
     },
     onJobFailed() {
@@ -177,17 +177,6 @@ export default {
     },
     onJobCancelled() {
       this.createLoading = false
-    },
-    /**
-     * This should be called if .snapshots list was changed without an API call issued.
-     *
-     * Each SnapshotListItem displays time elapsed from snapshot's creation. When an
-     * item is added to snapshots list, only that element will be freshly rendered.
-     * Other items won't recalculate time elapsed, so we need to do a force refresh
-     * from the parent component.
-     */
-    refreshSnapshots() {
-      this.$forceUpdate()
     },
     async loadSnapshots() {
       this.snapshotsLoading = true

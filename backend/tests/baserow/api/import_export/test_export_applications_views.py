@@ -5,7 +5,9 @@ from django.test.utils import override_settings
 from django.urls import reverse
 
 import pytest
+from freezegun import freeze_time
 from rest_framework.status import (
+    HTTP_200_OK,
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_403_FORBIDDEN,
@@ -118,8 +120,9 @@ def test_exporting_empty_workspace(
     user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)
 
-    token = data_fixture.generate_token(user)
-    with django_capture_on_commit_callbacks(execute=True):
+    run_time = "2024-10-14T08:00:00Z"
+    with django_capture_on_commit_callbacks(execute=True), freeze_time(run_time):
+        token = data_fixture.generate_token(user)
         response = api_client.post(
             reverse(
                 "api:workspaces:export_workspace_async",
@@ -135,6 +138,7 @@ def test_exporting_empty_workspace(
 
     job_id = response_json["id"]
     assert response_json == {
+        "created_on": run_time,
         "exported_file_name": "",
         "human_readable_error": "",
         "id": job_id,
@@ -142,13 +146,16 @@ def test_exporting_empty_workspace(
         "state": "pending",
         "type": "export_applications",
         "url": None,
+        "workspace_id": workspace.id,
     }
 
+    token = data_fixture.generate_token(user)
     response = api_client.get(
         reverse("api:jobs:item", kwargs={"job_id": job_id}),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
+    assert response.status_code == HTTP_200_OK
     response_json = response.json()
 
     file_name = response_json["exported_file_name"]
@@ -182,8 +189,9 @@ def test_exporting_workspace_with_single_empty_database(
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)
 
-    token = data_fixture.generate_token(user)
-    with django_capture_on_commit_callbacks(execute=True):
+    run_time = "2024-10-14T08:00:00Z"
+    with django_capture_on_commit_callbacks(execute=True), freeze_time(run_time):
+        token = data_fixture.generate_token(user)
         response = api_client.post(
             reverse(
                 "api:workspaces:export_workspace_async",
@@ -199,6 +207,7 @@ def test_exporting_workspace_with_single_empty_database(
 
     job_id = response_json["id"]
     assert response_json == {
+        "created_on": run_time,
         "exported_file_name": "",
         "human_readable_error": "",
         "id": job_id,
@@ -206,13 +215,16 @@ def test_exporting_workspace_with_single_empty_database(
         "state": "pending",
         "type": "export_applications",
         "url": None,
+        "workspace_id": database.workspace.id,
     }
 
+    token = data_fixture.generate_token(user)
     response = api_client.get(
         reverse("api:jobs:item", kwargs={"job_id": job_id}),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
+    assert response.status_code == HTTP_200_OK
     response_json = response.json()
 
     file_name = response_json["exported_file_name"]
@@ -241,3 +253,137 @@ def test_exporting_workspace_with_single_empty_database(
                     "tables": [],
                 }
             ]
+
+
+@pytest.mark.django_db
+@override_settings(
+    FEATURE_FLAGS="",
+)
+def test_list_exports_with_feature_flag_disabled(data_fixture, api_client, tmpdir):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    data_fixture.create_database_application(workspace=workspace)
+
+    response = api_client.get(
+        reverse(
+            "api:workspaces:export_workspace_list",
+            kwargs={"workspace_id": workspace.id},
+        ),
+        data={},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_403_FORBIDDEN
+    assert response.json()["error"] == "ERROR_FEATURE_DISABLED"
+
+
+@pytest.mark.django_db
+def test_list_exports_with_missing_workspace_returns_error(
+    data_fixture, api_client, tmpdir
+):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    data_fixture.create_database_application(workspace=workspace)
+
+    response = api_client.get(
+        reverse(
+            "api:workspaces:export_workspace_list",
+            kwargs={"workspace_id": 9999},
+        ),
+        data={},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_GROUP_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_list_exports_for_invalid_user(
+    data_fixture,
+    api_client,
+    tmpdir,
+    django_capture_on_commit_callbacks,
+    use_tmp_media_root,
+):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    user2 = data_fixture.create_user()
+
+    run_time = "2024-10-14T08:00:00Z"
+    with django_capture_on_commit_callbacks(execute=True), freeze_time(run_time):
+        token = data_fixture.generate_token(user)
+        api_client.post(
+            reverse(
+                "api:workspaces:export_workspace_async",
+                kwargs={"workspace_id": database.workspace.id},
+            ),
+            data={
+                "application_ids": [],
+            },
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+    token2 = data_fixture.generate_token(user2)
+    response = api_client.get(
+        reverse(
+            "api:workspaces:export_workspace_list",
+            kwargs={"workspace_id": database.workspace.id},
+        ),
+        data={},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token2}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_list_exports_for_valid_user(
+    data_fixture,
+    api_client,
+    tmpdir,
+    django_capture_on_commit_callbacks,
+    use_tmp_media_root,
+):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+
+    run_time = "2024-10-14T08:00:00Z"
+    with django_capture_on_commit_callbacks(execute=True), freeze_time(run_time):
+        token = data_fixture.generate_token(user)
+        api_client.post(
+            reverse(
+                "api:workspaces:export_workspace_async",
+                kwargs={"workspace_id": database.workspace.id},
+            ),
+            data={
+                "application_ids": [],
+            },
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+    token = data_fixture.generate_token(user)
+    response = api_client.get(
+        reverse(
+            "api:workspaces:export_workspace_list",
+            kwargs={"workspace_id": database.workspace.id},
+        ),
+        data={},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert "results" in response_json
+    assert len(response_json["results"]) == 1
+
+    export = response_json["results"][0]
+    file_name = export["exported_file_name"]
+
+    assert export["state"] == "finished"
+    assert export["progress_percentage"] == 100
+    assert export["url"] == f"http://localhost:8000/media/export_files/{file_name}"

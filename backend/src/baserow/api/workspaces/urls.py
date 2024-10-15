@@ -5,6 +5,7 @@ from .users import urls as user_urls
 from .views import (
     AsyncExportWorkspaceApplicationsView,
     CreateInitialWorkspaceView,
+    ListExportWorkspaceApplicationsView,
     WorkspaceGenerativeAISettingsView,
     WorkspaceLeaveView,
     WorkspaceOrderView,
@@ -43,5 +44,10 @@ urlpatterns = [
         r"(?P<workspace_id>[0-9]+)/export/async/$",
         AsyncExportWorkspaceApplicationsView.as_view(),
         name="export_workspace_async",
+    ),
+    re_path(
+        r"(?P<workspace_id>[0-9]+)/export/$",
+        ListExportWorkspaceApplicationsView.as_view(),
+        name="export_workspace_list",
     ),
 ]
