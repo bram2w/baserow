@@ -685,6 +685,7 @@ class LocalBaserowListRowsUserServiceType(
         return {
             **super().serializer_field_overrides,
             **LocalBaserowTableServiceSortableMixin.mixin_serializer_field_overrides,
+            **LocalBaserowTableServiceSearchableMixin.mixin_serializer_field_overrides,
             **LocalBaserowTableServiceFilterableMixin.mixin_serializer_field_overrides,
         }
 
@@ -1023,6 +1024,7 @@ class LocalBaserowGetRowUserServiceType(
         return {
             **super().serializer_field_overrides,
             **LocalBaserowTableServiceFilterableMixin.mixin_serializer_field_overrides,
+            **LocalBaserowTableServiceSearchableMixin.mixin_serializer_field_overrides,
             **LocalBaserowTableServiceSpecificRowMixin.mixin_serializer_field_overrides,
         }
 

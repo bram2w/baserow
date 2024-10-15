@@ -178,15 +178,13 @@ def test_update_local_baserow_list_rows_service(data_fixture):
         application=page.builder, user=user
     )
     service = data_fixture.create_local_baserow_list_rows_service(
-        integration=integration,
-        view=view,
-        table=view.table,
+        integration=integration, view=view, table=view.table, search_query="'badgers'"
     )
 
     service_type = service_type_registry.get("local_baserow_list_rows")
 
     values = service_type.prepare_values(
-        {"view_id": None, "integration_id": None}, user
+        {"view_id": None, "integration_id": None, "search_query": ""}, user
     )
 
     ServiceHandler().update_service(service_type, service, **values)
@@ -194,6 +192,7 @@ def test_update_local_baserow_list_rows_service(data_fixture):
     service.refresh_from_db()
 
     assert service.specific.view is None
+    assert service.specific.search_query == ""
     assert service.specific.integration is None
 
 

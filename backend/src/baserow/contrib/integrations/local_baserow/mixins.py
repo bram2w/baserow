@@ -332,6 +332,14 @@ class LocalBaserowTableServiceSearchableMixin:
     mixin_simple_formula_fields = ["search_query"]
     mixin_allowed_fields = ["search_query"]
     mixin_serializer_field_names = ["search_query"]
+    mixin_serializer_field_overrides = {
+        "search_query": FormulaSerializerField(
+            required=False,
+            allow_blank=True,
+            help_text="Any search queries to apply to the "
+            "service when it is dispatched.",
+        )
+    }
 
     class SerializedDict(ServiceDict):
         search_query: str
