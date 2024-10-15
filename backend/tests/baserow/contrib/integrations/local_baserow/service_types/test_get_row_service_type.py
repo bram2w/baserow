@@ -158,13 +158,12 @@ def test_update_local_baserow_get_row_service(data_fixture):
         application=page.builder, user=user
     )
     service = data_fixture.create_local_baserow_get_row_service(
-        integration=integration,
-        table=table,
+        integration=integration, table=table, search_query="'horses'"
     )
 
     service_type = LocalBaserowGetRowUserServiceType()
     values = service_type.prepare_values(
-        {"table_id": None, "integration_id": None}, user
+        {"table_id": None, "integration_id": None, "search_query": ""}, user
     )
 
     ServiceHandler().update_service(service_type, service, **values)
@@ -172,6 +171,7 @@ def test_update_local_baserow_get_row_service(data_fixture):
     service.refresh_from_db()
 
     assert service.specific.table is None
+    assert service.specific.search_query == ""
     assert service.specific.integration is None
 
 
