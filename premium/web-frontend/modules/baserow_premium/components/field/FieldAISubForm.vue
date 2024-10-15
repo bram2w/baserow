@@ -47,6 +47,7 @@
           :data-providers="dataProviders"
           :application-context="applicationContext"
           :placeholder="$t('fieldAISubForm.promptPlaceholder')"
+          @input="$v.values.ai_prompt.$touch()"
         ></FormulaInputField>
       </div>
       <template #error> {{ $t('error.requiredField') }}</template>
