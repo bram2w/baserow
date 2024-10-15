@@ -901,6 +901,7 @@ class FieldType(
             "id": field.id,
             "type": self.type,
             "name": field.name,
+            "description": field.description,
             "order": field.order,
             "primary": field.primary,
             "read_only": field.read_only,

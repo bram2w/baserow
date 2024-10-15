@@ -44,10 +44,31 @@ def test_import_export_text_field(data_fixture):
     )
     assert text_field.id != text_field_imported.id
     assert text_field.name == text_field_imported.name
+    assert text_field.description == text_field_imported.description
     assert text_field.order == text_field_imported.order
     assert text_field.primary == text_field_imported.primary
     assert text_field.text_default == text_field_imported.text_default
     assert id_mapping["database_fields"][text_field.id] == text_field_imported.id
+
+
+@pytest.mark.django_db
+def test_import_export_text_field_with_description(data_fixture):
+    id_mapping = {}
+
+    text_field = data_fixture.create_text_field(
+        name="Text name", text_default="", description="test"
+    )
+    text_field_type = field_type_registry.get_by_model(text_field)
+    text_serialized = text_field_type.export_serialized(text_field)
+    text_field_imported = text_field_type.import_serialized(
+        text_field.table,
+        text_serialized,
+        ImportExportConfig(include_permission_data=True),
+        id_mapping,
+        DeferredForeignKeyUpdater(),
+    )
+    assert text_field.id != text_field_imported.id
+    assert text_field.description == text_field_imported.description == "test"
 
 
 @pytest.mark.django_db
