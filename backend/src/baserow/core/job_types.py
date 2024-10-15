@@ -219,7 +219,11 @@ class ExportApplicationsJobType(JobType):
 
     job_exceptions_map = {PermissionDenied: ERROR_PERMISSION_DENIED}
 
-    request_serializer_field_names = ["workspace_id", "application_ids"]
+    request_serializer_field_names = [
+        "workspace_id",
+        "application_ids",
+        "only_structure",
+    ]
     request_serializer_field_overrides = {
         "application_ids": serializers.ListField(
             allow_null=True,
@@ -242,7 +246,7 @@ class ExportApplicationsJobType(JobType):
     }
 
     serializer_mixins = [ExportWorkspaceExportedFileURLSerializerMixin]
-    serializer_field_names = ["exported_file_name", "url"]
+    serializer_field_names = ["exported_file_name", "url", "created_on", "workspace_id"]
 
     def transaction_atomic_context(self, job: "DuplicateApplicationJob"):
         """

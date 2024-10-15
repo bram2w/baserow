@@ -4,6 +4,8 @@ import zipfile
 from django.urls import reverse
 
 import pytest
+from freezegun import freeze_time
+from rest_framework.status import HTTP_200_OK
 
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.import_export_handler import ImportExportHandler
@@ -85,23 +87,26 @@ def test_exporting_workspace_writes_file_to_storage(
         },
     )
 
-    token = data_fixture.generate_token(user)
-    with django_capture_on_commit_callbacks(execute=True):
-        response = api_client.post(
-            reverse(
-                "api:workspaces:export_workspace_async",
-                kwargs={"workspace_id": table.database.workspace.id},
-            ),
-            data={
-                "application_ids": [],
-            },
-            format="json",
-            HTTP_AUTHORIZATION=f"JWT {token}",
-        )
+    run_time = "2024-10-14T08:00:00Z"
+    with freeze_time(run_time):
+        token = data_fixture.generate_token(user)
+        with django_capture_on_commit_callbacks(execute=True):
+            response = api_client.post(
+                reverse(
+                    "api:workspaces:export_workspace_async",
+                    kwargs={"workspace_id": table.database.workspace.id},
+                ),
+                data={
+                    "application_ids": [],
+                },
+                format="json",
+                HTTP_AUTHORIZATION=f"JWT {token}",
+            )
     response_json = response.json()
 
     job_id = response_json["id"]
     assert response_json == {
+        "created_on": run_time,
         "exported_file_name": "",
         "human_readable_error": "",
         "id": job_id,
@@ -109,14 +114,17 @@ def test_exporting_workspace_writes_file_to_storage(
         "state": "pending",
         "type": "export_applications",
         "url": None,
+        "workspace_id": table.database.workspace.id,
     }
 
+    token = data_fixture.generate_token(user)
     response = api_client.get(
         reverse("api:jobs:item", kwargs={"job_id": job_id}),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     response_json = response.json()
+    assert response.status_code == HTTP_200_OK
 
     file_name = response_json["exported_file_name"]
 

@@ -1,7 +1,7 @@
 <template>
   <form @submit.prevent="submit">
     <FormGroup :error="fieldHasErrors('name')" small-label required>
-      <slot name="settings"> </slot>
+      <slot name="select-applications"> </slot>
 
       <template #after-input>
         <slot></slot>

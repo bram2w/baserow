@@ -254,3 +254,13 @@ export class RestoreSnapshotJobType extends JobType {
     return 'restoreSnapshot'
   }
 }
+
+export class ExportApplicationsJobType extends JobType {
+  static getType() {
+    return 'export_applications'
+  }
+
+  getName() {
+    return 'exportApplications'
+  }
+}

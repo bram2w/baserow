@@ -5,6 +5,7 @@ import { PasswordAuthProviderType } from '@baserow/modules/core/authProviderType
 import {
   CreateSnapshotJobType,
   DuplicateApplicationJobType,
+  ExportApplicationsJobType,
   InstallTemplateJobType,
   RestoreSnapshotJobType,
 } from '@baserow/modules/core/jobTypes'
@@ -191,6 +192,7 @@ export default (context, inject) => {
   registry.register('job', new InstallTemplateJobType(context))
   registry.register('job', new CreateSnapshotJobType(context))
   registry.register('job', new RestoreSnapshotJobType(context))
+  registry.register('job', new ExportApplicationsJobType(context))
 
   registry.register(
     'workspaceSettingsPage',
