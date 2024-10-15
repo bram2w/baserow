@@ -254,7 +254,7 @@ def construct_all_possible_field_kwargs(
                 "name": "ai",
                 "ai_generative_ai_type": "test_generative_ai",
                 "ai_generative_ai_model": "test_1",
-                "ai_prompt": "Who are you?",
+                "ai_prompt": "'Who are you?'",
             }
         ],
     }
