@@ -70,6 +70,10 @@ from baserow.contrib.integrations.local_baserow.utils import (
     guess_cast_function_from_response_serializer_field,
     guess_json_type_from_response_serializer_field,
 )
+from baserow.core.feature_flags import (
+    FF_FILTER_DISPATCH_QUERYSET,
+    feature_flag_is_enabled,
+)
 from baserow.core.formula import resolve_formula
 from baserow.core.formula.registries import formula_runtime_function_registry
 from baserow.core.handler import CoreHandler
@@ -895,7 +899,8 @@ class LocalBaserowListRowsUserServiceType(
         """
 
         table = resolved_values["table"]
-        queryset = self.build_queryset(service, table, dispatch_context)
+        model = table.get_model()
+        queryset = self.build_queryset(service, table, dispatch_context, model=model)
 
         public_formula_fields = None
 
@@ -903,7 +908,9 @@ class LocalBaserowListRowsUserServiceType(
             all_field_names = dispatch_context.public_formula_fields.get("all", {}).get(
                 service.id, None
             )
-            if all_field_names is not None:
+            if all_field_names is not None and feature_flag_is_enabled(
+                FF_FILTER_DISPATCH_QUERYSET
+            ):
                 # Ensure that only the public_formula_fields explicitly used
                 # in the page are fetched from the database.
                 queryset = queryset.only(*all_field_names)
@@ -923,7 +930,7 @@ class LocalBaserowListRowsUserServiceType(
         return {
             "results": rows[:-1] if has_next_page else rows,
             "has_next_page": has_next_page,
-            "baserow_table_model": table.get_model(),
+            "baserow_table_model": model,
             "public_formula_fields": public_formula_fields,
         }
 
@@ -1225,7 +1232,9 @@ class LocalBaserowGetRowUserServiceType(
             all_field_names = dispatch_context.public_formula_fields.get("all", {}).get(
                 service.id, None
             )
-            if all_field_names is not None:
+            if all_field_names is not None and feature_flag_is_enabled(
+                FF_FILTER_DISPATCH_QUERYSET
+            ):
                 # Ensure that only the public_formula_fields explicitly used
                 # in the page are fetched from the database.
                 queryset = queryset.only(*all_field_names)
