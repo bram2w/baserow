@@ -22,6 +22,16 @@
           :value="aIType"
         />
       </Dropdown>
+      <template #error>
+        <div
+          v-if="
+            $v.values.ai_generative_ai_type.$dirty &&
+            !$v.values.ai_generative_ai_type.required
+          "
+        >
+          {{ $t('error.requiredField') }}
+        </div>
+      </template>
     </FormGroup>
 
     <FormGroup
@@ -46,6 +56,16 @@
           :value="aIType"
         />
       </Dropdown>
+      <template #error>
+        <div
+          v-if="
+            $v.values.ai_generative_ai_model.$dirty &&
+            !$v.values.ai_generative_ai_model.required
+          "
+        >
+          {{ $t('error.requiredField') }}
+        </div>
+      </template>
     </FormGroup>
   </div>
 </template>
