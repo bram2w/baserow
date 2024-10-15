@@ -5,6 +5,8 @@ from baserow_premium.fields.models import AIField
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.table.handler import TableHandler
+from baserow.core.db import specific_iterator
 
 
 @pytest.mark.django_db
@@ -415,3 +417,86 @@ def test_update_ai_field_type_via_api_file_field_doesnt_exist(
     response_json = response.json()
     assert response.status_code == HTTP_404_NOT_FOUND, response_json
     assert response_json["error"] == "ERROR_FIELD_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+@pytest.mark.field_ai
+def test_duplicate_table_with_ai_field(premium_data_fixture):
+    session_id = "session-id"
+    user = premium_data_fixture.create_user(session_id=session_id)
+    database = premium_data_fixture.create_database_application(
+        user=user, name="Placeholder"
+    )
+    table = premium_data_fixture.create_database_table(
+        name="Example", database=database
+    )
+    text_field = premium_data_fixture.create_text_field(
+        table=table, order=0, name="text"
+    )
+    file_field = premium_data_fixture.create_file_field(
+        table=table, order=1, name="file"
+    )
+    ai_field = premium_data_fixture.create_ai_field(
+        table=table,
+        order=2,
+        name="ai",
+        ai_generative_ai_type="test_generative_ai",
+        ai_generative_ai_model="test_1",
+        ai_file_field=file_field,
+        ai_prompt=f"concat('test:',get('fields.field_{text_field.id}'))",
+    )
+
+    table_handler = TableHandler()
+    duplicated_table = table_handler.duplicate_table(user, table)
+    duplicated_fields = specific_iterator(
+        duplicated_table.field_set.all().order_by("id")
+    )
+    duplicated_text_field = duplicated_fields[0]
+    duplicated_file_field = duplicated_fields[1]
+    duplicated_ai_field = duplicated_fields[2]
+
+    assert duplicated_ai_field.name == "ai"
+    assert duplicated_ai_field.ai_generative_ai_type == "test_generative_ai"
+    assert duplicated_ai_field.ai_generative_ai_model == "test_1"
+    assert duplicated_ai_field.ai_file_field_id == duplicated_file_field.id
+    assert (
+        duplicated_ai_field.ai_prompt
+        == f"concat('test:',get('fields.field_{duplicated_text_field.id}'))"
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.field_ai
+def test_duplicate_table_with_ai_field_broken_references(premium_data_fixture):
+    session_id = "session-id"
+    user = premium_data_fixture.create_user(session_id=session_id)
+    database = premium_data_fixture.create_database_application(
+        user=user, name="Placeholder"
+    )
+    table = premium_data_fixture.create_database_table(
+        name="Example", database=database
+    )
+    text_field = premium_data_fixture.create_text_field(
+        table=table, order=0, name="text"
+    )
+    file_field = premium_data_fixture.create_file_field(
+        table=table, order=1, name="file"
+    )
+    ai_field = premium_data_fixture.create_ai_field(
+        table=table,
+        order=2,
+        name="ai",
+        ai_generative_ai_type="test_generative_ai",
+        ai_generative_ai_model="test_1",
+        ai_file_field=file_field,
+        ai_prompt=f"concat('test:',get('fields.field_0'))",
+    )
+
+    table_handler = TableHandler()
+    duplicated_table = table_handler.duplicate_table(user, table)
+    duplicated_fields = specific_iterator(
+        duplicated_table.field_set.all().order_by("id")
+    )
+    duplicated_ai_field = duplicated_fields[2]
+
+    assert duplicated_ai_field.ai_prompt == f"concat('test:',get('fields.field_0'))"

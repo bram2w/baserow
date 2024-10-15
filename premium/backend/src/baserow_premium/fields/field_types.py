@@ -35,6 +35,7 @@ from baserow.core.generative_ai.registries import (
 )
 
 from .models import AIField
+from .visitors import replace_field_id_references
 
 User = get_user_model()
 
@@ -170,3 +171,31 @@ class AIFieldType(CollationSortMixin, FieldType):
         self._validate_field_kwargs(
             ai_type, model_type, ai_file_field_id, workspace=workspace
         )
+
+    def after_import_serialized(
+        self,
+        field: AIField,
+        field_cache,
+        id_mapping,
+    ):
+        save = False
+        if field.ai_file_field_id:
+            field.ai_file_field_id = id_mapping["database_fields"][
+                field.ai_file_field_id
+            ]
+            save = True
+
+        if field.ai_prompt:
+            try:
+                field.ai_prompt = replace_field_id_references(
+                    field.ai_prompt, id_mapping["database_fields"]
+                )
+                save = True
+            except KeyError:
+                # Raised when the field ID is not found in the mapping. If that's the
+                # case, we leave the field ID references broken so that the import
+                # can still succeed.
+                pass
+
+        if save:
+            field.save()
