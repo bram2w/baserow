@@ -329,7 +329,7 @@ export default {
       }
     },
     importInProgress() {
-      return this.state !== null && !this.jobIsFinished && !this.error.visible
+      return this.state !== null && !this.jobIsDone && !this.error.visible
     },
     importerTypes() {
       return this.$registry.getAll('importer')
