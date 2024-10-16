@@ -133,7 +133,7 @@ current [state](#job-state) and [progress value](#progress-tracking).
 The workflow of updating a job's state is shown on the diagram below. It is actually
 comprised of two separate workflows that are independent of each other:
 
-![Job status update](../assets/diagrams//job-workflow/job-workflows-job_state_update.png)
+![Job status update](../assets/diagrams/job-workflow/job-workflows-job_state_update.png)
 
 #### Job's state propagation
 
@@ -202,7 +202,7 @@ error.
 
 Job cancellation workflow is shown on the diagram below:
 
-![Job cancellation](../assets/diagrams//job-workflow/job-workflows-job_cancellation.png)
+![Job cancellation](../assets/diagrams/job-workflow/job-workflows-job_cancellation.png)
 
 * The owner of the job triggers the cancellation via the UI where a component should
   dispatch `job/cancel` action, which will call `/api/job/$id/cancel/` endpoint in
