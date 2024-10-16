@@ -1,7 +1,7 @@
 <template>
   <div class="snapshots-modal__snapshot">
     <div class="snapshots-modal__info">
-      <div v-if="!jobIsRunning && !jobHasSucceeded">
+      <div v-if="!jobIsRunning && !jobIsFinished">
         <div class="snapshots-modal__name">
           {{ snapshot.name }}
         </div>

@@ -268,9 +268,10 @@ def test_job_cancel_failed(
     # a job failed, so we can't cancel it
     job.refresh_from_db()
     assert job.failed
-    out = jh.cancel_job(job)
-    assert isinstance(out, Job)
-    assert job.cancelled
+    with pytest.raises(JobNotCancellable):
+        jh.cancel_job(job)
+    job.refresh_from_db()
+    assert job.failed
 
 
 @pytest.mark.django_db(transaction=True)

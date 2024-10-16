@@ -27,7 +27,7 @@
         :snapshots="snapshots"
         @submitted="submitted"
       >
-        <template v-if="jobIsRunning || jobHasSucceeded" #input>
+        <template v-if="jobIsRunning || jobIsFinished" #input>
           <div class="margin-right-2">
             <ProgressBar
               :value="job.progress_percentage"
@@ -158,7 +158,7 @@ export default {
         this.handleError(error)
       }
     },
-    onJobDone() {
+    onJobFinished() {
       this.createLoading = false
       this.createFinished = true
       if (
