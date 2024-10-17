@@ -18,6 +18,7 @@
         v-model="computedDataSourceId"
         small
         :data-sources="dataSources"
+        :page="page"
       >
         <template #chooseValueState>
           {{ $t('collectionElementForm.noDataSourceMessage') }}

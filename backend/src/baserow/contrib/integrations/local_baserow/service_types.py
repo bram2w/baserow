@@ -1561,6 +1561,7 @@ class LocalBaserowUpsertRowServiceType(
         """
 
         resolved_values = super().resolve_service_formulas(service, dispatch_context)
+        dispatch_context.reset_call_stack()  # Before resolving the row_id
         resolved_values = self.resolve_row_id(
             resolved_values, service, dispatch_context
         )
@@ -1583,7 +1584,7 @@ class LocalBaserowUpsertRowServiceType(
             except Exception as e:
                 message = (
                     "Unknown error in formula for "
-                    f"field {field_mapping.field.name}({field_mapping.field.id}): {str(e)}"
+                    f"field {field_mapping.field.name}({field_mapping.field.id}): {repr(e)} - {str(e)}"
                 )
                 raise ServiceImproperlyConfigured(message) from e
 

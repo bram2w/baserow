@@ -823,7 +823,7 @@ const CollectionElementTypeMixin = (Base) =>
      * @param page - The page the element belongs to.
      * @returns {string} - The display name for the element.
      */
-    getDisplayName(element, { page }) {
+    getDisplayName(element, { page, builder }) {
       let suffix = ''
 
       const collectionAncestors = this.app.store.getters[
@@ -844,9 +844,10 @@ const CollectionElementTypeMixin = (Base) =>
       // If we find a collection ancestor which has a data source, we'll
       // use the data source's name as part of the display name.
       if (collectionElement?.data_source_id) {
+        const sharedPage = this.app.store.getters['page/getSharedPage'](builder)
         const dataSource = this.app.store.getters[
-          'dataSource/getPageDataSourceById'
-        ](page, collectionElement?.data_source_id)
+          'dataSource/getPagesDataSourceById'
+        ]([page, sharedPage], collectionElement?.data_source_id)
         suffix = dataSource ? dataSource.name : ''
 
         // If we have a data source, and the element has a schema property,
@@ -891,7 +892,11 @@ const CollectionElementTypeMixin = (Base) =>
      *  it's been updated.
      * @param params - Context data which the element type can use.
      */
-    async onElementEvent(event, { page, element, dataSourceId }) {
+    async onElementEvent(event, { builder, element, dataSourceId }) {
+      const page = this.app.store.getters['page/getById'](
+        builder,
+        element.page_id
+      )
       if (event === ELEMENT_EVENTS.DATA_SOURCE_REMOVED) {
         if (element.data_source_id === dataSourceId) {
           // Remove the data_source_id
@@ -929,7 +934,7 @@ const CollectionElementTypeMixin = (Base) =>
      * @param {Object} element - The repeat element
      * @returns {Boolean} - Whether the element is in error.
      */
-    isInError({ page, element }) {
+    isInError({ page, element, builder }) {
       // We get all parents with a valid data_source_id
       const collectionAncestorsWithDataSource = this.app.store.getters[
         'element/getAncestors'
@@ -950,9 +955,16 @@ const CollectionElementTypeMixin = (Base) =>
       const parentWithDataSource = collectionAncestorsWithDataSource.at(-1)
 
       // We now check if the parent element configuration is correct.
+      const sharedPage = this.app.store.getters['page/getSharedPage'](builder)
       const dataSource = this.app.store.getters[
-        'dataSource/getPageDataSourceById'
-      ](page, parentWithDataSource.data_source_id)
+        'dataSource/getPagesDataSourceById'
+      ]([page, sharedPage], parentWithDataSource.data_source_id)
+
+      // The data source is missing. May be it has been removed.
+      if (!dataSource) {
+        return true
+      }
+
       const serviceType = this.app.$registry.get('service', dataSource.type)
 
       // If the data source type doesn't return a list, we should have a schema_property
@@ -1327,7 +1339,10 @@ export class LinkElementType extends ElementType {
   }
 
   isInError({ element, builder }) {
-    return pathParametersInError(element, builder)
+    return pathParametersInError(
+      element,
+      this.app.store.getters['page/getVisiblePages'](builder)
+    )
   }
 
   getDisplayName(element, applicationContext) {
@@ -1335,9 +1350,11 @@ export class LinkElementType extends ElementType {
     let destination = ''
     if (element.navigation_type === 'page') {
       const builder = applicationContext.builder
-      const destinationPage = builder.pages.find(
-        ({ id }) => id === element.navigate_to_page_id
-      )
+
+      const destinationPage = this.app.store.getters['page/getVisiblePages'](
+        builder
+      ).find(({ id }) => id === element.navigate_to_page_id)
+
       if (destinationPage) {
         destination = `${destinationPage.name}`
       }

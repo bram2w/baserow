@@ -36,13 +36,11 @@
               class="data-source-form__condition-form-tab"
             >
               <LocalBaserowTableServiceConditionalForm
-                v-if="values.table_id && dataSource.schema"
+                v-if="values.table_id"
                 v-model="dataSourceFilters"
-                :schema="dataSource.schema"
-                :table-loading="tableLoading"
+                :fields="tableFields"
                 :filter-type.sync="values.filter_type"
-              >
-              </LocalBaserowTableServiceConditionalForm>
+              />
               <p v-if="!values.table_id">
                 {{ $t('localBaserowGetRowForm.noTableChosenForFiltering') }}
               </p>
@@ -149,6 +147,15 @@ export default {
     databases() {
       return this.contextData?.databases || []
     },
+    tables() {
+      return this.databases.map((database) => database.tables).flat()
+    },
+    tableSelected() {
+      return this.tables.find(({ id }) => id === this.values.table_id)
+    },
+    tableFields() {
+      return this.tableSelected?.fields || []
+    },
   },
   watch: {
     'values.table_id'(newValue, oldValue) {
@@ -174,12 +181,7 @@ export default {
      * @returns {Array} - The filtered array.
      */
     excludeTrashedFields(value) {
-      const schema = this.dataSource.schema
-      const schemaProperties =
-        schema.type === 'array' ? schema.items.properties : schema.properties
-      const localBaserowFieldIds = Object.values(schemaProperties)
-        .filter(({ metadata }) => metadata)
-        .map((prop) => prop.metadata.id)
+      const localBaserowFieldIds = this.tableFields.map(({ id }) => id)
       return value.filter(({ field }) => localBaserowFieldIds.includes(field))
     },
   },

@@ -5,10 +5,10 @@ import pytest
 
 from baserow.contrib.builder.formula_property_extractor import (
     FormulaFieldVisitor,
-    get_data_source_field_names,
-    get_element_field_names,
-    get_formula_field_names,
-    get_workflow_action_field_names,
+    get_builder_used_property_names,
+    get_data_source_property_names,
+    get_element_property_names,
+    get_workflow_action_property_names,
 )
 from baserow.contrib.builder.workflow_actions.models import EventTypes
 from baserow.contrib.builder.workflow_actions.service import (
@@ -38,9 +38,9 @@ class TestDataProviderType(DataProviderType):
 
 
 @pytest.mark.django_db
-def test_get_formula_field_names_returns_empty_list(data_fixture):
+def test_get_builder_used_property_names_returns_empty_list(data_fixture):
     """
-    Test the get_formula_field_names() function.
+    Test the get_builder_used_property_names() function.
 
     Ensure that an empty dict is returned if no Elements are found.
     """
@@ -48,7 +48,7 @@ def test_get_formula_field_names_returns_empty_list(data_fixture):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
 
-    results = get_formula_field_names(user, page)
+    results = get_builder_used_property_names(user, page.builder)
 
     assert results == {
         "all": {},
@@ -58,11 +58,11 @@ def test_get_formula_field_names_returns_empty_list(data_fixture):
 
 
 @pytest.mark.django_db
-def test_get_formula_field_names_returns_all_field_names(data_fixture):
+def test_get_builder_used_property_names_returns_all_property_names(data_fixture):
     """
-    Test the get_formula_field_names() function.
+    Test the get_builder_used_property_names() function.
 
-    Ensure that all the expected field names are returned.
+    Ensure that all the expected property names are returned.
     """
 
     user = data_fixture.create_user()
@@ -82,15 +82,13 @@ def test_get_formula_field_names_returns_all_field_names(data_fixture):
     integration = data_fixture.create_local_baserow_integration(
         user=user, application=builder
     )
-    page = data_fixture.create_builder_page(user=user)
+    page = data_fixture.create_builder_page(builder=builder)
     data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
-        user=user,
         page=page,
         integration=integration,
         table=table,
     )
     data_fixture.create_builder_table_element(
-        user=user,
         page=page,
         data_source=data_source,
         fields=[
@@ -107,7 +105,7 @@ def test_get_formula_field_names_returns_all_field_names(data_fixture):
         ],
     )
 
-    results = get_formula_field_names(user, page)
+    results = get_builder_used_property_names(user, builder)
 
     assert sorted(list(results)) == ["all", "external", "internal"]
     assert sorted(results["all"][data_source.service_id]) == [
@@ -120,11 +118,11 @@ def test_get_formula_field_names_returns_all_field_names(data_fixture):
 
 
 @pytest.mark.django_db
-def test_get_formula_field_names_returns_some_field_names(data_fixture):
+def test_get_builder_used_property_names_returns_some_property_names(data_fixture):
     """
-    Test the get_formula_field_names() function.
+    Test the get_builder_used_property_names() function.
 
-    Ensure that only some of the field names are returned. A field name should
+    Ensure that only some of the property names are returned. A property name should
     only be returned if it is used in the page.
     """
 
@@ -145,15 +143,13 @@ def test_get_formula_field_names_returns_some_field_names(data_fixture):
     integration = data_fixture.create_local_baserow_integration(
         user=user, application=builder
     )
-    page = data_fixture.create_builder_page(user=user)
+    page = data_fixture.create_builder_page(builder=builder)
     data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
-        user=user,
         page=page,
         integration=integration,
         table=table,
     )
     data_fixture.create_builder_table_element(
-        user=user,
         page=page,
         data_source=data_source,
         fields=[
@@ -166,10 +162,10 @@ def test_get_formula_field_names_returns_some_field_names(data_fixture):
         ],
     )
 
-    results = get_formula_field_names(user, page)
+    results = get_builder_used_property_names(user, builder)
 
     # Since the Table element (which is the only element in the Page) uses
-    # only one field, ensure that specific field is the only one returned.
+    # only one property, ensure that specific property is the only one returned.
     assert results == {
         "all": {
             data_source.service_id: [f"field_{fields[0].id}"],
@@ -190,13 +186,13 @@ def test_extract_properties_returns_none():
 
 
 @patch("baserow.contrib.builder.mixins.get_parse_tree_for_formula")
-def test_get_element_field_names_returns_empty_if_no_elements(mock_parse_tree):
+def test_get_element_property_names_returns_empty_if_no_elements(mock_parse_tree):
     """
-    Ensure the get_element_field_names() function returns an empty dict if
+    Ensure the get_element_property_names() function returns an empty dict if
     there are no elements.
     """
 
-    results = get_element_field_names([], {})
+    results = get_element_property_names([], {})
 
     assert results == {"external": {}}
     mock_parse_tree.assert_not_called()
@@ -204,11 +200,11 @@ def test_get_element_field_names_returns_empty_if_no_elements(mock_parse_tree):
 
 @pytest.mark.django_db
 @patch("baserow.contrib.builder.mixins.get_parse_tree_for_formula")
-def test_get_element_field_names_returns_empty_if_no_formulas(
+def test_get_element_property_names_returns_empty_if_no_formulas(
     mock_parse_tree, data_fixture
 ):
     """
-    Ensure the get_element_field_names() function returns an empty dict if
+    Ensure the get_element_property_names() function returns an empty dict if
     the element has no formula.
     """
 
@@ -219,7 +215,7 @@ def test_get_element_field_names_returns_empty_if_no_formulas(
     heading_element_1 = data_fixture.create_builder_heading_element(page=page, value="")
     heading_element_2 = data_fixture.create_builder_heading_element(page=page, value="")
 
-    results = get_element_field_names([heading_element_1, heading_element_2], {})
+    results = get_element_property_names([heading_element_1, heading_element_2], {})
 
     assert results == {"external": {}}
     mock_parse_tree.assert_not_called()
@@ -227,11 +223,11 @@ def test_get_element_field_names_returns_empty_if_no_formulas(
 
 @pytest.mark.django_db
 @patch("baserow.contrib.builder.mixins.get_parse_tree_for_formula")
-def test_get_element_field_names_returns_empty_if_invalid_formula(
+def test_get_element_property_names_returns_empty_if_invalid_formula(
     mock_parse_tree, data_fixture
 ):
     """
-    Ensure the get_element_field_names() function returns an empty dict if
+    Ensure the get_element_property_names() function returns an empty dict if
     the elements has an invalid formula.
     """
 
@@ -246,16 +242,17 @@ def test_get_element_field_names_returns_empty_if_invalid_formula(
     # Simulate an "invalid formula" error
     mock_parse_tree.side_effect = BaserowFormulaSyntaxError("Invalid formula!")
 
-    result = get_element_field_names([heading_element], {})
+    result = get_element_property_names([heading_element], {})
 
     assert result == {"external": {}}
     mock_parse_tree.assert_called_once_with("foo")
 
 
 @pytest.mark.django_db
-def test_get_element_field_names_returns_field_names(data_fixture):
+def test_get_element_property_names_returns_property_names(data_fixture):
     """
-    Ensure the get_element_field_names() function returns the expected field names.
+    Ensure the get_element_property_names() function returns the expected property
+    names.
     """
 
     user = data_fixture.create_user()
@@ -298,7 +295,7 @@ def test_get_element_field_names_returns_field_names(data_fixture):
         value=f"get('data_source.{data_source_2.id}.0.field_{fields[2].id}')",
     )
 
-    result = get_element_field_names(
+    result = get_element_property_names(
         [heading_element_1, heading_element_2, heading_element_3],
         {},
     )
@@ -321,19 +318,15 @@ def test_get_element_field_names_returns_field_names(data_fixture):
 
 @pytest.mark.django_db
 @patch("baserow.contrib.builder.mixins.get_parse_tree_for_formula")
-def test_get_workflow_action_field_names_returns_empty_if_no_workflow_actions(
+def test_get_workflow_action_property_names_returns_empty_if_no_workflow_actions(
     mock_parse_tree, data_fixture
 ):
     """
-    Ensure the get_workflow_action_field_names() function returns an empty dict if
+    Ensure the get_workflow_action_property_names() function returns an empty dict if
     there are no workflow actions.
     """
 
-    user = data_fixture.create_user()
-    builder = data_fixture.create_builder_application(user=user)
-    page = data_fixture.create_builder_page(user=user, builder=builder)
-
-    results = get_workflow_action_field_names(user, page, {})
+    results = get_workflow_action_property_names([], {})
 
     assert results == {"internal": {}, "external": {}}
 
@@ -342,11 +335,11 @@ def test_get_workflow_action_field_names_returns_empty_if_no_workflow_actions(
 
 @pytest.mark.django_db
 @patch("baserow.contrib.builder.mixins.get_parse_tree_for_formula")
-def test_get_workflow_action_field_names_returns_empty_if_no_formulas(
+def test_get_workflow_action_property_names_returns_empty_if_no_formulas(
     mock_parse_tree, data_fixture
 ):
     """
-    Ensure the get_workflow_action_field_names() function returns an empty dict if
+    Ensure the get_workflow_action_property_names() function returns an empty dict if
     the workflow action has no formula.
     """
 
@@ -368,7 +361,7 @@ def test_get_workflow_action_field_names_returns_empty_if_no_formulas(
         .specific
     )
 
-    results = get_workflow_action_field_names(user, page, {})
+    results = get_workflow_action_property_names([workflow_action], {})
 
     assert results == {"external": {}, "internal": {}}
     mock_parse_tree.assert_not_called()
@@ -376,11 +369,11 @@ def test_get_workflow_action_field_names_returns_empty_if_no_formulas(
 
 @pytest.mark.django_db
 @patch("baserow.contrib.builder.mixins.get_parse_tree_for_formula")
-def test_get_workflow_action_field_names_returns_empty_if_invalid_formula(
+def test_get_workflow_action_property_names_returns_empty_if_invalid_formula(
     mock_parse_tree, data_fixture
 ):
     """
-    Ensure the get_workflow_action_field_names() function returns an empty dict if
+    Ensure the get_workflow_action_property_names() function returns an empty dict if
     the workflow action has an invalid formula.
     """
 
@@ -405,16 +398,16 @@ def test_get_workflow_action_field_names_returns_empty_if_invalid_formula(
     # Simulate an "invalid formula" error
     mock_parse_tree.side_effect = BaserowFormulaSyntaxError("Invalid formula!")
 
-    results = get_workflow_action_field_names(user, page, {})
+    results = get_workflow_action_property_names([workflow_action], {})
 
     assert results == {"external": {}, "internal": {}}
     mock_parse_tree.assert_called_once_with("foo")
 
 
 @pytest.mark.django_db
-def test_get_workflow_action_field_names_returns_field_names(data_fixture):
+def test_get_workflow_action_property_names_returns_property_names(data_fixture):
     """
-    Ensure the get_workflow_action_field_names() function returns field names.
+    Ensure the get_workflow_action_property_names() function returns property names.
     """
 
     user = data_fixture.create_user()
@@ -459,11 +452,11 @@ def test_get_workflow_action_field_names_returns_field_names(data_fixture):
         .specific
     )
 
-    results = get_workflow_action_field_names(user, page, {})
+    results = get_workflow_action_property_names([workflow_action], {})
 
     assert sorted(list(results)) == ["external", "internal"]
-    # Since the third field is not used anywhere in the page, we do _not_
-    # expect to see that field in the results.
+    # Since the third property is not used anywhere in the page, we do _not_
+    # expect to see that property in the results.
     assert sorted(list(results["external"][data_source_1.service.id])) == [
         f"field_{fields[0].id}"
     ]
@@ -487,11 +480,11 @@ def test_get_workflow_action_field_names_returns_field_names(data_fixture):
         ],
     ],
 )
-def test_get_workflow_action_field_names_returns_external_field_names(
+def test_get_workflow_action_property_names_returns_external_property_names(
     data_fixture, workflow_action_type, formula_fields
 ):
     """
-    Ensure the get_workflow_action_field_names() function returns field names.
+    Ensure the get_workflow_action_property_names() function returns property names.
 
     Test that the external and internal dicts are correctly segregated.
     """
@@ -538,7 +531,7 @@ def test_get_workflow_action_field_names_returns_external_field_names(
         )
     workflow_action.save()
 
-    results = get_workflow_action_field_names(user, page, {})
+    results = get_workflow_action_property_names([workflow_action], {})
 
     assert results == {
         # Since the workflow action is public/safe, only the external dict
@@ -559,11 +552,11 @@ def test_get_workflow_action_field_names_returns_external_field_names(
         UpdateRowWorkflowActionType,
     ],
 )
-def test_get_workflow_action_field_names_returns_internal_field_names(
+def test_get_workflow_action_property_names_returns_internal_property_names(
     data_fixture, workflow_action_type
 ):
     """
-    Ensure the get_workflow_action_field_names() function returns field names.
+    Ensure the get_workflow_action_property_names() function returns property names.
 
     Test that the external and internal dicts are correctly segregated.
     """
@@ -607,7 +600,7 @@ def test_get_workflow_action_field_names_returns_internal_field_names(
     )
     workflow_action.service.save()
 
-    results = get_workflow_action_field_names(user, page, {})
+    results = get_workflow_action_property_names([workflow_action], {})
 
     assert results == {
         "external": {},
@@ -621,11 +614,11 @@ def test_get_workflow_action_field_names_returns_internal_field_names(
 
 @pytest.mark.django_db
 @patch("baserow.contrib.builder.mixins.get_parse_tree_for_formula")
-def test_get_data_source_field_names_returns_empty_if_no_data_sources(
+def test_get_data_source_property_names_returns_empty_if_no_data_sources(
     mock_parse_tree, data_fixture
 ):
     """
-    Ensure the get_data_source_field_names() function returns an empty dict if
+    Ensure the get_data_source_property_names() function returns an empty dict if
     there are no data sources.
     """
 
@@ -633,7 +626,7 @@ def test_get_data_source_field_names_returns_empty_if_no_data_sources(
     builder = data_fixture.create_builder_application(user=user)
     page = data_fixture.create_builder_page(user=user, builder=builder)
 
-    result = get_data_source_field_names(page)
+    result = get_data_source_property_names([])
 
     assert result == {"internal": {}}
     mock_parse_tree.assert_not_called()
@@ -641,11 +634,11 @@ def test_get_data_source_field_names_returns_empty_if_no_data_sources(
 
 @pytest.mark.django_db
 @patch("baserow.contrib.builder.mixins.get_parse_tree_for_formula")
-def test_get_data_source_field_names_returns_empty_if_invalid_formula(
+def test_get_data_source_property_names_returns_empty_if_invalid_formula(
     mock_parse_tree, data_fixture
 ):
     """
-    Ensure the get_data_source_field_names() function returns an empty dict if
+    Ensure the get_data_source_property_names() function returns an empty dict if
     the data source has an invalid formula.
     """
 
@@ -674,7 +667,7 @@ def test_get_data_source_field_names_returns_empty_if_invalid_formula(
         search_query="foo",
     )
 
-    data_fixture.create_builder_local_baserow_list_rows_data_source(
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
         user=user,
         page=page,
         table=table,
@@ -684,17 +677,17 @@ def test_get_data_source_field_names_returns_empty_if_invalid_formula(
     # Simulate an "invalid formula" error
     mock_parse_tree.side_effect = BaserowFormulaSyntaxError("Invalid formula!")
 
-    results = get_data_source_field_names(page)
+    results = get_data_source_property_names([data_source])
 
     assert results == {"internal": {}}
     mock_parse_tree.assert_called_once_with("foo")
 
 
 @pytest.mark.django_db
-def test_get_data_source_field_names_list_rows_returns_field_names(data_fixture):
+def test_get_data_source_property_names_list_rows_returns_property_names(data_fixture):
     """
-    Ensure the get_data_source_field_names() function returns the expected
-    field_names for the List Rows service type.
+    Ensure the get_data_source_property_names() function returns the expected
+    property_names for the List Rows service type.
     """
 
     user = data_fixture.create_user()
@@ -738,7 +731,7 @@ def test_get_data_source_field_names_list_rows_returns_field_names(data_fixture)
     )
     list_rows_service.save()
 
-    results = get_data_source_field_names(page)
+    results = get_data_source_property_names([data_source_1, data_source_2])
 
     assert list(results) == ["internal"]
     assert sorted(list(results["internal"][data_source_1.service.id])) == [
@@ -747,10 +740,10 @@ def test_get_data_source_field_names_list_rows_returns_field_names(data_fixture)
 
 
 @pytest.mark.django_db
-def test_get_data_source_field_names_get_row_returns_field_names(data_fixture):
+def test_get_data_source_property_names_get_row_returns_property_names(data_fixture):
     """
-    Ensure the get_data_source_field_names() function returns the expected
-    field_names for the Get Row service type.
+    Ensure the get_data_source_property_names() function returns the expected
+    property_names for the Get Row service type.
     """
 
     user = data_fixture.create_user()
@@ -794,7 +787,7 @@ def test_get_data_source_field_names_get_row_returns_field_names(data_fixture):
     )
     get_row_service.save()
 
-    results = get_data_source_field_names(page)
+    results = get_data_source_property_names([data_source_1, data_source_2])
 
     assert results == {
         "internal": {data_source_1.service.id: [f"field_{fields[1].id}"]},
@@ -803,9 +796,11 @@ def test_get_data_source_field_names_get_row_returns_field_names(data_fixture):
 
 @pytest.mark.django_db
 @patch("baserow.contrib.builder.mixins.get_parse_tree_for_formula")
-def test_get_data_source_field_names_skips_if_no_service(mock_parse_tree, data_fixture):
+def test_get_data_source_property_names_skips_if_no_service(
+    mock_parse_tree, data_fixture
+):
     """
-    Ensure the get_data_source_field_names() function skips processing a
+    Ensure the get_data_source_property_names() function skips processing a
     Data Source if its service is not configured.
 
     The user can create a Data Source and not fully configure it. Thus it is
@@ -834,7 +829,7 @@ def test_get_data_source_field_names_skips_if_no_service(mock_parse_tree, data_f
     data_source.service = None
     data_source.save()
 
-    results = get_data_source_field_names(page)
+    results = get_data_source_property_names([data_source])
 
     assert results == {"internal": {}}
     mock_parse_tree.assert_not_called()
@@ -843,7 +838,7 @@ def test_get_data_source_field_names_skips_if_no_service(mock_parse_tree, data_f
 @patch(
     "baserow.contrib.builder.formula_property_extractor.builder_data_provider_type_registry"
 )
-def test_formula_field_visitor_visit_function_call_handles_formula_error(
+def test_formula_property_visitor_visit_function_call_handles_formula_error(
     mock_data_provider_registry,
 ):
     """
@@ -871,3 +866,161 @@ def test_formula_field_visitor_visit_function_call_handles_formula_error(
 
     assert visitor.results == {}
     mock_data_provider_type.extract_properties.assert_called_once_with(["field_999"])
+
+
+@pytest.mark.django_db
+def test_get_builder_used_property_names_returns_merged_property_names_integration(
+    data_fixture,
+):
+    """
+    Test the get_builder_used_property_names() function.
+
+    Integration tests that ensure that formulas are extracted correctly from
+    multiple element/wa/DS at the same time.
+    """
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Food", "text"),
+            ("Spiciness", "number"),
+            ("Color", "text"),
+        ],
+        rows=[
+            ["Paneer Tikka", 5, "Grey"],
+            ["Gobi Manchurian", 8, "Yellow"],
+        ],
+    )
+    builder = data_fixture.create_builder_application(user=user, workspace=workspace)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    shared_page = builder.page_set.get(shared=True)
+    page = data_fixture.create_builder_page(builder=builder)
+    page2 = data_fixture.create_builder_page(builder=builder)
+
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        page=page,
+        integration=integration,
+        table=table,
+    )
+    data_source_2 = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=page,
+        table=table,
+    )
+    data_source_3 = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=shared_page,
+        table=table,
+    )
+    data_source_4 = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=page2,
+        table=table,
+    )
+    # Data source using another one
+    # Also unused data source
+    data_source_5 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        page=page,
+        integration=integration,
+        table=table,
+        row_id=f"get('data_source.{data_source.id}.field_{fields[2].id}')",
+    )
+
+    data_fixture.create_builder_table_element(
+        page=page,
+        data_source=data_source,
+        fields=[
+            {
+                "name": "FieldA",
+                "type": "text",
+                "config": {"value": f"get('current_record.field_{fields[0].id}')"},
+            },
+        ],
+    )
+
+    heading_element_1 = data_fixture.create_builder_heading_element(
+        page=page,
+        value=f"get('data_source.{data_source.id}.field_{fields[0].id}')",
+    )
+    heading_element_2 = data_fixture.create_builder_heading_element(
+        page=page,
+        value=f"get('data_source.{data_source_3.id}.0.field_{fields[1].id}')",
+    )
+    heading_element_3 = data_fixture.create_builder_heading_element(
+        page=page2,
+        value=f"get('data_source.{data_source_2.id}.0.field_{fields[2].id}')",
+    )
+    heading_element_4 = data_fixture.create_builder_heading_element(
+        page=page2,
+        value=f"get('data_source.{data_source_4.id}.0.field_{fields[2].id}')",
+    )
+
+    button_element_1 = data_fixture.create_builder_button_element(page=page)
+    button_element_2 = data_fixture.create_builder_button_element(page=page2)
+
+    workflow_action1 = data_fixture.create_notification_workflow_action(
+        page=page,
+        element=button_element_1,
+        event=EventTypes.CLICK,
+        description=f"get('data_source.{data_source_3.id}.0.field_{fields[0].id}')",
+        title=f"get('data_source.{data_source.id}.field_{fields[0].id}')",
+    )
+
+    service = data_fixture.create_local_baserow_upsert_row_service(
+        table=table,
+        integration=integration,
+    )
+    service.field_mappings.create(
+        field=fields[2],
+        value=f"get('data_source.{data_source_4.id}.0.field_{fields[0].id}')",
+    )
+    service.field_mappings.create(
+        field=fields[1],
+        value=f"get('data_source.{data_source_3.id}.0.field_{fields[2].id}')",
+    )
+    workflow_action2 = data_fixture.create_local_baserow_create_row_workflow_action(
+        page=page, service=service, element=button_element_2, event=EventTypes.CLICK
+    )
+
+    results = get_builder_used_property_names(user, builder)
+
+    assert results == {
+        "all": {
+            data_source.service_id: [
+                f"field_{fields[0].id}",
+                f"field_{fields[2].id}",
+            ],
+            data_source_2.service_id: [f"field_{fields[2].id}"],
+            data_source_3.service_id: [
+                f"field_{fields[0].id}",
+                f"field_{fields[1].id}",
+                f"field_{fields[2].id}",
+            ],
+            data_source_4.service_id: [
+                f"field_{fields[0].id}",
+                f"field_{fields[2].id}",
+            ],
+        },
+        "external": {
+            data_source.service_id: [
+                f"field_{fields[0].id}",  # From heading_element_1
+            ],
+            data_source_2.service_id: [f"field_{fields[2].id}"],  # From heading_elmt_3
+            data_source_3.service_id: [
+                f"field_{fields[0].id}",  # From workflow_action_1
+                f"field_{fields[1].id}",  # From heading_element_2
+            ],
+            data_source_4.service_id: [
+                f"field_{fields[2].id}",  # From heading_element_4
+            ],
+        },
+        "internal": {
+            data_source.service_id: [f"field_{fields[2].id}"],  # From data_source_1
+            data_source_3.service_id: [f"field_{fields[2].id}"],  # From workflow_act_2
+            data_source_4.service_id: [f"field_{fields[0].id}"],  # From workflow_act_2
+        },
+    }

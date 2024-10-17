@@ -219,11 +219,18 @@ def test_get_integrations_serializer(
                         "database_id": table.database_id,
                         "fields": [
                             {
+                                "description": None,
                                 "id": field.id,
-                                "name": field.name,
+                                "name": "Name",
+                                "order": 0,
+                                "immutable_properties": False,
+                                "immutable_type": False,
+                                "primary": False,
+                                "read_only": False,
                                 "table_id": table.id,
+                                "text_default": "",
                                 "type": "text",
-                            }
+                            },
                         ],
                     }
                 ],

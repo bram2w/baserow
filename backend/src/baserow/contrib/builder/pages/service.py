@@ -75,7 +75,7 @@ class PageService:
             context=builder,
         )
 
-        page = self.handler.create_page(builder, name, path, path_params)
+        page = self.handler.create_page(builder, name, path, path_params=path_params)
 
         page_created.send(self, page=page, user=user)
 
@@ -146,7 +146,7 @@ class PageService:
             context=builder,
         )
 
-        all_pages = Page.objects.filter(builder_id=builder.id)
+        all_pages = Page.objects.filter(builder_id=builder.id, shared=False)
         user_pages = CoreHandler().filter_queryset(
             user,
             OrderPagesBuilderOperationType.type,

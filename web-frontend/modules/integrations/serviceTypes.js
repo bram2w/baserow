@@ -3,6 +3,7 @@ import { LocalBaserowIntegrationType } from '@baserow/modules/integrations/integ
 import LocalBaserowGetRowForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowGetRowForm'
 import LocalBaserowListRowsForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowListRowsForm'
 import { uuid } from '@baserow/modules/core/utils/string'
+
 export class LocalBaserowGetRowServiceType extends ServiceType {
   static getType() {
     return 'local_baserow_get_row'
@@ -57,6 +58,25 @@ export class LocalBaserowGetRowServiceType extends ServiceType {
   /** Returns the name of the given record */
   getRecordName(service, record) {
     return ''
+  }
+
+  getDescription(service, application) {
+    const integration = this.app.store.getters[
+      'integration/getIntegrationById'
+    ](application, service.integration_id)
+
+    const databases = integration.context_data?.databases
+
+    if (service.table_id && databases) {
+      const tableSelected = databases
+        .map((database) => database.tables)
+        .flat()
+        .find(({ id }) => id === service.table_id)
+
+      return `${this.name} - ${tableSelected.name}`
+    }
+
+    return this.name
   }
 
   getOrder() {
@@ -170,6 +190,25 @@ export class LocalBaserowListRowsServiceType extends ServiceType {
     // NOTE: This is assuming that the first field is the primary field.
     const field = Object.keys(record).find((key) => key.startsWith('field_'))
     return record[field]
+  }
+
+  getDescription(service, application) {
+    const integration = this.app.store.getters[
+      'integration/getIntegrationById'
+    ](application, service.integration_id)
+
+    const databases = integration.context_data?.databases
+
+    if (service.table_id && databases) {
+      const tableSelected = databases
+        .map((database) => database.tables)
+        .flat()
+        .find(({ id }) => id === service.table_id)
+
+      return `${this.name} - ${tableSelected.name}`
+    }
+
+    return this.name
   }
 
   getOrder() {

@@ -82,21 +82,26 @@ export default {
       }
       return true
     },
+    sharedPage() {
+      return this.$store.getters['page/getSharedPage'](this.builder)
+    },
     /**
      * Returns all data sources that are available to the current page.
      * @returns {Array} - The data sources the page designer can choose from.
      */
     dataSources() {
-      return this.$store.getters['dataSource/getPageDataSources'](
-        this.page
+      const pages = [this.sharedPage, this.page]
+      return this.$store.getters['dataSource/getPagesDataSources'](
+        pages
       ).filter((dataSource) => dataSource.type)
     },
     selectedDataSource() {
       if (!this.values.data_source_id) {
         return null
       }
-      return this.$store.getters['dataSource/getPageDataSourceById'](
-        this.page,
+      const pages = [this.sharedPage, this.page]
+      return this.$store.getters['dataSource/getPagesDataSourceById'](
+        pages,
         this.values.data_source_id
       )
     },
@@ -144,6 +149,10 @@ export default {
         ) {
           // Remove the data_source_id if the related dataSource has been deleted.
           this.values.data_source_id = null
+          // And delete element content (not handled by the element event)
+          this.$store.dispatch('elementContent/clearElementContent', {
+            element: this.element,
+          })
         }
       }
     },

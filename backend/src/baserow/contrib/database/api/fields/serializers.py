@@ -10,6 +10,7 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.serializers import SkipField, empty
 
+from baserow.api.polymorphic import PolymorphicSerializer
 from baserow.api.user_files.serializers import UserFileURLAndThumbnailsSerializerMixin
 from baserow.api.user_files.validators import user_file_name_validator
 from baserow.contrib.database.fields.constants import (
@@ -69,6 +70,16 @@ class FieldSerializer(serializers.ModelSerializer):
             field_type_registry.get_by_model(instance.specific_class).read_only
             or instance.read_only
         )
+
+
+class PolymorphicFieldSerializer(PolymorphicSerializer):
+    """
+    Polymorphic field serializer.
+    """
+
+    base_class = FieldSerializer
+    registry = field_type_registry
+    request = False
 
 
 class RelatedFieldsSerializer(serializers.Serializer):

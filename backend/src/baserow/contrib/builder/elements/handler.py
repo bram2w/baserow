@@ -181,6 +181,24 @@ class ElementHandler:
             base_queryset=queryset,
         )
 
+    def _query_elements(self, base_queryset: QuerySet, specific=True):
+        """
+        Query elements from the base queryset.
+
+        :param base_queryset: The base QuerySet to query from.
+        :param specific: A boolean flag to determine if a specific instances should
+          be returned.
+        :return: The queried elements based on the specified conditions.
+        """
+
+        if specific:
+            queryset = base_queryset.select_related("content_type")
+            elements = specific_iterator(queryset)
+        else:
+            elements = base_queryset
+
+        return elements
+
     def get_elements(
         self,
         page: Page,
@@ -217,14 +235,34 @@ class ElementHandler:
 
         queryset = queryset.filter(page=page)
 
-        if specific:
-            queryset = queryset.select_related("content_type")
-            elements = specific_iterator(queryset)
-        else:
-            elements = queryset
+        elements = self._query_elements(queryset, specific=specific)
 
         if use_cache:
             setattr(page, cache_key, list(elements))
+
+        return elements
+
+    def get_builder_elements(
+        self,
+        builder: List[Page],
+        base_queryset: Optional[QuerySet] = None,
+        specific: bool = True,
+    ) -> Union[QuerySet[Element], Iterable[Element]]:
+        """
+        Gets all the elements of a given builder.
+
+        :param builder: The builder that holds the pages that hold the elements.
+        :param base_queryset: The base queryset to use to build the query.
+        :param specific: Whether to return the generic elements or the specific
+            instances.
+        :return: The elements of that builder.
+        """
+
+        queryset = base_queryset if base_queryset is not None else Element.objects.all()
+
+        queryset = queryset.filter(page__builder=builder)
+
+        elements = self._query_elements(queryset, specific=specific)
 
         return elements
 

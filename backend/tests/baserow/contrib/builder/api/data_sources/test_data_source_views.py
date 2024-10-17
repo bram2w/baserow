@@ -228,6 +228,57 @@ def test_update_data_source(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_update_data_source_page(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    page2 = data_fixture.create_builder_page(user=user, builder=page.builder)
+    data_source1 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        page=page, name="name"
+    )
+
+    url = reverse(
+        "api:builder:data_source:item", kwargs={"data_source_id": data_source1.id}
+    )
+
+    response = api_client.patch(
+        url,
+        {"page_id": page2.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json()["page_id"] == page2.id
+    assert response.json()["name"] == "name"
+
+
+@pytest.mark.django_db
+def test_update_data_source_with_with_name_conflict(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    page2 = data_fixture.create_builder_page(user=user, builder=page.builder)
+    data_source1 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        page=page, name="Conflict"
+    )
+    data_fixture.create_builder_local_baserow_get_row_data_source(
+        page=page2, name="Conflict"
+    )
+
+    url = reverse(
+        "api:builder:data_source:item", kwargs={"data_source_id": data_source1.id}
+    )
+
+    response = api_client.patch(
+        url,
+        {"page_id": page2.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json()["page_id"] == page2.id
+    assert response.json()["name"] == "Conflict 2"
+
+
+@pytest.mark.django_db
 def test_update_data_source_with_filters(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     page = data_fixture.create_builder_page(user=user)
@@ -1037,6 +1088,7 @@ def test_dispatch_data_source_with_element_from_different_page(
     data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
         page=page_with_data_source
     )
+
     url = reverse(
         "api:builder:data_source:dispatch", kwargs={"data_source_id": data_source.id}
     )
@@ -1048,8 +1100,50 @@ def test_dispatch_data_source_with_element_from_different_page(
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json() == [
-        "The dispatched element does not belong to the same page as the data source."
+        "The data source is not available for the dispatched element."
     ]
+
+
+@pytest.mark.django_db
+def test_dispatch_data_source_with_element_from_shared_page(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+
+    page_with_element = data_fixture.create_builder_page(user=user)
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("My Color", "text"),
+        ],
+        rows=[
+            ["BMW", "Blue"],
+            ["Audi", "Orange"],
+        ],
+    )
+
+    page_with_element = data_fixture.create_builder_page(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=page_with_element.builder
+    )
+
+    element = data_fixture.create_builder_table_element(page=page_with_element)
+
+    shared_page = page_with_element.builder.shared_page
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        page=shared_page,
+        integration=integration,
+        table=table,
+    )
+    url = reverse(
+        "api:builder:data_source:dispatch", kwargs={"data_source_id": data_source.id}
+    )
+    response = api_client.post(
+        url,
+        {"data_source": {"element": element.id}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
 
 
 @pytest.mark.django_db
@@ -1393,6 +1487,242 @@ def test_dispatch_data_sources(api_client, data_fixture):
             "The `row_id` formula can't be resolved: "
             "Invalid syntax at line 1, col 3: mismatched input "
             "'the end of the formula' expecting '('",
+        },
+    }
+
+
+@pytest.mark.django_db
+def test_dispatch_data_sources_with_formula_using_datasource_calling_an_other(
+    data_fixture, api_client
+):
+    user, token = data_fixture.create_user_and_token()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("My Color", "text"),
+        ],
+        rows=[
+            ["BMW", "Blue"],
+            ["Audi", "Orange"],
+            ["Volkswagen", "White"],
+            ["Volkswagen", "Green"],
+        ],
+    )
+    view = data_fixture.create_grid_view(user, table=table)
+    table2, fields2, rows2 = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Id", "text"),
+        ],
+        rows=[
+            ["42"],
+            [f"{rows[1].id}"],
+            ["44"],
+            ["45"],
+        ],
+    )
+    view2 = data_fixture.create_grid_view(user, table=table2)
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+
+    data_source2 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        view=view2,
+        table=table2,
+        row_id=f"'{rows2[1].id}'",
+        name="Id source",
+    )
+
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        view=view,
+        table=table,
+        row_id=f"get('data_source.{data_source2.id}.{fields2[0].db_column}')",
+        name="Item",
+    )
+
+    url = reverse("api:builder:data_source:dispatch-all", kwargs={"page_id": page.id})
+
+    response = api_client.post(
+        url,
+        {
+            "data_source": {},
+            "page_parameter": {},
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.json() == {
+        str(data_source2.id): {
+            "id": 2,
+            "order": "2.00000000000000000000",
+            fields2[0].db_column: "2",
+        },
+        str(data_source.id): {
+            "id": 2,
+            "order": "2.00000000000000000000",
+            fields[0].db_column: "Audi",
+            fields[1].db_column: "Orange",
+        },
+    }
+
+
+@pytest.mark.django_db
+def test_dispatch_data_sources_with_formula_using_datasource_calling_a_shared_data_source(
+    data_fixture, api_client
+):
+    user, token = data_fixture.create_user_and_token()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("My Color", "text"),
+        ],
+        rows=[
+            ["BMW", "Blue"],
+            ["Audi", "Orange"],
+            ["Volkswagen", "White"],
+            ["Volkswagen", "Green"],
+        ],
+    )
+    view = data_fixture.create_grid_view(user, table=table)
+    table2, fields2, rows2 = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Id", "text"),
+        ],
+        rows=[
+            ["42"],
+            [f"{rows[1].id}"],
+            ["44"],
+            ["45"],
+        ],
+    )
+    view2 = data_fixture.create_grid_view(user, table=table2)
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    shared_page = builder.page_set.first()
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+
+    data_source2 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user,
+        page=shared_page,
+        integration=integration,
+        view=view2,
+        table=table2,
+        row_id=f"'{rows2[1].id}'",
+        name="Id source",
+    )
+
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        view=view,
+        table=table,
+        row_id=f"get('data_source.{data_source2.id}.{fields2[0].db_column}')",
+        name="Item",
+    )
+
+    url = reverse("api:builder:data_source:dispatch-all", kwargs={"page_id": page.id})
+
+    response = api_client.post(
+        url,
+        {
+            "data_source": {},
+            "page_parameter": {},
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.json() == {
+        str(data_source.id): {
+            "id": rows[1].id,
+            "order": "2.00000000000000000000",
+            fields[0].db_column: "Audi",
+            fields[1].db_column: "Orange",
+        },
+    }
+
+
+@pytest.mark.django_db
+def test_dispatch_only_shared_data_sources(data_fixture, api_client):
+    user, token = data_fixture.create_user_and_token()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("My Color", "text"),
+        ],
+        rows=[
+            ["BMW", "Blue"],
+            ["Audi", "Orange"],
+            ["Volkswagen", "White"],
+            ["Volkswagen", "Green"],
+        ],
+    )
+    view = data_fixture.create_grid_view(user, table=table)
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    shared_page = builder.page_set.first()
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+
+    shared_data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user,
+        page=shared_page,
+        integration=integration,
+        view=view,
+        table=table,
+        row_id=f"'{rows[1].id}'",
+        name="Item",
+    )
+
+    url = reverse("api:builder:data_source:dispatch-all", kwargs={"page_id": page.id})
+
+    response = api_client.post(
+        url,
+        {
+            "page_parameter": {},
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.json() == {}
+
+    url = reverse(
+        "api:builder:data_source:dispatch-all", kwargs={"page_id": shared_page.id}
+    )
+
+    response = api_client.post(
+        url,
+        {
+            "page_parameter": {},
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.json() == {
+        str(shared_data_source.id): {
+            "id": rows[1].id,
+            "order": "2.00000000000000000000",
+            fields[0].db_column: "Audi",
+            fields[1].db_column: "Orange",
         },
     }
 

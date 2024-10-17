@@ -40,6 +40,7 @@ export default {
       applicationContext: this.applicationContext,
     }
   },
+
   /**
    * When the route is updated we want to unselect the element
    */
@@ -52,9 +53,16 @@ export default {
       // When we switch from one application to another we want to logoff the current
       // user
       const builder = this.$store.getters['application/get'](
-        from.params.builderId
+        parseInt(from.params.builderId)
       )
-      this.$store.dispatch('userSourceUser/logoff', { application: builder })
+      if (builder) {
+        // We want to reload once only data for this builder next time
+        this.$store.dispatch('application/forceUpdate', {
+          application: builder,
+          data: { _loadedOnce: false },
+        })
+        this.$store.dispatch('userSourceUser/logoff', { application: builder })
+      }
     }
     next()
   },
@@ -70,9 +78,17 @@ export default {
     })
 
     const builder = this.$store.getters['application/get'](
-      from.params.builderId
+      parseInt(from.params.builderId)
     )
-    this.$store.dispatch('userSourceUser/logoff', { application: builder })
+    if (builder) {
+      // We want to reload once only data for this builder next time
+      this.$store.dispatch('application/forceUpdate', {
+        application: builder,
+        data: { _loadedOnce: false },
+      })
+      this.$store.dispatch('userSourceUser/logoff', { application: builder })
+    }
+
     next()
   },
   layout: 'app',
@@ -87,7 +103,6 @@ export default {
       store.dispatch('userSourceUser/setCurrentApplication', {
         application: builder,
       })
-
       const workspace = await store.dispatch(
         'workspace/selectById',
         builder.workspace.id
@@ -97,9 +112,10 @@ export default {
         'application',
         BuilderApplicationType.getType()
       )
-      await builderApplicationType.loadExtraData(builder)
 
       const page = store.getters['page/getById'](builder, pageId)
+
+      await builderApplicationType.loadExtraData(builder, page, mode)
 
       await Promise.all([
         store.dispatch('dataSource/fetch', {
@@ -146,10 +162,26 @@ export default {
     dataSources() {
       return this.$store.getters['dataSource/getPageDataSources'](this.page)
     },
+    sharedPage() {
+      return this.$store.getters['page/getSharedPage'](this.builder)
+    },
+    sharedDataSources() {
+      return this.$store.getters['dataSource/getPageDataSources'](
+        this.sharedPage
+      )
+    },
     dispatchContext() {
       return DataProviderType.getAllDataSourceDispatchContext(
         this.$registry.getAll('builderDataProvider'),
         this.applicationContext
+      )
+    },
+    // Separate dispatch context for application level shared data sources
+    // This one doesn't contain the page.
+    applicationDispatchContext() {
+      return DataProviderType.getAllDataSourceDispatchContext(
+        this.$registry.getAll('builderDataProvider'),
+        { builder: this.builder, mode }
       )
     },
   },
@@ -170,6 +202,21 @@ export default {
         )
       },
     },
+    sharedDataSources: {
+      deep: true,
+      /**
+       * Update shared data source content on data source configuration changes
+       */
+      handler() {
+        this.$store.dispatch(
+          'dataSourceContent/debouncedFetchPageDataSourceContent',
+          {
+            page: this.sharedPage,
+            data: this.dispatchContext,
+          }
+        )
+      },
+    },
     dispatchContext: {
       deep: true,
       /**
@@ -183,6 +230,23 @@ export default {
               page: this.page,
               data: newDispatchContext,
               mode: this.mode,
+            }
+          )
+        }
+      },
+    },
+    applicationDispatchContext: {
+      deep: true,
+      /**
+       * Update data source content on backend context changes
+       */
+      handler(newDispatchContext, oldDispatchContext) {
+        if (!_.isEqual(newDispatchContext, oldDispatchContext)) {
+          this.$store.dispatch(
+            'dataSourceContent/debouncedFetchPageDataSourceContent',
+            {
+              page: this.sharedPage,
+              data: newDispatchContext,
             }
           )
         }

@@ -170,7 +170,7 @@ class DispatchDataSourceDataSourceContextSerializer(serializers.Serializer):
         required=False,
         default=None,
         allow_null=True,
-        queryset=Element.objects.all(),
+        queryset=Element.objects.select_related("page__builder").all(),
         help_text="Optionally provide the data source dispatch endpoint with a "
         "collection element ID if you wish to apply element-level filters, "
         "sorts and/or search.",
@@ -212,9 +212,11 @@ class DispatchDataSourceRequestSerializer(serializers.Serializer):
         data_source = self.context.get("data_source")
         element = self.validated_data.get("data_source").get("element")
         if element:
-            if element.page_id != data_source.page_id:
+            if (
+                element.page_id != data_source.page_id
+                and element.page.builder.shared_page.id != data_source.page_id
+            ):
                 raise ValidationError(
-                    "The dispatched element does not "
-                    "belong to the same page as the data source.",
+                    "The data source is not available for the dispatched element.",
                     code="PAGE_MISMATCH",
                 )

@@ -141,11 +141,11 @@ export default {
   },
   computed: {
     pages() {
-      return this.builder.pages
+      return this.$store.getters['page/getVisiblePages'](this.builder)
     },
     destinationPage() {
       if (!isNaN(this.navigateTo)) {
-        return this.builder.pages.find(({ id }) => id === this.navigateTo)
+        return this.pages.find(({ id }) => id === this.navigateTo)
       }
       return null
     },
@@ -195,7 +195,7 @@ export default {
   },
   methods: {
     refreshParametersInError() {
-      this.parametersInError = pathParametersInError(this.values, this.builder)
+      this.parametersInError = pathParametersInError(this.values, this.pages)
     },
     updatePageParameters() {
       this.values.page_parameters = (

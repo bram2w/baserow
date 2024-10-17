@@ -518,7 +518,6 @@ class LocalBaserowTableServiceSpecificRowMixin:
             return resolved_values
 
         try:
-            dispatch_context.reset_call_stack()
             resolved_values["row_id"] = ensure_integer(
                 resolve_formula(
                     service.row_id,
@@ -534,6 +533,8 @@ class LocalBaserowTableServiceSpecificRowMixin:
         except DataProviderChunkInvalidException as e:
             message = f"Formula for row {service.row_id} could not be resolved."
             raise ServiceImproperlyConfigured(message) from e
+        except ServiceImproperlyConfigured:
+            raise
         except Exception as e:
             raise ServiceImproperlyConfigured(
                 f"The `row_id` formula can't be resolved: {e}"

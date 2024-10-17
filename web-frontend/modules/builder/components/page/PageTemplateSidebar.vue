@@ -49,9 +49,7 @@ export default {
   },
   computed: {
     orderedPages() {
-      return this.application.pages
-        .map((page) => page)
-        .sort((a, b) => a.order - b.order)
+      return this.$store.getters['page/getVisiblePages'](this.application)
     },
   },
   methods: {

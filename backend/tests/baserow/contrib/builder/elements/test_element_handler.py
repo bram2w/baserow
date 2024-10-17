@@ -100,6 +100,42 @@ def test_get_elements(data_fixture, django_assert_num_queries):
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize(
+    "specific,expected_query_count",
+    [
+        [
+            True,
+            3,
+        ],
+        [
+            False,
+            1,
+        ],
+    ],
+)
+def test_get_builder_elements(
+    data_fixture, django_assert_num_queries, specific, expected_query_count
+):
+    page = data_fixture.create_builder_page()
+    page2 = data_fixture.create_builder_page(builder=page.builder)
+
+    element1 = data_fixture.create_builder_heading_element(page=page)
+    element2 = data_fixture.create_builder_text_element(page=page2)
+
+    with django_assert_num_queries(expected_query_count):
+        elements = list(
+            ElementHandler().get_builder_elements(page.builder, specific=specific)
+        )
+
+    assert sorted([e.id for e in elements]) == sorted(
+        [
+            element1.id,
+            element2.id,
+        ]
+    )
+
+
+@pytest.mark.django_db
 def test_delete_element(data_fixture):
     element = data_fixture.create_builder_heading_element()
 

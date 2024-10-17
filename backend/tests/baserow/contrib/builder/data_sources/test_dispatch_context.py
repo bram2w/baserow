@@ -45,7 +45,7 @@ def test_dispatch_context_page_range():
 
 @pytest.mark.django_db
 @patch(
-    "baserow.contrib.builder.data_sources.builder_dispatch_context.get_formula_field_names"
+    "baserow.contrib.builder.data_sources.builder_dispatch_context.get_builder_used_property_names"
 )
 def test_dispatch_context_page_from_context(mock_get_field_names, data_fixture):
     mock_get_field_names.return_value = {"all": {}, "external": {}, "internal": {}}
@@ -145,10 +145,10 @@ def test_dispatch_context_sortings():
     ),
 )
 @patch(
-    "baserow.contrib.builder.data_sources.builder_dispatch_context.get_formula_field_names"
+    "baserow.contrib.builder.data_sources.builder_dispatch_context.get_builder_used_property_names"
 )
 def test_builder_dispatch_context_field_names_computed_on_param(
-    mock_get_formula_field_names,
+    mock_get_builder_used_property_names,
     only_expose_public_formula_fields,
 ):
     """
@@ -158,11 +158,12 @@ def test_builder_dispatch_context_field_names_computed_on_param(
     """
 
     mock_field_names = ["field_123"]
-    mock_get_formula_field_names.return_value = mock_field_names
+    mock_get_builder_used_property_names.return_value = mock_field_names
 
     mock_request = MagicMock()
     mock_request.user.is_anonymous = True
     mock_page = MagicMock()
+    mock_page.builder = MagicMock()
 
     dispatch_context = BuilderDispatchContext(
         mock_request,
@@ -172,12 +173,12 @@ def test_builder_dispatch_context_field_names_computed_on_param(
 
     if only_expose_public_formula_fields:
         assert dispatch_context.public_formula_fields == mock_field_names
-        mock_get_formula_field_names.assert_called_once_with(
-            mock_request.user, mock_page
+        mock_get_builder_used_property_names.assert_called_once_with(
+            mock_request.user, mock_page.builder
         )
     else:
         assert dispatch_context.public_formula_fields is None
-        mock_get_formula_field_names.assert_not_called()
+        mock_get_builder_used_property_names.assert_not_called()
 
 
 @pytest.mark.django_db
@@ -326,7 +327,7 @@ def test_builder_dispatch_context_public_formula_fields_is_cached(
     }
 
     # Initially calling the property should cause a bunch of DB queries.
-    with django_assert_num_queries(14):
+    with django_assert_num_queries(12):
         result = dispatch_context.public_formula_fields
         assert result == expected_results
 
@@ -388,7 +389,7 @@ def test_builder_dispatch_context_get_cache_key(
     mock_request.user.role = user_role
 
     mock_page = MagicMock()
-    mock_page.id = 100
+    mock_page.builder_id = 100
 
     dispatch_context = BuilderDispatchContext(
         mock_request,

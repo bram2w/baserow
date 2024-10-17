@@ -145,8 +145,7 @@ export default {
      * calling the submitted event.
      */
     getFormValues() {
-      const result = Object.assign({}, this.values, this.getChildFormsValues())
-      return result
+      return Object.assign({}, this.values, this.getChildFormsValues())
     },
     /**
      * Returns an object containing the values of the child forms.

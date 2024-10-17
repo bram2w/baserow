@@ -16,6 +16,7 @@ export function populatePage(page) {
     elementMap: {},
     orderedElements: [],
     workflowActions: [],
+    contents: null,
   }
 }
 
@@ -160,8 +161,13 @@ const actions = {
 }
 
 const getters = {
-  getById: (state) => (builder, pageId) => {
-    const index = builder.pages.findIndex((item) => item.id === pageId)
+  getAllPages: (state) => (builder) => {
+    return builder.pages
+  },
+  getById: (state, getters) => (builder, pageId) => {
+    const index = getters
+      .getAllPages(builder)
+      .findIndex((item) => item.id === pageId)
 
     if (index === -1) {
       throw new StoreItemLookupError(
@@ -169,7 +175,16 @@ const getters = {
       )
     }
 
-    return builder.pages[index]
+    return getters.getAllPages(builder)[index]
+  },
+  getVisiblePages: (state, getters) => (builder) => {
+    return getters
+      .getAllPages(builder)
+      .filter((page) => page.shared === false)
+      .sort((a, b) => a.order - b.order)
+  },
+  getSharedPage: (state, getters) => (builder) => {
+    return getters.getAllPages(builder).find((page) => page.shared === true)
   },
   getSelected(state) {
     return state.selected

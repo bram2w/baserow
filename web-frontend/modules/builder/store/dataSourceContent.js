@@ -5,7 +5,7 @@ import PublishedBuilderService from '@baserow/modules/builder/services/published
 
 const state = {}
 
-let pageFetchTimeout = null
+const fetchTimeoutPerPage = {}
 
 const mutations = {
   SET_CONTENT(state, { page, dataSourceId, value }) {
@@ -110,8 +110,10 @@ const actions = {
     { dispatch },
     { page, data: queryData, mode }
   ) {
-    clearTimeout(pageFetchTimeout)
-    pageFetchTimeout = setTimeout(() => {
+    if (fetchTimeoutPerPage[page.id]) {
+      clearTimeout(fetchTimeoutPerPage[page.id])
+    }
+    fetchTimeoutPerPage[page.id] = setTimeout(() => {
       dispatch('fetchPageDataSourceContent', {
         page,
         data: queryData,

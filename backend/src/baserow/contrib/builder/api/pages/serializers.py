@@ -28,10 +28,11 @@ class PageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Page
-        fields = ("id", "name", "path", "path_params", "order", "builder_id")
+        fields = ("id", "name", "path", "path_params", "order", "builder_id", "shared")
         extra_kwargs = {
             "id": {"read_only": True},
             "builder_id": {"read_only": True},
+            "shared": {"read_only": True},
             "order": {"help_text": "Lowest first."},
         }
 

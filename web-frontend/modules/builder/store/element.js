@@ -430,12 +430,10 @@ const actions = {
 
     return elements
   },
-  emitElementEvent({ getters }, { event, page, ...rest }) {
-    const elements = getters.getElementsOrdered(page)
-
+  emitElementEvent({ getters }, { event, elements, ...rest }) {
     elements.forEach((element) => {
       const elementType = this.$registry.get('element', element.type)
-      elementType.onElementEvent(event, { page, element, ...rest })
+      elementType.onElementEvent(event, { element, ...rest })
     })
   },
   async moveElement({ dispatch, getters }, { page, element, placement }) {

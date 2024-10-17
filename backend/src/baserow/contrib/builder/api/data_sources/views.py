@@ -56,6 +56,7 @@ from baserow.contrib.builder.data_sources.service import DataSourceService
 from baserow.contrib.builder.elements.exceptions import ElementDoesNotExist
 from baserow.contrib.builder.pages.exceptions import PageDoesNotExist
 from baserow.contrib.builder.pages.handler import PageHandler
+from baserow.contrib.builder.pages.models import Page
 from baserow.core.exceptions import PermissionException
 from baserow.core.services.exceptions import (
     DoesNotExist,
@@ -249,6 +250,13 @@ class DataSourceView(APIView):
         change_service_type = False
         service_type = None
 
+        page = None
+        if "page_id" in request.data:
+            page = PageHandler().get_page(
+                int(request.data["page_id"]),
+                base_queryset=Page.objects.filter(builder=data_source.page.builder),
+            )
+
         # Do we have a service?
         if data_source.service is not None:
             # Yes, let's read the service type from it.
@@ -285,6 +293,9 @@ class DataSourceView(APIView):
 
         if change_service_type:
             data["new_service_type"] = service_type_from_query
+
+        if page is not None:
+            data["page"] = page
 
         data_source_updated = DataSourceService().update_data_source(
             request.user, data_source, service_type=service_type, **data
