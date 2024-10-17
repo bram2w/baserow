@@ -7,7 +7,7 @@ from django.db import transaction
 import pytest
 
 from baserow.contrib.database.rows.handler import RowHandler
-from baserow.contrib.database.views.models import SORT_ORDER_DESC
+from baserow.contrib.database.views.models import SORT_ORDER_ASC, SORT_ORDER_DESC
 from baserow.contrib.database.views.view_filters import ContainsViewFilterType
 from baserow.contrib.integrations.local_baserow.mixins import (
     LocalBaserowTableServiceFilterableMixin,
@@ -187,6 +187,35 @@ def test_local_baserow_table_service_filterable_mixin_import_export(data_fixture
 
 
 @pytest.mark.django_db
+def test_local_baserow_table_service_filterable_mixin_get_used_field_names(
+    data_fixture,
+):
+    service_type = get_test_service_type(LocalBaserowTableServiceFilterableMixin)
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_text_field(name="Names", table=table)
+    service = data_fixture.create_local_baserow_list_rows_service(table=table)
+    service_filter = data_fixture.create_local_baserow_table_service_filter(
+        service=service,
+        field=field,
+        value="'A'",
+        order=0,
+    )
+
+    field_names = {
+        "all": {service.id: []},
+        "external": {service.id: []},
+        "internal": {},
+    }
+
+    dispatch_context = FakeDispatchContext(public_formula_fields=field_names)
+
+    result = service_type.get_used_field_names(service, dispatch_context)
+
+    assert result == [field.db_column]
+
+
+@pytest.mark.django_db
 def test_local_baserow_table_service_sortable_mixin_get_queryset(
     data_fixture,
 ):
@@ -243,6 +272,31 @@ def test_local_baserow_table_service_sortable_mixin_get_queryset(
     ] == [aardvark.id, badger.id, crow.id, dragonfly.id]
 
 
+@pytest.mark.django_db
+def test_local_baserow_table_service_sortable_mixin_get_used_field_names(
+    data_fixture,
+):
+    service_type = get_test_service_type(LocalBaserowTableServiceSortableMixin)
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_text_field(name="Names", table=table)
+    service = data_fixture.create_local_baserow_list_rows_service(table=table)
+    service_sort = data_fixture.create_local_baserow_table_service_sort(
+        service=service, field=field, order_by=SORT_ORDER_ASC, order=0
+    )
+    field_names = {
+        "all": {service.id: []},
+        "external": {service.id: []},
+        "internal": {},
+    }
+
+    dispatch_context = FakeDispatchContext(public_formula_fields=field_names)
+
+    result = service_type.get_used_field_names(service, dispatch_context)
+
+    assert result == [field.db_column]
+
+
 @pytest.mark.django_db(transaction=True)
 def test_local_baserow_table_service_searchable_mixin_get_queryset(
     data_fixture,
@@ -287,9 +341,9 @@ def test_local_baserow_table_service_searchable_mixin_get_queryset(
     ] == [alessia.id, alex.id, alexandra.id]
 
     # Adhoc search queries extend the service search query.
-    dispatch_context = Mock()
-    dispatch_context.searchable_fields.return_value = [field.db_column]
-    dispatch_context.search_query.return_value = "Alexa"
+    dispatch_context = FakeDispatchContext(
+        searchable_fields=[field.db_column], search_query="Alexa"
+    )
 
     assert [
         row.id
@@ -297,3 +351,27 @@ def test_local_baserow_table_service_searchable_mixin_get_queryset(
             service, table, dispatch_context, table_model
         )
     ] == [alexandra.id]
+
+
+@pytest.mark.django_db
+def test_local_baserow_table_service_searchable_mixin_get_used_field_names(
+    data_fixture,
+):
+    service_type = get_test_service_type(LocalBaserowTableServiceSearchableMixin)
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_text_field(name="Names", table=table)
+    service = data_fixture.create_local_baserow_list_rows_service(
+        table=table, search_query="'a'"
+    )
+    field_names = {
+        "all": {service.id: []},
+        "external": {service.id: []},
+        "internal": {},
+    }
+
+    dispatch_context = FakeDispatchContext(public_formula_fields=field_names)
+
+    result = service_type.get_used_field_names(service, dispatch_context)
+
+    assert result == [field.tsv_db_column]

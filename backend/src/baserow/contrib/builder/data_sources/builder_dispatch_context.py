@@ -14,10 +14,6 @@ from baserow.contrib.builder.data_sources.exceptions import (
 )
 from baserow.contrib.builder.formula_property_extractor import get_formula_field_names
 from baserow.contrib.builder.pages.models import Page
-from baserow.core.feature_flags import (
-    FF_FILTER_DISPATCH_QUERYSET,
-    feature_flag_is_enabled,
-)
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.services.utils import ServiceAdhocRefinements
 
@@ -105,9 +101,6 @@ class BuilderDispatchContext(DispatchContext):
         Source fields are external and safe (user facing) vs internal and
         sensitive (required only by the backend).
         """
-
-        if not feature_flag_is_enabled(FF_FILTER_DISPATCH_QUERYSET):
-            return None
 
         if self.only_expose_public_formula_fields:
             cache_key = self.get_cache_key()

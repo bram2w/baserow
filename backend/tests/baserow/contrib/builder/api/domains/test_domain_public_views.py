@@ -924,7 +924,7 @@ def test_public_dispatch_data_sources_list_rows_no_elements(
 
     assert response.status_code == HTTP_200_OK
     assert response.json() == {
-        str(data_source.id): {"has_next_page": False, "results": []}
+        str(data_source.id): {"has_next_page": False, "results": [{}] * 3}
     }
 
 
@@ -1034,6 +1034,6 @@ def test_public_dispatch_data_sources_list_rows_with_elements_and_role(
         assert response.json() == {
             str(data_source.id): {
                 "has_next_page": False,
-                "results": [],
+                "results": [{}] * 3,
             },
         }

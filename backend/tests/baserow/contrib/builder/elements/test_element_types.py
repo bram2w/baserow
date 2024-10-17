@@ -1313,7 +1313,9 @@ def test_record_element_is_valid(data_fixture):
         table=table,
     )
 
-    dispatch_context = BuilderDispatchContext(HttpRequest(), page)
+    dispatch_context = BuilderDispatchContext(
+        HttpRequest(), page, only_expose_public_formula_fields=False
+    )
 
     # Record selector with no data sources is invalid
     with pytest.raises(FormDataProviderChunkInvalidException):

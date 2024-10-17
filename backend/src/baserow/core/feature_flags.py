@@ -4,7 +4,6 @@ from baserow.core.exceptions import FeatureDisabledException
 
 FF_EXPORT_WORKSPACE = "export_workspace"
 FF_DASHBOARDS = "dashboards"
-FF_FILTER_DISPATCH_QUERYSET = "filter_dispatch_queryset"
 FF_ENABLE_ALL = "*"
 
 

@@ -285,21 +285,6 @@ class DataSourceService:
                 "external", {}
             ).get(data_source.service.id, [])
 
-            # If field_names is empty, that means no fields are allowed so
-            # we should skip this data source altogether.
-            if not field_names:
-                if data_source.service.get_type().returns_list:
-                    new_results[data_source.id] = {
-                        "results": [],
-                        "has_next_page": False,
-                    }
-                else:
-                    new_results[data_source.id] = {}
-
-                # Since field_names is empty, there is nothing to filter for
-                # this data source.
-                continue
-
             if data_source.service.get_type().returns_list:
                 new_results[data_source.id] = {
                     **results[data_source.id],
