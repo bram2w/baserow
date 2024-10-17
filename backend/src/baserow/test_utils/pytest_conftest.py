@@ -744,14 +744,17 @@ class FakeDispatchContext(DispatchContext):
     def __init__(self, **kwargs):
         super().__init__()
         self.context = kwargs.pop("context", {})
+        self._public_formula_fields = kwargs.pop("public_formula_fields", None)
+        self._searchable_fields = kwargs.pop("searchable_fields", [])
+        self._search_query = kwargs.pop("search_query", None)
         for key, value in kwargs.items():
             setattr(self, key, value)
 
     def search_query(self):
-        return None
+        return self._search_query
 
     def searchable_fields(self):
-        return []
+        return self._searchable_fields
 
     def filters(self):
         return None
@@ -776,7 +779,7 @@ class FakeDispatchContext(DispatchContext):
 
     @property
     def public_formula_fields(self) -> Optional[Dict[str, Dict[int, List[str]]]]:
-        return {}
+        return self._public_formula_fields
 
     def validate_filter_search_sort_fields(
         self, fields: List[str], refinement: ServiceAdhocRefinements

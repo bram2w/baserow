@@ -20,7 +20,7 @@ from baserow.core.services.exceptions import ServiceImproperlyConfigured
 from baserow.core.services.handler import ServiceHandler
 from baserow.core.services.registries import service_type_registry
 from baserow.core.utils import MirrorDict
-from baserow.test_utils.helpers import AnyStr
+from baserow.test_utils.helpers import AnyStr, setup_interesting_test_table
 from baserow.test_utils.pytest_conftest import FakeDispatchContext, fake_import_formula
 
 
@@ -79,7 +79,7 @@ def test_export_import_local_baserow_list_rows_service(data_fixture):
         view=view,
         table=view.table,
         search_query="get('page_parameter.id')",
-        filter_type="Or",
+        filter_type="OR",
     )
 
     field = fields[0]
@@ -102,7 +102,7 @@ def test_export_import_local_baserow_list_rows_service(data_fixture):
         "table_id": service.table_id,
         "integration_id": service.integration_id,
         "search_query": service.search_query,
-        "filter_type": "Or",
+        "filter_type": "OR",
         "filters": [
             {
                 "field_id": service_filter.field_id,
@@ -708,7 +708,7 @@ def test_import_formula_local_baserow_list_rows_user_service_type(data_fixture):
         view=view,
         table=view.table,
         search_query=f"get('data_source.{data_source.id}.0.{text_field.db_column}')",
-        filter_type="Or",
+        filter_type="OR",
     )
 
     data_fixture.create_local_baserow_table_service_filter(
@@ -903,16 +903,16 @@ def test_order_by_is_applied_depending_on_views_sorts(
     (
         [
             (
-                {"all": ["field_foo", "field_bar"], "external": None, "internal": None},
+                {"all": ["field_42", "field_43"], "external": None, "internal": None},
                 True,
             ),
             (
-                {"all": ["field_foo", "field_bar"], "external": [], "internal": []},
+                {"all": ["field_42", "field_43"], "external": [], "internal": []},
                 True,
             ),
             (
                 {
-                    "all": ["field_foo", "field_bar"],
+                    "all": ["field_42", "field_43"],
                     "external": ["foo"],
                     "internal": ["bar"],
                 },
@@ -927,7 +927,7 @@ def test_order_by_is_applied_depending_on_views_sorts(
                 False,
             ),
             (
-                {"all": None, "external": ["field_foo"], "internal": ["field_bar"]},
+                {"all": None, "external": ["field_42"], "internal": ["field_43"]},
                 False,
             ),
         ]
@@ -990,22 +990,97 @@ def test_only_is_applied_to_queryset_if_field_names(
     for key, value in field_name_checks.items():
         field_names[key] = {service.id: value}
 
-    dispatch_context = FakeDispatchContext()
-
-    with patch(
-        "baserow.test_utils.pytest_conftest.FakeDispatchContext.public_formula_fields",
-        None,
-    ):
-        dispatch_context.public_formula_fields = field_names
-        service_type.dispatch_data(service, resolved_values, dispatch_context)
+    dispatch_context = FakeDispatchContext(public_formula_fields=field_names)
+    service_type.dispatch_data(service, resolved_values, dispatch_context)
 
     if expect_only_applied:
         mock_queryset.only.assert_called_once_with(
-            field_names["all"][service.id][0],
-            field_names["all"][service.id][1],
+            *field_names["all"][service.id],
         )
     else:
         mock_queryset.only.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_can_dispatch_interesting_table(data_fixture):
+    """
+    Test that we can dispatch an interesting table content.
+    Multiple test are chained in the same function to improve test performances.
+    """
+
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    table, _, _, _, _ = setup_interesting_test_table(
+        data_fixture,
+        user,
+    )
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+
+    service = data_fixture.create_local_baserow_list_rows_service(
+        integration=integration,
+        table=table,
+        filter_type="OR",
+    )
+
+    dispatch_context = FakeDispatchContext()
+
+    # Normal dispatch
+    result = service.get_type().dispatch(service, dispatch_context)
+
+    assert len(result["results"]) == 2
+    assert len(result["results"][0].keys()) == table.field_set.count() + 2
+
+    # Now can we dispatch the table if all fields are hidden?
+    field_names = {
+        "all": {service.id: ["id"]},
+        "external": {service.id: ["id"]},
+        "internal": {},
+    }
+
+    dispatch_context = FakeDispatchContext(public_formula_fields=field_names)
+
+    # If this dispatch doesn't fail while all the fields are excluded from the result
+    # means that the enhance_by_field is filtered to only used field.
+    result = service.get_type().dispatch(service, dispatch_context)
+
+    assert (
+        len(result["results"][0].keys()) == 1 + 1
+    )  # We also have the order at that point
+
+    # Test with a filter on a single select field. Single select have a select_related
+    single_select_field = table.field_set.get(name="single_select")
+    service_filter = data_fixture.create_local_baserow_table_service_filter(
+        service=service,
+        field=single_select_field,
+        value="'A'",
+        order=0,
+    )
+
+    dispatch_context = FakeDispatchContext(public_formula_fields=field_names)
+
+    assert len(result["results"][0].keys()) == 1 + 1
+
+    # Let's remove the filter to not interfer with the sort
+    service_filter.delete()
+
+    # Test with a sort
+    service_sort = data_fixture.create_local_baserow_table_service_sort(
+        service=service, field=single_select_field, order_by=SORT_ORDER_ASC, order=0
+    )
+
+    dispatch_context = FakeDispatchContext(public_formula_fields=field_names)
+    assert len(result["results"][0].keys()) == 1 + 1
+
+    service_sort.delete()
+
+    # Now with a search
+    service.search_query = "'A'"
+    service.save()
+
+    dispatch_context = FakeDispatchContext(public_formula_fields=field_names)
+    assert len(result["results"][0].keys()) == 1 + 1
 
 
 @pytest.mark.parametrize(
@@ -1031,15 +1106,14 @@ def test_dispatch_transform_passes_field_ids(mock_get_serializer, field_names):
     mock_get_serializer.return_value = mock_serializer
 
     service_type = LocalBaserowListRowsUserServiceType()
-    service_type.extract_field_ids = MagicMock(return_value=[])
 
     dispatch_data = {
         "baserow_table_model": MagicMock(),
         "results": [],
         "has_next_page": False,
     }
-    if field_names:
-        dispatch_data["public_formula_fields"] = field_names
+
+    dispatch_data["public_formula_fields"] = field_names
 
     results = service_type.dispatch_transform(dispatch_data)
 
@@ -1051,9 +1125,8 @@ def test_dispatch_transform_passes_field_ids(mock_get_serializer, field_names):
         dispatch_data["baserow_table_model"],
         RowSerializer,
         is_response=True,
-        field_ids=[],
+        field_ids=None,
     )
-    service_type.extract_field_ids.assert_called_once_with(field_names)
 
 
 @pytest.mark.parametrize(

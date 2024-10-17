@@ -147,7 +147,7 @@ def test_dispatch_data_sources_list_rows_no_elements(
     assert response.json() == {
         str(data_source.id): {
             "has_next_page": False,
-            "results": [],
+            "results": [{}] * 3,
         },
     }
 
@@ -522,6 +522,8 @@ def test_dispatch_data_sources_list_rows_with_elements_and_role(
             # to see the data source fields.
 
             expected_results.append({field_name: getattr(row, field_name)})
+        else:
+            expected_results.append({})
 
     assert response.status_code == HTTP_200_OK
     assert response.json() == {

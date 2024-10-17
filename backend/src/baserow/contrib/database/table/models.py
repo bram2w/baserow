@@ -160,7 +160,9 @@ class TableModelQuerySet(MultiFieldPrefetchQuerysetMixin, models.QuerySet):
         with cachalot_enabled():
             return super().count()
 
-    def enhance_by_fields(self, **kwargs):
+    def enhance_by_fields(
+        self, only_field_ids: Optional[List[int]] = None, **kwargs
+    ) -> QuerySet:
         """
         Enhances the queryset based on the `enhance_queryset_in_bulk` for each unique
         field type used in the table. This one will eventually call the
@@ -168,12 +170,19 @@ class TableModelQuerySet(MultiFieldPrefetchQuerysetMixin, models.QuerySet):
         field adds the `prefetch_related` to prevent N queries per row. This helper
         should only be used when multiple rows are going to be fetched.
 
+        :param only_field_ids: only apply the prefetch related for the field with ID
+          included in the given list.
         :return: The enhanced queryset.
-        :rtype: QuerySet
         """
 
+        selected_fields = (
+            field
+            for field in self.model._field_objects.values()
+            if only_field_ids is None or field["field"].id in only_field_ids
+        )
+
         by_type = defaultdict(list)
-        for field_object in self.model._field_objects.values():
+        for field_object in selected_fields:
             field_type = field_object["type"]
             by_type[field_type].append(field_object)
         for field_type, field_objects in by_type.items():
