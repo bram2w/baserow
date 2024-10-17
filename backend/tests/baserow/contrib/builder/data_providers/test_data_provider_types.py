@@ -431,7 +431,6 @@ def test_data_source_data_provider_get_data_chunk_with_formula_to_missing_dataso
 
     fake_request = HttpRequest()
     fake_request.data = {
-        "data_source": {"page_id": page.id},
         "page_parameter": {},
     }
 
@@ -490,8 +489,10 @@ def test_data_source_data_provider_get_data_chunk_with_formula_recursion(
         name="Item",
     )
 
-    data_source.row_id = f"get('data_source.{data_source.id}.Id')"
-    data_source.save()
+    data_source.service.row_id = (
+        f"get('data_source.{data_source.id}.{fields2[0].db_column}')"
+    )
+    data_source.service.save()
 
     data_source_provider = DataSourceDataProviderType()
 
@@ -505,11 +506,81 @@ def test_data_source_data_provider_get_data_chunk_with_formula_recursion(
         fake_request, page, only_expose_public_formula_fields=False
     )
 
+    with pytest.raises(ServiceImproperlyConfigured):
+        data_source_provider.get_data_chunk(
+            dispatch_context, [data_source.id, fields[1].db_column]
+        )
+
+
+@pytest.mark.django_db
+def test_data_source_data_provider_get_data_chunk_with_formula_using_another_datasource(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("My Color", "text"),
+        ],
+        rows=[
+            ["BMW", "Blue"],
+            ["Audi", "Orange"],
+            ["Volkswagen", "White"],
+            ["Volkswagen", "Green"],
+        ],
+    )
+    view = data_fixture.create_grid_view(user, table=table)
+    table2, fields2, rows2 = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Id", "text"),
+        ],
+        rows=[
+            ["42"],
+            [f"{rows[1].id}"],
+            ["44"],
+            ["45"],
+        ],
+    )
+    view2 = data_fixture.create_grid_view(user, table=table2)
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+
+    data_source2 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        view=view2,
+        table=table2,
+        row_id=f"'{rows2[1].id}'",
+        name="Id source",
+    )
+
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        view=view,
+        table=table,
+        row_id=f"get('data_source.{data_source2.id}.{fields2[0].db_column}')",
+        name="Item",
+    )
+
+    data_source_provider = DataSourceDataProviderType()
+
+    dispatch_context = BuilderDispatchContext(
+        HttpRequest(), page, only_expose_public_formula_fields=False
+    )
+
     assert (
         data_source_provider.get_data_chunk(
             dispatch_context, [data_source.id, fields[1].db_column]
         )
-        == "Blue"
+        == "Orange"
     )
 
 
@@ -565,18 +636,17 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource_
         integration=integration,
         view=view2,
         table=table2,
-        row_id=f"get('data_source.{data_source.id}.Id')",
+        row_id=f"get('data_source.{data_source.id}.id')",
         name="Id source",
     )
 
-    data_source.row_id = f"get('data_source.{data_source2.id}.Id')"
-    data_source.save()
+    data_source.service.row_id = f"get('data_source.{data_source2.id}.id')"
+    data_source.service.save()
 
     data_source_provider = DataSourceDataProviderType()
 
     fake_request = HttpRequest()
     fake_request.data = {
-        "data_source": {"page_id": page.id},
         "page_parameter": {},
     }
 
@@ -584,12 +654,10 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource_
         fake_request, page, only_expose_public_formula_fields=False
     )
 
-    assert (
+    with pytest.raises(ServiceImproperlyConfigured):
         data_source_provider.get_data_chunk(
             dispatch_context, [data_source.id, fields[1].db_column]
         )
-        == "Blue"
-    )
 
 
 @pytest.mark.django_db

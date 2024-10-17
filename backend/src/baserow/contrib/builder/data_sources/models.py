@@ -48,7 +48,7 @@ class DataSource(
     )
 
     class Meta:
-        ordering = ("order", "id")
+        ordering = ("page_id", "order", "id")
         unique_together = [["page", "name"]]
 
     def get_parent(self):
@@ -59,7 +59,7 @@ class DataSource(
         """
         Returns the last order for the given page.
 
-        :param Page: The page we want the order for.
+        :param page: The page we want the order for.
         :return: The last order.
         """
 

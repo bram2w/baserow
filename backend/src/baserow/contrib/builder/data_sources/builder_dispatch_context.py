@@ -12,7 +12,9 @@ from baserow.contrib.builder.data_providers.registries import (
 from baserow.contrib.builder.data_sources.exceptions import (
     DataSourceRefinementForbidden,
 )
-from baserow.contrib.builder.formula_property_extractor import get_formula_field_names
+from baserow.contrib.builder.formula_property_extractor import (
+    get_builder_used_property_names,
+)
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.services.utils import ServiceAdhocRefinements
@@ -82,7 +84,7 @@ class BuilderDispatchContext(DispatchContext):
         else:
             role = f"_{self.request.user.role}"
 
-        return f"{CACHE_KEY_PREFIX}_{self.page.id}{role}"
+        return f"{CACHE_KEY_PREFIX}_{self.page.builder_id}{role}"
 
     @cached_property
     def public_formula_fields(self) -> Optional[Dict[str, Dict[int, List[str]]]]:
@@ -107,7 +109,9 @@ class BuilderDispatchContext(DispatchContext):
 
             formula_fields = cache.get(cache_key) if cache_key else None
             if formula_fields is None:
-                formula_fields = get_formula_field_names(self.request.user, self.page)
+                formula_fields = get_builder_used_property_names(
+                    self.request.user, self.page.builder
+                )
 
                 if cache_key:
                     cache.set(

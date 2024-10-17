@@ -1,3 +1,5 @@
+from functools import cached_property
+
 from django.db import models
 
 from baserow.contrib.builder.domains.models import Domain, PublishDomainJob
@@ -30,7 +32,23 @@ class Builder(Application):
         related_name="builder_favicon_file",
     )
 
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+
+        if is_new:
+            from baserow.contrib.builder.pages.handler import PageHandler
+
+            # Create the shared page
+            PageHandler().create_shared_page(self)
+
     def get_parent(self):
         # Parent is the Application here even if it's at the "same" level
         # but it's a more generic type
         return self.application_ptr
+
+    @cached_property
+    def shared_page(self):
+        from baserow.contrib.builder.pages.handler import PageHandler
+
+        return PageHandler().get_shared_page(self)

@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from django.contrib.auth.models import AbstractUser
 from django.utils import translation
@@ -26,12 +26,16 @@ from baserow.contrib.builder.data_sources.signals import (
     data_source_updated,
 )
 from baserow.contrib.builder.data_sources.types import DataSourceForUpdate
+from baserow.contrib.builder.pages.exceptions import PageNotInBuilder
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.exceptions import CannotCalculateIntermediateOrder
 from baserow.core.handler import CoreHandler
 from baserow.core.services.exceptions import InvalidServiceTypeDispatchSource
 from baserow.core.services.registries import DispatchTypes, ServiceType
 from baserow.core.types import PermissionCheck
+
+if TYPE_CHECKING:
+    from baserow.contrib.builder.models import Builder
 
 
 class DataSourceService:
@@ -78,11 +82,33 @@ class DataSourceService:
         user_data_sources = CoreHandler().filter_queryset(
             user,
             ListDataSourcesPageOperationType.type,
-            DataSource.objects.filter(page=page),
+            DataSource.objects.all(),
             workspace=page.builder.workspace,
         )
 
         return self.handler.get_data_sources(page, base_queryset=user_data_sources)
+
+    def get_builder_data_sources(
+        self, user: AbstractUser, builder: "Builder"
+    ) -> List[DataSource]:
+        """
+        Gets all the data_sources of a given builder visible to the given user.
+
+        :param user: The user trying to get the data_sources.
+        :param page: The builder that holds the data_sources.
+        :return: The data_sources of that builder.
+        """
+
+        user_data_sources = CoreHandler().filter_queryset(
+            user,
+            ListDataSourcesPageOperationType.type,
+            DataSource.objects.all(),
+            workspace=builder.workspace,
+        )
+
+        return self.handler.get_builder_data_sources(
+            builder, base_queryset=user_data_sources
+        )
 
     def create_data_source(
         self,
@@ -185,6 +211,13 @@ class DataSourceService:
             context=data_source,
         )
 
+        page = None
+        if "page" in kwargs:
+            page = kwargs.pop("page")
+            # Check we are in the same builder.
+            if page.builder_id != data_source.page.builder_id:
+                raise PageNotInBuilder(page.id)
+
         new_service_type = kwargs.get("new_service_type", None)
         if new_service_type:
             # Verify the new `service_type` is dispatch-able by DISPATCH_DATA_SOURCE.
@@ -199,6 +232,9 @@ class DataSourceService:
             prepared_values["service_type"] = service_type
         else:
             prepared_values = kwargs
+
+        if page is not None:
+            prepared_values["page"] = page
 
         data_source = self.handler.update_data_source(data_source, **prepared_values)
 
@@ -316,12 +352,18 @@ class DataSourceService:
         :return: The result of dispatching all the data source dispatch mapped by ID.
         """
 
+        # We cache all data sources even the shared ones...
         data_sources = self.handler.get_data_sources_with_cache(page)
 
-        if not data_sources:
+        # ...but we want to dispatch only those for this page
+        dispatchable_data_sources = [d for d in data_sources if d.page_id == page.id]
+
+        if not dispatchable_data_sources:
             return {}
 
-        return self.dispatch_data_sources(user, data_sources, dispatch_context)
+        return self.dispatch_data_sources(
+            user, dispatchable_data_sources, dispatch_context
+        )
 
     def dispatch_data_source(
         self,

@@ -25,16 +25,35 @@ export class DataSourceDataProviderType extends DataProviderType {
     return this.app.i18n.t('dataProviderType.dataSource')
   }
 
-  getDataSourceDispatchContext(applicationContext) {
-    const { element } = applicationContext
-    // If the workflow action dispatch comes from a collection element, we
-    // need to pass it to the backend for validating adhoc refinements.
-    if (element) {
-      return { element: element.id }
-    }
-    return null
+  /**
+   * Dispatch all the shared data sources.
+   * @param {Object} applicationContext
+   */
+  async initOnce(applicationContext) {
+    const page = this.app.store.getters['page/getSharedPage'](
+      applicationContext.builder
+    )
+
+    const dataSources =
+      this.app.store.getters['dataSource/getPageDataSources'](page)
+
+    await this.app.store.dispatch(
+      'dataSourceContent/fetchPageDataSourceContent',
+      {
+        page,
+        data: DataProviderType.getAllDataSourceDispatchContext(
+          this.app.$registry.getAll('builderDataProvider'),
+          applicationContext
+        ),
+        dataSources,
+      }
+    )
   }
 
+  /**
+   * Dispatch all the data source of the current page only (not the shared ones).
+   * @param {Object} applicationContext
+   */
   async init(applicationContext) {
     const dataSources = this.app.store.getters['dataSource/getPageDataSources'](
       applicationContext.page
@@ -55,23 +74,42 @@ export class DataSourceDataProviderType extends DataProviderType {
     )
   }
 
+  getDataSourceDispatchContext(applicationContext) {
+    const { element } = applicationContext
+    // If the workflow action dispatch comes from a collection element, we
+    // need to pass it to the backend for validating adhoc refinements.
+    if (element) {
+      return { element: element.id }
+    }
+    return null
+  }
+
   getDataChunk(applicationContext, [dataSourceId, ...rest]) {
+    const pages = [
+      applicationContext.page,
+      this.app.store.getters['page/getSharedPage'](applicationContext.builder),
+    ]
     const dataSource = this.app.store.getters[
-      'dataSource/getPageDataSourceById'
-    ](applicationContext.page, parseInt(dataSourceId))
+      'dataSource/getPagesDataSourceById'
+    ](pages, parseInt(dataSourceId))
 
     const content = this.getDataSourceContent(applicationContext, dataSource)
+
     return content ? getValueAtPath(content, rest.join('.')) : null
   }
 
   getDataSourceContent(applicationContext, dataSource) {
-    const dataSourceContents = this.app.store.getters[
-      'dataSourceContent/getDataSourceContents'
-    ](applicationContext.page)
-
     if (!dataSource?.type) {
       return null
     }
+
+    const page = this.app.store.getters['page/getById'](
+      applicationContext.builder,
+      dataSource.page_id
+    )
+
+    const dataSourceContents =
+      this.app.store.getters['dataSourceContent/getDataSourceContents'](page)
 
     const serviceType = this.app.$registry.get('service', dataSource.type)
 
@@ -91,9 +129,13 @@ export class DataSourceDataProviderType extends DataProviderType {
   }
 
   getDataContent(applicationContext) {
-    const page = applicationContext.page
+    const pages = [
+      applicationContext.page,
+      this.app.store.getters['page/getSharedPage'](applicationContext.builder),
+    ]
+
     const dataSources =
-      this.app.store.getters['dataSource/getPageDataSources'](page)
+      this.app.store.getters['dataSource/getPagesDataSources'](pages)
 
     return Object.fromEntries(
       dataSources.map((dataSource) => {
@@ -106,11 +148,15 @@ export class DataSourceDataProviderType extends DataProviderType {
   }
 
   getDataSchema(applicationContext) {
-    const page = applicationContext.page
-    const dataSources =
-      this.app.store.getters['dataSource/getPageDataSources'](page)
+    const pages = [
+      this.app.store.getters['page/getSharedPage'](applicationContext.builder),
+      applicationContext.page,
+    ]
 
-    const dataSourcesSchema = Object.fromEntries(
+    const dataSources =
+      this.app.store.getters['dataSource/getPagesDataSources'](pages)
+
+    const result = Object.fromEntries(
       dataSources
         .map((dataSource) => {
           const dsSchema = this.getDataSourceSchema(dataSource)
@@ -122,19 +168,27 @@ export class DataSourceDataProviderType extends DataProviderType {
         .filter(([, schema]) => schema)
     )
 
-    return { type: 'object', properties: dataSourcesSchema }
+    return { type: 'object', properties: result }
   }
 
   getPathTitle(applicationContext, pathParts) {
     if (pathParts.length === 2) {
-      const page = applicationContext?.page
       const dataSourceId = parseInt(pathParts[1])
-      return (
-        this.app.store.getters['dataSource/getPageDataSourceById'](
-          page,
-          dataSourceId
-        )?.name || `data_source_${dataSourceId}`
-      )
+      const pages = [
+        applicationContext.page,
+        this.app.store.getters['page/getSharedPage'](
+          applicationContext.builder
+        ),
+      ]
+      const dataSource = this.app.store.getters[
+        'dataSource/getPagesDataSourceById'
+      ](pages, dataSourceId)
+
+      if (dataSource) {
+        return dataSource.name
+      }
+
+      return `data_source_${dataSourceId}`
     }
     return super.getPathTitle(applicationContext, pathParts)
   }
@@ -149,28 +203,43 @@ export class DataSourceContextDataProviderType extends DataProviderType {
     return this.app.i18n.t('dataProviderType.dataSourceContext')
   }
 
-  getDataChunk({ page }, path) {
+  getDataChunk(applicationContext, path) {
     const [dataSourceId, ...rest] = path
 
+    const pages = [
+      applicationContext.page,
+      this.app.store.getters['page/getSharedPage'](applicationContext.builder),
+    ]
+
     const dataSource = this.app.store.getters[
-      'dataSource/getPageDataSourceById'
-    ](page, parseInt(dataSourceId))
+      'dataSource/getPagesDataSourceById'
+    ](pages, parseInt(dataSourceId))
 
     return getValueAtPath(dataSource.context_data, rest.join('.'))
   }
 
-  getDataContent({ page }) {
+  getDataContent(applicationContext) {
+    const pages = [
+      applicationContext.page,
+      this.app.store.getters['page/getSharedPage'](applicationContext.builder),
+    ]
+
     const dataSources =
-      this.app.store.getters['dataSource/getPageDataSources'](page)
+      this.app.store.getters['dataSource/getPagesDataSources'](pages)
 
     return Object.fromEntries(
       dataSources.map((dataSource) => [dataSource.id, dataSource.context_data])
     )
   }
 
-  getDataSchema({ page }) {
+  getDataSchema(applicationContext) {
+    const pages = [
+      applicationContext.page,
+      this.app.store.getters['page/getSharedPage'](applicationContext.builder),
+    ]
+
     const dataSources =
-      this.app.store.getters['dataSource/getPageDataSources'](page)
+      this.app.store.getters['dataSource/getPagesDataSources'](pages)
 
     const contextDataSchema = Object.fromEntries(
       dataSources
@@ -189,11 +258,16 @@ export class DataSourceContextDataProviderType extends DataProviderType {
 
   getPathTitle(applicationContext, pathParts) {
     if (pathParts.length === 2) {
-      const page = applicationContext?.page
+      const pages = [
+        applicationContext.page,
+        this.app.store.getters['page/getSharedPage'](
+          applicationContext.builder
+        ),
+      ]
       const dataSourceId = parseInt(pathParts[1])
       return (
-        this.app.store.getters['dataSource/getPageDataSourceById'](
-          page,
+        this.app.store.getters['dataSource/getPagesDataSourceById'](
+          pages,
           dataSourceId
         )?.name || `data_source_context_${dataSourceId}`
       )
@@ -213,6 +287,7 @@ export class PageParameterDataProviderType extends DataProviderType {
 
   async init(applicationContext) {
     const { page, mode, pageParamsValue } = applicationContext
+
     if (mode === 'editing') {
       // Generate fake values for the parameters
       await Promise.all(
@@ -250,6 +325,10 @@ export class PageParameterDataProviderType extends DataProviderType {
   }
 
   getDataContent(applicationContext) {
+    if (!applicationContext.page) {
+      // It's probably called at application level
+      return null
+    }
     return this.app.store.getters['pageParameter/getParameters'](
       applicationContext.page
     )
@@ -290,55 +369,6 @@ export class CurrentRecordDataProviderType extends DataProviderType {
 
   get needBackendContext() {
     return true
-  }
-
-  /**
-   * Here we load all element contents to populate the elements while in SSR for the
-   * first render.
-   */
-  async init(applicationContext) {
-    const { page } = applicationContext
-
-    const elements = this.app.store.getters['element/getElementsOrdered'](page)
-
-    await Promise.all(
-      elements.map(async (element) => {
-        const elementType = this.app.$registry.get('element', element.type)
-        if (elementType.isCollectionElement) {
-          const dataSource = this.app.store.getters[
-            'dataSource/getPageDataSourceById'
-          ](page, element.data_source_id)
-
-          const dispatchContext =
-            DataProviderType.getAllDataSourceDispatchContext(
-              this.app.$registry.getAll('builderDataProvider'),
-              { ...applicationContext, element }
-            )
-
-          const elementType = this.app.$registry.get('element', element.type)
-
-          if (elementType.fetchAtLoad) {
-            try {
-              // fetch the initial content
-              return await this.app.store.dispatch(
-                'elementContent/fetchElementContent',
-                {
-                  page,
-                  element,
-                  dataSource,
-                  data: dispatchContext,
-                  range: [0, element.items_per_page],
-                  mode: applicationContext.mode,
-                }
-              )
-            } catch (e) {
-              // We don't want to block next dispatches so we do nothing, a notification
-              // will be displayed by the component itself.
-            }
-          }
-        }
-      })
-    )
   }
 
   getActionDispatchContext(applicationContext) {
@@ -440,11 +470,14 @@ export class CurrentRecordDataProviderType extends DataProviderType {
   }
 
   getDataSourceAndSchemaPath(
+    builder,
     page,
     element,
     allowSameElement,
     followSameElementSchemaProperties
   ) {
+    const pages = [page, this.app.store.getters['page/getSharedPage'](builder)]
+
     // Find the first collection ancestor with a `data_source`. If we
     // find one, this is what we'll use to generate the schema.
     const collectionAncestors = this.getCollectionAncestors({
@@ -462,8 +495,8 @@ export class CurrentRecordDataProviderType extends DataProviderType {
     const dataSourceId = firstCollectionElement.data_source_id
 
     const dataSource = this.app.store.getters[
-      'dataSource/getPageDataSourceById'
-    ](page, dataSourceId)
+      'dataSource/getPagesDataSourceById'
+    ](pages, dataSourceId)
 
     const schemaProperties = collectionAncestors
       .filter(
@@ -485,6 +518,7 @@ export class CurrentRecordDataProviderType extends DataProviderType {
     // to control whether we wish to fetch schema property for the current element
     // or not.
     const {
+      builder,
       page,
       element,
       allowSameElement = false,
@@ -492,6 +526,7 @@ export class CurrentRecordDataProviderType extends DataProviderType {
     } = applicationContext
 
     const [dataSource, schemaProperties] = this.getDataSourceAndSchemaPath(
+      builder,
       page,
       element,
       allowSameElement,
@@ -525,6 +560,7 @@ export class CurrentRecordDataProviderType extends DataProviderType {
   getPathTitle(applicationContext, pathParts) {
     if (pathParts.length === 1) {
       const {
+        builder,
         page,
         element,
         allowSameElement = false,
@@ -532,6 +568,7 @@ export class CurrentRecordDataProviderType extends DataProviderType {
       } = applicationContext
 
       const [dataSource, schemaProperties] = this.getDataSourceAndSchemaPath(
+        builder,
         page,
         element,
         allowSameElement,
@@ -827,22 +864,19 @@ export class UserDataProviderType extends DataProviderType {
     return getValueAtPath(content, path.join('.'))
   }
 
-  getDataContent(applicationContext) {
-    const loggedUser = this.app.store.getters['userSourceUser/getUser'](
-      applicationContext.builder
-    )
+  getDataContent({ builder }) {
+    const loggedUser = this.app.store.getters['userSourceUser/getUser'](builder)
 
     const context = {
-      is_authenticated: this.app.store.getters[
-        'userSourceUser/isAuthenticated'
-      ](applicationContext.builder),
+      is_authenticated:
+        this.app.store.getters['userSourceUser/isAuthenticated'](builder),
       ...loggedUser,
     }
 
     if (context.role?.startsWith(DEFAULT_USER_ROLE_PREFIX)) {
       const userSource = this.app.store.getters[
         'userSource/getUserSourceByUId'
-      ](applicationContext.builder, loggedUser.user_source_uid)
+      ](builder, loggedUser.user_source_uid)
 
       if (userSource) {
         context.role = this.app.i18n.t('visibilityForm.rolesAllMembersOf', {

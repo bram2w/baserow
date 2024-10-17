@@ -33,8 +33,18 @@ class Page(
     path = models.CharField(max_length=255, validators=[path_validation])
     path_params = models.JSONField(default=dict)
 
+    # Shared page is invisible to the user but contains all shared data like
+    # shared data sources or shared elements. That way we keep everything working as
+    # usual for this shared items but we have an easy way to get them.
+    # We should have only one shared page per builder. Shared page can't be create
+    # directly. They are created on demand when a shared element is created.
+    shared = models.BooleanField(default=False, db_default=False)
+
     class Meta:
-        ordering = ("order",)
+        ordering = (
+            "-shared",  # First page is the shared one if any.
+            "order",
+        )
         unique_together = [["builder", "name"], ["builder", "path"]]
 
     def get_parent(self):

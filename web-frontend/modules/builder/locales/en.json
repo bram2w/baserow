@@ -348,14 +348,33 @@
   },
   "dataSourceForm": {
     "namePlaceholder": "Source name",
+    "nameLabel": "Name",
+    "actionLabel": "Action",
+    "integrationLabel": "Integration",
     "servicePlaceholder": "Select a service",
     "integrationPlaceholder": "Select an integration",
     "errorUniqueName": "Data source name must be unique."
   },
   "dataSourceContext": {
     "addDataSource": "Add new data source",
-    "noDataSourceTitle": "This page has no data sources.",
-    "noDataSourceMessage": "Data sources can be used to fetch data from internal or external sources and display it on the page."
+    "noDataSourceTitle": "You have not yet added a data source.",
+    "noDataSourceMessage": "Data sources can be used to fetch data from internal or external sources and display it on the page.",
+    "sharedDataSourceTitle": "Shared between pages",
+    "pageDataSourceTitle": "For this page",
+    "sharedDataSourceDescription": "Accessible on every page and is fetched once on first page load.",
+    "pageDataSourceDescription": "Fetched when the user navigates to this page."
+  },
+  "dataSourceItem": {
+    "notConfigured": "Not configured"
+  },
+  "dataSourceItemContext": {
+    "shareBetweenPages": "Share between pages",
+    "unshareBetweenPages": "Unshare from other pages"
+  },
+  "dataSourceCreateEditModal": {
+    "editTitle": "Edit data source",
+    "createTitle": "Create data source",
+    "sharedWarning": "This data source is shared so your changes can affect multiple pages."
   },
   "defaultStyleForm": {
     "boxTop": "Top",
@@ -762,6 +781,8 @@
   },
   "dataSourceDropdown": {
     "label": "Data source",
-    "noDataSources": "No data sources available"
+    "noDataSources": "No data sources available",
+    "shared": "shared",
+    "pageOnly": "this page"
   }
 }

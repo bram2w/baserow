@@ -60,11 +60,11 @@ def test_builder_application_type_init_application(data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
 
-    assert Page.objects.count() == 0
+    assert Page.objects.count() == 1  # The shared page must exists
 
     BuilderApplicationType().init_application(user, builder)
 
-    assert Page.objects.count() == 2
+    assert Page.objects.count() == 3  # With demo data
 
 
 @pytest.mark.django_db
@@ -119,6 +119,7 @@ def test_builder_application_export(data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
 
+    shared_page = builder.page_set.get(shared=True)
     page1 = data_fixture.create_builder_page(builder=builder)
     page2 = data_fixture.create_builder_page(builder=builder)
 
@@ -149,6 +150,9 @@ def test_builder_application_export(data_fixture):
         user_source=user_source
     )
 
+    shared_datasource = data_fixture.create_builder_local_baserow_get_row_data_source(
+        page=shared_page, user=user, name="Shared", integration=integration
+    )
     datasource1 = data_fixture.create_builder_local_baserow_get_row_data_source(
         page=page1, user=user, name="source 1", integration=integration
     )
@@ -178,16 +182,46 @@ def test_builder_application_export(data_fixture):
         builder, ImportExportConfig(include_permission_data=True)
     )
 
+    # To make sure a really JSON file can be imported
     serialized = json.loads(json.dumps(serialized))
 
     reference = {
         "pages": [
+            {
+                "id": shared_page.id,
+                "name": shared_page.name,
+                "order": shared_page.order,
+                "path": shared_page.path,
+                "path_params": shared_page.path_params,
+                "shared": True,
+                "workflow_actions": [],
+                "data_sources": [
+                    {
+                        "id": shared_datasource.id,
+                        "name": shared_datasource.name,
+                        "order": "1.00000000000000000000",
+                        "service": {
+                            "id": shared_datasource.service.id,
+                            "integration_id": integration.id,
+                            "filter_type": "AND",
+                            "filters": [],
+                            "row_id": "",
+                            "view_id": None,
+                            "table_id": None,
+                            "search_query": "",
+                            "type": "local_baserow_get_row",
+                        },
+                    },
+                ],
+                "elements": [],
+            },
             {
                 "id": page1.id,
                 "name": page1.name,
                 "order": page1.order,
                 "path": page1.path,
                 "path_params": page1.path_params,
+                "shared": False,
                 "workflow_actions": [
                     {
                         "id": workflow_action_1.id,
@@ -364,6 +398,7 @@ def test_builder_application_export(data_fixture):
                 "order": page2.order,
                 "path": page2.path,
                 "path_params": page2.path_params,
+                "shared": False,
                 "workflow_actions": [],
                 "data_sources": [
                     {
@@ -628,453 +663,6 @@ def test_builder_application_export(data_fixture):
         "favicon_file": None,
     }
 
-    test = {
-        "pages": [
-            {
-                "id": 3,
-                "name": "search",
-                "order": 1,
-                "path": "search",
-                "path_params": {},
-                "elements": [
-                    {
-                        "id": 13,
-                        "order": "1.00000000000000000000",
-                        "type": "heading",
-                        "parent_element_id": None,
-                        "place_in_container": None,
-                        "visibility": "all",
-                        "role_type": "allow_all",
-                        "roles": [],
-                        "styles": {},
-                        "style_border_top_color": "border",
-                        "style_border_top_size": 0,
-                        "style_padding_top": 10,
-                        "style_margin_top": 0,
-                        "style_border_bottom_color": "border",
-                        "style_border_bottom_size": 0,
-                        "style_padding_bottom": 10,
-                        "style_margin_bottom": 0,
-                        "style_border_left_color": "border",
-                        "style_border_left_size": 0,
-                        "style_padding_left": 20,
-                        "style_margin_left": 0,
-                        "style_border_right_color": "border",
-                        "style_border_right_size": 0,
-                        "style_padding_right": 20,
-                        "style_margin_right": 0,
-                        "style_background": "none",
-                        "style_background_color": "#ffffffff",
-                        "style_background_file_id": None,
-                        "style_background_mode": "fill",
-                        "style_width": "normal",
-                        "value": "foo",
-                        "level": 2,
-                    },
-                    {
-                        "id": 14,
-                        "order": "2.00000000000000000000",
-                        "type": "text",
-                        "parent_element_id": None,
-                        "place_in_container": None,
-                        "visibility": "all",
-                        "role_type": "allow_all",
-                        "roles": [],
-                        "styles": {},
-                        "style_border_top_color": "border",
-                        "style_border_top_size": 0,
-                        "style_padding_top": 10,
-                        "style_margin_top": 0,
-                        "style_border_bottom_color": "border",
-                        "style_border_bottom_size": 0,
-                        "style_padding_bottom": 10,
-                        "style_margin_bottom": 0,
-                        "style_border_left_color": "border",
-                        "style_border_left_size": 0,
-                        "style_padding_left": 20,
-                        "style_margin_left": 0,
-                        "style_border_right_color": "border",
-                        "style_border_right_size": 0,
-                        "style_padding_right": 20,
-                        "style_margin_right": 0,
-                        "style_background": "none",
-                        "style_background_color": "#ffffffff",
-                        "style_background_file_id": None,
-                        "style_background_mode": "fill",
-                        "style_width": "normal",
-                        "value": "",
-                        "format": "plain",
-                    },
-                    {
-                        "id": 16,
-                        "order": "3.00000000000000000000",
-                        "type": "column",
-                        "parent_element_id": None,
-                        "place_in_container": None,
-                        "visibility": "all",
-                        "role_type": "allow_all",
-                        "roles": [],
-                        "styles": {},
-                        "style_border_top_color": "border",
-                        "style_border_top_size": 0,
-                        "style_padding_top": 10,
-                        "style_margin_top": 0,
-                        "style_border_bottom_color": "border",
-                        "style_border_bottom_size": 0,
-                        "style_padding_bottom": 10,
-                        "style_margin_bottom": 0,
-                        "style_border_left_color": "border",
-                        "style_border_left_size": 0,
-                        "style_padding_left": 20,
-                        "style_margin_left": 0,
-                        "style_border_right_color": "border",
-                        "style_border_right_size": 0,
-                        "style_padding_right": 20,
-                        "style_margin_right": 0,
-                        "style_background": "none",
-                        "style_background_color": "#ffffffff",
-                        "style_background_file_id": None,
-                        "style_background_mode": "fill",
-                        "style_width": "normal",
-                        "column_amount": 3,
-                        "column_gap": 50,
-                        "alignment": "top",
-                    },
-                    {
-                        "id": 17,
-                        "order": "4.00000000000000000000",
-                        "type": "text",
-                        "parent_element_id": 16,
-                        "place_in_container": "0",
-                        "visibility": "all",
-                        "role_type": "allow_all",
-                        "roles": [],
-                        "styles": {},
-                        "style_border_top_color": "border",
-                        "style_border_top_size": 0,
-                        "style_padding_top": 10,
-                        "style_margin_top": 0,
-                        "style_border_bottom_color": "border",
-                        "style_border_bottom_size": 0,
-                        "style_padding_bottom": 10,
-                        "style_margin_bottom": 0,
-                        "style_border_left_color": "border",
-                        "style_border_left_size": 0,
-                        "style_padding_left": 20,
-                        "style_margin_left": 0,
-                        "style_border_right_color": "border",
-                        "style_border_right_size": 0,
-                        "style_padding_right": 20,
-                        "style_margin_right": 0,
-                        "style_background": "none",
-                        "style_background_color": "#ffffffff",
-                        "style_background_file_id": None,
-                        "style_background_mode": "fill",
-                        "style_width": "normal",
-                        "value": "",
-                        "format": "plain",
-                    },
-                ],
-                "data_sources": [
-                    {
-                        "id": 1,
-                        "name": "source 1",
-                        "order": "1.00000000000000000000",
-                        "service": {
-                            "id": 1,
-                            "integration_id": 2,
-                            "type": "local_baserow_get_row",
-                            "table_id": None,
-                            "view_id": None,
-                            "filter_type": "AND",
-                            "filters": [],
-                            "row_id": "",
-                            "search_query": "",
-                        },
-                    }
-                ],
-                "workflow_actions": [
-                    {
-                        "id": 1,
-                        "type": "notification",
-                        "order": 0,
-                        "page_id": 3,
-                        "element_id": 13,
-                        "event": "click",
-                        "title": "there",
-                        "description": "hello",
-                    }
-                ],
-            },
-            {
-                "id": 4,
-                "name": "index",
-                "order": 2,
-                "path": "index",
-                "path_params": {},
-                "elements": [
-                    {
-                        "id": 15,
-                        "order": "1.00000000000000000000",
-                        "type": "heading",
-                        "parent_element_id": None,
-                        "place_in_container": None,
-                        "visibility": "all",
-                        "role_type": "allow_all",
-                        "roles": [],
-                        "styles": {},
-                        "style_border_top_color": "border",
-                        "style_border_top_size": 0,
-                        "style_padding_top": 10,
-                        "style_margin_top": 0,
-                        "style_border_bottom_color": "border",
-                        "style_border_bottom_size": 0,
-                        "style_padding_bottom": 10,
-                        "style_margin_bottom": 0,
-                        "style_border_left_color": "border",
-                        "style_border_left_size": 0,
-                        "style_padding_left": 20,
-                        "style_margin_left": 0,
-                        "style_border_right_color": "border",
-                        "style_border_right_size": 0,
-                        "style_padding_right": 20,
-                        "style_margin_right": 0,
-                        "style_background": "none",
-                        "style_background_color": "#ffffffff",
-                        "style_background_file_id": None,
-                        "style_background_mode": "fill",
-                        "style_width": "normal",
-                        "value": "",
-                        "level": 1,
-                    },
-                    {
-                        "id": 18,
-                        "order": "2.00000000000000000000",
-                        "type": "table",
-                        "parent_element_id": None,
-                        "place_in_container": None,
-                        "visibility": "all",
-                        "role_type": "allow_all",
-                        "roles": [],
-                        "styles": {},
-                        "style_border_top_color": "border",
-                        "style_border_top_size": 0,
-                        "style_padding_top": 10,
-                        "style_margin_top": 0,
-                        "style_border_bottom_color": "border",
-                        "style_border_bottom_size": 0,
-                        "style_padding_bottom": 10,
-                        "style_margin_bottom": 0,
-                        "style_border_left_color": "border",
-                        "style_border_left_size": 0,
-                        "style_padding_left": 20,
-                        "style_margin_left": 0,
-                        "style_border_right_color": "border",
-                        "style_border_right_size": 0,
-                        "style_padding_right": 20,
-                        "style_margin_right": 0,
-                        "style_background": "none",
-                        "style_background_color": "#ffffffff",
-                        "style_background_file_id": None,
-                        "style_background_mode": "fill",
-                        "style_width": "normal",
-                        "data_source_id": 3,
-                        "items_per_page": 42,
-                        "schema_property": "",
-                        "button_load_more_label": "",
-                        "fields": [
-                            {
-                                "uid": "447cbec7-c422-42eb-bd50-204b53453330",
-                                "name": "Field 1",
-                                "type": "text",
-                                "styles": {},
-                                "config": {"value": "get('test1')"},
-                            },
-                            {
-                                "uid": "44446a1c-841f-47ba-b1df-e902cc50c6ed",
-                                "name": "Field 2",
-                                "type": "text",
-                                "styles": {},
-                                "config": {"value": "get('test2')"},
-                            },
-                            {
-                                "uid": "960aef1f-a894-4003-8cf2-36da3b9c798b",
-                                "name": "Field 3",
-                                "type": "text",
-                                "styles": {},
-                                "config": {"value": "get('test3')"},
-                            },
-                        ],
-                        "orientation": {
-                            "tablet": "horizontal",
-                            "desktop": "horizontal",
-                            "smartphone": "horizontal",
-                        },
-                        "property_options": [
-                            {
-                                "schema_property": "location",
-                                "filterable": True,
-                                "sortable": True,
-                                "searchable": False,
-                            }
-                        ],
-                    },
-                ],
-                "data_sources": [
-                    {
-                        "id": 2,
-                        "name": "source 2",
-                        "order": "1.00000000000000000000",
-                        "service": {
-                            "id": 2,
-                            "integration_id": 2,
-                            "type": "local_baserow_get_row",
-                            "table_id": None,
-                            "view_id": None,
-                            "filter_type": "AND",
-                            "filters": [],
-                            "row_id": "",
-                            "search_query": "",
-                        },
-                    },
-                    {
-                        "id": 3,
-                        "name": "source 3",
-                        "order": "2.00000000000000000000",
-                        "service": {
-                            "id": 3,
-                            "integration_id": 2,
-                            "type": "local_baserow_list_rows",
-                            "table_id": None,
-                            "view_id": None,
-                            "search_query": "",
-                            "filter_type": "AND",
-                            "filters": [],
-                            "sortings": [],
-                        },
-                    },
-                ],
-                "workflow_actions": [],
-            },
-        ],
-        "integrations": [
-            {
-                "id": 2,
-                "name": "test",
-                "order": "1.00000000000000000000",
-                "type": "local_baserow",
-                "authorized_user": "jennifer92@example.net",
-            }
-        ],
-        "theme": {
-            "id": 1,
-            "primary_color": "#5190efff",
-            "secondary_color": "#0eaa42ff",
-            "border_color": "#d7d8d9ff",
-            "main_success_color": "#12D452",
-            "main_error_color": "#FF5A4A",
-            "main_warning_color": "#FCC74A",
-            "body_font_family": "inter",
-            "body_font_size": 14,
-            "body_text_color": "#070810ff",
-            "body_text_alignment": "left",
-            "heading_1_font_family": "inter",
-            "heading_1_font_size": 24,
-            "heading_1_text_color": "#070810ff",
-            "heading_1_text_alignment": "left",
-            "heading_2_font_family": "inter",
-            "heading_2_font_size": 20,
-            "heading_2_text_color": "#070810ff",
-            "heading_2_text_alignment": "left",
-            "heading_3_font_family": "inter",
-            "heading_3_font_size": 16,
-            "heading_3_text_color": "#070810ff",
-            "heading_3_text_alignment": "left",
-            "heading_4_font_family": "inter",
-            "heading_4_font_size": 16,
-            "heading_4_text_color": "#070810ff",
-            "heading_4_text_alignment": "left",
-            "heading_5_font_family": "inter",
-            "heading_5_font_size": 14,
-            "heading_5_text_color": "#070810ff",
-            "heading_5_text_alignment": "left",
-            "heading_6_font_family": "inter",
-            "heading_6_font_size": 14,
-            "heading_6_text_color": "#202128",
-            "heading_6_text_alignment": "left",
-            "button_font_family": "inter",
-            "button_font_size": 13,
-            "button_alignment": "left",
-            "button_text_alignment": "center",
-            "button_width": "auto",
-            "button_background_color": "primary",
-            "button_text_color": "#ffffffff",
-            "button_border_color": "border",
-            "button_border_size": 0,
-            "button_border_radius": 4,
-            "button_vertical_padding": 12,
-            "button_horizontal_padding": 12,
-            "button_hover_background_color": "#96baf6ff",
-            "button_hover_text_color": "#ffffffff",
-            "button_hover_border_color": "border",
-            "link_font_family": "inter",
-            "link_font_size": 13,
-            "link_text_alignment": "left",
-            "link_text_color": "primary",
-            "link_hover_text_color": "#96baf6ff",
-            "image_alignment": "left",
-            "image_max_width": 100,
-            "image_max_height": None,
-            "image_constraint": "contain",
-            "page_background_color": "#ffffffff",
-            "page_background_file_id": None,
-            "page_background_mode": "tile",
-            "table_border_size": 1,
-            "table_cell_alternate_background_color": "transparent",
-            "table_cell_background_color": "transparent",
-            "table_cell_horizontal_padding": 20,
-            "table_cell_alignment": "left",
-            "table_cell_vertical_padding": 10,
-            "table_header_background_color": "#edededff",
-            "table_header_font_family": "inter",
-            "table_header_font_size": 13,
-            "table_header_text_alignment": "left",
-            "table_header_text_color": "#000000ff",
-            "table_horizontal_separator_color": "#000000FF",
-            "table_horizontal_separator_size": 0,
-            "table_vertical_separator_color": "#000000FF",
-            "table_vertical_separator_size": 1,
-        },
-        "user_sources": [
-            {
-                "id": 1,
-                "name": "",
-                "order": "1.00000000000000000000",
-                "type": "local_baserow",
-                "uid": "12345678123456781234567812345678",
-                "integration_id": 2,
-                "auth_providers": [
-                    {
-                        "id": 1,
-                        "type": "local_baserow_password",
-                        "domain": None,
-                        "enabled": True,
-                        "password_field_id": None,
-                    }
-                ],
-                "table_id": None,
-                "email_field_id": None,
-                "name_field_id": None,
-                "role_field_id": None,
-            }
-        ],
-        "favicon_file": None,
-        "id": 5,
-        "name": "Monica Baldwin",
-        "order": 0,
-        "type": "builder",
-    }
-
     assert serialized == reference
 
 
@@ -1266,6 +854,7 @@ IMPORT_REFERENCE = {
             "path": "/test2",
             "path_params": {},
             "workflow_actions": [],
+            "shared": False,
             "elements": [
                 {
                     "id": 997,
@@ -1397,7 +986,8 @@ def test_builder_application_import(data_fixture):
     )
 
     assert builder.id != serialized_values["id"]
-    assert builder.page_set.count() == 2
+    assert builder.page_set.exclude(shared=True).count() == 2
+    assert builder.page_set.filter(shared=True).count() == 1
 
     assert builder.integrations.count() == 1
     first_integration = builder.integrations.first().specific
@@ -1405,7 +995,7 @@ def test_builder_application_import(data_fixture):
 
     assert builder.user_sources.count() == 1
 
-    [page1, page2] = builder.page_set.all()
+    [page1, page2] = builder.page_set.exclude(shared=True)
 
     assert page1.element_set.count() == 6
     assert page2.element_set.count() == 1
@@ -1720,7 +1310,7 @@ def test_builder_application_imports_correct_default_roles(data_fixture):
         workspace, serialized_values, config, {}
     )
 
-    new_element = builder.page_set.all()[0].element_set.all()[0]
+    new_element = builder.page_set.exclude(shared=True)[0].element_set.all()[0]
     new_user_source = builder.user_sources.all()[0]
 
     # Ensure the "old" Default User Role doesn't exist
@@ -1804,7 +1394,7 @@ def test_ensure_new_element_roles_are_sanitized_during_import_for_default_roles(
     expected_roles = _expected_roles
 
     # Ensure new element has roles updated
-    new_element = builder.page_set.all()[0].element_set.all()[0]
+    new_element = builder.page_set.exclude(shared=True)[0].element_set.all()[0]
     for index, role in enumerate(new_element.roles):
         # Default Role's User Source should have changed for new elements
         if role.startswith(prefix):
@@ -1881,5 +1471,5 @@ def test_ensure_new_element_roles_are_sanitized_during_import_for_roles(
             workspace, serialized, config, {}
         )
 
-    new_element = builder.page_set.all()[0].element_set.all()[0]
+    new_element = builder.page_set.exclude(shared=True)[0].element_set.all()[0]
     assert new_element.roles == expected_roles

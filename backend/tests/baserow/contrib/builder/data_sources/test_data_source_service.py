@@ -15,6 +15,7 @@ from baserow.contrib.builder.data_sources.exceptions import (
 )
 from baserow.contrib.builder.data_sources.models import DataSource
 from baserow.contrib.builder.data_sources.service import DataSourceService
+from baserow.contrib.builder.pages.exceptions import PageNotInBuilder
 from baserow.contrib.database.views.view_filters import EqualViewFilterType
 from baserow.core.exceptions import PermissionException
 from baserow.core.services.exceptions import InvalidServiceTypeDispatchSource
@@ -270,6 +271,18 @@ def test_update_data_source(data_source_updated_mock, data_fixture):
     assert data_source_updated_mock.called_with(
         data_source=data_source_updated, user=user
     )
+
+
+@pytest.mark.django_db
+def test_update_data_source_external_page(data_fixture):
+    user = data_fixture.create_user()
+    data_source = data_fixture.create_builder_data_source(user=user)
+    page_not_on_same_builder = data_fixture.create_builder_page(user=user)
+
+    with pytest.raises(PageNotInBuilder):
+        DataSourceService().update_data_source(
+            user, data_source, page=page_not_on_same_builder
+        )
 
 
 @pytest.mark.django_db(transaction=True)

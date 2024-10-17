@@ -154,7 +154,7 @@ class PublicPageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Page
-        fields = ("id", "name", "path", "path_params")
+        fields = ("id", "name", "path", "path_params", "shared")
         extra_kwargs = {
             "id": {"read_only": True},
             "builder_id": {"read_only": True},

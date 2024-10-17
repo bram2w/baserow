@@ -18,16 +18,21 @@ export default {
       getHasMorePage: 'elementContent/getHasMorePage',
       getElementContent: 'elementContent/getElementContent',
       getReset: 'elementContent/getReset',
-      getPageDataSourceById: 'dataSource/getPageDataSourceById',
+      getPagesDataSourceById: 'dataSource/getPagesDataSourceById',
+      getSharedPage: 'page/getSharedPage',
     }),
     reset() {
       return this.getReset(this.element)
+    },
+    sharedPage() {
+      return this.getSharedPage(this.builder)
     },
     dataSource() {
       if (!this.element.data_source_id) {
         return null
       }
-      return this.getPageDataSourceById(this.page, this.element.data_source_id)
+      const pages = [this.page, this.sharedPage]
+      return this.getPagesDataSourceById(pages, this.element.data_source_id)
     },
     dataSourceType() {
       if (!this.dataSource) {
@@ -42,7 +47,10 @@ export default {
       return this.getHasMorePage(this.element)
     },
     contentLoading() {
-      return this.getLoading(this.element) && !this.elementIsInError
+      return (
+        this.$fetchState.pending ||
+        (this.getLoading(this.element) && !this.elementIsInError)
+      )
     },
     dispatchContext() {
       return DataProviderType.getAllDataSourceDispatchContext(
@@ -82,24 +90,19 @@ export default {
       deep: true,
     },
   },
-  async mounted() {
+  async fetch() {
     if (!this.elementIsInError && this.elementType.fetchAtLoad) {
-      // This fetch is necessary when we duplicate the collection element as
-      // the initial load from the data provider has already happened.
-      // It won't be executed by the store when the data provider has already loaded
-      // the data because the range is the same in which case only the `currentOffset`
-      // is updated.
-      await this.fetchContent([0, this.element.items_per_page])
+      await this.fetchContent([0, this.element.items_per_page], true)
     }
   },
   methods: {
     ...mapActions({
       fetchElementContent: 'elementContent/fetchElementContent',
-      clearElementContent: 'elementContent/clearElementContent',
     }),
     debouncedReset() {
       clearTimeout(this.resetTimeout)
       this.resetTimeout = setTimeout(() => {
+        this.contentFetchEnabled = true
         this.errorNotified = false
         this.currentOffset = 0
         this.loadMore(true)

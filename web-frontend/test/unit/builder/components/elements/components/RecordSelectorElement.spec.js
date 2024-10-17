@@ -36,11 +36,21 @@ describe('RecordSelectorElement', () => {
   }
 
   test('does not paginate if API returns 400/404', async () => {
-    const builder = { id: 1, theme: { primary_color: '#ccc' } }
     const page = {
       id: 1,
       dataSources: [{ id: 1, type: 'local_baserow_list_rows', table_id: 1 }],
       elements: [],
+    }
+    const sharedPage = {
+      id: 2,
+      dataSources: [],
+      elements: [],
+      shared: true,
+    }
+    const builder = {
+      id: 1,
+      theme: { primary_color: '#ccc' },
+      pages: [sharedPage, page],
     }
     const workspace = {}
     const mode = 'public'
@@ -118,11 +128,21 @@ describe('RecordSelectorElement', () => {
   })
 
   test('resolves suffix formulas', async () => {
-    const builder = { id: 1, theme: { primary_color: '#ccc' } }
     const page = {
       id: 1,
       dataSources: [{ id: 1, type: 'local_baserow_list_rows', table_id: 1 }],
       elements: [],
+    }
+    const sharedPage = {
+      id: 2,
+      dataSources: [],
+      elements: [],
+      shared: true,
+    }
+    const builder = {
+      id: 1,
+      theme: { primary_color: '#ccc' },
+      pages: [sharedPage, page],
     }
     const workspace = {}
     const mode = 'public'

@@ -53,7 +53,13 @@ export class OpenPageWorkflowActionType extends WorkflowActionType {
     applicationContext: { builder, mode },
     resolveFormula,
   }) {
-    const url = resolveElementUrl(workflowAction, builder, resolveFormula, mode)
+    const url = resolveElementUrl(
+      workflowAction,
+      builder,
+      this.app.store.getters['page/getVisiblePages'](builder),
+      resolveFormula,
+      mode
+    )
 
     if (mode === 'editing' || !url) {
       return

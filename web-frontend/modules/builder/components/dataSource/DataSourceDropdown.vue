@@ -9,10 +9,21 @@
       @input="$emit('input', $event)"
     >
       <DropdownItem
-        v-for="dataSource in dataSources"
+        v-for="dataSource in sharedDataSources"
         :key="dataSource.id"
         :name="getDataSourceLabel(dataSource)"
         :value="dataSource.id"
+        icon="iconoir-multiple-pages-empty"
+        :icon-tooltip="$t('dataSourceDropdown.shared')"
+      >
+      </DropdownItem>
+      <DropdownItem
+        v-for="dataSource in pageDataSources"
+        :key="dataSource.id"
+        :name="getDataSourceLabel(dataSource)"
+        :value="dataSource.id"
+        icon="iconoir-empty-page"
+        :icon-tooltip="$t('dataSourceDropdown.pageOnly')"
       >
       </DropdownItem>
       <template #emptyState>
@@ -41,6 +52,22 @@ export default {
       type: Boolean,
       required: false,
       default: false,
+    },
+    page: {
+      type: Object,
+      required: true,
+    },
+  },
+  computed: {
+    pageDataSources() {
+      return this.dataSources.filter(
+        ({ page_id: pageId }) => pageId === this.page.id
+      )
+    },
+    sharedDataSources() {
+      return this.dataSources.filter(
+        ({ page_id: pageId }) => pageId !== this.page.id
+      )
     },
   },
   methods: {

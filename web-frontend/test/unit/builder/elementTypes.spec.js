@@ -155,7 +155,7 @@ describe('elementTypes tests', () => {
       const elementType = testApp.getRegistry().get('element', 'link')
       const applicationContext = {
         builder: {
-          pages: [{ id: 1, name: 'Contact Us' }],
+          pages: [{ id: 1, name: 'Contact Us', shared: false }],
         },
       }
       expect(
@@ -239,9 +239,17 @@ describe('elementTypes tests', () => {
           { id: 1, type: 'local_baserow_list_rows', name: 'Customers' },
         ],
       }
+
+      const sharedPage = {
+        id: 2,
+        shared: true,
+        name: '__shared__',
+        dataSources: [],
+      }
+
       const applicationContext = {
         page,
-        builder: { pages: [page] },
+        builder: { pages: [page, sharedPage] },
       }
       expect(
         elementType.getDisplayName({ data_source_id: 1 }, applicationContext)

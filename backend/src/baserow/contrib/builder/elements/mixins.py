@@ -40,7 +40,6 @@ from baserow.contrib.builder.elements.types import (
     ElementSubClass,
 )
 from baserow.contrib.builder.formula_importer import import_formula
-from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.types import ElementDict
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.utils import merge_dicts_no_duplicates
@@ -243,17 +242,22 @@ class CollectionElementTypeMixin:
                     )
 
                 if instance:
-                    current_page = PageHandler().get_page(instance.page_id)
+                    element_page = instance.page
                 else:
-                    current_page = values["page"]
+                    element_page = values["page"]
 
-                if current_page.id != data_source.page_id:
+                # The data source must belong to the same element page or the shared
+                # page.
+                if data_source.page_id not in [
+                    element_page.id,
+                    element_page.builder.shared_page.id,
+                ]:
                     raise RequestBodyValidationException(
                         {
                             "data_source_id": [
                                 {
-                                    "detail": "The provided data source doesn't belong "
-                                    "to the same application.",
+                                    "detail": "The provided data source is not "
+                                    "available for this element.",
                                     "code": "invalid_data_source",
                                 }
                             ]

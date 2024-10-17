@@ -100,6 +100,22 @@ export default {
           message: app.i18n.t('publicPage.siteNotFound'),
         })
       }
+
+      // Post builder loading task executed once per application
+      const sharedPage = await store.getters['page/getSharedPage'](builder)
+      await Promise.all([
+        store.dispatch('dataSource/fetchPublished', {
+          page: sharedPage,
+        }),
+      ])
+
+      await DataProviderType.initOnceAll(
+        $registry.getAll('builderDataProvider'),
+        {
+          builder,
+          mode,
+        }
+      )
     }
     store.dispatch('userSourceUser/setCurrentApplication', {
       application: builder,
@@ -136,7 +152,10 @@ export default {
       }
     }
 
-    const found = resolveApplicationRoute(builder.pages, params.pathMatch)
+    const found = resolveApplicationRoute(
+      store.getters['page/getVisiblePages'](builder),
+      params.pathMatch
+    )
 
     // Handle 404
     if (!found) {
@@ -227,6 +246,21 @@ export default {
         this.applicationContext
       )
     },
+    // Separate dispatch context for application level data sources
+    applicationDispatchContext() {
+      return DataProviderType.getAllDataSourceDispatchContext(
+        this.$registry.getAll('builderDataProvider'),
+        { builder: this.builder, mode: this.mode }
+      )
+    },
+    sharedPage() {
+      return this.$store.getters['page/getSharedPage'](this.builder)
+    },
+    sharedDataSources() {
+      return this.$store.getters['dataSource/getPageDataSources'](
+        this.sharedPage
+      )
+    },
     isAuthenticated() {
       return this.$store.getters['userSourceUser/isAuthenticated'](this.builder)
     },
@@ -260,6 +294,23 @@ export default {
               page: this.page,
               data: newDispatchContext,
               mode: this.mode,
+            }
+          )
+        }
+      },
+    },
+    applicationDispatchContext: {
+      deep: true,
+      /**
+       * Update data source content on dispatch context changes
+       */
+      handler(newDispatchContext, oldDispatchContext) {
+        if (!_.isEqual(newDispatchContext, oldDispatchContext)) {
+          this.$store.dispatch(
+            'dataSourceContent/debouncedFetchPageDataSourceContent',
+            {
+              page: this.sharedPage,
+              data: newDispatchContext,
             }
           )
         }
