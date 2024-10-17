@@ -68,7 +68,7 @@
     "@tiptap/vue-2": "2.2.3",
     "antlr4": "4.9.3",
     "async-mutex": "0.4.0",
-    "axios": "^1.6.7",
+    "axios": "^1.7.4",
     "bignumber.js": "9.1.1",
     "chart.js": "3.9.1",
     "chartjs-adapter-moment": "1.0.1",
