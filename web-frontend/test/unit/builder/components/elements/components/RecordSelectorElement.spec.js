@@ -48,7 +48,7 @@ describe('RecordSelectorElement', () => {
       id: 1,
       type: 'record_selector',
       data_source_id: page.dataSources[0].id,
-      items_Per_page: 5,
+      items_per_page: 5,
     }
     store.dispatch('element/forceCreate', { page, element })
 
@@ -74,11 +74,11 @@ describe('RecordSelectorElement', () => {
       .onPost(url)
       .replyOnce(200, {
         results: [
-          { id: 1, order: 1, name: 'First' },
-          { id: 2, order: 1, name: 'Second' },
-          { id: 3, order: 1, name: 'Third' },
-          { id: 4, order: 1, name: 'Fourth' },
-          { id: 5, order: 1, name: 'Fifth' },
+          { id: 1, order: 1, field_1: 'First' },
+          { id: 2, order: 1, field_1: 'Second' },
+          { id: 3, order: 1, field_1: 'Third' },
+          { id: 4, order: 1, field_1: 'Fourth' },
+          { id: 5, order: 1, field_1: 'Fifth' },
         ],
         has_next_page: true,
       })
@@ -115,5 +115,76 @@ describe('RecordSelectorElement', () => {
     await flushPromises()
     expect(wrapper.element).toMatchSnapshot()
     expect(mockServer.mock.history.post.length).toBe(2)
+  })
+
+  test('resolves suffix formulas', async () => {
+    const builder = { id: 1, theme: { primary_color: '#ccc' } }
+    const page = {
+      id: 1,
+      dataSources: [{ id: 1, type: 'local_baserow_list_rows', table_id: 1 }],
+      elements: [],
+    }
+    const workspace = {}
+    const mode = 'public'
+    const element = {
+      id: 1,
+      type: 'record_selector',
+      data_source_id: page.dataSources[0].id,
+      items_per_page: 5,
+      option_name_suffix: "'Suffix'",
+    }
+    store.dispatch('element/forceCreate', { page, element })
+
+    const wrapper = await mountComponent({
+      props: {
+        element,
+      },
+      provide: {
+        builder,
+        page,
+        mode,
+        applicationContext: { builder, page, mode, element },
+        element,
+        workspace,
+      },
+    })
+
+    // A simple mock server that return ids and some fields
+    const url = `builder/domains/published/data-source/${page.dataSources[0].id}/dispatch/`
+    mockServer.mock.onPost(url).reply(200, {
+      results: [
+        { id: 1, order: 1, field_1: 'First', field_2: 'One' },
+        { id: 2, order: 1, field_1: 'Second', field_2: 'Two' },
+      ],
+      has_next_page: false,
+    })
+
+    // Check that the literal string was added to all items in the record selector
+    await wrapper
+      .findAllComponents({ name: 'ABDropdown' })
+      .at(0)
+      .find('.ab-dropdown__selected')
+      .trigger('click')
+    await flushPromises()
+    expect(wrapper.element).toMatchSnapshot()
+    expect(wrapper.find("span[title='First - Suffix']").exists()).toBeTruthy()
+    expect(wrapper.find("span[title='Second - Suffix']").exists()).toBeTruthy()
+
+    // Set a formula for suffix and check it was properly resolved
+    store.dispatch('element/forceUpdate', {
+      page,
+      element,
+      values: { option_name_suffix: "get('current_record.field_2')" },
+    })
+    await flushPromises()
+    await wrapper
+      .findAllComponents({ name: 'ABDropdown' })
+      .at(0)
+      .find('.ab-dropdown__selected')
+      .trigger('click')
+    await flushPromises()
+    expect(wrapper.element).toMatchSnapshot()
+    expect(wrapper.find("span[title='First - One']").exists()).toBeTruthy()
+    expect(wrapper.find("span[title='Second - Two']").exists()).toBeTruthy()
   })
 })

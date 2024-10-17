@@ -617,11 +617,9 @@ class ElementHandler:
             # Fetch the element if we have no cache
             current_element = self.get_element(element_id)
 
-        return current_element.get_type().import_context_addition(
-            current_element
-        ) | self.get_import_context_addition(
+        return self.get_import_context_addition(
             current_element.parent_element_id, element_map
-        )
+        ) | current_element.get_type().import_context_addition(current_element)
 
     def import_element(
         self,

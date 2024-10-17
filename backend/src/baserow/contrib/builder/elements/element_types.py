@@ -1,5 +1,5 @@
 import abc
-from typing import Any, Dict, Generator, List, Optional, TypedDict, Union
+from typing import Any, Callable, Dict, Generator, List, Optional, Set, TypedDict, Union
 
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
@@ -14,6 +14,7 @@ from baserow.contrib.builder.data_providers.exceptions import (
     FormDataProviderChunkInvalidException,
 )
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
+from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.mixins import (
     CollectionElementTypeMixin,
     CollectionElementWithFieldsTypeMixin,
@@ -46,13 +47,18 @@ from baserow.contrib.builder.elements.registries import (
     ElementType,
     element_type_registry,
 )
+from baserow.contrib.builder.formula_property_extractor import FormulaFieldVisitor
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.builder.theme.theme_config_block_types import (
     TableThemeConfigBlockType,
 )
 from baserow.contrib.builder.types import ElementDict
-from baserow.core.formula import resolve_formula
+from baserow.core.formula import (
+    BaserowFormulaSyntaxError,
+    get_parse_tree_for_formula,
+    resolve_formula,
+)
 from baserow.core.formula.registries import formula_runtime_function_registry
 from baserow.core.formula.types import BaserowFormula
 from baserow.core.formula.validator import (
@@ -64,6 +70,7 @@ from baserow.core.formula.validator import (
 from baserow.core.registry import Instance, T
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.user_files.handler import UserFileHandler
+from baserow.core.utils import merge_dicts_no_duplicates
 
 
 def collection_element_types():
@@ -389,7 +396,6 @@ class RecordSelectorElementType(
     type = "record_selector"
     model_class = RecordSelectorElement
     simple_formula_fields = [
-        "option_name_suffix",
         "label",
         "default_value",
         "placeholder",
@@ -515,7 +521,48 @@ class RecordSelectorElementType(
                 # And we also need at least the name that identifies the row
                 properties[instance.data_source.service_id].append(primary_property)
 
+            try:
+                # Beside the id and the name field, the record selector also requires
+                # the properties used in the `option_name_suffix` formula.
+                # This formula has access to the `CurrentDataProvider` so we need
+                # to populate the formula context with the `data_source_id`
+                # of the element so that we can resolve them.
+                formula_context = ElementHandler().get_import_context_addition(
+                    instance.id,
+                    element_map,
+                )
+                tree = get_parse_tree_for_formula(instance.option_name_suffix)
+                properties = merge_dicts_no_duplicates(
+                    properties,
+                    FormulaFieldVisitor(**formula_context).visit(tree),
+                )
+            except BaserowFormulaSyntaxError:
+                # If there is a syntax error within the formula we ignore it as
+                # there will be no properties to extract
+                pass
+
         return properties
+
+    def import_formulas(
+        self,
+        instance: Instance,
+        id_mapping: Dict[str, Any],
+        import_formula: Callable[[str, Dict[str, Any]], str],
+        **kwargs: Dict[str, Any],
+    ) -> Set[Instance]:
+        # We need to import the option_name_suffix formula separately because
+        # it uses a different import_context
+        updated_models = super().import_formulas(
+            instance, id_mapping, import_formula, **kwargs
+        )
+        formula_context = ElementHandler().get_import_context_addition(instance.id)
+        instance.option_name_suffix = import_formula(
+            instance.option_name_suffix,
+            id_mapping,
+            **(kwargs | formula_context),
+        )
+        updated_models.add(instance)
+        return updated_models
 
     def import_context_addition(self, instance):
         return {"data_source_id": instance.data_source_id}

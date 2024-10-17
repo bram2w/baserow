@@ -164,9 +164,12 @@ export class LocalBaserowListRowsServiceType extends ServiceType {
   }
 
   getRecordName(service, record) {
-    // We skip row_id and order properties here so we keep only first which should be
-    // the primary field.
-    return Object.values(record)[2]
+    // We skip row_id and order properties here, so we keep only first key
+    // that should be the primary field
+    // [{ field_1234: 'The name of the record', id: 0, __idx__: 0 }]
+    // NOTE: This is assuming that the first field is the primary field.
+    const field = Object.keys(record).find((key) => key.startsWith('field_'))
+    return record[field]
   }
 
   getOrder() {

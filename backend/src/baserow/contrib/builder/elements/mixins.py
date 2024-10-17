@@ -330,7 +330,10 @@ class CollectionElementTypeMixin:
         we need the generate this import context for all formulas of this element.
         """
 
-        results = {"data_source_id": instance.data_source_id}
+        if instance.data_source_id:
+            results = {"data_source_id": instance.data_source_id}
+        else:
+            results = {}
 
         if instance.schema_property is not None:
             results["schema_property"] = instance.schema_property
