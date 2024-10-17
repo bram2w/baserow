@@ -172,9 +172,9 @@ export default {
             )
           )
         ),
-        name: record
-          ? this.dataSourceType.getRecordName(this.dataSource, record)
-          : this.$t('recordSelectorElementForm.record', { id: recordIndex }),
+        name:
+          this.dataSourceType.getRecordName(this.dataSource, record || {}) ||
+          this.$t('recordSelectorElementForm.record', { id: recordIndex }),
       }))
 
       // Append the default value options so that they are displayed in the
