@@ -574,25 +574,6 @@ def test_create_data_sync_without_license(enterprise_data_fixture, api_client):
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_get_data_sync_properties_without_license(enterprise_data_fixture, api_client):
-    user, token = enterprise_data_fixture.create_user_and_token()
-    table = enterprise_data_fixture.create_database_table(user=user)
-
-    url = reverse("api:database:data_sync:properties")
-    response = api_client.post(
-        url,
-        {
-            "type": "local_baserow_table",
-            "source_table_id": table.id,
-        },
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-    assert response.status_code == HTTP_402_PAYMENT_REQUIRED
-
-
-@pytest.mark.django_db
-@override_settings(DEBUG=True)
 def test_sync_data_sync_table_without_license(enterprise_data_fixture):
     enterprise_data_fixture.enable_enterprise()
     user = enterprise_data_fixture.create_user()

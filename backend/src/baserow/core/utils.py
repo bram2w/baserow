@@ -305,7 +305,7 @@ def to_path(path):
     return result
 
 
-def get_value_at_path(obj: Any, path: Union[str | List[str]]) -> Any:
+def get_value_at_path(obj: Any, path: Union[str | List[str]], default=None) -> Any:
     """Get the value at `path` of `obj`, similar to Lodash `get` function.
 
     Example:
@@ -328,6 +328,7 @@ def get_value_at_path(obj: Any, path: Union[str | List[str]]) -> Any:
 
     :param obj: The object that holds the value
     :param path: The path to the value or a list with the path parts
+    :param default: The value that must be returning if the path is not found.
     :return: The value held by the path
     """
 
@@ -355,7 +356,7 @@ def get_value_at_path(obj: Any, path: Union[str | List[str]]) -> Any:
             # Remove empty results and return None in case there are no results
             # Note: Don't exclude false values such as booleans, empty strings, etc.
             return [result for result in results if result is not None] or None
-        return None
+        return default
 
     keys = to_path(path) if isinstance(path, str) else path
     return _get_value_at_path(obj, keys)
