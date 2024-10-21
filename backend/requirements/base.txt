@@ -252,6 +252,8 @@ isodate==0.6.1
     # via azure-storage-blob
 itsdangerous==2.2.0
     # via -r base.in
+jira2markdown==0.3.7
+    # via -r base.in
 jmespath==1.0.1
     # via
     #   boto3
@@ -476,6 +478,8 @@ pyopenssl==24.1.0
     #   ndg-httpsclient
     #   pysaml2
     #   twisted
+pyparsing==3.2.0
+    # via jira2markdown
 pyrsistent==0.20.0
     # via jsonschema
 pysaml2==7.5.0

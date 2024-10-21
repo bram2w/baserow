@@ -75,3 +75,4 @@ jsonschema==4.17.3 # pinned due to version conflict
 # referencing==0.31.1 # pinned because of version conflict
 # premium ical feed feature
 icalendar==5.0.12
+jira2markdown==0.3.7

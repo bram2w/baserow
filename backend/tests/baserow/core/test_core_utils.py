@@ -565,6 +565,11 @@ def test_get_value_at_path(obj, path, expected_result):
     assert result == expected_result
 
 
+def test_get_value_at_path_default():
+    obj = {}
+    assert get_value_at_path(obj, "does.not.exist", "test") == "test"
+
+
 @pytest.mark.parametrize(
     "input,expected",
     [
