@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from baserow_premium.fields.field_types import AIFieldType
@@ -40,6 +40,7 @@ from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.core.db import specific_iterator
 from baserow.core.handler import CoreHandler
+from baserow.core.utils import ChildProgressBuilder
 from baserow_enterprise.features import DATA_SYNC
 
 from .models import LocalBaserowTableDataSync
@@ -183,10 +184,20 @@ class LocalBaserowTableDataSyncType(DataSyncType):
             in BaserowFieldDataSyncProperty.supported_field_types
         ]
 
-    def get_all_rows(self, instance) -> List[Dict]:
+    def get_all_rows(
+        self,
+        instance,
+        progress_builder: Optional[ChildProgressBuilder] = None,
+    ) -> List[Dict]:
+        # The progress bar is difficult to setup because there are only two steps
+        # that must completed. We're therefore using working with a total of 10 where
+        # most of it is related to fetching the row values.
+        progress = ChildProgressBuilder.build(progress_builder, child_total=10)
         table = self._get_table(instance)
         enabled_properties = DataSyncSyncedProperty.objects.filter(data_sync=instance)
         enabled_property_field_ids = [p.key for p in enabled_properties]
         model = table.get_model()
+        progress.increment(by=1)  # makes the total `1`
         rows_queryset = model.objects.all().values(*["id"] + enabled_property_field_ids)
+        progress.increment(by=9)  # makes the total `10`
         return rows_queryset

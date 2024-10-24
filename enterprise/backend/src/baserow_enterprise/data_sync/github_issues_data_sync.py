@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import requests
 from baserow_premium.license.handler import LicenseHandler
@@ -15,7 +15,7 @@ from baserow.contrib.database.fields.models import (
     TextField,
     URLField,
 )
-from baserow.core.utils import get_value_at_path
+from baserow.core.utils import ChildProgressBuilder, get_value_at_path
 from baserow_enterprise.features import DATA_SYNC
 
 from .models import GitHubIssuesDataSync
@@ -203,7 +203,26 @@ class GitHubIssuesDataSyncType(DataSyncType):
         except ValueError:
             raise SyncError(f"The date {value} could not be parsed.")
 
-    def _fetch_issues(self, instance):
+    def _get_total_pages(self, response):
+        if "Link" not in response.headers:
+            return 1
+        else:
+            link_header = response.headers["Link"]
+            links = link_header.split(",")
+            last_link = next((link for link in links if 'rel="last"' in link), None)
+
+            if last_link:
+                last_page_url = last_link[last_link.find("<") + 1 : last_link.find(">")]
+                last_page_number = int(last_page_url.split("page=")[1].split("&")[0])
+                return last_page_number
+            else:
+                return 1
+
+    def _fetch_issues(
+        self,
+        instance,
+        progress_builder: Optional[ChildProgressBuilder] = None,
+    ):
         url = f"https://api.github.com/repos/{instance.github_issues_owner}/{instance.github_issues_repo}/issues"
         headers = {
             "Accept": "application/vnd.github+json",
@@ -212,6 +231,7 @@ class GitHubIssuesDataSyncType(DataSyncType):
         }
         page, per_page = 1, 50
         issues = []
+        progress = None
         try:
             while True:
                 response = requests.get(
@@ -232,6 +252,16 @@ class GitHubIssuesDataSyncType(DataSyncType):
                         "The request to GitHub did not return an OK response."
                     )
 
+                # The response of any request gives us the total number of pages,
+                # allowing us to properly construct a progress bar.
+                if progress is None:
+                    progress = ChildProgressBuilder.build(
+                        progress_builder,
+                        child_total=self._get_total_pages(response),
+                    )
+                if progress:
+                    progress.increment(by=1)
+
                 data = response.json()
                 if not data:
                     break
@@ -243,9 +273,13 @@ class GitHubIssuesDataSyncType(DataSyncType):
 
         return issues
 
-    def get_all_rows(self, instance) -> List[Dict]:
+    def get_all_rows(
+        self,
+        instance,
+        progress_builder: Optional[ChildProgressBuilder] = None,
+    ) -> List[Dict]:
         issues = []
-        for issue in self._fetch_issues(instance):
+        for issue in self._fetch_issues(instance, progress_builder):
             issue_id = get_value_at_path(issue, "number")
             created_at = self._parse_datetime(get_value_at_path(issue, "created_at"))
             updated_at = self._parse_datetime(get_value_at_path(issue, "updated_at"))

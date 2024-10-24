@@ -1,5 +1,6 @@
+import math
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import advocate
 from advocate import UnacceptableAddressException
@@ -17,7 +18,7 @@ from baserow.contrib.database.fields.models import (
     TextField,
     URLField,
 )
-from baserow.core.utils import get_value_at_path
+from baserow.core.utils import ChildProgressBuilder, get_value_at_path
 from baserow_enterprise.features import DATA_SYNC
 
 from .models import JiraIssuesDataSync
@@ -201,11 +202,12 @@ class JiraIssuesDataSyncType(DataSyncType):
         except ValueError:
             raise SyncError(f"The date {value} could not be parsed.")
 
-    def _fetch_issues(self, instance):
+    def _fetch_issues(self, instance, progress_builder: ChildProgressBuilder):
         headers = {"Content-Type": "application/json"}
         issues = []
         start_at = 0
         max_results = 50
+        progress = None
         try:
             while True:
                 url = (
@@ -236,6 +238,16 @@ class JiraIssuesDataSyncType(DataSyncType):
 
                 data = response.json()
 
+                # The response of any request gives us the total, allowing us to
+                # properly construct a progress bar.
+                if data["total"] and progress is None:
+                    progress = ChildProgressBuilder.build(
+                        progress_builder,
+                        child_total=math.ceil(data["total"] / max_results),
+                    )
+                if progress:
+                    progress.increment(by=1)
+
                 if len(data["issues"]) == 0 and start_at == 0:
                     raise SyncError(
                         "No issues found. This is usually because the authentication "
@@ -251,9 +263,18 @@ class JiraIssuesDataSyncType(DataSyncType):
 
         return issues
 
-    def get_all_rows(self, instance) -> List[Dict]:
+    def get_all_rows(
+        self,
+        instance,
+        progress_builder: Optional[ChildProgressBuilder] = None,
+    ) -> List[Dict]:
         issue_list = []
-        for issue in self._fetch_issues(instance):
+        progress = ChildProgressBuilder.build(progress_builder, child_total=10)
+        fetched_issues = self._fetch_issues(
+            instance,
+            progress_builder=progress.create_child_builder(represents_progress=9),
+        )
+        for issue in fetched_issues:
             try:
                 jira_id = issue["id"]
                 issue_url = f"{instance.jira_url}/browse/{issue['key']}"
@@ -289,5 +310,6 @@ class JiraIssuesDataSyncType(DataSyncType):
                 "url": issue_url,
             }
             issue_list.append(issue_dict)
+        progress.increment(by=1)
 
         return issue_list
