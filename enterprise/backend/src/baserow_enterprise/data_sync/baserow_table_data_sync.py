@@ -6,10 +6,10 @@ from baserow_premium.fields.field_types import AIFieldType
 from baserow_premium.license.handler import LicenseHandler
 from rest_framework import serializers
 
-from baserow.contrib.database.data_sync.data_sync_types import compare_date
 from baserow.contrib.database.data_sync.exceptions import SyncError
 from baserow.contrib.database.data_sync.models import DataSyncSyncedProperty
 from baserow.contrib.database.data_sync.registries import DataSyncProperty, DataSyncType
+from baserow.contrib.database.data_sync.utils import compare_date
 from baserow.contrib.database.fields.field_types import (
     AutonumberFieldType,
     BooleanFieldType,
