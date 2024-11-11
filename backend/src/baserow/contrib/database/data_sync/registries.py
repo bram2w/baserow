@@ -150,10 +150,11 @@ class DataSyncType(
         type_specific = {
             field: getattr(instance, field) for field in self.allowed_fields
         }
+        last_sync_iso = instance.last_sync.isoformat() if instance.last_sync else None
         return DataSyncExportSerializedStructure.data_sync(
             id=instance.id,
             type_name=self.type,
-            last_sync=instance.last_sync.isoformat(),
+            last_sync=last_sync_iso,
             last_error=instance.last_error,
             properties=[
                 DataSyncExportSerializedStructure.property(
