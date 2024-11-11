@@ -111,7 +111,16 @@
     "invalidMetadata": "Invalid XML metadata for the Identity Provider",
     "relayStateUrl": "Default Relay State URL",
     "acsUrl": "Single Sign On URL",
-    "providerIsVerified": "The provider has been verified"
+    "providerIsVerified": "The provider has been verified",
+    "samlResponseSettings": "SAML Response Attributes",
+    "defaultAttrs": "Default",
+    "customAttrs": "Custom",
+    "emailAttrKey": "Email",
+    "emailAttrKeyHelper": "The email address that will be used as username for the user.",
+    "firstNameAttrKey": "First name",
+    "firstNameAttrKeyHelper": "The first name of the user or the full name if 'Last name' is not provided.",
+    "lastNameAttrKey": "Last name",
+    "lastNameAttrKeyHelper": "Last name of the user (optional). Clear this value to provide the full name via 'First name'."
   },
   "createSettingsAuthProviderModal": {
     "title": "Add a new {type}"
