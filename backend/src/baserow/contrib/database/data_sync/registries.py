@@ -60,6 +60,21 @@ class DataSyncProperty(ABC):
         :return: An unsaved Baserow field model object.
         """
 
+    def get_metadata(
+        self, baserow_field: Field, existing_metadata: Optional[dict] = None
+    ) -> Optional[dict]:
+        """
+        Called after the field is created or updated. It can return metadata that's
+        going to be stored in the related DataSyncSyncedProperty. This can for
+        example to store a mapping that's needed when the data is synchronized.
+
+        :param baserow_field: The saved/created Baserow field in the synced table.
+        :param existing_metadata: Optionally already existing metadata can be provided.
+        :return: The mapping that must be stored in the `DataSyncSyncedProperty`.
+        """
+
+        return None
+
     def is_equal(self, baserow_row_value: Any, data_sync_row_value: Any) -> bool:
         """
         Checks if the provided cell value is equal. This is used to check if the
