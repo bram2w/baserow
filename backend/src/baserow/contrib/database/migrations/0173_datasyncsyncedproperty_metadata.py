@@ -5,7 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("database", "0171_alter_formview_submit_action_redirect_url"),
+        ("database", "0172_postgresqldatasync"),
     ]
 
     operations = [
