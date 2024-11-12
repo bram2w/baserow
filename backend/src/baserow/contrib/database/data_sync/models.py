@@ -69,6 +69,11 @@ class DataSyncSyncedProperty(models.Model):
         help_text="Indicates whether the data sync property is used for unique "
         "identification when syncing.",
     )
+    metadata = models.JSONField(
+        null=True,
+        default=None,
+        help_text="Private metadata needed to help keep the data in sync.",
+    )
 
 
 class SyncDataSyncTableJob(Job):
