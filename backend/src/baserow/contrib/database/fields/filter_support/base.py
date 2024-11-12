@@ -19,10 +19,6 @@ if typing.TYPE_CHECKING:
     from baserow.contrib.database.fields.models import Field
 
 
-class FilterNotSupportedException(Exception):
-    pass
-
-
 class HasValueEmptyFilterSupport:
     def get_in_array_empty_query(
         self, field_name: str, model_field: models.Field, field: "Field"
