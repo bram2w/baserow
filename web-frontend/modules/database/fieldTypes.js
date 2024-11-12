@@ -727,7 +727,7 @@ export class FieldType extends Registerable {
    * Override and return true if the field type can be referenced by a formula field.
    * @return {boolean}
    */
-  canBeReferencedByFormulaField() {
+  canBeReferencedByFormulaField(field) {
     return false
   }
 
