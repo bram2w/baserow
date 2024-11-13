@@ -67,6 +67,14 @@ export default {
         mode,
       }
     },
+    sharedPage() {
+      return this.$store.getters['page/getSharedPage'](this.builder)
+    },
+    sharedDataSources() {
+      return this.$store.getters['dataSource/getPageDataSources'](
+        this.sharedPage
+      )
+    },
     dataSources() {
       return this.$store.getters['dataSource/getPageDataSources'](this.page)
     },
@@ -89,6 +97,14 @@ export default {
             'dataSourceContent/debouncedFetchPageDataSourceContent',
             {
               page: this.page,
+              data: newDispatchContext,
+              mode: this.mode,
+            }
+          )
+          this.$store.dispatch(
+            'dataSourceContent/debouncedFetchPageDataSourceContent',
+            {
+              page: this.sharedPage,
               data: newDispatchContext,
             }
           )

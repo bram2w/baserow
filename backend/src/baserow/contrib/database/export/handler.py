@@ -1,8 +1,7 @@
 import uuid
 from datetime import datetime, timezone
-from io import BytesIO
 from os.path import join
-from typing import Any, BinaryIO, Dict, Optional
+from typing import Any, Dict, Optional
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -26,7 +25,10 @@ from baserow.contrib.database.views.exceptions import ViewNotInTable
 from baserow.contrib.database.views.models import View
 from baserow.contrib.database.views.registries import view_type_registry
 from baserow.core.handler import CoreHandler
-from baserow.core.storage import get_default_storage
+from baserow.core.storage import (
+    _create_storage_dir_if_missing_and_open,
+    get_default_storage,
+)
 
 from .exceptions import (
     ExportJobCanceledException,
@@ -301,27 +303,3 @@ def _open_file_and_run_export(job: ExportJob) -> ExportJob:
 
 def _generate_random_file_name_with_extension(file_extension):
     return str(uuid.uuid4()) + file_extension
-
-
-def _create_storage_dir_if_missing_and_open(storage_location, storage=None) -> BinaryIO:
-    """
-    Attempts to open the provided storage location in binary overwriting write mode.
-    If it encounters a FileNotFound error will attempt to create the folder structure
-    leading upto to the storage location and then open again.
-
-    :param storage_location: The storage location to open and ensure folders for.
-    :param storage: The storage to use, if None will use the default storage.
-    :return: The open file descriptor for the storage_location
-    """
-
-    storage = storage or get_default_storage()
-
-    try:
-        return storage.open(storage_location, "wb+")
-    except FileNotFoundError:
-        # django's file system storage will not attempt to creating a missing
-        # EXPORT_FILES_DIRECTORY and instead will throw a FileNotFoundError.
-        # So we first save an empty file which will create any missing directories
-        # and then open again.
-        storage.save(storage_location, BytesIO())
-        return storage.open(storage_location, "wb")

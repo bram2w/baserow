@@ -6,7 +6,7 @@ import threading
 from contextlib import contextmanager
 from functools import partial
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from unittest.mock import patch
 
 from django.conf import settings as django_settings
@@ -32,6 +32,7 @@ from baserow.core.exceptions import PermissionDenied
 from baserow.core.jobs.registries import job_type_registry
 from baserow.core.permission_manager import CorePermissionManagerType
 from baserow.core.services.dispatch_context import DispatchContext
+from baserow.core.services.utils import ServiceAdhocRefinements
 from baserow.core.trash.trash_types import WorkspaceTrashableItemType
 from baserow.core.utils import get_value_at_path
 
@@ -743,14 +744,32 @@ class FakeDispatchContext(DispatchContext):
     def __init__(self, **kwargs):
         super().__init__()
         self.context = kwargs.pop("context", {})
+        self._public_formula_fields = kwargs.pop("public_formula_fields", None)
+        self._searchable_fields = kwargs.pop("searchable_fields", [])
+        self._search_query = kwargs.pop("search_query", None)
         for key, value in kwargs.items():
             setattr(self, key, value)
 
+    @property
+    def is_publicly_searchable(self):
+        return True
+
     def search_query(self):
-        return None
+        return self._search_query
+
+    def searchable_fields(self):
+        return self._searchable_fields
+
+    @property
+    def is_publicly_filterable(self):
+        return True
 
     def filters(self):
         return None
+
+    @property
+    def is_publicly_sortable(self):
+        return True
 
     def sortings(self):
         return None
@@ -769,6 +788,15 @@ class FakeDispatchContext(DispatchContext):
             return "999"
 
         return get_value_at_path(self.context, key)
+
+    @property
+    def public_formula_fields(self) -> Optional[Dict[str, Dict[int, List[str]]]]:
+        return self._public_formula_fields
+
+    def validate_filter_search_sort_fields(
+        self, fields: List[str], refinement: ServiceAdhocRefinements
+    ):
+        pass
 
 
 @pytest.fixture()
@@ -841,3 +869,8 @@ def test_thread():
             sys.setswitchinterval(orig_switch_interval)
 
     yield run_callable
+
+
+@pytest.fixture()
+def use_tmp_media_root(tmpdir, settings):
+    settings.MEDIA_ROOT = tmpdir

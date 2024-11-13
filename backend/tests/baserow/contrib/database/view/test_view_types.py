@@ -8,6 +8,10 @@ from django.core.files.storage import FileSystemStorage
 
 import pytest
 
+from baserow.contrib.database.fields.field_filters import (
+    FILTER_TYPE_AND,
+    FILTER_TYPE_OR,
+)
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import GalleryViewFieldOptions
@@ -20,6 +24,7 @@ from baserow.contrib.database.views.view_ownership_types import (
 )
 from baserow.core.models import WorkspaceUser
 from baserow.core.user_files.handler import UserFileHandler
+from baserow.test_utils.helpers import ReplayValues, is_dict_subset
 
 
 @pytest.mark.django_db
@@ -319,13 +324,14 @@ def test_import_export_form_view(data_fixture, tmpdir):
         order=1,
     )
     condition = data_fixture.create_form_view_field_options_condition(
-        field_option=field_option, field=text_field
+        field_option=field_option, field=text_field, group=None
     )
     condition_2 = data_fixture.create_form_view_field_options_condition(
         field_option=field_option,
         field=text_field,
         type="multiple_select_has",
         value="1",
+        group=None,
     )
 
     files_buffer = BytesIO()
@@ -369,12 +375,14 @@ def test_import_export_form_view(data_fixture, tmpdir):
             "id": condition.id,
             "field": condition.field_id,
             "type": condition.type,
+            "group": None,
             "value": condition.value,
         },
         {
             "id": condition_2.id,
             "field": condition_2.field_id,
             "type": condition_2.type,
+            "group": None,
             "value": condition_2.value,
         },
     ]
@@ -434,6 +442,261 @@ def test_import_export_form_view(data_fixture, tmpdir):
     assert imported_field_option_condition_2.field_option_id == imported_field_option.id
     assert imported_field_option_condition_2.type == condition_2.type
     assert imported_field_option_condition_2.value == "2"
+
+
+@pytest.mark.django_db
+def test_import_export_form_view_with_grouped_conditions(data_fixture, tmpdir):
+    user = data_fixture.create_user()
+
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    handler = UserFileHandler()
+    user_file = handler.upload_user_file(
+        user, "test.jpg", ContentFile(b"Hello World"), storage=storage
+    )
+
+    table = data_fixture.create_database_table(user=user)
+    form_view = data_fixture.create_form_view(
+        table=table,
+        slug="public-test-slug",
+        public=True,
+        title="Title",
+        description="Description",
+        cover_image=user_file,
+        logo_image=user_file,
+        submit_text="My Submit",
+        submit_action="REDIRECT",
+        submit_action_message="TEst message",
+        submit_action_redirect_url="https://localhost",
+    )
+    text_field = data_fixture.create_text_field(table=table)
+    bool_field = data_fixture.create_boolean_field(table=table)
+
+    imported_text_field = data_fixture.create_text_field(table=form_view.table)
+    imported_bool_field = data_fixture.create_boolean_field(table=form_view.table)
+
+    # use ReplayValues helper to check for group patterns. Each condition group will
+    # have a different id after export/import, but the distribution will be similar
+    r_groups = ReplayValues()
+
+    field_option_text = data_fixture.create_form_view_field_option(
+        form_view,
+        text_field,
+        required=True,
+        enabled=True,
+        name="Test name",
+        description="Field description",
+        order=1,
+    )
+
+    field_option_bool = data_fixture.create_form_view_field_option(
+        form_view,
+        bool_field,
+        required=True,
+        enabled=True,
+        name="Bool field",
+        description="Field description",
+        condition_type=FILTER_TYPE_OR,
+        order=2,
+    )
+
+    condition_group = data_fixture.create_form_view_field_options_condition_group(
+        user=user, field_option=field_option_text
+    )
+    condition_group_2 = data_fixture.create_form_view_field_options_condition_group(
+        user=user, field_option=field_option_text
+    )
+    condition_group_3 = data_fixture.create_form_view_field_options_condition_group(
+        user=user, field_option=field_option_bool
+    )
+
+    condition = data_fixture.create_form_view_field_options_condition(
+        field_option=field_option_text, field=text_field, group=r_groups.record(None)
+    )
+    condition_2 = data_fixture.create_form_view_field_options_condition(
+        field_option=field_option_text,
+        field=text_field,
+        type="multiple_select_has",
+        value="1",
+        group=r_groups.record(condition_group),
+    )
+    condition_3 = data_fixture.create_form_view_field_options_condition(
+        field_option=field_option_text,
+        field=text_field,
+        type="contains_not",
+        value="2",
+        group=r_groups.record(condition_group_2),
+    )
+
+    condition_4 = data_fixture.create_form_view_field_options_condition(
+        field_option=field_option_text,
+        field=text_field,
+        type="contains_not",
+        value="3",
+        group=r_groups.record(condition_group_2),
+    )
+    condition_5 = data_fixture.create_form_view_field_options_condition(
+        field_option=field_option_bool,
+        field=text_field,
+        type="contains",
+        value="4",
+        group=r_groups.record(condition_group_3),
+    )
+    condition_6 = data_fixture.create_form_view_field_options_condition(
+        field_option=field_option_bool,
+        field=text_field,
+        type="contains",
+        value="5",
+        group=r_groups.record(condition_group_3),
+    )
+
+    recorded_groups_created = r_groups.stored
+    r_groups.reset()
+
+    files_buffer = BytesIO()
+    form_view_type = view_type_registry.get("form")
+
+    with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:
+        serialized = form_view_type.export_serialized(
+            form_view, None, files_zip=files_zip, storage=storage
+        )
+
+    assert serialized["id"] == form_view.id
+    assert serialized["type"] == "form"
+    assert serialized["name"] == form_view.name
+    assert serialized["order"] == 0
+    assert "slug" not in serialized
+    assert serialized["public"] == form_view.public
+    assert serialized["title"] == form_view.title
+    assert serialized["cover_image"] == {
+        "name": form_view.cover_image.name,
+        "original_name": form_view.cover_image.original_name,
+    }
+    assert serialized["logo_image"] == {
+        "name": form_view.logo_image.name,
+        "original_name": form_view.logo_image.original_name,
+    }
+    assert serialized["submit_text"] == form_view.submit_text
+    assert serialized["submit_action"] == form_view.submit_action
+    assert serialized["submit_action_message"] == form_view.submit_action_message
+    assert (
+        serialized["submit_action_redirect_url"] == form_view.submit_action_redirect_url
+    )
+    assert len(serialized["field_options"]) == 2
+    assert serialized["field_options"][0]["id"] == field_option_text.id
+    assert serialized["field_options"][0]["field_id"] == field_option_text.field_id
+    assert serialized["field_options"][0]["name"] == field_option_text.name
+    assert (
+        serialized["field_options"][0]["description"] == field_option_text.description
+    )
+    assert serialized["field_options"][0]["enabled"] == field_option_text.enabled
+    assert serialized["field_options"][0]["required"] == field_option_text.required
+    assert serialized["field_options"][0]["condition_type"] == FILTER_TYPE_AND
+    assert serialized["field_options"][0]["conditions"] == [
+        {
+            "id": condition.id,
+            "field": condition.field_id,
+            "type": condition.type,
+            "group": r_groups.record(None),
+            "value": condition.value,
+        },
+        {
+            "id": condition_2.id,
+            "field": condition_2.field_id,
+            "type": condition_2.type,
+            "group": r_groups.record(condition_group.id),
+            "value": condition_2.value,
+        },
+        {
+            "id": condition_3.id,
+            "field": condition_3.field_id,
+            "type": condition_3.type,
+            "group": r_groups.record(condition_group_2.id),
+            "value": condition_3.value,
+        },
+        {
+            "id": condition_4.id,
+            "field": condition_4.field_id,
+            "type": condition_4.type,
+            "group": r_groups.record(condition_group_2.id),
+            "value": condition_4.value,
+        },
+    ]
+
+    assert serialized["field_options"][1]["id"] == field_option_bool.id
+    assert serialized["field_options"][1]["field_id"] == field_option_bool.field_id
+    assert serialized["field_options"][1]["name"] == field_option_bool.name
+    assert (
+        serialized["field_options"][1]["description"] == field_option_bool.description
+    )
+    assert serialized["field_options"][1]["enabled"] == field_option_bool.enabled
+    assert serialized["field_options"][1]["required"] == field_option_bool.required
+    assert serialized["field_options"][1]["condition_type"] == FILTER_TYPE_OR
+    assert serialized["field_options"][1]["conditions"] == [
+        {
+            "id": condition_5.id,
+            "field": condition_5.field_id,
+            "type": condition_5.type,
+            "group": r_groups.record(condition_group_3.id),
+            "value": condition_5.value,
+        },
+        {
+            "id": condition_6.id,
+            "field": condition_6.field_id,
+            "type": condition_6.type,
+            "group": r_groups.record(condition_group_3.id),
+            "value": condition_6.value,
+        },
+    ]
+
+    assert r_groups.stored == recorded_groups_created
+
+    with ZipFile(files_buffer, "r", ZIP_DEFLATED, False) as zip_file:
+        assert zip_file.read(user_file.name) == b"Hello World"
+        assert len(zip_file.infolist()) == 1
+
+    id_mapping = {
+        "database_fields": {
+            text_field.id: imported_text_field.id,
+            bool_field.id: imported_bool_field.id,
+        },
+        "database_field_select_options": {1: 2},
+    }
+
+    with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:
+        imported_form_view = form_view_type.import_serialized(
+            form_view.table, serialized, id_mapping, files_zip, storage
+        )
+
+    form_expected = {
+        "name": imported_form_view.name,
+        "order": imported_form_view.order,
+        "slug": form_view.slug,
+    }
+    assert form_view.id != imported_form_view.id
+    assert form_view.slug != imported_form_view.slug
+    assert is_dict_subset(form_expected, vars(form_view))
+
+    imported_field_options = imported_form_view.get_field_options()
+    assert len(imported_field_options) == 2
+
+    fields_and_options = [field_option_text, field_option_bool]
+
+    r_groups.reset()
+    for source_option_field, imported_field_option in zip(
+        fields_and_options, imported_field_options
+    ):
+        field_expected = {
+            k: getattr(source_option_field, k)
+            for k in ["name", "description", "enabled", "required", "order"]
+        }
+
+        assert source_option_field.id != imported_field_option.id
+        assert is_dict_subset(field_expected, vars(imported_field_option))
+
+        imported_field_option_conditions = imported_field_option.conditions.all()
+        for cond in imported_field_option_conditions:
+            r_groups.record(cond.group)
+    assert r_groups.stored == recorded_groups_created
 
 
 @pytest.mark.django_db

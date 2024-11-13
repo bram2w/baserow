@@ -7,7 +7,6 @@
     :disabled="disabled"
     :fixed-items="true"
     class="filters__value-dropdown"
-    small
     @input="$emit('input', $event)"
   ></PaginatedDropdown>
   <a

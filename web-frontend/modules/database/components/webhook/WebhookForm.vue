@@ -53,7 +53,7 @@
             required
             class="margin-bottom-2"
           >
-            <Dropdown v-model="values.request_method" small>
+            <Dropdown v-model="values.request_method">
               <DropdownItem name="GET" value="GET"></DropdownItem>
               <DropdownItem name="POST" value="POST"></DropdownItem>
               <DropdownItem name="PATCH" value="PATCH"></DropdownItem>
@@ -136,9 +136,14 @@
             class="webhook__type-dropdown-container"
           >
             <Dropdown
-              :value="getEventFields(webhookEvent)"
+              :value="
+                values.events.includes(webhookEvent.type)
+                  ? getEventFields(webhookEvent)
+                  : []
+              "
               :placeholder="webhookEvent.getRelatedFieldsPlaceholder()"
               :multiple="true"
+              :disabled="!values.events.includes(webhookEvent.type)"
               class="dropdown--tiny webhook__type-dropdown"
               @input="setEventFields(webhookEvent, $event)"
             >
@@ -224,7 +229,6 @@
             <Dropdown
               v-model="exampleWebhookEventType"
               class="dropdown--floating-left"
-              small
             >
               <DropdownItem
                 v-for="webhookEvent in webhookEventTypes"

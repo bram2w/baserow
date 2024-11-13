@@ -1,12 +1,15 @@
 from collections import defaultdict
 from unittest.mock import MagicMock, Mock, patch
 
+from django.test import override_settings
+
 import pytest
 
 from baserow.contrib.builder.data_sources.service import DataSourceService
 from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.elements.service import ElementService
 from baserow.contrib.builder.pages.service import PageService
+from baserow.contrib.database.api.rows.serializers import RowSerializer
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.views.models import SORT_ORDER_ASC, SORT_ORDER_DESC
@@ -19,7 +22,7 @@ from baserow.core.services.exceptions import ServiceImproperlyConfigured
 from baserow.core.services.handler import ServiceHandler
 from baserow.core.services.registries import service_type_registry
 from baserow.core.utils import MirrorDict
-from baserow.test_utils.helpers import AnyStr
+from baserow.test_utils.helpers import AnyStr, setup_interesting_test_table
 from baserow.test_utils.pytest_conftest import FakeDispatchContext, fake_import_formula
 
 
@@ -78,7 +81,7 @@ def test_export_import_local_baserow_list_rows_service(data_fixture):
         view=view,
         table=view.table,
         search_query="get('page_parameter.id')",
-        filter_type="Or",
+        filter_type="OR",
     )
 
     field = fields[0]
@@ -101,7 +104,7 @@ def test_export_import_local_baserow_list_rows_service(data_fixture):
         "table_id": service.table_id,
         "integration_id": service.integration_id,
         "search_query": service.search_query,
-        "filter_type": "Or",
+        "filter_type": "OR",
         "filters": [
             {
                 "field_id": service_filter.field_id,
@@ -177,15 +180,13 @@ def test_update_local_baserow_list_rows_service(data_fixture):
         application=page.builder, user=user
     )
     service = data_fixture.create_local_baserow_list_rows_service(
-        integration=integration,
-        view=view,
-        table=view.table,
+        integration=integration, view=view, table=view.table, search_query="'badgers'"
     )
 
     service_type = service_type_registry.get("local_baserow_list_rows")
 
     values = service_type.prepare_values(
-        {"view_id": None, "integration_id": None}, user
+        {"view_id": None, "integration_id": None, "search_query": ""}, user
     )
 
     ServiceHandler().update_service(service_type, service, **values)
@@ -193,6 +194,7 @@ def test_update_local_baserow_list_rows_service(data_fixture):
     service.refresh_from_db()
 
     assert service.specific.view is None
+    assert service.specific.search_query == ""
     assert service.specific.integration is None
 
 
@@ -399,6 +401,7 @@ def test_local_baserow_list_rows_service_dispatch_data_with_varying_filter_types
     view = data_fixture.create_grid_view(
         user, table=table, owned_by=user, filter_type="OR"
     )
+
     dispatch_context = FakeDispatchContext()
     service_type = LocalBaserowListRowsUserServiceType()
     service = data_fixture.create_local_baserow_list_rows_service(
@@ -534,9 +537,7 @@ def test_local_baserow_list_rows_service_dispatch_data_with_view_and_service_sor
 
 
 @pytest.mark.django_db
-def test_local_baserow_list_rows_service_dispatch_data_with_pagination(
-    data_fixture,
-):
+def test_local_baserow_list_rows_service_dispatch_data_with_pagination(data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
     integration = data_fixture.create_local_baserow_integration(
@@ -709,7 +710,7 @@ def test_import_formula_local_baserow_list_rows_user_service_type(data_fixture):
         view=view,
         table=view.table,
         search_query=f"get('data_source.{data_source.id}.0.{text_field.db_column}')",
-        filter_type="Or",
+        filter_type="OR",
     )
 
     data_fixture.create_local_baserow_table_service_filter(
@@ -895,3 +896,369 @@ def test_order_by_is_applied_depending_on_views_sorts(
         mock_queryset.order_by.assert_called_once_with(*view_sorts)
     else:
         mock_queryset.order_by.assert_not_called()
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.integrations.local_baserow.service_types.CoreHandler")
+@pytest.mark.parametrize(
+    "field_name_checks,expect_only_applied",
+    (
+        [
+            (
+                {"all": ["field_42", "field_43"], "external": None, "internal": None},
+                True,
+            ),
+            (
+                {"all": ["field_42", "field_43"], "external": [], "internal": []},
+                True,
+            ),
+            (
+                {
+                    "all": ["field_42", "field_43"],
+                    "external": ["foo"],
+                    "internal": ["bar"],
+                },
+                True,
+            ),
+            (
+                {"all": None, "external": None, "internal": None},
+                False,
+            ),
+            (
+                {"all": None, "external": [], "internal": []},
+                False,
+            ),
+            (
+                {"all": None, "external": ["field_42"], "internal": ["field_43"]},
+                False,
+            ),
+        ]
+    ),
+)
+def test_only_is_applied_to_queryset_if_field_names(
+    mock_core_handler, field_name_checks, expect_only_applied, data_fixture
+):
+    """
+    Test to ensure that the queryset's only() is applied if
+    field_names exists.
+    """
+
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    table, _, _ = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("My Color", "text"),
+        ],
+        rows=[
+            ["BMW", "Blue"],
+            ["Audi", "Orange"],
+        ],
+    )
+    view = data_fixture.create_grid_view(user, table=table)
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+
+    service = data_fixture.create_local_baserow_list_rows_service(
+        integration=integration,
+        view=view,
+        table=table,
+    )
+
+    service_type = LocalBaserowListRowsUserServiceType()
+
+    mock_queryset = MagicMock()
+
+    mock_objects = MagicMock()
+    mock_objects.enhance_by_fields.return_value = mock_queryset
+
+    mock_model = MagicMock()
+    mock_objects = mock_model.objects.all.return_value = mock_objects
+
+    mock_table = MagicMock()
+    mock_table.get_model.return_value = mock_model
+
+    resolved_values = {
+        "table": mock_table,
+    }
+
+    service_type.get_dispatch_search = MagicMock(return_value=None)
+    service_type.get_dispatch_filters = MagicMock(return_value=mock_queryset)
+    service_type.get_dispatch_sorts = MagicMock(return_value=(None, mock_queryset))
+
+    field_names = {"all": {}, "external": {}, "internal": {}}
+    for key, value in field_name_checks.items():
+        field_names[key] = {service.id: value}
+
+    dispatch_context = FakeDispatchContext(public_formula_fields=field_names)
+    service_type.dispatch_data(service, resolved_values, dispatch_context)
+
+    if expect_only_applied:
+        mock_queryset.only.assert_called_once_with(
+            *field_names["all"][service.id],
+        )
+    else:
+        mock_queryset.only.assert_not_called()
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.integrations.local_baserow.service_types.CoreHandler")
+@override_settings(FEATURE_FLAGS=[])
+def test_only_is_not_applied_when_behind_feature_flag(mock_core_handler, data_fixture):
+    """
+    Test to ensure that the queryset's only() is not applied when the feature
+    flag is missing.
+    """
+
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    table, _, _ = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("My Color", "text"),
+        ],
+        rows=[
+            ["BMW", "Blue"],
+            ["Audi", "Orange"],
+        ],
+    )
+    view = data_fixture.create_grid_view(user, table=table)
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+
+    service = data_fixture.create_local_baserow_list_rows_service(
+        integration=integration,
+        view=view,
+        table=table,
+    )
+
+    service_type = LocalBaserowListRowsUserServiceType()
+
+    mock_queryset = MagicMock()
+
+    mock_objects = MagicMock()
+    mock_objects.enhance_by_fields.return_value = mock_queryset
+
+    mock_model = MagicMock()
+    mock_objects = mock_model.objects.all.return_value = mock_objects
+
+    mock_table = MagicMock()
+    mock_table.get_model.return_value = mock_model
+
+    resolved_values = {
+        "table": mock_table,
+    }
+
+    service_type.get_dispatch_search = MagicMock(return_value=None)
+    service_type.get_dispatch_filters = MagicMock(return_value=mock_queryset)
+    service_type.get_dispatch_sorts = MagicMock(return_value=(None, mock_queryset))
+
+    field_names = {
+        "all": {service.id: ["field_42", "field_43"]},
+        "external": {service.id: ["field_42", "field_43"]},
+        "internal": {service.id: ["field_42", "field_43"]},
+    }
+
+    dispatch_context = FakeDispatchContext(public_formula_fields=field_names)
+    service_type.dispatch_data(service, resolved_values, dispatch_context)
+
+    mock_queryset.only.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_can_dispatch_interesting_table(data_fixture):
+    """
+    Test that we can dispatch an interesting table content.
+    Multiple test are chained in the same function to improve test performances.
+    """
+
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    table, _, _, _, _ = setup_interesting_test_table(
+        data_fixture,
+        user,
+    )
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+
+    service = data_fixture.create_local_baserow_list_rows_service(
+        integration=integration,
+        table=table,
+        filter_type="OR",
+    )
+
+    dispatch_context = FakeDispatchContext()
+
+    # Normal dispatch
+    result = service.get_type().dispatch(service, dispatch_context)
+
+    assert len(result["results"]) == 2
+    assert len(result["results"][0].keys()) == table.field_set.count() + 2
+
+    # Now can we dispatch the table if all fields are hidden?
+    field_names = {
+        "all": {service.id: ["id"]},
+        "external": {service.id: ["id"]},
+        "internal": {},
+    }
+
+    dispatch_context = FakeDispatchContext(public_formula_fields=field_names)
+
+    # If this dispatch doesn't fail while all the fields are excluded from the result
+    # means that the enhance_by_field is filtered to only used field.
+    result = service.get_type().dispatch(service, dispatch_context)
+
+    assert (
+        len(result["results"][0].keys()) == 1 + 1
+    )  # We also have the order at that point
+
+    # Test with a filter on a single select field. Single select have a select_related
+    single_select_field = table.field_set.get(name="single_select")
+    service_filter = data_fixture.create_local_baserow_table_service_filter(
+        service=service,
+        field=single_select_field,
+        value="'A'",
+        order=0,
+    )
+
+    dispatch_context = FakeDispatchContext(public_formula_fields=field_names)
+
+    assert len(result["results"][0].keys()) == 1 + 1
+
+    # Let's remove the filter to not interfer with the sort
+    service_filter.delete()
+
+    # Test with a sort
+    service_sort = data_fixture.create_local_baserow_table_service_sort(
+        service=service, field=single_select_field, order_by=SORT_ORDER_ASC, order=0
+    )
+
+    dispatch_context = FakeDispatchContext(public_formula_fields=field_names)
+    assert len(result["results"][0].keys()) == 1 + 1
+
+    service_sort.delete()
+
+    # Now with a search
+    service.search_query = "'A'"
+    service.save()
+
+    dispatch_context = FakeDispatchContext(public_formula_fields=field_names)
+    assert len(result["results"][0].keys()) == 1 + 1
+
+
+@pytest.mark.parametrize(
+    "field_names",
+    [
+        None,
+        {"external": {1: ["field_123"]}},
+    ],
+)
+@patch(
+    "baserow.contrib.integrations.local_baserow.service_types.get_row_serializer_class"
+)
+def test_dispatch_transform_passes_field_ids(mock_get_serializer, field_names):
+    """
+    Test the LocalBaserowListRowsUserServiceType::dispatch_transform() method.
+
+    Ensure that the field_ids parameter is passed to the serializer class.
+    """
+
+    mock_serializer_instance = MagicMock()
+    mock_serializer_instance.data.return_value = "foo"
+    mock_serializer = MagicMock(return_value=mock_serializer_instance)
+    mock_get_serializer.return_value = mock_serializer
+
+    service_type = LocalBaserowListRowsUserServiceType()
+
+    dispatch_data = {
+        "baserow_table_model": MagicMock(),
+        "results": [],
+        "has_next_page": False,
+    }
+
+    dispatch_data["public_formula_fields"] = field_names
+
+    results = service_type.dispatch_transform(dispatch_data)
+
+    assert results == {
+        "has_next_page": False,
+        "results": mock_serializer_instance.data,
+    }
+    mock_get_serializer.assert_called_once_with(
+        dispatch_data["baserow_table_model"],
+        RowSerializer,
+        is_response=True,
+        field_ids=None,
+    )
+
+
+@pytest.mark.parametrize(
+    "path,expected",
+    [
+        (
+            [],
+            [],
+        ),
+        (
+            ["foo"],
+            [],
+        ),
+        (
+            ["", "foo"],
+            [],
+        ),
+        (
+            ["field_123"],
+            [],
+        ),
+        (
+            ["", "field_456"],
+            ["field_456"],
+        ),
+        (
+            ["*", "field_456"],
+            ["field_456"],
+        ),
+        (
+            ["1", "field_456"],
+            ["field_456"],
+        ),
+        (
+            ["0", "field_456", "0", "value"],
+            ["field_456"],
+        ),
+        (
+            ["0", "field_456", "0", "value", "", "", ""],
+            ["field_456"],
+        ),
+    ],
+)
+def test_extract_properties(path, expected):
+    """
+    Test the extract_properties() method.
+
+    Given the input path, ensure the expected field name is returned.
+
+    An element that specifies a specific row and field:
+    ['1', 'field_5439']
+
+    An element that specifies a field and all rows:
+    ['*', 'field_5439']
+
+    A collection element (e.g. Table):
+    ['field_5439']
+
+    An element that uses a Link Row Field formula
+    ['0', 'field_5569', '0', 'value']
+    """
+
+    service_type = LocalBaserowListRowsUserServiceType()
+
+    result = service_type.extract_properties(path)
+
+    assert result == expected

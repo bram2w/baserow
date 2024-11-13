@@ -13,7 +13,7 @@ from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_AND,
     FILTER_TYPE_OR,
 )
-from baserow.contrib.database.fields.models import Field, FileField
+from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.views.registries import (
     form_view_mode_registry,
     view_filter_type_registry,
@@ -645,7 +645,7 @@ class GridViewFieldOptions(HierarchicalModelMixin, models.Model):
 class GalleryView(View):
     field_options = models.ManyToManyField(Field, through="GalleryViewFieldOptions")
     card_cover_image_field = models.ForeignKey(
-        FileField,
+        Field,
         blank=True,
         null=True,
         on_delete=models.SET_NULL,
@@ -744,6 +744,9 @@ class FormView(View):
         help_text=f"If the `submit_action` is {FORM_VIEW_SUBMIT_ACTION_REDIRECT},"
         f"then the visitors will be redirected to the this URL after submitting the "
         f"form.",
+        # Must be kepy in sync with
+        # `modules/database/components/view/form/FormViewMetaControls.vue::redirectUrlMaxLength`
+        max_length=2000,
     )
     users_to_notify_on_submit = models.ManyToManyField(
         User,

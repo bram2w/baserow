@@ -100,6 +100,20 @@ export default {
         : this.$registry.get('dataSync', this.chosenType).getFormComponent()
     },
   },
+  watch: {
+    chosenType(newValue, oldValue) {
+      if (newValue !== oldValue) {
+        this.hideError()
+        this.loadedProperties = false
+        this.loadingProperties = false
+        this.formValues = null
+        this.properties = null
+        this.syncedProperties = null
+        this.creatingTable = false
+        this.createdTable = null
+      }
+    },
+  },
   beforeDestroy() {
     this.stopPollIfRunning()
   },
@@ -130,6 +144,14 @@ export default {
         this.properties = data
         this.syncedProperties = data.map((p) => p.key)
       } catch (error) {
+        if (error.handler && error.handler.code === 'ERROR_SYNC_ERROR') {
+          this.showError(
+            this.$t('dataSyncType.syncError'),
+            error.handler.detail
+          )
+          error.handler.handled()
+          return
+        }
         this.handleError(error)
       } finally {
         this.loadingProperties = false

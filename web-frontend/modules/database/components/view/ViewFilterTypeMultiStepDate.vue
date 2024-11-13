@@ -5,10 +5,9 @@
       :disabled="disabled"
       :value="operatorValue"
       :fixed-items="true"
-      small
       @input="setOperator($event)"
     >
-      <template #value>
+      <template #selectedValue>
         <span
           class="dropdown__selected-text"
           :title="$t(selectedOperatorLabel)"
@@ -181,8 +180,8 @@ export default {
       }
 
       if (newDate.isValid()) {
-        const dateString = newDate.format('YYYY-MM-DD')
-        this.setValue(dateString, sender)
+        this.setCopy(newDate.format('YYYY-MM-DD'), sender)
+        this.delayedUpdate(this.copy, true)
       } else {
         this.copy = value
       }

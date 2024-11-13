@@ -109,6 +109,7 @@ class PublicElementSerializer(serializers.ModelSerializer):
         model = Element
         fields = (
             "id",
+            "page_id",
             "type",
             "order",
             "parent_element_id",
@@ -141,6 +142,7 @@ class PublicElementSerializer(serializers.ModelSerializer):
         )
         extra_kwargs = {
             "id": {"read_only": True},
+            "page_id": {"read_only": True},
             "type": {"read_only": True},
         }
 
@@ -154,7 +156,7 @@ class PublicPageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Page
-        fields = ("id", "name", "path", "path_params")
+        fields = ("id", "name", "path", "path_params", "shared")
         extra_kwargs = {
             "id": {"read_only": True},
             "builder_id": {"read_only": True},

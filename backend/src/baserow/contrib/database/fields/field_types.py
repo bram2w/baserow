@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
 from datetime import date, datetime, timedelta, timezone
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from itertools import cycle
 from random import randint, randrange, sample
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Set, Tuple, Union
@@ -78,16 +78,13 @@ from baserow.contrib.database.api.views.errors import (
 )
 from baserow.contrib.database.db.functions import RandomUUID
 from baserow.contrib.database.export_serialized import DatabaseExportSerializedStructure
-from baserow.contrib.database.fields.filter_support import (
-    FilterNotSupportedException,
-    HasValueContainsFilterSupport,
-    HasValueContainsWordFilterSupport,
-    HasValueEmptyFilterSupport,
-    HasValueFilterSupport,
-    HasValueLengthIsLowerThanFilterSupport,
+from baserow.contrib.database.fields.filter_support.formula import (
+    FormulaArrayFilterSupport,
 )
 from baserow.contrib.database.formula import (
     BASEROW_FORMULA_TYPE_ALLOWED_FIELDS,
+    BASEROW_FORMULA_TYPE_REQUEST_SERIALIZER_FIELD_NAMES,
+    BASEROW_FORMULA_TYPE_SERIALIZER_FIELD_NAMES,
     BaserowExpression,
     BaserowFormulaBooleanType,
     BaserowFormulaCharType,
@@ -100,6 +97,13 @@ from baserow.contrib.database.formula import (
     FormulaHandler,
 )
 from baserow.contrib.database.formula.registries import formula_function_registry
+from baserow.contrib.database.formula.types.formula_types import (
+    BaserowFormulaArrayType,
+    BaserowFormulaDurationType,
+    BaserowFormulaMultipleSelectType,
+    BaserowFormulaSingleFileType,
+    BaserowFormulaURLType,
+)
 from baserow.contrib.database.models import Table
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.types import SerializedRowHistoryFieldMetadata
@@ -122,13 +126,6 @@ from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.utils import list_to_comma_separated_string
 
-from ..formula.types.formula_types import (
-    BaserowFormulaArrayType,
-    BaserowFormulaDurationType,
-    BaserowFormulaMultipleSelectType,
-    BaserowFormulaSingleFileType,
-    BaserowFormulaURLType,
-)
 from .constants import BASEROW_BOOLEAN_FIELD_TRUE_VALUES, UPSERT_OPTION_DICT_KEY
 from .dependencies.exceptions import (
     CircularFieldDependencyError,
@@ -158,7 +155,6 @@ from .expressions import extract_jsonb_array_values_to_single_string
 from .field_cache import FieldCache
 from .field_filters import (
     AnnotatedQ,
-    OptionallyAnnotatedQ,
     contains_filter,
     contains_word_filter,
     filename_contains_filter,
@@ -529,7 +525,13 @@ class NumberFieldType(FieldType):
 
     def prepare_value_for_db(self, instance, value):
         if value is not None:
-            value = Decimal(value)
+            try:
+                value = Decimal(value)
+            except InvalidOperation:
+                raise ValidationError(
+                    f"The value for field {instance.id} is not a valid number",
+                    code="invalid",
+                )
 
         if value is not None and not instance.number_negative and value < 0:
             raise ValidationError(
@@ -674,8 +676,14 @@ class RatingFieldType(FieldType):
         if not value:
             return 0
 
-        # Ensure the value is an int
-        value = int(value)
+        try:
+            # Ensure the value is an int
+            value = int(value)
+        except (ValueError, TypeError):
+            raise ValidationError(
+                f"The value for field {instance.id} is not a valid number",
+                code="invalid",
+            )
 
         if value < 0:
             raise ValidationError(
@@ -2953,7 +2961,9 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
             through_model_fields = through_model._meta.get_fields()
             current_field_name = through_model_fields[1].name
             relation_field_name = through_model_fields[2].name
-            for relation in through_model.objects.all():
+            for relation in through_model.objects.filter(
+                Q(**{f"{relation_field_name}__trashed": False})
+            ):
                 cache[cache_entry][
                     getattr(relation, f"{current_field_name}_id")
                 ].append(getattr(relation, f"{relation_field_name}_id"))
@@ -3189,6 +3199,9 @@ class FileFieldType(FieldType):
                 Value("visible_name", output_field=models.TextField())
             ],
         )
+
+    def can_represent_files(self, field):
+        return True
 
     def _extract_file_names(self, value):
         # Validates the provided object and extract the names from it. We need the name
@@ -3805,7 +3818,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         """
 
         name = f"{field_name}__value"
-        order = F(name)
+        order = collate_expression(F(name))
 
         if order_direction == "ASC":
             order = order.asc(nulls_first=True)
@@ -4241,7 +4254,7 @@ class MultipleSelectFieldType(
             output_field=models.TextField(),
         )
         annotation = {sort_column_name: query}
-        order = F(sort_column_name)
+        order = collate_expression(F(sort_column_name))
 
         if order_direction == "DESC":
             order = order.desc(nulls_first=True)
@@ -4349,14 +4362,7 @@ class PhoneNumberFieldType(CollationSortMixin, CharFieldMatchingRegexFieldType):
         return collate_expression(Value(value))
 
 
-class FormulaFieldType(
-    HasValueEmptyFilterSupport,
-    HasValueFilterSupport,
-    HasValueContainsFilterSupport,
-    HasValueContainsWordFilterSupport,
-    HasValueLengthIsLowerThanFilterSupport,
-    ReadOnlyFieldType,
-):
+class FormulaFieldType(FormulaArrayFilterSupport, ReadOnlyFieldType):
     type = "formula"
     model_class = FormulaField
     _db_column_fields = []
@@ -4371,11 +4377,27 @@ class FormulaFieldType(
         "formula_type",
     ]
     allowed_fields = BASEROW_FORMULA_TYPE_ALLOWED_FIELDS + CORE_FORMULA_FIELDS
-    serializer_field_names = BASEROW_FORMULA_TYPE_ALLOWED_FIELDS + CORE_FORMULA_FIELDS
-    serializer_field_overrides = {
+    request_serializer_field_names = (
+        BASEROW_FORMULA_TYPE_REQUEST_SERIALIZER_FIELD_NAMES + CORE_FORMULA_FIELDS
+    )
+    request_serializer_field_overrides = {
         "error": serializers.CharField(required=False, read_only=True),
         "nullable": serializers.BooleanField(required=False, read_only=True),
     }
+    serializer_field_names = (
+        BASEROW_FORMULA_TYPE_SERIALIZER_FIELD_NAMES + CORE_FORMULA_FIELDS
+    )
+
+    @property
+    def serializer_field_overrides(self):
+        from baserow.contrib.database.formula.types.formula_types import (
+            get_baserow_formula_type_serializer_field_overrides,
+        )
+
+        return {
+            **self.request_serializer_field_overrides,
+            **get_baserow_formula_type_serializer_field_overrides(),
+        }
 
     @staticmethod
     def _stack_error_mapper(e):
@@ -4516,83 +4538,6 @@ class FormulaFieldType(
             value,
             {"field": field_instance, "type": field_type, "name": field_object["name"]},
             rich_value=rich_value,
-        )
-
-    def get_in_array_empty_query(self, field_name, model_field, field: FormulaField):
-        (
-            field_instance,
-            field_type,
-        ) = self.get_field_instance_and_type_from_formula_field(field)
-
-        if not isinstance(field_type, HasValueEmptyFilterSupport):
-            raise FilterNotSupportedException()
-
-        return field_type.get_in_array_empty_query(
-            field_name, model_field, field_instance
-        )
-
-    def get_in_array_is_query(
-        self,
-        field_name: str,
-        value: str,
-        model_field: models.Field,
-        field: FormulaField,
-    ) -> Q | OptionallyAnnotatedQ:
-        (
-            field_instance,
-            field_type,
-        ) = self.get_field_instance_and_type_from_formula_field(field)
-
-        if not isinstance(field_type, HasValueFilterSupport):
-            raise FilterNotSupportedException()
-
-        return field_type.get_in_array_is_query(
-            field_name, value, model_field, field_instance
-        )
-
-    def get_in_array_contains_query(
-        self, field_name, value, model_field, field: FormulaField
-    ):
-        (
-            field_instance,
-            field_type,
-        ) = self.get_field_instance_and_type_from_formula_field(field)
-
-        if not isinstance(field_type, HasValueContainsFilterSupport):
-            raise FilterNotSupportedException()
-
-        return field_type.get_in_array_contains_query(
-            field_name, value, model_field, field_instance
-        )
-
-    def get_in_array_contains_word_query(
-        self, field_name, value, model_field, field: FormulaField
-    ):
-        (
-            field_instance,
-            field_type,
-        ) = self.get_field_instance_and_type_from_formula_field(field)
-
-        if not isinstance(field_type, HasValueContainsWordFilterSupport):
-            raise FilterNotSupportedException()
-
-        return field_type.get_in_array_contains_word_query(
-            field_name, value, model_field, field_instance
-        )
-
-    def get_in_array_length_is_lower_than_query(
-        self, field_name, value, model_field, field: FormulaField
-    ):
-        (
-            field_instance,
-            field_type,
-        ) = self.get_field_instance_and_type_from_formula_field(field)
-
-        if not isinstance(field_type, HasValueLengthIsLowerThanFilterSupport):
-            raise FilterNotSupportedException()
-
-        return field_type.get_in_array_length_is_lower_than_query(
-            field_name, value, model_field, field_instance
         )
 
     def contains_query(self, field_name, value, model_field, field: FormulaField):
@@ -4944,6 +4889,12 @@ class FormulaFieldType(
     def can_represent_date(self, field: "Field") -> bool:
         return self.to_baserow_formula_type(field.specific).can_represent_date
 
+    def can_represent_files(self, field):
+        return self.to_baserow_formula_type(field.specific).can_represent_files
+
+    def can_represent_select_options(self, field):
+        return self.to_baserow_formula_type(field.specific).can_represent_select_options
+
     def get_permission_error_when_user_changes_field_to_depend_on_forbidden_field(
         self, user: AbstractUser, changed_field: Field, forbidden_field: Field
     ) -> Exception:
@@ -5000,6 +4951,14 @@ class CountFieldType(FormulaFieldType):
         ),
         "nullable": serializers.BooleanField(required=False, read_only=True),
     }
+
+    @property
+    def request_serializer_field_names(self):
+        return self.serializer_field_names
+
+    @property
+    def request_serializer_field_overrides(self):
+        return self.serializer_field_overrides
 
     def before_create(
         self, table, primary, allowed_field_values, order, user, field_kwargs
@@ -5150,6 +5109,14 @@ class RollupFieldType(FormulaFieldType):
         ),
         "nullable": serializers.BooleanField(required=False, read_only=True),
     }
+
+    @property
+    def request_serializer_field_names(self):
+        return self.serializer_field_names
+
+    @property
+    def request_serializer_field_overrides(self):
+        return self.serializer_field_overrides
 
     def before_create(
         self, table, primary, allowed_field_values, order, user, field_kwargs
@@ -5306,14 +5273,24 @@ class LookupFieldType(FormulaFieldType):
         "target_field_id",
         "target_field_name",
     ]
-    serializer_field_names = BASEROW_FORMULA_TYPE_ALLOWED_FIELDS + [
+    request_serializer_field_names = (
+        BASEROW_FORMULA_TYPE_REQUEST_SERIALIZER_FIELD_NAMES
+        + [
+            "through_field_id",
+            "through_field_name",
+            "target_field_id",
+            "target_field_name",
+            "formula_type",
+        ]
+    )
+    serializer_field_names = BASEROW_FORMULA_TYPE_SERIALIZER_FIELD_NAMES + [
         "through_field_id",
         "through_field_name",
         "target_field_id",
         "target_field_name",
         "formula_type",
     ]
-    serializer_field_overrides = {
+    request_serializer_field_overrides = {
         "through_field_name": serializers.CharField(
             required=False,
             allow_blank=True,
@@ -5346,6 +5323,7 @@ class LookupFieldType(FormulaFieldType):
             "parameter if both are provided, however only one is required.",
         ),
         "nullable": serializers.BooleanField(required=False, read_only=True),
+        "error": serializers.CharField(required=False, read_only=True),
     }
 
     def before_create(
@@ -5615,6 +5593,19 @@ class MultipleCollaboratorsFieldType(
         )
 
     def prepare_value_for_db(self, instance, value):
+        if not isinstance(
+            value,
+            (
+                list,
+                set,
+                tuple,
+            ),
+        ) or not all([isinstance(v, dict) for v in value]):
+            raise ValidationError(
+                f"The value for field {instance.id} is not a valid list of dictionaries",
+                code="invalid",
+            )
+
         if value is None:
             return []
 
@@ -5879,7 +5870,7 @@ class MultipleCollaboratorsFieldType(
         )
         annotation = {sort_column_name: query}
 
-        order = F(sort_column_name)
+        order = collate_expression(F(sort_column_name))
 
         if order_direction == "DESC":
             order = order.desc(nulls_first=True)
@@ -6258,3 +6249,7 @@ class PasswordFieldType(FieldType):
         # We don't want to expose the hash of the password, so we just show `True` or
         # `False` as string depending on whether the value is set.
         return bool(value)
+
+    def is_searchable(self, field: Field) -> bool:
+        # passwords shouldn't be searchable!
+        return False

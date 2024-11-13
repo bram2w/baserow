@@ -58,6 +58,10 @@
     background-color: rgba($palette-neutral-1300, 0.04);
   }
 
+  &.tree__action--highlighted {
+    background-color: rgba($palette-neutral-1300, 0.04);
+  }
+
   .tree__item.active &:hover {
     background-color: transparent;
   }

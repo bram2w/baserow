@@ -170,7 +170,17 @@ def test_get_builder_application(api_client, data_fixture):
             "name": workspace.name,
             "generative_ai_models_enabled": {},
         },
-        "pages": [],
+        "pages": [
+            {
+                "id": application.page_set.get(shared=True).id,
+                "builder_id": application.id,
+                "order": 1,
+                "name": "__shared__",
+                "path": "__shared__",
+                "path_params": [],
+                "shared": True,
+            },
+        ],
     }
 
 
@@ -215,6 +225,16 @@ def test_list_builder_applications(api_client, data_fixture):
                 "name": workspace.name,
                 "generative_ai_models_enabled": {},
             },
-            "pages": [],
+            "pages": [
+                {
+                    "id": application.page_set.get(shared=True).id,
+                    "builder_id": application.id,
+                    "order": 1,
+                    "name": "__shared__",
+                    "path": "__shared__",
+                    "path_params": [],
+                    "shared": True,
+                },
+            ],
         }
     ]

@@ -11,6 +11,7 @@ from freezegun import freeze_time
 from pyinstrument import Profiler
 
 from baserow.contrib.database.api.utils import (
+    extract_field_ids_from_list,
     extract_field_ids_from_string,
     extract_user_field_names_from_params,
     get_include_exclude_fields,
@@ -31,6 +32,19 @@ def test_get_field_ids_from_dict():
         "fieldd_3": "Not included",
     }
     assert handler.extract_field_ids_from_dict(fields_dict) == [1, 2, 3]
+
+
+def test_extract_field_ids_from_list():
+    assert extract_field_ids_from_list([]) == []
+    assert extract_field_ids_from_list(["not", "something"]) == []
+    assert extract_field_ids_from_list(["field_1", "field_2"]) == [1, 2]
+    assert extract_field_ids_from_list(["field_22", "test_8", "999"]) == [22, 999]
+    assert extract_field_ids_from_list(["field_22", "test_8", "999"], False) == [
+        22,
+        8,
+        999,
+    ]
+    assert extract_field_ids_from_list(["is", "1", "one"]) == [1]
 
 
 def test_extract_field_ids_from_string():

@@ -50,7 +50,7 @@ def _parse_date(date):
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_hidden_fields_are_excluded(get_storage_mock, data_fixture):
     storage_mock = MagicMock()
     get_storage_mock.return_value = storage_mock
@@ -79,7 +79,7 @@ def test_hidden_fields_are_excluded(get_storage_mock, data_fixture):
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_csv_is_sorted_by_sorts(get_storage_mock, data_fixture):
     storage_mock = MagicMock()
     get_storage_mock.return_value = storage_mock
@@ -106,7 +106,7 @@ def test_csv_is_sorted_by_sorts(get_storage_mock, data_fixture):
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_csv_is_filtered_by_filters(get_storage_mock, data_fixture):
     storage_mock = MagicMock()
     get_storage_mock.return_value = storage_mock
@@ -135,7 +135,7 @@ def test_csv_is_filtered_by_filters(get_storage_mock, data_fixture):
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_exporting_table_ignores_view_filters_sorts_hides(
     get_storage_mock, data_fixture
 ):
@@ -179,7 +179,7 @@ def test_exporting_table_ignores_view_filters_sorts_hides(
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_columns_are_exported_by_order_then_field_id(get_storage_mock, data_fixture):
     storage_mock = MagicMock()
     get_storage_mock.return_value = storage_mock
@@ -223,7 +223,7 @@ def test_columns_are_exported_by_order_then_field_id(get_storage_mock, data_fixt
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_can_export_every_interesting_different_field_to_csv(
     get_storage_mock, data_fixture
 ):
@@ -247,12 +247,12 @@ def test_can_export_every_interesting_different_field_to_csv(
         "phone_number,formula_text,formula_int,formula_bool,formula_decimal,formula_dateinterval,"
         "formula_date,formula_singleselect,formula_email,formula_link_with_label,"
         "formula_link_url_only,formula_multipleselect,count,rollup,duration_rollup_sum,"
-        "duration_rollup_avg,lookup,uuid,autonumber,password,ai\r\n"
+        "duration_rollup_avg,lookup,uuid,autonumber,password,ai,ai_choice\r\n"
         "1,,,,,,,,,0,False,,,,,,,01/02/2021 12:00,01/02/2021,02/01/2021 12:00,02/01/2021,"
         "02/01/2021 13:00,01/02/2021 12:00,01/02/2021,02/01/2021 12:00,02/01/2021,02/01/2021 13:00,"
         "user@example.com,user@example.com,,,,,,,,,,,,,,,,,,,test FORMULA,1,True,33.3333333333,"
         "1d 0:00,2020-01-01,,,label (https://google.com),https://google.com,,0,0.000,"
-        "0:00,0:00,,00000000-0000-4000-8000-000000000001,1,,\r\n"
+        "0:00,0:00,,00000000-0000-4000-8000-000000000001,1,,,\r\n"
         "2,text,long_text,https://www.google.com,test@example.com,-1,1,-1.2,1.2,3,True,"
         "02/01/2020 01:23,02/01/2020,01/02/2020 01:23,01/02/2020,01/02/2020 02:23,"
         "01/02/2020 02:23,01/02/2021 12:00,01/02/2021,02/01/2021 12:00,02/01/2021,"
@@ -267,7 +267,7 @@ def test_can_export_every_interesting_different_field_to_csv(
         '"user2@example.com,user3@example.com",\'+4412345678,test FORMULA,1,True,33.3333333333,'
         "1d 0:00,2020-01-01,A,test@example.com,label (https://google.com),https://google.com,"
         '"C,D,E",3,-122.222,0:04,0:02,"linked_row_1,linked_row_2,",'
-        "00000000-0000-4000-8000-000000000002,2,True,I'm an AI.\r\n"
+        "00000000-0000-4000-8000-000000000002,2,True,I'm an AI.,Object\r\n"
     )
 
     assert contents == expected
@@ -285,7 +285,7 @@ def run_export_job_over_interesting_table(data_fixture, storage_mock, options):
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_can_export_special_characters_in_arabic_encoding_to_csv(
     get_storage_mock, data_fixture
 ):
@@ -384,7 +384,7 @@ def test_a_complete_export_job_which_has_expired_will_have_its_file_deleted(
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_a_pending_job_which_has_expired_will_be_cleaned_up(
     get_storage_mock,
     data_fixture,
@@ -425,7 +425,7 @@ def test_a_pending_job_which_has_expired_will_be_cleaned_up(
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_a_running_export_job_which_has_expired_will_be_stopped(
     get_storage_mock, data_fixture, settings
 ):
@@ -547,7 +547,7 @@ def test_attempting_to_export_a_view_for_a_type_which_doesnt_support_it_fails(
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_an_export_job_which_fails_will_be_marked_as_a_failed_job(
     get_storage_mock,
     data_fixture,
@@ -610,7 +610,7 @@ def test_an_export_job_which_fails_will_be_marked_as_a_failed_job(
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_can_export_csv_without_header(get_storage_mock, data_fixture):
     storage_mock = MagicMock()
     get_storage_mock.return_value = storage_mock
@@ -630,7 +630,7 @@ def test_can_export_csv_without_header(get_storage_mock, data_fixture):
 
 @pytest.mark.django_db
 @pytest.mark.once_per_day_in_ci
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_can_export_csv_with_different_charsets(get_storage_mock, data_fixture):
     storage_mock = MagicMock()
     get_storage_mock.return_value = storage_mock
@@ -654,7 +654,7 @@ def test_can_export_csv_with_different_charsets(get_storage_mock, data_fixture):
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_can_export_csv_with_different_column_separators(
     get_storage_mock, data_fixture
 ):
@@ -682,7 +682,7 @@ def test_can_export_csv_with_different_column_separators(
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_adding_more_rows_doesnt_increase_number_of_queries_run(
     get_storage_mock, data_fixture, django_assert_num_queries
 ):
@@ -879,7 +879,7 @@ def setup_table_and_run_export_decoding_result(
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_a_column_without_a_grid_view_option_has_an_option_made_and_is_exported(
     get_storage_mock, data_fixture
 ):
@@ -916,7 +916,7 @@ def test_a_column_without_a_grid_view_option_has_an_option_made_and_is_exported(
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_action_done_is_emitted_when_the_export_finish(get_storage_mock, data_fixture):
     storage_mock = MagicMock()
     get_storage_mock.return_value = storage_mock
@@ -943,7 +943,7 @@ def test_action_done_is_emitted_when_the_export_finish(get_storage_mock, data_fi
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.export.handler.get_default_storage")
+@patch("baserow.core.storage.get_default_storage")
 def test_csv_is_escaped(get_storage_mock, data_fixture):
     storage_mock = MagicMock()
     get_storage_mock.return_value = storage_mock

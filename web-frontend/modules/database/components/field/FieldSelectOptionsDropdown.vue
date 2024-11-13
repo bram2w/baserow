@@ -4,6 +4,8 @@
     :class="{
       'dropdown--floating': !showInput,
       'dropdown--disabled': disabled,
+      'dropdown--large': size === 'large',
+      'dropdown--error': error,
     }"
     :tabindex="realTabindex"
     @contextmenu.stop
@@ -124,6 +126,11 @@ export default {
       type: Boolean,
       required: false,
       default: true,
+    },
+    size: {
+      type: String,
+      required: false,
+      default: 'regular',
     },
   },
   data() {

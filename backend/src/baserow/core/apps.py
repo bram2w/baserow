@@ -189,6 +189,8 @@ class CoreConfig(AppConfig):
             DeleteWorkspaceActionType,
             DeleteWorkspaceInvitationActionType,
             DuplicateApplicationActionType,
+            ExportApplicationsActionType,
+            ImportApplicationsActionType,
             InstallTemplateActionType,
             LeaveWorkspaceActionType,
             OrderApplicationsActionType,
@@ -216,6 +218,8 @@ class CoreConfig(AppConfig):
         action_type_registry.register(UpdateWorkspaceInvitationActionType())
         action_type_registry.register(LeaveWorkspaceActionType())
         action_type_registry.register(CreateInitialWorkspaceActionType())
+        action_type_registry.register(ExportApplicationsActionType())
+        action_type_registry.register(ImportApplicationsActionType())
 
         from baserow.core.snapshots.actions import (
             CreateSnapshotActionType,
@@ -271,13 +275,20 @@ class CoreConfig(AppConfig):
 
         from baserow.core.jobs.registries import job_type_registry
 
-        from .job_types import DuplicateApplicationJobType, InstallTemplateJobType
+        from .job_types import (
+            DuplicateApplicationJobType,
+            ExportApplicationsJobType,
+            ImportApplicationsJobType,
+            InstallTemplateJobType,
+        )
         from .snapshots.job_types import CreateSnapshotJobType, RestoreSnapshotJobType
 
         job_type_registry.register(DuplicateApplicationJobType())
         job_type_registry.register(InstallTemplateJobType())
         job_type_registry.register(CreateSnapshotJobType())
         job_type_registry.register(RestoreSnapshotJobType())
+        job_type_registry.register(ExportApplicationsJobType())
+        job_type_registry.register(ImportApplicationsJobType())
 
         from baserow.api.notifications.user_data_types import (
             UnreadUserNotificationsCountPermissionsDataType,
@@ -317,6 +328,8 @@ class CoreConfig(AppConfig):
         notification_type_registry.register(BaserowVersionUpgradeNotificationType())
 
         from baserow.core.generative_ai.generative_ai_model_types import (
+            AnthropicGenerativeAIModelType,
+            MistralGenerativeAIModelType,
             OllamaGenerativeAIModelType,
             OpenAIGenerativeAIModelType,
         )
@@ -325,6 +338,8 @@ class CoreConfig(AppConfig):
         )
 
         generative_ai_model_type_registry.register(OpenAIGenerativeAIModelType())
+        generative_ai_model_type_registry.register(AnthropicGenerativeAIModelType())
+        generative_ai_model_type_registry.register(MistralGenerativeAIModelType())
         generative_ai_model_type_registry.register(OllamaGenerativeAIModelType())
 
         # Must import the Posthog signal, otherwise it won't work.
@@ -401,6 +416,7 @@ class CoreConfig(AppConfig):
             plugin_dir.register(HerokuExternalFileStorageConfiguredHealthCheck)
         plugin_dir.register(DefaultFileStorageHealthCheck)
 
+        import baserow.core.import_export.tasks  # noqa: F403, F401
         import baserow.core.integrations.receivers  # noqa: F403, F401
 
 

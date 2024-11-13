@@ -1,4 +1,5 @@
 import DataSourceService from '@baserow/modules/builder/services/dataSource'
+import PublishedBuilderService from '@baserow/modules/builder/services/publishedBuilder'
 import { rangeDiff } from '@baserow/modules/core/utils/range'
 
 const state = {}
@@ -57,13 +58,30 @@ const actions = {
    * @param {object} element - the element object
    * @param {object} dataSource - the data source we want to dispatch
    * @param {object} range - the range of the data we want to fetch
+   * @param {object} filters - the adhoc filters to apply to the data
+   * @param {object} sortings - the adhoc sortings to apply to the data
+   * @param {object} search - the adhoc search to apply to the data
+   * @param {string} searchMode - the search mode to apply to the data.
+   * @param {string} mode - the mode of the application
    * @param {object} dispatchContext - the context to dispatch to the data
    * @param {bool} replace - if we want to replace the current content
    * @param {object} data - the query body
    */
   async fetchElementContent(
     { commit, getters },
-    { page, element, dataSource, range, data: dispatchContext, replace = false }
+    {
+      page,
+      element,
+      dataSource,
+      range,
+      filters = {},
+      sortings = null,
+      search = '',
+      searchMode = '',
+      mode,
+      data: dispatchContext,
+      replace = false,
+    }
   ) {
     /**
      * If `dataSource` is `null`, this means that we are trying to fetch the content
@@ -186,10 +204,15 @@ const actions = {
           rangeToFetch = [rangeToFetch[0], rangeToFetch[1] - rangeToFetch[0]]
         }
 
-        const { data } = await DataSourceService(this.app.$client).dispatch(
+        let service = DataSourceService
+        if (['preview', 'public'].includes(mode)) {
+          service = PublishedBuilderService
+        }
+
+        const { data } = await service(this.app.$client).dispatch(
           dataSource.id,
           dispatchContext,
-          { range: rangeToFetch }
+          { range: rangeToFetch, filters, sortings, search, searchMode }
         )
 
         // With a list-type data source, the data object will return

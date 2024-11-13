@@ -1,0 +1,11 @@
+{
+  "dashboard": {
+    "descriptionPlaceholder": "Description"
+  },
+  "dashboardHeader": {
+    "doneEditing": "Done editing"
+  },
+  "dashboardHeaderMenuItems": {
+    "editMode": "Edit mode"
+  }
+}

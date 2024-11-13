@@ -1,5 +1,16 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Generator, List, Optional, Type, TypedDict, TypeVar, Union
+from typing import (
+    Any,
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TypedDict,
+    TypeVar,
+    Union,
+)
 from zipfile import ZipFile
 
 from django.core.files.storage import Storage
@@ -9,13 +20,13 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from baserow.contrib.builder.formula_importer import import_formula
+from baserow.contrib.builder.mixins import BuilderInstanceWithFormulaMixin
 from baserow.contrib.database.db.functions import RandomUUID
 from baserow.core.registry import (
     CustomFieldsInstanceMixin,
     CustomFieldsRegistryMixin,
     EasyImportExportMixin,
     Instance,
-    InstanceWithFormulaMixin,
     ModelInstanceMixin,
     ModelRegistryMixin,
     Registry,
@@ -33,7 +44,7 @@ EXISTING_USER_SOURCE_ROLES = "_existing_user_source_roles"
 
 
 class ElementType(
-    InstanceWithFormulaMixin,
+    BuilderInstanceWithFormulaMixin,
     EasyImportExportMixin[ElementSubClass],
     CustomFieldsInstanceMixin,
     ModelInstanceMixin[ElementSubClass],
@@ -96,13 +107,20 @@ class ElementType(
             instance.
         """
 
-    def after_update(self, instance: ElementSubClass, values: Dict):
+    def after_update(
+        self,
+        instance: ElementSubClass,
+        values: Dict,
+        changes: Dict[str, Tuple],
+    ):
         """
         This hook is called right after the element has been updated.
 
         :param instance: The updated element instance.
         :param values: The values that were passed when creating the field
             instance.
+        :param changes: A dictionary containing all changes which were made to the
+            element prior to `after_update` being called.
         """
 
     def before_delete(self, instance: ElementSubClass):
@@ -112,16 +130,13 @@ class ElementType(
         :param instance: The to be deleted element instance.
         """
 
-    def import_context_addition(
-        self, instance: ElementSubClass, id_mapping
-    ) -> Dict[str, Any]:
+    def import_context_addition(self, instance: ElementSubClass) -> Dict[str, Any]:
         """
         This hook allow to specify extra context data when importing objects related
         to this one like child elements, collection fields or workflow actions.
         This extra context is then used as import context for these objects.
 
         :param instance: The instance we want the context for.
-        :param id_mapping: The import ID mapping object.
         :return: An object containing the extra context for the import process.
         """
 
@@ -153,7 +168,6 @@ class ElementType(
             ]
             import_context = ElementHandler().get_import_context_addition(
                 imported_parent_element_id,
-                id_mapping,
                 element_map=cache.get("imported_element_map", None),
             )
 
@@ -180,6 +194,7 @@ class ElementType(
             **(kwargs | import_context),
         )
 
+        # Update formulas of the current element
         updated_models = self.import_formulas(
             created_instance, id_mapping, import_formula, **(kwargs | import_context)
         )
@@ -339,7 +354,7 @@ element_type_registry = ElementTypeRegistry()
 
 
 class CollectionFieldType(
-    InstanceWithFormulaMixin,
+    BuilderInstanceWithFormulaMixin,
     CustomFieldsInstanceMixin,
     Instance,
     ABC,

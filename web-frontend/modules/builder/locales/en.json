@@ -139,7 +139,8 @@
     "invalidFormula": "The formula is invalid"
   },
   "headingElement": {
-    "noValue": "No title..."
+    "missingValue": "Missing title...",
+    "emptyValue": "Empty title..."
   },
   "headingElementForm": {
     "levelTitle": "Level",
@@ -149,7 +150,8 @@
     "textError": "The value is invalid."
   },
   "textElement": {
-    "noValue": "Empty text..."
+    "missingValue": "Missing text...",
+    "emptyValue": "Empty text..."
   },
   "textElementForm": {
     "textTitle": "Text",
@@ -160,7 +162,8 @@
     "textFormatTypeMarkdown": "Markdown"
   },
   "imageElement": {
-    "emptyState": "No alt text defined..."
+    "missingValue": "Missing alt text...",
+    "emptyValue": "Empty alt text..."
   },
   "generalForm": {
     "labelTitle": "Label",
@@ -198,7 +201,8 @@
     "uploadFileButton": "Upload file"
   },
   "iframeElementForm": {
-    "empty": "Empty IFrame...",
+    "missingValue": "Missing IFrame source...",
+    "emptyValue": "Empty IFrame source...",
     "sourceTypeLabel": "Source type",
     "urlLabel": "URL",
     "urlPlaceholder": "Link to the external resource to be embedded",
@@ -267,7 +271,8 @@
     "subDomain": "Subdomain of {domain}"
   },
   "linkElement": {
-    "noValue": "Unnamed..."
+    "missingValue": "Missing link text...",
+    "emptyValue": "Empty link text..."
   },
   "linkNavigationSelection": {
     "navigateTo": "Navigate to",
@@ -348,14 +353,33 @@
   },
   "dataSourceForm": {
     "namePlaceholder": "Source name",
+    "nameLabel": "Name",
+    "actionLabel": "Action",
+    "integrationLabel": "Integration",
     "servicePlaceholder": "Select a service",
     "integrationPlaceholder": "Select an integration",
     "errorUniqueName": "Data source name must be unique."
   },
   "dataSourceContext": {
     "addDataSource": "Add new data source",
-    "noDataSourceTitle": "This page has no data sources.",
-    "noDataSourceMessage": "Data sources can be used to fetch data from internal or external sources and display it on the page."
+    "noDataSourceTitle": "You have not yet added a data source.",
+    "noDataSourceMessage": "Data sources can be used to fetch data from internal or external sources and display it on the page.",
+    "sharedDataSourceTitle": "Shared between pages",
+    "pageDataSourceTitle": "For this page",
+    "sharedDataSourceDescription": "Accessible on every page and is fetched once on first page load.",
+    "pageDataSourceDescription": "Fetched when the user navigates to this page."
+  },
+  "dataSourceItem": {
+    "notConfigured": "Not configured"
+  },
+  "dataSourceItemContext": {
+    "shareBetweenPages": "Share between pages",
+    "unshareBetweenPages": "Unshare from other pages"
+  },
+  "dataSourceCreateEditModal": {
+    "editTitle": "Edit data source",
+    "createTitle": "Create data source",
+    "sharedWarning": "This data source is shared so your changes can affect multiple pages."
   },
   "defaultStyleForm": {
     "boxTop": "Top",
@@ -491,7 +515,8 @@
     "valuePlaceholder": "Enter text..."
   },
   "buttonElement": {
-    "noValue": "Unnamed..."
+    "missingValue": "Missing button text...",
+    "emptyValue": "Empty button text..."
   },
   "eventTypes": {
     "clickLabel": "On click",
@@ -545,11 +570,22 @@
     "empty": "No items have been found.",
     "showMore": "Show more",
     "missingDataSourceTooltip": "Choose a data source to begin adding elements.",
-    "missingSchemaPropertyTooltip": "Choose a property to begin adding elements."
+    "missingSchemaPropertyTooltip": "Choose a property to begin adding elements.",
+    "emptyState": "No records found."
   },
   "collectionElementForm": {
     "noDataSourceMessage": "Choose a data source with multiple rows to list all results, or a single row data source to choose a property inside this row.",
-    "noSchemaPropertyMessage": "Choose a property inside the data source to use as the list data of your element."
+    "noSchemaPropertyMessage": "Choose a property inside the data source to use as the list data of your element.",
+    "propertyOptionLabel": "User actions"
+  },
+  "propertyOptionForm": {
+    "fieldHeading": "Field",
+    "filterHeading": "Filter",
+    "sortHeading": "Sort",
+    "searchHeading": "Search",
+    "optionUnavailable": "Unavailable",
+    "noPropertiesAvailable": "No fields available.",
+    "formDescription": "Choose which properties within this element's data source external users can filter, sort and search upon."
   },
   "repeatElementForm": {
     "dataSource": "Data source",
@@ -563,6 +599,10 @@
     "buttonLoadMoreLabel": "Show more label",
     "toggleEditorRepetitionsLabel": "Temporarily disable repetitions",
     "propertySelectorMissingArrays": "No multiple valued fields found to repeat with."
+  },
+  "recordSelectorElement": {
+    "emptyAdhocState": "No records matching '{query}' found.",
+    "emptyState": "No records found."
   },
   "recordSelectorElementForm": {
     "selectRecordsFrom": "Select records from",
@@ -645,7 +685,8 @@
     "integrationFieldLabel": "Integration"
   },
   "formContainerElement": {
-    "submitDeactivatedText": "Complete all required fields to submit"
+    "submitDeactivatedText": "Complete all required fields to submit",
+    "defaultSubmitButtonLabel": "Submit"
   },
   "formContainerElementForm": {
     "submitButtonLabel": "Submit button",
@@ -762,6 +803,8 @@
   },
   "dataSourceDropdown": {
     "label": "Data source",
-    "noDataSources": "No data sources available"
+    "noDataSources": "No data sources available",
+    "shared": "shared",
+    "pageOnly": "this page"
   }
 }

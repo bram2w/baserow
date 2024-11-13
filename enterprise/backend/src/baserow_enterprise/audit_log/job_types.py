@@ -8,7 +8,6 @@ from django.utils.translation import gettext as _
 from django.utils.translation import override as translation_override
 
 import unicodecsv as csv
-from baserow_premium.license.handler import LicenseHandler
 from loguru import logger
 from rest_framework import serializers
 
@@ -26,9 +25,9 @@ from baserow.core.action.registries import action_type_registry
 from baserow.core.jobs.registries import JobType
 from baserow.core.storage import get_default_storage
 from baserow.core.utils import ChildProgressBuilder
-from baserow_enterprise.features import AUDIT_LOG
 
 from .models import AuditLogEntry, AuditLogExportJob
+from .utils import check_for_license_and_permissions_or_raise
 
 AUDIT_LOG_CSV_COLUMN_NAMES = OrderedDict(
     {
@@ -266,9 +265,7 @@ class AuditLogExportJobType(JobType):
         :progress: The progress object that can be used to update the progress bar.
         """
 
-        LicenseHandler.raise_if_user_doesnt_have_feature_instance_wide(
-            AUDIT_LOG, job.user
-        )
+        check_for_license_and_permissions_or_raise(job.user, job.filter_workspace_id)
 
         queryset = self.get_filtered_queryset(job)
 

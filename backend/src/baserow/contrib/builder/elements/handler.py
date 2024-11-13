@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Any, Dict, Iterable, List, Optional, Type, Union, cast
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, Union, cast
 from zipfile import ZipFile
 
 from django.core.files.storage import Storage
@@ -181,6 +181,24 @@ class ElementHandler:
             base_queryset=queryset,
         )
 
+    def _query_elements(self, base_queryset: QuerySet, specific=True):
+        """
+        Query elements from the base queryset.
+
+        :param base_queryset: The base QuerySet to query from.
+        :param specific: A boolean flag to determine if a specific instances should
+          be returned.
+        :return: The queried elements based on the specified conditions.
+        """
+
+        if specific:
+            queryset = base_queryset.select_related("content_type")
+            elements = specific_iterator(queryset)
+        else:
+            elements = base_queryset
+
+        return elements
+
     def get_elements(
         self,
         page: Page,
@@ -217,14 +235,34 @@ class ElementHandler:
 
         queryset = queryset.filter(page=page)
 
-        if specific:
-            queryset = queryset.select_related("content_type")
-            elements = specific_iterator(queryset)
-        else:
-            elements = queryset
+        elements = self._query_elements(queryset, specific=specific)
 
         if use_cache:
             setattr(page, cache_key, list(elements))
+
+        return elements
+
+    def get_builder_elements(
+        self,
+        builder: List[Page],
+        base_queryset: Optional[QuerySet] = None,
+        specific: bool = True,
+    ) -> Union[QuerySet[Element], Iterable[Element]]:
+        """
+        Gets all the elements of a given builder.
+
+        :param builder: The builder that holds the pages that hold the elements.
+        :param base_queryset: The base queryset to use to build the query.
+        :param specific: Whether to return the generic elements or the specific
+            instances.
+        :return: The elements of that builder.
+        """
+
+        queryset = base_queryset if base_queryset is not None else Element.objects.all()
+
+        queryset = queryset.filter(page__builder=builder)
+
+        elements = self._query_elements(queryset, specific=specific)
 
         return elements
 
@@ -304,12 +342,20 @@ class ElementHandler:
             allowed_updates, instance=element
         )
 
-        for key, value in allowed_updates.items():
-            setattr(element, key, value)
+        # Responsible for tracking the fields which changed in this update.
+        # This will be passed to `element_type.after_update` so that granular
+        # decisions can be made if certain field values changed.
+        element_changes: Dict[str, Tuple] = {}
+
+        for key, new_value in allowed_updates.items():
+            prev_value = getattr(element, key)
+            if prev_value != new_value:
+                element_changes[key] = (prev_value, new_value)
+            setattr(element, key, new_value)
 
         element.save()
 
-        element.get_type().after_update(element, kwargs)
+        element.get_type().after_update(element, kwargs, element_changes)
 
         return element
 
@@ -591,7 +637,6 @@ class ElementHandler:
     def get_import_context_addition(
         self,
         element_id: int,
-        id_mapping: Dict[str, Dict[int, int]],
         element_map: Dict[int, Element] = None,
     ) -> Dict[str, Any]:
         """
@@ -601,7 +646,6 @@ class ElementHandler:
         actions.
 
         :param element_id: The element_id to compute the context for.
-        :param id_mapping: The ID mapping dict used by import process.
         :param element_map: An optional map of already loaded elements to improve
           performances.
         :return: An object that can be used as import context.
@@ -619,11 +663,9 @@ class ElementHandler:
             # Fetch the element if we have no cache
             current_element = self.get_element(element_id)
 
-        return current_element.get_type().import_context_addition(
-            current_element, id_mapping
-        ) | self.get_import_context_addition(
-            current_element.parent_element_id, id_mapping, element_map
-        )
+        return self.get_import_context_addition(
+            current_element.parent_element_id, element_map
+        ) | current_element.get_type().import_context_addition(current_element)
 
     def import_element(
         self,

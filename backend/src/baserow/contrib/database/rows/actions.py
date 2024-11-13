@@ -172,7 +172,11 @@ class CreateRowsActionType(UndoableActionType):
             )
 
         rows = RowHandler().create_rows(
-            user, table, rows_values, before_row=before_row, model=model
+            user,
+            table,
+            rows_values,
+            before_row=before_row,
+            model=model,
         )
 
         workspace = table.database.workspace
@@ -777,7 +781,12 @@ class UpdateRowsActionType(UndoableActionType):
 
         row_handler = RowHandler()
 
-        result = row_handler.update_rows(user, table, rows_values, model=model)
+        result = row_handler.update_rows(
+            user,
+            table,
+            rows_values,
+            model=model,
+        )
         updated_rows = result.updated_rows
 
         workspace = table.database.workspace

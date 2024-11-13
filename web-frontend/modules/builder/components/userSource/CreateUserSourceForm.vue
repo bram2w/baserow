@@ -6,11 +6,13 @@
       required
       small-label
       class="margin-bottom-2"
+      size="large"
     >
       <Dropdown
         v-model="$v.values.type.$model"
         :show-search="false"
         class="user-source-settings__user-source-type"
+        size="large"
       >
         <DropdownItem
           v-for="userSourceType in userSourceTypes"
@@ -33,6 +35,7 @@
         :application="builder"
         :integrations="integrations"
         :integration-type="currentUserSourceType?.integrationType"
+        size="large"
       />
     </FormGroup>
 

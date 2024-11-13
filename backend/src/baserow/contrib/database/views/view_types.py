@@ -11,7 +11,10 @@ from django.urls import include, path
 from rest_framework import serializers
 
 from baserow.api.user_files.serializers import UserFileField
-from baserow.contrib.database.api.fields.errors import ERROR_FIELD_NOT_IN_TABLE
+from baserow.contrib.database.api.fields.errors import (
+    ERROR_FIELD_NOT_IN_TABLE,
+    ERROR_INCOMPATIBLE_FIELD,
+)
 from baserow.contrib.database.api.views.form.errors import (
     ERROR_FORM_VIEW_FIELD_OPTIONS_CONDITION_GROUP_DOES_NOT_EXIST,
     ERROR_FORM_VIEW_FIELD_TYPE_IS_NOT_SUPPORTED,
@@ -33,7 +36,10 @@ from baserow.contrib.database.api.views.grid.errors import (
 from baserow.contrib.database.api.views.grid.serializers import (
     GridViewFieldOptionsSerializer,
 )
-from baserow.contrib.database.fields.exceptions import FieldNotInTable
+from baserow.contrib.database.fields.exceptions import (
+    FieldNotInTable,
+    IncompatibleField,
+)
 from baserow.contrib.database.fields.models import Field, FileField
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.table.models import Table
@@ -338,7 +344,7 @@ class GalleryViewType(ViewType):
     serializer_field_names = ["card_cover_image_field"]
     serializer_field_overrides = {
         "card_cover_image_field": serializers.PrimaryKeyRelatedField(
-            queryset=FileField.objects.all(),
+            queryset=Field.objects.all(),
             required=False,
             default=None,
             allow_null=True,
@@ -348,6 +354,7 @@ class GalleryViewType(ViewType):
     }
     api_exceptions_map = {
         FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
+        IncompatibleField: ERROR_INCOMPATIBLE_FIELD,
     }
     can_decorate = True
     can_share = True
@@ -367,20 +374,29 @@ class GalleryViewType(ViewType):
 
         name = "card_cover_image_field"
 
-        if name in values:
+        if values.get(name, None) is not None:
             if isinstance(values[name], int):
-                values[name] = FileField.objects.get(pk=values[name])
+                values[name] = Field.objects.get(pk=values[name])
 
-            if (
-                isinstance(values[name], FileField)
-                and values[name].table_id != table.id
-            ):
+            field_type = field_type_registry.get_by_model(values[name].specific)
+            if not field_type.can_represent_files(values[name]):
+                raise IncompatibleField(
+                    "The provided field cannot be used as a card cover image field."
+                )
+            elif values[name].table_id != table.id:
                 raise FieldNotInTable(
                     "The provided file select field id does not belong to the gallery "
                     "view's table."
                 )
 
         return super().prepare_values(values, table, user)
+
+    def after_field_type_change(self, field):
+        field_type = field_type_registry.get_by_model(field)
+        if not field_type.can_represent_files(field):
+            GalleryView.objects.filter(card_cover_image_field_id=field.id).update(
+                card_cover_image_field_id=None
+            )
 
     def export_serialized(
         self,
@@ -1026,6 +1042,7 @@ class FormViewType(ViewType):
                             "id": condition.id,
                             "field": condition.field_id,
                             "type": condition.type,
+                            "group": condition.group_id,
                             "value": view_filter_type_registry.get(
                                 condition.type
                             ).get_export_serialized_value(condition.value, {}),
@@ -1077,6 +1094,7 @@ class FormViewType(ViewType):
                 id_mapping["database_form_view_field_options"] = {}
 
             condition_objects = []
+            condition_groups = {}
             for field_option in field_options:
                 field_option_copy = field_option.copy()
                 field_option_id = field_option_copy.pop("id")
@@ -1091,12 +1109,22 @@ class FormViewType(ViewType):
                     value = view_filter_type_registry.get(
                         condition["type"]
                     ).set_import_serialized_value(condition["value"], id_mapping)
+                    group = None
+                    if "group" in condition and not (
+                        group := condition_groups.get(condition["group"])
+                    ):
+                        group = FormViewFieldOptionsConditionGroup.objects.create(
+                            field_option=field_option_object
+                        )
+                        condition_groups[condition["group"]] = group
+
                     condition_objects.append(
                         FormViewFieldOptionsCondition(
                             field_option=field_option_object,
                             field_id=id_mapping["database_fields"][condition["field"]],
                             type=condition["type"],
                             value=value,
+                            group=group,
                         )
                     )
                 id_mapping["database_form_view_field_options"][

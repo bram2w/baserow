@@ -22,6 +22,8 @@ import {
   CHOICE_OPTION_TYPES,
   ELEMENT_EVENTS,
   PLACEMENTS,
+  IMAGE_SOURCE_TYPES,
+  IFRAME_SOURCE_TYPES,
 } from '@baserow/modules/builder/enums'
 import ColumnElement from '@baserow/modules/builder/components/elements/components/ColumnElement'
 import ColumnElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ColumnElementForm'
@@ -123,10 +125,10 @@ export class ElementType extends Registerable {
 
   /**
    * Returns whether the element configuration is valid or not.
-   * @param {object} param An object containing the element and the builder
+   * @param {object} param An object containing the page, element, and builder
    * @returns true if the element is in error
    */
-  isInError({ element, builder }) {
+  isInError({ page, element, builder }) {
     return false
   }
 
@@ -589,6 +591,19 @@ const ContainerElementTypeMixin = (Base) =>
     getNextHorizontalElementToSelect(page, element, placement) {
       return null
     }
+
+    /**
+     * A Container element without any child elements is invalid. Return true
+     * if there are no children, otherwise return false.
+     */
+    isInError({ page, element }) {
+      const children = this.app.store.getters['element/getChildren'](
+        page,
+        element
+      )
+
+      return !children.length
+    }
   }
 
 export class FormContainerElementType extends ContainerElementTypeMixin(
@@ -654,6 +669,22 @@ export class FormContainerElementType extends ContainerElementTypeMixin(
       PLACEMENTS.RIGHT,
       ...this.getVerticalPlacementsDisabled(page, element),
     ]
+  }
+
+  /**
+   * A form container is invalid if it has no workflow actions, or it has no
+   * children.
+   */
+  isInError({ page, element }) {
+    const workflowActions = this.app.store.getters[
+      'workflowAction/getElementWorkflowActions'
+    ](page, element.id)
+
+    if (!workflowActions.length) {
+      return true
+    }
+
+    return super.isInError({ page, element })
   }
 }
 
@@ -792,6 +823,87 @@ const CollectionElementTypeMixin = (Base) =>
     isCollectionElement = true
 
     /**
+     * A helper function responsible for returning this collection element's
+     * schema properties.
+     */
+    getSchemaProperties(dataSource) {
+      const serviceType = this.app.$registry.get('service', dataSource.type)
+      const schema = serviceType.getDataSchema(dataSource)
+      if (!schema) {
+        return []
+      }
+      return schema.type === 'array'
+        ? schema.items.properties
+        : schema.properties
+    }
+
+    /**
+     * Given a schema property name, is responsible for finding the matching
+     * property option in the element. If it doesn't exist, then we return
+     * an empty object, and it won't be included in the adhoc header.
+     * @param {object} element - the element we want to extract options from.
+     * @param {string} schemaProperty - the schema property name to check.
+     * @returns {object} - the matching property option, or an empty object.
+     */
+    getPropertyOptionsByProperty(element, schemaProperty) {
+      return (
+        element.property_options.find((option) => {
+          return option.schema_property === schemaProperty
+        }) || {}
+      )
+    }
+
+    /**
+     * Responsible for iterating over the schema's properties, filtering
+     * the results down to the properties which are `filterable`, `sortable`,
+     * and `searchable`, and then returning the property value.
+     * @param {string} option - the `filterable`, `sortable` or `searchable`
+     *  property option. If the value is `true` then the property will be
+     *  included in the adhoc header component.
+     * @param {object} element - the element we want to extract options from.
+     * @param {object} dataSource - the dataSource used by `element`.
+     * @returns {array} - an array of schema properties which are present
+     *  in the element's property options where `option` = `true`.
+     */
+    getPropertyOptionByType(option, element, dataSource) {
+      const schemaProperties = dataSource
+        ? this.getSchemaProperties(dataSource)
+        : []
+      return Object.entries(schemaProperties)
+        .filter(
+          ([schemaProperty, _]) =>
+            this.getPropertyOptionsByProperty(element, schemaProperty)[
+              option
+            ] || false
+        )
+        .map(([_, property]) => property)
+    }
+
+    /**
+     * An array of properties within this element which have been flagged
+     * as filterable by the page designer.
+     */
+    adhocFilterableProperties(element, dataSource) {
+      return this.getPropertyOptionByType('filterable', element, dataSource)
+    }
+
+    /**
+     * An array of properties within this element which have been flagged
+     * as sortable by the page designer.
+     */
+    adhocSortableProperties(element, dataSource) {
+      return this.getPropertyOptionByType('sortable', element, dataSource)
+    }
+
+    /**
+     * An array of properties within this element which have been flagged
+     * as searchable by the page designer.
+     */
+    adhocSearchableProperties(element, dataSource) {
+      return this.getPropertyOptionByType('searchable', element, dataSource)
+    }
+
+    /**
      * By default collection element will load their content at loading time
      * but if you don't want that you can return false here.
      */
@@ -809,6 +921,18 @@ const CollectionElementTypeMixin = (Base) =>
     }
 
     /**
+     * A simple check to return whether this collection element has a
+     * "source of data" (i.e. a data source, or a schema property).
+     * Should not be used as an "in error" or validation check, use
+     * `isInError` for this purpose as it is more thorough.
+     * @param element - The element we want to check for a source of data.
+     * @returns {Boolean} - Whether the element has a source of data.
+     */
+    hasSourceOfData(element) {
+      return Boolean(element.data_source_id || element.schema_property)
+    }
+
+    /**
      * Collection elements by default will have three permutations of display names:
      *
      * 1. If no data source exists, on `element` or its ancestors, then:
@@ -823,7 +947,7 @@ const CollectionElementTypeMixin = (Base) =>
      * @param page - The page the element belongs to.
      * @returns {string} - The display name for the element.
      */
-    getDisplayName(element, { page }) {
+    getDisplayName(element, { page, builder }) {
       let suffix = ''
 
       const collectionAncestors = this.app.store.getters[
@@ -844,9 +968,10 @@ const CollectionElementTypeMixin = (Base) =>
       // If we find a collection ancestor which has a data source, we'll
       // use the data source's name as part of the display name.
       if (collectionElement?.data_source_id) {
+        const sharedPage = this.app.store.getters['page/getSharedPage'](builder)
         const dataSource = this.app.store.getters[
-          'dataSource/getPageDataSourceById'
-        ](page, collectionElement?.data_source_id)
+          'dataSource/getPagesDataSourceById'
+        ]([page, sharedPage], collectionElement?.data_source_id)
         suffix = dataSource ? dataSource.name : ''
 
         // If we have a data source, and the element has a schema property,
@@ -891,7 +1016,11 @@ const CollectionElementTypeMixin = (Base) =>
      *  it's been updated.
      * @param params - Context data which the element type can use.
      */
-    async onElementEvent(event, { page, element, dataSourceId }) {
+    async onElementEvent(event, { builder, element, dataSourceId }) {
+      const page = this.app.store.getters['page/getById'](
+        builder,
+        element.page_id
+      )
       if (event === ELEMENT_EVENTS.DATA_SOURCE_REMOVED) {
         if (element.data_source_id === dataSourceId) {
           // Remove the data_source_id
@@ -927,9 +1056,10 @@ const CollectionElementTypeMixin = (Base) =>
      * - It is nested in another collection element, and we don't have a `schema_property`.
      * @param {Object} page - The page the repeat element belongs to.
      * @param {Object} element - The repeat element
+     * @param {Object} builder - The builder
      * @returns {Boolean} - Whether the element is in error.
      */
-    isInError({ page, element }) {
+    isInError({ page, element, builder }) {
       // We get all parents with a valid data_source_id
       const collectionAncestorsWithDataSource = this.app.store.getters[
         'element/getAncestors'
@@ -950,9 +1080,16 @@ const CollectionElementTypeMixin = (Base) =>
       const parentWithDataSource = collectionAncestorsWithDataSource.at(-1)
 
       // We now check if the parent element configuration is correct.
+      const sharedPage = this.app.store.getters['page/getSharedPage'](builder)
       const dataSource = this.app.store.getters[
-        'dataSource/getPageDataSourceById'
-      ](page, parentWithDataSource.data_source_id)
+        'dataSource/getPagesDataSourceById'
+      ]([page, sharedPage], parentWithDataSource.data_source_id)
+
+      // The data source is missing. May be it has been removed.
+      if (!dataSource) {
+        return true
+      }
+
       const serviceType = this.app.$registry.get('service', dataSource.type)
 
       // If the data source type doesn't return a list, we should have a schema_property
@@ -966,8 +1103,7 @@ const CollectionElementTypeMixin = (Base) =>
         return true
       }
 
-      // Otherwise it's not in error.
-      return false
+      return super.isInError({ page, element, builder })
     }
   }
 
@@ -1018,11 +1154,11 @@ export class TableElementType extends CollectionElementTypeMixin(ElementType) {
 
   /**
    * The table is in error if the configuration is invalid (see collection element
-   * mixin) or if one of the field is in error.
+   * mixin) or if one of the fields are in error.
    */
-  isInError({ element, page, builder }) {
+  isInError({ page, element, builder }) {
     return (
-      super.isInError({ element, page, builder }) ||
+      super.isInError({ page, element, builder }) ||
       element.fields.some((collectionField) => {
         const collectionFieldType = this.app.$registry.get(
           'collectionField',
@@ -1037,8 +1173,8 @@ export class TableElementType extends CollectionElementTypeMixin(ElementType) {
   }
 }
 
-export class RepeatElementType extends ContainerElementTypeMixin(
-  CollectionElementTypeMixin(ElementType)
+export class RepeatElementType extends CollectionElementTypeMixin(
+  ContainerElementTypeMixin(ElementType)
 ) {
   static getType() {
     return 'repeat'
@@ -1254,6 +1390,14 @@ export class HeadingElementType extends ElementType {
     return HeadingElementForm
   }
 
+  /**
+   * A value is mandatory for the Heading element. Return true if the value
+   * is empty to indicate an error, otherwise return false.
+   */
+  isInError({ element }) {
+    return element.value.length === 0
+  }
+
   getDisplayName(element, applicationContext) {
     if (element.value && element.value.length) {
       const resolvedName = ensureString(
@@ -1288,6 +1432,14 @@ export class TextElementType extends ElementType {
 
   get generalFormComponent() {
     return TextElementForm
+  }
+
+  /**
+   * A value is mandatory for the Text element. Return true if the value
+   * is empty to indicate an error, otherwise return false.
+   */
+  isInError({ element }) {
+    return element.value.length === 0
   }
 
   getDisplayName(element, applicationContext) {
@@ -1326,8 +1478,34 @@ export class LinkElementType extends ElementType {
     return LinkElementForm
   }
 
+  /**
+   * LinkElement validation returns true if the element is misconfigured,
+   * otherwise return false.
+   *
+   * When the Navigate To is a Page, the page and the path parameters must
+   * be valid.
+   *
+   * When the Navigate To is a Custom URL, a Destination URL value must be
+   * provided.
+   */
   isInError({ element, builder }) {
-    return pathParametersInError(element, builder)
+    // A Link without any text isn't usable
+    if (!element.value) {
+      return true
+    }
+
+    if (element.navigation_type === 'page') {
+      if (!element.navigate_to_page_id) {
+        return true
+      }
+      return pathParametersInError(
+        element,
+        this.app.store.getters['page/getVisiblePages'](builder)
+      )
+    } else if (element.navigation_type === 'custom') {
+      return Boolean(!element.navigate_to_url)
+    }
+    return true
   }
 
   getDisplayName(element, applicationContext) {
@@ -1335,9 +1513,11 @@ export class LinkElementType extends ElementType {
     let destination = ''
     if (element.navigation_type === 'page') {
       const builder = applicationContext.builder
-      const destinationPage = builder.pages.find(
-        ({ id }) => id === element.navigate_to_page_id
-      )
+
+      const destinationPage = this.app.store.getters['page/getVisiblePages'](
+        builder
+      ).find(({ id }) => id === element.navigate_to_page_id)
+
       if (destinationPage) {
         destination = `${destinationPage.name}`
       }
@@ -1388,6 +1568,19 @@ export class ImageElementType extends ElementType {
     return ImageElementForm
   }
 
+  /**
+   * Image element must have an image file or a URL as its source. Return true
+   * to indicate an error when an image source doesn't exist, otherwise
+   * return false.
+   */
+  isInError({ element }) {
+    if (element.image_source_type === IMAGE_SOURCE_TYPES.UPLOAD) {
+      return Boolean(!element.image_file?.url)
+    } else {
+      return Boolean(!element.image_url)
+    }
+  }
+
   getDisplayName(element, applicationContext) {
     if (element.alt_text) {
       const resolvedName = ensureString(
@@ -1426,6 +1619,23 @@ export class ButtonElementType extends ElementType {
 
   getEvents(element) {
     return [new ClickEvent({ ...this.app })]
+  }
+
+  /**
+   * A Button element must have a Workflow Action to be considered valid. Return
+   * true if there are no Workflow Actions, otherwise return false.
+   */
+  isInError({ page, element }) {
+    // If Button without any label should be considered invalid
+    if (!element.value) {
+      return true
+    }
+
+    const workflowActions = this.app.store.getters[
+      'workflowAction/getElementWorkflowActions'
+    ](page, element.id)
+
+    return !workflowActions.length
   }
 
   getDisplayName(element, applicationContext) {
@@ -1551,7 +1761,7 @@ export class ChoiceElementType extends FormElementType {
     return !(element.required && !validOption)
   }
 
-  isInError({ element, builder }) {
+  isInError({ element }) {
     switch (element.option_type) {
       case CHOICE_OPTION_TYPES.MANUAL:
         return element.options.length === 0
@@ -1646,6 +1856,24 @@ export class IFrameElementType extends ElementType {
 
   get generalFormComponent() {
     return IFrameElementForm
+  }
+
+  /**
+   * IFrame element must have a URL or an embedded value, depending on the
+   * source_type. If the value doesn't exist, return true to indicate an error,
+   * otherwise return false.
+   */
+  isInError({ element }) {
+    if (element.source_type === IFRAME_SOURCE_TYPES.URL && !element.url) {
+      return true
+    } else if (
+      element.source_type === IFRAME_SOURCE_TYPES.EMBED &&
+      !element.embed
+    ) {
+      return true
+    } else {
+      return false
+    }
   }
 
   getDisplayName(element, applicationContext) {

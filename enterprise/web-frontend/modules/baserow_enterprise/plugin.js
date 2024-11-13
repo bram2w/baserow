@@ -38,7 +38,12 @@ import {
   NoAccessRoleType,
   NoRoleLowPriorityRoleType,
 } from '@baserow_enterprise/roleTypes'
-import { LocalBaserowTableDataSyncType } from '@baserow_enterprise/dataSyncTypes'
+import {
+  LocalBaserowTableDataSyncType,
+  JiraIssuesDataSyncType,
+  GitHubIssuesDataSyncType,
+  GitLabIssuesDataSyncType,
+} from '@baserow_enterprise/dataSyncTypes'
 
 export default (context) => {
   const { app, isDev, store } = context
@@ -120,4 +125,7 @@ export default (context) => {
   app.$registry.register('element', new AuthFormElementType(context))
 
   app.$registry.register('dataSync', new LocalBaserowTableDataSyncType(context))
+  app.$registry.register('dataSync', new JiraIssuesDataSyncType(context))
+  app.$registry.register('dataSync', new GitHubIssuesDataSyncType(context))
+  app.$registry.register('dataSync', new GitLabIssuesDataSyncType(context))
 }

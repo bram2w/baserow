@@ -1,5 +1,7 @@
-from typing import Any, Dict, Generator, List, Optional, Type
+from typing import Any, Dict, List, Optional, Tuple, Type
+from zipfile import ZipFile
 
+from django.core.files.storage import Storage
 from django.db import IntegrityError
 from django.db.models import Q, QuerySet
 from django.utils.translation import gettext_lazy as _
@@ -33,11 +35,16 @@ from baserow.contrib.builder.elements.registries import (
     element_type_registry,
 )
 from baserow.contrib.builder.elements.signals import elements_moved
-from baserow.contrib.builder.elements.types import CollectionElementSubClass
-from baserow.contrib.builder.pages.handler import PageHandler
+from baserow.contrib.builder.elements.types import (
+    CollectionElementSubClass,
+    ElementSubClass,
+)
+from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.builder.types import ElementDict
-from baserow.core.registry import Instance
+from baserow.contrib.database.fields.utils import get_field_id_from_field_key
+from baserow.core.formula.types import BaserowFormula
 from baserow.core.services.dispatch_context import DispatchContext
+from baserow.core.utils import merge_dicts_no_duplicates
 
 
 class ContainerElementTypeMixin:
@@ -123,6 +130,17 @@ class ContainerElementTypeMixin:
 
 
 class CollectionElementTypeMixin:
+    is_collection_element = True
+
+    # Three properties which define whether this collection element
+    # is allowed to be publicly sortable, filterable and searchable
+    # by page visitors. Can be overridden by subclasses to influence
+    # whether page designers can flag collection elements and their
+    # properties as sortable, filterable and searchable.
+    is_publicly_sortable = True
+    is_publicly_filterable = True
+    is_publicly_searchable = True
+
     allowed_fields = [
         "data_source",
         "data_source_id",
@@ -136,6 +154,9 @@ class CollectionElementTypeMixin:
         "items_per_page",
         "button_load_more_label",
         "property_options",
+        "is_publicly_sortable",
+        "is_publicly_filterable",
+        "is_publicly_searchable",
     ]
 
     class SerializedDict(ElementDict):
@@ -148,16 +169,25 @@ class CollectionElementTypeMixin:
     def enhance_queryset(self, queryset):
         return queryset.prefetch_related("property_options")
 
-    def after_update(self, instance: CollectionElementSubClass, values):
+    def after_update(
+        self, instance: CollectionElementSubClass, values, changes: Dict[str, Tuple]
+    ):
         """
         After the element has been updated we need to update the property options.
 
         :param instance: The instance of the element that has been updated.
         :param values: The values that have been updated.
+        :param changes: A dictionary containing all changes which were made to the
+            collection element prior to `after_update` being called.
         :return: None
         """
 
-        if "property_options" in values:
+        # Following a DataSource change, from one DataSource to another, we drop all
+        # property options. This is due to the fact that the `schema_property` in the
+        # property options are specific to that data source's schema.
+        data_source_changed = "data_source" in changes
+
+        if "property_options" in values or data_source_changed:
             instance.property_options.all().delete()
             try:
                 CollectionElementPropertyOptions.objects.bulk_create(
@@ -166,7 +196,7 @@ class CollectionElementTypeMixin:
                             **option,
                             element=instance,
                         )
-                        for option in values["property_options"]
+                        for option in values.get("property_options", [])
                     ]
                 )
             except IntegrityError as e:
@@ -179,6 +209,21 @@ class CollectionElementTypeMixin:
         from baserow.core.formula.serializers import FormulaSerializerField
 
         return {
+            "is_publicly_sortable": serializers.BooleanField(
+                read_only=True,
+                default=self.is_publicly_sortable,
+                help_text="Whether this collection element is publicly sortable.",
+            ),
+            "is_publicly_filterable": serializers.BooleanField(
+                read_only=True,
+                default=self.is_publicly_filterable,
+                help_text="Whether this collection element is publicly filterable.",
+            ),
+            "is_publicly_searchable": serializers.BooleanField(
+                read_only=True,
+                default=self.is_publicly_searchable,
+                help_text="Whether this collection element is publicly searchable.",
+            ),
             "data_source_id": serializers.IntegerField(
                 allow_null=True,
                 default=None,
@@ -235,17 +280,22 @@ class CollectionElementTypeMixin:
                     )
 
                 if instance:
-                    current_page = PageHandler().get_page(instance.page_id)
+                    element_page = instance.page
                 else:
-                    current_page = values["page"]
+                    element_page = values["page"]
 
-                if current_page.id != data_source.page_id:
+                # The data source must belong to the same element page or the shared
+                # page.
+                if data_source.page_id not in [
+                    element_page.id,
+                    element_page.builder.shared_page.id,
+                ]:
                     raise RequestBodyValidationException(
                         {
                             "data_source_id": [
                                 {
-                                    "detail": "The provided data source doesn't belong "
-                                    "to the same application.",
+                                    "detail": "The provided data source is not "
+                                    "available for this element.",
                                     "code": "invalid_data_source",
                                 }
                             ]
@@ -304,6 +354,22 @@ class CollectionElementTypeMixin:
         if prop_name == "data_source_id" and value:
             return id_mapping["builder_data_sources"][value]
 
+        if prop_name == "property_options" and "database_fields" in id_mapping:
+            property_options = []
+            for po in value:
+                field_id = get_field_id_from_field_key(po["schema_property"])
+                if field_id is None:
+                    # If we can't translate the `schema_property` into a Field ID, then
+                    # it's not a `Field` db_column value. For example this can happen
+                    # if someone chooses to have a `id` property option.
+                    property_options.append(po)
+                    continue
+                new_field_id = id_mapping["database_fields"][field_id]
+                property_options.append(
+                    {**po, "schema_property": f"field_{new_field_id}"}
+                )
+            return property_options
+
         return super().deserialize_property(
             prop_name,
             value,
@@ -314,40 +380,23 @@ class CollectionElementTypeMixin:
             **kwargs,
         )
 
-    def import_serialized(
-        self,
-        parent: Any,
-        serialized_values: Dict[str, Any],
-        id_mapping: Dict[str, Any],
-        files_zip=None,
-        storage=None,
-        cache=None,
-        **kwargs,
-    ):
+    def import_context_addition(self, instance: CollectionElement) -> Dict[str, int]:
         """
-        Here we add the data_source_id to the import process to be able to resolve
-        current_record formulas migration.
+        Given a collection element, adds the data_source_id to the import context.
+
+        The data_source_id is not store in some formulas (current_record ones) so
+        we need the generate this import context for all formulas of this element.
         """
 
-        actual_data_source_id = None
-        if (
-            serialized_values.get("data_source_id", None)
-            and "builder_data_sources" in id_mapping
-        ):
-            actual_data_source_id = id_mapping["builder_data_sources"][
-                serialized_values["data_source_id"]
-            ]
+        if instance.data_source_id:
+            results = {"data_source_id": instance.data_source_id}
+        else:
+            results = {}
 
-        return super().import_serialized(
-            parent,
-            serialized_values,
-            id_mapping,
-            files_zip=files_zip,
-            storage=storage,
-            cache=cache,
-            data_source_id=actual_data_source_id,
-            **kwargs,
-        )
+        if instance.schema_property is not None:
+            results["schema_property"] = instance.schema_property
+
+        return results
 
     def create_instance_from_serialized(
         self,
@@ -382,12 +431,42 @@ class CollectionElementTypeMixin:
         )
 
         # Create property options
-        options = [CollectionElementPropertyOptions(**po) for po in property_options]
+        options = [
+            CollectionElementPropertyOptions(**po, element=instance)
+            for po in property_options
+        ]
         CollectionElementPropertyOptions.objects.bulk_create(options)
 
         instance.property_options.add(*options)
 
         return instance
+
+    def extract_formula_properties(
+        self, instance: Element, **kwargs
+    ) -> Dict[int, List[BaserowFormula]]:
+        """
+        Some collection elements (e.g. Repeat Element) may have a nested
+        collection element which uses a schema_property. This property points
+        to a field name that is connected to the parent collection element's
+        data source.
+
+        This method is overridden to ensure that any schema_property is also
+        included in the list of field names used by the element.
+        """
+
+        properties = super().extract_formula_properties(instance, **kwargs)
+
+        if schema_property := instance.schema_property:
+            # if we have a data_source_id in the context from a parent or from the
+            # current instance
+            data_source_id = instance.data_source_id or kwargs.get(
+                "data_source_id", None
+            )
+            if data_source_id:
+                data_source = DataSourceHandler().get_data_source(data_source_id)
+                properties[data_source.service_id] = [schema_property]
+
+        return properties
 
 
 class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
@@ -409,20 +488,6 @@ class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
 
     class SerializedDict(CollectionElementTypeMixin.SerializedDict):
         fields: List[Dict]
-
-    def formula_generator(
-        self, element: "CollectionElementWithFieldsTypeMixin"
-    ) -> Generator[str | Instance, str, None]:
-        """
-        Generator that iterates over formula fields for LinkCollectionFieldType.
-
-        Some formula fields are in the config JSON field, e.g. page_parameters.
-        """
-
-        yield from super().formula_generator(element)
-
-        for collection_field in element.fields.all():
-            yield from collection_field.get_type().formula_generator(collection_field)
 
     def serialize_property(
         self,
@@ -482,12 +547,16 @@ class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
         )
         instance.fields.add(*created_fields)
 
-    def after_update(self, instance: CollectionElementSubClass, values):
+    def after_update(
+        self, instance: CollectionElementSubClass, values, changes: Dict[str, Tuple]
+    ):
         """
         After the element has been updated we need to update the fields.
 
         :param instance: The instance of the element that has been updated.
         :param values: The values that have been updated.
+        :param changes: A dictionary containing all changes which were made to the
+            collection element prior to `after_update` being called.
         :return: None
         """
 
@@ -514,7 +583,7 @@ class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
             )
             instance.fields.add(*created_fields)
 
-        super().after_update(instance, values)
+        super().after_update(instance, values, changes)
 
     def before_delete(self, instance: CollectionElementSubClass):
         # Call the before_delete hook of all fields
@@ -546,7 +615,7 @@ class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
         )
 
         import_field_context = ElementHandler().get_import_context_addition(
-            instance.id, id_mapping, cache.get("imported_element_map")
+            instance.id, cache.get("imported_element_map")
         )
 
         fields = [
@@ -566,6 +635,81 @@ class CollectionElementWithFieldsTypeMixin(CollectionElementTypeMixin):
         instance.fields.add(*created_fields)
 
         return instance
+
+    def import_serialized(
+        self,
+        page: Any,
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict[str, Dict[int, int]],
+        files_zip: ZipFile | None = None,
+        storage: Storage | None = None,
+        cache: Dict[str, Any] | None = None,
+        **kwargs,
+    ) -> ElementSubClass:
+        """
+        This method is overridden to ensure that the import_context contains
+        the data sources and correctly imports formulas.
+        """
+
+        # Import the element itself
+        created_instance = super().import_serialized(
+            page,
+            serialized_values,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            **kwargs,
+        )
+
+        # For collection fields, import_context should include the current element
+        import_context = ElementHandler().get_import_context_addition(
+            created_instance.id,
+            element_map=cache.get("imported_element_map", None) if cache else None,
+        )
+
+        # Import the collection field formulas
+        updated_models = []
+        for collection_field in created_instance.fields.all():
+            collection_field.get_type().import_formulas(
+                collection_field,
+                id_mapping,
+                import_formula,
+                **(kwargs | import_context),
+            )
+            updated_models.append(collection_field)
+
+        [m.save() for m in updated_models]
+
+        return created_instance
+
+    def extract_formula_properties(
+        self,
+        instance: CollectionElementSubClass,
+        **kwargs,
+    ) -> Dict[int, List[str]]:
+        """
+        Extract all formula field names of the collection element instance.
+
+        Returns a dict where keys are the Service ID and values are a list of
+        field names, e.g.: {164: ['field_5440', 'field_5441', 'field_5439']}
+        """
+
+        # First get from the current element
+        result = super().extract_formula_properties(instance, **kwargs)
+
+        # then extract the properties used in the collection field formulas
+        formula_context = kwargs | self.import_context_addition(instance)
+
+        for collection_field in instance.fields.all():
+            result = merge_dicts_no_duplicates(
+                result,
+                collection_field.get_type().extract_formula_properties(
+                    collection_field, **formula_context
+                ),
+            )
+
+        return result
 
 
 class FormElementTypeMixin:
