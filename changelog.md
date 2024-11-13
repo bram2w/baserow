@@ -49,6 +49,7 @@
 * Fix for primary field becomes invisible when set to a hidden field in grid view [#3168](https://gitlab.com/baserow/baserow/-/issues/3168)
 * Resolved an issue with exporting workspace applications when a color decoration pointed to a single select option. [#3177](https://gitlab.com/baserow/baserow/-/issues/3177)
 * Don't export deleted relations for link row fields. [#3183](https://gitlab.com/baserow/baserow/-/issues/3183)
+* Fix a bug causing the related row modal to always use the slow compat search instead of the default one. [#3186](https://gitlab.com/baserow/baserow/-/issues/3186)
 * [Builder] Fix broken data source for published website when using some field types in the table
 * [Builder] Fix record selector name and option suffix formula resolution bug
 * [Builder] Resolved an issue with creating and updating rows in workflow actions.
