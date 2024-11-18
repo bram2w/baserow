@@ -2739,7 +2739,8 @@ export class EmptyViewFilterType extends ViewFilterType {
         'number',
         'url',
         'single_select',
-        FormulaFieldType.arrayOf('single_file')
+        FormulaFieldType.arrayOf('single_file'),
+        FormulaFieldType.arrayOf('boolean')
       ),
     ]
   }
@@ -2803,7 +2804,8 @@ export class NotEmptyViewFilterType extends ViewFilterType {
         'number',
         'url',
         'single_select',
-        FormulaFieldType.arrayOf('single_file')
+        FormulaFieldType.arrayOf('single_file'),
+        FormulaFieldType.arrayOf('boolean')
       ),
     ]
   }
