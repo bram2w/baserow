@@ -155,6 +155,7 @@ x-backend-variables: &backend-variables
   BASEROW_MAX_CONCURRENT_USER_REQUESTS:
   BASEROW_CONCURRENT_USER_REQUESTS_THROTTLE_TIMEOUT:
   BASEROW_SEND_VERIFY_EMAIL_RATE_LIMIT:
+  BASEROW_LOGIN_ACTION_LOG_LIMIT:
   BASEROW_OSS_ONLY:
   OTEL_TRACES_SAMPLER:
   OTEL_TRACES_SAMPLER_ARG:
@@ -175,7 +176,7 @@ x-backend-variables: &backend-variables
 
 services:
   backend:
-    image: baserow/backend:1.29.2
+    image: baserow/backend:1.29.3
     restart: unless-stopped
     ports:
       - "${HOST_PUBLISH_IP:-127.0.0.1}:8000:8000"
@@ -190,7 +191,7 @@ services:
       local:
 
   web-frontend:
-    image: baserow/web-frontend:1.29.2
+    image: baserow/web-frontend:1.29.3
     restart: unless-stopped
     ports:
       - "${HOST_PUBLISH_IP:-127.0.0.1}:3000:3000"
@@ -225,7 +226,7 @@ services:
       local:
 
   celery:
-    image: baserow/backend:1.29.2
+    image: baserow/backend:1.29.3
     restart: unless-stopped
     environment:
       <<: *backend-variables
@@ -242,7 +243,7 @@ services:
       local:
 
   celery-export-worker:
-    image: baserow/backend:1.29.2
+    image: baserow/backend:1.29.3
     restart: unless-stopped
     command: celery-exportworker
     environment:
@@ -259,7 +260,7 @@ services:
       local:
 
   celery-beat-worker:
-    image: baserow/backend:1.29.2
+    image: baserow/backend:1.29.3
     restart: unless-stopped
     command: celery-beat
     environment:

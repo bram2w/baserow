@@ -492,7 +492,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/baserow/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.29.2",
+    "VERSION": "1.29.3",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -948,6 +948,13 @@ BASEROW_SEND_VERIFY_EMAIL_RATE_LIMIT = RateLimit.from_string(
     os.getenv("BASEROW_SEND_VERIFY_EMAIL_RATE_LIMIT", "5/h")
 )
 
+login_action_limit_from_env = os.getenv("BASEROW_LOGIN_ACTION_LOG_LIMIT")
+BASEROW_LOGIN_ACTION_LOG_LIMIT = (
+    RateLimit.from_string(login_action_limit_from_env)
+    if login_action_limit_from_env
+    else RateLimit(period_in_seconds=60 * 5, number_of_calls=1)
+)
+
 # Configurable thumbnails that are going to be generated when a user uploads an image
 # file.
 USER_THUMBNAILS = {"tiny": [None, 21], "small": [48, 48], "card_cover": [300, 160]}
@@ -1043,6 +1050,9 @@ BASEROW_WEBHOOKS_URL_REGEX_BLACKLIST = [
 ]
 BASEROW_WEBHOOKS_URL_CHECK_TIMEOUT_SECS = int(
     os.getenv("BASEROW_WEBHOOKS_URL_CHECK_TIMEOUT_SECS", "10")
+)
+BASEROW_MAX_WEBHOOK_CALLS_IN_QUEUE_PER_WEBHOOK = (
+    int(os.getenv("BASEROW_MAX_WEBHOOK_CALLS_IN_QUEUE_PER_WEBHOOK", "0")) or None
 )
 
 # ======== WARNING ========
