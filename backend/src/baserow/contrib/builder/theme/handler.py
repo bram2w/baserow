@@ -22,11 +22,20 @@ class ThemeHandler:
 
         return builder
 
-    def export_theme(self, builder: Builder) -> Dict[str, Any]:
+    def export_theme(
+        self,
+        builder: Builder,
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+        cache: Optional[Dict[str, any]] = None,
+    ) -> Dict[str, Any]:
         """
         Serializes the theme blocks of the given builder.
 
         :param builder: The builder instance of the theme to serialize.
+        :param files_zip: The zip file where the files must be stored.
+        :param storage: The storage where the files must be stored.
+        :param cache: The cache instance that is used to cache the files.
         :return: The serialized version of the theme properties.
         """
 
@@ -37,7 +46,9 @@ class ThemeHandler:
             related_name = theme_config_block_type.related_name_in_builder_model
             theme_config_block = getattr(builder, related_name)
             serialized_theme.update(
-                **theme_config_block_type.export_serialized(theme_config_block)
+                **theme_config_block_type.export_serialized(
+                    theme_config_block, files_zip, storage, cache
+                )
             )
         return serialized_theme
 

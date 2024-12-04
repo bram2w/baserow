@@ -186,6 +186,9 @@ class BuilderApplicationType(ApplicationType):
 
         serialized_theme = ThemeHandler().export_theme(
             builder,
+            files_zip=files_zip,
+            storage=storage,
+            cache=self.cache,
         )
 
         serialized_favicon_file = UserFileHandler().export_user_file(
