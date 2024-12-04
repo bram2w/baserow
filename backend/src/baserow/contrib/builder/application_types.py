@@ -410,7 +410,9 @@ class BuilderApplicationType(ApplicationType):
                 builder.login_page_id = login_page_id
                 builder.save()
 
-        ThemeHandler().import_theme(builder, serialized_theme, id_mapping)
+        ThemeHandler().import_theme(
+            builder, serialized_theme, id_mapping, files_zip, storage
+        )
 
         return builder
 
