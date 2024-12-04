@@ -439,7 +439,10 @@ class EasyImportExportMixin(Generic[T], ABC):
         Exports the instance to a serialized dict that can be imported by the
         `import_serialized` method. This dict is also JSON serializable.
 
-        :param element: The instance that must be serialized.
+        :param instance: The instance that must be serialized.
+        :param files_zip: The zip file where the files must be stored.
+        :param storage: The storage where the files must be stored.
+        :param cache: The cache instance that is used to cache the files.
         :return: The exported instance as serialized dict.
         """
 
