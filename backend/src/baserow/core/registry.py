@@ -522,6 +522,9 @@ class EasyImportExportMixin(Generic[T], ABC):
         :param serialized_values: The dict containing the serialized values.
         :param id_mapping: Used to mapped object ids from export to newly created
           instances.
+        :param files_zip: The zip file containing the files.
+        :param storage: The storage instance that is used to store the files.
+        :param cache: The cache instance that is used to cache the files.
         :return: The created instance.
         """
 
@@ -542,7 +545,7 @@ class EasyImportExportMixin(Generic[T], ABC):
                 )
 
         # Remove id key
-        originale_instance_id = deserialized_properties.pop("id", 0)
+        original_instance_id = deserialized_properties.pop("id", 0)
 
         # Remove type if any
         if "type" in deserialized_properties:
@@ -562,9 +565,7 @@ class EasyImportExportMixin(Generic[T], ABC):
 
         if self.id_mapping_name:
             # Add the created instance to the mapping
-            id_mapping[self.id_mapping_name][
-                originale_instance_id
-            ] = created_instance.id
+            id_mapping[self.id_mapping_name][original_instance_id] = created_instance.id
 
         return created_instance
 
