@@ -1,9 +1,11 @@
 from collections import defaultdict
-from unittest.mock import MagicMock, patch
+from datetime import datetime
+from unittest.mock import MagicMock, Mock, patch
 
 from django.urls import reverse
 
 import pytest
+from freezegun import freeze_time
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
@@ -39,6 +41,7 @@ from baserow.core.user_sources.registries import (
     DEFAULT_USER_ROLE_PREFIX,
     user_source_type_registry,
 )
+from baserow.core.user_sources.service import UserSourceService
 from baserow.core.utils import MirrorDict, Progress
 from baserow.test_utils.helpers import AnyStr
 from baserow_enterprise.integrations.local_baserow.models import LocalBaserowUserSource
@@ -2210,3 +2213,214 @@ def test_local_baserow_user_source_get_user_is_case_insensitive(
     user = user_source_type.get_user(user_source, email=user_provided_email)
 
     assert user.email == actual_email
+
+
+def test__generate_update_user_count_cache_key():
+    user_source = Mock(id=123)
+    assert (
+        LocalBaserowUserSourceType()._generate_update_user_count_cache_key(user_source)
+        == "local_baserow_user_source_123_user_count"
+    )
+
+
+def test__generate_update_user_count_cache_value():
+    with freeze_time("2024-11-29T12:00:00.00Z"):
+        assert (
+            LocalBaserowUserSourceType()._generate_update_user_count_cache_value(500)
+            == "500-1732881600.0"
+        )
+
+
+@pytest.mark.django_db
+def test_update_user_count_with_configured_user_sources(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    application1 = data_fixture.create_builder_application(workspace=workspace)
+    integration1 = data_fixture.create_local_baserow_integration(
+        application=application1
+    )
+    application2 = data_fixture.create_builder_application(workspace=workspace)
+    integration2 = data_fixture.create_local_baserow_integration(
+        application=application2
+    )
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Email", "text"),
+            ("Name", "text"),
+            ("Role", "text"),
+        ],
+        rows=[
+            ["jrmi@baserow.io", "Jérémie", ""],
+            ["peter@baserow.io", "Peter", ""],
+            ["afonso@baserow.io", "Afonso", ""],
+            ["tsering@baserow.io", "Tsering", ""],
+            ["evren@baserow.io", "Evren", ""],
+        ],
+    )
+    email_field, name_field, role_field = fields
+
+    local_baserow_user_source_type = user_source_type_registry.get("local_baserow")
+
+    user_source1 = data_fixture.create_user_source(
+        local_baserow_user_source_type.model_class,
+        application=application1,
+        integration=integration1,
+        table=table,
+        email_field=email_field,
+        name_field=name_field,
+        role_field=role_field,
+    )
+    user_source2 = data_fixture.create_user_source(
+        local_baserow_user_source_type.model_class,
+        application=application2,
+        integration=integration2,
+        table=table,
+        email_field=email_field,
+        name_field=name_field,
+        role_field=role_field,
+    )
+
+    # 1. Fetching all configured user sources.
+    # 2. Fetching all tables for the user sources.
+    # 3. One COUNT per table, in our case here, once.
+    with freeze_time("2030-11-29T12:00:00.00Z"), django_assert_num_queries(3):
+        local_baserow_user_source_type.update_user_count()
+
+    with django_assert_num_queries(0):
+        user_count = local_baserow_user_source_type.get_user_count(user_source1)
+        assert user_count.count == 5
+        assert user_count.last_updated == datetime(2030, 11, 29, 12, 0, 0)
+
+    with django_assert_num_queries(0):
+        user_count = local_baserow_user_source_type.get_user_count(user_source2)
+        assert user_count.count == 5
+        assert user_count.last_updated == datetime(2030, 11, 29, 12, 0, 0)
+
+
+@pytest.mark.django_db
+def test_update_user_count_with_misconfigured_user_sources(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+    application1 = data_fixture.create_builder_application(workspace=workspace)
+    integration1 = data_fixture.create_local_baserow_integration(
+        application=application1
+    )
+    application2 = data_fixture.create_builder_application(workspace=workspace)
+    integration2 = data_fixture.create_local_baserow_integration(
+        application=application2
+    )
+
+    local_baserow_user_source_type = user_source_type_registry.get("local_baserow")
+
+    user_source1 = data_fixture.create_user_source(
+        local_baserow_user_source_type.model_class,
+        table=table,
+        application=application1,
+        integration=integration1,
+    )
+    user_source2 = data_fixture.create_user_source(
+        local_baserow_user_source_type.model_class,
+        table=table,
+        application=application2,
+        integration=integration2,
+    )
+
+    # 1. Fetching all configured user sources.
+    with django_assert_num_queries(1):
+        local_baserow_user_source_type.update_user_count()
+
+    # `get_user_count` will find that there's no cache entry, so they
+    # will each trigger 1 query. We only cache the count if the user
+    # source is configured.
+    with django_assert_num_queries(0):
+        assert local_baserow_user_source_type.get_user_count(user_source1) is None
+    with django_assert_num_queries(0):
+        assert local_baserow_user_source_type.get_user_count(user_source2) is None
+
+
+@pytest.mark.django_db
+def test_trigger_user_count_update_on_properties_requiring_user_recount_update(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    application = data_fixture.create_builder_application(workspace=workspace)
+    integration = data_fixture.create_local_baserow_integration(application=application)
+    table_a, fields_a, rows_a = data_fixture.build_table(
+        database=database,
+        columns=[
+            ("Email", "text"),
+            ("Name", "text"),
+            ("Role", "text"),
+        ],
+        rows=[
+            ["jrmi@baserow.io", "Jérémie", ""],
+            ["peter@baserow.io", "Peter", ""],
+        ],
+    )
+    email_field_a, name_field_a, role_field_a = fields_a
+
+    user_source_type = LocalBaserowUserSourceType()
+    user_source = data_fixture.create_user_source(
+        user_source_type.model_class,
+        table=table_a,
+        application=application,
+        integration=integration,
+        email_field=email_field_a,
+        name_field=name_field_a,
+        role_field=role_field_a,
+    )
+
+    table_a_count = user_source_type.get_user_count(user_source)
+    assert table_a_count.count == 2
+
+    table_b, fields_b, rows_b = data_fixture.build_table(
+        database=database,
+        columns=[
+            ("Email", "text"),
+            ("Name", "text"),
+            ("Role", "text"),
+        ],
+        rows=[
+            ["jrmi@baserow.io", "Jérémie", ""],
+            ["peter@baserow.io", "Peter", ""],
+            ["afonso@baserow.io", "Afonso", ""],
+            ["tsering@baserow.io", "Tsering", ""],
+            ["evren@baserow.io", "Evren", ""],
+        ],
+    )
+    email_field_b, name_field_b, role_field_b = fields_b
+
+    UserSourceService().update_user_source(
+        user,
+        user_source,
+        **{
+            "table": table_b,
+            "email_field": email_field_b,
+            "name_field": name_field_b,
+            "role_field": role_field_b,
+        },
+    )
+
+    table_b_count = user_source_type.get_user_count(user_source)
+    assert table_b_count.count == 5
+    assert (
+        table_b_count.last_updated != table_a_count.last_updated
+    )  # confirm it's a fresh cache entry
+
+
+def test_local_baserow_after_user_source_update_requires_user_recount():
+    assert (
+        LocalBaserowUserSourceType().after_user_source_update_requires_user_recount(
+            Mock(), {}
+        )
+        is True
+    )
