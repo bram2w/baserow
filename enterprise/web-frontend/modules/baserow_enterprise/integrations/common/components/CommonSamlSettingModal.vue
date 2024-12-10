@@ -107,12 +107,6 @@ export default {
       this.handleError(error)
     }
   },
-  watch: {
-    '$v.$anyDirty'() {
-      // Force validity refresh on child touch
-      this.checkValidity()
-    },
-  },
   computed: {
     ...mapGetters({ domains: 'domain/getDomains' }),
     config() {
@@ -132,6 +126,12 @@ export default {
         relay: this.getDomainUrl(domain),
       }))
       return [...preview, ...others]
+    },
+  },
+  watch: {
+    '$v.$anyDirty'() {
+      // Force validity refresh on child touch
+      this.checkValidity()
     },
   },
   methods: {

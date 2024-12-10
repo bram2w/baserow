@@ -806,5 +806,8 @@
   "formGroup": {
     "protectedField": "This field is protected. Click to change.",
     "cancelProtectedField": "Cancel change"
+  },
+  "userSourceType": {
+    "userCountSummary": "{count} users ({lastUpdated})"
   }
 }
