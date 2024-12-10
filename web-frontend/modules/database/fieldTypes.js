@@ -814,6 +814,13 @@ export class FieldType extends Registerable {
   getDeactivatedClickModal(workspaceId) {
     return null
   }
+
+  /**
+   * Alternative text used when searching for the field.
+   */
+  getAlias() {
+    return null
+  }
 }
 
 export class TextFieldType extends FieldType {
@@ -828,6 +835,10 @@ export class TextFieldType extends FieldType {
   getName() {
     const { i18n } = this.app
     return i18n.t('fieldType.singleLineText')
+  }
+
+  getAlias() {
+    return 'string'
   }
 
   getFormComponent() {
@@ -915,6 +926,10 @@ export class LongTextFieldType extends FieldType {
   getName() {
     const { i18n } = this.app
     return i18n.t('fieldType.longText')
+  }
+
+  getAlias() {
+    return 'multiline multi-line rich string'
   }
 
   getFormComponent() {
@@ -1023,6 +1038,10 @@ export class LinkRowFieldType extends FieldType {
   getName() {
     const { i18n } = this.app
     return i18n.t('fieldType.linkToTable')
+  }
+
+  getAlias() {
+    return 'foreign key'
   }
 
   getFormComponent() {
@@ -1608,6 +1627,10 @@ export class BooleanFieldType extends FieldType {
     return i18n.t('fieldType.boolean')
   }
 
+  getAlias() {
+    return 'checkbox'
+  }
+
   getGridViewFieldComponent() {
     return GridViewFieldBoolean
   }
@@ -2041,6 +2064,10 @@ export class LastModifiedFieldType extends CreatedOnLastModifiedBaseFieldType {
     return i18n.t('fieldType.lastModified')
   }
 
+  getAlias() {
+    return 'last updated'
+  }
+
   getDocsDescription(field) {
     return super.getDocsDescription(
       field,
@@ -2095,6 +2122,10 @@ export class LastModifiedByFieldType extends FieldType {
   getName() {
     const { i18n } = this.app
     return i18n.t('fieldType.lastModifiedBy')
+  }
+
+  getAlias() {
+    return 'last updated by'
   }
 
   getFormViewFieldComponents(field) {
@@ -2727,6 +2758,10 @@ export class FileFieldType extends FieldType {
   getName() {
     const { i18n } = this.app
     return i18n.t('fieldType.file')
+  }
+
+  getAlias() {
+    return 'upload attachment document'
   }
 
   getGridViewFieldComponent() {
@@ -3818,6 +3853,10 @@ export class MultipleCollaboratorsFieldType extends FieldType {
   getName() {
     const { i18n } = this.app
     return i18n.t('fieldType.multipleCollaborators')
+  }
+
+  getAlias() {
+    return 'people person team'
   }
 
   getFormComponent() {
