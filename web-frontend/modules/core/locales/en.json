@@ -802,5 +802,9 @@
   },
   "dataExplorerNode": {
     "showMore": "Show more repetitions"
+  },
+  "formGroup": {
+    "protectedField": "This field is protected. Click to change.",
+    "cancelProtectedField": "Cancel change"
   }
 }
