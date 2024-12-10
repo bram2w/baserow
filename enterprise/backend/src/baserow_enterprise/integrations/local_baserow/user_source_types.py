@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Optional
 
 from django.contrib.auth.models import AbstractUser
 
+from loguru import logger
 from rest_framework import serializers
 
 from baserow.api.exceptions import RequestBodyValidationException
@@ -17,6 +18,7 @@ from baserow.contrib.database.fields.field_types import (
 )
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import FieldType
+from baserow.contrib.database.rows.actions import CreateRowsActionType
 from baserow.contrib.database.rows.operations import ReadDatabaseRowOperationType
 from baserow.contrib.database.search.handler import SearchHandler
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
@@ -450,9 +452,9 @@ class LocalBaserowUserSourceType(UserSourceType):
 
         return (
             f"{user_source.id}"
-            f"_{user_source.table_id if user_source.table_id else '?'}"
-            f"_{user_source.email_field_id if user_source.email_field_id else '?'}"
-            f"_{user_source.role_field_id if user_source.role_field_id else '?'}"
+            f"_{user_source.table_id if user_source.table_id else '0'}"
+            f"_{user_source.email_field_id if user_source.email_field_id else '0'}"
+            f"_{user_source.role_field_id if user_source.role_field_id else '0'}"
         )
 
     def role_type_is_allowed(self, role_field: Optional[FieldType]) -> bool:
@@ -595,6 +597,54 @@ class LocalBaserowUserSourceType(UserSourceType):
             )
 
         raise UserNotFound()
+
+    def create_user(self, user_source: UserSource, email, name, role=None):
+        """
+        Creates the user in the configured table.
+        """
+
+        if not self.is_configured(user_source):
+            raise UserSourceImproperlyConfigured()
+
+        try:
+            # Use table handler to exclude trashed table
+            table = TableHandler().get_table(user_source.table_id)
+        except TableDoesNotExist as exc:
+            # As we CASCADE when a table is deleted, the table shouldn't
+            # exist only if it's trashed and not yet deleted.
+            raise UserSourceImproperlyConfigured("The table doesn't exist.") from exc
+
+        integration = user_source.integration.specific
+
+        model = table.get_model()
+
+        values = {
+            user_source.name_field.db_column: name,
+            user_source.email_field.db_column: email,
+        }
+        if role and user_source.role_field_id:
+            values[user_source.role_field.db_column] = role
+
+        try:
+            # Use the action to keep track on what's going on
+            (user,) = CreateRowsActionType.do(
+                user=integration.authorized_user,
+                table=table,
+                rows_values=[values],
+                model=model,
+            )
+        except Exception as e:
+            logger.exception(e)
+            raise ("Error while creating the user") from e
+
+        return UserSourceUser(
+            user_source,
+            user,
+            user.id,
+            getattr(user, user_source.name_field.db_column),
+            getattr(user, user_source.email_field.db_column),
+            self.get_user_role(user, user_source),
+        )
 
     def authenticate(self, user_source: UserSource, **kwargs):
         """

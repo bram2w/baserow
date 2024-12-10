@@ -1,6 +1,6 @@
 import uuid
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Iterable, List, Optional, Type, TypeVar
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, TypeVar
 
 from django.contrib.auth.models import AbstractUser
 
@@ -16,6 +16,7 @@ from baserow.core.registry import (
     ModelRegistryMixin,
     Registry,
 )
+from baserow.core.user.exceptions import UserNotFound
 from baserow.core.user_sources.constants import DEFAULT_USER_ROLE_PREFIX
 from baserow.core.user_sources.user_source_user import UserSourceUser
 
@@ -233,14 +234,40 @@ class UserSourceType(
         """
 
     @abstractmethod
-    def get_user(self, user_source: UserSource, **kwargs) -> Optional[UserSourceUser]:
+    def create_user(
+        self, user_source: UserSource, email: str, name: str
+    ) -> UserSourceUser:
+        """
+        Create a user for the given user source instance from it's email and name.
+
+        :param user_source: The user source we want to create the user for.
+        :param email: Email of the user to create.
+        :param name: Name of the user to create.
+        :return: A user instance.
+        """
+
+    @abstractmethod
+    def get_user(self, user_source: UserSource, **kwargs) -> UserSourceUser:
         """
         Returns a user given some args.
 
         :param user_source: The user source used to get the user.
         :param kwargs: Keyword arguments to get the user.
+        :raises UserNotFound: When the user can't be found.
         :return: A user instance if any found with the given parameters.
         """
+
+    def get_or_create_user(
+        self, user_source: UserSource, email: str, name: str
+    ) -> Tuple[UserSourceUser, bool]:
+        """
+        Shorthand to create a user if he doesn't exist.
+        """
+
+        try:
+            return self.get_user(user_source, email=email), False
+        except UserNotFound:
+            return self.create_user(user_source, email, name), True
 
     @abstractmethod
     def authenticate(self, user_source: UserSource, **kwargs) -> UserSourceUser:

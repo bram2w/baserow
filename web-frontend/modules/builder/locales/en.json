@@ -732,7 +732,8 @@
     "nameFieldLabel": "Name",
     "nameFieldPlaceholder": "Enter a name...",
     "authTitle": "Authentication",
-    "integrationFieldLabel": "Integration"
+    "integrationFieldLabel": "Integration",
+    "addProvider": "Add provider"
   },
   "builderLoginPageForm": {
     "pageDropdownLabel": "Login Page",
