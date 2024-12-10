@@ -117,17 +117,22 @@ export class LocalBaserowUserSourceType extends UserSourceType {
     if (!userSource.email_field_id || !userSource.name_field_id) {
       return {}
     }
-    if (userSource.auth_providers.length !== 1) {
-      return {}
-    }
-    const authProvider = userSource.auth_providers[0]
-    if (
-      authProvider.type !== 'local_baserow_password' ||
-      !authProvider.password_field_id
-    ) {
-      return {}
-    }
-    return { password: {} }
+
+    return userSource.auth_providers.reduce((acc, authProvider) => {
+      if (!acc[authProvider.type]) {
+        acc[authProvider.type] = []
+      }
+
+      const loginOptions = this.app.$registry
+        .get('appAuthProvider', authProvider.type)
+        .getLoginOptions(authProvider)
+
+      if (loginOptions) {
+        acc[authProvider.type].push(loginOptions)
+      }
+
+      return acc
+    }, {})
   }
 
   getOrder() {

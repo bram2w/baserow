@@ -655,6 +655,95 @@ def test_create_user_source_field_from_other_table(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_user_source_create_user(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_builder_application(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
+
+    integration = data_fixture.create_local_baserow_integration(
+        application=application, user=user
+    )
+
+    table_from_same_workspace1, fields, rows = data_fixture.build_table(
+        user=user,
+        database=database,
+        columns=[
+            ("Email", "text"),
+            ("Name", "text"),
+        ],
+        rows=[
+            ["test@baserow.io", "Test"],
+        ],
+    )
+
+    email_field, name_field = fields
+
+    user_source = data_fixture.create_user_source_with_first_type(
+        integration=integration,
+        name="Test name",
+        table=table_from_same_workspace1,
+        email_field=email_field,
+        name_field=name_field,
+        uid="uid",
+    )
+
+    created_user = user_source.get_type().create_user(
+        user_source, "test2@baserow.io", "Test2"
+    )
+
+    model = table_from_same_workspace1.get_model()
+    assert created_user.email == "test2@baserow.io"
+    assert model.objects.count() == 2
+    assert getattr(model.objects.last(), email_field.db_column) == "test2@baserow.io"
+
+
+@pytest.mark.django_db
+def test_user_source_create_user_w_role(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_builder_application(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
+
+    integration = data_fixture.create_local_baserow_integration(
+        application=application, user=user
+    )
+
+    table_from_same_workspace1, fields, rows = data_fixture.build_table(
+        user=user,
+        database=database,
+        columns=[
+            ("Email", "text"),
+            ("Name", "text"),
+            ("Role", "text"),
+        ],
+        rows=[
+            ["test@baserow.io", "Test", "role1"],
+        ],
+    )
+
+    email_field, name_field, role_field = fields
+
+    user_source = data_fixture.create_user_source_with_first_type(
+        integration=integration,
+        name="Test name",
+        table=table_from_same_workspace1,
+        email_field=email_field,
+        name_field=name_field,
+        role_field=role_field,
+        uid="uid",
+    )
+
+    created_user = user_source.get_type().create_user(
+        user_source, "test2@baserow.io", "Test2", "role2"
+    )
+
+    model = table_from_same_workspace1.get_model()
+    assert created_user.role == "role2"
+    assert getattr(model.objects.last(), role_field.db_column) == "role2"
+
+
+@pytest.mark.django_db
 def test_export_user_source(data_fixture):
     user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)
@@ -803,7 +892,7 @@ def test_create_local_baserow_user_source_w_auth_providers(api_client, data_fixt
                 {
                     "type": "local_baserow_password",
                     "enabled": True,
-                    "domain": "test1",
+                    "domain": "test1.com",
                     "password_field_id": password_field.id,
                 }
             ],
@@ -820,7 +909,7 @@ def test_create_local_baserow_user_source_w_auth_providers(api_client, data_fixt
 
     assert response_json["auth_providers"] == [
         {
-            "domain": "test1",
+            "domain": "test1.com",
             "id": first.id,
             "password_field_id": password_field.id,
             "type": "local_baserow_password",

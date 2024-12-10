@@ -265,6 +265,9 @@ def stub_user_source_registry(data_fixture, mutable_user_source_registry, fake):
                     return get_user_return
                 return data_fixture.create_user_source_user(user_source=user_source)
 
+            def create_user(self, user_source, email, name):
+                return data_fixture.create_user_source_user(user_source=user_source)
+
             def authenticate(self, user_source, **kwargs):
                 if authenticate_return:
                     if callable(authenticate_return):
