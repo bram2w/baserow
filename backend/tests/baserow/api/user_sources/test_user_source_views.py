@@ -122,6 +122,8 @@ def test_create_user_source(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert response_json["type"] == "local_baserow"
+    assert response_json["user_count"] is None
+    assert response_json["user_count_updated_at"] is None
 
 
 @pytest.mark.django_db
@@ -416,11 +418,14 @@ def test_create_user_source_bad_application_type(api_client, data_fixture):
 @pytest.mark.django_db
 def test_update_user_source(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
-    application = data_fixture.create_builder_application(user=user)
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_builder_application(workspace=workspace)
     user_source1 = data_fixture.create_user_source_with_first_type(
         application=application
     )
-    integration = data_fixture.create_local_baserow_integration(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        application=application, authorized_user=user
+    )
 
     url = reverse("api:user_sources:item", kwargs={"user_source_id": user_source1.id})
     response = api_client.patch(
@@ -431,8 +436,35 @@ def test_update_user_source(api_client, data_fixture):
     )
 
     assert response.status_code == HTTP_200_OK
-    assert response.json()["name"] == "newName"
-    assert response.json()["integration_id"] == integration.id
+    response_json = response.json()
+    assert response_json["name"] == "newName"
+    assert response_json["integration_id"] == integration.id
+    assert response_json["user_count"] is None
+    assert response_json["user_count_updated_at"] is None
+
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+    name_field = data_fixture.create_text_field(table=table)
+    email_field = data_fixture.create_email_field(table=table)
+    model = table.get_model(field_ids=[])
+    model.objects.create()
+    model.objects.create()
+    model.objects.create()
+
+    response = api_client.patch(
+        url,
+        {
+            "table_id": table.id,
+            "name_field_id": name_field.id,
+            "email_field_id": email_field.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json["user_count"] == 3
+    assert response_json["user_count_updated_at"] is not None
 
 
 @pytest.mark.django_db
