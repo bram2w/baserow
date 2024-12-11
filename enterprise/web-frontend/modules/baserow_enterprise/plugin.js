@@ -47,6 +47,7 @@ import {
   JiraIssuesDataSyncType,
   GitHubIssuesDataSyncType,
   GitLabIssuesDataSyncType,
+  HubspotContactsDataSyncType,
 } from '@baserow_enterprise/dataSyncTypes'
 
 import { FF_AB_SSO } from '@baserow/modules/core/plugins/featureFlags'
@@ -142,4 +143,5 @@ export default (context) => {
   app.$registry.register('dataSync', new JiraIssuesDataSyncType(context))
   app.$registry.register('dataSync', new GitHubIssuesDataSyncType(context))
   app.$registry.register('dataSync', new GitLabIssuesDataSyncType(context))
+  app.$registry.register('dataSync', new HubspotContactsDataSyncType(context))
 }

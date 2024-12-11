@@ -349,78 +349,96 @@ def test_postgresql_data_sync_get_properties(
     )
     assert response.status_code == HTTP_200_OK
     assert response.json() == [
-        {"unique_primary": True, "key": "id", "name": "id", "field_type": "number"},
+        {
+            "unique_primary": True,
+            "key": "id",
+            "name": "id",
+            "field_type": "number",
+            "initially_selected": True,
+        },
         {
             "unique_primary": False,
             "key": "text_col",
             "name": "text_col",
             "field_type": "long_text",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "char_col",
             "name": "char_col",
             "field_type": "text",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "int_col",
             "name": "int_col",
             "field_type": "number",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "float_col",
             "name": "float_col",
             "field_type": "number",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "numeric_col",
             "name": "numeric_col",
             "field_type": "number",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "numeric2_col",
             "name": "numeric2_col",
             "field_type": "number",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "smallint_col",
             "name": "smallint_col",
             "field_type": "number",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "bigint_col",
             "name": "bigint_col",
             "field_type": "number",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "decimal_col",
             "name": "decimal_col",
             "field_type": "number",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "date_col",
             "name": "date_col",
             "field_type": "date",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "datetime_col",
             "name": "datetime_col",
             "field_type": "date",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "boolean_col",
             "name": "boolean_col",
             "field_type": "boolean",
+            "initially_selected": True,
         },
     ]
 
@@ -464,6 +482,7 @@ def test_postgresql_data_sync_get_properties_unsupported_column_types(
             "key": "char_col",
             "name": "char_col",
             "field_type": "text",
+            "initially_selected": True,
         }
     ]
 

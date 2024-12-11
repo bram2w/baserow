@@ -1671,6 +1671,37 @@ def test_delete_non_unique_primary_data_sync_field(data_fixture):
     assert data_sync.table.field_set.all().count() == 3
 
 
+@pytest.mark.django_db
+@responses.activate
+def test_delete_field_and_then_sync(data_fixture):
+    responses.add(
+        responses.GET,
+        "https://baserow.io/ical.ics",
+        status=200,
+        body=ICAL_FEED_WITH_ONE_ITEMS,
+    )
+
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+
+    handler = DataSyncHandler()
+    data_sync = handler.create_data_sync_table(
+        user=user,
+        database=database,
+        table_name="Test",
+        type_name="ical_calendar",
+        synced_properties=["uid", "dtstart"],
+        ical_url="https://baserow.io/ical.ics",
+    )
+
+    fields = specific_iterator(data_sync.table.field_set.all().order_by("id"))
+    FieldHandler().delete_field(user, fields[1])
+
+    data_sync = handler.sync_data_sync_table(user=user, data_sync=data_sync)
+
+    assert data_sync.last_error is None
+
+
 @pytest.mark.field_duration
 @pytest.mark.django_db
 @responses.activate

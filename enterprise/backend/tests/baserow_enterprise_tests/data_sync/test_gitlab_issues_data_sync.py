@@ -528,6 +528,76 @@ def test_create_data_sync_table_pagination(enterprise_data_fixture):
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 @responses.activate
+def test_sync_data_sync_table_is_equal(enterprise_data_fixture):
+    responses.add(
+        responses.GET,
+        "https://gitlab.com/api/v4/projects/1/issues?page=1&per_page=50&state=all",
+        status=200,
+        json=SINGLE_ISSUE_RESPONSE,
+    )
+    responses.add(
+        responses.GET,
+        "https://gitlab.com/api/v4/projects/1/issues?page=2&per_page=50&state=all",
+        status=200,
+        json=NO_ISSUES_RESPONSE,
+    )
+
+    enterprise_data_fixture.enable_enterprise()
+
+    user = enterprise_data_fixture.create_user()
+    database = enterprise_data_fixture.create_database_application(user=user)
+    handler = DataSyncHandler()
+
+    data_sync = handler.create_data_sync_table(
+        user=user,
+        database=database,
+        table_name="Test",
+        type_name="gitlab_issues",
+        synced_properties=[
+            "id",
+            "iid",
+            "project_id",
+            "title",
+            "description",
+            "state",
+            "created_at",
+            "updated_at",
+            "closed_at",
+            "closed_by",
+            "labels",
+            "assignees",
+            "author",
+            "upvotes",
+            "downvotes",
+            "due_date",
+            "milestone",
+            "url",
+        ],
+        gitlab_url="https://gitlab.com",
+        gitlab_project_id="1",
+        gitlab_access_token="test",
+    )
+    handler.sync_data_sync_table(user=user, data_sync=data_sync)
+
+    model = data_sync.table.get_model()
+    rows = model.objects.all()
+    row_1 = rows[0]
+
+    row_1_last_modified = row_1.updated_on
+
+    handler.sync_data_sync_table(user=user, data_sync=data_sync)
+
+    rows = model.objects.all()
+    row_1 = rows[0]
+
+    # Because none of the values have changed, we don't expect the rows to have been
+    # updated.
+    assert row_1.updated_on == row_1_last_modified
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+@responses.activate
 def test_create_data_sync_table_invalid_auth(enterprise_data_fixture):
     responses.add(
         responses.GET,
@@ -581,108 +651,126 @@ def test_get_data_sync_properties(enterprise_data_fixture, api_client):
             "key": "id",
             "name": "Internal unique ID",
             "field_type": "number",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "iid",
             "name": "Issue ID",
             "field_type": "number",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "project_id",
             "name": "Project ID",
             "field_type": "number",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "title",
             "name": "Title",
             "field_type": "text",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "description",
             "name": "Description",
             "field_type": "long_text",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "state",
             "name": "State",
             "field_type": "text",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "created_at",
             "name": "Created At",
             "field_type": "date",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "updated_at",
             "name": "Updated At",
             "field_type": "date",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "closed_at",
             "name": "Closed At",
             "field_type": "date",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "closed_by",
             "name": "Closed By",
             "field_type": "text",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "labels",
             "name": "Labels",
             "field_type": "text",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "assignees",
             "name": "Assignees",
             "field_type": "text",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "author",
             "name": "Author",
             "field_type": "text",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "upvotes",
             "name": "Upvotes",
             "field_type": "number",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "downvotes",
             "name": "Downvotes",
             "field_type": "number",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "due_date",
             "name": "Due date",
             "field_type": "date",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "milestone",
             "name": "Milestone",
             "field_type": "text",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "url",
             "name": "URL to Issue",
             "field_type": "url",
+            "initially_selected": True,
         },
     ]
 
