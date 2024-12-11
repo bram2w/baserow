@@ -959,24 +959,28 @@ def test_get_data_sync_properties(data_fixture, api_client):
             "key": "uid",
             "name": "Unique ID",
             "field_type": "text",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "dtstart",
             "name": "Start date",
             "field_type": "date",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "dtend",
             "name": "End date",
             "field_type": "date",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "summary",
             "name": "Summary",
             "field_type": "text",
+            "initially_selected": True,
         },
     ]
 
@@ -1113,24 +1117,28 @@ def test_get_data_sync_properties_of_data_sync(data_fixture, api_client):
             "key": "uid",
             "name": "Unique ID",
             "field_type": "text",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "dtstart",
             "name": "Start date",
             "field_type": "date",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "dtend",
             "name": "End date",
             "field_type": "date",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": "summary",
             "name": "Summary",
             "field_type": "text",
+            "initially_selected": True,
         },
     ]
 

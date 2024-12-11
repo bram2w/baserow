@@ -25,7 +25,7 @@
     <FormGroup small-label class="margin-top-3">
       <template #label> {{ $t('createDataSync.fields') }}</template>
       <SwitchInput
-        v-for="property in properties"
+        v-for="property in orderedProperties"
         :key="property.key"
         class="margin-top-2"
         small

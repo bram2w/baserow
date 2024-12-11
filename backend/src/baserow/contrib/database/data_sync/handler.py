@@ -512,7 +512,8 @@ class DataSyncHandler:
                 synced_properties.insert(0, data_sync_property.key)
 
         enabled_properties = DataSyncSyncedProperty.objects.filter(
-            data_sync=data_sync
+            data_sync=data_sync,
+            field__trashed=False,
         ).prefetch_related(
             Prefetch("field", queryset=specific_queryset(Field.objects.all())),
             "field__select_options",

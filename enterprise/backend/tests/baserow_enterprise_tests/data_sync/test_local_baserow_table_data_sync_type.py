@@ -606,18 +606,21 @@ def test_get_data_sync_properties(enterprise_data_fixture, api_client):
             "key": "id",
             "name": "Row ID",
             "field_type": "number",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": f"field_{field_1.id}",
             "name": "Text",
             "field_type": "text",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": f"field_{field_2.id}",
             "name": "Number",
             "field_type": "number",
+            "initially_selected": True,
         },
     ]
 

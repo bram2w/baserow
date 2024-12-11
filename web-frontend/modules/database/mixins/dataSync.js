@@ -17,6 +17,24 @@ export default {
   beforeDestroy() {
     this.stopPollIfRunning()
   },
+  computed: {
+    orderedProperties() {
+      if (!this.properties) {
+        return []
+      }
+
+      // Show the properties where `initially_selected == True` first.
+      return this.properties
+        .slice()
+        .sort((a, b) =>
+          a.initially_selected === b.initially_selected
+            ? 0
+            : a.initially_selected
+            ? -1
+            : 1
+        )
+    },
+  },
   methods: {
     toggleVisibleField(key) {
       const index = this.syncedProperties.findIndex((f) => key === f)
@@ -64,7 +82,9 @@ export default {
         )
         this.loadedProperties = true
         this.properties = data
-        this.syncedProperties = data.map((p) => p.key)
+        this.syncedProperties = data
+          .filter((p) => p.initially_selected)
+          .map((p) => p.key)
       } catch (error) {
         if (error.handler && error.handler.code === 'ERROR_SYNC_ERROR') {
           this.showError(
