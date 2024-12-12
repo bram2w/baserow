@@ -4,12 +4,7 @@ import {
   XMLTableExporter,
   ExcelTableExporterType,
 } from '@baserow_premium/tableExporterTypes'
-import {
-  DashboardType,
-  WorkspacesAdminType,
-  UsersAdminType,
-  LicensesAdminType,
-} from '@baserow_premium/adminTypes'
+import { LicensesAdminType } from '@baserow_premium/adminTypes'
 import rowCommentsStore from '@baserow_premium/store/row_comments'
 import kanbanStore from '@baserow_premium/store/view/kanban'
 import calendarStore from '@baserow_premium/store/view/calendar'
@@ -104,9 +99,6 @@ export default (context) => {
   app.$registry.registerNamespace('aiFieldOutputType')
 
   app.$registry.register('plugin', new PremiumPlugin(context))
-  app.$registry.register('admin', new DashboardType(context))
-  app.$registry.register('admin', new UsersAdminType(context))
-  app.$registry.register('admin', new WorkspacesAdminType(context))
   app.$registry.register('admin', new LicensesAdminType(context))
   app.$registry.register('exporter', new JSONTableExporter(context))
   app.$registry.register('exporter', new XMLTableExporter(context))

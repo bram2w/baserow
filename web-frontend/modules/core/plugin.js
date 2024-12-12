@@ -30,6 +30,9 @@ import {
   UploadViaURLUserFileUploadType,
 } from '@baserow/modules/core/userFileUploadTypes'
 import {
+  DashboardAdminType,
+  UsersAdminType,
+  WorkspacesAdminType,
   HealthCheckAdminType,
   SettingsAdminType,
 } from '@baserow/modules/core/adminTypes'
@@ -179,6 +182,9 @@ export default (context, inject) => {
     'userFileUpload',
     new UploadViaURLUserFileUploadType(context)
   )
+  registry.register('admin', new DashboardAdminType(context))
+  registry.register('admin', new UsersAdminType(context))
+  registry.register('admin', new WorkspacesAdminType(context))
   registry.register('admin', new SettingsAdminType(context))
   registry.register('admin', new HealthCheckAdminType(context))
   inject('registry', registry)
