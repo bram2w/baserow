@@ -319,8 +319,10 @@ class DataSourceHandler:
         Updates a data_source and the related service with values.
 
         :param data_source: The data_source that should be updated.
+        :param service_type: The service type for the data_source's service.
         :param name: A new name for the data_source.
-        :param values: The values that should be set on the data_source.
+        :param page: The data source's page.
+        :param kwargs: The values that should be set on the data_source.
         :return: The updated data_source.
         """
 
