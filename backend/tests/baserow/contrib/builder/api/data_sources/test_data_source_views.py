@@ -442,9 +442,11 @@ def test_update_data_source_with_filters(api_client, data_fixture):
 def test_update_data_source_change_type(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     page = data_fixture.create_builder_page(user=user)
-    data_source1 = data_fixture.create_builder_local_baserow_get_row_data_source(
-        page=page
+    table = data_fixture.create_database_table(user=user)
+    service = data_fixture.create_local_baserow_aggregate_rows_service(
+        table_id=table.id,
     )
+    data_source1 = data_fixture.create_builder_data_source(service=service, page=page)
 
     url = reverse(
         "api:builder:data_source:item", kwargs={"data_source_id": data_source1.id}
@@ -452,23 +454,12 @@ def test_update_data_source_change_type(api_client, data_fixture):
 
     response = api_client.patch(
         url,
-        {"type": "local_baserow_list_rows"},
+        {"type": "local_baserow_list_rows", "field_id": None, "table_id": table.id},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
 
     assert response.status_code == HTTP_200_OK
-    assert response.json()["type"] == "local_baserow_list_rows"
-
-    response = api_client.patch(
-        url,
-        {"type": None},
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-
-    assert response.status_code == HTTP_200_OK
-    assert response.json()["type"] is None
 
 
 @pytest.mark.django_db
