@@ -140,3 +140,7 @@
     }
   }
 }
+
+.group-bys__add {
+  @include absolute(calc(100% + 4px), auto, auto, 0);
+}
