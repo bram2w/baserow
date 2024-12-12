@@ -237,6 +237,8 @@ export default function CoreModule(options) {
   // middleware.js file has to be changed.
   this.options.router.middleware.push('authentication')
 
+  this.options.router.middleware.push('impersonate')
+
   // This template will output the contents of the original Iconoir scss file, but
   // it changes increases the default stroke with for all icons.
   const iconoirCSS = readFileSync(

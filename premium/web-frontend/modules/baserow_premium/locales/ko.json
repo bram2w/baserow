@@ -1,15 +1,6 @@
 {
   "premium": {
-    "user": {
-      "isStaff": "직원 여부",
-      "isWorkspaceAdmin": "워크스페이스 관리자 여부",
-      "active": "활성",
-      "deactivated": "비활성화됨"
-    },
     "adminType": {
-      "dashboard": "대시보드",
-      "users": "사용자",
-      "workspaces": "워크스페이스",
       "licenses": "라이선스 관리"
     },
     "viewType": {
@@ -89,82 +80,6 @@
   },
   "registerLicenseForm": {
     "licenseKey": "라이선스 키"
-  },
-  "workspacesAdminTable": {
-    "allWorkspaces": "모든 워크스페이스",
-    "id": "ID",
-    "name": "이름",
-    "members": "멤버",
-    "applications": "애플리케이션",
-    "created": "생성됨",
-    "rowCount": "행 수",
-    "freeUsers": "무료 사용자",
-    "seatsTaken": "사용된 좌석",
-    "storageUsage": "사용된 저장소 (MB)",
-    "usageHelpText": "워크스페이스 사용 추적 설정이 활성화된 경우 매일 밤 계산됩니다"
-  },
-  "editWorkspaceContext": {
-    "delete": "영구 삭제"
-  },
-  "deleteWorkspaceModal": {
-    "title": "{name} 삭제",
-    "confirmation": "워크스페이스 {name}을(를) 삭제하시겠습니까?",
-    "comment": "워크스페이스는 관련된 애플리케이션과 함께 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
-    "delete": "워크스페이스 {name} 삭제"
-  },
-  "activeUsers": {
-    "newUsers": "신규 사용자",
-    "activeUsers": "활성 사용자"
-  },
-  "usersAdminTable": {
-    "allUsers": "모든 사용자",
-    "username": "사용자 이름",
-    "name": "이름",
-    "workspaces": "워크스페이스",
-    "lastLogin": "마지막 로그인",
-    "dateJoined": "가입일",
-    "active": "활성"
-  },
-  "editUserContext": {
-    "changePassword": "비밀번호 변경",
-    "delete": "영구 삭제",
-    "impersonate": "사용자 가장"
-  },
-  "changePasswordForm": {
-    "newPassword": "새 비밀번호",
-    "repeatPassword": "비밀번호 재입력",
-    "changePassword": "비밀번호 변경",
-    "error": {
-      "doesntMatch": "이 필드는 비밀번호 필드와 일치해야 합니다."
-    }
-  },
-  "userForm": {
-    "fullName": "전체 이름",
-    "email": "이메일",
-    "isActive": "활성 여부",
-    "warning": {
-      "changeEmail": "이 사용자의 이메일 주소를 변경하면 로그인 시 새 이메일 주소를 사용해야 합니다. 이는 해당 사용자에게 전달되어야 합니다.",
-      "inactiveUser": "사용자가 비활성화되면 로그인할 수 없습니다.",
-      "userStaff": "사용자를 직원으로 지정하면 모든 사용자와 워크스페이스에 대한 관리자 액세스 권한이 부여되며, 본인의 직원 권한을 철회할 수 있습니다."
-    },
-    "error": {
-      "invalidName": "유효한 전체 이름을 입력하세요. 2자 이상 150자 이하여야 합니다.",
-      "invalidEmail": "유효한 이메일 주소를 입력하세요."
-    }
-  },
-  "changeUserPasswordModal": {
-    "changePassword": "{username}의 비밀번호 변경"
-  },
-  "deleteUserModal": {
-    "title": "{username} 삭제",
-    "confirmation": "사용자 {name}을(를) 삭제하시겠습니까?",
-    "comment1": "사용자 계정은 삭제되지만, 해당 사용자가 속한 워크스페이스는 계속 존재합니다. 해당 사용자가 워크스페이스의 마지막 사용자이더라도 사용자의 워크스페이스는 삭제되지 않습니다. 워크스페이스의 마지막 사용자를 삭제하면 해당 워크스페이스에 아무도 접근할 수 없게 됩니다.",
-    "comment2": "사용자를 삭제한 후 삭제된 사용자의 이메일 주소를 사용하여 새 사용자가 다시 가입할 수 있습니다. 다시 가입하지 못하도록 하려면 사용자를 삭제하지 않고 비활성화하세요.",
-    "delete": "사용자 {username} 삭제"
-  },
-  "editUserModal": {
-    "delete": "사용자 삭제",
-    "edit": "{username} 편집"
   },
   "tableJSONExporter": {
     "encoding": "인코딩"
@@ -248,22 +163,6 @@
   },
   "timelineGridRow": {
     "days": "0 | 1일 | {count}일"
-  },
-  "dashboard": {
-    "title": "대시보드",
-    "totals": "합계",
-    "totalUsers": "전체 사용자",
-    "totalWorkspaces": "전체 워크스페이스",
-    "totalApplications": "전체 애플리케이션",
-    "newUsers": "신규 사용자",
-    "newUsers24h": "지난 24시간 동안 신규 사용자",
-    "newUsers7days": "지난 7일 동안 신규 사용자",
-    "newUsers30days": "지난 30일 동안 신규 사용자",
-    "activeUsers": "활성 사용자",
-    "activeUsers24h": "지난 24시간 동안 활성 사용자",
-    "activeUsers7days": "지난 7일 동안 활성 사용자",
-    "activeUsers30days": "지난 30일 동안 활성 사용자",
-    "viewAll": "모두 보기"
   },
   "premiumFeatures": {
     "rowComments": "행 댓글",
