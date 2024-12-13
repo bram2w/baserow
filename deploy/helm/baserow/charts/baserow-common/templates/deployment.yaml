@@ -106,6 +106,10 @@ spec:
             {{- if and (.name) (.value) }}
             - name: {{ .name | quote }}
               value: {{ .value | quote }}
+            {{- else if and (.name) (.valueFrom) }}
+            - name: {{ .name | quote }}
+              valueFrom:
+                {{- toYaml .valueFrom | nindent 16 }}
             {{- end }}
             {{- end }}
       {{- with .Values.nodeSelector }}
