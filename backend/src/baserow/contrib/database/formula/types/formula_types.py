@@ -1312,7 +1312,7 @@ class BaserowFormulaArrayType(
         return self.sub_type.can_order_by_in_array
 
     def get_order(
-        self, field, field_name, order_direction
+        self, field, field_name, order_direction, table_model=None
     ) -> OptionallyAnnotatedOrderBy:
         expr = self.sub_type.get_order_by_in_array_expr(
             field, field_name, order_direction
@@ -1474,7 +1474,7 @@ class BaserowFormulaSingleSelectType(
         return True
 
     def get_order(
-        self, field, field_name, order_direction
+        self, field, field_name, order_direction, table_model=None
     ) -> OptionallyAnnotatedOrderBy:
         field_expr = F(f"{field_name}__value")
 

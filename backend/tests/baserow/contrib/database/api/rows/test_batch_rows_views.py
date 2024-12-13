@@ -19,7 +19,7 @@ from rest_framework.status import (
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import SelectOption
 from baserow.contrib.database.tokens.handler import TokenHandler
-from baserow.test_utils.helpers import is_dict_subset
+from baserow.test_utils.helpers import AnyStr, is_dict_subset
 
 # Create
 
@@ -1485,7 +1485,9 @@ def test_batch_update_rows_different_manytomany_provided(api_client, data_fixtur
                 "id": 1,
                 "order": "1.00000000000000000000",
                 f"field_{primary.id}": "row 1",
-                f"field_{link_row_field_1.id}": [{"id": 1, "value": "row A"}],
+                f"field_{link_row_field_1.id}": [
+                    {"id": 1, "value": "row A", "order": AnyStr()}
+                ],
                 f"field_{link_row_field_2.id}": [],
             },
             {
@@ -1493,19 +1495,21 @@ def test_batch_update_rows_different_manytomany_provided(api_client, data_fixtur
                 "order": "1.00000000000000000000",
                 f"field_{primary.id}": "row 2",
                 f"field_{link_row_field_1.id}": [],
-                f"field_{link_row_field_2.id}": [{"id": 2, "value": "row B"}],
+                f"field_{link_row_field_2.id}": [
+                    {"id": 2, "value": "row B", "order": AnyStr()}
+                ],
             },
             {
                 "id": 3,
                 "order": "1.00000000000000000000",
                 f"field_{primary.id}": "row 3",
                 f"field_{link_row_field_1.id}": [
-                    {"id": 1, "value": "row A"},
-                    {"id": 2, "value": "row B"},
+                    {"id": 1, "value": "row A", "order": AnyStr()},
+                    {"id": 2, "value": "row B", "order": AnyStr()},
                 ],
                 f"field_{link_row_field_2.id}": [
-                    {"id": 1, "value": "row A"},
-                    {"id": 2, "value": "row B"},
+                    {"id": 1, "value": "row A", "order": AnyStr()},
+                    {"id": 2, "value": "row B", "order": AnyStr()},
                 ],
             },
         ]
@@ -1536,27 +1540,35 @@ def test_batch_update_rows_different_manytomany_provided(api_client, data_fixtur
                 "id": 1,
                 "order": "1.00000000000000000000",
                 f"field_{primary.id}": "row 1",
-                f"field_{link_row_field_1.id}": [{"id": 1, "value": "row A"}],
-                f"field_{link_row_field_2.id}": [{"id": 1, "value": "row A"}],
+                f"field_{link_row_field_1.id}": [
+                    {"id": 1, "value": "row A", "order": AnyStr()}
+                ],
+                f"field_{link_row_field_2.id}": [
+                    {"id": 1, "value": "row A", "order": AnyStr()}
+                ],
             },
             {
                 "id": 2,
                 "order": "1.00000000000000000000",
                 f"field_{primary.id}": "row 2",
-                f"field_{link_row_field_1.id}": [{"id": 2, "value": "row B"}],
-                f"field_{link_row_field_2.id}": [{"id": 2, "value": "row B"}],
+                f"field_{link_row_field_1.id}": [
+                    {"id": 2, "value": "row B", "order": AnyStr()}
+                ],
+                f"field_{link_row_field_2.id}": [
+                    {"id": 2, "value": "row B", "order": AnyStr()}
+                ],
             },
             {
                 "id": 3,
                 "order": "1.00000000000000000000",
                 f"field_{primary.id}": "row 3",
                 f"field_{link_row_field_1.id}": [
-                    {"id": 1, "value": "row A"},
-                    {"id": 2, "value": "row B"},
+                    {"id": 1, "value": "row A", "order": AnyStr()},
+                    {"id": 2, "value": "row B", "order": AnyStr()},
                 ],
                 f"field_{link_row_field_2.id}": [
-                    {"id": 1, "value": "row A"},
-                    {"id": 2, "value": "row B"},
+                    {"id": 1, "value": "row A", "order": AnyStr()},
+                    {"id": 2, "value": "row B", "order": AnyStr()},
                 ],
             },
         ]

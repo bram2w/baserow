@@ -203,7 +203,7 @@ class BaserowFormulaType(abc.ABC):
         pass
 
     def get_order(
-        self, field, field_name, order_direction
+        self, field, field_name, order_direction, table_model=None
     ) -> OptionallyAnnotatedOrderBy:
         """
         Returns OptionallyAnnotatedOrderBy with desired order and optional

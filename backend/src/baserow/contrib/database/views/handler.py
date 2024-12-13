@@ -32,7 +32,7 @@ from baserow.contrib.database.fields.field_filters import (
     FilterBuilder,
 )
 from baserow.contrib.database.fields.field_sortings import OptionallyAnnotatedOrderBy
-from baserow.contrib.database.fields.models import Field
+from baserow.contrib.database.fields.models import Field, LinkRowField
 from baserow.contrib.database.fields.operations import ReadFieldOperationType
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
@@ -311,7 +311,10 @@ class ViewIndexingHandler(metaclass=baserow_trace_methods(tracer)):
         for view_sort_or_group_by in view.get_all_sorts():
             field_object = model._field_objects[view_sort_or_group_by.field_id]
             annotated_order_by = field_object["type"].get_order(
-                field_object["field"], field_object["name"], view_sort_or_group_by.order
+                field_object["field"],
+                field_object["name"],
+                view_sort_or_group_by.order,
+                table_model=model,
             )
 
             # It's enough to have one field that cannot be indexed to make the DB
@@ -321,7 +324,7 @@ class ViewIndexingHandler(metaclass=baserow_trace_methods(tracer)):
 
             field_order_bys.append(annotated_order_by)
 
-        index_fields = [order_by.order for order_by in field_order_bys]
+        index_fields = [o for ob in field_order_bys for o in ob.order_bys]
 
         if not index_fields:
             return None
@@ -1315,6 +1318,19 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             if deleted_count > 0:
                 ViewIndexingHandler.after_field_changed_or_deleted(field)
 
+            # If it's a primary field, we also need to remove any sortings on the
+            # link row fields pointing to this table.
+            if field.primary:
+                related_fields = LinkRowField.objects.filter(
+                    link_row_table_id=field.table_id
+                )
+                deleted_count, _ = ViewSort.objects.filter(
+                    field__in=related_fields
+                ).delete()
+                if deleted_count > 0:
+                    for field in related_fields:
+                        ViewIndexingHandler.after_field_changed_or_deleted(field)
+
         # If the new field type does not support grouping then all group bys will be
         # removed.
         if not field_type.check_can_group_by(field):
@@ -1829,15 +1845,19 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             field_type = model._field_objects[view_sort_or_group_by.field_id]["type"]
 
             field_annotated_order_by = field_type.get_order(
-                field, field_name, view_sort_or_group_by.order
+                field,
+                field_name,
+                view_sort_or_group_by.order,
+                table_model=queryset.model,
             )
             field_annotation = field_annotated_order_by.annotation
-            field_order_by = field_annotated_order_by.order
+            field_order_bys = field_annotated_order_by.order_bys
 
             if field_annotation is not None:
                 queryset = queryset.annotate(**field_annotation)
 
-            order_by.append(field_order_by)
+            for fob in field_order_bys:
+                order_by.append(fob)
 
         order_by.append(F("order").asc(nulls_first=True))
         order_by.append(F("id").asc(nulls_first=True))

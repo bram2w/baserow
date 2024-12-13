@@ -1319,7 +1319,9 @@ class LinkRowContainsViewFilterType(ViewFilterType):
     compatible_field_types = [LinkRowFieldType.type]
 
     def get_filter(self, field_name, value, model_field, field) -> OptionallyAnnotatedQ:
-        related_primary_field = field.get_related_primary_field().specific
+        related_primary_field = field.link_row_table_primary_field.specific
+        if related_primary_field is None:
+            return Q()
         related_primary_field_type = field_type_registry.get_by_model(
             related_primary_field
         )

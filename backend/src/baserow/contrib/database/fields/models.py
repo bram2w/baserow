@@ -389,6 +389,8 @@ class DurationField(Field):
 
 class LinkRowField(Field):
     THROUGH_DATABASE_TABLE_PREFIX = LINK_ROW_THROUGH_TABLE_PREFIX
+    RELATED_PPRIMARY_FIELD_ATTR = "primary_fields"
+
     link_row_table = models.ForeignKey(
         "database.Table",
         on_delete=models.CASCADE,
@@ -427,7 +429,15 @@ class LinkRowField(Field):
 
         return f"{self.THROUGH_DATABASE_TABLE_PREFIX}{self.link_row_relation_id}"
 
-    def get_related_primary_field(self):
+    @property
+    def link_row_table_primary_field(self):
+        # LinkRowFieldType.enhance_field_queryset prefetches the primary field
+        # into RELATED_PPRIMARY_FIELD_ATTR. Let's check if it's already there first.
+        if related_primary_field_set := getattr(
+            self.link_row_table, self.RELATED_PPRIMARY_FIELD_ATTR, None
+        ):
+            return related_primary_field_set[0]
+
         try:
             return self.link_row_table.field_set.get(primary=True)
         except Field.DoesNotExist:

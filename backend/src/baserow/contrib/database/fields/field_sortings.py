@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from django.db.models.expressions import OrderBy
 
@@ -18,7 +18,7 @@ class OptionallyAnnotatedOrderBy:
     order by expression.
     """
 
-    order: OrderBy
+    order: OrderBy | List[OrderBy]
     annotation: Optional[Dict[str, Any]] = None
     can_be_indexed: bool = False
 
@@ -36,6 +36,10 @@ class OptionallyAnnotatedOrderBy:
             return self.order.expression.source_expressions[0].name
         else:
             return self.order.expression.name
+
+    @property
+    def order_bys(self) -> List[OrderBy]:
+        return self.order if isinstance(self.order, (list, tuple)) else [self.order]
 
     @property
     def collation(self) -> str:

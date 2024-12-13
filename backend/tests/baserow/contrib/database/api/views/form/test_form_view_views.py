@@ -939,7 +939,6 @@ def test_form_view_link_row_lookup_view(api_client, data_fixture):
     assert len(response_json["results"]) == 3
     assert response_json["results"][0]["id"] == i1.id
     assert response_json["results"][0]["value"] == "Test 1"
-    assert len(response_json["results"][0]) == 2
     assert response_json["results"][1]["id"] == i2.id
     assert response_json["results"][2]["id"] == i3.id
 
