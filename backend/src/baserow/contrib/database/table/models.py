@@ -308,7 +308,7 @@ class TableModelQuerySet(MultiFieldPrefetchQuerysetMixin, models.QuerySet):
         :rtype: QuerySet
         """
 
-        order_by = split_comma_separated_string(order_string)
+        order_by_fields = split_comma_separated_string(order_string)
 
         if user_field_names:
             field_object_dict = {
@@ -318,7 +318,8 @@ class TableModelQuerySet(MultiFieldPrefetchQuerysetMixin, models.QuerySet):
             field_object_dict = self.model._field_objects
 
         annotations = {}
-        for index, order in enumerate(order_by):
+        order_by = []
+        for order in order_by_fields:
             if user_field_names:
                 field_name_or_id = self._get_field_name(order)
             else:
@@ -346,13 +347,14 @@ class TableModelQuerySet(MultiFieldPrefetchQuerysetMixin, models.QuerySet):
                 )
 
             field_annotated_order_by = field_type.get_order(
-                field, field_name, order_direction
+                field, field_name, order_direction, table_model=self.model
             )
 
             if field_annotated_order_by.annotation is not None:
                 annotations = {**annotations, **field_annotated_order_by.annotation}
-            field_order_by = field_annotated_order_by.order
-            order_by[index] = field_order_by
+            field_order_bys = field_annotated_order_by.order_bys
+            for field_order_by in field_order_bys:
+                order_by.append(field_order_by)
 
         order_by.append("order")
         order_by.append("id")
@@ -678,6 +680,18 @@ class GeneratedTableModel(HierarchicalModelMixin, models.Model):
     @classmethod
     def get_fields(cls, include_trash=False):
         return [o["field"] for o in cls.get_field_objects(include_trash)]
+
+    @classmethod
+    def get_primary_field(self):
+        field_objects = self.get_field_objects()
+
+        try:
+            field_object = next(
+                filter(lambda f: f["field"].primary is True, field_objects)
+            )
+            return field_object["field"]
+        except StopIteration:
+            return None
 
     class Meta:
         abstract = True

@@ -797,6 +797,15 @@ export class FieldType extends Registerable {
   }
 
   /**
+   * Parse a value of for the field type from a linked row item value. This can be
+   * used to convert values provided by a linked row item to the format that is used
+   * by the field type to sort, filter, etc. in the frontend.
+   */
+  parseFromLinkedRowItemValue(field, value) {
+    return value
+  }
+
+  /**
    * Indicates whether it's possible to select the field type when creating or updating the field.
    */
   isEnabled(workspace) {
@@ -1091,7 +1100,99 @@ export class LinkRowFieldType extends FieldType {
   }
 
   getCanSortInView(field) {
-    return false
+    const relatedField = field.link_row_table_primary_field
+    const relatedFieldType = this.app.$registry.get('field', relatedField.type)
+    return relatedFieldType.getCanSortInView(relatedField)
+  }
+
+  getSort(name, order, field) {
+    const relatedPrimaryField = field.link_row_table_primary_field
+    const relatedPrimaryFieldType = this.app.$registry.get(
+      'field',
+      relatedPrimaryField.type
+    )
+    const relatedSortFunc = relatedPrimaryFieldType.getSort(
+      name,
+      order,
+      relatedPrimaryField
+    )
+    const relatedParseFunc = (item) => {
+      return relatedPrimaryFieldType.parseFromLinkedRowItemValue(
+        relatedPrimaryField,
+        item?.value
+      )
+    }
+
+    return (a, b) => {
+      const valuesA = a[name].map(relatedParseFunc)
+      const valuesB = b[name].map(relatedParseFunc)
+      const lenA = valuesA.length
+      const lenB = valuesB.length
+
+      // nulls (empty arrays) first
+      if (lenA === 0 && lenB !== 0) {
+        return -1
+      } else if (lenA !== 0 && lenB === 0) {
+        return 1
+      }
+
+      for (let i = 0; i < Math.max(valuesA.length, valuesB.length); i++) {
+        let compared = 0
+
+        const isAdefined = valuesA[i] !== undefined
+        const isBdefined = valuesB[i] !== undefined
+
+        if (isAdefined && isBdefined) {
+          const isAnull = valuesA[i] === null
+          const isBnull = valuesB[i] === null
+          if (!isAnull && !isBnull) {
+            compared = relatedSortFunc(
+              { [name]: valuesA[i] },
+              { [name]: valuesB[i] }
+            )
+          } else if (!isAnull) {
+            // Postgres sort nulls last in arrays, so we do the same here.
+            compared = order === 'ASC' ? -1 : 1
+          } else if (!isBnull) {
+            compared = order === 'ASC' ? 1 : -1
+          }
+        } else if (isAdefined) {
+          // Different lengths with the same initial values, the shorter array comes first.
+          compared = order === 'ASC' ? 1 : -1
+        } else if (isBdefined) {
+          compared = order === 'ASC' ? -1 : 1
+        }
+        if (compared !== 0) {
+          return compared
+        }
+      }
+
+      // The arrays have the same length and all values are the same.
+      // Let's compare the order and the id of the linked row items.
+      for (let i = 0; i < a[name].length; i++) {
+        const orderA = new BigNumber(a[name][i].order)
+        const orderB = new BigNumber(b[name][i].order)
+        if (!orderA.isEqualTo(orderB)) {
+          return order === 'ASC'
+            ? orderA.minus(orderB).toNumber()
+            : orderB.minus(orderA).toNumber()
+        }
+      }
+
+      // If the order is the same, we compare the id of the linked row items to
+      // match the backend behavior.
+      for (let i = 0; i < a[name].length; i++) {
+        const aId = a[name][i].id
+        const bId = b[name][i].id
+        if (aId !== bId) {
+          return order === 'ASC' ? aId - bId : bId - aId
+        }
+      }
+
+      // Exactly the same items. The order will be determined by the next
+      // order by in the list, either another field or rows' order and id.
+      return 0
+    }
   }
 
   getCanBePrimaryField() {
@@ -1479,6 +1580,13 @@ export class NumberFieldType extends FieldType {
   parseInputValue(field, value) {
     return parseFloat(value)
   }
+
+  parseFromLinkedRowItemValue(field, value) {
+    if (value === '') {
+      return null
+    }
+    return parseFloat(value)
+  }
 }
 
 export class RatingFieldType extends FieldType {
@@ -1693,6 +1801,10 @@ export class BooleanFieldType extends FieldType {
     return this._prepareValue(value)
   }
 
+  parseFromLinkedRowItemValue(field, value) {
+    return this._prepareValue(value)
+  }
+
   getDocsDataType(field) {
     return 'boolean'
   }
@@ -1769,6 +1881,10 @@ class BaseDateFieldType extends FieldType {
 
   getSort(name, order) {
     return (a, b) => {
+      if (moment.isMoment(a[name]) && moment.isMoment(b[name])) {
+        return order === 'ASC' ? a[name].diff(b[name]) : b[name].diff(a[name])
+      }
+
       if (a[name] === b[name]) {
         return 0
       }
@@ -1850,7 +1966,7 @@ class BaseDateFieldType extends FieldType {
   static getDateFormatsOptionsForValue(field, value) {
     let formats = [moment.ISO_8601]
 
-    const timeFormats = value.includes(':')
+    const timeFormats = value?.includes(':')
       ? ['', ' H:m', ' H:m A', ' H:m:s', ' H:m:s A']
       : ['']
 
@@ -1858,7 +1974,7 @@ class BaseDateFieldType extends FieldType {
       return dateFormats.flatMap((df) => timeFormats.map((tf) => `${df}${tf}`))
     }
 
-    const containsDash = value.includes('-')
+    const containsDash = value?.includes('-')
     const s = containsDash ? '-' : '/'
 
     const usFieldFormats = getDateTimeFormatsFor(
@@ -1902,6 +2018,10 @@ class BaseDateFieldType extends FieldType {
       date.tz(timezone, true)
     }
     return date
+  }
+
+  parseFromLinkedRowItemValue(field, value) {
+    return this.parseInputValue(field, value)
   }
 
   formatValue(field, value) {
@@ -2528,6 +2648,10 @@ export class DurationFieldType extends FieldType {
     return roundDurationValueToFormat(preparedValue, format)
   }
 
+  parseFromLinkedRowItemValue(field, value) {
+    return this.parseInputValue(field, value)
+  }
+
   toHumanReadableString(field, value, delimiter = ', ') {
     return this.formatValue(field, value)
   }
@@ -3014,6 +3138,10 @@ export class SingleSelectFieldType extends FieldType {
     }
   }
 
+  parseFromLinkedRowItemValue(field, value) {
+    return value ? { value } : null
+  }
+
   prepareValueForUpdate(field, value) {
     if (value === undefined || value === null) {
       return null
@@ -3199,6 +3327,11 @@ export class MultipleSelectFieldType extends FieldType {
     return RowEditFieldMultipleSelect
   }
 
+  parseFromLinkedRowItemValue(field, value) {
+    // FIXME: what if the option value contains a comma?
+    return value.split(',').map((value) => ({ value: value.trim() }))
+  }
+
   getFormViewFieldComponents(field) {
     const { i18n } = this.app
     const components = super.getFormViewFieldComponents(field)
@@ -3230,9 +3363,9 @@ export class MultipleSelectFieldType extends FieldType {
       const valuesA = a[name]
       const valuesB = b[name]
       const stringA =
-        valuesA.length > 0 ? valuesA.map((obj) => obj.value).join('') : ''
+        valuesA.length > 0 ? valuesA.map((obj) => obj.value).join(', ') : ''
       const stringB =
-        valuesB.length > 0 ? valuesB.map((obj) => obj.value).join('') : ''
+        valuesB.length > 0 ? valuesB.map((obj) => obj.value).join(', ') : ''
 
       return collatedStringCompare(stringA, stringB, order)
     }
@@ -3733,6 +3866,11 @@ export class FormulaFieldType extends mix(
     return underlyingFieldType.parseInputValue(field, value)
   }
 
+  parseFromLinkedRowItemValue(field, value) {
+    const underlyingFieldType = this.getFormulaSubtype(field)
+    return underlyingFieldType.parseFromLinkedRowItemValue(field, value)
+  }
+
   canRepresentFiles(field) {
     return this.getFormulaSubtype(field)?.canRepresentFiles(field)
   }
@@ -3858,6 +3996,10 @@ export class MultipleCollaboratorsFieldType extends FieldType {
 
   static getIconClass() {
     return 'iconoir-community'
+  }
+
+  parseFromLinkedRowItemValue(field, value) {
+    return this.app.store.getters['workspace/getUserByEmail'](value) || null
   }
 
   getName() {

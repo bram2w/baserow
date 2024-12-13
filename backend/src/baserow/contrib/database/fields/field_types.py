@@ -7,13 +7,24 @@ from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 from itertools import cycle
 from random import randint, randrange, sample
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
+)
 from zipfile import ZipFile
 from zoneinfo import ZoneInfo
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
-from django.contrib.postgres.aggregates import StringAgg
+from django.contrib.postgres.aggregates import ArrayAgg, StringAgg
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.core.files.storage import Storage
@@ -35,7 +46,7 @@ from django.db.models import (
     Window,
 )
 from django.db.models.fields.related import ManyToManyField
-from django.db.models.functions import Coalesce, RowNumber
+from django.db.models.functions import Coalesce, Extract, RowNumber
 
 from dateutil import parser
 from dateutil.parser import ParserError
@@ -64,6 +75,7 @@ from baserow.contrib.database.api.fields.serializers import (
     FileFieldRequestSerializer,
     FileFieldResponseSerializer,
     IntegerOrStringField,
+    LinkRowFieldSerializerMixin,
     LinkRowRequestSerializer,
     LinkRowValueSerializer,
     ListOrStringField,
@@ -113,6 +125,7 @@ from baserow.contrib.database.views.models import OWNERSHIP_TYPE_COLLABORATIVE, 
 from baserow.core.db import (
     CombinedForeignKeyAndManyToManyMultipleFieldPrefetch,
     collate_expression,
+    specific_queryset,
 )
 from baserow.core.expressions import DateTrunc
 from baserow.core.fields import SyncedDateTimeField
@@ -234,7 +247,7 @@ if TYPE_CHECKING:
 
 class CollationSortMixin:
     def get_order(
-        self, field, field_name, order_direction
+        self, field, field_name, order_direction, table_model=None
     ) -> OptionallyAnnotatedOrderBy:
         field_expr = collate_expression(F(field_name))
 
@@ -1476,15 +1489,14 @@ class LastModifiedByFieldType(ReadOnlyFieldType):
         return user.email if user else None
 
     def get_order(
-        self, field, field_name, order_direction
+        self, field, field_name, order_direction, table_model=None
     ) -> OptionallyAnnotatedOrderBy:
         """
         If the user wants to sort the results they expect them to be ordered
         alphabetically based on the user's name.
         """
 
-        name = f"{field_name}__first_name"
-        order = collate_expression(F(name))
+        order = collate_expression(self.get_sortable_column_expression(field_name))
 
         if order_direction == "ASC":
             order = order.asc(nulls_first=True)
@@ -1548,6 +1560,9 @@ class LastModifiedByFieldType(ReadOnlyFieldType):
         return super().get_alter_column_prepare_old_value(
             connection, from_field, to_field
         )
+
+    def get_sortable_column_expression(self, field_name: str) -> Expression | F:
+        return F(f"{field_name}__first_name")
 
 
 class CreatedByFieldType(ReadOnlyFieldType):
@@ -1681,15 +1696,14 @@ class CreatedByFieldType(ReadOnlyFieldType):
         return user.email if user else None
 
     def get_order(
-        self, field, field_name, order_direction
+        self, field, field_name, order_direction, table_model=None
     ) -> OptionallyAnnotatedOrderBy:
         """
         If the user wants to sort the results they expect them to be ordered
         alphabetically based on the user's name.
         """
 
-        name = f"{field_name}__first_name"
-        order = collate_expression(F(name))
+        order = collate_expression(self.get_sortable_column_expression(field_name))
 
         if order_direction == "ASC":
             order = order.asc(nulls_first=True)
@@ -1753,6 +1767,9 @@ class CreatedByFieldType(ReadOnlyFieldType):
         return super().get_alter_column_prepare_old_value(
             connection, from_field, to_field
         )
+
+    def get_sortable_column_expression(self, field_name: str) -> Expression | F:
+        return F(f"{field_name}__first_name")
 
 
 class DurationFieldType(FieldType):
@@ -1908,6 +1925,9 @@ class DurationFieldType(FieldType):
 
         setattr(row, field_name, value)
 
+    def get_sortable_column_expression(self, field_name: str) -> Expression | F:
+        return Extract(F(f"{field_name}"), "epoch")
+
 
 class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType):
     """
@@ -1932,7 +1952,9 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         "link_row_table",
         "link_row_related_field",
         "link_row_limit_selection_view_id",
+        "link_row_table_primary_field",
     ]
+    serializer_mixins = [LinkRowFieldSerializerMixin]
     serializer_field_overrides = {
         "link_row_table_id": serializers.IntegerField(
             required=False,
@@ -2001,11 +2023,110 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
         ViewNotInTable: ERROR_VIEW_NOT_IN_TABLE,
     }
-    _can_order_by = False
     _can_be_primary_field = False
     can_get_unique_values = False
     is_many_to_many_field = True
     can_be_target_of_adhoc_lookup = False
+
+    def _check_related_field_can_order_by(
+        self, related_primary_field: Type[Field]
+    ) -> bool:
+        related_primary_field_type = field_type_registry.get_by_model(
+            related_primary_field
+        )
+        return related_primary_field_type.check_can_order_by(related_primary_field)
+
+    def check_can_order_by(self, field: Field) -> bool:
+        related_primary_field = field.specific.link_row_table_primary_field
+        if related_primary_field is None:
+            return False
+        return self._check_related_field_can_order_by(related_primary_field.specific)
+
+    def get_value_for_filter(self, row: "GeneratedTableModel", field):
+        related_primary_field = field.link_row_table_primary_field
+        if related_primary_field is None:
+            return None
+        related_primary_field = related_primary_field.specific
+        related_primary_field_type = field_type_registry.get_by_model(
+            related_primary_field
+        )
+        return related_primary_field_type.get_value_for_filter(
+            row, related_primary_field
+        )
+
+    def get_order(self, field, field_name, order_direction, table_model=None):
+        # If provided, use the table_model to find the related_primary_field to avoid
+        # potential unnecessary queries.
+        if table_model is not None:
+            remote_table_model = getattr(
+                table_model, field_name
+            ).field.remote_field.model
+            related_primary_field = remote_table_model.get_primary_field()
+        else:
+            related_primary_field = field.link_row_table_primary_field
+        if related_primary_field is None:
+            raise ValueError("Cannot find the related primary field.")
+
+        related_primary_field = related_primary_field.specific
+        if not self._check_related_field_can_order_by(related_primary_field):
+            raise ValueError(
+                "The primary field for the related table cannot be ordered by."
+            )
+        related_primary_field_type = field_type_registry.get_by_model(
+            related_primary_field
+        )
+        sortable_column_expr = (
+            related_primary_field_type.get_sortable_column_expression(
+                f"{field_name}__{related_primary_field.db_column}",
+            )
+        )
+
+        def get_array_agg(expr):
+            return ArrayAgg(
+                expr,
+                filter=Q(
+                    **{f"{field_name}__isnull": False, f"{field_name}__trashed": False}
+                ),
+                ordering=(f"{field_name}__order", f"{field_name}__id"),
+            )
+
+        value_query = get_array_agg(sortable_column_expr)
+        order_query = get_array_agg(F(f"{field_name}__order"))
+        id_query = get_array_agg(F(f"{field_name}__id"))
+
+        linked_value_column_name = f"{field_name}_{related_primary_field.db_column}"
+        # If the value are the same for multiple rows, we don't want Postgres to return
+        # them randomly, so we add the order and id of the rows in the linked table to
+        # make the ordering deterministic.
+        linked_order_column_name = (
+            f"{field_name}_{related_primary_field.db_column}_order"
+        )
+        linked_id_column_name = f"{field_name}_{related_primary_field.db_column}_id"
+        annotation = {
+            linked_value_column_name: value_query,
+            linked_order_column_name: order_query,
+            linked_id_column_name: id_query,
+        }
+
+        linked_value = F(linked_value_column_name)
+        linked_order = F(linked_order_column_name)
+        linked_id = F(linked_id_column_name)
+        if isinstance(related_primary_field_type, CollationSortMixin):
+            linked_value = collate_expression(linked_value)
+
+        if order_direction == "DESC":
+            linked_value = linked_value.desc(nulls_first=True)
+            linked_order = linked_order.desc()
+            linked_id = linked_id.desc()
+        else:
+            linked_value = linked_value.asc(nulls_first=True)
+            linked_order = linked_order.asc()
+            linked_id = linked_id.asc()
+
+        return OptionallyAnnotatedOrderBy(
+            annotation=annotation,
+            order=[linked_value, linked_order, linked_id],
+        )
 
     def get_search_expression(self, field: Field, queryset: QuerySet) -> Expression:
         remote_field = queryset.model._meta.get_field(field.db_column).remote_field
@@ -2077,7 +2198,7 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
             ]
 
         if len(target_field_names) > 0:
-            related_queryset = related_queryset.only(*target_field_names)
+            related_queryset = related_queryset.only("order", *target_field_names)
             for target_field_name in target_field_names:
                 field_obj = remote_model.get_field_object(target_field_name)
                 related_queryset = field_obj["type"].enhance_queryset(
@@ -2088,6 +2209,21 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
 
         return queryset.prefetch_related(
             models.Prefetch(name, queryset=related_queryset)
+        )
+
+    def enhance_field_queryset(
+        self, queryset: QuerySet[Field], field: Field
+    ) -> QuerySet[Field]:
+        return queryset.prefetch_related(
+            models.Prefetch(
+                "link_row_table__field_set",
+                queryset=specific_queryset(
+                    Field.objects.filter(primary=True)
+                    .select_related("content_type")
+                    .prefetch_related("select_options")
+                ),
+                to_attr=LinkRowField.RELATED_PPRIMARY_FIELD_ATTR,
+            )
         )
 
     def prepare_value_for_db(self, instance, value):
@@ -3000,7 +3136,7 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         return fields
 
     def to_baserow_formula_type(self, field) -> BaserowFormulaType:
-        primary_field = field.get_related_primary_field()
+        primary_field = field.link_row_table_primary_field
         if primary_field is None:
             return BaserowFormulaInvalidType("references unknown or deleted table")
         else:
@@ -3011,7 +3147,7 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
     def to_baserow_formula_expression(
         self, field
     ) -> BaserowExpression[BaserowFormulaType]:
-        primary_field = field.get_related_primary_field()
+        primary_field = field.link_row_table_primary_field
         return FormulaHandler.get_lookup_field_reference_expression(
             field, primary_field, self.to_baserow_formula_type(field)
         )
@@ -3019,7 +3155,7 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
     def get_field_dependencies(
         self, field_instance: LinkRowField, field_cache: "FieldCache"
     ) -> FieldDependencies:
-        primary_related_field = field_instance.get_related_primary_field()
+        primary_related_field = field_instance.link_row_table_primary_field
         if primary_related_field is not None:
             return [
                 FieldDependency(
@@ -3185,6 +3321,7 @@ class FileFieldType(FieldType):
     model_class = FileField
     can_be_in_form_view = True
     can_get_unique_values = False
+    _can_order_by = False
 
     def to_baserow_formula_type(self, field) -> BaserowFormulaType:
         return BaserowFormulaArrayType(BaserowFormulaSingleFileType(nullable=True))
@@ -3557,8 +3694,11 @@ class SelectOptionBaseFieldType(FieldType):
 
         return queryset
 
+    def get_sortable_column_expression(self, field_name: str) -> Expression | F:
+        return F(f"{field_name}__value")
 
-class SingleSelectFieldType(SelectOptionBaseFieldType):
+
+class SingleSelectFieldType(CollationSortMixin, SelectOptionBaseFieldType):
     type = "single_select"
     model_class = SingleSelectField
 
@@ -3815,7 +3955,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         )
 
     def get_order(
-        self, field, field_name, order_direction
+        self, field, field_name, order_direction, table_model=None
     ) -> OptionallyAnnotatedOrderBy:
         """
         If the user wants to sort the results they expect them to be ordered
@@ -3824,8 +3964,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         to the correct position.
         """
 
-        name = f"{field_name}__value"
-        order = collate_expression(F(name))
+        order = collate_expression(self.get_sortable_column_expression(field_name))
 
         if order_direction == "ASC":
             order = order.asc(nulls_first=True)
@@ -3893,6 +4032,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
 
 
 class MultipleSelectFieldType(
+    CollationSortMixin,
     ManyToManyFieldTypeSerializeToInputValueMixin,
     ManyToManyGroupByMixin,
     SelectOptionBaseFieldType,
@@ -4246,17 +4386,23 @@ class MultipleSelectFieldType(
             q={f"select_option_value_{field_name}__iregex": rf"\m{value}\M"},
         )
 
-    def get_order(self, field, field_name, order_direction):
+    def get_order(self, field, field_name, order_direction, table_model=None):
         """
-        If the user wants to sort the results they expect them to be ordered
-        alphabetically based on the select option value and not in the id which is
-        stored in the table. This method generates a Case expression which maps the id
-        to the correct position.
+        Order by the concatenated values of the select options, separated by a comma.
         """
 
+        # FIXME: this is broken because the field sort items by insertion order with the
+        # id in the through table. It's fixable here using a subquery on the m2m table
+        # instead of a `StringAgg`, but it will be very difficult to fix in the formula
+        # language. Also the frontend is not matching exactly the backend sorting and we
+        # should also consider the possibility that a comma can be part of the value.
         sort_column_name = f"{field_name}_agg_sort"
         query = Coalesce(
-            StringAgg(f"{field_name}__value", ",", output_field=models.TextField()),
+            StringAgg(
+                self.get_sortable_column_expression(field_name),
+                ",",
+                output_field=models.TextField(),
+            ),
             Value(""),
             output_field=models.TextField(),
         )
@@ -4877,10 +5023,10 @@ class FormulaFieldType(FormulaArrayFilterSupport, ReadOnlyFieldType):
         return self.to_baserow_formula_type(field.specific).can_group_by
 
     def get_order(
-        self, field, field_name, order_direction
+        self, field, field_name, order_direction, table_model=None
     ) -> OptionallyAnnotatedOrderBy:
         return self.to_baserow_formula_type(field.specific).get_order(
-            field, field_name, order_direction
+            field, field_name, order_direction, table_model=table_model
         )
 
     def get_value_for_filter(self, row: "GeneratedTableModel", field):
@@ -5543,7 +5689,7 @@ class LookupFieldType(FormulaFieldType):
 
 
 class MultipleCollaboratorsFieldType(
-    ManyToManyFieldTypeSerializeToInputValueMixin, FieldType
+    CollationSortMixin, ManyToManyFieldTypeSerializeToInputValueMixin, FieldType
 ):
     type = "multiple_collaborators"
     model_class = MultipleCollaboratorsField
@@ -5861,7 +6007,7 @@ class MultipleCollaboratorsFieldType(
     def random_to_input_value(self, field, value):
         return [{"id": user_id} for user_id in value]
 
-    def get_order(self, field, field_name, order_direction):
+    def get_order(self, field, field_name, order_direction, table_model=None):
         """
         If the user wants to sort the results they expect them to be ordered
         alphabetically based on the user's name and not in the id which is
@@ -5871,7 +6017,11 @@ class MultipleCollaboratorsFieldType(
 
         sort_column_name = f"{field_name}_agg_sort"
         query = Coalesce(
-            StringAgg(f"{field_name}__first_name", "", output_field=models.TextField()),
+            StringAgg(
+                self.get_sortable_column_expression(field_name),
+                "",
+                output_field=models.TextField(),
+            ),
             Value(""),
             output_field=models.TextField(),
         )
@@ -5891,6 +6041,9 @@ class MultipleCollaboratorsFieldType(
         values = [related_object.first_name for related_object in related_objects.all()]
         value = list_to_comma_separated_string(values)
         return value
+
+    def get_sortable_column_expression(self, field_name: str) -> Expression | F:
+        return F(f"{field_name}__first_name")
 
 
 class UUIDFieldType(ReadOnlyFieldType):

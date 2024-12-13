@@ -187,9 +187,11 @@ class AIFieldType(CollationSortMixin, SelectOptionBaseFieldType):
         baserow_field_type = self.get_baserow_field_type(field)
         return baserow_field_type.enhance_queryset(queryset, field, name)
 
-    def get_order(self, field, field_name, order_direction):
+    def get_order(self, field, field_name, order_direction, table_name=None):
         baserow_field_type = self.get_baserow_field_type(field)
-        return baserow_field_type.get_order(field, field_name, order_direction)
+        return baserow_field_type.get_order(
+            field, field_name, order_direction, table_model=table_name
+        )
 
     def serialize_to_input_value(self, field, value):
         baserow_field_type = self.get_baserow_field_type(field)
