@@ -20,10 +20,14 @@ spec:
           imagePullPolicy: Always
           {{- if .Values.migration.extraEnv }}
           env:
-            {{- range .Values.extraEnv }}
+            {{- range .Values.migration.extraEnv }}
             {{- if and (.name) (.value) }}
             - name: {{ .name | quote }}
               value: {{ .value | quote }}
+            {{- else if and (.name) (.valueFrom) }}
+            - name: {{ .name | quote }}
+              valueFrom:
+                {{- toYaml .valueFrom | nindent 16 }}
             {{- end }}
             {{- end }}
           {{- end }}
