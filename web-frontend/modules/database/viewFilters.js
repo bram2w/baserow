@@ -2750,6 +2750,9 @@ export class BooleanViewFilterType extends ViewFilterType {
   }
 
   matches(rowValue, filterValue, field, fieldType) {
+    if (filterValue === null) {
+      filterValue = false
+    }
     filterValue = trueValues.includes(
       filterValue.toString().toLowerCase().trim()
     )

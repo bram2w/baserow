@@ -1,6 +1,7 @@
 import { TestApp } from '@baserow/test/helpers/testApp'
 import moment from '@baserow/modules/core/moment'
 import {
+  BooleanViewFilterType,
   DateAfterDaysAgoViewFilterType,
   DateAfterOrEqualViewFilterType,
   DateAfterTodayViewFilterType,
@@ -1873,6 +1874,44 @@ const formulaUrlFieldFilterNotEqualCases = [
   },
 ]
 
+const booleanFieldTests = [
+  {
+    filterValue: null,
+    rowValue: null,
+    expectedResult: true, // both will evaluate to false
+  },
+  {
+    filterValue: null,
+    rowValue: '',
+    expectedResult: true, // both will evaluate to false
+  },
+  {
+    filterValue: '',
+    rowValue: '',
+    expectedResult: true, // both will evaluate to false
+  },
+  {
+    filterValue: false,
+    rowValue: true,
+    expectedResult: false,
+  },
+  {
+    filterValue: '0',
+    rowValue: '0',
+    expectedResult: true,
+  },
+  {
+    filterValue: '1',
+    rowValue: '0',
+    expectedResult: false,
+  },
+  {
+    filterValue: '1',
+    rowValue: '1',
+    expectedResult: true,
+  },
+]
+
 describe('All Tests', () => {
   let testApp = null
 
@@ -2671,4 +2710,13 @@ describe('All Tests', () => {
     'formulaUrlFieldFilters lenght is lower than test case %j',
     runUrlFormulafieldTest
   )
+
+  test.each(booleanFieldTests)('Boolean filter type tests %j', (values) => {
+    const result = new BooleanViewFilterType().matches(
+      values.rowValue,
+      values.filterValue,
+      {}
+    )
+    expect(result).toBe(values.expectedResult)
+  })
 })
