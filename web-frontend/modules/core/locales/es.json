@@ -256,11 +256,11 @@
         "noWorkspace": "Sin espacio de trabajo"
     },
     "login": {
-        "title": "Acceso",
-        "forgotPassword": "¿Se te olvidó tu contraseña?",
+        "title": "Bienvenido de nuevo",
+        "forgotPassword": "¿Olvidaste tu contraseña?",
         "passwordPlaceholder": "Introduce tu contraseña...",
-        "signUpText": "¿No tienes cuenta?",
-        "signUp": "Inscribirse",
+        "signUpText": "¿Eres nuevo en Baserow?",
+        "signUp": "Regístrate",
         "emailPlaceholder": "Introduce tu correo electrónico...",
         "displayPasswordLogin": "Iniciar sesión con correo electrónico y contraseña",
         "redirecting": "Redireccionando al proveedor de autentificación..."
@@ -276,10 +276,11 @@
         "errorLinkExpiredTitle": "Enlace expirado",
         "errorLinkExpiredMessage": "El enlace de restablecimiento de contraseña ha caducado. Solicite otro.",
         "disabled": "El restablecimiento de la contraseña está desactivado",
-        "disabledMessage": "No es posible restablecer la contraseña porque ha sido desactivada."
+        "disabledMessage": "No es posible restablecer la contraseña porque ha sido desactivada.",
+        "message": "Ya puede iniciar sesión en Baserow con su nueva contraseña."
     },
     "signup": {
-        "headTitle": "Crear una nueva cuenta",
+        "headTitle": "Crear una cuenta",
         "title": "Inscribirse",
         "disabled": "Registro está deshabilitado",
         "disabledMessage": "No es posible crear una cuenta porque ha sido deshabilitada.",
@@ -290,16 +291,21 @@
         "emailPlaceholder": "Introduce tu correo electrónico...",
         "passwordRepeatPlaceholder": "Confirma tu contraseña...",
         "loginText": "¿Ya tienes una cuenta?",
-        "namePlaceholder": "Introduce tu nombre..."
+        "namePlaceholder": "Introduce tu nombre...",
+        "agreeTerms": "Al crear una cuenta, acepta el {0} {1} {2}",
+        "terms": "Condiciones del servicio",
+        "privacyPolicy": "Política de privacidad"
     },
     "forgotPassword": {
         "title": "Contraseña olvidada",
-        "message": "Por favor, introduzca su dirección de correo electrónico en el formulario. Si encontramos una cuenta, le enviaremos un correo electrónico con un enlace para restablecer su contraseña.",
+        "message": "Introduce tu dirección de correo electrónico y te enviaremos un enlace para restablecer tu contraseña.",
         "submit": "Enviar enlace",
-        "confirmation": "Si su dirección de correo electrónico existe en nuestra base de datos, recibirá un enlace de restablecimiento de contraseña en su dirección de correo electrónico en unos minutos.",
+        "confirmation": "Hemos enviado un correo electrónico a {email}, que contiene un enlace para restablecer tu contraseña de Baserow.",
         "disabled": "Contraseña olvidada está desactivada",
         "disabledMessage": "No es posible restablecer la contraseña porque ha sido deshabilitada.",
-        "loginText": "¿Ya tienes cuenta y contraseña?"
+        "loginText": "¿Ya tienes cuenta y contraseña?",
+        "confirmationTitle": "Comprueba tu correo electrónico",
+        "goBack": "Volver"
     },
     "settings": {
         "settingsTitle": "Configuración de administrador",

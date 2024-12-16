@@ -13,7 +13,9 @@
         "beta": "Bêta",
         "disabled": "Désactivé·e",
         "enabled": "Activé·e",
-        "summarize": "Résumer"
+        "summarize": "Résumer",
+        "or": "ou",
+        "and": "et"
     },
     "action": {
         "upload": "Envoyer",
@@ -45,7 +47,8 @@
         "reset": "Réinitialiser",
         "logout": "Déconnexion",
         "set": "Définir",
-        "backToHome": "Retour à l'accueil"
+        "backToHome": "Retour à l'accueil",
+        "close": "Fermer"
     },
     "adminType": {
         "settings": "Paramètres",

@@ -1,7 +1,7 @@
 {
     "paginator": {
-        "page": "página",
-        "of": "de{pages}"
+        "page": "Página",
+        "of": "de {pages}"
     },
     "copied": {
         "label": "Copiado!"
@@ -9,7 +9,11 @@
     "sidebarApplication": {
         "renameApplication": "Renomear{type}",
         "viewTrash": "Visualizar lixeira",
-        "deleteApplication": "Deletar{type}"
+        "deleteApplication": "Deletar{type}",
+        "snapshots": "Salvar visualização da base de dados",
+        "rename": "Renomear",
+        "duplicate": "Duplicar",
+        "delete": "Deletar"
     },
     "sidebar": {
         "createWorkspace": "Criar grupo",
@@ -19,20 +23,29 @@
         "admin": "Administrador",
         "dashboard": "Painel",
         "trash": "Lixeira",
-        "settings": "Configurações"
+        "settings": "Configurações",
+        "addNewWorkspace": "Adicionar novo grupo",
+        "adminSettings": "Configuração administrativas",
+        "notifications": "Notificações",
+        "members": "Membros",
+        "adminTools": "Ferramentas administrativas",
+        "home": "Home",
+        "general": "Geral",
+        "people": "Pessoas",
+        "licenses": "Licenças"
     },
     "accountForm": {
         "nameLabel": "Seu nome",
-        "languageLabel": "Interface de linguagem"
+        "languageLabel": "Linguagem da interface"
     },
     "accountSettings": {
         "title": "Conta",
         "changedTitle": "Alterado",
         "changedDescription": "As informações da sua conta foram alteradas.",
-        "submitButton": "Conta atualizada"
+        "submitButton": "Atualizar conta"
     },
     "settingsModal": {
-        "title": "Configurações"
+        "title": "Minhas configurações"
     },
     "passwordSettings": {
         "title": "Alterar a senha",
@@ -331,6 +344,32 @@
                 }
             }
         }
+    },
+<<<<<<< HEAD
+    "notificationPanel": {
+        "noNotification": "Notificaremos sobre atualizações importar e quando você mencionado no Baserow.",
+        "title": "Notificações",
+        "newNotificationsAvailable": "Novas notificações disponíveis",
+        "refresh": "Atualizar",
+        "markAllAsRead": "Marcar todas como lidas",
+        "clearAll": "Limpar tudo",
+        "noNotificationTitle": "Você não possui notificações"
+    },
+    "deleteAccountSettings": {
+        "description": "Ao digitar a sua senha e clicar no botão, o agendamento para apagar a sua conta será realizado. Sua conta será permanentemente deletada após {days} dias. Se em qualquer momento você logar novamente, o agendamento para apagar será cancelado.",
+        "title": "Apagar conta"
+    },
+    "duplicateApplicationJobType": {
+        "duplicating": "Duplicando",
+        "duplicatedTitle": "Aplicação Duplicada"
+    },
+    "InstallTemplateJobType": {
+        "installing": "Instalando",
+        "installedTitle": "Template instalado"
+    },
+    "clearAllNotificationsConfirmModal": {
+        "title": "Você tem certeza de que deseja limpar todas as notificações?",
+        "message": "Todas as notificações serão apagadas e não será mais possível vê-las."
     },
     "user": {
         "isStaff": "É staff",

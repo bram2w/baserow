@@ -281,7 +281,8 @@
         "addField": "Añadir campo"
     },
     "selectRowContent": {
-        "search": "Filas de búsqueda"
+        "search": "Filas de búsqueda",
+        "hideFields": "Ocultar campos"
     },
     "rowEditModal": {
         "addField": "Añadir campo",
@@ -466,7 +467,8 @@
         "selected": "Seleccionado"
     },
     "viewFilter": {
-        "filter": "Filtro | 1 filtro | {count} filtros"
+        "filter": "Filtro | 1 filtro | {count} filtros",
+        "hasAllValuesEqual": "tiene todos los valores iguales"
     },
     "viewContext": {
         "exportView": "Exportar vista",
@@ -526,7 +528,8 @@
         "tooManyItemsDescription": "No es posible actualizar más de {límite} filas a la vez, así que sólo actualizamos la primera.",
         "generateCellsValues": "Generar valores con IA",
         "AIValuesGenerationErrorTitle": "Falló la generación de valor de la IA",
-        "AIValuesGenerationErrorMessage": "Por favor, comprueba tu API_KEY y verifica el modelo seleccionado."
+        "AIValuesGenerationErrorMessage": "Por favor, comprueba tu API_KEY y verifica el modelo seleccionado.",
+        "copyCellsWithHeader": "Copiar celdas con encabezado"
     },
     "gridViewFieldLinkRow": {
         "unnamed": "fila sin nombre {value}"
@@ -542,7 +545,8 @@
         "failedTitle": "Exportación fallida",
         "failedDescription": "La exportación falló debido a un error del servidor.",
         "cancelledTitle": "Exportación cancelada",
-        "cancelledDescription": "La exportación fue cancelada."
+        "cancelledDescription": "La exportación fue cancelada.",
+        "title": "Exportar {name}"
     },
     "exporterTypeChoices": {
         "formatLabel": "¿A qué formato le gustaría exportar?"
@@ -563,7 +567,8 @@
         "recordSeparator": "separador de registros",
         "unitSeparator": "Separador de unidades",
         "encodingLabel": "Codificación",
-        "firstRowIsHeaderLabel": "La primera fila es el encabezado"
+        "firstRowIsHeaderLabel": "La primera fila es el encabezado",
+        "includeHeader": "Incluir nombres de campos como encabezado"
     },
     "apiDocsDatabase": {
         "pageTitle": "Documentación de la API de la base de datos de {name}",

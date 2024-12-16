@@ -907,5 +907,14 @@
     "recordSelectorElement": {
         "emptyAdhocState": "Aucun enregistrement correspondant à '{query}' n'a été trouvé.",
         "emptyState": "Aucun enregistrement n'a été trouvé."
+    },
+    "common": {
+        "dateFormatTitle": "Format de date",
+        "dateFormatEU": "Européen",
+        "dateFormatUS": "Américain",
+        "dateFormatISO": "ISO",
+        "timeFormatTitle": "Format de l'heure",
+        "timeFormat24Hour": "24 heures",
+        "timeFormat12Hour": "12 heures"
     }
 }
