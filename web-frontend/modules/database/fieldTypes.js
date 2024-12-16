@@ -163,10 +163,11 @@ import { DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY } from '@baserow/modules/database
 import ViewService from '@baserow/modules/database/services/view'
 import FormService from '@baserow/modules/database/services/view/form'
 import { UploadFileUserFileUploadType } from '@baserow/modules/core/userFileUploadTypes'
-import _ from 'lodash'
+import _, { clone } from 'lodash'
 import { trueValues } from '@baserow/modules/core/utils/constants'
 import ViewFilterTypeNumber from '@baserow/modules/database/components/view/ViewFilterTypeNumber.vue'
 import ViewFilterTypeDuration from '@baserow/modules/database/components/view/ViewFilterTypeDuration.vue'
+import FormViewFieldOptionsAllowedSelectOptions from '@baserow/modules/database/components/view/form/FormViewFieldOptionsAllowedSelectOptions'
 
 export class FieldType extends Registerable {
   /**
@@ -265,6 +266,25 @@ export class FieldType extends Registerable {
         properties: {},
       },
     }
+  }
+
+  /**
+   * This hook is called in the form view editing mode. It allows to change the
+   * field values per field type. These field values are only passed into the input
+   * component. The form view component is sometimes the same as the row edit modal
+   * field component, so unique changes can't always be made there. Hence this hook
+   * to prepare the values.
+   */
+  prepareFormViewFieldForFormEditInput(field) {
+    return field
+  }
+
+  /**
+   * Can optionally return a component that's rendered inside the form view, and can
+   * be used to configure field specific field options.
+   */
+  getFormViewFieldOptionsComponent(field) {
+    return null
   }
 
   /**
@@ -831,6 +851,25 @@ export class FieldType extends Registerable {
    */
   getAlias() {
     return null
+  }
+}
+
+class SelectOptionBaseFieldType extends FieldType {
+  prepareFormViewFieldForFormEditInput(field, fieldOptions) {
+    const updatedField = clone(field)
+    updatedField.select_options = updatedField.select_options.filter(
+      (selectOption) => {
+        return (
+          fieldOptions.include_all_select_options ||
+          fieldOptions.allowed_select_options.includes(selectOption.id)
+        )
+      }
+    )
+    return updatedField
+  }
+
+  getFormViewFieldOptionsComponent() {
+    return FormViewFieldOptionsAllowedSelectOptions
   }
 }
 
@@ -3096,7 +3135,7 @@ export class FileFieldType extends FieldType {
   }
 }
 
-export class SingleSelectFieldType extends FieldType {
+export class SingleSelectFieldType extends SelectOptionBaseFieldType {
   static getType() {
     return 'single_select'
   }
@@ -3318,7 +3357,7 @@ export class SingleSelectFieldType extends FieldType {
   }
 }
 
-export class MultipleSelectFieldType extends FieldType {
+export class MultipleSelectFieldType extends SelectOptionBaseFieldType {
   static getType() {
     return 'multiple_select'
   }

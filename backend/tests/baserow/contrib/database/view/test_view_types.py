@@ -833,6 +833,59 @@ def test_import_export_form_view_with_conditions_in_groups(data_fixture, api_cli
 
 
 @pytest.mark.django_db
+def test_import_export_form_view_with_allowed_select_options(data_fixture, api_client):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+
+    table = data_fixture.create_database_table(user=user)
+    form_view = data_fixture.create_form_view(table=table)
+    field_1 = data_fixture.create_single_select_field(table=table)
+    option_1 = data_fixture.create_select_option(field=field_1)
+    option_2 = data_fixture.create_select_option(field=field_1)
+    option_3 = data_fixture.create_select_option(field=field_1)
+
+    field_1_option = data_fixture.create_form_view_field_option(
+        form_view,
+        field_1,
+        required=True,
+        enabled=True,
+        name="Field ",
+        order=1,
+        include_all_select_options=False,
+    )
+    field_1_option.allowed_select_options.set([option_1.id, option_2.id])
+
+    database_type = application_type_registry.get("database")
+    config = ImportExportConfig(include_permission_data=True)
+    serialized = database_type.export_serialized(table.database, config)
+
+    imported_workspace = data_fixture.create_workspace(user=user)
+
+    id_mapping = {}
+    imported_database = database_type.import_serialized(
+        imported_workspace,
+        serialized,
+        config,
+        id_mapping,
+        None,
+        None,
+    )
+
+    imported_table = imported_database.table_set.all().first()
+    imported_view = imported_table.view_set.all().first().specific
+    imported_field_option = list(imported_view.active_field_options)[0]
+    imported_field = imported_field_option.field
+    select_options = imported_field.select_options.all()
+
+    assert imported_field_option.include_all_select_options is False
+    assert [s.id for s in imported_field_option.allowed_select_options.all()] == [
+        select_options[0].id,
+        select_options[1].id,
+    ]
+
+
+@pytest.mark.django_db
 def test_import_export_view_ownership_type(data_fixture):
     workspace = data_fixture.create_workspace()
     user = data_fixture.create_user(workspace=workspace)

@@ -769,10 +769,13 @@
   "formViewField": {
     "required": "required",
     "descriptionPlaceholder": "Description",
+    "includeAllSelectOptions": "include all select options",
+    "includeAllSelectOptionsHelper": "Choose the select options that must be included in the form using this dropdown",
     "showWhenMatchingConditions": "show when conditions are met",
     "addCondition": "Add condition",
     "addConditionGroup": "Add condition group",
-    "showFieldAs": "Show field as"
+    "showFieldAs": "Show field as",
+    "noSelectOptions": "There are no select options available."
   },
   "duplicateFieldContext": {
     "duplicate": "Duplicate field",

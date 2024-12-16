@@ -1206,7 +1206,7 @@ def test_sync_data_sync_table_single_select_get_metadata_delete(
 
     source_option_a.delete()
 
-    with django_assert_num_queries(3):
+    with django_assert_num_queries(5):
         metadata = data_sync_property.get_metadata(
             target_single_select_field_1, metadata
         )
