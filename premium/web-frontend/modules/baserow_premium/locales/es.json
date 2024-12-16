@@ -10,7 +10,8 @@
         },
         "exporterType": {
             "json": "Exportar a JSON",
-            "xml": "Exportar a XML"
+            "xml": "Exportar a XML",
+            "excel": "Exportar a Excel"
         },
         "deactivated": "Disponible en el plan Premium"
     },
@@ -347,5 +348,8 @@
         "choice": "Elección",
         "textDescription": "Genera un texto libre basado en la pregunta.",
         "choiceDescription": "Elige sólo una de las opciones de campo."
+    },
+    "tableExcelExporter": {
+        "includeHeader": "Incluir nombres de campos como encabezado"
     }
 }
