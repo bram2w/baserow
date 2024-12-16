@@ -1891,6 +1891,21 @@ class ManyToManyGroupByMixin:
     that the field type must set the `_can_group_by` property to `True`.
     """
 
+    def _get_group_by_agg_expression(self, field_name: str) -> Expression:
+        """
+        Returns the aggregation expression that can be used to group by the field. By
+        default it will return an ArrayAgg expression that will aggregate all the
+        related field values.
+
+        :param field_name: The name of the field in the table.
+        :return: The aggregation expression that can be used to group by the field.
+        """
+
+        return ArrayAgg(
+            f"{field_name}__id",
+            filter=Q(**{f"{field_name}__isnull": False}),
+        )
+
     def get_group_by_field_unique_value(
         self, field: Field, field_name: str, value: Any
     ) -> Any:
@@ -1907,10 +1922,7 @@ class ManyToManyGroupByMixin:
                 base_queryset.filter(id=OuterRef("id"))
                 .annotate(
                     res=Coalesce(
-                        ArrayAgg(
-                            f"{field_name}__id",
-                            filter=Q(**{f"{field_name}__id__isnull": False}),
-                        ),
+                        self._get_group_by_agg_expression(field_name),
                         Value([], output_field=ArrayField(IntegerField())),
                     ),
                 )

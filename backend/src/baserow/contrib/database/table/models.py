@@ -605,6 +605,15 @@ class GeneratedTableModel(HierarchicalModelMixin, models.Model):
             raise ValueError(f"Field {field_name} not found.")
 
     @classmethod
+    def get_field_object_by_id(cls, field_id: int, include_trash: bool = False):
+        field_objects = cls.get_field_objects(include_trash)
+
+        try:
+            return next(filter(lambda f: f["field"].id == field_id, field_objects))
+        except StopIteration:
+            raise ValueError(f"Field with ID {field_id} not found.")
+
+    @classmethod
     def get_field_object_by_user_field_name(
         cls, field_name: str, include_trash: bool = False
     ):
@@ -1279,7 +1288,14 @@ class Table(
                 fields_query = fields_query.filter(name__in=field_names)
 
         if isinstance(fields_query, QuerySet):
-            fields_query = specific_iterator(fields_query)
+            fields_query = specific_iterator(
+                fields_query,
+                per_content_type_queryset_hook=(
+                    lambda model, queryset: field_type_registry.get_by_model(
+                        model
+                    ).enhance_field_queryset(queryset, model)
+                ),
+            )
 
         # Create a combined list of fields that must be added and belong to the this
         # table.

@@ -1929,7 +1929,9 @@ class DurationFieldType(FieldType):
         return Extract(F(f"{field_name}"), "epoch")
 
 
-class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType):
+class LinkRowFieldType(
+    ManyToManyFieldTypeSerializeToInputValueMixin, ManyToManyGroupByMixin, FieldType
+):
     """
     The link row field can be used to link a field to a row of another table. Because
     the user should also be able to see which rows are linked to the related table,
@@ -2028,22 +2030,61 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
     is_many_to_many_field = True
     can_be_target_of_adhoc_lookup = False
 
+    def _get_related_table_primary_field(
+        self, field: Field, table_model: Optional["GeneratedTableModel"] = None
+    ) -> Optional[Field]:
+        # If provided, use the table_model to find the related_primary_field to avoid
+        # potential unnecessary queries.
+        if table_model is not None:
+            model_field_name = table_model.get_field_object_by_id(field.id)["name"]
+            model_field = getattr(table_model, model_field_name).field
+            remote_table_model = model_field.remote_field.model
+            return remote_table_model.get_primary_field()
+        else:
+            return field.specific.link_row_table_primary_field
+
     def _check_related_field_can_order_by(
         self, related_primary_field: Type[Field]
     ) -> bool:
         related_primary_field_type = field_type_registry.get_by_model(
+            related_primary_field.specific_class
+        )
+        return related_primary_field_type.check_can_order_by(
+            related_primary_field.specific
+        )
+
+    def check_can_group_by(self, field):
+        related_primary_field = self._get_related_table_primary_field(field)
+        if related_primary_field is None:
+            return False
+        related_primary_field = related_primary_field.specific
+        related_primary_field_type = field_type_registry.get_by_model(
             related_primary_field
         )
-        return related_primary_field_type.check_can_order_by(related_primary_field)
+        return related_primary_field_type.check_can_group_by(related_primary_field)
+
+    def _get_group_by_agg_expression(self, field_name: str) -> dict:
+        return ArrayAgg(
+            f"{field_name}__id",
+            filter=Q(
+                **{
+                    f"{field_name}__isnull": False,
+                    f"{field_name}__trashed": False,
+                }
+            ),
+            distinct=True,
+        )
 
     def check_can_order_by(self, field: Field) -> bool:
-        related_primary_field = field.specific.link_row_table_primary_field
+        related_primary_field = self._get_related_table_primary_field(field)
         if related_primary_field is None:
             return False
         return self._check_related_field_can_order_by(related_primary_field.specific)
 
     def get_value_for_filter(self, row: "GeneratedTableModel", field):
-        related_primary_field = field.link_row_table_primary_field
+        related_primary_field = self._get_related_table_primary_field(
+            field, row._meta.model
+        )
         if related_primary_field is None:
             return None
         related_primary_field = related_primary_field.specific
@@ -2055,15 +2096,9 @@ class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType)
         )
 
     def get_order(self, field, field_name, order_direction, table_model=None):
-        # If provided, use the table_model to find the related_primary_field to avoid
-        # potential unnecessary queries.
-        if table_model is not None:
-            remote_table_model = getattr(
-                table_model, field_name
-            ).field.remote_field.model
-            related_primary_field = remote_table_model.get_primary_field()
-        else:
-            related_primary_field = field.link_row_table_primary_field
+        related_primary_field = self._get_related_table_primary_field(
+            field, table_model
+        )
         if related_primary_field is None:
             raise ValueError("Cannot find the related primary field.")
 

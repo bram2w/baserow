@@ -1099,6 +1099,27 @@ export class LinkRowFieldType extends FieldType {
     return []
   }
 
+  getCanGroupByInView(field) {
+    const relatedField = field.link_row_table_primary_field
+    const relatedFieldType = this.app.$registry.get('field', relatedField.type)
+    return relatedFieldType.getCanGroupByInView(relatedField)
+  }
+
+  getGroupValueFromRowValue(field, value) {
+    return (value || []).map((row) => row.id)
+  }
+
+  getRowValueFromGroupValue(field, value) {
+    return (value || []).map((rowId) => ({ id: rowId }))
+  }
+
+  isEqual(field, value1, value2) {
+    const value1Ids = value1.map((v) => v.id)
+    const value2Ids = value2.map((v) => v.id)
+
+    return _.isEqual(value1Ids, value2Ids)
+  }
+
   getCanSortInView(field) {
     const relatedField = field.link_row_table_primary_field
     const relatedFieldType = this.app.$registry.get('field', relatedField.type)

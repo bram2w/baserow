@@ -2539,86 +2539,56 @@ def test_get_group_by_metadata_in_rows_with_many_to_many_field(data_fixture):
         color="blue",
     )
 
-    RowHandler().create_row(
+    RowHandler().force_create_rows(
         user=user,
         table=table,
-        values={
-            f"field_{text_field.id}": "Row 1",
-            f"field_{multiple_select_field.id}": [],
-        },
-    )
-    RowHandler().create_row(
-        user=user,
-        table=table,
-        values={
-            f"field_{text_field.id}": "Row 2",
-            f"field_{multiple_select_field.id}": [],
-        },
-    )
-    RowHandler().create_row(
-        user=user,
-        table=table,
-        values={
-            f"field_{text_field.id}": "Row 3",
-            f"field_{multiple_select_field.id}": [select_option_1.id],
-        },
-    )
-    RowHandler().create_row(
-        user=user,
-        table=table,
-        values={
-            f"field_{text_field.id}": "Row 4",
-            f"field_{multiple_select_field.id}": [select_option_1.id],
-        },
-    )
-    RowHandler().create_row(
-        user=user,
-        table=table,
-        values={
-            f"field_{text_field.id}": "Row 5",
-            f"field_{multiple_select_field.id}": [select_option_2.id],
-        },
-    )
-    RowHandler().create_row(
-        user=user,
-        table=table,
-        values={
-            f"field_{text_field.id}": "Row 6",
-            f"field_{multiple_select_field.id}": [select_option_2.id],
-        },
-    )
-    RowHandler().create_row(
-        user=user,
-        table=table,
-        values={
-            f"field_{text_field.id}": "Row 7",
-            f"field_{multiple_select_field.id}": [
-                select_option_1.id,
-                select_option_2.id,
-            ],
-        },
-    )
-    RowHandler().create_row(
-        user=user,
-        table=table,
-        values={
-            f"field_{text_field.id}": "Row 8",
-            f"field_{multiple_select_field.id}": [
-                select_option_1.id,
-                select_option_2.id,
-            ],
-        },
-    )
-    RowHandler().create_row(
-        user=user,
-        table=table,
-        values={
-            f"field_{text_field.id}": "Row 9",
-            f"field_{multiple_select_field.id}": [
-                select_option_2.id,
-                select_option_1.id,
-            ],
-        },
+        rows_values=[
+            {
+                f"field_{text_field.id}": "Row 1",
+                f"field_{multiple_select_field.id}": [],
+            },
+            {
+                f"field_{text_field.id}": "Row 2",
+                f"field_{multiple_select_field.id}": [],
+            },
+            {
+                f"field_{text_field.id}": "Row 3",
+                f"field_{multiple_select_field.id}": [select_option_1.id],
+            },
+            {
+                f"field_{text_field.id}": "Row 4",
+                f"field_{multiple_select_field.id}": [select_option_1.id],
+            },
+            {
+                f"field_{text_field.id}": "Row 5",
+                f"field_{multiple_select_field.id}": [select_option_2.id],
+            },
+            {
+                f"field_{text_field.id}": "Row 6",
+                f"field_{multiple_select_field.id}": [select_option_2.id],
+            },
+            {
+                f"field_{text_field.id}": "Row 7",
+                f"field_{multiple_select_field.id}": [
+                    select_option_1.id,
+                    select_option_2.id,
+                ],
+            },
+            {
+                f"field_{text_field.id}": "Row 8",
+                f"field_{multiple_select_field.id}": [
+                    select_option_1.id,
+                    select_option_2.id,
+                ],
+            },
+            {
+                f"field_{text_field.id}": "Row 9",
+                f"field_{multiple_select_field.id}": [
+                    select_option_2.id,
+                    select_option_1.id,
+                ],
+            },
+        ],
     )
 
     model = table.get_model()
@@ -2761,91 +2731,61 @@ def test_get_group_by_metadata_in_rows_multiple_and_single_select_fields(data_fi
         color="blue",
     )
 
-    RowHandler().create_row(
+    RowHandler().force_create_rows(
         user=user,
         table=table,
-        values={
-            f"field_{text_field.id}": "Row 1",
-            f"field_{multiple_select_field.id}": [],
-            f"field_{single_select_field.id}": None,
-        },
-    )
-    RowHandler().create_row(
-        user=user,
-        table=table,
-        values={
-            f"field_{text_field.id}": "Row 2",
-            f"field_{multiple_select_field.id}": [],
-            f"field_{single_select_field.id}": ss_option_1.id,
-        },
-    )
-    RowHandler().create_row(
-        user=user,
-        table=table,
-        values={
-            f"field_{text_field.id}": "Row 3",
-            f"field_{multiple_select_field.id}": [ms_option_1.id],
-            f"field_{single_select_field.id}": ss_option_1.id,
-        },
-    )
-    RowHandler().create_row(
-        user=user,
-        table=table,
-        values={
-            f"field_{text_field.id}": "Row 4",
-            f"field_{multiple_select_field.id}": [ms_option_1.id],
-            f"field_{single_select_field.id}": ss_option_2.id,
-        },
-    )
-    RowHandler().create_row(
-        user=user,
-        table=table,
-        values={
-            f"field_{text_field.id}": "Row 5",
-            f"field_{multiple_select_field.id}": [ms_option_2.id],
-            f"field_{single_select_field.id}": ss_option_2.id,
-        },
-    )
-    RowHandler().create_row(
-        user=user,
-        table=table,
-        values={
-            f"field_{text_field.id}": "Row 6",
-            f"field_{multiple_select_field.id}": [ms_option_2.id],
-        },
-    )
-    RowHandler().create_row(
-        user=user,
-        table=table,
-        values={
-            f"field_{text_field.id}": "Row 7",
-            f"field_{multiple_select_field.id}": [
-                ms_option_1.id,
-                ms_option_2.id,
-            ],
-        },
-    )
-    RowHandler().create_row(
-        user=user,
-        table=table,
-        values={
-            f"field_{text_field.id}": "Row 8",
-            f"field_{multiple_select_field.id}": [
-                ms_option_1.id,
-                ms_option_2.id,
-            ],
-        },
-    )
-    RowHandler().create_row(
-        user=user,
-        table=table,
-        values={
-            f"field_{text_field.id}": "Row 9",
-            f"field_{multiple_select_field.id}": [
-                ms_option_2.id,
-                ms_option_1.id,
-            ],
-        },
+        rows_values=[
+            {
+                f"field_{text_field.id}": "Row 1",
+                f"field_{multiple_select_field.id}": [],
+                f"field_{single_select_field.id}": None,
+            },
+            {
+                f"field_{text_field.id}": "Row 2",
+                f"field_{multiple_select_field.id}": [],
+                f"field_{single_select_field.id}": ss_option_1.id,
+            },
+            {
+                f"field_{text_field.id}": "Row 3",
+                f"field_{multiple_select_field.id}": [ms_option_1.id],
+                f"field_{single_select_field.id}": ss_option_1.id,
+            },
+            {
+                f"field_{text_field.id}": "Row 4",
+                f"field_{multiple_select_field.id}": [ms_option_1.id],
+                f"field_{single_select_field.id}": ss_option_2.id,
+            },
+            {
+                f"field_{text_field.id}": "Row 5",
+                f"field_{multiple_select_field.id}": [ms_option_2.id],
+                f"field_{single_select_field.id}": ss_option_2.id,
+            },
+            {
+                f"field_{text_field.id}": "Row 6",
+                f"field_{multiple_select_field.id}": [ms_option_2.id],
+            },
+            {
+                f"field_{text_field.id}": "Row 7",
+                f"field_{multiple_select_field.id}": [
+                    ms_option_1.id,
+                    ms_option_2.id,
+                ],
+            },
+            {
+                f"field_{text_field.id}": "Row 8",
+                f"field_{multiple_select_field.id}": [
+                    ms_option_1.id,
+                    ms_option_2.id,
+                ],
+            },
+            {
+                f"field_{text_field.id}": "Row 9",
+                f"field_{multiple_select_field.id}": [
+                    ms_option_2.id,
+                    ms_option_1.id,
+                ],
+            },
+        ],
     )
 
     model = table.get_model()

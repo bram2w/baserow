@@ -4242,6 +4242,18 @@ def test_get_group_by_on_all_fields_in_interesting_table(data_fixture):
             {"count": 1, "field_duration_hms_sss": timedelta(seconds=3666.666)},
             {"count": 1, "field_duration_hms_sss": None},
         ],
+        "link_row": [
+            {"field_link_row": [], "count": 1},
+            {"field_link_row": [1, 2, 3], "count": 1},
+        ],
+        "self_link_row": [
+            {"field_self_link_row": [], "count": 1},
+            {"field_self_link_row": [1], "count": 1},
+        ],
+        "link_row_without_related": [
+            {"field_link_row_without_related": [], "count": 1},
+            {"field_link_row_without_related": [1, 2], "count": 1},
+        ],
     }
 
     for field_name, expected in expected_result.items():
