@@ -20,7 +20,11 @@ from baserow.contrib.dashboard.data_sources.operations import (
 from baserow.contrib.dashboard.handler import DashboardHandler
 from baserow.core.handler import CoreHandler
 from baserow.core.services.exceptions import InvalidServiceTypeDispatchSource
-from baserow.core.services.registries import DispatchTypes, ServiceType
+from baserow.core.services.registries import (
+    DispatchTypes,
+    ServiceType,
+    service_type_registry,
+)
 
 from .exceptions import ServiceConfigurationNotAllowed
 from .signals import (
@@ -192,6 +196,11 @@ class DashboardDataSourceService:
             raise ServiceConfigurationNotAllowed()
 
         service = data_source.service.specific
+        original_service_type = service_type_registry.get_by_model(service)
+
+        if original_service_type != service_type:
+            raise ServiceConfigurationNotAllowed()
+
         prepared_values = service_type.prepare_values(kwargs, user, instance=service)
 
         data_source = self.handler.update_data_source(
