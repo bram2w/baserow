@@ -235,12 +235,13 @@ class FileFieldRequestSerializer(serializers.ListField):
 
         elif isinstance(data[0], dict):
             for val in data:
-                if "name" not in val:
+                name = val.get("name")
+                if name is None:
                     raise serializers.ValidationError(
                         "A name property is required for all values of the list.",
                         code="required",
                     )
-                user_file_name_validator(val["name"])
+                user_file_name_validator(name)
         else:
             raise serializers.ValidationError(
                 "The provided value should be a list of valid string or objects "
