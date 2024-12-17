@@ -18,6 +18,7 @@
 * [Builder] Display a count of user source users in the application settings panel. [#3251](https://gitlab.com/baserow/baserow/-/issues/3251)
 * Collapse sidebar with button [#3258](https://gitlab.com/baserow/baserow/-/issues/3258)
 * OpenRouter.ai generative AI integration. [#3259](https://gitlab.com/baserow/baserow/-/issues/3259)
+* Add support to filter multiple select formula fields. [#3276](https://gitlab.com/baserow/baserow/-/issues/3276)
 * Add ability to sort by link_row ('Link to table') field [#506](https://gitlab.com/baserow/baserow/-/issues/506)
 * Allow choosing select options in the form view. [#814](https://gitlab.com/baserow/baserow/-/issues/814)
 * Add sort and group by add field search.

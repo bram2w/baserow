@@ -587,7 +587,8 @@ export class ContainsViewFilterType extends ViewFilterType {
         'number',
         'date',
         'url',
-        'single_select'
+        'single_select',
+        'multiple_select'
       ),
     ]
   }
@@ -634,7 +635,8 @@ export class ContainsNotViewFilterType extends ViewFilterType {
         'number',
         'date',
         'url',
-        'single_select'
+        'single_select',
+        'multiple_select'
       ),
     ]
   }
@@ -670,7 +672,8 @@ export class ContainsWordViewFilterType extends ViewFilterType {
         'text',
         'char',
         'url',
-        'single_select'
+        'single_select',
+        'multiple_select'
       ),
     ]
   }
@@ -2490,10 +2493,12 @@ export class SingleSelectIsAnyOfViewFilterType extends ViewFilterType {
    * @private
    */
   _prepareValue(value, field) {
-    if (value === '') {
+    if (value == null || value === '') {
       return null
     }
-    const _parsed = this.app.$papa.stringToArray(value).map((v) => parseInt(v))
+    const _parsed = this.app.$papa
+      .stringToArray(String(value))
+      .map((v) => parseInt(v))
     return _.uniq(_parsed)
   }
 
@@ -2534,20 +2539,37 @@ export class MultipleSelectHasFilterType extends ViewFilterType {
   }
 
   getInputComponent() {
-    return ViewFilterTypeSelectOptions
+    return ViewFilterTypeMultipleSelectOptions
   }
 
   getCompatibleFieldTypes() {
-    return ['multiple_select']
+    return [
+      'multiple_select',
+      FormulaFieldType.compatibleWithFormulaTypes('multiple_select'),
+    ]
+  }
+
+  prepareValue(value, field) {
+    return (this._prepareValue(value, field) || []).join(',')
+  }
+
+  _prepareValue(value, field) {
+    if (value == null || value === '') {
+      return null
+    }
+    const _parsed = this.app.$papa
+      .stringToArray(String(value))
+      .map((v) => parseInt(v))
+    return _.uniq(_parsed)
   }
 
   matches(rowValue, filterValue, field, fieldType) {
-    if (!isNumeric(filterValue)) {
-      return true
-    }
-
-    const filterValueId = parseInt(filterValue)
-    return rowValue.some((option) => option.id === filterValueId)
+    const parsedValue = this._prepareValue(filterValue)
+    return (
+      parsedValue === null ||
+      (rowValue?.length &&
+        rowValue.some((opt) => _.includes(parsedValue, opt?.id)))
+    )
   }
 }
 
@@ -2566,20 +2588,37 @@ export class MultipleSelectHasNotFilterType extends ViewFilterType {
   }
 
   getInputComponent() {
-    return ViewFilterTypeSelectOptions
+    return ViewFilterTypeMultipleSelectOptions
   }
 
   getCompatibleFieldTypes() {
-    return ['multiple_select']
+    return [
+      'multiple_select',
+      FormulaFieldType.compatibleWithFormulaTypes('multiple_select'),
+    ]
+  }
+
+  prepareValue(value, field) {
+    return (this._prepareValue(value, field) || []).join(',')
+  }
+
+  _prepareValue(value, field) {
+    if (value == null || value === '') {
+      return null
+    }
+    const _parsed = this.app.$papa
+      .stringToArray(String(value))
+      .map((v) => parseInt(v))
+    return _.uniq(_parsed)
   }
 
   matches(rowValue, filterValue, field, fieldType) {
-    if (!isNumeric(filterValue)) {
-      return true
-    }
-
-    const filterValueId = parseInt(filterValue)
-    return !rowValue.some((option) => option.id === filterValueId)
+    const parsedValue = this._prepareValue(filterValue)
+    return (
+      parsedValue === null ||
+      rowValue?.length === 0 ||
+      rowValue.every((opt) => !_.includes(parsedValue, opt?.id))
+    )
   }
 }
 
@@ -2946,6 +2985,7 @@ export class EmptyViewFilterType extends ViewFilterType {
         'duration',
         'url',
         'single_select',
+        'multiple_select',
         FormulaFieldType.arrayOf('single_file'),
         FormulaFieldType.arrayOf('boolean')
       ),
@@ -3012,6 +3052,7 @@ export class NotEmptyViewFilterType extends ViewFilterType {
         'duration',
         'url',
         'single_select',
+        'multiple_select',
         FormulaFieldType.arrayOf('single_file'),
         FormulaFieldType.arrayOf('boolean')
       ),

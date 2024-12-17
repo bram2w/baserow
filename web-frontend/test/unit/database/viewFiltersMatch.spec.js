@@ -804,7 +804,7 @@ const multipleSelectValuesHas = [
       { id: 154, value: 'B', color: 'green' },
     ],
     filterValue: 'wrong_type',
-    expected: true,
+    expected: false,
   },
 ]
 
@@ -2163,20 +2163,16 @@ describe('All Tests', () => {
   })
 
   test.each(multipleSelectValuesHas)('MultipleSelect Has', (values) => {
-    const result = new MultipleSelectHasFilterType().matches(
-      values.rowValue,
-      values.filterValue,
-      {}
-    )
+    const result = new MultipleSelectHasFilterType({
+      app: testApp._app,
+    }).matches(values.rowValue, values.filterValue, {})
     expect(result).toBe(values.expected)
   })
 
   test.each(multipleSelectValuesHasNot)('MultipleSelect Has Not', (values) => {
-    const result = new MultipleSelectHasNotFilterType().matches(
-      values.rowValue,
-      values.filterValue,
-      {}
-    )
+    const result = new MultipleSelectHasNotFilterType({
+      app: testApp._app,
+    }).matches(values.rowValue, values.filterValue, {})
     expect(result).toBe(values.expected)
   })
 

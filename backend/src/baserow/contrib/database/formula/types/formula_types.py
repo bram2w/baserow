@@ -4,10 +4,20 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any, List, Optional, Set, Type, Union
 
+from django.contrib.postgres.expressions import ArraySubquery
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Expression, F, Func, Q, QuerySet, TextField, Value
+from django.db.models import (
+    Expression,
+    F,
+    Func,
+    OuterRef,
+    Q,
+    QuerySet,
+    TextField,
+    Value,
+)
 from django.db.models.functions import Cast, Concat
 
 from dateutil import parser
@@ -20,7 +30,10 @@ from baserow.contrib.database.fields.expressions import (
     extract_jsonb_list_values_to_array,
     json_extract_path,
 )
-from baserow.contrib.database.fields.field_filters import OptionallyAnnotatedQ
+from baserow.contrib.database.fields.field_filters import (
+    AnnotatedQ,
+    OptionallyAnnotatedQ,
+)
 from baserow.contrib.database.fields.field_sortings import OptionallyAnnotatedOrderBy
 from baserow.contrib.database.fields.filter_support.base import (
     HasAllValuesEqualFilterSupport,
@@ -1560,6 +1573,10 @@ class BaserowFormulaMultipleSelectType(BaserowJSONBObjectBaseType):
         return "p_in = '';"
 
     @property
+    def can_represent_select_options(self) -> bool:
+        return True
+
+    @property
     def db_column_fields(self) -> Set[str]:
         return {}
 
@@ -1645,6 +1662,76 @@ class BaserowFormulaMultipleSelectType(BaserowJSONBObjectBaseType):
         arg: BaserowExpression[BaserowFormulaValidType],
     ) -> BaserowExpression[BaserowFormulaType]:
         return formula_function_registry.get("multiple_select_count")(arg)
+
+    def contains_query(self, field_name, value, model_field, field):
+        value = value.strip()
+        # If an empty value has been provided we do not want to filter at all.
+        if value == "":
+            return Q()
+        model = model_field.model
+        subq = (
+            model.objects.filter(id=OuterRef("id"))
+            .annotate(
+                res=Func(
+                    Func(
+                        field_name,
+                        function="jsonb_array_elements",
+                        output_field=JSONField(),
+                    ),
+                    Value("value"),
+                    function="jsonb_extract_path",
+                    output_field=TextField(),
+                )
+            )
+            .values("res")
+        )
+        annotation_name = f"{field_name}_contains"
+        return AnnotatedQ(
+            annotation={
+                annotation_name: Func(
+                    ArraySubquery(subq, output_field=ArrayField(TextField())),
+                    Value(","),
+                    function="array_to_string",
+                    output_field=TextField(),
+                )
+            },
+            q=Q(**{f"{annotation_name}__icontains": value}),
+        )
+
+    def contains_word_query(self, field_name, value, model_field, field):
+        value = value.strip()
+        # If an empty value has been provided we do not want to filter at all.
+        if value == "":
+            return Q()
+        model = model_field.model
+        subq = (
+            model.objects.filter(id=OuterRef("id"))
+            .annotate(
+                res=Func(
+                    Func(
+                        field_name,
+                        function="jsonb_array_elements",
+                        output_field=JSONField(),
+                    ),
+                    Value("value"),
+                    function="jsonb_extract_path",
+                    output_field=TextField(),
+                )
+            )
+            .values("res")
+        )
+        annotation_name = f"{field_name}_contains"
+        return AnnotatedQ(
+            annotation={
+                annotation_name: Func(
+                    ArraySubquery(subq, output_field=ArrayField(TextField())),
+                    Value(","),
+                    function="array_to_string",
+                    output_field=TextField(),
+                )
+            },
+            q=Q(**{f"{annotation_name}__iregex": rf"\m{re.escape(value)}\M"}),
+        )
 
 
 BASEROW_FORMULA_TYPES = [
