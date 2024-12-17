@@ -23,6 +23,11 @@ import {
   hasEmptyValueFilterMixin,
   hasAllValuesEqualFilterMixin,
 } from '@baserow/modules/database/arrayFilterMixins'
+import {
+  parseNumberValue,
+  formatNumberValue,
+} from '@baserow/modules/database/utils/number'
+
 import moment from '@baserow/modules/core/moment'
 import guessFormat from 'moment-guess'
 import { Registerable } from '@baserow/modules/core/registry'
@@ -338,7 +343,11 @@ export class FieldType extends Registerable {
     if (Array.isArray(value) && value.length === 0) {
       return true
     }
-    if (typeof val === 'object' && Object.keys(value).length === 0) {
+    if (
+      value !== null &&
+      typeof value === 'object' &&
+      Object.keys(value).length === 0
+    ) {
       return true
     }
     if (typeof value === 'string') {
@@ -1503,12 +1512,8 @@ export class NumberFieldType extends FieldType {
       const numberB = new BigNumber(b[name])
 
       return order === 'ASC'
-        ? numberA.isLessThan(numberB)
-          ? -1
-          : 1
-        : numberB.isLessThan(numberA)
-        ? -1
-        : 1
+        ? numberA.minus(numberB).toNumber()
+        : numberB.minus(numberA).toNumber()
     }
   }
 
@@ -1517,19 +1522,12 @@ export class NumberFieldType extends FieldType {
       return null
     }
 
-    // Transform any commas to dots
-    const valueWithDots =
-      typeof value === 'string'
-        ? NumberFieldType.unlocalizeString(value)
-        : value
-
-    if (isNaN(parseFloat(valueWithDots)) || !isFinite(valueWithDots)) {
+    const nrValue = new BigNumber(value)
+    if (nrValue.isNaN() || !nrValue.isFinite()) {
       return this.app.i18n.t('fieldErrors.invalidNumber')
     }
-    if (
-      valueWithDots.split('.')[0].replace('-', '').length >
-      NumberFieldType.getMaxNumberLength()
-    ) {
+    const maxVal = new BigNumber(`10e${NumberFieldType.getMaxNumberLength()}`)
+    if (nrValue.absoluteValue().isGreaterThanOrEqualTo(maxVal)) {
       return this.app.i18n.t('fieldErrors.maxDigits', {
         max: NumberFieldType.getMaxNumberLength(),
       })
@@ -1541,17 +1539,22 @@ export class NumberFieldType extends FieldType {
    * First checks if the value is numeric, if that is the case, the number is going
    * to be formatted.
    */
-  prepareValueForPaste(field, clipboardData) {
-    const value = clipboardData
-    if (
-      isNaN(parseFloat(value)) ||
-      !isFinite(value) ||
-      value.split('.')[0].replace('-', '').length >
-        NumberFieldType.getMaxNumberLength()
-    ) {
-      return null
+  prepareValueForPaste(field, clipboardData, richClipboardData) {
+    let value = clipboardData
+    const parsedRichValue =
+      richClipboardData != null ? new BigNumber(richClipboardData) : null
+    if (parsedRichValue !== null && !parsedRichValue.isNaN()) {
+      value = parsedRichValue
     }
-    return this.constructor.formatNumber(field, value)
+    return this.parseInputValue(field, value)
+  }
+
+  prepareValueForCopy(field, value) {
+    return NumberFieldType.formatNumber(field, new BigNumber(value))
+  }
+
+  prepareRichValueForCopy(field, value) {
+    return new BigNumber(value).toString()
   }
 
   /**
@@ -1560,32 +1563,11 @@ export class NumberFieldType extends FieldType {
    * they will be set to 0.
    */
   static formatNumber(field, value) {
-    const valueWithDots =
-      typeof value === 'string'
-        ? NumberFieldType.unlocalizeString(value)
-        : value
-
-    if (
-      valueWithDots === '' ||
-      isNaN(valueWithDots) ||
-      valueWithDots === undefined ||
-      valueWithDots === null
-    ) {
-      return null
-    }
-    let number = new BigNumber(valueWithDots)
-    if (!field.number_negative && number.isLessThan(0)) {
-      number = 0
-    }
-    return number.toFixed(field.number_decimal_places)
+    return formatNumberValue(field, value)
   }
 
   toHumanReadableString(field, value, delimiter = ', ') {
     return NumberFieldType.formatNumber(field, value)
-  }
-
-  static unlocalizeString(value) {
-    return value.replace(/,/g, '.')
   }
 
   getDocsDataType(field) {
@@ -1638,16 +1620,22 @@ export class NumberFieldType extends FieldType {
   }
 
   parseInputValue(field, value) {
-    return parseFloat(value)
+    return parseNumberValue(field, value)
+  }
+
+  prepareValueForUpdate(field, value) {
+    return parseNumberValue(field, value)
   }
 
   parseFromLinkedRowItemValue(field, value) {
     if (value === '') {
       return null
     }
-    return parseFloat(value)
+    return new BigNumber(value)
   }
 }
+
+BigNumber.config({ EXPONENTIAL_AT: NumberFieldType.getMaxNumberLength() })
 
 export class RatingFieldType extends FieldType {
   static getMaxNumberLength() {

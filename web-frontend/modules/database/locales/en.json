@@ -272,7 +272,16 @@
     "integer": "Integer",
     "decimal": "Decimal",
     "decimalPlacesLabel": "Decimal places",
-    "allowNegative": "Allow negative"
+    "allowNegative": "Allow negative",
+    "separatorLabel": "Thousand and decimal separator",
+    "prefixPlaceholder": "Prefix",
+    "suffixPlaceholder": "Suffix",
+    "prefixAndSuffixLabel": "Prefix / suffix",
+    "spaceComma": "Space, comma (1 000 000,00)",
+    "spacePeriod": "Space, period (1 000 000.00)",
+    "commaPeriod": "Comma, period (1,000,000.00)",
+    "periodComma": "Period, comma (1.000.000,00)",
+    "noFormatting": "No formatting"
   },
   "fieldDurationSubForm": {
     "durationFormatLabel": "Duration format"

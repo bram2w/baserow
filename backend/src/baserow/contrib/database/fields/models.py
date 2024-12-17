@@ -71,6 +71,14 @@ RATING_STYLE_CHOICES = [
     ("smile", "Smile"),
 ]
 
+NUMBER_SEPARATOR_CHOICES = [
+    ("", "No formatting"),
+    ("SPACE_COMMA", "Space, comma"),
+    ("SPACE_PERIOD", "Space, period"),
+    ("COMMA_PERIOD", "Comma, period"),
+    ("PERIOD_COMMA", "Period, comma"),
+]
+
 DURATION_FORMAT_CHOICES = [(k, v["name"]) for k, v in DURATION_FORMATS.items()]
 
 
@@ -301,6 +309,27 @@ class NumberField(Field):
     number_negative = models.BooleanField(
         default=False, help_text="Indicates if negative values are allowed."
     )
+    number_prefix = models.CharField(
+        max_length=10,
+        blank=True,
+        help_text="The prefix to use for the field.",
+        db_default="",
+        default="",
+    )
+    number_suffix = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="The suffix to use for the field.",
+        default="",
+        db_default="",
+    )
+    number_separator = models.CharField(
+        choices=NUMBER_SEPARATOR_CHOICES,
+        default=NUMBER_SEPARATOR_CHOICES[0][0],
+        db_default=NUMBER_SEPARATOR_CHOICES[0][0],
+        max_length=16,
+        help_text="The thousand and decimal separator to use for the field.",
+    )
 
     def save(self, *args, **kwargs):
         """Check if the number_decimal_places has a valid choice."""
@@ -506,6 +535,27 @@ class FormulaField(Field):
         default=None,
         null=True,
         help_text="The amount of digits allowed after the point.",
+    )
+    number_prefix = models.CharField(
+        max_length=10,
+        blank=True,
+        help_text="The prefix to use for the field.",
+        default="",
+        db_default="",
+    )
+    number_suffix = models.CharField(
+        max_length=10,
+        blank=True,
+        help_text="The suffix to use for the field.",
+        default="",
+        db_default="",
+    )
+    number_separator = models.CharField(
+        choices=NUMBER_SEPARATOR_CHOICES,
+        default=NUMBER_SEPARATOR_CHOICES[0][0],
+        db_default=NUMBER_SEPARATOR_CHOICES[0][0],
+        max_length=16,
+        help_text="The thousand and decimal separator to use for the field.",
     )
     date_format = models.CharField(
         choices=DATE_FORMAT_CHOICES,
