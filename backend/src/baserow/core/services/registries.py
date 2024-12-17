@@ -20,6 +20,7 @@ from baserow.core.registry import (
 )
 from baserow.core.services.dispatch_context import DispatchContext
 
+from .exceptions import ServiceTypeDoesNotExist
 from .models import Service
 from .types import ServiceDictSubClass, ServiceSubClass
 
@@ -291,6 +292,17 @@ class ServiceType(
     def extract_properties(self, path: List[str], **kwargs) -> List[str]:
         return []
 
+    def import_property_name(
+        self, property_name: str, id_mapping: Dict[str, Any]
+    ) -> Optional[str]:
+        """
+        Allows to hook into the property name import resolution.
+
+        If not implemented, returns the property name as it is.
+        """
+
+        return property_name
+
 
 ServiceTypeSubClass = TypeVar("ServiceTypeSubClass", bound=ServiceType)
 
@@ -352,6 +364,7 @@ class ServiceTypeRegistry(
     """
 
     name = "integration_service"
+    does_not_exist_exception_class = ServiceTypeDoesNotExist
 
 
 service_type_registry: ServiceTypeRegistry = ServiceTypeRegistry()

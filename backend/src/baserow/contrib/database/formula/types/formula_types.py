@@ -4,10 +4,20 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any, List, Optional, Set, Type, Union
 
+from django.contrib.postgres.expressions import ArraySubquery
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Expression, F, Func, Q, QuerySet, TextField, Value
+from django.db.models import (
+    Expression,
+    F,
+    Func,
+    OuterRef,
+    Q,
+    QuerySet,
+    TextField,
+    Value,
+)
 from django.db.models.functions import Cast, Concat
 
 from dateutil import parser
@@ -20,7 +30,10 @@ from baserow.contrib.database.fields.expressions import (
     extract_jsonb_list_values_to_array,
     json_extract_path,
 )
-from baserow.contrib.database.fields.field_filters import OptionallyAnnotatedQ
+from baserow.contrib.database.fields.field_filters import (
+    AnnotatedQ,
+    OptionallyAnnotatedQ,
+)
 from baserow.contrib.database.fields.field_sortings import OptionallyAnnotatedOrderBy
 from baserow.contrib.database.fields.filter_support.base import (
     HasAllValuesEqualFilterSupport,
@@ -319,14 +332,29 @@ class BaserowFormulaNumberType(
 ):
     type = "number"
     baserow_field_type = "number"
-    user_overridable_formatting_option_fields = ["number_decimal_places"]
+    user_overridable_formatting_option_fields = [
+        "number_decimal_places",
+        "number_prefix",
+        "number_suffix",
+        "number_separator",
+    ]
     MAX_DIGITS = 50
     can_order_by_in_array = True
     can_group_by = True
 
-    def __init__(self, number_decimal_places: int, **kwargs):
+    def __init__(
+        self,
+        number_decimal_places: int,
+        number_prefix: str = "",
+        number_suffix: str = "",
+        number_separator: str = "",
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         self.number_decimal_places = number_decimal_places
+        self.number_prefix = number_prefix
+        self.number_suffix = number_suffix
+        self.number_separator = number_separator
 
     @property
     def comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
@@ -1312,7 +1340,7 @@ class BaserowFormulaArrayType(
         return self.sub_type.can_order_by_in_array
 
     def get_order(
-        self, field, field_name, order_direction
+        self, field, field_name, order_direction, table_model=None
     ) -> OptionallyAnnotatedOrderBy:
         expr = self.sub_type.get_order_by_in_array_expr(
             field, field_name, order_direction
@@ -1474,7 +1502,7 @@ class BaserowFormulaSingleSelectType(
         return True
 
     def get_order(
-        self, field, field_name, order_direction
+        self, field, field_name, order_direction, table_model=None
     ) -> OptionallyAnnotatedOrderBy:
         field_expr = F(f"{field_name}__value")
 
@@ -1543,6 +1571,10 @@ class BaserowFormulaMultipleSelectType(BaserowJSONBObjectBaseType):
 
     def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
         return "p_in = '';"
+
+    @property
+    def can_represent_select_options(self) -> bool:
+        return True
 
     @property
     def db_column_fields(self) -> Set[str]:
@@ -1630,6 +1662,76 @@ class BaserowFormulaMultipleSelectType(BaserowJSONBObjectBaseType):
         arg: BaserowExpression[BaserowFormulaValidType],
     ) -> BaserowExpression[BaserowFormulaType]:
         return formula_function_registry.get("multiple_select_count")(arg)
+
+    def contains_query(self, field_name, value, model_field, field):
+        value = value.strip()
+        # If an empty value has been provided we do not want to filter at all.
+        if value == "":
+            return Q()
+        model = model_field.model
+        subq = (
+            model.objects.filter(id=OuterRef("id"))
+            .annotate(
+                res=Func(
+                    Func(
+                        field_name,
+                        function="jsonb_array_elements",
+                        output_field=JSONField(),
+                    ),
+                    Value("value"),
+                    function="jsonb_extract_path",
+                    output_field=TextField(),
+                )
+            )
+            .values("res")
+        )
+        annotation_name = f"{field_name}_contains"
+        return AnnotatedQ(
+            annotation={
+                annotation_name: Func(
+                    ArraySubquery(subq, output_field=ArrayField(TextField())),
+                    Value(","),
+                    function="array_to_string",
+                    output_field=TextField(),
+                )
+            },
+            q=Q(**{f"{annotation_name}__icontains": value}),
+        )
+
+    def contains_word_query(self, field_name, value, model_field, field):
+        value = value.strip()
+        # If an empty value has been provided we do not want to filter at all.
+        if value == "":
+            return Q()
+        model = model_field.model
+        subq = (
+            model.objects.filter(id=OuterRef("id"))
+            .annotate(
+                res=Func(
+                    Func(
+                        field_name,
+                        function="jsonb_array_elements",
+                        output_field=JSONField(),
+                    ),
+                    Value("value"),
+                    function="jsonb_extract_path",
+                    output_field=TextField(),
+                )
+            )
+            .values("res")
+        )
+        annotation_name = f"{field_name}_contains"
+        return AnnotatedQ(
+            annotation={
+                annotation_name: Func(
+                    ArraySubquery(subq, output_field=ArrayField(TextField())),
+                    Value(","),
+                    function="array_to_string",
+                    output_field=TextField(),
+                )
+            },
+            q=Q(**{f"{annotation_name}__iregex": rf"\m{re.escape(value)}\M"}),
+        )
 
 
 BASEROW_FORMULA_TYPES = [

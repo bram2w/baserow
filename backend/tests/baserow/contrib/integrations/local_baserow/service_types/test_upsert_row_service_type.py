@@ -18,6 +18,7 @@ from baserow.contrib.integrations.local_baserow.service_types import (
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import ImportExportConfig
 from baserow.core.services.exceptions import ServiceImproperlyConfigured
+from baserow.test_utils.helpers import AnyStr
 from baserow.test_utils.pytest_conftest import FakeDispatchContext
 
 
@@ -479,7 +480,7 @@ def test_local_baserow_upsert_row_service_dispatch_data_convert_value(data_fixtu
         table.field_set.get(name="text").db_column: "text",
         # The string '1' is converted to a list with a single item
         table.field_set.get(name="array").db_column: [
-            {"id": 1, "value": "unnamed row 1"}
+            {"id": 1, "value": "unnamed row 1", "order": AnyStr()}
         ],
     }
 
@@ -603,7 +604,7 @@ def test_export_import_local_baserow_upsert_row_service(
     imported_table = imported_database.table_set.get()
     imported_field = imported_table.field_set.get()
 
-    imported_page = imported_builder.page_set.exclude(shared=True).get()
+    imported_page = imported_builder.page_set.get()
     imported_data_source = imported_page.datasource_set.get()
     imported_integration = imported_builder.integrations.get()
     imported_upsert_row_service = LocalBaserowUpsertRow.objects.get(

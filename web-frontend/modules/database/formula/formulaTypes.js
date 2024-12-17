@@ -20,6 +20,7 @@ import RowEditFieldButton from '@baserow/modules/database/components/row/RowEdit
 import RowEditFieldDurationReadOnly from '@baserow/modules/database/components/row/RowEditFieldDurationReadOnly.vue'
 import FunctionalFormulaArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaArrayItem'
 import FunctionalFormulaArrayDurationItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaArrayDurationItem'
+import FunctionalFormulaArrayNumberItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaArrayNumberItem'
 import FunctionalFormulaBooleanArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaBooleanArrayItem'
 import FunctionalFormulaDateArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaDateArrayItem'
 import FunctionalFormulaSingleSelectArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaSingleSelectArrayItem'
@@ -65,6 +66,7 @@ import {
   genericHasValueContainsFilter,
 } from '@baserow/modules/database/utils/fieldFilters'
 import ViewFilterTypeSelectOptions from '@baserow/modules/database/components/view/ViewFilterTypeSelectOptions.vue'
+import ViewFilterTypeDuration from '@baserow/modules/database/components/view/ViewFilterTypeDuration.vue'
 
 export class BaserowFormulaTypeDefinition extends Registerable {
   getIconClass() {
@@ -320,6 +322,10 @@ export class BaserowFormulaNumberType extends BaserowFormulaTypeDefinition {
     return RowEditFieldNumber
   }
 
+  getFunctionalFieldArrayComponent() {
+    return FunctionalFormulaArrayNumberItem
+  }
+
   getSortOrder() {
     return 2
   }
@@ -455,6 +461,10 @@ export class BaserowFormulaDurationType extends BaserowFormulaTypeDefinition {
 
   getRowEditFieldComponent(field) {
     return RowEditFieldDurationReadOnly
+  }
+
+  getFilterInputComponent(field, filterType) {
+    return ViewFilterTypeDuration
   }
 
   getSortOrder() {

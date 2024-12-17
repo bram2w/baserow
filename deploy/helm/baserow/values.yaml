@@ -22,12 +22,28 @@
 ## @param global.baserow.domain Configure the domain for the frontend application.
 ## @param global.baserow.backendDomain Configure the domain for the backend application.
 ## @param global.baserow.objectsDomain Configure the domain for the external facing minio api.
+## @param global.baserow.containerSecurityContext.enabled Enabled containers' Security Context
+## @param global.baserow.containerSecurityContext.seLinuxOptions [object,nullable] Set SELinux options in container
+## @param global.baserow.containerSecurityContext.runAsUser Set containers' Security Context runAsUser
+## @param global.baserow.containerSecurityContext.runAsGroup Set containers' Security Context runAsGroup
+## @param global.baserow.containerSecurityContext.runAsNonRoot Set container's Security Context runAsNonRoot
+## @param global.baserow.containerSecurityContext.privileged Set container's Security Context privileged
+## @param global.baserow.containerSecurityContext.readOnlyRootFilesystem Set container's Security Context readOnlyRootFilesystem
+## @param global.baserow.containerSecurityContext.allowPrivilegeEscalation Set container's Security Context allowPrivilegeEscalation
+## @param global.baserow.containerSecurityContext.capabilities.drop List of capabilities to be dropped
+## @param global.baserow.containerSecurityContext.capabilities.add List of capabilities to be added
+## @param global.baserow.containerSecurityContext.seccompProfile.type Set container's Security Context seccomp profile
+## @param global.baserow.securityContext.enabled Enable security context
+## @param global.baserow.securityContext.fsGroupChangePolicy Set filesystem group change policy
+## @param global.baserow.securityContext.sysctls Set kernel settings using the sysctl interface
+## @param global.baserow.securityContext.supplementalGroups Set filesystem extra groups
+## @param global.baserow.securityContext.fsGroup Group ID for the pod
 ##
 global:
   baserow:
     imageRegistry: baserow
     image:
-      tag: 1.29.3
+      tag: 1.30.0
     imagePullSecrets: []
     serviceAccount:
       shared: true
@@ -43,6 +59,28 @@ global:
     domain: cluster.local
     backendDomain: api.cluster.local
     objectsDomain: objects.cluster.local
+
+    securityContext:
+      enabled: false
+      fsGroupChangePolicy: "Always"
+      sysctls: []
+      supplementalGroups: []
+      fsGroup: ""
+
+    containerSecurityContext:
+      enabled: false
+      seLinuxOptions: {}
+      runAsUser: ""
+      runAsGroup: ""
+      runAsNonRoot: ""
+      privileged: false
+      readOnlyRootFilesystem: false
+      allowPrivilegeEscalation: false
+      capabilities:
+        add: []
+        drop: []
+      seccompProfile:
+        type: ""
 
 ## @section Baserow Configuration
 ## Configuration for the Baserow application
@@ -112,6 +150,23 @@ backendConfigMap:
 ## @param migration.envFrom ConfigMaps or Secrets to be used as environment variables
 ## @param migration.volumes Volumes for the migration job
 ## @param migration.volumeMounts Volume mounts for the migration job
+## @param migration.securityContext.enabled Enable security context
+## @param migration.securityContext.fsGroupChangePolicy Set filesystem group change policy
+## @param migration.securityContext.sysctls Set kernel settings using the sysctl interface
+## @param migration.securityContext.supplementalGroups Set filesystem extra groups
+## @param migration.securityContext.fsGroup Group ID for the pod
+## @param migration.containerSecurityContext.enabled Enabled containers' Security Context
+## @param migration.containerSecurityContext.seLinuxOptions [object,nullable] Set SELinux options in container
+## @param migration.containerSecurityContext.runAsUser Set containers' Security Context runAsUser
+## @param migration.containerSecurityContext.runAsGroup Set containers' Security Context runAsGroup
+## @param migration.containerSecurityContext.runAsNonRoot Set container's Security Context runAsNonRoot
+## @param migration.containerSecurityContext.privileged Set container's Security Context privileged
+## @param migration.containerSecurityContext.readOnlyRootFilesystem Set container's Security Context readOnlyRootFilesystem
+## @param migration.containerSecurityContext.allowPrivilegeEscalation Set container's Security Context allowPrivilegeEscalation
+## @param migration.containerSecurityContext.capabilities.drop List of capabilities to be dropped
+## @param migration.containerSecurityContext.capabilities.add List of capabilities to be added
+## @param migration.containerSecurityContext.seccompProfile.type Set container's Security Context seccomp profile
+
 migration:
   enabled: true
   image:
@@ -124,6 +179,26 @@ migration:
   envFrom: []
   volumes: []
   volumeMounts: []
+  securityContext:
+    enabled: false
+    fsGroupChangePolicy: ""
+    sysctls: ""
+    supplementalGroups: ""
+    fsGroup: ""
+  containerSecurityContext:
+    enabled: false
+    seLinuxOptions: {}
+    runAsUser: ""
+    runAsGroup: ""
+    runAsNonRoot: ""
+    privileged: false
+    readOnlyRootFilesystem: false
+    allowPrivilegeEscalation: false
+    capabilities:
+      add: []
+      drop: []
+    seccompProfile:
+      type: ""
 
 ## @section Baserow Backend ASGI Configuration
 ## Configuration for the ASGI server that serves the Baserow backend application.

@@ -1032,8 +1032,18 @@ def test_list_rows_join_lookup(api_client, data_fixture, user_field_names):
         "results": [
             {
                 f"{link_row_ref}": [
-                    {"id": linked_blank_row.id, "value": "", **looked_up_fields_blank},
-                    {"id": linked_row.id, "value": "text", **looked_up_fields_row},
+                    {
+                        "id": linked_blank_row.id,
+                        "value": "",
+                        **looked_up_fields_blank,
+                        "order": AnyStr(),
+                    },
+                    {
+                        "id": linked_row.id,
+                        "value": "text",
+                        **looked_up_fields_row,
+                        "order": AnyStr(),
+                    },
                 ],
                 "id": row.id,
                 "order": AnyStr(),
@@ -1129,6 +1139,7 @@ def test_list_rows_join_lookup_field_to_same_table(data_fixture, api_client):
                     {
                         "id": table_row.id,
                         "value": "unnamed row 1",
+                        "order": AnyStr(),
                         f"field_{linked_table_text_field.id}": "Text 1",
                         f"field_{linked_table_multiselect.id}": [
                             {
@@ -1214,6 +1225,7 @@ def test_list_rows_join_lookup_multiple_link_row_fields(data_fixture, api_client
                     {
                         "id": table_row.id,
                         "value": "unnamed row 1",
+                        "order": AnyStr(),
                         f"field_{linked_table_text_field.id}": "Text 1",
                         f"field_{linked_table_text_field_2.id}": "Text 2",
                     },
@@ -1222,6 +1234,7 @@ def test_list_rows_join_lookup_multiple_link_row_fields(data_fixture, api_client
                     {
                         "id": table_row.id,
                         "value": "unnamed row 1",
+                        "order": AnyStr(),
                         f"field_{linked_table_2_text_field.id}": "Table 2 Text 1",
                     },
                 ],
@@ -1368,6 +1381,7 @@ def test_list_rows_join_lookup_field_multiple_lookups_user_field_names(
                     {
                         "id": table_row.id,
                         "value": "unnamed row 1",
+                        "order": AnyStr(),
                         f"{linked_table_text_field.name}": "Text 1",
                         f"{linked_table_text_field_2.name}": "Text 2",
                     },
@@ -1375,6 +1389,7 @@ def test_list_rows_join_lookup_field_multiple_lookups_user_field_names(
                 f"{link_row_field_2.name}": [
                     {
                         "id": table_row.id,
+                        "order": AnyStr(),
                         "value": "unnamed row 1",
                         f"{linked_table_2_text_field.name}": "Table 2 Text 1",
                     },
@@ -2717,6 +2732,7 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
     link_field = FieldHandler().create_field(
         user, table, "link_row", link_row_table=table_to_link_with, name="Link"
     )
+    password_field = data_fixture.create_password_field(name="Password", table=table)
 
     model = table.get_model()
     row_1 = model.objects.create(
@@ -2742,6 +2758,7 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
             "id": 1,
             "order": "1.00000000000000000000",
             "Link": [],
+            "Password": None,
         }
     ]
 
@@ -2762,6 +2779,7 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
         "order": "1.00000000000000000000",
         "Price,": "2",
         "Link": [],
+        "Password": None,
     }
 
     url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
@@ -2795,6 +2813,7 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
             "id": 1,
             "order": "1.00000000000000000000",
             "Link": [],
+            "Password": None,
         }
     ]
 
@@ -2808,7 +2827,7 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
 
     url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
     response = api_client.get(
-        f"{url}?user_field_names=true&order_by={link_field.name}",
+        f"{url}?user_field_names=true&order_by={password_field.name}",
         format="json",
         HTTP_AUTHORIZATION=f"JWT {jwt_token}",
     )
@@ -2816,8 +2835,8 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert (
         response_json["detail"]
-        == "It is not possible to order by Link because the field type "
-        "link_row does not support filtering."
+        == "It is not possible to order by Password because the field type "
+        "password does not support filtering."
     )
 
     url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
@@ -2836,6 +2855,7 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
             "id": 1,
             "order": "1.00000000000000000000",
             "Link": [],
+            "Password": None,
         },
         {
             '"Name, 2"': True,
@@ -2844,6 +2864,7 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
             "id": 2,
             "order": "1.00000000000000000000",
             "Link": [],
+            "Password": None,
         },
     ]
 
@@ -2863,6 +2884,7 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
             "id": 2,
             "order": "1.00000000000000000000",
             "Link": [],
+            "Password": None,
         },
         {
             '"Name, 2"': False,
@@ -2871,6 +2893,7 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
             "id": 1,
             "order": "1.00000000000000000000",
             "Link": [],
+            "Password": None,
         },
     ]
 
@@ -2909,6 +2932,7 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
             f"field_{field_3.id}": False,
             f"field_{field_2.id}": "2",
             f"field_{link_field.id}": [],
+            f"field_{password_field.id}": None,
         },
         {
             "id": 2,
@@ -2917,6 +2941,7 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
             f"field_{field_3.id}": True,
             f"field_{field_2.id}": "1",
             f"field_{link_field.id}": [],
+            f"field_{password_field.id}": None,
         },
     ]
 
@@ -3503,6 +3528,9 @@ def test_list_row_history_for_different_rows(data_fixture, api_client):
                         "type": "number",
                         "number_decimal_places": 2,
                         "number_negative": False,
+                        "number_prefix": "",
+                        "number_separator": "",
+                        "number_suffix": "",
                     },
                 },
             },
@@ -3762,6 +3790,9 @@ def test_list_row_history_for_different_fields(data_fixture, api_client):
                         "id": number_field.id,
                         "number_decimal_places": 2,
                         "number_negative": False,
+                        "number_prefix": "",
+                        "number_separator": "",
+                        "number_suffix": "",
                         "type": "number",
                     },
                     f"field_{email_field.id}": {

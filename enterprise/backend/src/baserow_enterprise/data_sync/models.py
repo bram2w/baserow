@@ -71,3 +71,11 @@ class GitLabIssuesDataSync(DataSync):
         max_length=255,
         help_text="The API access token used to authenticate requests to GitLab.",
     )
+
+
+class HubSpotContactsDataSync(DataSync):
+    hubspot_access_token = models.CharField(
+        max_length=255,
+        help_text="The private app access token used to authenticate requests to "
+        "HubSpot.",
+    )

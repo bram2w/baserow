@@ -21,8 +21,13 @@ from advocate.exceptions import UnacceptableAddressException
 from PIL import Image, ImageOps
 from requests.exceptions import RequestException
 
+from baserow.core.import_export.utils import file_chunk_generator
 from baserow.core.models import UserFile
-from baserow.core.storage import OverwritingStorageHandler, get_default_storage
+from baserow.core.storage import (
+    ExportZipFile,
+    OverwritingStorageHandler,
+    get_default_storage,
+)
 from baserow.core.utils import random_string, sha256_hash, stream_size, truncate_middle
 
 from .exceptions import (
@@ -383,7 +388,7 @@ class UserFileHandler:
     def export_user_file(
         self,
         user_file: Optional[UserFile],
-        files_zip: Optional[ZipFile] = None,
+        files_zip: Optional[ExportZipFile] = None,
         storage: Optional[Storage] = None,
         cache: Dict[str, Any] = None,
     ) -> Optional[Dict[str, str]]:
@@ -403,16 +408,22 @@ class UserFileHandler:
         name = user_file.name
 
         # Check if the user file object is already in the cache and if not,
-        # it must be fetched and added to to it.
+        # it must be fetched and added to it.
         cache_entry = f"user_file_{name}"
         if cache_entry not in cache:
-            if files_zip is not None and name not in files_zip.namelist():
+            namelist = (
+                [item["name"] for item in files_zip.info_list()]
+                if files_zip is not None
+                else []
+            )
+            if files_zip is not None and name not in namelist:
                 # Load the user file from the content and write it to the zip file
                 # because it might not exist in the environment that it is going
                 # to be imported in.
                 file_path = self.user_file_path(name)
-                with storage.open(file_path, mode="rb") as storage_file:
-                    files_zip.writestr(name, storage_file.read())
+
+                chunk_generator = file_chunk_generator(storage, file_path)
+                files_zip.add(chunk_generator, name)
 
             # Avoid writing the same file twice
             cache[cache_entry] = True

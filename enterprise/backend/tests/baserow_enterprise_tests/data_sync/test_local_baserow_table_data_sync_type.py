@@ -606,18 +606,21 @@ def test_get_data_sync_properties(enterprise_data_fixture, api_client):
             "key": "id",
             "name": "Row ID",
             "field_type": "number",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": f"field_{field_1.id}",
             "name": "Text",
             "field_type": "text",
+            "initially_selected": True,
         },
         {
             "unique_primary": False,
             "key": f"field_{field_2.id}",
             "name": "Number",
             "field_type": "number",
+            "initially_selected": True,
         },
     ]
 
@@ -1203,7 +1206,7 @@ def test_sync_data_sync_table_single_select_get_metadata_delete(
 
     source_option_a.delete()
 
-    with django_assert_num_queries(3):
+    with django_assert_num_queries(5):
         metadata = data_sync_property.get_metadata(
             target_single_select_field_1, metadata
         )
@@ -1216,3 +1219,52 @@ def test_sync_data_sync_table_single_select_get_metadata_delete(
     assert metadata == {
         "select_options_mapping": {str(source_option_b.id): target_select_options[0].id}
     }
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_change_source_table_with_changing_synced_fields(
+    enterprise_data_fixture, api_client
+):
+    enterprise_data_fixture.enable_enterprise()
+    user, token = enterprise_data_fixture.create_user_and_token()
+    database = enterprise_data_fixture.create_database_application(user=user)
+
+    source_table = enterprise_data_fixture.create_database_table(
+        user=user, name="Source", database=database
+    )
+    source_text_field = enterprise_data_fixture.create_text_field(
+        table=source_table, name="Text"
+    )
+
+    source_2_table = enterprise_data_fixture.create_database_table(
+        user=user, name="Source 2", database=database
+    )
+    source_2_text_field = enterprise_data_fixture.create_text_field(
+        table=source_2_table, name="Text"
+    )
+
+    handler = DataSyncHandler()
+    data_sync = handler.create_data_sync_table(
+        user=user,
+        database=database,
+        table_name="Test",
+        type_name="local_baserow_table",
+        synced_properties=["id", f"field_{source_text_field.id}"],
+        source_table_id=source_table.id,
+    )
+
+    url = reverse("api:database:data_sync:item", kwargs={"data_sync_id": data_sync.id})
+    response = api_client.patch(
+        url,
+        {
+            "source_table_id": source_2_table.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+
+    # Expect the other field to be removed.
+    assert len(response_json["synced_properties"]) == 1
+    assert response_json["synced_properties"][0]["key"] == "id"

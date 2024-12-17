@@ -1,5 +1,16 @@
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Dict, List, NoReturn, Optional, Set, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    List,
+    NoReturn,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
+)
 from zipfile import ZipFile
 
 from django.contrib.auth.models import AbstractUser
@@ -15,6 +26,7 @@ from django.db.models import (
     Count,
     DurationField,
     Expression,
+    F,
     IntegerField,
     JSONField,
     Model,
@@ -313,6 +325,18 @@ class FieldType(
         :type name: str
         :return: The enhanced queryset.
         :rtype: QuerySet
+        """
+
+        return queryset
+
+    def enhance_field_queryset(
+        self, queryset: QuerySet[Field], field: Field
+    ) -> QuerySet[Field]:
+        """
+        This hook can be used to enhance a queryset when fetching multiple fields of a
+        table. This is used when retrieving the fields of a table in the table view
+        to, for example, retrieve the primary field of the related table for the link
+        row field.
         """
 
         return queryset
@@ -808,7 +832,11 @@ class FieldType(
         """
 
     def get_order(
-        self, field, field_name, order_direction
+        self,
+        field: Type[Field],
+        field_name: str,
+        order_direction: str,
+        table_model: Optional["GeneratedTableModel"] = None,
     ) -> OptionallyAnnotatedOrderBy:
         """
         This hook can be called to generate a different order by expression.
@@ -822,17 +850,15 @@ class FieldType(
         get_value_for_filter method.
 
         :param field: The related field object instance.
-        :type field: Field
         :param field_name: The name of the field.
-        :type field_name: str
-        :param order_direction: The sort order direction.
-        :type order_direction: str (Either "ASC" or "DESC")
+        :param order_direction: The sort order direction (either "ASC" or "DESC").
+        :param table_model: The table model instance that the field is part of,
+            if available.
         :return: Either the expression that is added directly to the
             model.objects.order(), an AnnotatedOrderBy class or None.
-        :rtype: Optional[Expression, AnnotatedOrderBy, None]
         """
 
-        field_expr = django_models.F(field_name)
+        field_expr = self.get_sortable_column_expression(field_name)
 
         if order_direction == "ASC":
             field_order_by = field_expr.asc(nulls_first=True)
@@ -1589,6 +1615,18 @@ class FieldType(
 
         return self._can_group_by
 
+    def get_sortable_column_expression(self, field_name: str) -> Expression | F:
+        """
+        Returns the expression that can be used to sort the field in the database.
+        By default it will just return the field name, but for example for a
+        SingleSelectField, the select option value should be returned.
+
+        :param field_name: The name of the field in the table.
+        :return: The expression that can be used to sort the field in the database.
+        """
+
+        return F(field_name)
+
     def get_group_by_field_unique_value(
         self, field: Field, field_name: str, value: Any
     ) -> Any:
@@ -1853,6 +1891,21 @@ class ManyToManyGroupByMixin:
     that the field type must set the `_can_group_by` property to `True`.
     """
 
+    def _get_group_by_agg_expression(self, field_name: str) -> Expression:
+        """
+        Returns the aggregation expression that can be used to group by the field. By
+        default it will return an ArrayAgg expression that will aggregate all the
+        related field values.
+
+        :param field_name: The name of the field in the table.
+        :return: The aggregation expression that can be used to group by the field.
+        """
+
+        return ArrayAgg(
+            f"{field_name}__id",
+            filter=Q(**{f"{field_name}__isnull": False}),
+        )
+
     def get_group_by_field_unique_value(
         self, field: Field, field_name: str, value: Any
     ) -> Any:
@@ -1869,10 +1922,7 @@ class ManyToManyGroupByMixin:
                 base_queryset.filter(id=OuterRef("id"))
                 .annotate(
                     res=Coalesce(
-                        ArrayAgg(
-                            f"{field_name}__id",
-                            filter=Q(**{f"{field_name}__id__isnull": False}),
-                        ),
+                        self._get_group_by_agg_expression(field_name),
                         Value([], output_field=ArrayField(IntegerField())),
                     ),
                 )

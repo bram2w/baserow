@@ -4475,7 +4475,7 @@ def test_multiple_select_has_filter_type(data_fixture):
     view_filter.value = "not_number"
     view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
-    assert len(ids) == 4
+    assert len(ids) == 0
 
     view_filter.value = "-1"
     view_filter.save()
