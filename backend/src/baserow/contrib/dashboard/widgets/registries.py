@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Type
+from decimal import Decimal
 
 from baserow.contrib.dashboard.types import WidgetDict
 from baserow.core.registry import (
@@ -27,7 +27,7 @@ class WidgetType(
 ):
     """Widget type"""
 
-    SerializedDict = Type[WidgetDict]
+    SerializedDict = WidgetDict
     parent_property_name = "dashboard"
     id_mapping_name = DASHBOARD_WIDGETS
     allowed_fields = ["title", "description"]
@@ -53,6 +53,42 @@ class WidgetType(
         """
 
         pass
+
+    def deserialize_property(
+        self,
+        prop_name: str,
+        value: any,
+        id_mapping: dict[str, any],
+        **kwargs,
+    ) -> any:
+        if prop_name == "order" and value:
+            return Decimal(value)
+
+        return super().deserialize_property(
+            prop_name,
+            value,
+            id_mapping,
+            **kwargs,
+        )
+
+    def serialize_property(
+        self,
+        instance: Widget,
+        prop_name: str,
+        files_zip=None,
+        storage=None,
+        cache=None,
+    ):
+        if prop_name == "order":
+            return str(instance.order)
+
+        return super().serialize_property(
+            instance,
+            prop_name,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+        )
 
 
 class WidgetTypeRegistry(
