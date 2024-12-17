@@ -280,7 +280,7 @@
         "personal": "개인"
     },
     "dateFieldSelectForm": {
-        "dateField": "이 뷰에 사용할 필드를 선택하세요.",
+        "dateField": "어떤 필드를 이 뷰에 사용하고 싶으신가요?",
         "noCompatibleDateFields": "이 테이블에는 날짜 필드가 없습니다. 먼저 하나를 생성하세요."
     },
     "selectDateFieldModal": {

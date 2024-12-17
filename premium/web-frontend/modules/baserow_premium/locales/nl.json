@@ -10,7 +10,8 @@
         },
         "exporterType": {
             "json": "Exporteren naar JSON",
-            "xml": "Exporteren naar XML"
+            "xml": "Exporteren naar XML",
+            "excel": "Exporteren naar Excel"
         },
         "deactivated": "Beschikbaar in de premium versie"
     },
@@ -346,5 +347,8 @@
         "text": "Tekst",
         "textDescription": "Genereert vrije tekst op basis van de prompt.",
         "choiceDescription": "Kiest slechts één van de veldopties."
+    },
+    "tableExcelExporter": {
+        "includeHeader": "Veldnamen opnemen als koptekst"
     }
 }

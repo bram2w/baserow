@@ -755,7 +755,13 @@
         "anthropicModelsDescription": "Proporciona una lista de [modelos de Anthropic] separados por comas (https://docs.anthropic.com/en/docs/about-claude/models) que puedan utilizarse en Baserow. (e.g. `claude-3-5-sonnet-20241022,claude-3-opus-20240229`)",
         "mistral": "Mistral",
         "mistralApiKeyLabel": "Clave API",
-        "mistralModelsDescription": "Proporciona una lista de [modelos Mistral] separados por comas (https://docs.mistral.ai/getting-started/models/models_overview/) que pueden utilizarse en Baserow. (por ejemplo, `mistral-large-latest,mistral-small-latest`)"
+        "mistralModelsDescription": "Proporciona una lista de [modelos Mistral] separados por comas (https://docs.mistral.ai/getting-started/models/models_overview/) que pueden utilizarse en Baserow. (por ejemplo, `mistral-large-latest,mistral-small-latest`)",
+        "openRouterApiKeyLabel": "Clave API",
+        "openRouterOrganization": "Organización (opcional)",
+        "openRouter": "OpenRouter",
+        "openRouterApiKeyDescription": "Proporciona una clave API de OpenRouter si deseas habilitar la integración. [Obtener una clave de API](https://openrouter.ai/settings/keys).",
+        "openRouterModelsLabel": "Modelos habilitados",
+        "openRouterModelsDescription": "Proporciona una lista de [OpenRouter models](https://openrouter.ai/models) separados por comas que pueden ser utilizados en Baserow. (por ejemplo, `openai/gpt-4o,anthropic/claude-3-haiku`)"
     },
     "generativeAIWorkspaceSettings": {
         "title": "Configuración de la IA generativa",
@@ -1002,5 +1008,12 @@
         "activeUsers7days": "Usuarios activos últimos 7 días",
         "activeUsers30days": "Usuarios activos últimos 30 días",
         "viewAll": "Ver todo"
+    },
+    "formGroup": {
+        "cancelProtectedField": "Cancelar cambio",
+        "protectedField": "Este campo está protegido. Haz clic para cambiarlo."
+    },
+    "userSourceType": {
+        "userCountSummary": "{count} usuarios ({lastUpdated})"
     }
 }

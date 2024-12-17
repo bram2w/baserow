@@ -10,7 +10,10 @@
             "xml": "Exporter vers XML",
             "excel": "Exporter vers Excel"
         },
-        "deactivated": "Disponible en version premium"
+        "deactivated": "Disponible en version premium",
+        "adminType": {
+            "licenses": "Gérer les licences"
+        }
     },
     "rowCommentSidebar": {
         "onlyPremium": "Les commentaires de lignes sont disponibles dans la version premium.",
@@ -344,5 +347,8 @@
         "textDescription": "Génère un texte libre basé sur le prompt.",
         "choice": "Choix",
         "choiceDescription": "Ne choisit qu'une seule des options du champ."
+    },
+    "tableExcelExporter": {
+        "includeHeader": "Inclure les noms de champs comme en-tête"
     }
 }
