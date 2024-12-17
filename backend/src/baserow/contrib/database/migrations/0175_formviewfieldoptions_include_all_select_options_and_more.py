@@ -6,7 +6,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("database", "0173_datasyncsyncedproperty_metadata"),
+        ("database", "0174_formulafield_number_prefix_and_more"),
     ]
 
     operations = [

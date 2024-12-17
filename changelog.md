@@ -3,6 +3,7 @@
 ## Released 1.30.0
 
 ### New features
+* Add support for advanced number formatting [#1270](https://gitlab.com/baserow/baserow/-/issues/1270)
 * Add ability to group by link to table field. [#2306](https://gitlab.com/baserow/baserow/-/issues/2306)
 * [Builder] Improve Builder security with Page level Visibility. [#2392](https://gitlab.com/baserow/baserow/-/issues/2392)
 * Select row modal field width, order, and visibility configuration. [#2439](https://gitlab.com/baserow/baserow/-/issues/2439)
