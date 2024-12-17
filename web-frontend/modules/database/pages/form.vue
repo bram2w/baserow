@@ -275,8 +275,8 @@ export default {
         const value = values[valueName]
         const ref = this.$refs.form.$refs['field-' + field.field.id][0]
 
-        // If the field required and empty or if the value has a validation error, then
-        // we don't want to submit the form, focus on the field and top the loading.
+        // If the field is required but empty or if the value has a validation error, then
+        // we don't want to submit the form, focus on the field and stop the loading.
         if (
           (field.required && fieldType.isEmpty(field.field, value)) ||
           fieldType.getValidationError(field.field, value) !== null ||

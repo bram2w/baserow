@@ -182,6 +182,48 @@ def test_get_table_serializer(data_fixture):
 
 
 @pytest.mark.django_db
+def test_get_table_serializer_number_formatting(data_fixture):
+    table = data_fixture.create_database_table(name="Sample")
+    data_fixture.create_number_field(
+        table=table, order=1, name="Prefix", number_negative=False, number_prefix="$"
+    )
+    data_fixture.create_number_field(
+        table=table, order=2, name="Suffix", number_negative=False, number_suffix="%"
+    )
+
+    data_fixture.create_number_field(
+        table=table,
+        order=2,
+        name="Prefix and Suffix",
+        number_negative=False,
+        number_prefix="$",
+        number_suffix="%",
+    )
+
+    model = table.get_model(attribute_names=True)
+    serializer_class = get_row_serializer_class(model=model)
+
+    # expect the result to be empty if not provided
+    serializer_instance = serializer_class(data={})
+    assert serializer_instance.is_valid()
+    assert serializer_instance.data == {
+        "prefix": None,
+        "suffix": None,
+        "prefix_and_suffix": None,
+    }
+
+    serializer_instance = serializer_class(
+        data={"prefix": 123, "suffix": 456, "prefix_and_suffix": 789}
+    )
+    assert serializer_instance.is_valid()
+
+    # Adding prefix and/or suffix doesn't impact value
+    assert serializer_instance.data["prefix"] == "123"
+    assert serializer_instance.data["suffix"] == "456"
+    assert serializer_instance.data["prefix_and_suffix"] == "789"
+
+
+@pytest.mark.django_db
 def test_get_example_row_serializer_class():
     request_serializer = get_example_row_serializer_class(example_type="post")
     response_serializer = get_example_row_serializer_class(example_type="get")

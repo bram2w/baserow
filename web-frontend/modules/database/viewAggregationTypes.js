@@ -1,9 +1,6 @@
 import { Registerable } from '@baserow/modules/core/registry'
 import GenericViewAggregation from '@baserow/modules/database/components/aggregation/GenericViewAggregation'
-import {
-  FormulaFieldType,
-  NumberFieldType,
-} from '@baserow/modules/database/fieldTypes'
+import { FormulaFieldType } from '@baserow/modules/database/fieldTypes'
 
 export class ViewAggregationType extends Registerable {
   /**
@@ -675,11 +672,7 @@ export class AverageViewAggregationType extends ViewAggregationType {
     if (isNaN(value)) {
       return null
     }
-    if (fieldType.getType() === 'number') {
-      return NumberFieldType.formatNumber(field, value)
-    } else {
-      return value && value.toFixed(2)
-    }
+    return fieldType.toHumanReadableString(field, value)
   }
 
   getComponent() {
@@ -714,11 +707,7 @@ export class StdDevViewAggregationType extends ViewAggregationType {
     if (isNaN(value)) {
       return null
     }
-    if (fieldType.getType() === 'number') {
-      return NumberFieldType.formatNumber(field, value)
-    } else {
-      return value && value.toFixed(2)
-    }
+    return fieldType.toHumanReadableString(field, value)
   }
 
   getComponent() {
@@ -748,11 +737,7 @@ export class VarianceViewAggregationType extends ViewAggregationType {
     if (isNaN(value)) {
       return null
     }
-    if (fieldType.getType() === 'number') {
-      return NumberFieldType.formatNumber(field, value)
-    } else {
-      return value && value.toFixed(2)
-    }
+    return fieldType.toHumanReadableString(field, value)
   }
 
   getComponent() {
@@ -780,5 +765,12 @@ export class MedianViewAggregationType extends ViewAggregationType {
 
   getComponent() {
     return GenericViewAggregation
+  }
+
+  getValue(value, { field, fieldType }) {
+    if (isNaN(value)) {
+      return null
+    }
+    return fieldType.toHumanReadableString(field, value)
   }
 }

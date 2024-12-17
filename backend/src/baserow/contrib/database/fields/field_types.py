@@ -83,7 +83,10 @@ from baserow.contrib.database.api.fields.serializers import (
     PasswordSerializer,
     SelectOptionSerializer,
 )
-from baserow.contrib.database.api.utils import LinkRowJoin
+from baserow.contrib.database.api.utils import (
+    LinkRowJoin,
+    get_thousand_and_decimal_separator,
+)
 from baserow.contrib.database.api.views.errors import (
     ERROR_VIEW_DOES_NOT_EXIST,
     ERROR_VIEW_NOT_IN_TABLE,
@@ -528,8 +531,21 @@ class NumberFieldType(FieldType):
 
     type = "number"
     model_class = NumberField
-    allowed_fields = ["number_decimal_places", "number_negative"]
-    serializer_field_names = ["number_decimal_places", "number_negative", "number_type"]
+    allowed_fields = [
+        "number_decimal_places",
+        "number_negative",
+        "number_prefix",
+        "number_suffix",
+        "number_separator",
+    ]
+    serializer_field_names = [
+        "number_decimal_places",
+        "number_negative",
+        "number_type",
+        "number_prefix",
+        "number_suffix",
+        "number_separator",
+    ]
     serializer_field_overrides = {
         "number_type": MustBeEmptyField(
             "The number_type option has been removed and can no longer be provided. "
@@ -541,17 +557,34 @@ class NumberFieldType(FieldType):
     _can_group_by = True
     _db_column_fields = ["number_decimal_places"]
 
-    def prepare_value_for_db(self, instance, value):
-        if value is not None:
-            try:
-                value = Decimal(value)
-            except InvalidOperation:
-                raise ValidationError(
-                    f"The value for field {instance.id} is not a valid number",
-                    code="invalid",
-                )
+    def prepare_value_for_db(self, instance: NumberField, value):
+        if value is None:
+            return value
 
-        if value is not None and not instance.number_negative and value < 0:
+        if isinstance(value, str):
+            if instance.number_prefix is not None:
+                value = value.lstrip(instance.number_prefix)
+            if instance.number_suffix is not None:
+                value = value.rstrip(instance.number_suffix)
+
+            thousand_sep, decimal_sep = get_thousand_and_decimal_separator(
+                instance.number_separator
+            )
+
+            value = value.replace(thousand_sep, "").replace(decimal_sep, ".").strip()
+
+            if value in ["", "NaN"]:
+                return None
+
+        try:
+            value = Decimal(value)
+        except (InvalidOperation, ValueError, TypeError):
+            raise ValidationError(
+                f"The value for field {instance.id} is not a valid number",
+                code="invalid",
+            )
+
+        if not instance.number_negative and value < 0:
             raise ValidationError(
                 f"The value for field {instance.id} cannot be negative.",
                 code="negative_not_allowed",
@@ -579,16 +612,61 @@ class NumberFieldType(FieldType):
         if value is None:
             return value if rich_value else ""
 
-        # If the number is an integer we want it to be a literal json number and so
-        # don't convert it to a string. However if a decimal to preserve any precision
-        # we keep it as a string.
         instance = field_object["field"]
-        if instance.number_decimal_places == 0:
-            return int(value)
 
-        # DRF's Decimal Serializer knows how to quantize and format the decimal
-        # correctly so lets use it instead of trying to do it ourselves.
-        return self.get_serializer_field(instance).to_representation(value)
+        apply_formatting = (
+            instance.number_prefix
+            or instance.number_suffix
+            or instance.number_separator
+        )
+
+        # Old export that doesn't require formatting
+        if not apply_formatting:
+            # If the number is an integer we want it to be a literal json number and so
+            # don't convert it to a string. However, if a decimal to preserve any
+            # precision we keep it as a string.
+            instance = field_object["field"]
+            if instance.number_decimal_places == 0:
+                return int(value)
+
+            # DRF's Decimal Serializer knows how to quantize and format the decimal
+            # correctly so lets use it instead of trying to do it ourselves.
+            return self.get_serializer_field(instance).to_representation(value)
+
+        formatted_value = self.get_serializer_field(instance).to_representation(value)
+        fractional_part = ""
+        if instance.number_decimal_places == 0:
+            integer_part = formatted_value.split(".")[0]
+        elif "." in formatted_value:
+            integer_part, fractional_part = formatted_value.split(".")
+        else:
+            integer_part = formatted_value
+
+        thousand_separator, decimal_separator = get_thousand_and_decimal_separator(
+            instance.number_separator
+        )
+
+        minus_sign = ""
+        if integer_part.startswith("-"):
+            minus_sign = "-"
+            integer_part = integer_part[1:]
+
+        # Format integer part with thousand separator
+        integer_part_with_sep = f"{int(integer_part):,}".replace(
+            ",", thousand_separator
+        )
+
+        # Add fractional part with decimal_separator if needed
+        if fractional_part:
+            fractional_part = f"{decimal_separator}{fractional_part}"
+
+        # Add prefix and suffix
+        return (
+            f"{minus_sign}"
+            f"{instance.number_prefix}"
+            f"{integer_part_with_sep}{fractional_part}"
+            f"{instance.number_suffix}".strip()
+        )
 
     def get_model_field(self, instance, **kwargs):
         kwargs["decimal_places"] = instance.number_decimal_places
@@ -643,7 +721,11 @@ class NumberFieldType(FieldType):
 
     def to_baserow_formula_type(self, field: NumberField) -> BaserowFormulaType:
         return BaserowFormulaNumberType(
-            number_decimal_places=field.number_decimal_places, nullable=True
+            number_decimal_places=field.number_decimal_places,
+            number_prefix=field.number_prefix,
+            number_suffix=field.number_suffix,
+            number_separator=field.number_separator,
+            nullable=True,
         )
 
     def from_baserow_formula_type(
@@ -652,6 +734,9 @@ class NumberFieldType(FieldType):
         return NumberField(
             number_decimal_places=formula_type.number_decimal_places,
             number_negative=True,
+            number_prefix=formula_type.number_prefix,
+            number_suffix=formula_type.number_suffix,
+            number_separator=formula_type.number_separator,
         )
 
     def should_backup_field_data_for_same_type_update(
@@ -663,8 +748,22 @@ class NumberFieldType(FieldType):
         new_number_negative = new_field_attrs.get(
             "number_negative", old_field.number_negative
         )
-        return (old_field.number_decimal_places > new_number_decimal_places) or (
-            old_field.number_negative and not new_number_negative
+        new_number_prefix = new_field_attrs.get(
+            "number_prefix", old_field.number_prefix
+        )
+        new_number_suffix = new_field_attrs.get(
+            "number_suffix", old_field.number_suffix
+        )
+        new_number_separator = new_field_attrs.get(
+            "number_separator", old_field.number_separator
+        )
+        return (
+            old_field.number_decimal_places > new_number_decimal_places
+            or old_field.number_negative
+            and not new_number_negative
+            or old_field.number_prefix != new_number_prefix
+            or old_field.number_suffix != new_number_suffix
+            or old_field.number_separator != new_number_separator
         )
 
     def serialize_metadata_for_row_history(
@@ -679,6 +778,9 @@ class NumberFieldType(FieldType):
             **base,
             "number_decimal_places": field.number_decimal_places,
             "number_negative": field.number_negative,
+            "number_prefix": field.number_prefix,
+            "number_suffix": field.number_suffix,
+            "number_separator": field.number_separator,
         }
 
 

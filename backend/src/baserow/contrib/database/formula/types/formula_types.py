@@ -319,14 +319,29 @@ class BaserowFormulaNumberType(
 ):
     type = "number"
     baserow_field_type = "number"
-    user_overridable_formatting_option_fields = ["number_decimal_places"]
+    user_overridable_formatting_option_fields = [
+        "number_decimal_places",
+        "number_prefix",
+        "number_suffix",
+        "number_separator",
+    ]
     MAX_DIGITS = 50
     can_order_by_in_array = True
     can_group_by = True
 
-    def __init__(self, number_decimal_places: int, **kwargs):
+    def __init__(
+        self,
+        number_decimal_places: int,
+        number_prefix: str = "",
+        number_suffix: str = "",
+        number_separator: str = "",
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         self.number_decimal_places = number_decimal_places
+        self.number_prefix = number_prefix
+        self.number_suffix = number_suffix
+        self.number_separator = number_separator
 
     @property
     def comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:

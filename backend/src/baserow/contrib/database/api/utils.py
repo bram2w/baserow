@@ -7,6 +7,7 @@ from django.db.models import QuerySet
 from rest_framework import serializers
 
 from baserow.config.settings.utils import str_to_bool
+from baserow.contrib.database.api.constants import NUMBER_SEPARATOR_MAPPING
 from baserow.contrib.database.api.rows.exceptions import InvalidJoinParameterException
 from baserow.contrib.database.fields.exceptions import (
     FieldDoesNotExist,
@@ -290,3 +291,7 @@ def extract_link_row_joins_from_request(
                 raise FieldDoesNotExist() from ex
 
     return list(link_row_joins.values())
+
+
+def get_thousand_and_decimal_separator(value):
+    return NUMBER_SEPARATOR_MAPPING.get(value, None) or NUMBER_SEPARATOR_MAPPING[""]

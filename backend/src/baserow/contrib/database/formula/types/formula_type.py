@@ -330,6 +330,7 @@ class BaserowFormulaType(abc.ABC):
         :param formula_field: The formula field to store the type information onto.
         """
 
+        from baserow.contrib.database.fields.models import FormulaField
         from baserow.contrib.database.formula.types.formula_types import (
             BASEROW_FORMULA_TYPE_ALLOWED_FIELDS,
         )
@@ -344,7 +345,9 @@ class BaserowFormulaType(abc.ABC):
             elif attr in self.get_internal_fields():
                 setattr(formula_field, attr, getattr(self, attr))
             else:
-                setattr(formula_field, attr, None)
+                field_attr = getattr(FormulaField, attr).field
+                default_value = None if field_attr.null else field_attr.default
+                setattr(formula_field, attr, default_value)
 
     def get_baserow_field_instance_and_type(self) -> "tuple[Model, FieldType]":
         from baserow.contrib.database.fields.registries import field_type_registry

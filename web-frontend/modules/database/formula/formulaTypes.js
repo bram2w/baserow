@@ -20,6 +20,7 @@ import RowEditFieldButton from '@baserow/modules/database/components/row/RowEdit
 import RowEditFieldDurationReadOnly from '@baserow/modules/database/components/row/RowEditFieldDurationReadOnly.vue'
 import FunctionalFormulaArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaArrayItem'
 import FunctionalFormulaArrayDurationItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaArrayDurationItem'
+import FunctionalFormulaArrayNumberItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaArrayNumberItem'
 import FunctionalFormulaBooleanArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaBooleanArrayItem'
 import FunctionalFormulaDateArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaDateArrayItem'
 import FunctionalFormulaSingleSelectArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaSingleSelectArrayItem'
@@ -319,6 +320,10 @@ export class BaserowFormulaNumberType extends BaserowFormulaTypeDefinition {
 
   getRowEditFieldComponent(field) {
     return RowEditFieldNumber
+  }
+
+  getFunctionalFieldArrayComponent() {
+    return FunctionalFormulaArrayNumberItem
   }
 
   getSortOrder() {
