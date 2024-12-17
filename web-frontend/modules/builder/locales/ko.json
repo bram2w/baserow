@@ -87,16 +87,16 @@
         "buttonDescription": "버튼 요소",
         "table": "테이블",
         "tableDescription": "테이블 요소",
-        "formContainer": "폼",
-        "formContainerDescription": "폼 요소",
+        "formContainer": "양식",
+        "formContainerDescription": "양식 요소",
         "choice": "선택",
         "choiceDescription": "단일/다중 값 선택",
         "checkbox": "체크박스",
         "checkboxDescription": "체크박스 요소",
         "iframe": "아이프레임",
         "iframeDescription": "인라인 프레임",
-        "authForm": "로그인 폼",
-        "authFormDescription": "사용자 로그인 폼",
+        "authForm": "로그인 양식",
+        "authFormDescription": "사용자 로그인 양식",
         "repeat": "반복",
         "repeatDescription": "반복 가능한 요소 집합",
         "recordSelector": "레코드 선택기",
@@ -701,7 +701,8 @@
         "nameFieldLabel": "이름",
         "nameFieldPlaceholder": "이름 입력...",
         "authTitle": "인증",
-        "integrationFieldLabel": "통합"
+        "integrationFieldLabel": "통합",
+        "addProvider": "제공자 추가"
     },
     "formContainerElement": {
         "submitDeactivatedText": "제출하려면 모든 필수 필드를 완료하세요",
@@ -712,7 +713,7 @@
         "submitButtonPlaceholder": "값 입력...",
         "buttonColor": "버튼 색상",
         "resetToInitialValuesTitle": "제출 후 기본값으로 재설정",
-        "resetToInitialValuesDescription": "선택한 경우, 성공적인 제출 후 폼의 기본값이 폼을 재설정하는 데 사용됩니다. 선택하지 않은 경우, 사용자의 값이 유지됩니다."
+        "resetToInitialValuesDescription": "선택한 경우, 성공적인 제출 후 양식의 기본값이 양식을 재설정하는 데 사용됩니다. 선택하지 않은 경우, 사용자의 값이 유지됩니다."
     },
     "choiceOptionSelector": {
         "label": "옵션",
@@ -730,7 +731,7 @@
     "dispatchWorkflowActionError": {
         "defaultTitle": "이벤트 오류",
         "defaultMessage": "이 이벤트를 트리거하는 중 오류가 발생했습니다.",
-        "formDataInvalidTitle": "유효하지 않은 폼",
+        "formDataInvalidTitle": "유효하지 않은 양식",
         "formDataInvalidMessage": "하나 이상의 필드에 유효하지 않은 값이 있습니다."
     },
     "dispatchDataSourceError": {
@@ -765,7 +766,7 @@
         "noEmail": "이메일 없음"
     },
     "userSelector": {
-        "viewAs": "{user}로 보기",
+        "viewAs": "{user}으로 보기",
         "anonymous": "익명",
         "member": "{prefix} 멤버"
     },

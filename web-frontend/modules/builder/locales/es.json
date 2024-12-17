@@ -206,7 +206,8 @@
         "nameFieldLabel": "Nombre",
         "nameFieldPlaceholder": "Introduce un nombre...",
         "integrationFieldLabel": "Integración",
-        "authTitle": "Autenticación"
+        "authTitle": "Autenticación",
+        "addProvider": "Añadir proveedor"
     },
     "elementForms": {
         "urlInputPlaceholder": "Introducir URL...",

@@ -47,7 +47,8 @@
         "deactivate": "비활성화",
         "download": "다운로드",
         "copyToClipboard": "클립보드에 복사",
-        "reset": "재설정"
+        "reset": "재설정",
+        "hide": "숨기기"
     },
     "adminType": {
         "settings": "설정",

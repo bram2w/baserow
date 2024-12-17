@@ -242,7 +242,13 @@
         "ollamaHostLabel": "호스트",
         "ollamaHostDescription": "[Ollama](https://ollama.com/) 서버의 호스트 이름을 제공하세요. 일반적으로 로컬 기기에서 실행됩니다.",
         "ollamaModelsLabel": "사용 가능한 모델",
-        "ollamaModelsDescription": "쉼표로 구분된 [Ollama 설치된 모델](https://ollama.com/library)을 제공하세요. 모델은 다운로드 및 설치되어야 사용 가능합니다. (예: `llama2,mistral`)"
+        "ollamaModelsDescription": "쉼표로 구분된 [Ollama 설치된 모델](https://ollama.com/library)을 제공하세요. 모델은 다운로드 및 설치되어야 사용 가능합니다. (예: `llama2,mistral`)",
+        "openRouterApiKeyDescription": "연동 하려면 OpenRouter API 키를 제공하세요. [API 키 받기](https://openrouter.ai/settings/keys).",
+        "openRouterApiKeyLabel": "API 키",
+        "openRouterModelsDescription": "Baserow에서 사용할 수 있는 [OpenRouter 모델](https://openrouter.ai/models) 의 목록을 쉼표로 구분하여 제공하세요. (예 : `openai/gpt-4o,anthropic/claude-3-haiku`)",
+        "openRouter": "OpenRouter",
+        "openRouterOrganization": "조직 (선택 사항)",
+        "openRouterModelsLabel": "활성화된 모델"
     },
     "generativeAIWorkspaceSettings": {
         "title": "생성형 AI 설정",
@@ -543,7 +549,7 @@
             },
             "example": {
                 "title": "예제",
-                "description": "`이름`이라는 필드를 `마이크` 라는 값으로 미리 채우고 싶다면 아래 예제를 참고하세요.",
+                "description": "`이름`이라는 필드를 `마이크` 라는 값으로 미리 채우고 싶다면 아래 예제를 참고하세요",
                 "codeSnippet": "?prefill_Name=Mike"
             },
             "spaces": {
@@ -712,7 +718,7 @@
         "instant": "즉시",
         "daily": "매일",
         "weekly": "매주",
-        "never": "절대 안 함",
+        "never": "안 함",
         "submitButton": "빈도 업데이트"
     },
     "formulaInputField": {
@@ -905,5 +911,12 @@
         "activeUsers7days": "지난 7일 동안 활성 사용자",
         "activeUsers30days": "지난 30일 동안 활성 사용자",
         "viewAll": "모두 보기"
+    },
+    "formGroup": {
+        "protectedField": "이 필드는 보호되어 있습니다. 변경하려면 클릭하세요.",
+        "cancelProtectedField": "변경 취소"
+    },
+    "userSourceType": {
+        "userCountSummary": "{count} 사용자 ({lastUpdated})"
     }
 }

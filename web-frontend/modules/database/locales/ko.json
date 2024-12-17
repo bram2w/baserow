@@ -67,7 +67,8 @@
         "webhooks": "웹훅",
         "lastSynced": "마지막 동기화",
         "notSynced": "동기화되지 않음",
-        "sync": "테이블 동기화"
+        "sync": "테이블 동기화",
+        "updateSyncConfig": "동기화 구성 업데이트"
     },
     "duplicateTableJobType": {
         "duplicating": "복제 중",
@@ -509,7 +510,7 @@
         "notSharedYetText": "이 뷰의 데이터를 누구나 볼 수 있도록 허용하거나 외부 캘린더와 이벤트를 동기화하세요."
     },
     "viewGroupByContext": {
-        "noGroupByTitle": "아직 그룹화를 생성하지 않았습니다",
+        "noGroupByTitle": "아직 그룹을 생성하지 않았습니다",
         "noGroupByText": "필드별로 행을 그룹화합니다.",
         "groupBy": "그룹화 기준",
         "thenBy": "다음 기준",
@@ -613,7 +614,7 @@
     "gridViewRow": {
         "rowNotMatchingFilters": "행이 필터와 일치하지 않음",
         "rowNotMatchingSearch": "행이 검색과 일치하지 않음",
-        "rowHasMoved": "행이 이동되었습니다"
+        "rowHasMoved": "행이 이동됩니다"
     },
     "gridView": {
         "selectRow": "행 선택",
@@ -772,7 +773,10 @@
         "showWhenMatchingConditions": "조건이 충족될 때 표시",
         "addCondition": "조건 추가",
         "addConditionGroup": "조건 그룹 추가",
-        "showFieldAs": "필드 표시 방식"
+        "showFieldAs": "필드 표시 방식",
+        "includeAllSelectOptions": "모든 선택 옵션 포함",
+        "includeAllSelectOptionsHelper": "이 드롭다운을 사용하여 양식에 포함해야 할 선택 옵션을 선택하세요",
+        "noSelectOptions": "선택할 옵션이 없습니다."
     },
     "duplicateFieldContext": {
         "duplicate": "필드 복제",
@@ -1010,5 +1014,19 @@
         "small": "작게",
         "medium": "중간",
         "large": "크게"
+    },
+    "configureDataSyncModal": {
+        "title": "데이터 동기화",
+        "syncedFields": "동기화된 필드",
+        "syncSettings": "동기화 설정"
+    },
+    "configureDataSyncVisibleFields": {
+        "title": "동기화된 필드 변경",
+        "fields": "동기화된 필드",
+        "syncTable": "저장 시 동기화"
+    },
+    "configureDataSyncSettings": {
+        "title": "데이터 동기화 변경",
+        "syncTable": "저장 시 동기화"
     }
 }

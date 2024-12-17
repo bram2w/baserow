@@ -72,7 +72,8 @@
         "webhooks": "Webhooks",
         "lastSynced": "Última sincronización",
         "notSynced": "No sincronizado",
-        "sync": "Sincronizar tabla"
+        "sync": "Sincronizar tabla",
+        "updateSyncConfig": "Actualizar la configuración de sincronización"
     },
     "apiToken": {
         "create": "crear",
@@ -695,7 +696,10 @@
         "addCondition": "Añadir condición",
         "descriptionPlaceholder": "Descripción",
         "addConditionGroup": "Añadir grupo de condiciones",
-        "showFieldAs": "Mostrar campo como"
+        "showFieldAs": "Mostrar campo como",
+        "includeAllSelectOptions": "Incluir todas las opciones seleccionadas",
+        "includeAllSelectOptionsHelper": "Elige las opciones de selección que deben incluirse en el formulario utilizando este desplegable",
+        "noSelectOptions": "No hay opciones de selección disponibles."
     },
     "duplicateFieldContext": {
         "duplicate": "Duplicar campo",
@@ -1049,5 +1053,19 @@
         "port": "Puerto",
         "sslMode": "Modo SSL",
         "description": "Sincroniza una tabla de PostgreSQL con una tabla de Baserow que coincida con los detalles proporcionados a continuación. Tenga en cuenta que cuando se inicia la sincronización, se seleccionarán todas las filas de la tabla proporcionada. Aunque Baserow solo selecciona datos, recomendamos encarecidamente limitar al usuario a una conexión de solo lectura."
+    },
+    "configureDataSyncVisibleFields": {
+        "syncTable": "Sincronizar al guardar",
+        "title": "Modificar los campos sincronizados",
+        "fields": "Campos sincronizados"
+    },
+    "configureDataSyncSettings": {
+        "syncTable": "Sincronizar al guardar",
+        "title": "Cambiar la sincronización de datos"
+    },
+    "configureDataSyncModal": {
+        "syncSettings": "Ajustes de sincronización",
+        "syncedFields": "Campos sincronizados",
+        "title": "Sincronización de datos"
     }
 }

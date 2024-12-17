@@ -276,7 +276,8 @@
         "errorLinkExpiredTitle": "Link verlopen",
         "errorLinkExpiredMessage": "De link voor het resetten van je wachtwoord is verlopen. Vraag een nieuwe link aan.",
         "disabled": "Wachtwoord opnieuw instellen is uitgeschakeld",
-        "disabledMessage": "Het is niet mogelijk om het wachtwoord te resetten omdat het is uitgeschakeld."
+        "disabledMessage": "Het is niet mogelijk om het wachtwoord te resetten omdat het is uitgeschakeld.",
+        "message": "Je kunt nu inloggen op Baserow met je nieuwe wachtwoord."
     },
     "signup": {
         "headTitle": "Nieuw account aanmaken",
@@ -290,7 +291,10 @@
         "passwordRepeatPlaceholder": "Bevestig je wachtwoord.",
         "loginText": "Heb je al een account?",
         "emailPlaceholder": "Voer je e-mailadres in..",
-        "login": "Inloggen"
+        "login": "Inloggen",
+        "privacyPolicy": "Privacybeleid",
+        "agreeTerms": "Door een account aan te maken, gaat u akkoord met de {0} {1} {2}",
+        "terms": "Servicevoorwaarden"
     },
     "forgotPassword": {
         "title": "Wachtwoord vergeten",
@@ -299,7 +303,9 @@
         "confirmation": "Als je e-mailadres in onze database voorkomt, ontvangt je binnen enkele minuten op je e-mailadres een link om je wachtwoord opnieuw in te stellen.",
         "disabled": "Wachtwoord resetten is uitgeschakeld",
         "disabledMessage": "Het is niet mogelijk om een wachtwoord opnieuw in te stellen omdat het is uitgeschakeld.",
-        "loginText": "Heb je al een account en wachtwoord?"
+        "loginText": "Heb je al een account en wachtwoord?",
+        "confirmationTitle": "Controleer je e-mail",
+        "goBack": "Ga terug"
     },
     "settings": {
         "settingsTitle": "Beheerdersinstellingen",
@@ -752,7 +758,13 @@
         "anthropicModelsDescription": "Geef een lijst van door komma's gescheiden [Anthropic modellen] (https://docs.anthropic.com/en/docs/about-claude/models) die kunnen worden gebruikt in Baserow. (e.g. `claude-3-5-sonnet-20241022,claude-3-opus-20240229`)",
         "mistralApiKeyLabel": "API-sleutel",
         "mistralModelsDescription": "Geef een lijst met door komma's gescheiden [Mistral modellen] (https://docs.mistral.ai/getting-started/models/models_overview/) die kunnen worden gebruikt in Baserow. (bijv. `mistral-large-latest,mistral-small-latest`)",
-        "mistralApiKeyDescription": "Geef een Mistral API-sleutel als u de integratie wilt inschakelen. [Instructies voor het verkrijgen van een API-sleutel](https://docs.mistral.ai/getting-started/quickstart/)."
+        "mistralApiKeyDescription": "Geef een Mistral API-sleutel als u de integratie wilt inschakelen. [Instructies voor het verkrijgen van een API-sleutel](https://docs.mistral.ai/getting-started/quickstart/).",
+        "openRouterApiKeyLabel": "API-sleutel",
+        "openRouterOrganization": "Organisatie (optioneel)",
+        "openRouter": "OpenRouter",
+        "openRouterModelsLabel": "Ingeschakelde modellen",
+        "openRouterModelsDescription": "Geef een lijst met door komma's gescheiden [OpenRouter modellen] (https://openrouter.ai/models) die kunnen worden gebruikt in Baserow. (bijv. `openai/gpt-4o,anthropic/claude-3-haiku`)",
+        "openRouterApiKeyDescription": "Geef een OpenRouter API-key op als u de integratie wilt inschakelen. [get an API key](https://openrouter.ai/settings/keys)."
     },
     "generativeAIWorkspaceSettings": {
         "title": "Generatieve AI-instellingen",
@@ -969,7 +981,7 @@
         }
     },
     "changeUserPasswordModal": {
-      "changePassword": "Wijzig wachtwoord voor {gebruikersnaam}"
+        "changePassword": "Wijzig wachtwoord voor {gebruikersnaam}"
     },
     "deleteUserModal": {
         "title": "Verwijder {gebruikersnaam}",
@@ -979,8 +991,8 @@
         "delete": "Verwijder gebruiker {gebruikersnaam}"
     },
     "editUserModal": {
-      "delete": "Gebruiker verwijderen",
-      "edit": "Bewerk { gebruikersnaam }"
+        "delete": "Gebruiker verwijderen",
+        "edit": "Bewerk { gebruikersnaam }"
     },
     "adminDashboard": {
         "title": "Dashboard",
@@ -997,5 +1009,12 @@
         "activeUsers7days": "Actieve gebruikers laatste 7 dagen",
         "activeUsers30days": "Actieve gebruikers laatste 30 dagen",
         "viewAll": "Alles bekijken"
+    },
+    "formGroup": {
+        "protectedField": "Dit veld is beveiligd. Klik om te wijzigen.",
+        "cancelProtectedField": "Annuleer verandering"
+    },
+    "userSourceType": {
+        "userCountSummary": "{count} gebruikers ({lastUpdated})"
     }
 }
