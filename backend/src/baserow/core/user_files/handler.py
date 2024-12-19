@@ -18,6 +18,7 @@ from django.utils.http import parse_header_parameters
 
 import advocate
 from advocate.exceptions import UnacceptableAddressException
+from loguru import logger
 from PIL import Image, ImageOps
 from requests.exceptions import RequestException
 
@@ -147,7 +148,11 @@ class UserFileHandler:
                 return unique
 
     def generate_and_save_image_thumbnails(
-        self, image, user_file, storage=None, only_with_name=None
+        self,
+        image: Image,
+        user_file_name: str,
+        storage: Storage | None = None,
+        only_with_name: str | None = None,
     ):
         """
         Generates the thumbnails based on the current settings and saves them to the
@@ -156,24 +161,16 @@ class UserFileHandler:
 
         :param image: The original Pillow image that serves as base when generating the
             image.
-        :type image: Image
-        :param user_file: The user file for which the thumbnails must be generated and
-            saved.
-        :type user_file: UserFile
+        :param user_file_name: The name of the user file that the thumbnail is for.
         :param storage: The storage where the thumbnails must be saved to.
-        :type storage: Storage or None
         :param only_with_name: If provided, then only thumbnail types with that name
             will be regenerated.
-        :type only_with_name: None or String
         :raises ValueError: If the provided user file is not a valid image.
         """
 
-        if not user_file.is_image:
-            raise ValueError("The provided user file is not an image.")
-
         storage = storage or get_default_storage()
-        image_width = user_file.image_width
-        image_height = user_file.image_height
+        image_width = image.width
+        image_height = image.height
 
         for name, size in settings.USER_THUMBNAILS.items():
             if only_with_name and only_with_name != name:
@@ -195,7 +192,7 @@ class UserFileHandler:
                 thumbnail_stream = BytesIO()
                 thumbnail.save(thumbnail_stream, image.format)
                 thumbnail_stream.seek(0)
-                thumbnail_path = self.user_file_thumbnail_path(user_file, name)
+                thumbnail_path = self.user_file_thumbnail_path(user_file_name, name)
 
                 handler = OverwritingStorageHandler(storage)
                 handler.save(thumbnail_path, thumbnail_stream)
@@ -252,25 +249,7 @@ class UserFileHandler:
             or MIME_TYPE_UNKNOWN
         )
         unique = self.generate_unique(stream_hash, extension)
-
-        # By default the provided file is not an image.
-        image = None
-        is_image = False
-        image_width = None
-        image_height = None
-
-        # Try to open the image with Pillow. If that succeeds we know the file is an
-        # image.
-        try:
-            image = Image.open(stream)
-            is_image = True
-            image_width = image.width
-            image_height = image.height
-            mime_type = f"image/{image.format}".lower()
-        except IOError:
-            pass
-
-        user_file = UserFile.objects.create(
+        user_file = UserFile(
             original_name=file_name,
             original_extension=extension,
             size=size,
@@ -278,20 +257,30 @@ class UserFileHandler:
             unique=unique,
             uploaded_by=user,
             sha256_hash=stream_hash,
-            is_image=is_image,
-            image_width=image_width,
-            image_height=image_height,
         )
 
-        # If the uploaded file is an image we need to generate the configurable
-        # thumbnails for it. We want to generate them before the file is saved to the
-        # storage because some storages close the stream after saving.
-        if image:
-            self.generate_and_save_image_thumbnails(image, user_file, storage=storage)
+        image = None
+        try:
+            image = Image.open(stream)
+            user_file.mime_type = f"image/{image.format}".lower()
+            self.generate_and_save_image_thumbnails(
+                image, user_file.name, storage=storage
+            )
+            # Skip marking as images if thumbnails cannot be generated (i.e. PSD files).
+            user_file.is_image = True
+            user_file.image_width = image.width
+            user_file.image_height = image.height
+        except IOError:
+            pass  # Not an image
+        except Exception as exc:
+            logger.warning(
+                f"Failed to generate thumbnails for user file of type {mime_type}: {exc}"
+            )
+        finally:
+            if image is not None:
+                del image
 
-            # When all the thumbnails have been generated, the image can be deleted
-            # from memory.
-            del image
+        user_file.save()
 
         # Save the file to the storage.
         full_path = self.user_file_path(user_file)
