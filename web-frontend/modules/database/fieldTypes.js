@@ -1488,6 +1488,16 @@ export class NumberFieldType extends FieldType {
     return ['text', '1', '9']
   }
 
+  /**
+   * When searching a cell's value, this should return the value to match the user's
+   * search term against. We can't use `toHumanReadableString` here as it needs to be
+   * consistent with the backend, and the backend doesn't know about the formatting
+   * that `toHumanReadableString` uses.
+   */
+  toSearchableString(field, value, delimiter = ', ') {
+    return value ? String(value) : ''
+  }
+
   getSort(name, order) {
     return (a, b) => {
       if (a[name] === b[name]) {
