@@ -276,10 +276,10 @@
     "viewType": {
         "grid": "그리드",
         "gallery": "갤러리",
-        "form": "폼",
+        "form": "양식",
         "sharing": {
             "linkName": "뷰",
-            "formLinkName": "폼"
+            "formLinkName": "양식"
         }
     },
     "trashType": {

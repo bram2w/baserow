@@ -22,12 +22,12 @@
         "installedTitle": "템플릿이 설치되었습니다"
     },
     "sidebar": {
-        "createWorkspace": "워크스페이스 생성",
-        "addNewWorkspace": "새 워크스페이스 추가",
+        "createWorkspace": "작업공간 생성",
+        "addNewWorkspace": "새 작업공간 추가",
         "inviteOthers": "다른 사람 초대",
         "members": "멤버",
         "logoff": "로그아웃",
-        "errorNoWorkspace": "워크스페이스가 없습니다.",
+        "errorNoWorkspace": "작업공간이 없습니다.",
         "adminTools": "관리자 도구",
         "home": "홈",
         "dashboard": "대시보드",
@@ -81,7 +81,7 @@
     "deleteAccountSettings": {
         "title": "계정 삭제",
         "description": "현재 비밀번호를 입력하고 버튼을 클릭하여 계정 삭제를 예약할 수 있습니다. 계정은 {days}일 후에 영구적으로 삭제됩니다. 그 동안 다시 로그인하면 계정 삭제가 취소됩니다.",
-        "workspaceNoticeDescription": "계정이 영구적으로 삭제되면, 마지막으로 활성화된 관리자 권한을 가진 사용자일 경우 해당 워크스페이스와 관련된 모든 데이터도 삭제됩니다. 아래 표시된 워크스페이스는 당신이 유일한 관리자이기 때문에 삭제될 것입니다. 삭제를 방지하려면 계정을 삭제하기 전에 다른 사용자에게 관리자를 부여해야 합니다.",
+        "workspaceNoticeDescription": "계정이 영구적으로 삭제되면, 마지막으로 활성화된 관리자 권한을 가진 사용자일 경우 해당 작업공간과 관련된 모든 데이터도 삭제됩니다. 아래 표시된 작업공간은 당신이 유일한 관리자이기 때문에 삭제될 것입니다. 삭제를 방지하려면 계정을 삭제하기 전에 다른 사용자에게 관리자를 부여해야 합니다.",
         "orphanWorkspaces": "유예 기간 후 영구적으로 삭제됩니다",
         "orphanWorkspaceMemberCount": "공유된 사용자 없음|한 명의 사용자와 공유됨|{count}명의 사용자와 공유됨",
         "password": "비밀번호",
@@ -94,8 +94,8 @@
         "errorUserIsLastAdminMessage": "당신은 이 Baserow 인스턴스의 마지막 관리자이기 때문에 계정을 삭제할 수 없습니다.",
         "accountDeletedSuccessTitle": "계정 삭제가 예약되었습니다",
         "accountDeletedSuccessMessage": "계정이 삭제 예정으로 예약되었습니다.",
-        "workspaceLoadingError": "워크스페이스 확인 실패",
-        "workspaceLoadingErrorDescription": "삭제될 워크스페이스를 확인하지 못했습니다. 페이지를 새로고침해 주세요."
+        "workspaceLoadingError": "작업공간 확인 실패",
+        "workspaceLoadingErrorDescription": "삭제될 작업공간을 확인하지 못했습니다. 페이지를 새로고침해 주세요."
     },
     "error": {
         "alreadyExistsTitle": "사용자가 이미 존재합니다",
@@ -123,9 +123,9 @@
         "nameLabel": "이름"
     },
     "leaveWorkspaceModal": {
-        "title": "{workspace} 떠나기",
-        "message": "워크스페이스 {workspace}를 정말로 떠나시겠습니까? 관련 애플리케이션에 더 이상 접근할 수 없으며, 다시 접근하려면 관리자 중 한 명이 다시 초대해야 합니다. 워크스페이스를 떠나면 삭제되지 않습니다. 다른 모든 멤버는 여전히 접근할 수 있습니다. 마지막 관리자라면 유지 관리되지 않기 때문에 워크스페이스를 떠날 수 없습니다.",
-        "leave": "워크스페이스 떠나기"
+        "title": "{workspace} 나가기",
+        "message": "작업공간 {workspace}을 정말로 나가시겠습니까? 관련 애플리케이션에 더 이상 접근할 수 없으며, 다시 접근하려면 관리자 중 한 명이 다시 초대해야 합니다. 작업공간을 나가면 삭제되지 않습니다. 다른 모든 멤버는 여전히 접근할 수 있습니다. 마지막 관리자라면 유지 관리되지 않기 때문에 작업공간을 나갈 수 없습니다.",
+        "leave": "작업공간 나가기"
     },
     "exportWorkspaceModal": {
         "title": "내보내기",
@@ -136,7 +136,7 @@
         "cancel": "취소",
         "download": "다운로드",
         "importingState": "가져오는 중",
-        "noExports": "이 워크스페이스에는 아직 내보낸 내용이 없습니다.",
+        "noExports": "이 작업공간에는 아직 내보낸 내용이 없습니다.",
         "created": "생성됨"
     },
     "exportWorkspaceForm": {
@@ -205,18 +205,18 @@
         "additionalRoles": "추가 역할"
     },
     "workspaceContext": {
-        "renameWorkspace": "워크스페이스 이름 변경",
+        "renameWorkspace": "작업공간 이름 변경",
         "exportWorkspace": "데이터 내보내기",
         "importWorkspace": "데이터 가져오기",
         "settings": "설정",
         "members": "멤버",
         "auditLog": "감사 로그",
         "viewTrash": "휴지통 보기",
-        "leaveWorkspace": "워크스페이스 떠나기\"",
-        "deleteWorkspace": "워크스페이스 삭제"
+        "leaveWorkspace": "작업공간 나가기",
+        "deleteWorkspace": "작업공간 삭제"
     },
     "workspaceSettingsModal": {
-        "title": "워크스페이스 설정"
+        "title": "작업공간 설정"
     },
     "workspaceSettingType": {
         "generativeAI": "생성형 AI"
@@ -252,19 +252,19 @@
     },
     "generativeAIWorkspaceSettings": {
         "title": "생성형 AI 설정",
-        "description": "이 설정은 워크스페이스 수준에서 생성형 AI 구성을 설정하는 데 사용됩니다. AI 필드와 같은 기능은 지원되는 모델의 API 키가 없기 때문에 비활성화될 수 있습니다. 여기에서 설정을 제공하여 이러한 기능을 활성화할 수 있습니다. 값을 비워두면 글로벌 인스턴스 설정으로 기본값이 설정됩니다. 워크스페이스의 모든 사람이 이러한 설정을 공유한다는 점에 유의하세요.",
+        "description": "이 설정은 작업공간 수준에서 생성형 AI 구성을 설정하는 데 사용됩니다. AI 필드와 같은 기능은 지원되는 모델의 API 키가 없기 때문에 비활성화될 수 있습니다. 여기에서 설정을 제공하여 이러한 기능을 활성화할 수 있습니다. 값을 비워두면 글로벌 인스턴스 설정으로 기본값이 설정됩니다. 작업공간의 모든 사람이 이러한 설정을 공유한다는 점에 유의하세요.",
         "changedTitle": "설정이 올바르게 업데이트되었습니다",
-        "changedDescription": "설정이 업데이트되었으며 이제 이 워크스페이스에서 사용됩니다.",
+        "changedDescription": "설정이 업데이트되었으며 이제 이 작업공간에서 사용됩니다.",
         "submitButton": "설정 업데이트",
         "openSettings": "설정 열기",
         "hideSettings": "설정 숨기기"
     },
     "createWorkspaceModal": {
-        "createNew": "새 워크스페이스 생성",
-        "defaultName": "제목 없는 워크스페이스",
-        "add": "워크스페이스 추가",
+        "createNew": "새 작업공간 생성",
+        "defaultName": "제목 없는 작업공간",
+        "add": "작업공간 추가",
         "permissionDeniedTitle": "권한 거부",
-        "permissionDeniedBody": "새 워크스페이스를 생성할 권한이 없습니다."
+        "permissionDeniedBody": "새 작업공간을 생성할 권한이 없습니다."
     },
     "templateCategories": {
         "search": "템플릿 검색",
@@ -275,7 +275,7 @@
     },
     "trashSidebar": {
         "title": "휴지통",
-        "unnamedWorkspace": "이름 없는 워크스페이스 {id}"
+        "unnamedWorkspace": "이름 없는 작업공간 {id}"
     },
     "trashContents": {
         "message": "지난 {duration} 동안 삭제된 항목 복원",
@@ -301,9 +301,9 @@
         "unnamed": "이름 없는 {type} {id}"
     },
     "trashModal": {
-        "emptyTitle": "워크스페이스를 찾을 수 없습니다",
-        "emptyMessage": "어떤 워크스페이스의 멤버도 아닙니다. 데이터베이스와 같은 애플리케이션은 워크스페이스에 속하므로, 생성하려면 워크스페이스를 생성해야 합니다.",
-        "emptyMessageWithoutCreatePermission": "어떤 워크스페이스의 멤버도 아닙니다. 데이터베이스와 같은 애플리케이션은 워크스페이스에 속하므로, 관리자에게 초대를 받아야 합니다."
+        "emptyTitle": "작업공간을 찾을 수 없습니다",
+        "emptyMessage": "어떤 작업공간의 멤버도 아닙니다. 데이터베이스와 같은 애플리케이션은 작업공간에 속하므로, 생성하려면 작업공간을 생성해야 합니다.",
+        "emptyMessageWithoutCreatePermission": "어떤 작업공간의 멤버도 아닙니다. 데이터베이스와 같은 애플리케이션은 작업공간에 속하므로, 관리자에게 초대를 받아야 합니다."
     },
     "uploadViaURLUserFileUpload": {
         "title": "URL에서 업로드",
@@ -424,11 +424,11 @@
         "tutorialsMessage": "Baserow의 잠재력 발견",
         "apiDocumentation": "API 문서",
         "apiDocumentationMessage": "우리의 코드에 대해 더 알아보기",
-        "emptyWorkspace": "이 워크스페이스는 비어 있습니다",
+        "emptyWorkspace": "이 작업공간은 비어 있습니다",
         "emptyWorkspaceMessage": "새 데이터베이스나 애플리케이션을 생성하여 시작하세요.",
         "addNew": "새로 추가...",
-        "noWorkspace": "워크스페이스 없음",
-        "noWorkspaceDescription": "새 워크스페이스를 생성하여 시작하세요"
+        "noWorkspace": "작업공간 없음",
+        "noWorkspaceDescription": "새 작업공간을 생성하여 시작하세요"
     },
     "dashboardApplication": {
         "createdAt": "생성됨"
@@ -500,13 +500,13 @@
         "settingAllowResetPasswordWarning": "비밀번호를 잊어버리면 시스템에서 자신을 잠글 수 있으며 액세스를 복원할 수 없습니다.",
         "settingAllowNewAccountsName": "새 계정 생성 허용",
         "settingAllowNewAccountsDescription": "기본적으로 Baserow 도메인에 방문하는 모든 사용자가 새 계정을 등록할 수 있습니다.",
-        "settingAllowSignupsViaWorkspaceInvitationsName": "워크스페이스 초대를 통한 회원가입 허용",
+        "settingAllowSignupsViaWorkspaceInvitationsName": "작업공간 초대를 통한 회원가입 허용",
         "settingAllowSignupsViaWorkspaceInvitationDescription": "새 계정 생성이 비활성화되어 있어도, 직접 초대된 사용자는 여전히 계정을 생성할 수 있습니다.",
-        "settingAllowNonStaffCreateWorkspaceOperation": "모두가 새 워크스페이스 생성 허용",
+        "settingAllowNonStaffCreateWorkspaceOperation": "모두가 새 작업공간 생성 허용",
         "settingAllowNonStaffCreateWorkspaceOperationDescription": "기본적으로 모든 사람이 새 작업공간을 생성할 수 있습니다. 이를 비활성화하여 직원만 새 작업공간을 생성할 수 있도록 합니다.",
-        "settingAllowNonStaffCreateWorkspaceOperationWarning": "새로운 사용자에게는 그들이 관리자인 워크스페이스가 자동으로 생성됩니다.",
-        "settingTrackWorkspaceUsage": "워크스페이스 사용량 추적",
-        "settingTrackWorkspaceUsageDescription": "워크스페이스별 행 및 파일 사용량을 집계하는 야간 작업을 활성화하여 프리미엄 워크스페이스 관리자 페이지에 표시됩니다.",
+        "settingAllowNonStaffCreateWorkspaceOperationWarning": "새로운 사용자에게는 그들이 관리자인 작업공간이 자동으로 생성됩니다.",
+        "settingTrackWorkspaceUsage": "작업공간 사용량 추적",
+        "settingTrackWorkspaceUsageDescription": "작업공간별 행 및 파일 사용량을 집계하는 야간 작업을 활성화하여 프리미엄 작업공간 관리자 페이지에 표시됩니다.",
         "userSettings": "사용자",
         "settingUserDeletionGraceDelay": "삭제 유예 기간",
         "settingUserDeletionGraceDelayDescription": "이것은 계정이 삭제되기로 예약된 후 로그인하지 않은 날 수입니다.",
@@ -528,19 +528,19 @@
             "addField": "필드 추가"
         },
         "notifyUserOnSubmit": "제출 시 사용자에게 알림 받기",
-        "fieldsDescription": "모든 필드가 폼에 있습니다.",
+        "fieldsDescription": "모든 필드가 양식에 있습니다.",
         "prefillOrHideInfoLink": "동적으로 미리 채우거나 숨기기",
         "modal": {
             "title": "필드를 동적으로 미리 채우거나 숨기기",
-            "descriptionPartOne": "사용자가 폼을 더 빨리 작성할 수 있도록 폼을 미리 채울 수 있습니다.",
-            "descriptionPartTwo": "폼에서 사용할 수 있는 모든 필드를 미리 채울 수 있습니다.",
+            "descriptionPartOne": "사용자가 양식을 더 빨리 작성할 수 있도록 양식을 미리 채울 수 있습니다.",
+            "descriptionPartTwo": "양식에서 사용할 수 있는 모든 필드를 미리 채울 수 있습니다.",
             "howToHide": {
                 "title": "필드를 숨기는 방법",
-                "description": "필드를 동적으로 숨기려면, 공개 폼 URL에 쿼리 매개변수를 추가할 수 있습니다. 이 쿼리 매개변수는 잠재적인 미래의 쿼리 매개변수와의 충돌을 피하기 위해 `hide_`로 접두어가 붙습니다."
+                "description": "필드를 동적으로 숨기려면, 공개 양식 URL에 쿼리 매개변수를 추가할 수 있습니다. 이 쿼리 매개변수는 잠재적인 미래의 쿼리 매개변수와의 충돌을 피하기 위해 `hide_`로 접두어가 붙습니다."
             },
             "howToPrefill": {
-                "title": "폼을 미리 채우는 방법",
-                "description": "폼을 데이터로 미리 채우려면, 공개 폼 URL에 쿼리 매개변수를 추가할 수 있습니다. 이 쿼리 매개변수는 잠재적인 미래의 쿼리 매개변수와의 충돌을 피하기 위해 `prefill`로 접두어가 붙습니다."
+                "title": "양식을 미리 채우는 방법",
+                "description": "양식을 데이터로 미리 채우려면, 공개 양식 URL에 쿼리 매개변수를 추가할 수 있습니다. 이 쿼리 매개변수는 잠재적인 미래의 쿼리 매개변수와의 충돌을 피하기 위해 `prefill`로 접두어가 붙습니다."
             },
             "format": {
                 "title": "형식",
@@ -622,12 +622,12 @@
                 "email": "이메일",
                 "role": "기본 역할",
                 "highestRole": "최고 역할",
-                "highestRoleHelpText": "이 워크스페이스의 어떤 것에서 직접 또는 팀에서 할당된 이 사용자의 최고 역할",
+                "highestRoleHelpText": "이 작업공간의 어떤 것에서 직접 또는 팀에서 할당된 이 사용자의 최고 역할",
                 "teams": "팀"
             },
             "actions": {
                 "copyEmail": "이메일 복사",
-                "remove": "워크스페이스에서 제거\""
+                "remove": "작업공간에서 제거"
             }
         },
         "invitesTable": {
@@ -643,13 +643,13 @@
             }
         },
         "membersInviteModal": {
-            "title": "워크스페이스 멤버 초대",
+            "title": "작업공간 멤버 초대",
             "submit": "초대 보내기",
-            "helpIconText": "선택한 역할은 이 워크스페이스에서 사용자의 기본 역할이 됩니다.",
+            "helpIconText": "선택한 역할은 이 작업공간에서 사용자의 기본 역할이 됩니다.",
             "errors": {
                 "userAlreadyInWorkspace": {
-                    "title": "사용자가 이미 워크스페이스에 있습니다.",
-                    "text": "사용자가 이미 워크스페이스의 멤버인 경우 초대를 보낼 수 없습니다."
+                    "title": "사용자가 이미 작업공간에 있습니다.",
+                    "text": "사용자가 이미 작업공간의 멤버인 경우 초대를 보낼 수 없습니다."
                 }
             }
         }
@@ -664,7 +664,7 @@
         "selectAll": "모두 선택"
     },
     "removeFromWorkspaceModal": {
-        "title": "워크스페이스에서 제거 확인",
+        "title": "작업공간에서 제거 확인",
         "confirmation": "{name}을(를) {workspaceName}에서 제거하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
         "remove": "제거"
     },
@@ -758,7 +758,7 @@
     },
     "onboarding": {
         "title": "온보딩",
-        "creating": "첫 워크스페이스 생성 중",
+        "creating": "첫 작업공간 생성 중",
         "continue": "계속",
         "skip": "지금은 건너뛰기",
         "cancel": "설정 도움말을 원하지 않습니다",
@@ -780,7 +780,7 @@
         "share": "Baserow 팀과 이 정보를 공유하는 데 동의합니다"
     },
     "teamStep": {
-        "title": "함께 첫 워크스페이스를 만들어봅시다!",
+        "title": "함께 첫 작업공간을 만들어봅시다!",
         "description": "어떤 팀에 속해 있나요?",
         "marketingTeam": "마케팅",
         "productAndDesignTeam": "제품 및 디자인",
@@ -796,8 +796,8 @@
         "otherPersonalTeam": "기타 / 개인"
     },
     "workspaceStep": {
-        "title": "워크스페이스 생성",
-        "workspaceLabel": "워크스페이스 이름"
+        "title": "작업공간 생성",
+        "workspaceLabel": "작업공간 이름"
     },
     "colorInput": {
         "default": "기본값"
@@ -811,17 +811,17 @@
     },
     "user": {
         "isStaff": "직원 여부",
-        "isWorkspaceAdmin": "워크스페이스 관리자 여부",
+        "isWorkspaceAdmin": "작업공간 관리자 여부",
         "active": "활성",
         "deactivated": "비활성화됨"
     },
     "adminType": {
         "dashboard": "대시보드",
         "users": "사용자",
-        "workspaces": "워크스페이스"
+        "workspaces": "작업공간"
     },
     "workspacesAdminTable": {
-        "allWorkspaces": "모든 워크스페이스",
+        "allWorkspaces": "모든 작업공간",
         "id": "ID",
         "name": "이름",
         "members": "멤버",
@@ -831,16 +831,16 @@
         "freeUsers": "무료 사용자",
         "seatsTaken": "사용된 좌석",
         "storageUsage": "사용된 저장소 (MB)",
-        "usageHelpText": "워크스페이스 사용 추적 설정이 활성화된 경우 매일 밤 계산됩니다"
+        "usageHelpText": "작업공간 사용 추적 설정이 활성화된 경우 매일 밤 계산됩니다"
     },
     "editWorkspaceContext": {
         "delete": "영구 삭제"
     },
     "deleteWorkspaceModal": {
         "title": "{name} 삭제",
-        "confirmation": "워크스페이스 {name}을(를) 삭제하시겠습니까?",
-        "comment": "워크스페이스는 관련된 애플리케이션과 함께 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
-        "delete": "워크스페이스 {name} 삭제"
+        "confirmation": "작업공간 {name}을(를) 삭제하시겠습니까?",
+        "comment": "작업공간은 관련된 애플리케이션과 함께 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
+        "delete": "작업공간 {name} 삭제"
     },
     "activeUsers": {
         "newUsers": "신규 사용자",
@@ -850,7 +850,7 @@
         "allUsers": "모든 사용자",
         "username": "사용자 이름",
         "name": "이름",
-        "workspaces": "워크스페이스",
+        "workspaces": "작업공간",
         "lastLogin": "마지막 로그인",
         "dateJoined": "가입일",
         "active": "활성"
@@ -875,7 +875,7 @@
         "warning": {
             "changeEmail": "이 사용자의 이메일 주소를 변경하면 로그인 시 새 이메일 주소를 사용해야 합니다. 이는 해당 사용자에게 전달되어야 합니다.",
             "inactiveUser": "사용자가 비활성화되면 로그인할 수 없습니다.",
-            "userStaff": "사용자를 직원으로 지정하면 모든 사용자와 워크스페이스에 대한 관리자 액세스 권한이 부여되며, 본인의 직원 권한을 철회할 수 있습니다."
+            "userStaff": "사용자를 직원으로 지정하면 모든 사용자와 작업공간에 대한 관리자 액세스 권한이 부여되며, 본인의 직원 권한을 철회할 수 있습니다."
         },
         "error": {
             "invalidName": "유효한 전체 이름을 입력하세요. 2자 이상 150자 이하여야 합니다.",
@@ -888,7 +888,7 @@
     "deleteUserModal": {
         "title": "{username} 삭제",
         "confirmation": "사용자 {name}을(를) 삭제하시겠습니까?",
-        "comment1": "사용자 계정은 삭제되지만, 해당 사용자가 속한 워크스페이스는 계속 존재합니다. 해당 사용자가 워크스페이스의 마지막 사용자이더라도 사용자의 워크스페이스는 삭제되지 않습니다. 워크스페이스의 마지막 사용자를 삭제하면 해당 워크스페이스에 아무도 접근할 수 없게 됩니다.",
+        "comment1": "사용자 계정은 삭제되지만, 해당 사용자가 속한 작업공간은 계속 존재합니다. 해당 사용자가 작업공간의 마지막 사용자이더라도 사용자의 작업공간은 삭제되지 않습니다. 작업공간의 마지막 사용자를 삭제하면 해당 작업공간에 아무도 접근할 수 없게 됩니다.",
         "comment2": "사용자를 삭제한 후 삭제된 사용자의 이메일 주소를 사용하여 새 사용자가 다시 가입할 수 있습니다. 다시 가입하지 못하도록 하려면 사용자를 삭제하지 않고 비활성화하세요.",
         "delete": "사용자 {username} 삭제"
     },
@@ -900,7 +900,7 @@
         "title": "대시보드",
         "totals": "합계",
         "totalUsers": "전체 사용자",
-        "totalWorkspaces": "전체 워크스페이스",
+        "totalWorkspaces": "전체 작업공간",
         "totalApplications": "전체 애플리케이션",
         "newUsers": "신규 사용자",
         "newUsers24h": "지난 24시간 동안 신규 사용자",
