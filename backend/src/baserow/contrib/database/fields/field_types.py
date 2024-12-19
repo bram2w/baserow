@@ -46,7 +46,7 @@ from django.db.models import (
     Window,
 )
 from django.db.models.fields.related import ManyToManyField
-from django.db.models.functions import Coalesce, Extract, RowNumber
+from django.db.models.functions import Coalesce, RowNumber
 
 from dateutil import parser
 from dateutil.parser import ParserError
@@ -2028,7 +2028,7 @@ class DurationFieldType(FieldType):
         setattr(row, field_name, value)
 
     def get_sortable_column_expression(self, field_name: str) -> Expression | F:
-        return Extract(F(f"{field_name}"), "epoch")
+        return F(f"{field_name}")
 
 
 class LinkRowFieldType(
