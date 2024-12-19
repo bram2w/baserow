@@ -1,43 +1,43 @@
 <template>
   <div class="layout__col-2-scroll">
     <div class="admin-dashboard">
-      <h1>{{ $t('dashboard.title') }}</h1>
+      <h1>{{ $t('adminDashboard.title') }}</h1>
       <div class="row margin-bottom-3">
         <div class="col col-4">
           <div class="admin-dashboard__box">
             <div v-if="loading" class="loading-overlay"></div>
             <div class="admin-dashboard__box-title">
-              {{ $t('dashboard.totals') }}
+              {{ $t('adminDashboard.totals') }}
             </div>
             <div class="admin-dashboard__numbers">
               <div class="admin-dashboard__numbers-name">
-                {{ $t('dashboard.totalUsers') }}
+                {{ $t('adminDashboard.totalUsers') }}
               </div>
               <div class="admin-dashboard__numbers-value">
                 {{ data.total_users }}
               </div>
               <div class="admin-dashboard__numbers-percentage">
                 <nuxt-link :to="{ name: 'admin-users' }">{{
-                  $t('dashboard.viewAll')
+                  $t('adminDashboard.viewAll')
                 }}</nuxt-link>
               </div>
             </div>
             <div class="admin-dashboard__numbers">
               <div class="admin-dashboard__numbers-name">
-                {{ $t('dashboard.totalWorkspaces') }}
+                {{ $t('adminDashboard.totalWorkspaces') }}
               </div>
               <div class="admin-dashboard__numbers-value">
                 {{ data.total_workspaces }}
               </div>
               <div class="admin-dashboard__numbers-percentage">
                 <nuxt-link :to="{ name: 'admin-workspaces' }">{{
-                  $t('dashboard.viewAll')
+                  $t('adminDashboard.viewAll')
                 }}</nuxt-link>
               </div>
             </div>
             <div class="admin-dashboard__numbers">
               <div class="admin-dashboard__numbers-name">
-                {{ $t('dashboard.totalApplications') }}
+                {{ $t('adminDashboard.totalApplications') }}
               </div>
               <div class="admin-dashboard__numbers-value">
                 {{ data.total_applications }}
@@ -49,11 +49,11 @@
           <div class="admin-dashboard__box">
             <div v-if="loading" class="loading-overlay"></div>
             <div class="admin-dashboard__box-title">
-              {{ $t('dashboard.newUsers') }}
+              {{ $t('adminDashboard.newUsers') }}
             </div>
             <div class="admin-dashboard__numbers">
               <div class="admin-dashboard__numbers-name">
-                {{ $t('dashboard.newUsers24h') }}
+                {{ $t('adminDashboard.newUsers24h') }}
               </div>
               <div class="admin-dashboard__numbers-value">
                 {{ data.new_users_last_24_hours }}
@@ -71,7 +71,7 @@
             </div>
             <div class="admin-dashboard__numbers">
               <div class="admin-dashboard__numbers-name">
-                {{ $t('dashboard.newUsers7days') }}
+                {{ $t('adminDashboard.newUsers7days') }}
               </div>
               <div class="admin-dashboard__numbers-value">
                 {{ data.new_users_last_7_days }}
@@ -89,7 +89,7 @@
             </div>
             <div class="admin-dashboard__numbers">
               <div class="admin-dashboard__numbers-name">
-                {{ $t('dashboard.newUsers30days') }}
+                {{ $t('adminDashboard.newUsers30days') }}
               </div>
               <div class="admin-dashboard__numbers-value">
                 {{ data.new_users_last_30_days }}
@@ -111,11 +111,11 @@
           <div class="admin-dashboard__box">
             <div v-if="loading" class="loading-overlay"></div>
             <div class="admin-dashboard__box-title">
-              {{ $t('dashboard.activeUsers') }}
+              {{ $t('adminDashboard.activeUsers') }}
             </div>
             <div class="admin-dashboard__numbers">
               <div class="admin-dashboard__numbers-name">
-                {{ $t('dashboard.activeUsers24h') }}
+                {{ $t('adminDashboard.activeUsers24h') }}
               </div>
               <div class="admin-dashboard__numbers-value">
                 {{ data.active_users_last_24_hours }}
@@ -133,7 +133,7 @@
             </div>
             <div class="admin-dashboard__numbers">
               <div class="admin-dashboard__numbers-name">
-                {{ $t('dashboard.activeUsers7days') }}
+                {{ $t('adminDashboard.activeUsers7days') }}
               </div>
               <div class="admin-dashboard__numbers-value">
                 {{ data.active_users_last_7_days }}
@@ -151,7 +151,7 @@
             </div>
             <div class="admin-dashboard__numbers">
               <div class="admin-dashboard__numbers-name">
-                {{ $t('dashboard.activeUsers30days') }}
+                {{ $t('adminDashboard.activeUsers30days') }}
               </div>
               <div class="admin-dashboard__numbers-value">
                 {{ data.active_users_last_30_days }}
