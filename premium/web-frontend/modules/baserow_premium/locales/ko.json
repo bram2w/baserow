@@ -6,7 +6,7 @@
         "viewType": {
             "kanban": "칸반",
             "timeline": "타임라인",
-            "calendar": "캘린더"
+            "calendar": "달력"
         },
         "exporterType": {
             "json": "JSON으로 내보내기",
@@ -113,11 +113,11 @@
         "new": "새로 만들기"
     },
     "calendarViewType": {
-        "sharedViewText": "누구나 이 뷰의 데이터를 보거나 외부 캘린더에 이벤트를 동기화할 수 있습니다.",
-        "sharedViewEnableSyncToExternalCalendar": "외부 캘린더로 동기화",
+        "sharedViewText": "누구나 이 뷰의 데이터를 보거나 외부 달력에 이벤트를 동기화할 수 있습니다.",
+        "sharedViewEnableSyncToExternalCalendar": "외부 달력에 동기화",
         "sharedViewDisableSyncToExternalCalendar": "외부 동기화 비활성화",
-        "sharedViewDescription": "이 링크를 캘린더 애플리케이션에 붙여넣으세요",
-        "sharedViewTitle": "외부 캘린더로 동기화"
+        "sharedViewDescription": "이 링크를 달력 애플리케이션에 붙여넣으세요",
+        "sharedViewTitle": "외부 달력으로 동기화"
     },
     "calendarViewHeader": {
         "displayBy": "표시 기준",
@@ -168,12 +168,12 @@
     "premiumFeatures": {
         "rowComments": "행 댓글",
         "kanbanView": "칸반 뷰",
-        "calendarView": "캘린더 뷰",
+        "calendarView": "달력 뷰",
         "timelineView": "타임라인 뷰",
         "exports": "JSON 및 XML 내보내기",
         "admin": "관리자 기능",
         "rowColoring": "행 색상 지정",
-        "surveyForm": "설문조사 폼",
+        "surveyForm": "설문조사 양식",
         "publicLogoRemoval": "공개 로고 제거",
         "personalViews": "개인 뷰",
         "aiFeatures": "AI 필드"
@@ -267,7 +267,7 @@
     },
     "formViewModePreviewSurvey": {
         "orderFields": "필드 순서",
-        "deactivated": "설문조사 폼은 프리미엄 버전에서 사용할 수 있습니다.",
+        "deactivated": "설문조사 양식은 프리미엄 버전에서 사용할 수 있습니다.",
         "more": "추가 정보"
     },
     "shareLinkOptions": {
@@ -324,7 +324,7 @@
         "label": "프롬프트",
         "labelDescription": "생성하려는 수식을 설명하세요",
         "generate": "생성",
-        "noModels": "귀하의 Baserow 인스턴스와 워크스페이스에 구성된 AI 모델이 없습니다. 워크스페이스 옆의 세 점을 클릭한 다음 설정을 클릭하여 구성하세요."
+        "noModels": "귀하의 Baserow 인스턴스와 작업공간에 구성된 AI 모델이 없습니다. 작업공간 옆의 세 점을 클릭한 다음 설정을 클릭하여 구성하세요."
     },
     "formulaFieldAI": {
         "generateWithAI": "AI를 사용하여 생성",

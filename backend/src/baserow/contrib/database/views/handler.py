@@ -15,7 +15,7 @@ from django.core.exceptions import FieldDoesNotExist, ValidationError
 from django.db import connection
 from django.db import models as django_models
 from django.db.models import Count, Q
-from django.db.models.expressions import F, OrderBy
+from django.db.models.expressions import OrderBy
 from django.db.models.query import QuerySet
 
 import jwt
@@ -290,7 +290,7 @@ class ViewIndexingHandler(metaclass=baserow_trace_methods(tracer)):
 
     @classmethod
     def get_index(
-        cls, view: View, model: Optional[GeneratedTableModel]
+        cls, view: View, model: Optional[GeneratedTableModel] = None
     ) -> Optional[django_models.Index]:
         """
         Returns the model and the best possible index for the requested view.
@@ -1859,8 +1859,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             for fob in field_order_bys:
                 order_by.append(fob)
 
-        order_by.append(F("order").asc(nulls_first=True))
-        order_by.append(F("id").asc(nulls_first=True))
+        order_by.extend(("order", "id"))
 
         return order_by, queryset
 

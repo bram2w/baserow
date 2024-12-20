@@ -46,7 +46,7 @@ from django.db.models import (
     Window,
 )
 from django.db.models.fields.related import ManyToManyField
-from django.db.models.functions import Coalesce, Extract, RowNumber
+from django.db.models.functions import Coalesce, RowNumber
 
 from dateutil import parser
 from dateutil.parser import ParserError
@@ -2028,7 +2028,7 @@ class DurationFieldType(FieldType):
         setattr(row, field_name, value)
 
     def get_sortable_column_expression(self, field_name: str) -> Expression | F:
-        return Extract(F(f"{field_name}"), "epoch")
+        return F(f"{field_name}")
 
 
 class LinkRowFieldType(
@@ -3487,6 +3487,8 @@ class FileFieldType(FieldType):
         # to validate if the file actually exists and to get the 'real' properties
         # from it.
         provided_files = []
+        if not value:
+            return provided_files
         for o in value:
             provided_files.append(o)
         return provided_files
@@ -3541,6 +3543,11 @@ class FileFieldType(FieldType):
                 name_map[name].append(row_index)
 
         if not name_map:
+            # ensure we're not returning None for any row
+            for k, v in values_by_row.items():
+                if v is None:
+                    values_by_row[k] = []
+
             return values_by_row
 
         unique_names = set(name_map.keys())

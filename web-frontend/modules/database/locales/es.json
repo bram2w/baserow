@@ -244,7 +244,16 @@
         "integer": "Entero",
         "decimal": "Décimal",
         "decimalPlacesLabel": "Lugares decimales",
-        "allowNegative": "Permitir negativo"
+        "allowNegative": "Permitir negativo",
+        "prefixPlaceholder": "Prefijo",
+        "suffixPlaceholder": "Sufijo",
+        "prefixAndSuffixLabel": "Prefijo / sufijo",
+        "spaceComma": "Espacio, coma (1 000 000,00)",
+        "spacePeriod": "Espacio, periodo (1 000 000,00)",
+        "periodComma": "Punto, coma (1.000.000,00)",
+        "separatorLabel": "Separador de miles y decimales",
+        "commaPeriod": "Coma, punto (1.000.000,00)",
+        "noFormatting": "Sin formato"
     },
     "fieldContext": {
         "editField": "Editar campo",

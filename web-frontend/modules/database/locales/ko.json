@@ -38,7 +38,7 @@
             "allEvents": "모든 이벤트 보내기",
             "customEvents": "개별 이벤트 선택하기"
         },
-        "triggerButton": "테스트 웹훅 트리거",
+        "triggerButton": "웹훅 트리거 테스트",
         "deactivated": {
             "title": "웹훅이 비활성화되었습니다",
             "content": "연속된 실패가 너무 많아 이 웹훅이 비활성화되었습니다. 자세한 내용은 호출 로그를 확인하세요. 다시 활성화하려면 아래 버튼을 클릭하세요. 활성화 후 웹훅을 저장하는 것을 잊지 마세요.",
@@ -272,7 +272,16 @@
         "integer": "정수",
         "decimal": "소수",
         "decimalPlacesLabel": "소수 자리수",
-        "allowNegative": "음수 허용"
+        "allowNegative": "음수 허용",
+        "prefixPlaceholder": "접두사",
+        "prefixAndSuffixLabel": "접두사 / 접미사",
+        "spacePeriod": "공백, 마침표 (1 000 000.00)",
+        "periodComma": "마침표, 쉼표 (1.000.000,00)",
+        "noFormatting": "형식 없음",
+        "suffixPlaceholder": "접미사",
+        "separatorLabel": "천 단위 및 소수점 구분 기호",
+        "spaceComma": "공백, 쉼표 (1 000 000,00)",
+        "commaPeriod": "쉼표, 마침표 (1,000,000.00)"
     },
     "fieldDurationSubForm": {
         "durationFormatLabel": "기간 형식"
@@ -517,7 +526,7 @@
         "addGroupBy": "그룹화할 필드 선택"
     },
     "viewGroupBy": {
-        "groupBy": "그룹화 | 1개의 필드로 그룹화 | {count}개의 필드로 그룹화"
+        "groupBy": "그룹 | 1개의 필드로 그룹화 | {count}개의 필드로 그룹화"
     },
     "viewSortContext": {
         "noSortTitle": "아직 정렬을 생성하지 않았습니다",
@@ -817,7 +826,7 @@
         "created": "생성됨"
     },
     "formViewModeType": {
-        "form": "폼",
+        "form": "양식",
         "formDescription": "모든 필드가 보이고 세로로 정렬됩니다."
     },
     "formViewHeader": {
@@ -830,7 +839,7 @@
         "addLogo": "로고 추가",
         "titlePlaceholder": "제목",
         "descriptionPlaceholder": "설명",
-        "noFields": "이 폼에는 필드가 없습니다. 왼쪽 사이드바에서 필드를 클릭하여 추가하세요."
+        "noFields": "이 양식에는 필드가 없습니다. 왼쪽 사이드바에서 필드를 클릭하여 추가하세요."
     },
     "table": {
         "adjacentRow": {

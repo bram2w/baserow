@@ -4,7 +4,7 @@
         "dataSourceContext": "사용 가능한 옵션",
         "pageParameter": "매개변수",
         "currentRecord": "데이터 소스",
-        "formData": "폼 데이터",
+        "formData": "양식 데이터",
         "previousAction": "이전 작업",
         "user": "사용자"
     },
@@ -196,7 +196,7 @@
         "multilineTitle": "여러 줄",
         "rowsTitle": "줄 수",
         "rowsPlaceholder": "이 입력의 줄 수 입력",
-        "validationTypeAnyLabel": "아무거나",
+        "validationTypeAnyLabel": "무엇이든",
         "validationTypeAnyDescription": "이 입력에 어떤 값이든 설정할 수 있도록 허용합니다.",
         "validationTypeIntegerLabel": "숫자",
         "validationTypeIntegerDescription": "이 입력에 숫자 값을 적용합니다.",
@@ -299,14 +299,14 @@
         "url": "목적지 URL",
         "paramsInErrorDescription": "저장된 매개변수가 페이지 매개변수와 일치하지 않습니다. 페이지가 삭제되었거나 업데이트되었을 수 있습니다.",
         "paramsInErrorButton": "매개변수 업데이트",
-        "target": "열기 위치...",
+        "target": "여는 위치는...",
         "targetSelf": "현재 탭",
         "targetNewTab": "새 탭"
     },
     "linkElementForm": {
         "text": "텍스트",
         "textPlaceholder": "텍스트 입력...",
-        "variant": "변형",
+        "variant": "변환",
         "variantLink": "링크",
         "variantButton": "버튼",
         "buttonColor": "버튼 색상"
@@ -414,8 +414,8 @@
     "styleBoxForm": {
         "borderColor": "테두리 색상",
         "borderLabel": "크기",
-        "paddingLabel": "패딩",
-        "marginLabel": "마진"
+        "paddingLabel": "안쪽 여백",
+        "marginLabel": "바깥 여백"
     },
     "themeConfigBlockType": {
         "color": "색상",
@@ -471,7 +471,7 @@
         "borderColor": "테두리 색상",
         "borderSize": "테두리 크기",
         "borderRadius": "테두리 반경",
-        "padding": "패딩",
+        "padding": "안쪽 여백",
         "fontFamily": "폰트",
         "size": "폰트 크기"
     },
@@ -491,7 +491,7 @@
         "borderColor": "테두리 색상",
         "borderSize": "테두리 크기",
         "borderRadius": "테두리 반경",
-        "padding": "패딩",
+        "padding": "안쪽 여백",
         "fontFamily": "폰트",
         "size": "폰트 크기"
     },
@@ -515,7 +515,7 @@
         "textColor": "텍스트 색상",
         "borderSize": "테두리 크기",
         "borderRadius": "테두리 반경",
-        "padding": "패딩",
+        "padding": "안쪽 여백",
         "fontFamily": "폰트",
         "size": "크기",
         "fontSize": "폰트 크기",

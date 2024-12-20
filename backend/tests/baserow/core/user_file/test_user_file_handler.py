@@ -263,6 +263,29 @@ def test_upload_user_file_with_truncated_image(data_fixture, tmpdir):
 
 
 @pytest.mark.django_db
+def test_upload_user_file_with_unsupported_image_format(
+    data_fixture, tmpdir, open_test_file
+):
+    user = data_fixture.create_user()
+
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    handler = UserFileHandler()
+
+    image_bytes = open_test_file("baserow/core/user_file/baserow.logo.psd")
+
+    user_file = handler.upload_user_file(
+        user, "truncated_image.psd", image_bytes, storage=storage
+    )
+    assert user_file.mime_type == "image/psd"
+    assert user_file.is_image is False
+    assert user_file.image_width is None
+    assert user_file.image_height is None
+
+    file_path = tmpdir.join("thumbnails", "tiny", user_file.name)
+    assert not file_path.isfile()
+
+
+@pytest.mark.django_db
 @httpretty.activate(verbose=True, allow_net_connect=False)
 def test_upload_user_file_by_url(data_fixture, tmpdir):
     user = data_fixture.create_user()
