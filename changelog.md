@@ -1,5 +1,17 @@
 # Changelog
 
+## Released 1.30.1
+
+### Bug fixes
+* Non-standard image formats don't break thumbnails [#2745](https://gitlab.com/baserow/baserow/-/issues/2745)
+* handle null payload for file field [#2906](https://gitlab.com/baserow/baserow/-/issues/2906)
+* Fix search for number field with applied formating [#3292](https://gitlab.com/baserow/baserow/-/issues/3292)
+* Fix a bug that prevent a database index to be created when sorting/grouping by a duration field. [#3296](https://gitlab.com/baserow/baserow/-/issues/3296)
+* Fix admin dashboard translations
+* Fix loading non en and fr translations for premium and enterprise in production mode.
+* Fix API docs server side rendering bugs.
+
+
 ## Released 1.30.0
 
 ### New features
