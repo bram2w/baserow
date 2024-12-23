@@ -858,7 +858,7 @@ class FieldType(
             model.objects.order(), an AnnotatedOrderBy class or None.
         """
 
-        field_expr = self.get_sortable_column_expression(field_name)
+        field_expr = self.get_sortable_column_expression(field, field_name)
 
         if order_direction == "ASC":
             field_order_by = field_expr.asc(nulls_first=True)
@@ -1615,12 +1615,15 @@ class FieldType(
 
         return self._can_group_by
 
-    def get_sortable_column_expression(self, field_name: str) -> Expression | F:
+    def get_sortable_column_expression(
+        self, field: Field, field_name: str
+    ) -> Expression | F:
         """
         Returns the expression that can be used to sort the field in the database.
-        By default it will just return the field name, but for example for a
+        By default, it will just return the field name, but for example for a
         SingleSelectField, the select option value should be returned.
 
+        :param field: The field where to get the sortable column expression for.
         :param field_name: The name of the field in the table.
         :return: The expression that can be used to sort the field in the database.
         """

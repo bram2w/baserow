@@ -1598,7 +1598,9 @@ class LastModifiedByFieldType(ReadOnlyFieldType):
         alphabetically based on the user's name.
         """
 
-        order = collate_expression(self.get_sortable_column_expression(field_name))
+        order = collate_expression(
+            self.get_sortable_column_expression(field, field_name)
+        )
 
         if order_direction == "ASC":
             order = order.asc(nulls_first=True)
@@ -1663,7 +1665,9 @@ class LastModifiedByFieldType(ReadOnlyFieldType):
             connection, from_field, to_field
         )
 
-    def get_sortable_column_expression(self, field_name: str) -> Expression | F:
+    def get_sortable_column_expression(
+        self, field: Field, field_name: str
+    ) -> Expression | F:
         return F(f"{field_name}__first_name")
 
 
@@ -1805,7 +1809,9 @@ class CreatedByFieldType(ReadOnlyFieldType):
         alphabetically based on the user's name.
         """
 
-        order = collate_expression(self.get_sortable_column_expression(field_name))
+        order = collate_expression(
+            self.get_sortable_column_expression(field, field_name)
+        )
 
         if order_direction == "ASC":
             order = order.asc(nulls_first=True)
@@ -1870,7 +1876,9 @@ class CreatedByFieldType(ReadOnlyFieldType):
             connection, from_field, to_field
         )
 
-    def get_sortable_column_expression(self, field_name: str) -> Expression | F:
+    def get_sortable_column_expression(
+        self, field: Field, field_name: str
+    ) -> Expression | F:
         return F(f"{field_name}__first_name")
 
 
@@ -2027,7 +2035,9 @@ class DurationFieldType(FieldType):
 
         setattr(row, field_name, value)
 
-    def get_sortable_column_expression(self, field_name: str) -> Expression | F:
+    def get_sortable_column_expression(
+        self, field: Field, field_name: str
+    ) -> Expression | F:
         return F(f"{field_name}")
 
 
@@ -2214,6 +2224,7 @@ class LinkRowFieldType(
         )
         sortable_column_expr = (
             related_primary_field_type.get_sortable_column_expression(
+                related_primary_field,
                 f"{field_name}__{related_primary_field.db_column}",
             )
         )
@@ -3838,7 +3849,9 @@ class SelectOptionBaseFieldType(FieldType):
 
         return queryset
 
-    def get_sortable_column_expression(self, field_name: str) -> Expression | F:
+    def get_sortable_column_expression(
+        self, field: Field, field_name: str
+    ) -> Expression | F:
         return F(f"{field_name}__value")
 
 
@@ -4108,7 +4121,9 @@ class SingleSelectFieldType(CollationSortMixin, SelectOptionBaseFieldType):
         to the correct position.
         """
 
-        order = collate_expression(self.get_sortable_column_expression(field_name))
+        order = collate_expression(
+            self.get_sortable_column_expression(field, field_name)
+        )
 
         if order_direction == "ASC":
             order = order.asc(nulls_first=True)
@@ -4543,7 +4558,7 @@ class MultipleSelectFieldType(
         sort_column_name = f"{field_name}_agg_sort"
         query = Coalesce(
             StringAgg(
-                self.get_sortable_column_expression(field_name),
+                self.get_sortable_column_expression(field, field_name),
                 ",",
                 output_field=models.TextField(),
             ),
@@ -6162,7 +6177,7 @@ class MultipleCollaboratorsFieldType(
         sort_column_name = f"{field_name}_agg_sort"
         query = Coalesce(
             StringAgg(
-                self.get_sortable_column_expression(field_name),
+                self.get_sortable_column_expression(field, field_name),
                 "",
                 output_field=models.TextField(),
             ),
@@ -6186,7 +6201,9 @@ class MultipleCollaboratorsFieldType(
         value = list_to_comma_separated_string(values)
         return value
 
-    def get_sortable_column_expression(self, field_name: str) -> Expression | F:
+    def get_sortable_column_expression(
+        self, field: Field, field_name: str
+    ) -> Expression | F:
         return F(f"{field_name}__first_name")
 
 
