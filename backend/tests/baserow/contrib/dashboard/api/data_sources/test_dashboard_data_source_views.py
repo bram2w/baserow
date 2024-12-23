@@ -255,8 +255,8 @@ def test_update_data_source_change_type(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
 
-    assert response.status_code == HTTP_200_OK, response.json()
-    assert response.json()["type"] == "local_baserow_list_rows"
+    assert response.status_code == HTTP_400_BAD_REQUEST, response.json()
+    assert response.json()["error"] == "ERROR_SERVICE_CONFIGURATION_NOT_ALLOWED"
 
 
 @pytest.mark.django_db
