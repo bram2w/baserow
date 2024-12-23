@@ -129,6 +129,24 @@ class ElementHandler:
 
         return element
 
+    def get_element_property_options(
+        self, element: Element
+    ) -> Dict[str, Dict[str, bool]]:
+        """
+        Return a dict where keys are the schema_property (e.g. "field_1") for
+        every property option if the element supports it. The values are the
+        searchable, sortable, filterable values.
+        """
+
+        return {
+            po.schema_property: {
+                "filterable": po.filterable,
+                "sortable": po.sortable,
+                "searchable": po.searchable,
+            }
+            for po in element.property_options.all()
+        }
+
     def get_ancestors(
         self,
         element_id: int,

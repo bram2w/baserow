@@ -457,7 +457,9 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
 
         return super().prepare_values(values, user, instance)
 
-    def generate_schema(self, service: ServiceSubClass) -> Optional[Dict[str, Any]]:
+    def generate_schema(
+        self, service: ServiceSubClass, allowed_fields: Optional[List[str]] = None
+    ) -> Optional[Dict[str, Any]]:
         """
         Responsible for generating a dictionary in the JSON Schema spec. This helps
         inform the frontend data source form and data explorer about the type of
@@ -480,7 +482,18 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
                 "searchable": False,
             }
         }
+
         for field_object in self.get_table_field_objects(service):
+            # When a schema is being generated, we will exclude properties that the
+            # Application creator did not actively configure. A configured property
+            # is one that the Application is using in a formula, configuration
+            # setting, or schema property.
+            if (
+                allowed_fields is not None
+                and field_object["name"] not in allowed_fields
+            ):
+                continue
+
             field_type = field_object["type"]
             field = field_object["field"]
             # Only `TextField` has a default value at the moment.
@@ -526,10 +539,10 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
           otherwise None.
         """
 
-        if isinstance(dispatch_context.public_formula_fields, dict):
-            all_field_names = dispatch_context.public_formula_fields.get("all", {}).get(
-                service.id, None
-            )
+        if isinstance(dispatch_context.public_allowed_properties, dict):
+            all_field_names = dispatch_context.public_allowed_properties.get(
+                "all", {}
+            ).get(service.id, None)
             if all_field_names is not None:
                 return all_field_names
 
@@ -564,13 +577,25 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
 
         return model.get_field_objects()
 
-    def get_context_data(self, service: ServiceSubClass) -> Optional[Dict[str, Any]]:
+    def get_context_data(
+        self, service: ServiceSubClass, allowed_fields: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
         table = service.table
         if not table:
             return None
 
         ret = {}
         for field_object in self.get_table_field_objects(service):
+            # When a context_data is being generated, we will exclude properties that
+            # the Application creator did not actively configure. A configured property
+            # is one that the Application is using in a formula, configuration
+            # setting, or schema property.
+            if (
+                allowed_fields is not None
+                and field_object["name"] not in allowed_fields
+            ):
+                continue
+
             field_type = field_object["type"]
             if field_type.can_have_select_options:
                 field_serializer = field_type.get_serializer(
@@ -581,7 +606,7 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
         return ret
 
     def get_context_data_schema(
-        self, service: ServiceSubClass
+        self, service: ServiceSubClass, allowed_fields: Optional[List[str]] = None
     ) -> Optional[Dict[str, Any]]:
         table = service.table
         if not table:
@@ -591,6 +616,9 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
         fields = FieldHandler().get_fields(table, specific=True)
 
         for field in fields:
+            if allowed_fields is not None and (field.db_column not in allowed_fields):
+                continue
+
             field_type = field_type_registry.get_by_model(field)
             if field_type.can_have_select_options:
                 properties[field.db_column] = {
@@ -1046,7 +1074,7 @@ class LocalBaserowListRowsUserServiceType(
             "results": rows[:-1] if has_next_page else rows,
             "has_next_page": has_next_page,
             "baserow_table_model": table_model,
-            "public_formula_fields": only_field_names,
+            "public_allowed_properties": only_field_names,
         }
 
     def dispatch_transform(self, dispatch_data: Dict[str, Any]) -> Any:
@@ -1058,8 +1086,8 @@ class LocalBaserowListRowsUserServiceType(
         """
 
         field_ids = (
-            extract_field_ids_from_list(dispatch_data["public_formula_fields"])
-            if isinstance(dispatch_data["public_formula_fields"], list)
+            extract_field_ids_from_list(dispatch_data["public_allowed_properties"])
+            if isinstance(dispatch_data["public_allowed_properties"], list)
             else None
         )
 
@@ -1651,8 +1679,8 @@ class LocalBaserowGetRowUserServiceType(
         """
 
         field_ids = (
-            extract_field_ids_from_list(dispatch_data["public_formula_fields"])
-            if isinstance(dispatch_data["public_formula_fields"], list)
+            extract_field_ids_from_list(dispatch_data["public_allowed_properties"])
+            if isinstance(dispatch_data["public_allowed_properties"], list)
             else None
         )
 
@@ -1716,7 +1744,7 @@ class LocalBaserowGetRowUserServiceType(
             return {
                 "data": queryset.first(),
                 "baserow_table_model": table_model,
-                "public_formula_fields": only_field_names,
+                "public_allowed_properties": only_field_names,
             }
 
         try:
@@ -1724,7 +1752,7 @@ class LocalBaserowGetRowUserServiceType(
             return {
                 "data": row,
                 "baserow_table_model": table_model,
-                "public_formula_fields": only_field_names,
+                "public_allowed_properties": only_field_names,
             }
         except table_model.DoesNotExist:
             raise DoesNotExist()

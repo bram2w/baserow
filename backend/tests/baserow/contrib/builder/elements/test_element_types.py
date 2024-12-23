@@ -640,7 +640,7 @@ def test_choice_element_is_valid_formula_data_source(data_fixture):
         page,
         offset=0,
         count=20,
-        only_expose_public_formula_fields=False,
+        only_expose_public_allowed_properties=False,
     )
 
     with pytest.raises(FormDataProviderChunkInvalidException):
@@ -652,7 +652,7 @@ def test_choice_element_is_valid_formula_data_source(data_fixture):
         page,
         offset=0,
         count=20,
-        only_expose_public_formula_fields=False,
+        only_expose_public_allowed_properties=False,
     )
 
     assert ChoiceElementType().is_valid(choice, "BMW", dispatch_context) == "BMW"
@@ -1346,7 +1346,7 @@ def test_choice_element_integer_option_values(data_fixture):
         page,
         offset=0,
         count=20,
-        only_expose_public_formula_fields=False,
+        only_expose_public_allowed_properties=False,
     )
 
     for value in expected_choices:
@@ -1398,7 +1398,7 @@ def test_record_element_is_valid(data_fixture):
     )
 
     dispatch_context = BuilderDispatchContext(
-        HttpRequest(), page, only_expose_public_formula_fields=False
+        HttpRequest(), page, only_expose_public_allowed_properties=False
     )
 
     # Record selector with no data sources is invalid

@@ -483,14 +483,12 @@ class RecordSelectorElementType(
             "option_name_suffix",
         ]
 
-    def extract_formula_properties(
-        self, instance: Element, **kwargs
-    ) -> Dict[int, List[BaserowFormula]]:
+    def extract_properties(self, instance: Element, **kwargs) -> Dict[int, List[str]]:
         """
         For the record selector we always need the `id` and the row name property.
         """
 
-        properties = super().extract_formula_properties(instance, **kwargs)
+        properties = super().extract_properties(instance, **kwargs)
 
         if instance.data_source_id and instance.data_source.service_id:
             service = instance.data_source.service.specific
