@@ -1205,3 +1205,278 @@ def test_local_baserow_view_service_type_prepare_values(data_fixture):
         str(exc.value.detail[0])
         == f"The view with ID {view_a.id} is not related to the given table {table_b.id}."
     )
+
+
+@pytest.fixture
+def local_baserow_get_context_data_fixture(data_fixture):
+    """
+    Fixture to help test LocalBaserowTableServiceType's get_context_data()
+    and get_context_data_schema() methods.
+    """
+
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    database = data_fixture.create_database_application(
+        workspace=page.builder.workspace
+    )
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+    table = TableHandler().create_table_and_fields(
+        user=user,
+        database=database,
+        name=data_fixture.fake.name(),
+        fields=[("Ingredient", "text", {})],
+    )
+    field_handler = FieldHandler()
+    field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="single_select",
+        name="Category",
+        select_options=[
+            {
+                "value": "Doom Red",
+                "color": "red",
+            },
+            {
+                "value": "Quake Green",
+                "color": "green",
+            },
+            {
+                "value": "Warcraft Blue",
+                "color": "blue",
+            },
+        ],
+    )
+
+    service_type = LocalBaserowGetRowUserServiceType()
+    service = data_fixture.create_local_baserow_get_row_service(
+        integration=integration,
+        table=table,
+    )
+
+    return {
+        "field": field,
+        "service": service,
+        "service_type": service_type,
+    }
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "allowed_fields_type,expect_none",
+    [
+        (
+            [],
+            True,
+        ),
+        (
+            None,
+            False,
+        ),
+        (
+            [0],
+            False,
+        ),
+    ],
+)
+def test_local_baserow_table_service_type_get_context_data_schema_excludes_fields(
+    local_baserow_get_context_data_fixture,
+    allowed_fields_type,
+    expect_none,
+):
+    """
+    Test the LocalBaserowTableServiceType's get_context_data_schema() method.
+
+    Ensure that when the optional allowed_fields list is supplied, any field
+    not in the list are excluded from the schema.
+    """
+
+    field = local_baserow_get_context_data_fixture["field"]
+    service = local_baserow_get_context_data_fixture["service"]
+    service_type = local_baserow_get_context_data_fixture["service_type"]
+
+    if allowed_fields_type is None:
+        allowed_fields = None
+    elif allowed_fields_type == []:
+        allowed_fields = []
+    else:
+        allowed_fields = [field.db_column]
+
+    schema = service_type.get_context_data_schema(
+        service, allowed_fields=allowed_fields
+    )
+
+    if expect_none:
+        assert schema is None
+    else:
+        assert schema == {
+            "properties": {
+                field.db_column: {
+                    "default": None,
+                    "items": {
+                        "properties": {
+                            "color": {
+                                "type": "string",
+                            },
+                            "id": {
+                                "type": "number",
+                            },
+                            "value": {
+                                "type": "string",
+                            },
+                        },
+                        "type": "object",
+                    },
+                    "title": "Category",
+                    "type": "array",
+                },
+            },
+            "title": f"Table{service.table_id}Schema",
+            "type": "object",
+        }
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "allowed_fields_id_indexes,expect_empty_dict",
+    [
+        (
+            [],
+            True,
+        ),
+        (
+            [0],
+            False,
+        ),
+        (
+            None,
+            False,
+        ),
+    ],
+)
+def test_local_baserow_table_service_type_get_context_data_excludes_fields(
+    local_baserow_get_context_data_fixture,
+    allowed_fields_id_indexes,
+    expect_empty_dict,
+):
+    """
+    Test the LocalBaserowTableServiceType's get_context_data() method.
+
+    Ensure that when the optional allowed_fields list is supplied, any field
+    not in the list are excluded from the schema.
+    """
+
+    field = local_baserow_get_context_data_fixture["field"]
+    service = local_baserow_get_context_data_fixture["service"]
+    service_type = local_baserow_get_context_data_fixture["service_type"]
+
+    select_options = field.select_options.all()
+
+    if allowed_fields_id_indexes is None:
+        allowed_fields = None
+    elif allowed_fields_id_indexes == []:
+        allowed_fields = []
+    else:
+        allowed_fields = [field.db_column]
+
+    schema = service_type.get_context_data(service, allowed_fields=allowed_fields)
+
+    if expect_empty_dict:
+        assert schema == {}
+    else:
+        assert schema == {
+            field.db_column: [
+                {
+                    "color": option.color,
+                    "value": option.value,
+                    "id": option.id,
+                }
+                for option in select_options
+            ]
+        }
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "allowed_fields_id_indexes,expect_empty_dict",
+    [
+        (
+            [],
+            True,
+        ),
+        (
+            [0],
+            False,
+        ),
+        (
+            None,
+            False,
+        ),
+    ],
+)
+def test_local_baserow_table_service_type_generate_schema_excludes_fields(
+    local_baserow_get_context_data_fixture,
+    allowed_fields_id_indexes,
+    expect_empty_dict,
+):
+    """
+    Test the LocalBaserowTableServiceType's generate_schema() method.
+
+    Ensure that when the optional allowed_fields list is supplied, any field
+    not in the list are excluded from the schema.
+    """
+
+    field = local_baserow_get_context_data_fixture["field"]
+    service = local_baserow_get_context_data_fixture["service"]
+    service_type = local_baserow_get_context_data_fixture["service_type"]
+
+    select_options = field.select_options.all()
+
+    if allowed_fields_id_indexes is None:
+        allowed_fields = None
+    elif allowed_fields_id_indexes == []:
+        allowed_fields = []
+    else:
+        allowed_fields = [field.db_column]
+
+    schema = service_type.generate_schema(service, allowed_fields=allowed_fields)
+
+    if expect_empty_dict:
+        assert schema == {
+            "properties": {
+                "id": {
+                    "filterable": False,
+                    "searchable": False,
+                    "sortable": False,
+                    "title": "Id",
+                    "type": "number",
+                },
+            },
+            "title": f"Table{service.table_id}Schema",
+            "type": "object",
+        }
+    else:
+        expected_select_options = [
+            {
+                "color": option.color,
+                "value": option.value,
+                "id": option.id,
+            }
+            for option in select_options
+        ]
+        expected_field_properties = {
+            "color": {"title": "color", "type": "string"},
+            "id": {"title": "id", "type": "number"},
+            "value": {"title": "value", "type": "string"},
+        }
+
+        assert (
+            schema["properties"][field.db_column]["metadata"]["select_options"]
+            == expected_select_options
+        )
+        assert (
+            schema["properties"][field.db_column]["properties"]
+            == expected_field_properties
+        )
