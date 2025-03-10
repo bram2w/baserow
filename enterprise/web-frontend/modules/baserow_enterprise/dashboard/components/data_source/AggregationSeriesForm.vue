@@ -47,7 +47,7 @@
         </Dropdown>
       </FormGroup>
     </FormSection>
-    <FormSection>
+    <FormSection v-if="aggregationSeries.length > 1">
       <ButtonText
         icon="iconoir-bin"
         type="secondary"
