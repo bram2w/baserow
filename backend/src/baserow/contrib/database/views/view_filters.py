@@ -74,6 +74,7 @@ from baserow.core.datetime import get_timezones
 from baserow.core.models import WorkspaceUser
 
 from .registries import ViewFilterType
+from ..fields.models import SelectOption
 
 DATE_FILTER_EMPTY_VALUE = ""
 DATE_FILTER_TIMEZONE_SEPARATOR = "?"
@@ -1066,7 +1067,7 @@ class DateAfterDaysAgoViewFilterType(TimezoneAwareDateViewFilterType):
 
 class SingleSelectEqualViewFilterType(ViewFilterType):
     """
-    The single select equal filter accepts a select option id as filter value. This
+    The single select equal filter accepts a select option id or value as filter value. This
     filter is only compatible with the SingleSelectFieldType field type.
     """
 
@@ -1079,11 +1080,23 @@ class SingleSelectEqualViewFilterType(ViewFilterType):
     ]
 
     @staticmethod
-    def _get_filter(field_name, value: int, model_field, field):
+    def _get_filter(field_name, value, model_field, field):
+        # If the value is a string and not a digit, it might be an option name
+        if isinstance(value, str) and not value.isdigit():
+            # Try to find the option by value
+            option = SelectOption.objects.filter(field=field, value=value).first()
+            if option:
+                value = option.id
         return Q(**{f"{field_name}_id": value})
 
     @staticmethod
-    def _get_formula_filter(field_name, value: int, model_field, field):
+    def _get_formula_filter(field_name, value, model_field, field):
+        # If the value is a string and not a digit, it might be an option name
+        if isinstance(value, str) and not value.isdigit():
+            # Try to find the option by value
+            option = SelectOption.objects.filter(field=field, value=value).first()
+            if option:
+                value = option.id
         return get_jsonb_has_any_in_value_filter_expr(
             model_field, [value], query_path="$.id"
         )
@@ -1097,11 +1110,6 @@ class SingleSelectEqualViewFilterType(ViewFilterType):
 
     def get_filter(self, field_name, value, model_field, field):
         value = value.strip()
-
-        try:
-            int(value)
-        except ValueError:
-            return Q()
 
         field_type = field_type_registry.get_by_model(field)
         filter_function = self.filter_functions[field_type.type]
@@ -1123,7 +1131,7 @@ class SingleSelectNotEqualViewFilterType(
 
 class SingleSelectIsAnyOfViewFilterType(ViewFilterType):
     """
-    This filter accepts a string with a list of option ids separated with a comma as
+    This filter accepts a string with a list of option ids or values separated with a comma as
     value input. The filter will show rows that have single select option value in
     the filter's value list.
     """
@@ -1156,7 +1164,22 @@ class SingleSelectIsAnyOfViewFilterType(ViewFilterType):
         if not value:
             return Q()
 
-        if not (option_ids := parse_ids_from_csv_string(value)):
+        # Split the value by comma to get individual option values or IDs
+        values = [v.strip() for v in value.split(",")]
+        option_ids = []
+
+        # Process each value - could be an ID or a text value
+        for val in values:
+            if val.isdigit():
+                # If it's a digit, treat as ID
+                option_ids.append(int(val))
+            else:
+                # If it's not a digit, try to find the option by value
+                option = SelectOption.objects.filter(field=field, value=val).first()
+                if option:
+                    option_ids.append(option.id)
+
+        if not option_ids:
             return self.default_filter_on_exception()
 
         field_type = field_type_registry.get_by_model(field)
