@@ -16,6 +16,8 @@ tool gives you the powers of a developer without leaving your browser.
 
 [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://www.heroku.com/deploy/?template=https://github.com/bram2w/baserow/tree/master)
 
+[![Trust Score](https://archestra.ai/mcp-catalog/api/badge/quality/bram2w/baserow)](https://archestra.ai/mcp-catalog/bram2w__baserow)
+
 ```bash
 docker run -v baserow_data:/baserow/data -p 80:80 -p 443:443 baserow/baserow:1.35.1
 ```
