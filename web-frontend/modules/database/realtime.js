@@ -641,4 +641,68 @@ export const registerRealtimeEvents = (realtime) => {
       ruleId: data.rule.id,
     })
   })
+
+  // User Permissions WebSocket Events
+  realtime.registerEvent('user_permission_updated', ({ store, app }, data) => {
+    const currentUserId = store.getters['auth/getUserId']
+    
+    // Refresh permissions if current user is affected
+    if (currentUserId === data.user_id) {
+      store.dispatch('userPermissions/fetchFilteredView', data.table_id)
+    }
+    
+    // If user is viewing permissions modal, refresh the list
+    const route = app.router.currentRoute
+    if (route.name === 'database-table-open-user-permissions') {
+      store.dispatch('userPermissions/fetchRules', data.table_id)
+    }
+    
+    // Show notification
+    store.dispatch('toast/info', {
+      title: app.i18n.t('userPermissions.realtime.permissionUpdated'),
+      message: app.i18n.t('userPermissions.realtime.permissionUpdatedMessage', {
+        action: data.action === 'created' ? 'granted' : 'modified'
+      }),
+    })
+  })
+
+  realtime.registerEvent('user_permission_revoked', ({ store, app }, data) => {
+    const currentUserId = store.getters['auth/getUserId']
+    
+    // Clear permissions if current user's access was revoked
+    if (currentUserId === data.user_id) {
+      store.commit('userPermissions/SET_FILTERED_VIEW', null)
+      
+      // Force table refresh to reflect loss of access
+      app.$bus.$emit('table-refresh', {
+        tableId: data.table_id,
+      })
+      
+      store.dispatch('toast/warning', {
+        title: app.i18n.t('userPermissions.realtime.permissionRevoked'),
+        message: app.i18n.t('userPermissions.realtime.permissionRevokedMessage'),
+      })
+    }
+    
+    // Refresh permissions list if viewing modal
+    const route = app.router.currentRoute
+    if (route.name === 'database-table-open-user-permissions') {
+      store.dispatch('userPermissions/fetchRules', data.table_id)
+    }
+  })
+
+  realtime.registerEvent('user_field_permission_updated', ({ store, app }, data) => {
+    const currentUserId = store.getters['auth/getUserId']
+    
+    // Refresh field permissions if current user is affected
+    if (currentUserId === data.user_id) {
+      store.dispatch('userPermissions/fetchFilteredView', data.table_id)
+      
+      // Refresh table view to reflect field visibility changes
+      const table = store.getters['table/getSelected']
+      if (table && table.id === data.table_id) {
+        app.$bus.$emit('table-refresh', { tableId: data.table_id })
+      }
+    }
+  })
 }

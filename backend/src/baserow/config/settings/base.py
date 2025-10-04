@@ -93,6 +93,7 @@ INSTALLED_APPS = [
     "baserow.api",
     "baserow.ws",
     "baserow.contrib.database",
+    "baserow.contrib.database.user_permissions",  # Sistema de permisos de usuario
     "baserow.contrib.integrations",
     "baserow.contrib.builder",
     "baserow.contrib.dashboard",

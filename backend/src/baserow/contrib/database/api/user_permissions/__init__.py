@@ -1,0 +1,3 @@
+"""
+User Permissions API Module
+"""
