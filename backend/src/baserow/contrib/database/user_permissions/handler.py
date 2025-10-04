@@ -305,18 +305,69 @@ class UserPermissionHandler:
         :param queryset: QuerySet base a filtrar
         :return: QuerySet filtrado según permisos del usuario
         """
+        from django.db.models import Q
+        import logging
+        logger = logging.getLogger(__name__)
+        
         user_rule = self.get_user_permission_rule(table, user)
         if user_rule is None or not user_rule.row_filter:
+            logger.debug(f"No row filter for user {user.email} on table {table.id}")
             return queryset
-            
-        # Resolver variables de usuario en el filtro
-        resolved_filter = self._resolve_user_variables(user_rule.row_filter, user)
         
-        # Aplicar filtro al queryset
-        if resolved_filter:
-            return queryset.filter(**resolved_filter)
+        logger.info(f"🔍 Applying row filter for user {user.email}: {user_rule.row_filter}")
+        
+        # El row_filter tiene formato: {"filter_type": "AND", "filters": [...]}
+        filters = user_rule.row_filter.get('filters', [])
+        filter_type = user_rule.row_filter.get('filter_type', 'AND')
+        
+        if not filters:
+            return queryset
+        
+        # Construir Q objects desde los filtros
+        q_filters = []
+        for filter_config in filters:
+            field_id = filter_config.get('field')
+            filter_operation = filter_config.get('type', 'equal')
+            value = filter_config.get('value')
             
-        return queryset
+            # Nombre del campo en el modelo generado
+            field_name = f"field_{field_id}"
+            
+            # Construir el filtro según el tipo
+            if filter_operation == 'equal':
+                q_filters.append(Q(**{field_name: value}))
+            elif filter_operation == 'not_equal':
+                q_filters.append(~Q(**{field_name: value}))
+            elif filter_operation == 'contains':
+                q_filters.append(Q(**{f"{field_name}__icontains": value}))
+            elif filter_operation == 'contains_not':
+                q_filters.append(~Q(**{f"{field_name}__icontains": value}))
+            elif filter_operation == 'greater_than':
+                q_filters.append(Q(**{f"{field_name}__gt": value}))
+            elif filter_operation == 'less_than':
+                q_filters.append(Q(**{f"{field_name}__lt": value}))
+            else:
+                logger.warning(f"Unknown filter type: {filter_operation}")
+        
+        if not q_filters:
+            return queryset
+        
+        # Combinar filtros con AND u OR
+        combined_filter = q_filters[0]
+        for q in q_filters[1:]:
+            if filter_type == 'OR':
+                combined_filter |= q
+            else:
+                combined_filter &= q
+        
+        # Aplicar el filtro
+        original_count = queryset.count()
+        filtered_queryset = queryset.filter(combined_filter)
+        filtered_count = filtered_queryset.count()
+        
+        logger.info(f"✅ Row filter applied: {original_count} -> {filtered_count} rows")
+        
+        return filtered_queryset
     
     def get_user_filtered_view(
         self,

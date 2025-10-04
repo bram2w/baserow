@@ -17,5 +17,5 @@ class UserPermissionsConfig(AppConfig):
         # Apply field permissions patch to FieldsView
         from . import field_permissions_patch  # noqa: F401
         
-        # Apply row filter patch to RowHandler
-        from . import row_filter_patch  # noqa: F401
+        # Row filter patch NO LONGER NEEDED - using direct source code modification in views.py
+        # from . import row_filter_patch  # noqa: F401
