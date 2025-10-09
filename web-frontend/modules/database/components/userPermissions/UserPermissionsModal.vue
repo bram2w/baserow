@@ -331,6 +331,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '@baserow/modules/core/assets/scss/colors';
+
 .user-permissions-modal {
   display: flex;
   flex-direction: column;

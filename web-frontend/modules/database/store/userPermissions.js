@@ -319,3 +319,11 @@ export const getters = {
     return state.availableUsers.filter(user => !assignedUserIds.includes(user.id))
   }
 }
+
+export default {
+  namespaced: true,
+  state,
+  mutations,
+  actions,
+  getters
+}

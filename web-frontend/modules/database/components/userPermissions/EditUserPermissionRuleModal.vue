@@ -437,6 +437,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '@baserow/modules/core/assets/scss/colors';
+
+.edit-user-permission-rule-modal {
 .user-permission-edit {
   &__user-display {
     display: flex;

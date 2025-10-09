@@ -456,6 +456,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '@baserow/modules/core/assets/scss/colors';
+
+.create-user-permission-rule-modal {
 .user-permission-create {
   &__user-select {
     width: 100%;

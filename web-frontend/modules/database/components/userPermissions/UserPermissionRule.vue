@@ -244,6 +244,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '@baserow/modules/core/assets/scss/colors';
+
 .user-permission-rule {
   display: flex;
   align-items: center;

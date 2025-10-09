@@ -283,6 +283,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '@baserow/modules/core/assets/scss/colors';
+
+.user-permission-rule-details-modal {
 .user-permission-details {
   &__section {
     margin-bottom: 32px;
