@@ -8,6 +8,7 @@ from .formula import urls as formula_urls
 from .rows import urls as row_urls
 from .tables import urls as table_urls
 from .tokens import urls as token_urls
+from .user_permissions import urls as user_permissions_urls
 from .views import urls as view_urls
 from .webhooks import urls as webhook_urls
 
@@ -24,4 +25,5 @@ urlpatterns = [
     path("formula/", include(formula_urls, namespace="formula")),
     path("data-sync/", include(data_sync_urls, namespace="data_sync")),
     path("field-rules/", include(field_rules_urls, namespace="field_rules")),
+    path("user-permissions/", include(user_permissions_urls, namespace="user_permissions")),
 ]

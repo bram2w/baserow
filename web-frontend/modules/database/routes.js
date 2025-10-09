@@ -33,6 +33,11 @@ export const routes = [
         name: 'database-table-open-configure-data-sync',
         component: path.resolve(__dirname, 'pages/table/configureDataSync.vue'),
       },
+      {
+        path: 'user-permissions',
+        name: 'database-table-open-user-permissions',
+        component: path.resolve(__dirname, 'pages/table/userPermissions.vue'),
+      },
     ],
   },
   // These redirect exist because the original api docs path was `/api/docs`, but

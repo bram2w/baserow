@@ -1147,6 +1147,165 @@
     "ruleDoesNotExist": "Rule doesn't exist",
     "ruleTypeDoesNotExist": "Rule type doesn't exist",
     "ruleAlreadyExists": "Rule already exists"
-
+  },
+  "userPermissions": {
+    "title": "User Permissions",
+    "description": "Manage user-level access controls and permissions for this table.",
+    "addUser": "Add User",
+    "refresh": "Refresh",
+    "empty": {
+      "title": "No user permissions configured",
+      "description": "Add user-specific permissions to control access to this table's data and fields.",
+      "action": "Add first user"
+    },
+    "tabs": {
+      "permissions": "User Permissions",
+      "auditLog": "Audit Log"
+    },
+    "roles": {
+      "admin": "Admin",
+      "manager": "Manager", 
+      "coordinator": "Coordinator",
+      "viewer": "Viewer"
+    },
+    "roleDescriptions": {
+      "admin": "Full access to manage permissions and all table operations",
+      "manager": "Can read, create, and update records but cannot delete or manage permissions",
+      "coordinator": "Can read and create new records but cannot update or delete existing ones",
+      "viewer": "Read-only access to table data"
+    },
+    "permissions": {
+      "read": "Read",
+      "create": "Create", 
+      "update": "Update",
+      "delete": "Delete"
+    },
+    "fieldPermissions": {
+      "hidden": "Hidden",
+      "read": "Read Only",
+      "write": "Read & Write",
+      "default": "Default"
+    },
+    "filters": {
+      "rowFilters": "{count} row filter | {count} row filters",
+      "fieldPermissions": "{count} field permission | {count} field permissions"
+    },
+    "actions": {
+      "viewDetails": "View Details",
+      "more": "More",
+      "edit": "Edit Permission",
+      "refreshView": "Refresh View", 
+      "revoke": "Revoke Access"
+    },
+    "createRule": {
+      "title": "Add User Permission",
+      "user": "User",
+      "selectUser": "Select a user",
+      "role": "Permission Role",
+      "advancedOptions": "Advanced Options",
+      "rowFilters": "Row Filters",
+      "rowFiltersDescription": "Limit access to specific rows using field-based filters. Use {user.field} to reference user properties.",
+      "fieldPermissions": "Field Permissions", 
+      "fieldPermissionsDescription": "Control visibility and editing permissions for individual fields.",
+      "fieldName": "Field name",
+      "filterValue": "Filter value",
+      "addFilter": "Add Filter",
+      "defaultPermission": "Default",
+      "create": "Create Permission",
+      "errors": {
+        "userRequired": "Please select a user",
+        "roleRequired": "Please select a role",
+        "incompleteFilters": "Please complete all filter fields or remove empty ones"
+      }
+    },
+    "deleteConfirm": {
+      "title": "Revoke User Permission",
+      "content": "Are you sure you want to revoke access for {userName} from table {tableName}? This action cannot be undone."
+    },
+    "success": {
+      "ruleCreated": "Permission Added",
+      "ruleCreatedMessage": "{userName} has been granted {role} access to this table.",
+      "ruleUpdated": "Permission Updated", 
+      "ruleUpdatedMessage": "Permission for {userName} has been successfully updated.",
+      "ruleRevoked": "Access Revoked",
+      "ruleRevokedMessage": "Access has been revoked for {userName}.",
+      "viewRefreshed": "View Refreshed",
+      "viewRefreshedMessage": "Filtered view has been refreshed for {userName}."
+    },
+    "errors": {
+      "initializationFailed": "Failed to load permissions",
+      "fetchRulesFailed": "Failed to load user permissions",
+      "fetchAuditLogsFailed": "Failed to load audit log",
+      "createRuleFailed": "Failed to create permission",
+      "revokeRuleFailed": "Failed to revoke permission",
+      "refreshViewFailed": "Failed to refresh view"
+    },
+    "ruleDetails": {
+      "title": "Permission Details",
+      "userInfo": "User Information",
+      "effectivePermissions": "Effective Permissions",
+      "rowFilters": "Row Access Filters",
+      "fieldPermissions": "Field Permissions",
+      "metadata": "Metadata",
+      "createdAt": "Created At",
+      "updatedAt": "Last Modified",
+      "isActive": "Status",
+      "filterNote": "Filters use dynamic user properties like {user.department}"
+    },
+    "editRule": {
+      "title": "Edit Permission",
+      "user": "User",
+      "role": "Permission Role",
+      "advancedOptions": "Advanced Options",
+      "rowFilters": "Row Filters",
+      "rowFiltersDescription": "Limit access to specific rows using field-based filters.",
+      "fieldPermissions": "Field Permissions",
+      "fieldPermissionsDescription": "Control visibility and editing permissions for individual fields.",
+      "fieldName": "Field name",
+      "filterValue": "Filter value",
+      "addFilter": "Add Filter",
+      "defaultPermission": "Default",
+      "update": "Update Permission",
+      "errors": {
+        "roleRequired": "Please select a role",
+        "incompleteFilters": "Please complete all filter fields or remove empty ones"
+      }
+    },
+    "permissionDescriptions": {
+      "read": "View and browse table data",
+      "create": "Add new records to the table",
+      "update": "Modify existing records",
+      "delete": "Remove records from the table"
+    },
+    "auditLog": {
+      "empty": {
+        "title": "No audit logs",
+        "description": "Permission changes will appear here for tracking and compliance."
+      },
+      "details": "Show Details",
+      "unknownUser": "Unknown User",
+      "actions": {
+        "granted": "Permission Granted",
+        "modified": "Permission Modified",
+        "revoked": "Permission Revoked"
+      },
+      "descriptions": {
+        "granted": "{actorName} granted permissions to {targetName}",
+        "modified": "{actorName} modified permissions for {targetName}",
+        "revoked": "{actorName} revoked permissions from {targetName}"
+      },
+      "timeAgo": {
+        "now": "Just now",
+        "minutes": "{count} minute ago | {count} minutes ago",
+        "hours": "{count} hour ago | {count} hours ago",
+        "days": "{count} day ago | {count} days ago"
+      }
+    },
+    "realtime": {
+      "permissionUpdated": "Permission Updated",
+      "permissionUpdatedMessage": "User permissions have been {action}",
+      "permissionRevoked": "Access Revoked",
+      "permissionRevokedMessage": "Your access to this table has been revoked"
+    }
   }
 }

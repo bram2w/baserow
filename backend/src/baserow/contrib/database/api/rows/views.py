@@ -109,6 +109,7 @@ from baserow.contrib.database.rows.signals import rows_loaded
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.user_permissions.handler import UserPermissionHandler
 from baserow.contrib.database.table.operations import (
     CreateRowDatabaseTableOperationType,
     ListRowNamesDatabaseTableOperationType,
@@ -449,6 +450,28 @@ class RowsView(APIView):
 
         if order_by:
             queryset = queryset.order_by_fields_string(order_by, user_field_names)
+
+        # Apply user-level row filtering based on UserPermissionRule
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"🔍 ROW FILTER: Starting row filter check")
+        logger.info(f"🔍 ROW FILTER: User authenticated={request.user and request.user.is_authenticated}")
+        if request.user and request.user.is_authenticated:
+            logger.info(f"🔍 ROW FILTER: User email={request.user.email}, table_id={table.id}")
+            try:
+                permission_handler = UserPermissionHandler()
+                logger.info(f"🔍 ROW FILTER: Handler created, applying filters...")
+                queryset = permission_handler.apply_row_filters(
+                    user=request.user,
+                    table=table,
+                    queryset=queryset
+                )
+                logger.info(f"✅ ROW FILTER: Filters applied successfully")
+            except Exception as e:
+                # Log error but don't break the request for users without permissions
+                import traceback
+                logger.error(f"❌ ROW FILTER ERROR: {e}")
+                logger.error(traceback.format_exc())
 
         paginator = PageNumberPagination(limit_page_size=settings.ROW_PAGE_SIZE_LIMIT)
         page = paginator.paginate_queryset(queryset, request, self)

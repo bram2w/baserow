@@ -1,0 +1,41 @@
+# Docker Compose para producción en DigitalOcean
+version: '3.8'
+
+services:
+  baserow:
+    container_name: baserow_production
+    image: baserow/baserow:1.35.2
+    restart: unless-stopped
+    environment:
+      BASEROW_PUBLIC_URL: ${BASEROW_PUBLIC_URL}
+      SECRET_KEY: ${SECRET_KEY}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_HOST: ${DATABASE_HOST}
+      DATABASE_PORT: ${DATABASE_PORT}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      EMAIL_SMTP: ${EMAIL_SMTP}
+      EMAIL_SMTP_HOST: ${EMAIL_SMTP_HOST}
+      EMAIL_SMTP_PORT: ${EMAIL_SMTP_PORT}
+      EMAIL_SMTP_USE_TLS: ${EMAIL_SMTP_USE_TLS}
+      EMAIL_SMTP_USER: ${EMAIL_SMTP_USER}
+      EMAIL_SMTP_PASSWORD: ${EMAIL_SMTP_PASSWORD}
+      FROM_EMAIL: ${FROM_EMAIL}
+      BASEROW_ENABLE_SECURE_PROXY_SSL_HEADER: ${BASEROW_ENABLE_SECURE_PROXY_SSL_HEADER}
+      BASEROW_DISABLE_PUBLIC_URL_CHECK: ${BASEROW_DISABLE_PUBLIC_URL_CHECK}
+    ports:
+      - "8080:80"  # Puerto interno para nginx
+    volumes:
+      - baserow_data:/baserow/data
+    networks:
+      - baserow_net
+
+volumes:
+  baserow_data:
+
+networks:
+  baserow_net:
+    driver: bridge
