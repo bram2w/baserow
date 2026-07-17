@@ -62,6 +62,8 @@ from baserow.contrib.integrations.utils import (
     get_http_request_function,
     read_response_within_limit,
 )
+from baserow.contrib.integrations.utils import get_http_request_function
+from baserow.core.datetime import get_timezones
 from baserow.core.formula.registries import formula_runtime_function_registry
 from baserow.core.formula.types import BaserowFormulaObject
 from baserow.core.formula.validator import (
@@ -1605,6 +1607,7 @@ class CorePeriodicServiceType(TriggerServiceTypeMixin, CoreServiceType):
 
     allowed_fields = [
         "interval",
+        "timezone",
         "minute",
         "hour",
         "day_of_week",
@@ -1613,6 +1616,7 @@ class CorePeriodicServiceType(TriggerServiceTypeMixin, CoreServiceType):
 
     serializer_field_names = [
         "interval",
+        "timezone",
         "minute",
         "hour",
         "day_of_week",
@@ -1624,6 +1628,10 @@ class CorePeriodicServiceType(TriggerServiceTypeMixin, CoreServiceType):
         "interval": serializers.ChoiceField(
             choices=PERIODIC_INTERVAL_CHOICES,
             help_text=CorePeriodicService._meta.get_field("interval").help_text,
+        ),
+        "timezone": serializers.CharField(
+            required=False,
+            help_text=CorePeriodicService._meta.get_field("timezone").help_text,
         ),
         "minute": serializers.IntegerField(
             min_value=0,
@@ -1661,6 +1669,7 @@ class CorePeriodicServiceType(TriggerServiceTypeMixin, CoreServiceType):
 
     class SerializedDict(ServiceDict):
         interval: str
+        timezone: str
         minute: int
         hour: int
         day_of_week: int
@@ -1677,6 +1686,8 @@ class CorePeriodicServiceType(TriggerServiceTypeMixin, CoreServiceType):
         Responsible for preparing and validating the periodic service values.
         If the `interval` is set to `MINUTE`, it ensures that the `minute` value
         is greater than or equal to the minimum allowed value defined in the settings.
+        The `timezone` is validated here so that an unknown one can't be persisted,
+        as it would then raise every time the schedule is calculated.
 
         :param values: The values to prepare.
         :param user: The user creating or updating the service.
@@ -1692,7 +1703,87 @@ class CorePeriodicServiceType(TriggerServiceTypeMixin, CoreServiceType):
                     f"or equal to {settings.INTEGRATIONS_PERIODIC_MINUTE_MIN}."
                 )
 
+        service_timezone = values.get("timezone", None)
+        if service_timezone is not None and service_timezone not in get_timezones():
+            raise AutomationNodeMisconfiguredService(
+                f"The timezone `{service_timezone}` is not a valid timezone."
+            )
+
         return super().prepare_values(values, user, instance)
+
+    def _reschedule(self, service: CorePeriodicService) -> None:
+        """
+        Recalculates the service's `next_run_at` from its current schedule. Called
+        whenever the schedule is created or changed, so that `next_run_at` is never
+        left pointing at a time which the schedule no longer describes.
+
+        :param service: The service to reschedule.
+        """
+
+        next_run_at = calculate_next_periodic_run(
+            interval=service.interval,
+            minute=service.minute,
+            hour=service.hour,
+            day_of_week=service.day_of_week,
+            day_of_month=service.day_of_month,
+            tz=service.timezone,
+        )
+
+        if service.next_run_at != next_run_at:
+            service.next_run_at = next_run_at
+            service.save(update_fields=["next_run_at"])
+
+    def after_create(self, instance: CorePeriodicService, values: Dict[str, Any]):
+        self._reschedule(instance)
+
+    def after_update(
+        self,
+        instance: CorePeriodicService,
+        values: Dict[str, Any],
+        changes: Dict[str, Tuple],
+    ):
+        # Only reschedule if the schedule itself changed, so that an unrelated
+        # update doesn't push the next run further into the future.
+        if any(field in changes for field in self.allowed_fields):
+            self._reschedule(instance)
+
+    def create_instance_from_serialized(
+        self,
+        serialized_values: Dict[str, Any],
+        id_mapping,
+        files_zip=None,
+        storage=None,
+        cache=None,
+        **kwargs,
+    ) -> CorePeriodicService:
+        """
+        The `next_run_at` of an imported service is recalculated rather than copied
+        from the source. Publishing a workflow imports a fresh copy of the service,
+        and the source is a draft which is never dispatched, so its `next_run_at` is
+        either `None` (which would make the copy immediately due, causing an
+        unscheduled run on publish) or a stale time from an earlier test run.
+
+        :param serialized_values: The deserialized values.
+        :return: The created service.
+        """
+
+        serialized_values["next_run_at"] = calculate_next_periodic_run(
+            interval=serialized_values.get("interval"),
+            minute=serialized_values.get("minute"),
+            hour=serialized_values.get("hour"),
+            day_of_week=serialized_values.get("day_of_week"),
+            day_of_month=serialized_values.get("day_of_month"),
+            tz=serialized_values.get("timezone"),
+        )
+
+        return super().create_instance_from_serialized(
+            serialized_values,
+            id_mapping,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
+            **kwargs,
+        )
 
     def serialize_property(
         self,
@@ -1783,10 +1874,12 @@ class CorePeriodicServiceType(TriggerServiceTypeMixin, CoreServiceType):
             day_of_week=service.day_of_week,
             day_of_month=service.day_of_month,
             from_time=now,
+            tz=service.timezone,
         )
         return {
             "triggered_at": now.isoformat(),
-            "next_run_at": next_run.isoformat(),
+            # A service with no interval yet has no next run to report.
+            "next_run_at": next_run.isoformat() if next_run else None,
         }
 
     def dispatch_data(
@@ -1828,8 +1921,15 @@ class CorePeriodicServiceType(TriggerServiceTypeMixin, CoreServiceType):
 
         return (
             CorePeriodicService.objects.filter(
+                # A service without an interval hasn't been configured yet, so it
+                # has no schedule to be due against.
+                Q(interval__isnull=False),
+                # `next_run_at` is set whenever the schedule is saved or imported,
+                # so it's only null for services created before that was the case.
+                # They're treated as due so that they aren't stranded, and are
+                # rescheduled by the dispatch below.
                 Q(next_run_at__lte=current.replace(second=0, microsecond=0))
-                | Q(next_run_at__isnull=True)
+                | Q(next_run_at__isnull=True),
             )
             .select_for_update(
                 of=("self",),
@@ -1894,6 +1994,7 @@ class CorePeriodicServiceType(TriggerServiceTypeMixin, CoreServiceType):
                     hour=dispatched_service.hour,
                     day_of_week=dispatched_service.day_of_week,
                     day_of_month=dispatched_service.day_of_month,
+                    tz=dispatched_service.timezone,
                     from_time=next_run,
                 )
 
