@@ -1,14 +1,11 @@
 import MarkdownIt from 'markdown-it'
 import { createApplicationBuilderMarkdownRules } from '@baserow/modules/builder/utils/markdown'
 
-const renderMarkdown = (
-  content,
-  { builder = { id: 1 }, mode = 'public' } = {}
-) => {
+const renderMarkdown = (content, { builderId = 1, mode = 'public' } = {}) => {
   const markdown = new MarkdownIt()
   markdown.renderer.rules = {
     ...markdown.renderer.rules,
-    ...createApplicationBuilderMarkdownRules({ builder, mode }),
+    ...createApplicationBuilderMarkdownRules({ builderId, mode }),
   }
   return markdown.render(content)
 }
@@ -57,12 +54,12 @@ describe('createApplicationBuilderMarkdownRules', () => {
 
   test('prefixes internal links in preview mode', () => {
     const html = renderMarkdown('[Link](/path)', {
-      builder: { id: 42 },
+      builderId: 42,
       mode: 'preview',
     })
 
     expect(html).toContain(
-      '<a href="/builder/42/preview/path" class="ab-link">Link</a>'
+      '<a href="/builder/preview/42/path" class="ab-link">Link</a>'
     )
   })
 })

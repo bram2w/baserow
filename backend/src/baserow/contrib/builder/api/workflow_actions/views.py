@@ -55,9 +55,6 @@ from baserow.contrib.builder.elements.exceptions import ElementDoesNotExist
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.pages.exceptions import PageDoesNotExist
 from baserow.contrib.builder.pages.handler import PageHandler
-from baserow.contrib.builder.preview.authentication import (
-    BuilderPreviewAuthentication,
-)
 from baserow.contrib.builder.workflow_actions.actions import (
     CreateBuilderWorkflowActionActionType,
     DeleteBuilderWorkflowActionActionType,
@@ -375,7 +372,6 @@ class OrderBuilderWorkflowActionsView(APIView):
 class DispatchBuilderWorkflowActionView(APIView):
     permission_classes = (AllowAny,)
     authentication_classes = (
-        BuilderPreviewAuthentication,
         UserSourceJSONWebTokenAuthentication,
         JSONWebTokenAuthentication,
     )
@@ -418,7 +414,12 @@ class DispatchBuilderWorkflowActionView(APIView):
         }
     )
     @atomic_with_retry_on_deadlock()
-    def post(self, request, workflow_action_id: int):
+    def post(
+        self,
+        request,
+        workflow_action_id: int,
+        builder_id: int | None = None,
+    ):
         """
         Call the given workflow_action related service dispatch method.
         """

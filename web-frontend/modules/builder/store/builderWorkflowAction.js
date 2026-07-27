@@ -167,11 +167,12 @@ const actions = {
 
     commit('SET_ITEMS', { page, workflowActions })
   },
-  async fetchPublished({ commit }, { page }) {
+  async fetchPublished({ commit, rootGetters }, { page }) {
     const { $registry, $i18n, $client, $config } = this
+    const previewBuilderId = rootGetters['publicBuilder/getPreviewBuilderId']
     const { data: workflowActions } = await PublishedBuilderService(
       $client
-    ).fetchWorkflowActions(page.id)
+    ).fetchWorkflowActions(page.id, previewBuilderId)
 
     commit('SET_ITEMS', { page, workflowActions })
   },
@@ -267,12 +268,16 @@ const actions = {
       updateContext.promiseResolve = resolve
     })
   },
-  async dispatchAction({ dispatch }, { workflowActionId, data, files }) {
+  async dispatchAction(
+    { dispatch, rootGetters },
+    { workflowActionId, data, files }
+  ) {
     const { $registry, $i18n, $client, $config } = this
     const { data: result } = await WorkflowActionService($client).dispatch(
       workflowActionId,
       data,
-      files
+      files,
+      rootGetters['publicBuilder/getPreviewBuilderId']
     )
     return result
   },
