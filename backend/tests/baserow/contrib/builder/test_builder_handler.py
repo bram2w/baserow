@@ -181,6 +181,9 @@ def test_builder_get_published_applications(data_fixture):
     data_fixture.create_builder_custom_domain(
         builder=builder_with_published_domains, published_to=published_builder
     )
+    data_fixture.create_builder_custom_domain(
+        builder=builder_with_published_domains, published_to=None
+    )
     qs = BuilderHandler().get_published_applications(workspace=workspace)
     assert qs.contains(builder_with_published_domains)
     assert qs.count() == 1

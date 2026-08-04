@@ -138,5 +138,7 @@ class BuilderHandler:
         :return: A queryset of published applications.
         """
 
-        applications = Builder.objects.exclude(domains__published_to=None)
+        applications = Builder.objects.filter(
+            domains__published_to__isnull=False
+        ).distinct()
         return applications.filter(workspace=workspace) if workspace else applications
