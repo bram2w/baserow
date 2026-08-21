@@ -20,6 +20,7 @@ from baserow.api.services.errors import (
     ERROR_SERVICE_IMPROPERLY_CONFIGURED,
     ERROR_SERVICE_INVALID_DISPATCH_CONTEXT,
     ERROR_SERVICE_INVALID_DISPATCH_CONTEXT_CONTENT,
+    ERROR_SERVICE_INVALID_TYPE,
     ERROR_SERVICE_UNEXPECTED_DISPATCH_ERROR,
 )
 from baserow.api.utils import (
@@ -78,6 +79,7 @@ from baserow.core.services.exceptions import (
     InvalidContextContentDispatchException,
     InvalidContextDispatchException,
     ServiceImproperlyConfiguredDispatchException,
+    ServiceTypeDoesNotExist,
     UnexpectedDispatchException,
 )
 from baserow.core.workflow_actions.exceptions import WorkflowActionDoesNotExist
@@ -119,6 +121,7 @@ class BuilderWorkflowActionsView(APIView):
                 [
                     "ERROR_REQUEST_BODY_VALIDATION",
                     "ERROR_INVALID_WORKFLOW_ACTION_EVENT",
+                    "ERROR_SERVICE_INVALID_TYPE",
                 ]
             ),
             404: get_error_schema(["ERROR_PAGE_DOES_NOT_EXIST"]),
@@ -130,6 +133,7 @@ class BuilderWorkflowActionsView(APIView):
             PageDoesNotExist: ERROR_PAGE_DOES_NOT_EXIST,
             ElementDoesNotExist: ERROR_ELEMENT_DOES_NOT_EXIST,
             InvalidWorkflowActionEvent: ERROR_INVALID_WORKFLOW_ACTION_EVENT,
+            ServiceTypeDoesNotExist: ERROR_SERVICE_INVALID_TYPE,
         }
     )
     @validate_body_custom_fields(
@@ -267,6 +271,7 @@ class BuilderWorkflowActionView(APIView):
                 [
                     "ERROR_REQUEST_BODY_VALIDATION",
                     "ERROR_INVALID_WORKFLOW_ACTION_EVENT",
+                    "ERROR_SERVICE_INVALID_TYPE",
                 ]
             ),
             404: get_error_schema(
@@ -281,6 +286,7 @@ class BuilderWorkflowActionView(APIView):
         {
             WorkflowActionDoesNotExist: ERROR_WORKFLOW_ACTION_DOES_NOT_EXIST,
             InvalidWorkflowActionEvent: ERROR_INVALID_WORKFLOW_ACTION_EVENT,
+            ServiceTypeDoesNotExist: ERROR_SERVICE_INVALID_TYPE,
         }
     )
     @require_request_data_type(dict)
