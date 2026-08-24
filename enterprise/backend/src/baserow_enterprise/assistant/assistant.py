@@ -1,5 +1,6 @@
 import asyncio
 from contextlib import aclosing
+from dataclasses import dataclass
 from typing import Any, AsyncGenerator
 
 from django.contrib.auth.models import AbstractUser
@@ -20,7 +21,9 @@ from pydantic_ai.messages import (
     ThinkingPart,
     ThinkingPartDelta,
 )
+from pydantic_ai.models import Model
 from pydantic_ai.run import AgentRunResultEvent
+from pydantic_ai.toolsets import AbstractToolset
 from pydantic_ai.usage import UsageLimits
 
 from baserow.api.sessions import get_client_undo_redo_action_group_id
@@ -136,6 +139,53 @@ def _get_workspace_license_type(
         return None
 
 
+@dataclass
+class AgentRunContext:
+    deps: AssistantDeps
+    toolset: AbstractToolset
+    model: Model
+
+
+def build_agent_run_context(
+    user: AbstractUser,
+    workspace: Workspace,
+    tool_helpers: ToolHelpers,
+    model: Model | None = None,
+) -> AgentRunContext:
+    """Build shared assistant and eval dependencies from one model profile.
+
+    :param user: The user running the assistant.
+    :param workspace: The workspace in which tools execute.
+    :param tool_helpers: Callbacks and the resolved model profile for this run.
+    :param model: An existing model, or None to create one from the profile.
+    :return: Dependencies, manifests, toolset, and the concrete model for the run.
+    """
+
+    model_profile = tool_helpers.model_profile
+    resolved_model = model if model is not None else model_profile.create_model()
+    deps = AssistantDeps(
+        user=user,
+        workspace=workspace,
+        tool_helpers=tool_helpers,
+        license_tier=_get_workspace_license_type(user, workspace),
+    )
+    toolset, db_manifest, app_manifest, auto_manifest, explain_manifest = (
+        assistant_tool_registry.build_toolset(
+            user=user,
+            workspace=workspace,
+            model=resolved_model,
+            model_profile=model_profile,
+            deps=deps,
+        )
+    )
+    deps.database_manifest = db_manifest
+    deps.application_manifest = app_manifest
+    deps.automation_manifest = auto_manifest
+    deps.explain_manifest = explain_manifest
+
+    return AgentRunContext(deps=deps, toolset=toolset, model=resolved_model)
+
+
 def _extract_tool_thought(event: FunctionToolCallEvent) -> str | None:
     """Extract the chain-of-thought ``thought`` argument from a tool call
     event, if present and non-empty."""
@@ -178,25 +228,11 @@ class Assistant:
         self._tool_helpers = self._build_tool_helpers()
         self._telemetry = PosthogTracingCallback()
 
-        self._deps = AssistantDeps(
-            user=self._user,
-            workspace=self._workspace,
-            tool_helpers=self._tool_helpers,
-            license_tier=_get_workspace_license_type(self._user, self._workspace),
+        ctx = build_agent_run_context(
+            self._user, self._workspace, self._tool_helpers, model=self._model
         )
-        self._toolset, db_m, app_m, auto_m, explain_m = (
-            assistant_tool_registry.build_toolset(
-                user=self._user,
-                workspace=self._workspace,
-                model=self._model,
-                model_profile=self._model_profile,
-                deps=self._deps,
-            )
-        )
-        self._deps.database_manifest = db_m
-        self._deps.application_manifest = app_m
-        self._deps.automation_manifest = auto_m
-        self._deps.explain_manifest = explain_m
+        self._deps = ctx.deps
+        self._toolset = ctx.toolset
 
         setup_instrumentation()
 
