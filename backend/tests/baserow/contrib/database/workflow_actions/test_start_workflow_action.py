@@ -252,3 +252,107 @@ def test_an_imported_action_keeps_a_workflow_of_this_workspace(data_fixture):
         imported = action_type.import_serialized(copy_field, exported, {})
 
     assert imported.service.specific.workflow_id == workflow.id
+
+
+@pytest.mark.django_db
+def test_a_click_starts_the_published_workflow(data_fixture):
+    from unittest.mock import patch
+
+    from baserow.contrib.automation.nodes.node_types import CoreManualTriggerNodeType
+    from baserow.contrib.automation.workflows.handler import AutomationWorkflowHandler
+    from baserow.contrib.database.workflow_actions.service import (
+        DatabaseWorkflowActionService,
+    )
+    from baserow.contrib.integrations.core.models import CoreStartWorkflowService
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(user=user, workspace=workspace)
+    table = data_fixture.create_database_table(user=user, database=database)
+    field = data_fixture.create_button_field(table=table)
+    row = table.get_model().objects.create()
+    automation = data_fixture.create_automation_application(
+        user=user, workspace=workspace
+    )
+    workflow = data_fixture.create_automation_workflow(
+        user=user,
+        automation=automation,
+        trigger_type=CoreManualTriggerNodeType.type,
+    )
+    published = AutomationWorkflowHandler().publish(workflow)
+    action = data_fixture.create_database_workflow_action(
+        CoreStartWorkflowWorkflowAction, field=field
+    )
+    CoreStartWorkflowService.objects.filter(id=action.service_id).update(
+        workflow=workflow
+    )
+
+    with patch(
+        "baserow.contrib.automation.workflows.handler."
+        "AutomationWorkflowHandler.async_start_workflow"
+    ) as async_start_workflow:
+        DatabaseWorkflowActionService().dispatch_workflow_actions(user, field, row)
+
+    async_start_workflow.assert_called_once_with(published)
+
+
+@pytest.mark.django_db
+def test_a_click_on_an_unpublished_workflow_tells_the_clicker(data_fixture):
+    from baserow.contrib.automation.nodes.node_types import CoreManualTriggerNodeType
+    from baserow.contrib.database.workflow_actions.exceptions import (
+        WorkflowActionDispatchError,
+    )
+    from baserow.contrib.database.workflow_actions.service import (
+        DatabaseWorkflowActionService,
+    )
+    from baserow.contrib.integrations.core.models import CoreStartWorkflowService
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(user=user, workspace=workspace)
+    table = data_fixture.create_database_table(user=user, database=database)
+    field = data_fixture.create_button_field(table=table)
+    row = table.get_model().objects.create()
+    automation = data_fixture.create_automation_application(
+        user=user, workspace=workspace
+    )
+    workflow = data_fixture.create_automation_workflow(
+        user=user,
+        automation=automation,
+        trigger_type=CoreManualTriggerNodeType.type,
+    )
+    action = data_fixture.create_database_workflow_action(
+        CoreStartWorkflowWorkflowAction, field=field
+    )
+    CoreStartWorkflowService.objects.filter(id=action.service_id).update(
+        workflow=workflow
+    )
+
+    with pytest.raises(WorkflowActionDispatchError) as exc:
+        DatabaseWorkflowActionService().dispatch_workflow_actions(user, field, row)
+
+    # The reason reaches the clicker rather than becoming a 500.
+    assert "published" in exc.value.message
+
+
+@pytest.mark.django_db
+def test_a_click_on_an_unconfigured_action_tells_the_clicker(data_fixture):
+    from baserow.contrib.database.workflow_actions.exceptions import (
+        WorkflowActionDispatchError,
+    )
+    from baserow.contrib.database.workflow_actions.service import (
+        DatabaseWorkflowActionService,
+    )
+
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_button_field(table=table)
+    row = table.get_model().objects.create()
+    data_fixture.create_database_workflow_action(
+        CoreStartWorkflowWorkflowAction, field=field
+    )
+
+    with pytest.raises(WorkflowActionDispatchError) as exc:
+        DatabaseWorkflowActionService().dispatch_workflow_actions(user, field, row)
+
+    assert "not configured" in exc.value.message
