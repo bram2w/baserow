@@ -292,7 +292,9 @@ error toast if that user lacks permission on a target table. The same rule holds
 field: an action that would write a field the clicker cannot write fails, rather than
 silently skipping that field the way the builder's upsert does today. There is no way to
 run an action on someone else's behalf: a button is a shortcut for things the clicker
-could already do, not a way to do more.
+could already do, not a way to do more. That holds for every action a button carries out
+itself. Starting a workflow, added in phase 4d, is the one exception, and the amendment
+below says how far it reaches and what bounds it.
 
 This is a deliberate break from the builder and automation, where services run every
 check as the integration's `authorized_user`. That model exists because builder end
@@ -300,7 +302,9 @@ users are usually not Baserow users at all. Database clickers are the opposite: 
 logged-in collaborators with at least the editor role (section 7). Reusing the
 on-behalf-of model here would put the wrong name in row history and created-by fields,
 and would let anyone who can edit a field use the integration to reach every table its
-user can reach. Neither is acceptable in a database.
+user can reach. Neither is acceptable in a database. Attaching such an integration to an
+action is what is refused; a button that starts a workflow reaches the same model one
+step removed, which the amendment below states rather than hides.
 
 Database buttons need no Local Baserow integration. That integration exists only to
 carry a user for services that act inside Baserow, and for a button that user is the
@@ -372,7 +376,42 @@ shape section 6 already uses for an integration outside the field's own database
 `prepare_values` refuses a workflow that is not in the button field's own workspace on
 save, and import blanks one that arrived pointing outside it rather than trust what the
 file claims, leaving the action to report itself unconfigured like any other action
-missing what it needs.
+missing what it needs. A snapshot and its restore are the exception to that blanking, and
+have to be: a snapshot's application is imported with no workspace on purpose, to hide it
+from the system, so the workspace the copy belongs to is read from the import's own
+`import_workspace_id` instead of from the field. Without that, taking a snapshot would
+quietly unconfigure the button and the restore would hand back one that starts nothing,
+which is the same reason section 6 gives for not dropping integrations on a restore.
+
+**What a click reaches through a started workflow.** The invariant at the top of this
+section does not survive this action, and it was never going to. An automation's Local
+Baserow nodes act as their integration's `authorized_user`, not as whoever set the
+workflow running, and dispatch checks only that the clicker may dispatch this field's
+actions — nothing about the workflow. So an editor, who holds the dispatch operation but
+not the builder role that reading or running a workflow needs, can click a button and
+cause writes under another user's name in databases they cannot read, and cannot open the
+workflow they ran or its history to see what happened.
+
+That is what "a button starts a workflow" means. The alternative, running the workflow's
+nodes as the clicker, is a different feature with a worse failure mode: workflows that
+half-run, differently for each person who clicks. So the reach is accepted and bounded
+instead, by two things and no more. The person configuring the action must be able to
+read the workflow, which puts choosing one behind the same field-update permission as
+every other action. And the workflow must be in the button field's own workspace, which
+the guard above enforces on save and on import. Within a workspace, a button that starts
+a workflow is a way for a builder to hand editors a lever on work the builder could
+already do; across workspaces it is nothing at all. The invariant still holds unqualified
+for every other action type: the row actions, the HTTP request, the email and the Slack
+message all act as the clicker or as this installation, and none of them borrows another
+user's reach.
+
+Not charging the button rate limit has one consequence worth stating plainly. When the
+automation module's own limits are what refuse a run, the clicker is not told:
+`async_start_workflow` catches the rate limit and the too-many-errors cases after dispatch
+has already returned, records them in the workflow's history and returns nothing, so the
+click shows the ordinary success toast and the reason is visible only to someone who can
+open the workflow. Surfacing it at the button would mean waiting on the queue's decision,
+which is the opposite of the fire-and-forget shape chosen above.
 
 Each action type names the integration types it may carry in an
 `allowed_integration_types` allow-list. It is empty unless the action needs a credential
@@ -489,6 +528,18 @@ it. Concretely:
   the first version, since a token has no role or identity to record.
 - A future per-field "who can click" permission (a role-based permission on that
   endpoint) fits without rework; it is out of scope for the first version.
+
+The editor role is the click permission for every action, and for the row actions, the
+HTTP request, the email and the Slack message that is the whole story: a click does what
+that editor could have done by hand. The start workflow action of phase 4d is the one
+place where it buys more. Running or even reading an automation workflow needs the builder
+role, so an editor who clicks a button that starts one causes work they have no permission
+to start themselves, performed as the workflow's own integration users, in databases they
+may not be able to open — and with no way to see the workflow or its history afterwards.
+The bound is on who may configure the action, not on who may click it: choosing the
+workflow needs the field-update permission, so the builder role, and the workflow must
+belong to the button field's own workspace (section 5). A per-field click permission is
+the natural place to narrow this further when it is wanted.
 
 ### 8. Behavior under common operations
 
