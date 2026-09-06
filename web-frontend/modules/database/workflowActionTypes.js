@@ -766,4 +766,49 @@ export class CoreStartWorkflowWorkflowActionType extends DatabaseWorkflowActionS
   getDataSchema() {
     return null
   }
+
+  /**
+   * Trashing the automation leaves the id behind, and the shared service type
+   * has nothing to say about a workflow it cannot find. Said here rather than
+   * after a doomed click, which fails outright.
+   */
+  getErrorMessage(workflowAction, applicationContext) {
+    const inherited = super.getErrorMessage(workflowAction, applicationContext)
+    if (inherited) {
+      return inherited
+    }
+
+    const workflowId = workflowAction.service?.workflow_id
+    const workspace = this.app.$store.getters['workspace/getSelected']
+    // Quiet until the applications have been fetched: no automation is in the
+    // store then either, and an empty store is what a load still running
+    // looks like. Every automation of the workspace carries its workflows in
+    // that same payload, so once it has landed the store can be read for an
+    // answer.
+    if (
+      !workflowId ||
+      !workspace?.id ||
+      !this.app.$store.getters['application/isLoaded']
+    ) {
+      return null
+    }
+
+    const found = this.app.$store.getters['application/getAllOfWorkspace'](
+      workspace
+    )
+      .filter((application) => application.type === 'automation')
+      .some((automation) =>
+        this.app.$store.getters['automationWorkflow/getOrderedWorkflows'](
+          automation
+        ).some((workflow) => workflow.id === workflowId)
+      )
+
+    // Absence answers whether this editor can see the workflow, not whether
+    // it exists: the applications are filtered by what the caller may read,
+    // so a deleted workflow and one behind a role look the same from here.
+    // The copy says that rather than claiming it is gone.
+    return found
+      ? null
+      : this.app.$i18n.t('databaseWorkflowActionType.startWorkflowMissing')
+  }
 }

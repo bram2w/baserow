@@ -11,6 +11,12 @@ const en = JSON.parse(
     'utf8'
   )
 )
+const enDatabase = JSON.parse(
+  readFileSync(
+    resolve(process.cwd(), 'modules/database/locales/en.json'),
+    'utf8'
+  )
+)
 
 const WORKSPACE_ID = 1
 const DATABASE_ID = 100
@@ -120,5 +126,71 @@ describe('start workflow action form', () => {
     expect(en.serviceType.errorWorkflowNotImmediateDispatch).toBe(
       'The selected workflow must use a trigger that can start immediately.'
     )
+  })
+
+  const startWorkflowType = () =>
+    testApp._app.$registry.get('databaseWorkflowActionType', 'start_workflow')
+
+  const missingWorkflowAction = {
+    id: 1,
+    type: 'start_workflow',
+    service: { workflow_id: 999 },
+  }
+
+  test('a workflow the loaded applications do not hold is called out', async () => {
+    // Trashing the automation leaves the id on the action, and the click that
+    // follows fails with nothing said in the editor.
+    await testApp.store.dispatch('application/forceSetAll', {
+      applications: [
+        {
+          id: DATABASE_ID,
+          name: 'Customers',
+          type: 'database',
+          workspace: { id: WORKSPACE_ID },
+          tables: [],
+        },
+        {
+          id: AUTOMATION_ID,
+          name: 'Onboarding',
+          type: 'automation',
+          order: 1,
+          workspace: { id: WORKSPACE_ID },
+          workflows: [
+            {
+              id: 11,
+              name: 'Send welcome',
+              order: 1,
+              immediate_dispatch: true,
+            },
+          ],
+        },
+      ],
+    })
+
+    const message = startWorkflowType().getErrorMessage(missingWorkflowAction, {
+      database: database(),
+    })
+
+    // `$t` returns the key here, so the copy is pinned separately. The
+    // applications are filtered by what the reader may see, so the copy may
+    // not claim the workflow was deleted: it can only say it cannot be found.
+    expect(message).toBe('databaseWorkflowActionType.startWorkflowMissing')
+    expect(enDatabase.databaseWorkflowActionType.startWorkflowMissing).toBe(
+      "This action's workflow can't be found. It may have been deleted, or " +
+        'you may not have access to it. Pick another workflow, or ask ' +
+        'someone who can see this one.'
+    )
+  })
+
+  test('nothing is said while the applications are still being fetched', () => {
+    // `forceCreate` never marks the list fetched, which is what a load still
+    // running looks like: the workflow is absent because nothing has landed.
+    expect(testApp.store.getters['application/isLoaded']).toBe(false)
+
+    const message = startWorkflowType().getErrorMessage(missingWorkflowAction, {
+      database: database(),
+    })
+
+    expect(message).toBeNull()
   })
 })
