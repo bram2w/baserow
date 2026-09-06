@@ -6,6 +6,7 @@ from rest_framework.status import HTTP_200_OK
 from baserow.contrib.database.workflow_actions.models import (
     CoreStartWorkflowWorkflowAction,
 )
+from baserow.core.deferred_callbacks import deferred_callback_context
 
 
 @pytest.mark.django_db
@@ -160,3 +161,94 @@ def test_clearing_the_workflow_needs_no_workspace(api_client, data_fixture):
     )
 
     assert response.status_code == OK, response.json()
+
+
+@pytest.mark.django_db
+def test_an_imported_action_drops_a_workflow_from_elsewhere(data_fixture):
+    from baserow.contrib.automation.nodes.node_types import CoreManualTriggerNodeType
+    from baserow.contrib.database.workflow_actions.registries import (
+        database_workflow_action_type_registry,
+    )
+    from baserow.contrib.integrations.core.models import CoreStartWorkflowService
+
+    user = data_fixture.create_user()
+    source_workspace = data_fixture.create_workspace(user=user)
+    automation = data_fixture.create_automation_application(
+        user=user, workspace=source_workspace
+    )
+    workflow = data_fixture.create_automation_workflow(
+        user=user,
+        automation=automation,
+        trigger_type=CoreManualTriggerNodeType.type,
+    )
+    source_table = data_fixture.create_database_table(user=user)
+    source_field = data_fixture.create_button_field(table=source_table)
+    action = data_fixture.create_database_workflow_action(
+        CoreStartWorkflowWorkflowAction, field=source_field
+    )
+    CoreStartWorkflowService.objects.filter(id=action.service_id).update(
+        workflow=workflow
+    )
+    # The fixture handed the action its exact service instance, which the FK
+    # descriptor now caches. A row updated by id, not through it, needs this
+    # to reach the export below.
+    action.service.refresh_from_db()
+
+    action_type = database_workflow_action_type_registry.get("start_workflow")
+    exported = action_type.export_serialized(action.specific)
+
+    elsewhere = data_fixture.create_workspace(user=user)
+    target_database = data_fixture.create_database_application(
+        user=user, workspace=elsewhere
+    )
+    target_table = data_fixture.create_database_table(
+        user=user, database=target_database
+    )
+    target_field = data_fixture.create_button_field(table=target_table)
+
+    with deferred_callback_context():
+        imported = action_type.import_serialized(target_field, exported, {})
+
+    assert imported.service.specific.workflow_id is None
+
+
+@pytest.mark.django_db
+def test_an_imported_action_keeps_a_workflow_of_this_workspace(data_fixture):
+    from baserow.contrib.automation.nodes.node_types import CoreManualTriggerNodeType
+    from baserow.contrib.database.workflow_actions.registries import (
+        database_workflow_action_type_registry,
+    )
+    from baserow.contrib.integrations.core.models import CoreStartWorkflowService
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    automation = data_fixture.create_automation_application(
+        user=user, workspace=workspace
+    )
+    workflow = data_fixture.create_automation_workflow(
+        user=user,
+        automation=automation,
+        trigger_type=CoreManualTriggerNodeType.type,
+    )
+    database = data_fixture.create_database_application(user=user, workspace=workspace)
+    table = data_fixture.create_database_table(user=user, database=database)
+    field = data_fixture.create_button_field(table=table)
+    action = data_fixture.create_database_workflow_action(
+        CoreStartWorkflowWorkflowAction, field=field
+    )
+    CoreStartWorkflowService.objects.filter(id=action.service_id).update(
+        workflow=workflow
+    )
+    # The fixture handed the action its exact service instance, which the FK
+    # descriptor now caches. A row updated by id, not through it, needs this
+    # to reach the export below.
+    action.service.refresh_from_db()
+
+    action_type = database_workflow_action_type_registry.get("start_workflow")
+    exported = action_type.export_serialized(action.specific)
+
+    copy_field = data_fixture.create_button_field(table=table)
+    with deferred_callback_context():
+        imported = action_type.import_serialized(copy_field, exported, {})
+
+    assert imported.service.specific.workflow_id == workflow.id

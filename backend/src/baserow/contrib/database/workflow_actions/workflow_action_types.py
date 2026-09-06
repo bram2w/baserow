@@ -835,6 +835,36 @@ class CoreStartWorkflowWorkflowActionType(DatabaseWorkflowServiceActionType):
                 f"The workflow with ID {workflow_id} does not exist."
             )
 
+    def import_serialized(
+        self,
+        parent: Any,
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict[str, Dict[int, int]],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+        cache: Optional[Dict[str, Any]] = None,
+        **kwargs,
+    ) -> WorkflowAction:
+        """
+        Drops a workflow the copy may not start: an export made elsewhere
+        names it by a number that can exist here too, and an unmapped id is
+        the normal case for a template or a restored snapshot. The action
+        then says what it needs, as an unconfigured one does.
+        """
+
+        created_instance = super().import_serialized(
+            parent, serialized_values, id_mapping, files_zip, storage, cache, **kwargs
+        )
+        service = created_instance.service.specific
+        if service.workflow_id is None:
+            return created_instance
+        try:
+            self._check_workflow(service.workflow_id, created_instance.field)
+        except serializers.ValidationError:
+            service.workflow = None
+            service.save(update_fields=["workflow"])
+        return created_instance
+
 
 class OpenUrlWorkflowActionType(DatabaseWorkflowActionType):
     type = "open_url"
