@@ -785,6 +785,56 @@ class CoreStartWorkflowWorkflowActionType(DatabaseWorkflowServiceActionType):
     model_class = CoreStartWorkflowWorkflowAction
     service_type = CoreStartWorkflowServiceType.type
 
+    def prepare_values(
+        self,
+        values: Dict[str, Any],
+        user: AbstractUser,
+        instance: Optional[WorkflowAction] = None,
+    ) -> Dict[str, Any]:
+        """
+        Refuses a workflow from another workspace. The service type resolves
+        the id against everything the user can read, and a user is often in
+        more than one workspace, so this is where a button is kept from
+        firing work its own workspace cannot see.
+
+        :param values: What the caller is setting on the action.
+        :param user: Who is configuring it.
+        :param instance: The action being updated, or None when creating one.
+        :raises serializers.ValidationError: When the workflow is not one of
+            this workspace's.
+        :return: The values to save.
+        """
+
+        service_values = values.get("service") or {}
+        workflow_id = service_values.get("workflow_id")
+        if workflow_id is not None:
+            field = values.get("field") or (instance.field if instance else None)
+            self._check_workflow(workflow_id, field)
+        return super().prepare_values(values, user, instance)
+
+    def _check_workflow(self, workflow_id: int, field) -> None:
+        """
+        :param workflow_id: The workflow the caller wants to start.
+        :param field: The button field the action belongs to.
+        :raises serializers.ValidationError: When the workflow is not in the
+            field's workspace. Worded exactly as the service type words a
+            workflow that does not exist, so walking the ids says nothing
+            about what this installation holds.
+        """
+
+        from baserow.contrib.automation.workflows.models import AutomationWorkflow
+
+        workspace_id = field.table.database.workspace_id if field else None
+        in_this_workspace = workspace_id is not None and (
+            AutomationWorkflow.objects.filter(
+                id=workflow_id, automation__workspace_id=workspace_id
+            ).exists()
+        )
+        if not in_this_workspace:
+            raise serializers.ValidationError(
+                f"The workflow with ID {workflow_id} does not exist."
+            )
+
 
 class OpenUrlWorkflowActionType(DatabaseWorkflowActionType):
     type = "open_url"
