@@ -86,6 +86,7 @@ describe('databaseWorkflowActionType registry', () => {
         'iconoir-bin',
         'databaseWorkflowActionType.deleteRow',
       ],
+      start_workflow: ['iconoir-play', 'serviceType.coreStartWorkflow'],
     }
     for (const [type, [icon, label]] of Object.entries(expected)) {
       const actionType = registry.get('databaseWorkflowActionType', type)

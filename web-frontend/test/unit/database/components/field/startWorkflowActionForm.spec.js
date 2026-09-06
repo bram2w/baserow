@@ -1,5 +1,16 @@
+import { readFileSync } from 'fs'
+import { resolve } from 'path'
 import { TestApp } from '@baserow/test/helpers/testApp'
 import DatabaseWorkflowActionWithService from '@baserow/modules/database/components/field/DatabaseWorkflowActionWithService'
+
+// Read rather than imported: the i18n loader turns an imported locale file
+// into compiled message ASTs, which the copy below can't be read off of.
+const en = JSON.parse(
+  readFileSync(
+    resolve(process.cwd(), 'modules/integrations/locales/en.json'),
+    'utf8'
+  )
+)
 
 const WORKSPACE_ID = 1
 const DATABASE_ID = 100
@@ -90,5 +101,24 @@ describe('start workflow action form', () => {
     )
 
     expect(message).toBeTruthy()
+  })
+
+  test('a workflow that cannot start immediately says so', () => {
+    const type = testApp._app.$registry.get(
+      'databaseWorkflowActionType',
+      'start_workflow'
+    )
+
+    const message = type.getErrorMessage(
+      { id: 1, type: 'start_workflow', service: { workflow_id: 12 } },
+      { database: database() }
+    )
+
+    // `$t` returns the key here, so the copy is pinned against the locale
+    // file separately.
+    expect(message).toBe('serviceType.errorWorkflowNotImmediateDispatch')
+    expect(en.serviceType.errorWorkflowNotImmediateDispatch).toBe(
+      'The selected workflow must use a trigger that can start immediately.'
+    )
   })
 })
