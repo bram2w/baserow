@@ -19,6 +19,7 @@ from baserow.contrib.database.workflow_actions.exceptions import (
 from baserow.contrib.database.workflow_actions.models import (
     CoreHTTPRequestWorkflowAction,
     CoreSMTPEmailWorkflowAction,
+    CoreStartWorkflowWorkflowAction,
     LocalBaserowCreateRowWorkflowAction,
     LocalBaserowDeleteRowWorkflowAction,
     LocalBaserowUpdateRowWorkflowAction,
@@ -32,6 +33,7 @@ from baserow.contrib.database.workflow_actions.types import DatabaseWorkflowActi
 from baserow.contrib.integrations.core.service_types import (
     CoreHTTPRequestServiceType,
     CoreSMTPEmailServiceType,
+    CoreStartWorkflowServiceType,
 )
 from baserow.contrib.integrations.local_baserow.service_types import (
     LocalBaserowDeleteRowServiceType,
@@ -770,6 +772,18 @@ class SlackWriteMessageWorkflowActionType(DatabaseWorkflowServiceActionType):
                 service_type.model_class, integration=None
             )
         }
+
+
+class CoreStartWorkflowWorkflowActionType(DatabaseWorkflowServiceActionType):
+    """
+    Queues an automation workflow. Nothing leaves the installation and
+    nothing comes back, so it is neither external nor a source of data for
+    the actions after it.
+    """
+
+    type = "start_workflow"
+    model_class = CoreStartWorkflowWorkflowAction
+    service_type = CoreStartWorkflowServiceType.type
 
 
 class OpenUrlWorkflowActionType(DatabaseWorkflowActionType):
