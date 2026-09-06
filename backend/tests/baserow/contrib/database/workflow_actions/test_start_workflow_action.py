@@ -405,3 +405,90 @@ def test_a_snapshot_and_its_restore_keep_the_workflow(data_fixture):
     (restored_action,) = DatabaseWorkflowAction.objects.filter(field=restored_button)
 
     assert restored_action.specific.service.specific.workflow_id == workflow.id
+
+
+@pytest.mark.django_db
+def test_creating_with_a_workflow_from_another_workspace_is_refused(
+    api_client, data_fixture
+):
+    """
+    The create path reads the field from the values the service injects, not
+    from an existing action, so it reaches the guard by its own route.
+    """
+
+    from rest_framework.status import HTTP_400_BAD_REQUEST
+
+    from baserow.contrib.automation.nodes.node_types import CoreManualTriggerNodeType
+
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    button_field = data_fixture.create_button_field(table=table)
+    elsewhere = data_fixture.create_workspace(user=user)
+    automation = data_fixture.create_automation_application(
+        user=user, workspace=elsewhere
+    )
+    workflow = data_fixture.create_automation_workflow(
+        user=user,
+        automation=automation,
+        trigger_type=CoreManualTriggerNodeType.type,
+    )
+
+    response = api_client.post(
+        reverse(
+            "api:database:workflow_actions:list",
+            kwargs={"field_id": button_field.id},
+        ),
+        {"type": "start_workflow", "service": {"workflow_id": workflow.id}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert CoreStartWorkflowWorkflowAction.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_swapping_type_to_a_workflow_from_another_workspace_is_refused(
+    api_client, data_fixture
+):
+    """
+    Changing an action's type prepares the values with no instance at all, so
+    the field arrives from a third place again.
+    """
+
+    from rest_framework.status import HTTP_400_BAD_REQUEST
+
+    from baserow.contrib.automation.nodes.node_types import CoreManualTriggerNodeType
+    from baserow.contrib.database.workflow_actions.models import (
+        OpenUrlWorkflowAction,
+    )
+
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    button_field = data_fixture.create_button_field(table=table)
+    elsewhere = data_fixture.create_workspace(user=user)
+    automation = data_fixture.create_automation_application(
+        user=user, workspace=elsewhere
+    )
+    workflow = data_fixture.create_automation_workflow(
+        user=user,
+        automation=automation,
+        trigger_type=CoreManualTriggerNodeType.type,
+    )
+    action = data_fixture.create_database_workflow_action(
+        OpenUrlWorkflowAction, field=button_field
+    )
+
+    response = api_client.patch(
+        reverse(
+            "api:database:workflow_actions:item",
+            kwargs={"workflow_action_id": action.id},
+        ),
+        {"type": "start_workflow", "service": {"workflow_id": workflow.id}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    action.refresh_from_db()
+    assert action.specific.get_type().type == "open_url"
