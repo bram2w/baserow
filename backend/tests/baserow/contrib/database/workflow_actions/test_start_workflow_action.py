@@ -1,12 +1,84 @@
+from unittest.mock import patch
+
 from django.urls import reverse
 
 import pytest
 from rest_framework.status import HTTP_200_OK
 
+from baserow.contrib.automation.nodes.node_types import CoreManualTriggerNodeType
+from baserow.contrib.automation.workflows.operations import (
+    ReadAutomationWorkflowOperationType,
+)
+from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.workflow_actions.models import (
     CoreStartWorkflowWorkflowAction,
+    DatabaseWorkflowAction,
 )
+from baserow.contrib.database.workflow_actions.registries import (
+    database_workflow_action_type_registry,
+)
+from baserow.contrib.integrations.core.models import CoreStartWorkflowService
 from baserow.core.deferred_callbacks import deferred_callback_context
+from baserow.core.exceptions import PermissionException
+from baserow.core.handler import CoreHandler
+from baserow.core.registries import ImportExportConfig
+
+
+def _denying(operation_name: str):
+    """A `check_permissions` that refuses one operation and defers the rest."""
+
+    real = CoreHandler.check_permissions
+
+    def check_permissions(self, actor, name, *args, **kwargs):
+        if name == operation_name:
+            raise PermissionException(f"cannot {name}")
+        return real(self, actor, name, *args, **kwargs)
+
+    return check_permissions
+
+
+def _duplicate_config(user=None) -> ImportExportConfig:
+    """What every copy that stays inside the instance is imported with."""
+
+    return ImportExportConfig(
+        include_permission_data=True,
+        reduce_disk_space_usage=False,
+        is_duplicate=True,
+        exclude_sensitive_data=False,
+        copied_by=user,
+    )
+
+
+def _button(data_fixture, user, workspace):
+    database = data_fixture.create_database_application(user=user, workspace=workspace)
+    table = data_fixture.create_database_table(user=user, database=database)
+    return data_fixture.create_button_field(table=table)
+
+
+def _workflow(data_fixture, user, workspace, **kwargs):
+    automation = data_fixture.create_automation_application(
+        user=user, workspace=workspace
+    )
+    kwargs.setdefault("trigger_type", CoreManualTriggerNodeType.type)
+    return data_fixture.create_automation_workflow(
+        user=user, automation=automation, **kwargs
+    )
+
+
+def _action_starting(data_fixture, field, workflow):
+    """A start workflow action on `field`, already pointed at `workflow`."""
+
+    action = data_fixture.create_database_workflow_action(
+        CoreStartWorkflowWorkflowAction, field=field
+    )
+    CoreStartWorkflowService.objects.filter(id=action.service_id).update(
+        workflow=workflow
+    )
+    # The fixture handed the action its exact service instance, which the FK
+    # descriptor now caches. A row updated by id, not through it, needs this
+    # to reach an export.
+    action.service.refresh_from_db()
+    return action
 
 
 @pytest.mark.django_db
@@ -213,7 +285,7 @@ def test_an_imported_action_drops_a_workflow_from_elsewhere(data_fixture):
 
 
 @pytest.mark.django_db
-def test_an_imported_action_keeps_a_workflow_of_this_workspace(data_fixture):
+def test_a_duplicated_action_keeps_the_workflow(data_fixture):
     from baserow.contrib.automation.nodes.node_types import CoreManualTriggerNodeType
     from baserow.contrib.database.workflow_actions.registries import (
         database_workflow_action_type_registry,
@@ -249,7 +321,12 @@ def test_an_imported_action_keeps_a_workflow_of_this_workspace(data_fixture):
 
     copy_field = data_fixture.create_button_field(table=table)
     with deferred_callback_context():
-        imported = action_type.import_serialized(copy_field, exported, {})
+        imported = action_type.import_serialized(
+            copy_field,
+            exported,
+            {},
+            import_export_config=_duplicate_config(user),
+        )
 
     assert imported.service.specific.workflow_id == workflow.id
 
@@ -492,3 +569,131 @@ def test_swapping_type_to_a_workflow_from_another_workspace_is_refused(
     assert response.status_code == HTTP_400_BAD_REQUEST
     action.refresh_from_db()
     assert action.specific.get_type().type == "open_url"
+
+
+@pytest.mark.django_db
+def test_a_file_import_drops_a_workflow_whose_id_collides(data_fixture):
+    """
+    Ids are one global sequence, so a file written on another installation can
+    name a workflow number the destination workspace happens to own. Living in
+    the workspace is not the same as being the workflow somebody chose: kept,
+    the button would start work nobody picked.
+    """
+
+    user = data_fixture.create_user()
+    source_workspace = data_fixture.create_workspace(user=user)
+    source_field = _button(data_fixture, user, source_workspace)
+    source_workflow = _workflow(data_fixture, user, source_workspace)
+    action = _action_starting(data_fixture, source_field, source_workflow)
+
+    action_type = database_workflow_action_type_registry.get("start_workflow")
+    exported = action_type.export_serialized(action.specific)
+
+    destination_workspace = data_fixture.create_workspace(user=user)
+    destination_field = _button(data_fixture, user, destination_workspace)
+    unrelated = _workflow(data_fixture, user, destination_workspace)
+    # What the collision looks like in the file: a number this workspace owns,
+    # written by an installation that meant something else by it.
+    exported["service"]["workflow_id"] = unrelated.id
+
+    with deferred_callback_context():
+        imported = action_type.import_serialized(destination_field, exported, {})
+
+    assert imported.service.specific.workflow_id is None
+
+
+@pytest.mark.django_db
+def test_an_import_keeps_a_workflow_it_remapped_itself(data_fixture):
+    """
+    The automation came along in the same import, so the id the file named has
+    a copy here and the reference is this installation's.
+    """
+
+    user = data_fixture.create_user()
+    source_workspace = data_fixture.create_workspace(user=user)
+    source_field = _button(data_fixture, user, source_workspace)
+    source_workflow = _workflow(data_fixture, user, source_workspace)
+    action = _action_starting(data_fixture, source_field, source_workflow)
+
+    action_type = database_workflow_action_type_registry.get("start_workflow")
+    exported = action_type.export_serialized(action.specific)
+
+    destination_workspace = data_fixture.create_workspace(user=user)
+    destination_field = _button(data_fixture, user, destination_workspace)
+    imported_workflow = _workflow(data_fixture, user, destination_workspace)
+    id_mapping = {
+        "automation_workflows": {source_workflow.id: imported_workflow.id},
+    }
+
+    with deferred_callback_context():
+        imported = action_type.import_serialized(
+            destination_field, exported, id_mapping
+        )
+
+    assert imported.service.specific.workflow_id == imported_workflow.id
+
+
+@pytest.mark.django_db
+def test_an_imported_action_drops_a_workflow_that_cannot_be_dispatched(data_fixture):
+    """
+    A save with this id would be refused, so a copy may not hold it either, or
+    every click on the copy fails at dispatch with nothing said in the editor.
+    """
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    field = _button(data_fixture, user, workspace)
+    workflow = _workflow(data_fixture, user, workspace, create_trigger=False)
+    action = _action_starting(data_fixture, field, workflow)
+
+    action_type = database_workflow_action_type_registry.get("start_workflow")
+    exported = action_type.export_serialized(action.specific)
+
+    copy_field = data_fixture.create_button_field(table=field.table)
+    with deferred_callback_context():
+        imported = action_type.import_serialized(
+            copy_field,
+            exported,
+            {},
+            import_export_config=_duplicate_config(user),
+        )
+
+    assert imported.service.specific.workflow_id is None
+
+
+@pytest.mark.django_db
+def test_duplicating_a_table_keeps_a_workflow_the_duplicator_can_read(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    button_field = _button(data_fixture, user, workspace)
+    workflow = _workflow(data_fixture, user, workspace)
+    _action_starting(data_fixture, button_field, workflow)
+
+    duplicated = TableHandler().duplicate_table(user, button_field.table)
+
+    (copied,) = DatabaseWorkflowAction.objects.filter(field__table=duplicated)
+    assert copied.specific.service.specific.workflow_id == workflow.id
+
+
+@pytest.mark.django_db
+def test_duplicating_a_table_drops_a_workflow_the_duplicator_cannot_read(data_fixture):
+    """
+    A role can reach the database without reaching the automation. The copy
+    must not hand its owner a button that starts what they may not read.
+    """
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    button_field = _button(data_fixture, user, workspace)
+    workflow = _workflow(data_fixture, user, workspace)
+    _action_starting(data_fixture, button_field, workflow)
+
+    with patch.object(
+        CoreHandler,
+        "check_permissions",
+        _denying(ReadAutomationWorkflowOperationType.type),
+    ):
+        duplicated = TableHandler().duplicate_table(user, button_field.table)
+
+    (copied,) = DatabaseWorkflowAction.objects.filter(field__table=duplicated)
+    assert copied.specific.service.specific.workflow_id is None

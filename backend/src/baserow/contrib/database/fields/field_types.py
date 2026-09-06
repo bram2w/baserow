@@ -8270,6 +8270,18 @@ class ButtonFieldType(ReadOnlyFieldType):
             "database_fields": UnchangedIdMapping(),
         }
 
+        # A duplicated field and a type change both stay in the workspace they
+        # came from, so a reference outside the copied scope is still the right
+        # one. Said the way every other copy says it, since that is what the
+        # service and action types read to tell a copy from a file import.
+        import_export_config = ImportExportConfig(
+            include_permission_data=True,
+            reduce_disk_space_usage=False,
+            is_duplicate=True,
+            exclude_sensitive_data=False,
+            copied_by=user,
+        )
+
         # Opened only because the action import registers a deferred callback,
         # which raises when no context is active.
         with deferred_callback_context():
@@ -8278,5 +8290,9 @@ class ButtonFieldType(ReadOnlyFieldType):
                     serialized_action["type"]
                 )
                 action_type.import_serialized(
-                    field, serialized_action, id_mapping, copied_by=user
+                    field,
+                    serialized_action,
+                    id_mapping,
+                    import_export_config=import_export_config,
+                    copied_by=user,
                 )
