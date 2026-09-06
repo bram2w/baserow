@@ -169,6 +169,7 @@ describe('start workflow action form', () => {
 
     const message = startWorkflowType().getErrorMessage(missingWorkflowAction, {
       database: database(),
+      workspace: { id: WORKSPACE_ID },
     })
 
     // `$t` returns the key here, so the copy is pinned separately. The
@@ -189,6 +190,7 @@ describe('start workflow action form', () => {
 
     const message = startWorkflowType().getErrorMessage(missingWorkflowAction, {
       database: database(),
+      workspace: { id: WORKSPACE_ID },
     })
 
     expect(message).toBeNull()

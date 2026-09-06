@@ -779,7 +779,9 @@ export class CoreStartWorkflowWorkflowActionType extends DatabaseWorkflowActionS
     }
 
     const workflowId = workflowAction.service?.workflow_id
-    const workspace = this.app.$store.getters['workspace/getSelected']
+    // From the caller rather than the selected workspace: the list already
+    // knows which workspace the button field is in.
+    const workspace = applicationContext?.workspace
     // Quiet until the applications have been fetched: no automation is in the
     // store then either, and an empty store is what a load still running
     // looks like. Every automation of the workspace carries its workflows in
