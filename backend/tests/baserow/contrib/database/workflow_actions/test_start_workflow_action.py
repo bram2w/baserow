@@ -356,3 +356,52 @@ def test_a_click_on_an_unconfigured_action_tells_the_clicker(data_fixture):
         DatabaseWorkflowActionService().dispatch_workflow_actions(user, field, row)
 
     assert "not configured" in exc.value.message
+
+
+@pytest.mark.django_db
+def test_a_snapshot_and_its_restore_keep_the_workflow(data_fixture):
+    """
+    A snapshot is imported with `workspace=None` on purpose, to hide it from
+    the system. The workspace check has to read the workspace the import is
+    for instead, or the snapshot's copy loses the workflow and the restore
+    hands back a button that starts nothing.
+    """
+
+    from baserow.contrib.automation.nodes.node_types import CoreManualTriggerNodeType
+    from baserow.contrib.database.workflow_actions.models import DatabaseWorkflowAction
+    from baserow.contrib.integrations.core.models import CoreStartWorkflowService
+    from baserow.core.snapshots.handler import SnapshotHandler
+    from baserow.core.utils import Progress
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace, order=1)
+    table = data_fixture.create_database_table(database=database, name="T")
+    button_field = data_fixture.create_button_field(table=table, name="btn")
+    automation = data_fixture.create_automation_application(
+        user=user, workspace=workspace
+    )
+    workflow = data_fixture.create_automation_workflow(
+        user=user,
+        automation=automation,
+        trigger_type=CoreManualTriggerNodeType.type,
+    )
+    action = data_fixture.create_database_workflow_action(
+        CoreStartWorkflowWorkflowAction, field=button_field
+    )
+    CoreStartWorkflowService.objects.filter(id=action.service_id).update(
+        workflow=workflow
+    )
+    action.service.refresh_from_db()
+
+    snapshot = data_fixture.create_snapshot(
+        snapshot_from_application=database, name="snap", created_by=user
+    )
+    SnapshotHandler().perform_create(snapshot, Progress(total=100))
+    snapshot.refresh_from_db()
+    restored = SnapshotHandler().perform_restore(snapshot, Progress(total=100))
+
+    restored_button = restored.table_set.get(name="T").field_set.get(name="btn")
+    (restored_action,) = DatabaseWorkflowAction.objects.filter(field=restored_button)
+
+    assert restored_action.specific.service.specific.workflow_id == workflow.id

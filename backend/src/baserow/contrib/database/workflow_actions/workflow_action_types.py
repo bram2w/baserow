@@ -812,10 +812,20 @@ class CoreStartWorkflowWorkflowActionType(DatabaseWorkflowServiceActionType):
             self._check_workflow(workflow_id, field)
         return super().prepare_values(values, user, instance)
 
-    def _check_workflow(self, workflow_id: int, field) -> None:
+    def _check_workflow(
+        self,
+        workflow_id: int,
+        field,
+        id_mapping: Optional[Dict[str, Any]] = None,
+    ) -> None:
         """
         :param workflow_id: The workflow the caller wants to start.
         :param field: The button field the action belongs to.
+        :param id_mapping: The import's mapping when this runs during an
+            import, which names the workspace being imported for. A snapshot
+            is created with `workspace=None` on the application on purpose,
+            to hide it from the system, so the field alone cannot say which
+            workspace the copy belongs to.
         :raises serializers.ValidationError: When the workflow is not in the
             field's workspace. Worded exactly as the service type words a
             workflow that does not exist, so walking the ids says nothing
@@ -825,6 +835,8 @@ class CoreStartWorkflowWorkflowActionType(DatabaseWorkflowServiceActionType):
         from baserow.contrib.automation.workflows.models import AutomationWorkflow
 
         workspace_id = field.table.database.workspace_id if field else None
+        if workspace_id is None and id_mapping is not None:
+            workspace_id = id_mapping.get("import_workspace_id")
         in_this_workspace = workspace_id is not None and (
             AutomationWorkflow.objects.filter(
                 id=workflow_id, automation__workspace_id=workspace_id
@@ -848,8 +860,12 @@ class CoreStartWorkflowWorkflowActionType(DatabaseWorkflowServiceActionType):
         """
         Drops a workflow the copy may not start: an export made elsewhere
         names it by a number that can exist here too, and an unmapped id is
-        the normal case for a template or a restored snapshot. The action
+        the normal case for a file import or a template install. The action
         then says what it needs, as an unconfigured one does.
+
+        A snapshot and its restore stay inside the workspace they came from,
+        so they keep the workflow. `id_mapping` is what says which workspace
+        that is while the snapshot's own application has none.
         """
 
         created_instance = super().import_serialized(
@@ -859,7 +875,9 @@ class CoreStartWorkflowWorkflowActionType(DatabaseWorkflowServiceActionType):
         if service.workflow_id is None:
             return created_instance
         try:
-            self._check_workflow(service.workflow_id, created_instance.field)
+            self._check_workflow(
+                service.workflow_id, created_instance.field, id_mapping
+            )
         except serializers.ValidationError:
             service.workflow = None
             service.save(update_fields=["workflow"])
