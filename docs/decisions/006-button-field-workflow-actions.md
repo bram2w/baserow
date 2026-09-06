@@ -121,6 +121,12 @@ that they reach outside this installation, so only clicks containing one spend t
 limit's budget, and the lock guarding the row is sized for how long they may take: each
 service type says, and a click waits for the sum of its actions.
 
+**Amendment (phase 4d, September 2026).** A fourth service-backed type landed alongside
+them: start workflow, which queues an automation run and returns rather than reaching
+outside this installation, so it is deliberately not one of the three external types
+above. Section 5 records why, and what not being external changes for the rate limit and
+the lock.
+
 The Slack action posts to `chat.postMessage` through a bot token held by a
 `slack_bot` integration on the field's own database. It answers with `ok`, `channel` and
 `ts`, the message reference a later action can write into a row or thread against.
