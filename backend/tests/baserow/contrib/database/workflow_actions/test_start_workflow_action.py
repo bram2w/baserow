@@ -37,13 +37,18 @@ def _denying(operation_name: str):
     return check_permissions
 
 
-def _duplicate_config(user=None) -> ImportExportConfig:
-    """What every copy that stays inside the instance is imported with."""
+def _duplicate_config(user=None, is_template=False) -> ImportExportConfig:
+    """
+    What every copy that stays inside the instance is imported with. A template
+    install says the same, plus `is_template`, since its ids were written on
+    another installation.
+    """
 
     return ImportExportConfig(
         include_permission_data=True,
         reduce_disk_space_usage=False,
         is_duplicate=True,
+        is_template=is_template,
         exclude_sensitive_data=False,
         copied_by=user,
     )
@@ -697,3 +702,36 @@ def test_duplicating_a_table_drops_a_workflow_the_duplicator_cannot_read(data_fi
 
     (copied,) = DatabaseWorkflowAction.objects.filter(field__table=duplicated)
     assert copied.specific.service.specific.workflow_id is None
+
+
+@pytest.mark.django_db
+def test_a_template_install_drops_a_workflow_whose_id_collides(data_fixture):
+    """
+    A template is imported as a duplicate, so its ids read as this instance's
+    unless the install says otherwise. It was written on another installation,
+    where the same number meant a different workflow.
+    """
+
+    user = data_fixture.create_user()
+    source_workspace = data_fixture.create_workspace(user=user)
+    source_field = _button(data_fixture, user, source_workspace)
+    source_workflow = _workflow(data_fixture, user, source_workspace)
+    action = _action_starting(data_fixture, source_field, source_workflow)
+
+    action_type = database_workflow_action_type_registry.get("start_workflow")
+    exported = action_type.export_serialized(action.specific)
+
+    destination_workspace = data_fixture.create_workspace(user=user)
+    destination_field = _button(data_fixture, user, destination_workspace)
+    unrelated = _workflow(data_fixture, user, destination_workspace)
+    exported["service"]["workflow_id"] = unrelated.id
+
+    with deferred_callback_context():
+        imported = action_type.import_serialized(
+            destination_field,
+            exported,
+            {},
+            import_export_config=_duplicate_config(is_template=True),
+        )
+
+    assert imported.service.specific.workflow_id is None

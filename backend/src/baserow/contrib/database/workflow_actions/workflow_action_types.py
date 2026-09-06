@@ -812,22 +812,17 @@ class CoreStartWorkflowWorkflowActionType(DatabaseWorkflowServiceActionType):
             self._check_workflow(workflow_id, field)
         return super().prepare_values(values, user, instance)
 
-    def _check_workflow(
-        self,
-        workflow_id: int,
-        field,
-        id_mapping: Optional[Dict[str, Any]] = None,
-    ) -> None:
+    def _check_workflow(self, workflow_id: int, field) -> None:
         """
         :param workflow_id: The workflow the caller wants to start.
-        :param field: The button field the action belongs to.
-        :param id_mapping: The import's mapping when this runs during an
-            import, which names the workspace being imported for.
+        :param field: The button field the action belongs to. A saved action
+            always has one with a workspace, so this needs none of the import
+            path's ways of naming the workspace.
         :raises serializers.ValidationError: When this button may not start it.
         """
 
         reason = self._unusable_workflow_reason(
-            workflow_id, self._workspace_id_for(field, id_mapping)
+            workflow_id, self._workspace_id_for(field, None)
         )
         if reason is not None:
             raise serializers.ValidationError(reason)
@@ -952,8 +947,9 @@ class CoreStartWorkflowWorkflowActionType(DatabaseWorkflowServiceActionType):
         installation's own only when this import remapped it, meaning the
         automation came along in the same import, or when the data never left
         the instance: a duplicated field, table or application, a snapshot and
-        its restore. A file import or a template install keeps neither, and
-        the workflow goes.
+        its restore. A file import keeps neither, and so does a template
+        install, which is imported as a duplicate but was written elsewhere.
+        The workflow then goes.
 
         :param workflow: The workflow the copy came with.
         :param exported_workflow_id: The id the export named it by.
@@ -965,7 +961,9 @@ class CoreStartWorkflowWorkflowActionType(DatabaseWorkflowServiceActionType):
         """
 
         remapped = exported_workflow_id in id_mapping.get("automation_workflows", {})
-        stayed_here = getattr(import_export_config, "is_duplicate", False)
+        stayed_here = getattr(
+            import_export_config, "is_duplicate", False
+        ) and not getattr(import_export_config, "is_template", False)
         if not (remapped or stayed_here):
             return False
 
