@@ -8248,6 +8248,12 @@ class ButtonFieldType(ReadOnlyFieldType):
         if isinstance(from_field, ButtonField):
             return
 
+        # A restore of what the conversion away from a button backed up, not a
+        # copy. `user` is still passed as the one asking: what an action
+        # carries is checked against them here too, so converting back does not
+        # hand someone a credential or a workflow they may not read (ADR 006
+        # section 5). Restoring an action somebody else configured can
+        # therefore come back with that reference dropped.
         self._recreate_workflow_actions(
             to_field, to_field_kwargs.get("workflow_actions") or [], user=user
         )

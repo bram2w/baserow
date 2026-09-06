@@ -9,6 +9,7 @@ from baserow.contrib.automation.nodes.node_types import CoreManualTriggerNodeTyp
 from baserow.contrib.automation.workflows.operations import (
     ReadAutomationWorkflowOperationType,
 )
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.workflow_actions.models import (
     CoreStartWorkflowWorkflowAction,
@@ -702,6 +703,25 @@ def test_duplicating_a_table_drops_a_workflow_the_duplicator_cannot_read(data_fi
 
     (copied,) = DatabaseWorkflowAction.objects.filter(field__table=duplicated)
     assert copied.specific.service.specific.workflow_id is None
+
+
+@pytest.mark.django_db
+def test_duplicating_a_field_keeps_the_workflow(data_fixture):
+    """
+    Field duplication skips the serialization import path and builds its own
+    config, so nothing else covers it holding the workflow.
+    """
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    button_field = _button(data_fixture, user, workspace)
+    workflow = _workflow(data_fixture, user, workspace)
+    _action_starting(data_fixture, button_field, workflow)
+
+    duplicated, _ = FieldHandler().duplicate_field(user, button_field)
+
+    (copied,) = DatabaseWorkflowAction.objects.filter(field=duplicated)
+    assert copied.specific.service.specific.workflow_id == workflow.id
 
 
 @pytest.mark.django_db
