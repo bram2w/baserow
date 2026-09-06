@@ -342,11 +342,38 @@ application itself, which the generic integration API already supports once the
 application type declares `supports_integrations`. The Slack action is the first to use
 this.
 
+**Amendment (phase 4d, September 2026).** A fourth service-backed type, start workflow,
+reuses the `CoreStartWorkflowServiceType` the builder and automation already have:
+dispatch queues the automation's own Celery run and returns at once, so a click
+experiences it like any other row action rather than like the external ones above. That
+is also why `is_external` stays `False` here: the flag means "reaches outside this
+installation," and it is what redacts a failure's message, sizes the dispatch lock's TTL,
+and decides which clicks spend the button rate limit's budget. Queuing Celery work inside
+Baserow does none of those things, so a button that starts workflows is not charged
+against that budget at all — the automation module's own limits on how much it will run
+are what bound it instead.
+
+The shared service type takes only a workflow id, not the row, so the clicked row is
+never handed to the workflow it starts. A workflow that needs the row waits for the
+phase-6 trigger node, which is designed to carry it as payload.
+
+The service type resolves that id through
+`AutomationWorkflowService().get_workflow(user, workflow_id)`, which checks only that the
+configuring user may read the workflow — and a user is commonly a member of more than one
+workspace. Left alone, that would let an action name a workflow the button itself has no
+business reaching. So the action type checks the workspace itself, the same defensive
+shape section 6 already uses for an integration outside the field's own database:
+`prepare_values` refuses a workflow that is not in the button field's own workspace on
+save, and import blanks one that arrived pointing outside it rather than trust what the
+file claims, leaving the action to report itself unconfigured like any other action
+missing what it needs.
+
 Each action type names the integration types it may carry in an
 `allowed_integration_types` allow-list. It is empty unless the action needs a credential
-of its own, which is why the row actions, the HTTP request and the email action all
-carry nothing: a row action acts as the clicker, an HTTP request carries its own
-headers, and email sends through the instance's own mail server. No action type lists
+of its own, which is why the row actions, the HTTP request, the email action and start
+workflow all carry nothing: a row action acts as the clicker, an HTTP request carries its
+own headers, email sends through the instance's own mail server, and start workflow
+reaches automation by workflow id rather than by credential. No action type lists
 `local_baserow`, because its `authorized_user` would replace the clicker as the acting
 user, which is what this section forbids.
 
