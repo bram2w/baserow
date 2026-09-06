@@ -393,6 +393,7 @@ import {
   CoreHTTPRequestWorkflowActionType,
   CoreSMTPEmailWorkflowActionType,
   SlackWriteMessageWorkflowActionType,
+  CoreStartWorkflowWorkflowActionType,
 } from '@baserow/modules/database/workflowActionTypes'
 
 export default defineNuxtPlugin({
@@ -1176,6 +1177,10 @@ export default defineNuxtPlugin({
     $registry.register(
       'databaseWorkflowActionType',
       new SlackWriteMessageWorkflowActionType(context)
+    )
+    $registry.register(
+      'databaseWorkflowActionType',
+      new CoreStartWorkflowWorkflowActionType(context)
     )
 
     $registry.registerNamespace('fieldContextItem')

@@ -34,6 +34,7 @@ describe('databaseWorkflowActionType registry', () => {
       'open_url',
       'slack_write_message',
       'smtp_email',
+      'start_workflow',
     ])
   })
 
@@ -49,7 +50,20 @@ describe('databaseWorkflowActionType registry', () => {
       'local_baserow_update_row',
       'local_baserow_delete_row',
       'slack_write_message',
+      'start_workflow',
     ])
+  })
+
+  test('start workflow is offered last and returns nothing to read', () => {
+    const type = testApp._app.$registry.get(
+      'databaseWorkflowActionType',
+      'start_workflow'
+    )
+
+    expect(type.getOrder()).toBe(70)
+    // Fire and forget: it must not appear as a node in the data explorer.
+    expect(type.producesResult).toBe(false)
+    expect(type.getDataSchema({}, { service: {} })).toBe(null)
   })
 
   test('each type shows the icon and label the design gives it', () => {

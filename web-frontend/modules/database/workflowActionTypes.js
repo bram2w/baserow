@@ -9,6 +9,7 @@ import {
 import {
   CoreHTTPRequestServiceType,
   CoreSMTPEmailServiceType,
+  CoreStartWorkflowServiceType,
 } from '@baserow/modules/integrations/core/serviceTypes'
 import { SlackWriteMessageServiceType } from '@baserow/modules/integrations/slack/serviceTypes'
 import { SlackBotIntegrationType } from '@baserow/modules/integrations/slack/integrationTypes'
@@ -734,5 +735,35 @@ export class SlackWriteMessageWorkflowActionType extends DatabaseExternalWorkflo
         },
       },
     }
+  }
+}
+
+/**
+ * Queues an automation workflow. The click hands the workflow over and reads
+ * nothing back, so it is not an external action and describes no result.
+ */
+export class CoreStartWorkflowWorkflowActionType extends DatabaseWorkflowActionServiceType {
+  static getType() {
+    return 'start_workflow'
+  }
+
+  getOrder() {
+    return 70
+  }
+
+  get serviceType() {
+    return this.app.$registry.get(
+      'service',
+      CoreStartWorkflowServiceType.getType()
+    )
+  }
+
+  get producesResult() {
+    return false
+  }
+
+  /** Nothing comes back, so the explorer must not offer a node for it. */
+  getDataSchema() {
+    return null
   }
 }
