@@ -554,7 +554,11 @@ class TestRunExperimentForFullDataset:
             mock_kb_cls.return_value.can_search.return_value = True
 
             run_experiment_for(
-                "kuma-database", "groq:test-model", runs=2, experiment_name="exp-name"
+                "kuma-database",
+                "groq:test-model",
+                runs=2,
+                experiment_name="exp-name",
+                runner_run_id="local-run",
             )
 
         assert len(client.experiments.run_experiment_calls) == 1
@@ -564,6 +568,8 @@ class TestRunExperimentForFullDataset:
         assert call_kwargs["experiment_name"] == "exp-name"
         assert call_kwargs["experiment_metadata"] == {
             "model": "groq:test-model",
+            "harness_version": 2,
+            "runner_run_id": "local-run",
             "model_settings": _expected_model_settings("groq:test-model"),
             "judge_model": "groq:openai/gpt-oss-120b",
             "prompts": {"kuma-system-prompt": "abc123"},
@@ -605,6 +611,8 @@ class TestRunExperimentForFullDataset:
         call_kwargs = client.experiments.run_experiment_calls[0]
         assert call_kwargs["experiment_metadata"] == {
             "model": "groq:test-model",
+            "harness_version": 2,
+            "runner_run_id": None,
             "model_settings": _expected_model_settings("groq:test-model"),
             "judge_model": "groq:openai/gpt-oss-120b",
             "prompts": {},
@@ -1054,6 +1062,8 @@ class TestRunExperimentForCaseSubset:
         assert create_kwargs["repetitions"] == 1
         assert create_kwargs["experiment_metadata"] == {
             "model": "groq:test-model",
+            "harness_version": 2,
+            "runner_run_id": None,
             "model_settings": _expected_model_settings("groq:test-model"),
             "judge_model": "groq:openai/gpt-oss-120b",
             "case_ids": ["db/case-1"],

@@ -1,6 +1,6 @@
 """Kuma-docs eval dataset: search_user_docs knowledge-base Q&A.
 
-All 18 cases share one scenario — the check depends on the knowledge base,
+All 64 cases share one scenario — the check depends on the knowledge base,
 not on any scenario state — so only the (question, source patterns, answer
 keywords) triple varies per case.
 """

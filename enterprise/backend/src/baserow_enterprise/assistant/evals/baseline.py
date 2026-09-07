@@ -53,9 +53,7 @@ mutation ($ids: [ID!]!) {
 
 
 def _api_base() -> str:
-    base = os.getenv("PHOENIX_ENDPOINT") or getattr(
-        settings, "BASEROW_ASSISTANT_PHOENIX_URL", ""
-    )
+    base = getattr(settings, "BASEROW_ASSISTANT_PHOENIX_URL", "")
     return base.rstrip("/")
 
 

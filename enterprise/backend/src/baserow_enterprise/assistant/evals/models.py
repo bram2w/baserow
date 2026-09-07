@@ -19,8 +19,6 @@ EVAL_MODELS: tuple[EvalModel, ...] = (
     EvalModel("groq:qwen/qwen3.6-27b", "Qwen3.6 27B (Groq)", "GROQ_API_KEY"),
     EvalModel("openai:gpt-5-mini", "GPT-5 mini (OpenAI)", "OPENAI_API_KEY"),
     EvalModel("openai:gpt-5.4-mini", "GPT-5.4 mini (OpenAI)", "OPENAI_API_KEY"),
-    EvalModel("openai:gpt-5.6-luna", "GPT-5.6 Luna (OpenAI)", "OPENAI_API_KEY"),
-    EvalModel("openai:gpt-5.6-terra", "GPT-5.6 Terra (OpenAI)", "OPENAI_API_KEY"),
     EvalModel(
         "google:gemini-3.6-flash",
         "Gemini 3.6 Flash (Google)",

@@ -1,11 +1,13 @@
 import asyncio
 import threading
 import time
+from unittest.mock import patch
 
 import pytest
 from pydantic_ai import Agent
 from pydantic_ai.models.test import TestModel
 
+from baserow_enterprise.assistant.agents import main_agent
 from baserow_enterprise.assistant.assistant import build_agent_run_context
 from baserow_enterprise.assistant.deps import ToolHelpers
 from baserow_enterprise.assistant.evals import registry
@@ -21,6 +23,8 @@ from baserow_enterprise.assistant.evals.harness import (
 from baserow_enterprise.assistant.evals.prompt_sync import SYNCED_PROMPTS
 from baserow_enterprise.assistant.evals.scenarios import make_fixtures
 from baserow_enterprise.assistant.evals.types import CheckResult, EvalCase, EvalScenario
+from baserow_enterprise.assistant.model_profiles import ORCHESTRATOR, get_model_settings
+from baserow_enterprise.assistant.retrying_model import RetryingModel
 
 
 @pytest.fixture(autouse=True)
@@ -97,6 +101,38 @@ class TestRunCase:
         @registry.register_scenario("harness-test-scenario")
         def _build(fixtures) -> EvalScenario:
             return EvalScenario(user=user, workspace=workspace, ui_context=None)
+
+    def test_uses_production_model_wrapper_and_settings(self, data_fixture):
+        user = data_fixture.create_user()
+        workspace = data_fixture.create_workspace(user=user)
+        self._register_scenario(user, workspace)
+        case = EvalCase(
+            id="harness-test/settings",
+            dataset="harness-test",
+            prompt="say hi",
+            scenario="harness-test-scenario",
+            checks=lambda case, scenario, output: [],
+        )
+        model = "groq:openai/gpt-oss-120b"
+        test_model = TestModel(custom_output_text="hello", call_tools=[])
+        with (
+            main_agent.override(model=test_model),
+            patch(
+                "baserow_enterprise.assistant.retrying_model._resolve_model",
+                return_value=test_model,
+            ),
+            patch(
+                "baserow_enterprise.assistant.evals.harness.main_agent.run",
+                wraps=main_agent.run,
+            ) as run,
+        ):
+            output, _ = run_case(case, model)
+
+        assert output.answer == "hello"
+        assert isinstance(run.call_args.kwargs["model"], RetryingModel)
+        assert run.call_args.kwargs["model_settings"] == get_model_settings(
+            model, ORCHESTRATOR
+        )
 
     def test_returns_output_and_prepends_budget_check(self):
         fixtures = make_fixtures()

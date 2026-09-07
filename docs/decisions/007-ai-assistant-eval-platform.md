@@ -1,6 +1,6 @@
 # 007: AI assistant eval and observability platform
 
-**Status:** accepted (2026-08-21). Tracing, the eval framework (65 cases in 5
+**Status:** accepted (2026-08-21). Tracing, the eval framework (111 cases in 5
 datasets), and the runner are shipped (2026-08-24); the pytest harness is
 retired. Judge evaluators are shipped for `kuma-docs` (`answer_quality`);
 other datasets don't have a judge yet.

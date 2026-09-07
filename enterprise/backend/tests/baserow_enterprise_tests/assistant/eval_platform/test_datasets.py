@@ -10,6 +10,10 @@ import json
 import pytest
 
 from baserow_enterprise.assistant.deps import AgentMode
+from baserow_enterprise.assistant.evals.datasets.core import (
+    _check_creates_automation,
+    _creates_automation_scenario,
+)
 from baserow_enterprise.assistant.evals.registry import (
     all_cases,
     cases_by_dataset,
@@ -17,8 +21,37 @@ from baserow_enterprise.assistant.evals.registry import (
     load_all,
 )
 from baserow_enterprise.assistant.evals.scenarios import make_fixtures
+from baserow_enterprise.assistant.evals.types import EvalCase, EvalRunOutput
 
 load_all()
+
+
+@pytest.mark.django_db
+def test_create_automation_check_ignores_previous_runs(data_fixture):
+    case = EvalCase(
+        id="core/creates-automation",
+        dataset="kuma-core",
+        prompt="Create automation",
+        scenario="core-creates-automation",
+        checks=_check_creates_automation,
+    )
+    output = EvalRunOutput(
+        answer="Created it",
+        messages=[],
+        tool_calls=["create_builders"],
+        tool_error_count=0,
+        tool_error_hint="",
+        sources=[],
+        request_count=1,
+        duration_s=0,
+    )
+    for _ in range(2):
+        scenario = _creates_automation_scenario(make_fixtures())
+        data_fixture.create_automation_application(
+            workspace=scenario.workspace, name="Overdue Task Reminder"
+        )
+        assert all(check.passed for check in case.checks(case, scenario, output))
+
 
 _OUR_DATASETS = {
     "kuma-core",

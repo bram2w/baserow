@@ -29,6 +29,7 @@ from baserow_enterprise.assistant.evals.types import (
     EvalCase,
     EvalRunOutput,
 )
+from baserow_enterprise.assistant.model_profiles import ORCHESTRATOR, get_model_settings
 from baserow_enterprise.assistant.onboarding import onboarding_suggestions_agent
 from baserow_enterprise.assistant.tools.automation import agents as automation_agents
 from baserow_enterprise.assistant.tools.builder import agents as builder_agents
@@ -284,7 +285,11 @@ def run_case(
                     main_agent.run(
                         user_prompt=case.prompt,
                         deps=ctx.deps,
-                        model=model,
+                        model=ctx.model if isinstance(model, str) else model,
+                        model_settings=get_model_settings(
+                            model if isinstance(model, str) else model.model_name,
+                            ORCHESTRATOR,
+                        ),
                         usage_limits=UsageLimits(request_limit=case.max_iters),
                         toolsets=[ctx.toolset],
                     ),

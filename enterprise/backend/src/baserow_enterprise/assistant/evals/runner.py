@@ -42,6 +42,7 @@ from baserow_enterprise.assistant.evals.registry import (
     load_all,
 )
 from baserow_enterprise.assistant.evals.run import (
+    HARNESS_VERSION,
     UI_CASE_PREFIX,
     prompt_from_example_input,
     run_experiment_for,
@@ -231,6 +232,7 @@ def _run_one(state: RunnerState, executor: Callable[..., Any]) -> None:
             prompt_overrides=state.prompt_overrides,
             notes=state.notes,
             control=state.control,
+            runner_run_id=state.id,
         )
         state.status = "stopped" if state.control.stopping else "done"
     except Exception as exc:
@@ -526,6 +528,8 @@ def _settings_label(metadata: dict[str, Any]) -> str | None:
     """Compact "temperature=0.3 reasoning=none" for the results table."""
 
     settings = metadata.get("model_settings") or {}
+    if settings and metadata.get("harness_version") != HARNESS_VERSION:
+        return "model settings unverified (legacy harness)"
     parts = [
         f"{key.replace('openai_reasoning_effort', 'reasoning')}={settings[key]}"
         for key in _REPORTED_SETTINGS
@@ -555,9 +559,11 @@ def _results_json() -> bytes:
     """Cross-dataset results: every experiment's mean scores, per dataset."""
 
     public_url = _phoenix_public_url()
+    states = {state.id: state for state in recent_runs()}
     datasets = []
     for name, cases in cases_by_dataset().items():
         experiments: list[dict[str, Any]] = []
+        summaries: list[dict[str, Any]] = []
         node_id = _dataset_ids.get(name)
         if node_id:
             try:
@@ -567,6 +573,7 @@ def _results_json() -> bytes:
                 summaries = []
             for node in summaries:
                 metadata = node.get("metadata") or {}
+                state = states.get(metadata.get("runner_run_id"))
                 git_label = "@".join(
                     part
                     for part in (
@@ -578,7 +585,9 @@ def _results_json() -> bytes:
                 # Imported baselines carry no traces, so live latency/cost
                 # fall back to the totals frozen at capture time.
                 totals = metadata.get("baseline_totals") or {}
-                run_count = node.get("runCount") or totals.get("run_count")
+                run_count = node.get("runCount")
+                if run_count is None:
+                    run_count = totals.get("run_count")
                 avg_latency_ms = node.get("averageRunLatencyMs") or totals.get(
                     "average_run_latency_ms"
                 )
@@ -594,6 +603,10 @@ def _results_json() -> bytes:
                         "id": node["id"],
                         "name": node.get("name") or "",
                         "created_at": node.get("createdAt"),
+                        "status": state.status if state else "unknown",
+                        "run_count": run_count,
+                        "prompts": metadata.get("prompts"),
+                        "prompt_overrides": metadata.get("prompt_overrides", []),
                         "model": metadata.get("model"),
                         "git_label": git_label or None,
                         "notes": metadata.get("notes"),
@@ -618,6 +631,27 @@ def _results_json() -> bytes:
                         ),
                     }
                 )
+        for state in states.values():
+            if state.dataset != name or state.status == "done":
+                continue
+            if any(
+                (node.get("metadata") or {}).get("runner_run_id") == state.id
+                for node in summaries
+            ):
+                continue
+            experiments.insert(
+                0,
+                {
+                    "id": state.id,
+                    "name": state.experiment_name or state.id,
+                    "created_at": state.created_at.isoformat(),
+                    "model": state.model,
+                    "status": state.status,
+                    "run_count": state.control.completed,
+                    "scores": {},
+                },
+            )
+        experiments.sort(key=lambda e: e.get("created_at") or "", reverse=True)
         datasets.append(
             {"name": name, "case_count": len(cases), "experiments": experiments}
         )
@@ -631,7 +665,7 @@ def _render_index() -> str:
     phoenix_public_url = _phoenix_public_url()
     runs = recent_runs()
     for state in runs:
-        if state.status == "done":
+        if state.status == "done" and state.experiment_info is not None:
             state.phoenix_link = _phoenix_link(
                 state.experiment_info, phoenix_public_url
             )

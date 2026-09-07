@@ -40,10 +40,17 @@ Open the dataset in Phoenix → select the `baseline` experiment and yours →
 Phoenix compares within one dataset. For **all datasets in one view**, use
 the runner page's **Results** tab: pick an experiment name (a run started
 from the page lands under the same name in every dataset it touched) and see
-each dataset's mean scores with deltas against the baseline, plus a
-case-weighted overall row; each dataset links to the per-case compare.
+each dataset's mean scores, execution status, and recorded run count. Baseline
+deltas and the overall aggregate are deferred; use Phoenix for per-case
+comparisons. Skipped and ungraded cases are excluded from scores, so check their
+coverage in Phoenix even when the selected cases match.
 
-The tab also shows **time and cost** per dataset and in total: time is the
+The committed snapshot predates the fix that applies production orchestrator
+settings and retries in evals. Its settings are unverified. A fresh baseline is
+part of the comparison follow-up; the old snapshot remains useful as historical
+per-case output.
+
+The tab also shows **time and cost** per dataset: time is the
 sum of run latencies (the runner executes sequentially, so it approximates
 wall clock), cost and tokens come from Phoenix's per-model token prices
 (Settings → Models for unknown models). A quality-neutral change that halves

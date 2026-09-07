@@ -436,7 +436,7 @@ class TestAssistantEvalSyncCommand:
 class TestGetPhoenixClient:
     def test_raises_when_no_url_configured(self, settings, monkeypatch):
         settings.BASEROW_ASSISTANT_PHOENIX_URL = ""
-        monkeypatch.delenv("PHOENIX_ENDPOINT", raising=False)
+        monkeypatch.setenv("PHOENIX_ENDPOINT", "http://unrelated-project")
 
         with pytest.raises(ImproperlyConfigured, match="ai-assistant-tracing.md"):
             get_phoenix_client()
@@ -454,7 +454,9 @@ class TestGetPhoenixClient:
             base_url="http://phoenix:6006", api_key=None
         )
 
-    def test_env_vars_take_precedence_over_settings(self, settings, monkeypatch):
+    def test_unrelated_phoenix_endpoint_cannot_override_baserow(
+        self, settings, monkeypatch
+    ):
         settings.BASEROW_ASSISTANT_PHOENIX_URL = "http://settings-url"
         settings.BASEROW_ASSISTANT_PHOENIX_API_KEY = "settings-key"
         monkeypatch.setenv("PHOENIX_ENDPOINT", "http://env-url")
@@ -464,5 +466,5 @@ class TestGetPhoenixClient:
             get_phoenix_client()
 
         mock_client_cls.assert_called_once_with(
-            base_url="http://env-url", api_key="env-key"
+            base_url="http://settings-url", api_key="env-key"
         )

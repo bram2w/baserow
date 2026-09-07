@@ -133,9 +133,22 @@ hashes, so branch/model comparisons are filterable in Phoenix.
 | `kuma-automation` | 7 | workflows, triggers, nodes |
 | `kuma-docs` | 64 | docs Q&A via `search_user_docs`, incl. cannot-do guardrail cases |
 
-`kuma-docs` needs the knowledge base: the `embeddings` service (`ai` profile)
-plus a synced KB. When unavailable, those cases are recorded as skipped, not
-failed.
+`kuma-docs` needs the `embeddings` service (`ai` profile) and a knowledge base
+synced into **`baserow_evals`**, independently of the main development database.
+Set `BASEROW_EMBEDDINGS_API_URL=http://embeddings:80` in `.env.docker-dev`,
+recreate the runner to pick it up, then seed its database using the existing
+command:
+
+```bash
+just dc-dev up -d embeddings assistant-eval-runner
+just dc-dev exec assistant-eval-runner just b manage sync_knowledge_base
+```
+
+The command indexes the repository's `enterprise/backend/website_export.csv`.
+Wait for it to finish before running docs cases. If it reports unavailable
+embeddings or pgvector, fix that prerequisite and run it again. When the knowledge
+base is unavailable, docs cases are skipped: a finished executor does not mean
+the evals passed. Check the run log and per-case Phoenix results.
 
 ## Writing a new eval
 
@@ -295,11 +308,7 @@ model applies to the whole agent, sub-agents included.
 
 Per-model overrides live in `_MODEL_PROFILES` in
 `enterprise/backend/src/baserow_enterprise/assistant/model_profiles.py`, keyed
-by exact model name. The `gpt-5.6` family is pinned to
-`openai_reasoning_effort="none"` there: it reasons by default, and OpenAI
-rejects function tools alongside reasoning on `/v1/chat/completions`. That is
-a workaround — the real fix is to resolve OpenAI models through the Responses
-API, which is what pydantic-ai's own `openai:` prefix already defaults to.
+by exact model name.
 
 ### Why a model is missing from the dropdown
 
@@ -309,7 +318,7 @@ environment. A model with no key is silently absent rather than listed and
 broken, so adding one to `EVAL_MODELS` is not enough to make it appear.
 
 `docker-compose.dev.yml` forwards `GROQ_API_KEY`, `OPENAI_API_KEY`,
-`ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, and `GOOGLE_API_KEY` to
+`ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `GOOGLE_API_KEY`, and `OPENROUTER_API_KEY` to
 `assistant-eval-runner` from `.env.docker-dev`. Set the variable the model's
 entry names, then restart the service.
 

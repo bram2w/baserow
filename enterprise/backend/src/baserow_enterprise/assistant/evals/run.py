@@ -65,6 +65,8 @@ from baserow_enterprise.assistant.tools.search_user_docs.handler import (
 )
 
 UI_CASE_PREFIX = "ui:"
+# Version 1 recorded production settings without applying them to the agent.
+HARNESS_VERSION = 2
 
 _PROMPT_INPUT_KEYS = ("prompt", "question", "input", "message")
 
@@ -411,6 +413,7 @@ def _experiment_metadata(
 
     metadata = {
         "model": model,
+        "harness_version": HARNESS_VERSION,
         "model_settings": dict(get_model_settings(model, ORCHESTRATOR)),
         "judge_model": get_judge_model(),
         **extra,
@@ -433,12 +436,16 @@ def run_experiment_for(
     prompt_overrides: list[str] | None = None,
     notes: str | None = None,
     control: RunControl | None = None,
+    runner_run_id: str | None = None,
 ) -> Any:
     """Run (or resume as a subset) a Phoenix experiment for an eval dataset.
 
     ``prompt_overrides`` names synced prompts to run with their latest
     Phoenix version instead of the code constant. ``control`` receives
     per-case progress and is polled between cases so a run can be stopped.
+
+    :param runner_run_id: Optional local submission ID for correlating status
+        with Phoenix results; experiment names can be reused.
     """
 
     load_all()
@@ -459,6 +466,7 @@ def run_experiment_for(
             prompt_texts,
             notes,
             control,
+            runner_run_id,
         )
 
     # Phoenix re-enters the task on retry, so cap each example at its repetitions.
@@ -487,7 +495,12 @@ def run_experiment_for(
         task=task,
         evaluators=[checklist, passed, answer_quality],
         experiment_name=experiment_name,
-        experiment_metadata=_experiment_metadata(model, prompt_texts, notes),
+        experiment_metadata=_experiment_metadata(
+            model,
+            prompt_texts,
+            notes,
+            runner_run_id=runner_run_id,
+        ),
         repetitions=runs,
     )
 
@@ -503,6 +516,7 @@ def _run_case_subset(
     prompt_texts: dict[str, str] | None = None,
     notes: str | None = None,
     control: RunControl | None = None,
+    runner_run_id: str | None = None,
 ) -> Any:
     control = control or RunControl()
     dataset = client.datasets.get_dataset(dataset=dataset_name)
@@ -544,7 +558,11 @@ def _run_case_subset(
         dataset_version_id=dataset.version_id,
         experiment_name=experiment_name,
         experiment_metadata=_experiment_metadata(
-            model, prompt_texts, notes, case_ids=case_ids
+            model,
+            prompt_texts,
+            notes,
+            case_ids=case_ids,
+            runner_run_id=runner_run_id,
         ),
         repetitions=runs,
     )

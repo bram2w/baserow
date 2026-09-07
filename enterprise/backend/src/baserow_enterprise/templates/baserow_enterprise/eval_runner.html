@@ -155,7 +155,7 @@
     th, td { border-bottom: 1px solid var(--border); padding: 0.45rem 0.7rem; text-align: left; }
     th { background: #fbfbfc; color: var(--muted); font-weight: 600; }
     tr:last-child td { border-bottom: none; }
-    .status-done { color: var(--ok); font-weight: 600; }
+    .status-done { color: var(--muted); font-weight: 600; }
     .status-failed { color: var(--bad); font-weight: 600; }
     .status-running, .status-queued { color: var(--warn); font-weight: 600; }
     .status-stopped { color: var(--muted); font-weight: 600; }
@@ -263,10 +263,6 @@
       border-radius: 3px;
     }
     .score-cell > span { position: relative; }
-    .delta { font-size: 0.75rem; margin-left: 0.3rem; }
-    .delta.up { color: var(--ok); }
-    .delta.down { color: var(--bad); }
-    .delta.flat { color: var(--muted); }
     #results-experiment {
       padding: 0.15rem 0.3rem;
       border: 1px solid var(--border);
@@ -380,7 +376,7 @@
               <span>
                 Experiment
                 <select id="results-experiment"></select>
-                compared to <strong>baseline</strong>
+                per dataset
               </span>
               <span>All datasets in one view; click a dataset for the per-case compare.</span>
             </div>
@@ -472,7 +468,7 @@
             <td data-col="cases">{% if run.case_ids %}{{ run.case_ids|join:", " }}{% else %}(all){% endif %}</td>
             <td data-col="model">{{ run.model }}{% if run.git_label %} <small>({{ run.git_label }})</small>{% endif %}{% if run.prompt_overrides %} <small>[prompts: {{ run.prompt_overrides|join:", " }}]</small>{% endif %}</td>
             <td data-col="runs">{{ run.runs }}</td>
-            <td data-col="status" class="status-{{ run.status }}">{{ run.status }}</td>
+            <td data-col="status" class="status-{{ run.status }}">{% if run.status == "done" %}finished{% elif run.status == "failed" %}crashed{% else %}{{ run.status }}{% endif %}</td>
             <td data-col="started">{{ run.started_at|date:"M d, H:i:s"|default:"" }}</td>
             <td data-col="finished">{{ run.finished_at|date:"M d, H:i:s"|default:"" }}</td>
             <td data-col="result">
@@ -610,6 +606,7 @@
 
     var METRICS = ["checklist", "passed", "answer_quality"];
     var resultsData = null;
+    var resultsLoading = false;
 
     var modelSelect = document.getElementById("model-select");
     var modelCustomLabel = document.getElementById("model-custom-label");
@@ -627,6 +624,8 @@
     updateModelUi();
 
     function loadResults() {
+      if (resultsLoading) return;
+      resultsLoading = true;
       fetch("/results.json")
         .then(function (response) { return response.json(); })
         .then(function (data) {
@@ -636,7 +635,8 @@
         })
         .catch(function () {
           document.getElementById("results-body").textContent = "Could not load results from Phoenix.";
-        });
+        })
+        .finally(function () { resultsLoading = false; });
     }
 
     function experimentsByName(dataset) {
@@ -654,7 +654,7 @@
       var names = [];
       resultsData.forEach(function (dataset) {
         dataset.experiments.forEach(function (experiment) {
-          if (experiment.name === "baseline" || seen[experiment.name]) return;
+          if (seen[experiment.name]) return;
           seen[experiment.name] = true;
           names.push({ name: experiment.name, created_at: experiment.created_at });
         });
@@ -683,16 +683,7 @@
       return tokens + " tok";
     }
 
-    function deltaBadge(delta, formatted, lowerIsBetter) {
-      var badge = document.createElement("span");
-      var good = lowerIsBetter ? delta < 0 : delta > 0;
-      var flat = Math.abs(delta) < 1e-9;
-      badge.className = "delta " + (flat ? "flat" : good ? "up" : "down");
-      badge.textContent = (delta >= 0 ? "+" : "−") + formatted;
-      return badge;
-    }
-
-    function usageCell(row, value, baselineValue, formatter, subText) {
+    function usageCell(row, value, formatter, subText) {
       var cell = document.createElement("td");
       if (value == null) {
         cell.textContent = "–";
@@ -702,12 +693,6 @@
       var val = document.createElement("span");
       val.textContent = formatter(value);
       cell.appendChild(val);
-      if (baselineValue != null) {
-        cell.appendChild(document.createTextNode(" "));
-        cell.appendChild(
-          deltaBadge(value - baselineValue, formatter(Math.abs(value - baselineValue)), true)
-        );
-      }
       if (subText) {
         var sub = document.createElement("small");
         sub.style.display = "block";
@@ -718,7 +703,7 @@
       row.appendChild(cell);
     }
 
-    function scoreCell(row, value, baselineValue) {
+    function scoreCell(row, value) {
       var cell = document.createElement("td");
       cell.className = "score";
       if (value == null) {
@@ -735,13 +720,6 @@
       var val = document.createElement("span");
       val.textContent = value.toFixed(2);
       wrap.appendChild(val);
-      if (baselineValue != null) {
-        var delta = value - baselineValue;
-        var badge = document.createElement("span");
-        badge.className = "delta " + (delta >= 0.02 ? "up" : delta <= -0.02 ? "down" : "flat");
-        badge.textContent = (delta >= 0 ? "+" : "") + delta.toFixed(2);
-        wrap.appendChild(badge);
-      }
       cell.appendChild(wrap);
       row.appendChild(cell);
     }
@@ -755,18 +733,16 @@
       }
       var table = document.createElement("table");
       var head = document.createElement("tr");
-      ["Dataset", "Cases", "Model"].concat(METRICS).concat(["time", "cost"]).forEach(function (label) {
+      ["Dataset", "Runs", "Model", "Status"].concat(METRICS).concat(["time", "cost"]).forEach(function (label) {
         var th = document.createElement("th");
         th.textContent = label;
         head.appendChild(th);
       });
       table.appendChild(head);
 
-      var totals = { casesRun: 0, scores: {}, weights: {}, baseline: {}, baselineWeights: {} };
       resultsData.forEach(function (dataset) {
         var byName = experimentsByName(dataset);
         var experiment = byName[selected];
-        var baseline = byName["baseline"];
         var row = document.createElement("tr");
         var nameCell = document.createElement("td");
         if (experiment && experiment.link) {
@@ -781,96 +757,47 @@
         }
         row.appendChild(nameCell);
         var casesCell = document.createElement("td");
-        casesCell.textContent = String(dataset.case_count);
+        casesCell.textContent = experiment && experiment.run_count != null ? String(experiment.run_count) : "–";
         row.appendChild(casesCell);
         var modelCell = document.createElement("td");
         if (experiment) {
           modelCell.textContent = (experiment.model || "") +
             (experiment.git_label ? " (" + experiment.git_label + ")" : "");
-          [experiment.settings, experiment.notes].forEach(function (text) {
+          var overrides = experiment.prompt_overrides || [];
+          var promptNote = overrides.length ? "Prompt overrides: " + overrides.join(", ") : "";
+          [experiment.settings, experiment.notes, promptNote].forEach(function (text) {
             if (!text) return;
             var line = document.createElement("small");
             line.className = "experiment-note";
             line.textContent = text;
+            if (text === promptNote) line.title = JSON.stringify(experiment.prompts || {});
             modelCell.appendChild(line);
           });
         } else {
           modelCell.textContent = "not run";
         }
         row.appendChild(modelCell);
+        var stateCell = document.createElement("td");
+        stateCell.textContent = experiment ? statusText(experiment) : "not run";
+        row.appendChild(stateCell);
         METRICS.forEach(function (metric) {
           var value = experiment ? experiment.scores[metric] : null;
-          var baseValue = baseline ? baseline.scores[metric] : null;
-          scoreCell(row, value == null ? null : value, baseValue == null ? null : baseValue);
-          if (value != null) {
-            totals.scores[metric] = (totals.scores[metric] || 0) + value * dataset.case_count;
-            totals.weights[metric] = (totals.weights[metric] || 0) + dataset.case_count;
-          }
-          if (baseValue != null) {
-            totals.baseline[metric] = (totals.baseline[metric] || 0) + baseValue * dataset.case_count;
-            totals.baselineWeights[metric] = (totals.baselineWeights[metric] || 0) + dataset.case_count;
-          }
+          scoreCell(row, value == null ? null : value);
         });
-        var time = experiment ? experiment.time_s : null;
-        var baseTime = baseline ? baseline.time_s : null;
-        usageCell(row, time, baseTime, fmtDuration);
-        var cost = experiment ? experiment.cost : null;
-        var baseCost = baseline ? baseline.cost : null;
+        usageCell(row, experiment ? experiment.time_s : null, fmtDuration);
         usageCell(
-          row, cost, baseCost,
+          row, experiment ? experiment.cost : null,
           function (value) { return "$" + value.toFixed(2); },
           experiment && experiment.tokens != null ? fmtTokens(experiment.tokens) : null
         );
-        ["time_s", "cost"].forEach(function (key) {
-          if (experiment && experiment[key] != null) {
-            totals[key] = (totals[key] || 0) + experiment[key];
-          }
-          if (baseline && baseline[key] != null) {
-            totals["baseline_" + key] = (totals["baseline_" + key] || 0) + baseline[key];
-          }
-        });
-        if (experiment && experiment.tokens != null) {
-          totals.tokens = (totals.tokens || 0) + experiment.tokens;
-        }
-        if (experiment) totals.casesRun += dataset.case_count;
         table.appendChild(row);
       });
-
-      if (totals.casesRun) {
-        var totalRow = document.createElement("tr");
-        ["Overall (case-weighted)", String(totals.casesRun), ""].forEach(function (label) {
-          var cell = document.createElement("td");
-          cell.textContent = label;
-          if (label === "Overall (case-weighted)") cell.style.fontWeight = "600";
-          totalRow.appendChild(cell);
-        });
-        METRICS.forEach(function (metric) {
-          var value = totals.weights[metric] ? totals.scores[metric] / totals.weights[metric] : null;
-          var baseValue = totals.baselineWeights[metric]
-            ? totals.baseline[metric] / totals.baselineWeights[metric] : null;
-          scoreCell(totalRow, value, baseValue);
-        });
-        usageCell(
-          totalRow,
-          totals.time_s != null ? totals.time_s : null,
-          totals.baseline_time_s != null ? totals.baseline_time_s : null,
-          fmtDuration
-        );
-        usageCell(
-          totalRow,
-          totals.cost != null ? totals.cost : null,
-          totals.baseline_cost != null ? totals.baseline_cost : null,
-          function (value) { return "$" + value.toFixed(2); },
-          totals.tokens != null ? fmtTokens(totals.tokens) : null
-        );
-        table.appendChild(totalRow);
-      }
 
       body.textContent = "";
       body.appendChild(table);
       var note = document.createElement("p");
       note.className = "results-note";
-      note.textContent = "Scores are experiment means per dataset; answer_quality exists only where a judge ran. Overall weighs scores by case count and sums time/cost. Time is the sum of run latencies; cost comes from Phoenix's token prices (baseline values are frozen at capture time).";
+      note.textContent = "Finished means the executor completed, not that cases passed. Scores exclude skipped or ungraded cases; inspect the per-case Phoenix comparison before drawing conclusions. Runs includes repetitions. Time is the sum of run latencies; cost uses Phoenix token prices.";
       body.appendChild(note);
     }
 
@@ -1061,6 +988,9 @@
     }
 
     function statusText(run) {
+      if (run.status === "done") return "finished";
+      if (run.status === "failed") return "crashed";
+      if (run.status === "unknown") return "completion unknown";
       if (run.status !== "running") return run.status;
       if (run.stopping) return "stopping…";
       if (!run.total) return "running";
@@ -1323,6 +1253,7 @@
         stopAll.textContent = stopping ? "Stopping…" : "Stop all";
         // Idle means nothing here can change on its own: back off hard.
         schedulePoll(active.length ? ACTIVE_POLL_MS : IDLE_POLL_MS);
+        if (activeTab() === RESULTS_TAB) loadResults();
         await refreshLog(
           active.some(function (run) { return run.id === expandedRunId; })
         );

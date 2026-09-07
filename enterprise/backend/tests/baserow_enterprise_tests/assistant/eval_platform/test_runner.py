@@ -79,6 +79,39 @@ def _call_wsgi(
 
 
 class TestIndexPage:
+    def test_results_distinguish_running_and_queued_submissions(self, monkeypatch):
+        _register_case("database/list-tables")
+        _register_case("core/list-databases", dataset="kuma-core")
+        running = runner.submit_run("kuma-database", "m", experiment_name="same-name")
+        running.status = "running"
+        queued = runner.submit_run("kuma-core", "m", experiment_name="same-name")
+        monkeypatch.setattr(runner, "_dataset_ids", {"kuma-database": "ds"})
+        monkeypatch.setattr(
+            runner,
+            "_experiment_summaries",
+            lambda _: [
+                {
+                    "id": "exp",
+                    "name": "same-name",
+                    "runCount": 1,
+                    "metadata": {"runner_run_id": running.id},
+                }
+            ],
+        )
+
+        datasets = {
+            d["name"]: d for d in json.loads(runner._results_json())["datasets"]
+        }
+
+        running_result = datasets["kuma-database"]["experiments"]
+        assert len(running_result) == 1
+        assert running_result[0]["status"] == "running"
+        assert running_result[0]["run_count"] == 1
+        queued_result = datasets["kuma-core"]["experiments"][0]
+        assert queued_result["id"] == queued.id
+        assert queued_result["status"] == "queued"
+        assert queued_result["scores"] == {}
+
     def test_get_index_returns_200_and_lists_registered_dataset(self):
         _register_case("database/list-tables")
         app = runner.make_wsgi_app()
@@ -445,6 +478,12 @@ class TestSubmitRunRoute:
         assert by_id[running.id].status == "failed"
         assert by_id[running.id].error == "interrupted by runner restart"
 
+        runner._render_index()
+        runner._save_history()
+        runner.load_history()
+        restored = next(run for run in runner.recent_runs() if run.id == done.id)
+        assert restored.phoenix_link == "http://localhost:6060/datasets/x"
+
     def test_cross_dataset_selection_fans_out_one_run_per_dataset(self):
         _register_case("database/fanout-a")
         _register_case("core/fanout-b", dataset="kuma-core")
@@ -610,6 +649,7 @@ class TestSubmitRunWorker:
             prompt_overrides=None,
             notes=None,
             control=state.control,
+            runner_run_id=state.id,
         )
 
     def test_state_transitions_to_failed_on_exception(self):
@@ -1038,11 +1078,11 @@ class TestCustomModelChoice:
             {
                 "case_ids": ["database/case-1"],
                 "model": [runner.CUSTOM_MODEL_CHOICE],
-                "model_custom": ["openai:gpt-5.6-luna"],
+                "model_custom": ["openai:gpt-5-mini"],
             }
         )
 
-        assert states[0].model == "openai:gpt-5.6-luna"
+        assert states[0].model == "openai:gpt-5-mini"
 
 
 class TestNotes:

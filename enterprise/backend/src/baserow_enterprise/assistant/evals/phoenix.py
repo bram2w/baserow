@@ -11,15 +11,13 @@ if TYPE_CHECKING:
 
 
 def get_phoenix_client() -> "Client":
-    """Build a Phoenix client from env vars, falling back to Django settings."""
+    """Build a Phoenix client using Baserow's configured endpoint."""
 
-    base_url = os.getenv("PHOENIX_ENDPOINT") or getattr(
-        settings, "BASEROW_ASSISTANT_PHOENIX_URL", ""
-    )
+    base_url = getattr(settings, "BASEROW_ASSISTANT_PHOENIX_URL", "")
     if not base_url:
         raise ImproperlyConfigured(
             "No Phoenix endpoint configured. Set BASEROW_ASSISTANT_PHOENIX_URL "
-            "(or the PHOENIX_ENDPOINT env var) — see "
+            "— see "
             "docs/development/ai-assistant-tracing.md."
         )
 
