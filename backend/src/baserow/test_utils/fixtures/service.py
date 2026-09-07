@@ -140,6 +140,9 @@ class ServiceFixtures:
         return self.create_service(AIAgentService, **kwargs)
 
     def create_slack_write_message_service(self, **kwargs):
+        # A bot with no token is refused before the dispatch sends anything.
+        if "integration" not in kwargs:
+            kwargs.setdefault("integration_args", {}).setdefault("token", "xoxb-test")
         return self.create_service(SlackWriteMessageService, **kwargs)
 
     def create_core_iterator_service(self, **kwargs):

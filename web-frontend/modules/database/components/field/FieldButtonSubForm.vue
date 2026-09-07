@@ -225,6 +225,10 @@ export default {
      * `shown` both land on the first open.
      */
     async onShow() {
+      // The list is not remounted between opens, so reopening the editor is
+      // the retry for an integrations fetch that failed. Reports its own
+      // failure, so nothing here waits on it.
+      this.$refs.actionList?.fetchIntegrations()
       if (
         !this.defaultValues.id ||
         this.defaultValues.type !== 'button' ||
