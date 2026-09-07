@@ -249,13 +249,10 @@
   "textElementForm": {
     "textTitle": "Text",
     "textPlaceholder": "Enter text...",
-    "textError": "The value is invalid."
-  },
-  "textFormatSelector": {
-    "label": "Format",
-    "plain": "Plain text",
-    "markdown": "Markdown",
-    "labelFormat": "Label format"
+    "textError": "The value is invalid.",
+    "textFormatTypeLabel": "Format",
+    "textFormatTypePlain": "Plain text",
+    "textFormatTypeMarkdown": "Markdown"
   },
   "orientations": {
     "label": "Orientation",
@@ -765,8 +762,7 @@
     "display": "Display",
     "dropdown": "Dropdown",
     "checkbox": "Checkbox",
-    "radio": "Radio",
-    "optionFormat": "Option format"
+    "radio": "Radio"
   },
   "dropdown": {
     "empty": "No options available"
@@ -787,8 +783,7 @@
     "buttonColor": "Button color",
     "refreshFieldsFromDataSource": "refresh fields from data source",
     "buttonLoadMoreLabel": "Show more label",
-    "propertySelectorMissingArrays": "No multiple valued fields found to use as rows.",
-    "nameFormat": "Name format"
+    "propertySelectorMissingArrays": "No multiple valued fields found to use as rows."
   },
   "tableElement": {
     "showMore": "Show more"
@@ -875,9 +870,7 @@
     "titleLabel": "Title",
     "titlePlaceholder": "Enter text...",
     "descriptionLabel": "Description",
-    "descriptionPlaceholder": "Enter text...",
-    "titleFormat": "Title format",
-    "descriptionFormat": "Description format"
+    "descriptionPlaceholder": "Enter text..."
   },
   "event": {
     "addAction": "add action",

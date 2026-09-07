@@ -10,7 +10,6 @@ from baserow.api.services.serializers import (
     PolymorphicServiceSerializer,
     PublicPolymorphicServiceSerializer,
 )
-from baserow.contrib.builder.constants import TextFormats
 from baserow.contrib.builder.data_sources.builder_dispatch_context import (
     BuilderDispatchContext,
 )
@@ -70,53 +69,25 @@ class NotificationWorkflowActionType(BuilderWorkflowActionType):
     type = "notification"
     model_class = NotificationWorkflowAction
     simple_formula_fields = ["title", "description"]
-    serializer_field_names = [
-        "title",
-        "title_format",
-        "description",
-        "description_format",
-    ]
+    serializer_field_names = ["title", "description"]
     serializer_field_overrides = {
         "title": FormulaSerializerField(
             help_text="The title of the notification. Must be an formula.",
             required=False,
         ),
-        "title_format": serializers.ChoiceField(
-            choices=TextFormats.choices,
-            default=TextFormats.PLAIN,
-            required=False,
-            help_text=NotificationWorkflowAction._meta.get_field(
-                "title_format"
-            ).help_text,
-        ),
         "description": FormulaSerializerField(
             help_text="The description of the notification. Must be an formula.",
             required=False,
-        ),
-        "description_format": serializers.ChoiceField(
-            choices=TextFormats.choices,
-            default=TextFormats.PLAIN,
-            required=False,
-            help_text=NotificationWorkflowAction._meta.get_field(
-                "description_format"
-            ).help_text,
         ),
     }
 
     class SerializedDict(BuilderWorkflowActionDict):
         title: BaserowFormulaObject
-        title_format: str
         description: BaserowFormulaObject
-        description_format: str
 
     @property
     def allowed_fields(self):
-        return super().allowed_fields + [
-            "title",
-            "title_format",
-            "description",
-            "description_format",
-        ]
+        return super().allowed_fields + ["title", "description"]
 
     def get_pytest_params(self, pytest_data_fixture) -> Dict[str, BaserowFormulaObject]:
         return {

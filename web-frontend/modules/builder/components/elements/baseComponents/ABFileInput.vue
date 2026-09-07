@@ -12,9 +12,7 @@
       @keydown.enter.prevent="triggerFileInput"
       @keydown.space.prevent="triggerFileInput"
     >
-      <div>
-        <slot name="help-text">{{ helpText }}</slot>
-      </div>
+      <div>{{ helpText }}</div>
       <input
         ref="fileInputRef"
         type="file"
@@ -173,12 +171,7 @@ export default {
     onDragLeave() {
       this.isDragOver = false
     },
-    triggerFileInput(event) {
-      // A link inside the help text navigates on its own, it shouldn't also
-      // open the file picker.
-      if (event?.target?.closest?.('a')) {
-        return
-      }
+    triggerFileInput() {
       this.$refs.fileInputRef.click()
     },
     removeFile(index) {

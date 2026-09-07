@@ -1,6 +1,18 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <TextFormatSelector v-model="values.format" />
+    <FormGroup
+      :label="$t('textElementForm.textFormatTypeLabel')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
+      <RadioGroup
+        v-model="values.format"
+        type="button"
+        :options="textFormatTypeOptions"
+      >
+      </RadioGroup>
+    </FormGroup>
 
     <CustomStyleButton
       v-model="values.styles"
@@ -28,14 +40,12 @@ import InjectedFormulaInput from '@baserow/modules/core/components/formula/Injec
 import elementForm from '@baserow/modules/builder/mixins/elementForm'
 import { TEXT_FORMAT_TYPES } from '@baserow/modules/builder/enums'
 import CustomStyleButton from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyleButton'
-import TextFormatSelector from '@baserow/modules/builder/components/elements/components/forms/TextFormatSelector'
 
 export default {
   name: 'TextElementForm',
   components: {
     InjectedFormulaInput,
     CustomStyleButton,
-    TextFormatSelector,
   },
   mixins: [elementForm],
   data() {
@@ -46,6 +56,16 @@ export default {
         format: TEXT_FORMAT_TYPES.PLAIN,
         styles: {},
       },
+      textFormatTypeOptions: [
+        {
+          value: TEXT_FORMAT_TYPES.PLAIN,
+          label: this.$t('textElementForm.textFormatTypePlain'),
+        },
+        {
+          value: TEXT_FORMAT_TYPES.MARKDOWN,
+          label: this.$t('textElementForm.textFormatTypeMarkdown'),
+        },
+      ],
     }
   },
   computed: {

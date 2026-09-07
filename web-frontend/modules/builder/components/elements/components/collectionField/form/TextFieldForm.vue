@@ -1,6 +1,5 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <TextFormatSelector v-model="values.format" horizontal />
     <FormGroup
       small-label
       :label="$t('textFieldForm.fieldValueLabel')"
@@ -19,11 +18,7 @@
           :config-block-types="['table', 'typography']"
           :theme="baseTheme"
           :on-styles-changed="onFieldStylesChanged"
-          :extra-args="{
-            onlyCell: true,
-            onlyBody: values.format === TEXT_FORMAT_TYPES.PLAIN,
-            noAlignment: true,
-          }"
+          :extra-args="{ onlyCell: true, onlyBody: true, noAlignment: true }"
           variant="normal"
         />
       </template>
@@ -35,27 +30,19 @@
 import collectionFieldForm from '@baserow/modules/builder/mixins/collectionFieldForm'
 import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
 import CustomStyleButton from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyleButton'
-import { TEXT_FORMAT_TYPES } from '@baserow/modules/builder/enums'
-import TextFormatSelector from '@baserow/modules/builder/components/elements/components/forms/TextFormatSelector'
 
 export default {
   name: 'TextField',
-  components: { InjectedFormulaInput, CustomStyleButton, TextFormatSelector },
+  components: { InjectedFormulaInput, CustomStyleButton },
   mixins: [collectionFieldForm],
   data() {
     return {
-      allowedValues: ['value', 'format', 'styles'],
+      allowedValues: ['value', 'styles'],
       values: {
         value: {},
-        format: TEXT_FORMAT_TYPES.PLAIN,
         styles: {},
       },
     }
-  },
-  computed: {
-    TEXT_FORMAT_TYPES() {
-      return TEXT_FORMAT_TYPES
-    },
   },
 }
 </script>
