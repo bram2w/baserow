@@ -11,7 +11,10 @@ import {
   getTokenCookieOptions,
   userSourceCookieTokenName,
 } from '../../../core/utils/cookie'
-import { consumeUserSourceCallback } from '../../../core/utils/userSourceCallback'
+import {
+  consumeUserSourceCallback,
+  getLoginCompletionCookieName,
+} from '../../../core/utils/userSourceCallback'
 
 // Consume the backend callback before Nuxt renders the public page or its payload.
 export default defineEventHandler((event) => {
@@ -27,6 +30,17 @@ export default defineEventHandler((event) => {
       getCookieName(config, userSourceCookieTokenName),
       callback.token,
       getTokenCookieOptions(config, 'lax')
+    )
+  }
+  if (callback.token && callback.attemptId) {
+    setCookie(
+      event,
+      getCookieName(config, getLoginCompletionCookieName(callback.attemptId)),
+      '1',
+      {
+        ...getTokenCookieOptions(config, 'lax'),
+        maxAge: 60,
+      }
     )
   }
   setResponseHeader(event, 'Cache-Control', 'no-store')

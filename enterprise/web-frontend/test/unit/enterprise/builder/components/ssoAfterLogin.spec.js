@@ -1,4 +1,5 @@
-import { useNuxtApp } from '#app'
+import { getCookieName } from '@baserow/modules/core/utils/cookie'
+import { useNuxtApp, useCookie } from '#app'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { flushPromises } from '@vue/test-utils'
 import AuthFormElement from '@baserow_enterprise/builder/components/elements/AuthFormElement'
@@ -14,6 +15,12 @@ describe('SSO After login workflow', () => {
   afterEach(() => {
     wrapper?.unmount()
     window.sessionStorage.clear()
+    for (const cookie of document.cookie.split(';')) {
+      const name = cookie.split('=')[0].trim()
+      if (name.includes('user_source_login_completed_')) {
+        document.cookie = `${name}=; Max-Age=0; Path=/`
+      }
+    }
     vi.restoreAllMocks()
   })
 
@@ -26,13 +33,25 @@ describe('SSO After login workflow', () => {
     ['saml', true, 'other-source'],
     ['openid_connect', true, 'source-42', true],
     ['saml', true, 'source-42', true],
+    ['openid_connect', true, 'source-42', false, false],
+    ['saml', true, 'source-42', false, false],
+    ['openid_connect', true, 'source-42', false, 'other-attempt'],
+    ['saml', true, 'source-42', false, 'other-attempt'],
   ])(
     'resumes only the successful %s login once (authenticated=%s, source=%s)',
-    async (provider, authenticated, sourceUid, failedCallback = false) => {
+    async (
+      provider,
+      authenticated,
+      sourceUid,
+      failedCallback = false,
+      completed = true
+    ) => {
       vi.spyOn(window, 'location', 'get').mockReturnValue(
         new URL('http://localhost/login')
       )
-      vi.spyOn(window, 'location', 'set').mockImplementation(() => {})
+      const leaveForProvider = vi
+        .spyOn(window, 'location', 'set')
+        .mockImplementation(() => {})
       app = useNuxtApp()
       routerPush = vi.spyOn(app.$router, 'push').mockResolvedValue()
       const page = {
@@ -116,6 +135,23 @@ describe('SSO After login workflow', () => {
       await wrapper.get('button').trigger('click')
       await flushPromises()
       wrapper.unmount()
+      const original = new URL(
+        new URL(leaveForProvider.mock.calls[0][0]).searchParams.get('original')
+      )
+      const attemptId = original.searchParams.get('user_source_login_attempt')
+      expect(attemptId).toMatch(/^[0-9a-f-]{36}$/)
+      // Simulate the receipt issued by the callback bridge, on the clean SSR request.
+      if (completed && !failedCallback) {
+        app.runWithContext(() => {
+          useCookie(
+            getCookieName(
+              app.$config,
+              `user_source_login_completed_${completed === 'other-attempt' ? '00000000-0000-4000-8000-000000000002' : attemptId}`
+            )
+          ).value = 1
+        })
+        await flushPromises()
+      }
 
       if (failedCallback) {
         const errorParam =
@@ -161,7 +197,12 @@ describe('SSO After login workflow', () => {
       wrapper = await mountPage()
       await flushPromises()
       const navigationCount =
-        authenticated && sourceUid === 'source-42' && !failedCallback ? 1 : 0
+        authenticated &&
+        sourceUid === 'source-42' &&
+        !failedCallback &&
+        completed === true
+          ? 1
+          : 0
       if (navigationCount) {
         expect(routerPush).toHaveBeenCalledWith('/page-sso')
       }

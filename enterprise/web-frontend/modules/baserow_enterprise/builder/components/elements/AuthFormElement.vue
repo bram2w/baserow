@@ -143,8 +143,9 @@ export default {
       )
     },
     async beforeLogin({ redirect = false } = {}) {
+      let attemptId
       if (redirect && !this.isEditMode) {
-        rememberPendingLogin({
+        attemptId = rememberPendingLogin({
           builder: this.builder,
           page: this.currentPage,
           element: this.element,
@@ -163,6 +164,7 @@ export default {
         })
         await this.$nextTick()
       }
+      return attemptId
     },
     async authenticateWithCredentials(credentials) {
       await this.userAuthenticate({

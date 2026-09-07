@@ -94,3 +94,35 @@ test('keeps a double-slash request path on the current host', async () => {
       .origin
   ).toBe('https://builder.example.com')
 })
+
+const attemptId = '00000000-0000-4000-8000-000000000001'
+
+test('acknowledges the initiating SSO attempt only on a token callback', async () => {
+  const response = await request(
+    `/login?user_source_saml_token__42=token&user_source_login_attempt=${attemptId}`
+  )
+  expect(response.headers.get('location')).toBe('/login')
+  expect(response.headers.get('set-cookie')).toContain(
+    `test_user_source_login_completed_${attemptId}=1`
+  )
+  expect(response.headers.get('set-cookie')).toContain('Max-Age=60')
+  const ordinary = await request(
+    `/login?user_source_login_attempt=${attemptId}`
+  )
+  expect(ordinary.headers.get('set-cookie')).toBeNull()
+})
+
+test.each([
+  '',
+  'invalid',
+  `${attemptId}&user_source_login_attempt=${attemptId}`,
+])(
+  'does not acknowledge a malformed or ambiguous attempt: %s',
+  async (attempt) => {
+    const response = await request(
+      `/login?user_source_saml_token__42=token&user_source_login_attempt=${attempt}`
+    )
+    expect(response.headers.get('location')).toBe('/login')
+    expect(response.headers.get('set-cookie')).not.toContain('login_completed')
+  }
+)
