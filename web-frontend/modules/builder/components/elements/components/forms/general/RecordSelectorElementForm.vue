@@ -66,6 +66,7 @@
       small-label
       class="margin-bottom-2"
       :label="$t('generalForm.labelTitle')"
+      :helper-text="$t('markdownMarker.hint')"
       required
     >
       <InjectedFormulaInput

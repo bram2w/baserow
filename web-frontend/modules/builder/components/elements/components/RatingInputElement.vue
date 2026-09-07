@@ -4,6 +4,12 @@
     :required="element.required"
     :error-message="displayFormDataError ? $t('error.requiredField') : ''"
   >
+    <template #label>
+      <FormattedText
+        :content="labelResolved"
+        preset="inlineLinks"
+      />
+    </template>
     <Rating
       :value="inputValue"
       :max-value="element.max_value"
@@ -17,6 +23,7 @@
 
 <script>
 import Rating from '@baserow/modules/database/components/Rating'
+import FormattedText from '@baserow/modules/builder/components/FormattedText'
 import formElement from '@baserow/modules/builder/mixins/formElement'
 import { ensureString } from '@baserow/modules/core/utils/validator'
 import { useVuelidate } from '@vuelidate/core'
@@ -26,6 +33,7 @@ export default {
   name: 'RatingInputElement',
   components: {
     Rating,
+    FormattedText,
   },
   mixins: [formElement],
   setup() {

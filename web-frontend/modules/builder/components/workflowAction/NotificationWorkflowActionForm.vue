@@ -3,6 +3,7 @@
     <FormGroup
       small-label
       :label="$t('notificationWorkflowActionForm.titleLabel')"
+      :helper-text="$t('markdownMarker.hint')"
       class="margin-bottom-2"
       required
     >
@@ -14,6 +15,7 @@
     <FormGroup
       small-label
       :label="$t('notificationWorkflowActionForm.descriptionLabel')"
+      :helper-text="$t('markdownMarker.hint')"
       class="margin-bottom-2"
       required
     >

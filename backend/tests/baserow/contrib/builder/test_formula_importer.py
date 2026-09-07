@@ -25,6 +25,12 @@ FORMULAS = [
         "output2": "get('test_provider.10.42')",
     },
     {"input": "concat('foo','bar')", "output": "concat('foo','bar')"},
+    {"input": "'__markdown__**a**'", "output": "'__markdown__**a**'"},
+    {
+        "input": "concat('__markdown__', get('test_provider.1.10'))",
+        "output": "concat('__markdown__',get('test_provider.1.10'))",
+        "output2": "concat('__markdown__',get('test_provider.10.42'))",
+    },
     {
         "input": "concat(get('test_provider.1.10'),'bar')",
         "output": "concat(get('test_provider.1.10'),'bar')",

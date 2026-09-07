@@ -254,6 +254,9 @@
     "textFormatTypePlain": "Plain text",
     "textFormatTypeMarkdown": "Markdown"
   },
+  "markdownMarker": {
+    "hint": "Start the text with __markdown__ to render it as Markdown."
+  },
   "orientations": {
     "label": "Orientation",
     "horizontal": "Horizontal",

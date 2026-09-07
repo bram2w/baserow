@@ -6,15 +6,15 @@
     }"
     :style="getStyleOverride('typography')"
   >
-    <template v-if="element.format === TEXT_FORMAT_TYPES.MARKDOWN">
+    <template v-if="isMarkdown">
       <MarkdownIt
         v-if="element.value"
         :content="
-          resolvedValue ||
+          displayValue ||
           (mode === 'editing' ? $t('textElement.emptyValue') : '&nbsp;')
         "
-        :rules="rules"
-        @click="onClick"
+        :rules="markdownRules"
+        @click="onMarkdownClick"
       ></MarkdownIt>
       <ABParagraph v-else>{{ $t('textElement.missingValue') }}</ABParagraph>
     </template>
@@ -37,7 +37,8 @@ import element from '@baserow/modules/builder/mixins/element'
 import { generateHash } from '@baserow/modules/core/utils/hashing'
 import { ensureString } from '@baserow/modules/core/utils/validator'
 import { TEXT_FORMAT_TYPES } from '@baserow/modules/builder/enums'
-import { createApplicationBuilderMarkdownRules } from '@baserow/modules/builder/utils/markdown'
+import { splitTextMarker } from '@baserow/modules/builder/utils/markdown'
+import markdownContent from '@baserow/modules/builder/mixins/markdownContent'
 
 /**
  * @typedef Text
@@ -47,7 +48,7 @@ import { createApplicationBuilderMarkdownRules } from '@baserow/modules/builder/
 
 export default {
   name: 'TextElement',
-  mixins: [element],
+  mixins: [element, markdownContent],
   props: {
     /**
      * @type {Object}
@@ -68,8 +69,25 @@ export default {
         return ''
       }
     },
+    /**
+     * The Text element keeps its own `format` setting, but it follows the rule
+     * of every other text surface too: a resolved value starting with the
+     * Markdown marker renders as Markdown, minus the marker.
+     */
+    markedValue() {
+      return splitTextMarker(this.resolvedValue)
+    },
+    displayValue() {
+      return this.markedValue.text
+    },
+    isMarkdown() {
+      return (
+        this.element.format === TEXT_FORMAT_TYPES.MARKDOWN ||
+        this.markedValue.format === TEXT_FORMAT_TYPES.MARKDOWN
+      )
+    },
     paragraphs() {
-      return this.resolvedValue
+      return this.displayValue
         .split('\n')
         .map((line) => line.trim())
         .filter((line) => line)
@@ -77,34 +95,6 @@ export default {
           content: line,
           id: generateHash(line + index),
         }))
-    },
-    TEXT_FORMAT_TYPES() {
-      return TEXT_FORMAT_TYPES
-    },
-    // Custom rules to pass down to `MarkdownIt` element.
-    // The goal is to make the styling of the rendered markdown content
-    // consistent with the rest of the application builder CSS classes
-    rules() {
-      return createApplicationBuilderMarkdownRules({
-        builder: this.builder,
-        mode: this.mode,
-      })
-    },
-  },
-  methods: {
-    onClick(event) {
-      if (this.mode === 'editing') {
-        event.preventDefault()
-        return
-      }
-      if (event.target.classList.contains('ab-link')) {
-        const url = event.target.getAttribute('href')
-
-        if (url.startsWith('/')) {
-          event.preventDefault()
-          this.$router.push(url)
-        }
-      }
     },
   },
 }

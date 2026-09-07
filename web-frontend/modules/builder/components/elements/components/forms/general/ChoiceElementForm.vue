@@ -9,6 +9,7 @@
     <FormGroup
       small-label
       :label="$t('generalForm.labelTitle')"
+      :helper-text="$t('markdownMarker.hint')"
       class="margin-bottom-2"
       required
     >
@@ -118,6 +119,9 @@
             <ButtonIcon icon="iconoir-bin" @click="deleteOption(option)" />
           </div>
         </div>
+        <p class="control__helper-text margin-bottom-1">
+          {{ $t('markdownMarker.hint') }}
+        </p>
       </template>
       <template v-else>
         <div class="row" style="--gap: 6px">
@@ -140,6 +144,7 @@
       <FormGroup
         small-label
         :label="$t('choiceOptionSelector.name')"
+        :helper-text="$t('markdownMarker.hint')"
         class="margin-bottom-2"
       >
         <InjectedFormulaInput

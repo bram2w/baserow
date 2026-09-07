@@ -10,6 +10,7 @@
     <FormGroup
       small-label
       :label="$t('checkboxElementForm.labelTitle')"
+      :helper-text="$t('markdownMarker.hint')"
       class="margin-bottom-2"
       required
     >

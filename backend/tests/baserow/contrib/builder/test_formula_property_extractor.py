@@ -1130,3 +1130,39 @@ def test_get_builder_used_property_names_returns_merged_property_names_integrati
             ],  # From workflow_action2
         },
     }
+
+
+@pytest.mark.django_db
+def test_get_element_property_names_finds_the_get_inside_a_markdown_marker_concat(
+    data_fixture,
+):
+    """
+    A label rendered as Markdown reads `concat('__markdown__', get(...))`. The
+    marker is a string literal, so the `get()` next to it is found and the
+    field ends up in the public-page allowlist like any other.
+    """
+
+    user = data_fixture.create_user()
+    table, fields, _ = data_fixture.build_table(
+        user=user,
+        columns=[("Fruit", "text"), ("Color", "text")],
+        rows=[["Apple", "Green"]],
+    )
+    builder = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user, page=page, table=table
+    )
+    input_text_element = data_fixture.create_builder_input_text_element(
+        page=page,
+        label=(
+            "concat('__markdown__', "
+            f"get('data_source.{data_source.id}.0.field_{fields[0].id}'))"
+        ),
+    )
+
+    result = get_element_property_names([input_text_element], {})
+
+    assert result == {
+        "external": {data_source.service.id: [f"field_{fields[0].id}"]},
+    }

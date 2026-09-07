@@ -3,6 +3,7 @@
     <FormGroup
       small-label
       :label="$t('generalForm.labelTitle')"
+      :helper-text="$t('markdownMarker.hint')"
       required
       class="margin-bottom-2"
     >

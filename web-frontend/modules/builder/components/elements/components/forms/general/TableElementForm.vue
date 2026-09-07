@@ -134,6 +134,7 @@
                 required
                 class="margin-bottom-2"
                 :label="$t('tableElementForm.name')"
+                :helper-text="$t('markdownMarker.hint')"
                 :error-message="v$.values.fields.$each.$message[index]?.[0]"
               >
                 <FormInput
