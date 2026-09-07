@@ -1296,10 +1296,12 @@ def _is_ip_unsafe(ip_obj: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool
             embedded = ipaddress.IPv4Address(packed[2:6])
             if _is_ip_unsafe(embedded):
                 return True
-        # Teredo (2001:0000::/32): embedded IPv4 is bitwise-inverted at bytes 12-16.
+        # Teredo (2001:0000::/32): check both server (bytes 4-8) and client
+        # (bitwise-inverted at bytes 12-16) embedded IPv4 addresses.
         if packed[:4] == b"\x20\x01\x00\x00":
-            embedded = ipaddress.IPv4Address(bytes(b ^ 0xFF for b in packed[12:16]))
-            if _is_ip_unsafe(embedded):
+            server = ipaddress.IPv4Address(packed[4:8])
+            client = ipaddress.IPv4Address(bytes(b ^ 0xFF for b in packed[12:16]))
+            if _is_ip_unsafe(server) or _is_ip_unsafe(client):
                 return True
 
     return False

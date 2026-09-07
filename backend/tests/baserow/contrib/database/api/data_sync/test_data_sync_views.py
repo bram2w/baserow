@@ -1168,7 +1168,7 @@ def test_get_data_sync_properties_permission_denied_no_external_call(
             side_effect=PermissionException(user),
         ),
         patch(
-            "baserow.contrib.database.data_sync.registries.DataSyncType.get_properties"
+            "baserow.contrib.database.data_sync.ical_data_sync_type.ICalCalendarDataSyncType.get_properties"
         ) as mock_get_properties,
     ):
         response = api_client.post(

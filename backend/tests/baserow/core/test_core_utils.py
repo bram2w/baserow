@@ -797,13 +797,23 @@ def test_is_hostname_safe():
         assert is_hostname_safe("6to4-public.test") is False
         assert is_hostname_safe("6to4-public.test", allow_private=True) is True
 
-    # Teredo with unsafe embedded IPv4 (inverted 127.0.0.1 = 0x80fffffe)
+    # Teredo with unsafe client embedded IPv4 (inverted 127.0.0.1 = 0x80fffffe)
     with patch(
         "baserow.core.utils.get_all_ips",
         return_value=["2001:0000:4136:e378:8000:63bf:80ff:fffe"],
     ):
         assert is_hostname_safe("teredo-loopback.test") is False
         assert is_hostname_safe("teredo-loopback.test", allow_private=True) is False
+
+    # Teredo with unsafe server address (127.0.0.1 at bytes 4-8, safe client)
+    with patch(
+        "baserow.core.utils.get_all_ips",
+        return_value=["2001:0000:7f00:0001:8000:63bf:f7f7:f7f7"],
+    ):
+        assert is_hostname_safe("teredo-server-loopback.test") is False
+        assert (
+            is_hostname_safe("teredo-server-loopback.test", allow_private=True) is False
+        )
 
 
 def test_resolve_and_validate_hostname():

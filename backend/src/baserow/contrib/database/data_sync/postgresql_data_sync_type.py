@@ -1,4 +1,5 @@
 import contextlib
+import ipaddress
 from typing import Any, Dict, List, Optional
 
 from django.conf import settings
@@ -162,6 +163,18 @@ class PostgreSQLDataSyncType(DataSyncType):
     }
 
     @staticmethod
+    def _normalize_ip(ip_str):
+        """
+        Normalize an IP string so that IPv4-mapped IPv6 addresses
+        (e.g. ``::ffff:172.18.0.2``) are reduced to their IPv4 equivalent.
+        """
+
+        ip_obj = ipaddress.ip_address(ip_str)
+        if isinstance(ip_obj, ipaddress.IPv6Address) and ip_obj.ipv4_mapped:
+            return str(ip_obj.ipv4_mapped)
+        return ip_str
+
+    @staticmethod
     def _check_host_not_blocked(postgresql_host, validated_ips):
         """
         Checks whether the target host overlaps with the application database
@@ -169,13 +182,22 @@ class PostgreSQLDataSyncType(DataSyncType):
         mode), IP sets are compared directly to avoid a second DNS lookup of
         the user-supplied hostname. In test mode, falls back to hostname-based
         comparison.
+
+        IPv4-mapped IPv6 addresses are normalized before comparison so that
+        ``::ffff:<ip>`` cannot bypass the check.
         """
 
-        validated_set = set(validated_ips) if validated_ips else None
+        normalize = PostgreSQLDataSyncType._normalize_ip
+        validated_set = (
+            set(normalize(ip) for ip in validated_ips) if validated_ips else None
+        )
 
         def _overlaps(other_hostname):
             if validated_set is not None:
-                return bool(validated_set & set(get_all_ips(other_hostname)))
+                return bool(
+                    validated_set
+                    & set(normalize(ip) for ip in get_all_ips(other_hostname))
+                )
             return are_hostnames_same(postgresql_host, other_hostname)
 
         if settings.BASEROW_PREVENT_POSTGRESQL_DATA_SYNC_CONNECTION_TO_DATABASE:
@@ -205,7 +227,6 @@ class PostgreSQLDataSyncType(DataSyncType):
 
         try:
             connect_kwargs = dict(
-                host=instance.postgresql_host,
                 dbname=instance.postgresql_database,
                 user=instance.postgresql_username,
                 password=instance.postgresql_password,
@@ -214,20 +235,19 @@ class PostgreSQLDataSyncType(DataSyncType):
                 connect_timeout=10,
             )
 
-            last_error = None
-            for ip in validated_ips or [None]:
-                try:
-                    kw = dict(connect_kwargs)
-                    if ip:
-                        kw["hostaddr"] = ip
-                    connection = psycopg.connect(**kw)
-                    last_error = None
-                    break
-                except psycopg.OperationalError as exc:
-                    last_error = exc
-                    continue
-            if last_error is not None:
-                raise last_error
+            if validated_ips:
+                # Use libpq's ordered multi-address support: repeat the
+                # hostname for each IP so TLS SNI works, and pin the actual
+                # addresses via hostaddr. libpq tries them in order and stops
+                # on the first successful connection (or auth error).
+                connect_kwargs["host"] = ",".join(
+                    [instance.postgresql_host] * len(validated_ips)
+                )
+                connect_kwargs["hostaddr"] = ",".join(validated_ips)
+            else:
+                connect_kwargs["host"] = instance.postgresql_host
+
+            connection = psycopg.connect(**connect_kwargs)
 
             cursor = connection.cursor()
             statement_timeout_ms = (
@@ -238,6 +258,12 @@ class PostgreSQLDataSyncType(DataSyncType):
                 [str(statement_timeout_ms)],
             )
             yield cursor
+        except psycopg.errors.QueryCanceled:
+            logger.warning("PostgreSQL data sync statement timeout", exc_info=True)
+            raise SyncError(
+                "The query exceeded the statement timeout. The table may be "
+                "too large or the remote server too slow."
+            )
         except psycopg.OperationalError:
             logger.warning("PostgreSQL data sync connection error", exc_info=True)
             raise SyncError(

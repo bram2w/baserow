@@ -21,6 +21,7 @@ from baserow.contrib.database.data_sync.models import (
     SyncDataSyncTableJob,
 )
 from baserow.contrib.database.data_sync.postgresql_data_sync_type import (
+    PostgreSQLDataSyncType,
     TextPostgreSQLSyncProperty,
 )
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -1144,3 +1145,41 @@ def test_postgresql_update_allows_non_target_change_without_password(
         postgresql_schema="public",
     )
     assert data_sync.postgresql_schema == "public"
+
+
+def test_check_host_not_blocked_ipv4_mapped_bypass():
+    """IPv4-mapped IPv6 addresses are normalized before blacklist comparison,
+    preventing ::ffff:<ip> from bypassing the app-database check."""
+
+    with override_settings(
+        BASEROW_PREVENT_POSTGRESQL_DATA_SYNC_CONNECTION_TO_DATABASE=True,
+        DATABASES={"default": {"HOST": "172.18.0.2"}},
+    ):
+        # Direct IPv4 is blocked
+        with pytest.raises(SyncError):
+            PostgreSQLDataSyncType._check_host_not_blocked("172.18.0.2", ["172.18.0.2"])
+
+        # IPv4-mapped IPv6 of the same address is also blocked
+        with pytest.raises(SyncError):
+            PostgreSQLDataSyncType._check_host_not_blocked(
+                "::ffff:172.18.0.2", ["::ffff:172.18.0.2"]
+            )
+
+
+def test_check_host_not_blocked_ipv4_mapped_blacklist():
+    """IPv4-mapped addresses are also caught by the blacklist."""
+
+    with override_settings(
+        BASEROW_PREVENT_POSTGRESQL_DATA_SYNC_CONNECTION_TO_DATABASE=False,
+        BASEROW_POSTGRESQL_DATA_SYNC_BLACKLIST=["10.0.0.5"],
+    ):
+        with pytest.raises(SyncError):
+            PostgreSQLDataSyncType._check_host_not_blocked(
+                "::ffff:10.0.0.5", ["::ffff:10.0.0.5"]
+            )
+
+
+def test_normalize_ip():
+    assert PostgreSQLDataSyncType._normalize_ip("::ffff:10.0.0.1") == "10.0.0.1"
+    assert PostgreSQLDataSyncType._normalize_ip("10.0.0.1") == "10.0.0.1"
+    assert PostgreSQLDataSyncType._normalize_ip("2001:db8::1") == "2001:db8::1"
