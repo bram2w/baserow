@@ -1,8 +1,4 @@
-// The inline rendering carries the `markdown` class too, so the block spacing
-// below must exclude it: its children are `<code>`/`<img>` boxes sitting on the
-// text baseline, where a top margin grows the line box and pushes the whole
-// line down instead of separating blocks.
-.markdown:not(.markdown--inline) {
+.markdown {
   & > .ab-blockquote,
   & > .ab-code,
   & > .ab-heading,
@@ -19,12 +15,6 @@
   }
 }
 
-.markdown:not(.markdown--inline) > *:first-child {
+.markdown > *:first-child {
   margin-top: 0;
-}
-
-// Inline Markdown (labels, option names, table headers...) must flow with
-// the surrounding text, e.g. inside an ellipsis container.
-.markdown--inline {
-  display: inline;
 }

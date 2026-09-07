@@ -4,7 +4,6 @@ from django.core.validators import MinValueValidator
 
 from rest_framework import serializers
 
-from baserow.contrib.builder.constants import TextFormats
 from baserow.contrib.builder.elements.element_types import NavigationElementManager
 from baserow.contrib.builder.elements.models import CollectionField, LinkElement
 from baserow.contrib.builder.elements.registries import CollectionFieldType
@@ -79,13 +78,12 @@ class RatingCollectionFieldType(CollectionFieldType):
 
 class TextCollectionFieldType(CollectionFieldType):
     type = "text"
-    allowed_fields = ["value", "format"]
-    serializer_field_names = ["value", "format"]
+    allowed_fields = ["value"]
+    serializer_field_names = ["value"]
     simple_formula_fields = ["value"]
 
     class SerializedDict(TypedDict):
         value: BaserowFormulaObject
-        format: str
 
     @property
     def serializer_field_overrides(self):
@@ -93,12 +91,6 @@ class TextCollectionFieldType(CollectionFieldType):
             "value": FormulaSerializerField(
                 help_text="The formula for the text.",
                 required=False,
-            ),
-            "format": serializers.ChoiceField(
-                choices=TextFormats.choices,
-                default=TextFormats.PLAIN,
-                required=False,
-                help_text="The format of the text.",
             ),
         }
 

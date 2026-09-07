@@ -23,10 +23,7 @@ import resolveElementUrl from '@baserow/modules/builder/utils/urlResolution'
 import { pathParametersInError } from '@baserow/modules/builder/utils/params'
 import { ClickEvent } from '@baserow/modules/builder/eventTypes'
 import { ThemeConfigBlockType } from '@baserow/modules/builder/themeConfigBlockTypes'
-import {
-  TEXT_FORMAT_TYPES,
-  LINK_VARIANTS,
-} from '@baserow/modules/builder/enums'
+import { LINK_VARIANTS } from '@baserow/modules/builder/enums'
 
 export class CollectionFieldType extends Registerable {
   get name() {
@@ -143,10 +140,7 @@ export class TextCollectionFieldType extends CollectionFieldType {
   }
 
   getProps(field, { resolveFormula, applicationContext }) {
-    return {
-      value: ensureString(resolveFormula(field.value)),
-      format: field.format || TEXT_FORMAT_TYPES.PLAIN,
-    }
+    return { value: ensureString(resolveFormula(field.value)) }
   }
 
   getOrder() {

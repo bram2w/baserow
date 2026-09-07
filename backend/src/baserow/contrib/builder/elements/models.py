@@ -11,7 +11,6 @@ from baserow.contrib.builder.constants import (
     BACKGROUND_IMAGE_MODES,
     COLOR_FIELD_MAX_LENGTH,
     HorizontalAlignments,
-    TextFormats,
     VerticalAlignments,
 )
 from baserow.core.constants import (
@@ -461,12 +460,16 @@ class TextElement(Element):
     A simple blob of text.
     """
 
+    class TEXT_FORMATS(models.TextChoices):
+        PLAIN = "plain"
+        MARKDOWN = "markdown"
+
     value = FormulaField()
     format = models.CharField(
-        choices=TextFormats.choices,
+        choices=TEXT_FORMATS.choices,
         help_text="The format of the text",
         max_length=10,
-        default=TextFormats.PLAIN,
+        default=TEXT_FORMATS.PLAIN,
     )
 
 
@@ -646,13 +649,6 @@ class RatingInputElement(BaseRatingElement, FormElement):
     label = FormulaField(
         help_text="The text label for this field",
     )
-    label_format = models.CharField(
-        choices=TextFormats.choices,
-        max_length=10,
-        default=TextFormats.PLAIN,
-        db_default=TextFormats.PLAIN,
-        help_text="The format of the label.",
-    )
 
 
 class InputTextElement(FormElement):
@@ -667,13 +663,6 @@ class InputTextElement(FormElement):
 
     label = FormulaField(
         help_text="The text label for this input",
-    )
-    label_format = models.CharField(
-        choices=TextFormats.choices,
-        max_length=10,
-        default=TextFormats.PLAIN,
-        db_default=TextFormats.PLAIN,
-        help_text="The format of the label.",
     )
     default_value = FormulaField(help_text="This text input's default value.")
     validation_type = models.CharField(
@@ -709,13 +698,6 @@ class ChoiceElement(FormElement):
     label = FormulaField(
         help_text="The text label for this choice",
     )
-    label_format = models.CharField(
-        choices=TextFormats.choices,
-        max_length=10,
-        default=TextFormats.PLAIN,
-        db_default=TextFormats.PLAIN,
-        help_text="The format of the label.",
-    )
     default_value = FormulaField(
         help_text="This choice's input default value.",
     )
@@ -740,14 +722,6 @@ class ChoiceElement(FormElement):
     )
     formula_name = FormulaField(
         help_text="The display name of the option if it is a formula",
-    )
-    option_format = models.CharField(
-        choices=TextFormats.choices,
-        max_length=10,
-        default=TextFormats.PLAIN,
-        db_default=TextFormats.PLAIN,
-        help_text="The format of the option names, for both manual and formula "
-        "options.",
     )
 
 
@@ -781,13 +755,6 @@ class CheckboxElement(FormElement):
     label = FormulaField(
         help_text="The text label for this input",
     )
-    label_format = models.CharField(
-        choices=TextFormats.choices,
-        max_length=10,
-        default=TextFormats.PLAIN,
-        db_default=TextFormats.PLAIN,
-        help_text="The format of the label.",
-    )
     default_value = FormulaField(help_text="The input's default value.")
 
 
@@ -808,13 +775,6 @@ class CollectionField(models.Model):
     order = models.PositiveIntegerField()
     name = models.CharField(
         max_length=225, help_text="The name of the field.", blank=True
-    )
-    name_format = models.CharField(
-        choices=TextFormats.choices,
-        max_length=10,
-        default=TextFormats.PLAIN,
-        db_default=TextFormats.PLAIN,
-        help_text="The format of the field name.",
     )
 
     type = models.CharField(
@@ -999,13 +959,6 @@ class RecordSelectorElement(CollectionElement, FormElement):
     label = FormulaField(
         help_text="The text label for this record selector",
     )
-    label_format = models.CharField(
-        choices=TextFormats.choices,
-        max_length=10,
-        default=TextFormats.PLAIN,
-        db_default=TextFormats.PLAIN,
-        help_text="The format of the label.",
-    )
     default_value = FormulaField(
         help_text="This record selector default value.",
     )
@@ -1028,13 +981,6 @@ class DateTimePickerElement(FormElement):
 
     label = FormulaField(
         help_text="The text label for this date time picker",
-    )
-    label_format = models.CharField(
-        choices=TextFormats.choices,
-        max_length=10,
-        default=TextFormats.PLAIN,
-        db_default=TextFormats.PLAIN,
-        help_text="The format of the label.",
     )
     default_value = FormulaField(
         help_text="This date time picker input's default value.",

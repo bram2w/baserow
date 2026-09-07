@@ -13,8 +13,8 @@
           resolvedValue ||
           (mode === 'editing' ? $t('textElement.emptyValue') : '&nbsp;')
         "
-        :rules="markdownRules"
-        @click="onMarkdownClick"
+        :rules="rules"
+        @click="onClick"
       ></MarkdownIt>
       <ABParagraph v-else>{{ $t('textElement.missingValue') }}</ABParagraph>
     </template>
@@ -37,7 +37,7 @@ import element from '@baserow/modules/builder/mixins/element'
 import { generateHash } from '@baserow/modules/core/utils/hashing'
 import { ensureString } from '@baserow/modules/core/utils/validator'
 import { TEXT_FORMAT_TYPES } from '@baserow/modules/builder/enums'
-import markdownContent from '@baserow/modules/builder/mixins/markdownContent'
+import { createApplicationBuilderMarkdownRules } from '@baserow/modules/builder/utils/markdown'
 
 /**
  * @typedef Text
@@ -47,7 +47,7 @@ import markdownContent from '@baserow/modules/builder/mixins/markdownContent'
 
 export default {
   name: 'TextElement',
-  mixins: [element, markdownContent],
+  mixins: [element],
   props: {
     /**
      * @type {Object}
@@ -80,6 +80,31 @@ export default {
     },
     TEXT_FORMAT_TYPES() {
       return TEXT_FORMAT_TYPES
+    },
+    // Custom rules to pass down to `MarkdownIt` element.
+    // The goal is to make the styling of the rendered markdown content
+    // consistent with the rest of the application builder CSS classes
+    rules() {
+      return createApplicationBuilderMarkdownRules({
+        builder: this.builder,
+        mode: this.mode,
+      })
+    },
+  },
+  methods: {
+    onClick(event) {
+      if (this.mode === 'editing') {
+        event.preventDefault()
+        return
+      }
+      if (event.target.classList.contains('ab-link')) {
+        const url = event.target.getAttribute('href')
+
+        if (url.startsWith('/')) {
+          event.preventDefault()
+          this.$router.push(url)
+        }
+      }
     },
   },
 }
