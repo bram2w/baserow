@@ -32,7 +32,7 @@
         "saml.authnstatement": "true",
         "saml.client.signature": "false",
         "saml.force.post.binding": "true",
-        "saml.server.signature": "false",
+        "saml.server.signature": "true",
         "saml_name_id_format": "email",
         "saml_assertion_consumer_url_post": "${PUBLIC_BACKEND_URL}/api/user-source/sso/saml/acs/"
       },
