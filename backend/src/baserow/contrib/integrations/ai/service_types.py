@@ -7,7 +7,10 @@ from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from baserow.contrib.integrations.ai.integration_types import AIIntegrationType
 from baserow.contrib.integrations.ai.models import AIAgentService, AIOutputType
-from baserow.core.ai_provider.constants import AI_PROVIDER_FEATURE_AI_AGENT
+from baserow.core.ai_provider.constants import (
+    AI_PROVIDER_FEATURE_AI_AGENT,
+    AI_PROVIDER_TYPES,
+)
 from baserow.core.feature_flags import FF_AI_PROVIDERS, feature_flag_is_enabled
 from baserow.core.formula.serializers import FormulaSerializerField
 from baserow.core.formula.validator import ensure_string
@@ -145,10 +148,10 @@ class AIAgentServiceType(ServiceType):
     ) -> tuple[list[str], Optional[dict[str, Any]]]:
         """Resolve one integration override without mixing configuration scopes.
 
-        A self-contained override owns both its connection and model list. An
-        incomplete override can only narrow models inherited from the active
-        workspace/environment resolver; its other fields are ignored so they can
-        never borrow credentials from that resolver.
+        A self-contained override owns its connection and any explicit model
+        list. Built-in overrides without a model list inherit the active
+        allowlist. An incomplete connection can only narrow inherited models;
+        its other fields are ignored so it never borrows credentials.
         """
 
         atomic_settings = (
@@ -156,7 +159,10 @@ class AIAgentServiceType(ServiceType):
             if integration_settings is not None
             else None
         )
-        if atomic_settings is not None:
+        if atomic_settings is not None and (
+            ai_model_type.type not in AI_PROVIDER_TYPES
+            or "models" in integration_settings
+        ):
             if providers_enabled:
                 available_models = ai_model_type.get_enabled_models_for_feature(
                     AI_PROVIDER_FEATURE_AI_AGENT,
@@ -179,6 +185,12 @@ class AIAgentServiceType(ServiceType):
             available_models = ai_model_type.call_get_enabled_models(
                 workspace=workspace,
             )
+
+        if atomic_settings is not None:
+            # Legacy callers may override only their connection. Preserve the
+            # omitted model list's inheritance without inheriting credentials or
+            # optional connection settings. An explicit empty list stays empty.
+            return available_models, {**atomic_settings, "models": available_models}
 
         if integration_settings is not None and "models" in integration_settings:
             model_limit = integration_settings["models"]

@@ -690,6 +690,9 @@ and verify nothing from this feature leaks into the old path:
   `feature_types`.
 - Automation AI Agent nodes and Application Builder AI Agent actions likewise use
   the legacy integration/workspace/environment model lists without feature filtering.
+  A complete provider connection with no `models` key inherits that model list;
+  explicit `models: []` remains empty. Partial overrides cannot introduce models
+  outside the inherited list or supply connection settings from another scope.
 
 ---
 

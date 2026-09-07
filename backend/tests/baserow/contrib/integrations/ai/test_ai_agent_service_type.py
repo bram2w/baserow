@@ -94,7 +94,9 @@ class CustomIntegrationGenerativeAIModelType(GenerativeAIModelType):
         settings_override=None,
         feature_type=None,
     ):
-        return (settings_override or {}).get("models", [])
+        if settings_override is None:
+            return []
+        return settings_override.get("models", ["custom-model"])
 
     def get_settings_serializer(self):
         return CustomIntegrationSettingsSerializer
@@ -1456,6 +1458,131 @@ def test_dispatch_integration_settings_win_over_database_with_flag(
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize(
+    "feature_flags, inherited_scope, expected_model",
+    [
+        ([], "instance", "env-model"),
+        ([], "workspace", "workspace-model"),
+        (["ai-providers"], "instance", "agent-model"),
+        (["ai-providers"], "workspace", "agent-model"),
+    ],
+)
+def test_connection_only_override_inherits_available_models(
+    data_fixture, settings, feature_flags, inherited_scope, expected_model
+):
+    settings.FEATURE_FLAGS = feature_flags
+    settings.BASEROW_OPENAI_API_KEY = "env-key"
+    settings.BASEROW_OPENAI_MODELS = ["env-model"]
+    settings.BASEROW_OPENAI_BASE_URL = "https://instance.example/v1"
+    settings.BASEROW_OPENAI_ORGANIZATION = "instance-organization"
+    user = data_fixture.create_user()
+    application = data_fixture.create_builder_application(user=user)
+    workspace = application.workspace
+    if inherited_scope == "workspace":
+        workspace.generative_ai_models_settings = {
+            "openai": {
+                "api_key": "workspace-key",
+                "models": ["workspace-model"],
+                "base_url": "https://workspace.example/v1",
+                "organization": "workspace-organization",
+            }
+        }
+        workspace.save(update_fields=("generative_ai_models_settings",))
+    if feature_flags:
+        provider, _ = create_openai_db_provider(
+            workspace if inherited_scope == "workspace" else None,
+            "agent-model",
+        )
+        AIProviderModel.objects.create(
+            provider_config=provider,
+            model_identifier="fields-only-model",
+            feature_types=["ai_fields"],
+        )
+
+    integration = IntegrationService().create_integration(
+        user,
+        AIIntegrationType(),
+        application=application,
+        ai_settings={"openai": {"api_key": "integration-key"}},
+    )
+    integration.refresh_from_db()
+    assert "models" not in integration.ai_settings["openai"]
+    service_type = AIAgentServiceType()
+    service_values = {
+        "integration_id": integration.id,
+        "ai_generative_ai_type": "openai",
+        "ai_generative_ai_model": expected_model,
+        "ai_prompt": "'Use my connection with inherited models'",
+    }
+    service = ServiceHandler().create_service(
+        service_type, **service_type.prepare_values(dict(service_values), user)
+    )
+
+    with mock_ai_prompt() as prompt:
+        result = service_type.dispatch(service, FakeDispatchContext())
+
+    assert result.data == {"result": "AI response"}
+    settings_override = prompt.call_args.kwargs["settings_override"]
+    assert settings_override["models"] == [expected_model]
+    openai_type = generative_ai_model_type_registry.get("openai")
+    assert openai_type.get_api_key(workspace, settings_override) == "integration-key"
+    assert openai_type.get_base_url(workspace, settings_override) is None
+    assert openai_type.get_organization(workspace, settings_override) is None
+
+    # An omitted model list still respects the inherited allowlist, including
+    # feature eligibility for database-backed models.
+    unavailable_model = "fields-only-model" if feature_flags else "unknown-model"
+    service_values["ai_generative_ai_model"] = unavailable_model
+    with pytest.raises(DRFValidationError, match="not available"):
+        service_type.prepare_values(service_values, user)
+    service.ai_generative_ai_model = unavailable_model
+    with (
+        mock_ai_prompt() as prompt,
+        pytest.raises(ServiceImproperlyConfiguredDispatchException),
+    ):
+        service_type.dispatch(service, FakeDispatchContext())
+    prompt.assert_not_called()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("feature_flags", [[], ["ai-providers"]])
+def test_complete_override_preserves_explicit_empty_models(
+    data_fixture, settings, feature_flags
+):
+    settings.FEATURE_FLAGS = feature_flags
+    settings.BASEROW_OPENAI_API_KEY = "env-key"
+    settings.BASEROW_OPENAI_MODELS = ["configured-model"]
+    user = data_fixture.create_user()
+    application = data_fixture.create_builder_application(user=user)
+    if feature_flags:
+        create_openai_db_provider(application.workspace, "configured-model")
+    integration = IntegrationService().create_integration(
+        user,
+        AIIntegrationType(),
+        application=application,
+        ai_settings={"openai": {"api_key": "integration-key", "models": []}},
+    )
+    integration.refresh_from_db()
+    assert integration.ai_settings["openai"]["models"] == []
+    service_type = AIAgentServiceType()
+    service_values = {
+        "integration_id": integration.id,
+        "ai_generative_ai_type": "openai",
+        "ai_generative_ai_model": "configured-model",
+        "ai_prompt": "'Do not inherit the model list'",
+    }
+    with pytest.raises(DRFValidationError, match="not available"):
+        service_type.prepare_values(dict(service_values), user)
+    service = ServiceHandler().create_service(service_type, **service_values)
+    with (
+        mock_ai_prompt() as prompt,
+        pytest.raises(ServiceImproperlyConfiguredDispatchException),
+    ):
+        service_type.dispatch(service, FakeDispatchContext())
+    prompt.assert_not_called()
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize("feature_flags", [[], ["ai-providers"]])
 def test_complete_override_does_not_inherit_optional_connection_settings(
     data_fixture, settings, feature_flags
@@ -1724,19 +1851,23 @@ def test_dispatch_rejects_model_removed_from_complete_integration_override(
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize("feature_flags", [[], ["ai-providers"]])
+@pytest.mark.parametrize(
+    "integration_settings",
+    [
+        {"token": "custom-token", "models": ["custom-model"]},
+        {"token": "custom-token"},
+    ],
+)
 def test_dispatch_preserves_custom_provider_integration_override(
-    data_fixture, settings
+    data_fixture, settings, feature_flags, integration_settings
 ):
-    settings.FEATURE_FLAGS = ["ai-providers"]
+    settings.FEATURE_FLAGS = feature_flags
     model_type = CustomIntegrationGenerativeAIModelType()
     generative_ai_model_type_registry.register(model_type)
     try:
         user = data_fixture.create_user()
         application = data_fixture.create_builder_application(user=user)
-        integration_settings = {
-            "token": "custom-token",
-            "models": ["custom-model"],
-        }
         integration = IntegrationService().create_integration(
             user,
             AIIntegrationType(),

@@ -32,11 +32,13 @@ const DropdownItemStub = defineComponent({
 const PassthroughStub = defineComponent({ template: '<div />' })
 
 const openAIModelType = {
+  getType: () => 'openai',
   getName: () => 'OpenAI',
   getMaxTemperature: () => 2,
   isIntegrationSettingsComplete: (settings) => Boolean(settings.api_key),
 }
 const anthropicModelType = {
+  getType: () => 'anthropic',
   getName: () => 'Anthropic',
   getMaxTemperature: () => 1,
   isIntegrationSettingsComplete: (settings) => Boolean(settings.api_key),
@@ -154,6 +156,66 @@ describe('AIAgentServiceForm', () => {
 
     expect(wrapper.vm.availableModels).toEqual(['blob-model'])
   })
+
+  test.each([
+    {
+      featureFlagEnabled: true,
+      available: 'db-model',
+      excluded: 'legacy-model',
+    },
+    {
+      featureFlagEnabled: false,
+      available: 'legacy-model',
+      excluded: 'db-model',
+    },
+  ])(
+    'inherits available models for an own-key override without models when flag is $featureFlagEnabled',
+    async ({ featureFlagEnabled, available, excluded }) => {
+      const wrapper = await mountForm({
+        featureFlagEnabled,
+        integration: {
+          id: 5,
+          type: 'ai',
+          ai_settings: { openai: { api_key: 'integration-key' } },
+        },
+        defaultValues: {
+          integration_id: 5,
+          ai_generative_ai_type: 'openai',
+          ai_generative_ai_model: available,
+        },
+      })
+      await flushPromises()
+
+      expect(
+        wrapper.get(`[data-value="${available}"]`).attributes('aria-disabled')
+      ).toBe('false')
+      expect(wrapper.find(`[data-value="${excluded}"]`).exists()).toBe(false)
+      expect(
+        wrapper
+          .get('[data-label="aiAgentServiceForm.modelLabel"]')
+          .attributes('data-error')
+      ).toBe('false')
+    }
+  )
+
+  test.each([true, false])(
+    'keeps an explicit empty own-key model list empty when flag is %s',
+    async (featureFlagEnabled) => {
+      const wrapper = await mountForm({
+        featureFlagEnabled,
+        integration: {
+          id: 5,
+          type: 'ai',
+          ai_settings: { openai: { api_key: 'integration-key', models: [] } },
+        },
+        defaultValues: { integration_id: 5, ai_generative_ai_type: 'openai' },
+      })
+      await flushPromises()
+
+      expect(wrapper.find('[data-value="db-model"]').exists()).toBe(false)
+      expect(wrapper.find('[data-value="legacy-model"]').exists()).toBe(false)
+    }
+  )
 
   test('limits partial integration model settings to workspace ai_agent models', async () => {
     const wrapper = await mountForm({
@@ -318,6 +380,29 @@ describe('AIAgentServiceType', () => {
         application,
       })
     ).toBeNull()
+  })
+
+  test('validates an own-key override without models against the ai_agent allowlist', () => {
+    const application = { id: 1 }
+    const serviceType = makeServiceType({
+      id: 5,
+      ai_settings: { openai: { api_key: 'integration-key' } },
+    })
+
+    expect(
+      serviceType.getErrorMessage({
+        service: makeService('db-model', 5),
+        workspace,
+        application,
+      })
+    ).toBeNull()
+    expect(
+      serviceType.getErrorMessage({
+        service: makeService('legacy-model', 5),
+        workspace,
+        application,
+      })
+    ).toBe('serviceType.errorAIModelUnavailable')
   })
 
   test('reports a provider from an uninstalled extension as unavailable', () => {

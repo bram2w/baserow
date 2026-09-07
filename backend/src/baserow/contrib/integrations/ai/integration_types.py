@@ -37,9 +37,10 @@ class AIIntegrationType(IntegrationType):
             required=False,
             default=dict,
             help_text="Per-provider AI settings overrides. If a provider key is not "
-            "present, workspace settings are inherited. A complete provider object "
-            "uses its own connection and models atomically; an incomplete object can "
-            "only restrict inherited model availability. Structure: "
+            "present, workspace settings are inherited. A complete connection uses "
+            "its own credentials and explicit model list; omitting models inherits "
+            "available models, while an empty list disables them. An incomplete "
+            "connection can only restrict inherited model availability. Structure: "
             '{"openai": {"api_key": "...", "models": [...], "organization": ""}, ...}',
         ),
     }
