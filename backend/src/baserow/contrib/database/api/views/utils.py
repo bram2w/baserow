@@ -109,7 +109,7 @@ def get_view_filtered_queryset(
     search_mode = query_params.get("search_mode")
 
     has_adhoc_sorting = order_by is not None
-    has_adhoc_grouping = group_by is not None and group_by != ""
+    has_adhoc_grouping = group_by is not None
     has_any_adhoc_ordering = has_adhoc_sorting or has_adhoc_grouping
 
     only_search_by_field_ids = None

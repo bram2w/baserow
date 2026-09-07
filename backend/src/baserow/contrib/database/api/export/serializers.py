@@ -144,7 +144,6 @@ class BaseExporterOptionsSerializer(serializers.Serializer):
         required=False,
         allow_null=True,
         allow_blank=True,
-        default=None,
         help_text="Optionally the rows can be grouped by provided field ids separated "
         "by comma. Group-by fields are ordered before sort fields.",
     )

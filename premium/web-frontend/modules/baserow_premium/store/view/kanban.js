@@ -490,9 +490,7 @@ export const actions = {
 
     const sortedRows = clone(stack.results)
     sortedRows.push(row)
-    sortedRows.sort(
-      getRowSortFunction($registry, view.sortings, fields, view.group_bys || [])
-    )
+    sortedRows.sort(getRowSortFunction($registry, view.sortings, fields))
     const index = sortedRows.findIndex((r) => r.id === row.id)
     const isLast = index === sortedRows.length - 1
 
@@ -656,9 +654,7 @@ export const actions = {
     }
     newStackResults.push(newRow)
     newStackCount++
-    newStackResults.sort(
-      getRowSortFunction($registry, view.sortings, fields, view.group_bys || [])
-    )
+    newStackResults.sort(getRowSortFunction($registry, view.sortings, fields))
     const newIndex = newStackResults.findIndex((r) => r.id === newRow.id)
     const newIsLast = newIndex === newStackResults.length - 1
     const newExists =
@@ -885,9 +881,7 @@ export const actions = {
       }
       const { $registry } = this
       const sortings = view?.sortings || []
-      sortedRows.sort(
-        getRowSortFunction($registry, sortings, fields, view?.group_bys || [])
-      )
+      sortedRows.sort(getRowSortFunction($registry, sortings, fields))
       const targetIndex = sortedRows.findIndex((r) => r.id === row.id)
 
       dispatch('forceMoveRowTo', {

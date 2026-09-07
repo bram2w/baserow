@@ -1431,31 +1431,50 @@ def test_order_by_fields_string_with_group_by_string_uses_group_by_sort_order(
         f"positions {idx1} and {idx3}"
     )
 
-    # With group_by_string for grouping + order_string for sorting:
-    # group-by fields come first in the ordering.
-    # Set text values such that sort-only would interleave the groups.
-    text_field = data_fixture.create_text_field(table=table, name="Label")
-    model = table.get_model()
+    # With group_by_string for grouping + a second M2M sort field:
+    # Exercises a second M2M join to verify isolated aggregates.
+    # Cardinalities: row1={X,Y}(2), row2={X}(1), row3={Y}(1)
+    ms_sort_field = FieldHandler().create_field(
+        user=user, table=table, name="Priority", type_name="multiple_select"
+    )
+    option_x = data_fixture.create_select_option(
+        field=ms_sort_field, value="X", color="red"
+    )
+    option_y = data_fixture.create_select_option(
+        field=ms_sort_field, value="Y", color="blue"
+    )
 
-    # row1 ({A,C}) = "Zebra", row2 ({B}) = "Middle", row3 ({A,C}) = "Alpha"
-    # Sort-only by text: Alpha(row3), Middle(row2), Zebra(row1)
-    # Group-by ms_field then sort by text:
-    #   group {A,C}: Alpha(row3), Zebra(row1) — adjacent
-    #   group {B}: Middle(row2)
     handler = RowHandler()
-    handler.update_row_by_id(user, table, row1.id, {f"field_{text_field.id}": "Zebra"})
-    handler.update_row_by_id(user, table, row2.id, {f"field_{text_field.id}": "Middle"})
-    handler.update_row_by_id(user, table, row3.id, {f"field_{text_field.id}": "Alpha"})
+    handler.update_row_by_id(
+        user,
+        table,
+        row1.id,
+        {f"field_{ms_sort_field.id}": [option_x.id, option_y.id]},
+    )
+    handler.update_row_by_id(
+        user,
+        table,
+        row2.id,
+        {f"field_{ms_sort_field.id}": [option_x.id]},
+    )
+    handler.update_row_by_id(
+        user,
+        table,
+        row3.id,
+        {f"field_{ms_sort_field.id}": [option_y.id]},
+    )
 
     model = table.get_model()
     results = model.objects.all().order_by_fields_string(
-        f"field_{text_field.id}",
+        f"field_{ms_sort_field.id}",
         group_by_string=f"field_{ms_field.id}",
     )
     result_ids = [r.id for r in results]
-    assert len(result_ids) == 3
+    assert len(result_ids) == 3, (
+        f"Expected 3 rows but got {len(result_ids)}: {result_ids}"
+    )
 
-    # Group-by must keep {A,C} rows adjacent despite text ordering
+    # Group-by must keep {A,C} rows adjacent despite M2M sort ordering
     idx1 = result_ids.index(row1.id)
     idx3 = result_ids.index(row3.id)
     assert abs(idx1 - idx3) == 1, (

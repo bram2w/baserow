@@ -370,8 +370,15 @@ class GridViewView(APIView):
         )
 
         if group_by_metadata and view_type.can_group_by:
+            visible_field_ids = (
+                {fid for fid in model._field_objects if fid not in hidden_field_ids}
+                if hidden_field_ids
+                else None
+            )
             if group_by:
-                adhoc_group_bys = parse_adhoc_view_group_bys(group_by, model)
+                adhoc_group_bys = parse_adhoc_view_group_bys(
+                    group_by, model, allowed_field_ids=visible_field_ids
+                )
                 group_by_fields = (
                     [
                         model._field_objects[gb.field_id]["field"]
@@ -580,18 +587,31 @@ class GridViewGroupByDataView(APIView):
                 serialize_group_by_data_pages([empty_group_by_data_page()], [])
             )
 
+        hidden_field_ids = get_hidden_field_ids_for_view_user(request.user, view)
         queryset = get_view_filtered_queryset(
             request.user,
             view,
             adhoc_filters,
             order_by=None,
             query_params=query_params,
+            hidden_field_ids=hidden_field_ids,
         )
         # Users who can list but not update the view's group-bys (e.g. viewers)
         # group ad hoc, so an explicit `group_by` parameter takes precedence over
         # the saved configuration.
+        visible_field_ids = (
+            {
+                fid
+                for fid in queryset.model._field_objects
+                if fid not in hidden_field_ids
+            }
+            if hidden_field_ids
+            else None
+        )
         view_group_bys = parse_adhoc_view_group_bys(
-            request.GET.get("group_by"), queryset.model
+            request.GET.get("group_by"),
+            queryset.model,
+            allowed_field_ids=visible_field_ids,
         )
         if view_group_bys is None:
             view_group_bys = list(view.viewgroupby_set.all())

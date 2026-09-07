@@ -4114,9 +4114,7 @@ class ViewHandler:
 
         has_adhoc_sorting = order_by is not None
         group_by_for_ordering = group_by if view_type.can_group_by else None
-        has_adhoc_grouping = (
-            group_by_for_ordering is not None and group_by_for_ordering != ""
-        )
+        has_adhoc_grouping = group_by_for_ordering is not None
         has_any_adhoc_ordering = has_adhoc_sorting or has_adhoc_grouping
 
         if has_any_adhoc_ordering:
