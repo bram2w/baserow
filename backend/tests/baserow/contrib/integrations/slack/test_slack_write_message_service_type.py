@@ -608,6 +608,58 @@ def test_slack_write_message_refused_address_is_not_charged(data_fixture):
 
 
 @pytest.mark.django_db
+def test_slack_write_message_without_a_token_is_not_sent(data_fixture):
+    """
+    An export strips the token, so an imported bot looks configured. Nothing
+    goes out, and the exception says so: a caller counting outbound traffic
+    does not count this one.
+    """
+
+    service = data_fixture.create_slack_write_message_service(
+        integration=data_fixture.create_integration(SlackBotIntegration, token=""),
+        channel="general",
+        text="'hi'",
+    )
+    sends = Mock()
+
+    with patch(
+        "baserow.contrib.integrations.slack.service_types.get_http_request_function",
+        return_value=sends,
+    ):
+        with pytest.raises(ServiceImproperlyConfiguredDispatchException) as exc:
+            service.get_type().dispatch(service, FakeDispatchContext())
+
+    assert "no token" in str(exc.value)
+    sends.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_slack_write_message_with_an_integration_of_another_type(data_fixture):
+    """
+    `prepare_values` checks an integration's application but not its type, so
+    a service can hold one with no token to post through. Refused like a
+    missing token, rather than failing on the read.
+    """
+
+    service = data_fixture.create_slack_write_message_service(
+        integration=data_fixture.create_local_baserow_integration(),
+        channel="general",
+        text="'hi'",
+    )
+    sends = Mock()
+
+    with patch(
+        "baserow.contrib.integrations.slack.service_types.get_http_request_function",
+        return_value=sends,
+    ):
+        with pytest.raises(ServiceImproperlyConfiguredDispatchException) as exc:
+            service.get_type().dispatch(service, FakeDispatchContext())
+
+    assert "not a Slack bot" in str(exc.value)
+    sends.assert_not_called()
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize(
     "body", [[], "forbidden", 12, {"ok": False, "error": {"code": "denied"}}]
 )
