@@ -3,7 +3,7 @@ from django.db import models
 
 from baserow.contrib.builder.elements.models import Element, NavigationElementMixin
 from baserow.contrib.builder.pages.models import Page
-from baserow.core.formula.field import FormulaField
+from baserow.core.formula.field import FormattedFormulaField
 from baserow.core.mixins import OrderableMixin
 from baserow.core.registry import ModelRegistryMixin
 from baserow.core.services.models import Service
@@ -92,8 +92,8 @@ class BuilderWorkflowAction(
 
 
 class NotificationWorkflowAction(BuilderWorkflowAction):
-    title = FormulaField(default="")
-    description = FormulaField(default="")
+    title = FormattedFormulaField(default="")
+    description = FormattedFormulaField(default="")
 
 
 class OpenPageWorkflowAction(BuilderWorkflowAction, NavigationElementMixin):

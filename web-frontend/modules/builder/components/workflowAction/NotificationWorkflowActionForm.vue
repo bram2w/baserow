@@ -11,6 +11,10 @@
         :placeholder="$t('notificationWorkflowActionForm.titlePlaceholder')"
       />
     </FormGroup>
+    <FormulaFormatSelector
+      v-model="values.title"
+      :label="$t('notificationWorkflowActionForm.titleFormat')"
+    />
     <FormGroup
       small-label
       :label="$t('notificationWorkflowActionForm.descriptionLabel')"
@@ -24,19 +28,25 @@
         "
       />
     </FormGroup>
+    <FormulaFormatSelector
+      v-model="values.description"
+      :label="$t('notificationWorkflowActionForm.descriptionFormat')"
+    />
   </form>
 </template>
 
 <script>
 import form from '@baserow/modules/core/mixins/form'
 import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
+import FormulaFormatSelector from '@baserow/modules/builder/components/elements/components/forms/FormulaFormatSelector'
 
 export default {
   name: 'NotificationWorkflowActionForm',
-  components: { InjectedFormulaInput },
+  components: { InjectedFormulaInput, FormulaFormatSelector },
   mixins: [form],
   data() {
     return {
+      allowedValues: ['title', 'description'],
       values: {
         title: {},
         description: {},
