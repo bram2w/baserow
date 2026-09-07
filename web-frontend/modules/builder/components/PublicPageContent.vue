@@ -31,6 +31,7 @@ import {
   userSourceCookieTokenName,
   setToken,
 } from '@baserow/modules/core/utils/auth'
+import { resumePendingLogin } from '@baserow/modules/builder/utils/pendingLogin'
 import { consumeUserSourceCallback } from '@baserow/modules/core/utils/userSourceCallback'
 import { QUERY_PARAM_TYPE_HANDLER_FUNCTIONS } from '@baserow/modules/builder/enums'
 import RecursiveWrapper from '@baserow/modules/core/components/RecursiveWrapper'
@@ -306,11 +307,15 @@ watch(
 )
 
 onMounted(async () => {
+  await checkProviderAuthentication()
+  await resumePendingLogin(nuxtApp, {
+    ...applicationContext.value,
+    page: props.page,
+  })
   // The server callback bridge has already authenticated the clean SSR request.
   if (isAuthenticated.value && (await maybeRedirectToNextPage())) {
     return
   }
-  await checkProviderAuthentication()
   await maybeRedirectUserToLoginPage()
 })
 

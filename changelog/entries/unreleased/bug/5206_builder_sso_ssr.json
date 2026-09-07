@@ -1,6 +1,6 @@
 {
     "type": "bug",
-    "message": "Authenticate Builder SAML and OIDC callbacks before rendering protected public pages on the server.",
+    "message": "Authenticate Builder SAML and OIDC callbacks before rendering protected public pages on the server, and run the configured After login actions on return.",
     "issue_number": 5206,
     "bullet_points": [],
     "created_at": "2026-09-07",

@@ -106,8 +106,6 @@ export default {
       }
     },
     async login() {
-      await this.beforeLogin()
-
       if (this.hasMultipleSamlProvider) {
         this.v$.$touch()
 
@@ -116,6 +114,8 @@ export default {
           return
         }
       }
+
+      await this.beforeLogin({ redirect: true })
 
       this.loading = true
       this.hideError()

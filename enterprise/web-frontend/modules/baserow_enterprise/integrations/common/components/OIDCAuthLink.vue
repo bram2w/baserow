@@ -66,7 +66,7 @@ export default {
       })
     },
     async login(authProvider) {
-      await this.beforeLogin()
+      await this.beforeLogin({ redirect: true })
 
       this.loading = true
 
