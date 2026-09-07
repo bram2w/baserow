@@ -83,12 +83,17 @@ class BasePolymorphicSerializer(serializers.Serializer):
     default_error_messages = {
         "missing_type": "Unable to determine the `type` of the polymorphic data.",
         "invalid_type": '"{type_name}" is not a valid type.',
+        "type_mismatch": (
+            'The type is fixed to "{default_type_name}" here, so "{type_name}" '
+            "cannot be used."
+        ),
     }
 
     def __init__(self, *args, default_type_name: str | None = None, **kwargs):
-        # The type to fall back to when the data doesn't name one, for use
-        # where the caller can't change the type anyway, like the service of a
-        # workflow action whose action type pins it.
+        # The type to fall back to when the data doesn't name one, and the only
+        # type accepted when it does. For use where the caller can't change the
+        # type anyway, like the service of a workflow action whose action type
+        # pins it.
         self.default_type_name = default_type_name
         super().__init__(*args, **kwargs)
 
@@ -114,22 +119,32 @@ class BasePolymorphicSerializer(serializers.Serializer):
             mapping.get(self.type_field_name) if isinstance(mapping, dict) else None
         )
 
-        if not type_name and self.default_type_name:
+        # An absent, `null` or empty `type` all mean the caller didn't name one.
+        if type_name is None or type_name == "":
             type_name = self.default_type_name
 
-        if type_name is None and (
-            not isinstance(mapping, dict) or self.type_field_name not in mapping
-        ):
+        if type_name is None:
             self.fail_on_type_field("missing_type")
 
-        try:
-            return self.registry.get(type_name)
-        # An unhashable `type` value, e.g. a list or a dict, would crash the
-        # registry lookup. An unknown type on the other hand propagates the
-        # registry's own does-not-exist exception, which views map to their
-        # specific API errors.
-        except TypeError:
+        # A list or a dict would crash the registry lookup, and other
+        # non-string values could still match an instance's `compat_type`, so
+        # only a real name is looked up.
+        if not isinstance(type_name, str):
             self.fail_on_type_field("invalid_type", type_name=type_name)
+
+        # When the type is pinned, a different one would only pick which
+        # serializer the values are checked against, and whatever it accepted
+        # would then be dropped without a word. Refused so the caller hears it.
+        if self.default_type_name is not None and type_name != self.default_type_name:
+            self.fail_on_type_field(
+                "type_mismatch",
+                type_name=type_name,
+                default_type_name=self.default_type_name,
+            )
+
+        # An unknown type propagates the registry's own does-not-exist
+        # exception, which views map to their specific API errors.
+        return self.registry.get(type_name)
 
     def to_representation(self, instance):
         if not self.required and not instance:

@@ -17,6 +17,7 @@ from baserow.api.decorators import (
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.exceptions import ThrottledAPIException
 from baserow.api.schemas import CLIENT_SESSION_ID_SCHEMA_PARAMETER, get_error_schema
+from baserow.api.services.errors import ERROR_SERVICE_INVALID_TYPE
 from baserow.api.utils import (
     CustomFieldRegistryMappingSerializer,
     DiscriminatorCustomFieldsMappingSerializer,
@@ -70,6 +71,7 @@ from baserow.contrib.database.workflow_actions.service import (
 )
 from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.feature_flags import FF_BUTTON_FIELD, feature_flag_is_enabled
+from baserow.core.services.exceptions import ServiceTypeDoesNotExist
 from baserow.core.workflow_actions.exceptions import WorkflowActionDoesNotExist
 
 
@@ -105,6 +107,7 @@ class DatabaseWorkflowActionsView(APIView):
                     "ERROR_REQUEST_BODY_VALIDATION",
                     "ERROR_USER_NOT_IN_GROUP",
                     "ERROR_WORKFLOW_ACTION_INVALID_INTEGRATION",
+                    "ERROR_SERVICE_INVALID_TYPE",
                 ]
             ),
             403: get_error_schema(
@@ -120,6 +123,7 @@ class DatabaseWorkflowActionsView(APIView):
             UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             WorkflowActionTypeDeactivated: ERROR_WORKFLOW_ACTION_TYPE_DEACTIVATED,
             WorkflowActionInvalidIntegration: ERROR_WORKFLOW_ACTION_INVALID_INTEGRATION,
+            ServiceTypeDoesNotExist: ERROR_SERVICE_INVALID_TYPE,
         }
     )
     @validate_body_custom_fields(
@@ -277,6 +281,7 @@ class DatabaseWorkflowActionView(APIView):
                     "ERROR_REQUEST_BODY_VALIDATION",
                     "ERROR_USER_NOT_IN_GROUP",
                     "ERROR_WORKFLOW_ACTION_INVALID_INTEGRATION",
+                    "ERROR_SERVICE_INVALID_TYPE",
                 ]
             ),
             403: get_error_schema(
@@ -296,6 +301,7 @@ class DatabaseWorkflowActionView(APIView):
             UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             WorkflowActionTypeDeactivated: ERROR_WORKFLOW_ACTION_TYPE_DEACTIVATED,
             WorkflowActionInvalidIntegration: ERROR_WORKFLOW_ACTION_INVALID_INTEGRATION,
+            ServiceTypeDoesNotExist: ERROR_SERVICE_INVALID_TYPE,
         }
     )
     @require_request_data_type(dict)

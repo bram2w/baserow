@@ -711,7 +711,75 @@ def test_update_workflow_action_service_with_invalid_type(api_client, data_fixtu
     )
 
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "ERROR_SERVICE_INVALID_TYPE"
+    response_json = response.json()
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"]["service"]["type"][0]["code"] == "type_mismatch"
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("service_type", [["local_baserow_upsert_row"], {"a": 1}, 1])
+def test_update_workflow_action_service_with_a_non_string_type(
+    api_client, data_fixture, service_type
+):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    element = data_fixture.create_builder_button_element(page=page)
+    workflow_action = data_fixture.create_local_baserow_update_row_workflow_action(
+        page=page, element=element, event=EventTypes.CLICK, user=user
+    )
+
+    url = reverse(
+        "api:builder:workflow_action:item",
+        kwargs={"workflow_action_id": workflow_action.id},
+    )
+    response = api_client.patch(
+        url,
+        {"service": {"type": service_type}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"]["service"]["type"][0]["code"] == "invalid_type"
+
+
+@pytest.mark.django_db
+def test_update_workflow_action_service_with_a_type_the_action_does_not_use(
+    api_client, data_fixture
+):
+    """
+    The action type pins the service type, so naming another registered type
+    would only pick which serializer the values are checked against and then
+    silently drop them. It must be refused instead.
+    """
+
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    element = data_fixture.create_builder_button_element(page=page)
+    workflow_action = data_fixture.create_local_baserow_update_row_workflow_action(
+        page=page, element=element, event=EventTypes.CLICK, user=user
+    )
+
+    url = reverse(
+        "api:builder:workflow_action:item",
+        kwargs={"workflow_action_id": workflow_action.id},
+    )
+    response = api_client.patch(
+        url,
+        {"service": {"type": "local_baserow_get_row", "row_id": "'42'"}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    type_error = response_json["detail"]["service"]["type"][0]
+    assert type_error["code"] == "type_mismatch"
+    assert "local_baserow_get_row" in type_error["error"]
+    assert LocalBaserowUpsertRowServiceType.type in type_error["error"]
 
 
 @pytest.mark.django_db

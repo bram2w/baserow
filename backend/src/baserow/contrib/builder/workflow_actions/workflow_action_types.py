@@ -6,7 +6,6 @@ from django.db.models import Prefetch
 from rest_framework import serializers
 
 from baserow.api.services.serializers import (
-    PolymorphicServiceRequestSerializer,
     PolymorphicServiceSerializer,
     PublicPolymorphicServiceSerializer,
 )
@@ -59,6 +58,7 @@ from baserow.core.formula.types import BASEROW_FORMULA_MODE_SIMPLE, BaserowFormu
 from baserow.core.integrations.models import Integration
 from baserow.core.registry import Instance
 from baserow.core.services.handler import ServiceHandler
+from baserow.core.services.mixins import ServiceBackedTypeMixin
 from baserow.core.services.models import Service
 from baserow.core.services.registries import service_type_registry
 from baserow.core.services.types import DispatchResult
@@ -244,8 +244,13 @@ class RefreshDataSourceWorkflowActionType(BuilderWorkflowActionType):
         )
 
 
-class BuilderWorkflowServiceActionType(BuilderWorkflowActionType):
+class BuilderWorkflowServiceActionType(
+    ServiceBackedTypeMixin, BuilderWorkflowActionType
+):
     service_type = None  # Must be implemented by subclasses.
+    service_field_help_text = (
+        "The service which this workflow action is associated with."
+    )
     serializer_field_names = ["service"]
     is_server_workflow = True
     serializer_field_overrides = {
@@ -260,26 +265,6 @@ class BuilderWorkflowServiceActionType(BuilderWorkflowActionType):
             help_text="The service which this workflow action is associated with."
         )
     }
-
-    def get_field_overrides(
-        self, request_serializer: bool, extra_params: Dict, **kwargs
-    ) -> Dict:
-        # Built per type rather than declared, so the request serializer can
-        # fall back to the service type this action carries when the caller
-        # leaves `type` out of the service payload.
-        public = (extra_params or {}).get("public", False)
-        if request_serializer and not public:
-            return {
-                "service": PolymorphicServiceRequestSerializer(
-                    default_type_name=self.service_type,
-                    default=None,
-                    required=False,
-                    help_text="The service which this workflow action is "
-                    "associated with.",
-                )
-            }
-
-        return super().get_field_overrides(request_serializer, extra_params, **kwargs)
 
     class SerializedDict(BuilderWorkflowActionDict):
         service: Dict

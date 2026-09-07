@@ -615,6 +615,31 @@ def test_updating_with_a_service_type_the_action_does_not_use_is_refused(
 
 
 @pytest.mark.django_db
+def test_updating_with_an_unknown_service_type_is_refused(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    button_field = data_fixture.create_button_field(table=table)
+    action = data_fixture.create_database_workflow_action(
+        LocalBaserowCreateRowWorkflowAction, field=button_field
+    )
+
+    response = api_client.patch(
+        reverse(
+            "api:database:workflow_actions:item",
+            kwargs={"workflow_action_id": action.id},
+        ),
+        {"service": {"type": "nope"}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST, response.json()
+    response_json = response.json()
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"]["service"]["type"][0]["code"] == "type_mismatch"
+
+
+@pytest.mark.django_db
 def test_naming_the_service_type_the_action_already_uses_is_accepted(
     api_client, data_fixture
 ):

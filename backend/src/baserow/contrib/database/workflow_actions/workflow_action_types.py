@@ -5,7 +5,6 @@ from django.contrib.auth.models import AbstractUser
 from django.core.files.storage import Storage
 from django.db.models import Manager, Prefetch, QuerySet
 
-from baserow.api.services.serializers import PolymorphicServiceRequestSerializer
 from baserow.contrib.database.api.workflow_actions.serializers import (
     DatabasePolymorphicServiceSerializer,
 )
@@ -49,6 +48,7 @@ from baserow.core.services.exceptions import (
     ServiceImproperlyConfiguredDispatchException,
 )
 from baserow.core.services.handler import ServiceHandler
+from baserow.core.services.mixins import ServiceBackedTypeMixin
 from baserow.core.services.models import Service
 from baserow.core.services.registries import service_type_registry
 from baserow.core.services.types import DispatchResult
@@ -60,8 +60,13 @@ if TYPE_CHECKING:
     )
 
 
-class DatabaseWorkflowServiceActionType(DatabaseWorkflowActionType):
+class DatabaseWorkflowServiceActionType(
+    ServiceBackedTypeMixin, DatabaseWorkflowActionType
+):
     service_type = None  # Must be implemented by subclasses.
+    service_field_help_text = (
+        "The service which this workflow action is associated with."
+    )
 
     # Where `import_serialized` leaves the field it is importing into, for
     # `deserialize_property`, which the base class hands the cache but not the
@@ -83,24 +88,6 @@ class DatabaseWorkflowServiceActionType(DatabaseWorkflowActionType):
 
     class SerializedDict(DatabaseWorkflowActionDict):
         service: Dict
-
-    def get_field_overrides(
-        self, request_serializer: bool, extra_params: Dict, **kwargs
-    ) -> Dict:
-        # Built per type rather than declared, so the serializer can fall back
-        # to the service type this action carries.
-        if request_serializer:
-            return {
-                "service": PolymorphicServiceRequestSerializer(
-                    default_type_name=self.service_type,
-                    default=None,
-                    required=False,
-                    help_text="The service which this workflow action is "
-                    "associated with.",
-                )
-            }
-
-        return super().get_field_overrides(request_serializer, extra_params, **kwargs)
 
     @property
     def allowed_fields(self) -> List[str]:
