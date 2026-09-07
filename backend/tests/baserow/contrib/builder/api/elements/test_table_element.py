@@ -186,3 +186,51 @@ def test_cant_update_a_table_element_fields_with_wrong_field_property(
 
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["detail"]["fields"][0][0]["code"] == "INVALID_FIELD_PROPERTY"
+
+
+@pytest.mark.django_db
+def test_can_update_a_table_element_field_with_markdown_name(api_client, data_fixture):
+    """
+    A Markdown column header is stored as its name with the `__markdown__`
+    marker in front, which the API stores and returns as-is.
+    """
+
+    user, token = data_fixture.create_user_and_token()
+    table_element = data_fixture.create_builder_table_element(user=user)
+
+    url = reverse("api:builder:element:item", kwargs={"element_id": table_element.id})
+
+    response = api_client.patch(
+        url,
+        {
+            "fields": [
+                {
+                    "name": "__markdown__**Bold**",
+                    "type": "text",
+                    "value": "__markdown__get('data_source.123')",
+                    "uid": str(uuid.uuid4()),
+                },
+                {
+                    "name": "Plain",
+                    "type": "text",
+                    "value": "get('data_source.123')",
+                    "uid": str(uuid.uuid4()),
+                },
+            ],
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    markdown_field, plain_field = response.json()["fields"]
+    assert markdown_field["name"] == "__markdown__**Bold**"
+    assert markdown_field["value"]["formula"] == "__markdown__get('data_source.123')"
+    assert plain_field["name"] == "Plain"
+
+    markdown_field, plain_field = table_element.fields.all()
+    assert markdown_field.name == "__markdown__**Bold**"
+    assert markdown_field.config["value"]["formula"] == (
+        "__markdown__get('data_source.123')"
+    )
+    assert plain_field.name == "Plain"

@@ -11,6 +11,10 @@
         :placeholder="$t('generalForm.labelPlaceholder')"
       />
     </FormGroup>
+    <ValueFormatSelector
+      v-model="values.label"
+      :label="$t('textFormatSelector.labelFormat')"
+    />
 
     <FormGroup
       :label="$t('generalForm.requiredTitle')"
@@ -47,6 +51,7 @@ import elementForm from '@baserow/modules/builder/mixins/elementForm'
 import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
 import Checkbox from '@baserow/modules/core/components/Checkbox'
 import RatingFormFields from '@baserow/modules/builder/components/elements/components/forms/RatingFormFields.vue'
+import ValueFormatSelector from '@baserow/modules/builder/components/elements/components/forms/ValueFormatSelector'
 
 export default {
   name: 'RatingInputElementForm',
@@ -54,6 +59,7 @@ export default {
     InjectedFormulaInput,
     Checkbox,
     RatingFormFields,
+    ValueFormatSelector,
   },
   mixins: [elementForm],
   data() {

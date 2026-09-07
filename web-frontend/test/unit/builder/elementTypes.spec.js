@@ -985,8 +985,8 @@ describe('elementTypes tests', () => {
 
       // When the Value is non-null, we expect them to be returned verbatim.
       expect(elementType.getOptionsResolved(element)).toEqual([
-        { name: 'Foo Name', value: '' },
-        { name: 'Bar Name', value: 'bar_name' },
+        { name: 'Foo Name', value: '', format: 'plain' },
+        { name: 'Bar Name', value: 'bar_name', format: 'plain' },
       ])
     })
 
@@ -1004,8 +1004,8 @@ describe('elementTypes tests', () => {
       // When Value is null, we assume the user wants it to be the same as
       // the Name. Thus, we return 'Foo Name' instead of null.
       expect(elementType.getOptionsResolved(element)).toEqual([
-        { name: 'Foo Name', value: 'Foo Name' },
-        { name: 'Bar Name', value: 'bar_name' },
+        { name: 'Foo Name', value: 'Foo Name', format: 'plain' },
+        { name: 'Bar Name', value: 'bar_name', format: 'plain' },
       ])
     })
 
@@ -1023,8 +1023,28 @@ describe('elementTypes tests', () => {
       // Since an empty string is a valid Value, if the user has explicitly
       // declared it, we should return an empty string.
       expect(elementType.getOptionsResolved(element)).toEqual([
-        { name: 'Foo Name', value: '' },
-        { name: 'Bar Name', value: 'bar_name' },
+        { name: 'Foo Name', value: '', format: 'plain' },
+        { name: 'Bar Name', value: 'bar_name', format: 'plain' },
+      ])
+    })
+
+    test('getOptionsResolved strips the text format marker from the Name.', () => {
+      const elementType = new ChoiceElementType()
+      const element = {
+        required: true,
+        option_type: CHOICE_OPTION_TYPES.MANUAL,
+        options: [
+          { id: 1, value: null, name: '__markdown__**Foo**' },
+          { id: 2, value: 'bar_name', name: '__markdown__Bar' },
+          { id: 3, value: null, name: 'Baz' },
+        ],
+      }
+
+      // The marker is neither displayed nor used as the fallback Value.
+      expect(elementType.getOptionsResolved(element)).toEqual([
+        { name: '**Foo**', value: '**Foo**', format: 'markdown' },
+        { name: 'Bar', value: 'bar_name', format: 'markdown' },
+        { name: 'Baz', value: 'Baz', format: 'plain' },
       ])
     })
   })

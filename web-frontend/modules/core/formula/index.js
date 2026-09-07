@@ -1,6 +1,7 @@
 import parseBaserowFormula from '@baserow/modules/core/formula/parser/parser'
 import BaserowFormulaExecutionVisitor from '@baserow/modules/core/formula/parser/formulaExecutionVisitor.js'
 import BaserowFormulaValidationVisitor from '@baserow/modules/core/formula/parser/formulaValidationVisitor.js'
+import { stripFormat } from '@baserow/modules/core/formula/textFormat'
 import { FORMULA_TYPE } from '@baserow/modules/core/enums'
 
 // Identical formulas share one parse tree, which avoids re-lexing and
@@ -44,17 +45,21 @@ export const resolveFormula = (
   functions,
   RuntimeFormulaContext
 ) => {
-  if (!formulaCtx.formula) {
-    return formulaCtx.formula
+  // The text format marker is not part of the formula: it is never resolved
+  // and never part of the result.
+  const formula = stripFormat(formulaCtx.formula)
+
+  if (!formula) {
+    return formula
   }
 
   if (formulaCtx.mode === 'raw') {
     // We don't need to resolve the formula for raw mode.
-    return formulaCtx.formula
+    return formula
   }
 
   try {
-    const tree = getCachedParseTree(formulaCtx.formula)
+    const tree = getCachedParseTree(formula)
     return new BaserowFormulaExecutionVisitor(
       functions,
       RuntimeFormulaContext
@@ -85,11 +90,13 @@ export const isFormulaValid = (
   validationContext = {},
   localisedInvalidSyntaxMessage = null
 ) => {
-  if (!formula) {
+  // The text format marker is not part of the formula syntax.
+  const bareFormula = stripFormat(formula)
+  if (!bareFormula) {
     return { scope: null, valid: true, errors: [] }
   }
   try {
-    const tree = parseBaserowFormula(formula)
+    const tree = parseBaserowFormula(bareFormula)
     if (!syntaxOnly) {
       new BaserowFormulaValidationVisitor(functions, validationContext).visit(
         tree

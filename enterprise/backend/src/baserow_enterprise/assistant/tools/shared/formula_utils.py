@@ -7,6 +7,7 @@ from typing import Any
 from baserow.core.formula.parser.exceptions import BaserowFormulaException
 from baserow.core.formula.parser.generated.BaserowFormula import BaserowFormula
 from baserow.core.formula.parser.parser import get_parse_tree_for_formula
+from baserow.core.formula.text_format import add_prefix, split_format, strip_format
 from baserow.core.formula.types import (
     BASEROW_FORMULA_MODE_SIMPLE,
     BaserowFormulaMode,
@@ -103,7 +104,7 @@ def is_valid_formula(value: str) -> bool:
     """
 
     try:
-        get_parse_tree_for_formula(value)
+        get_parse_tree_for_formula(strip_format(value))
     except (BaserowFormulaException, RecursionError):
         return False
     return True
@@ -122,7 +123,7 @@ def is_string_literal(value: str) -> bool:
     """
 
     try:
-        tree = get_parse_tree_for_formula(value)
+        tree = get_parse_tree_for_formula(strip_format(value))
     except (BaserowFormulaException, RecursionError):
         return False
     return isinstance(tree.expr(), BaserowFormula.StringLiteralContext)
@@ -173,10 +174,16 @@ def ensure_valid_formula(formula: str) -> str:
     :return: The formula itself, or a string literal fallback.
     """
 
-    if not formula or not isinstance(formula, str) or is_valid_formula(formula):
+    if not formula or not isinstance(formula, str):
         return formula
 
-    fallback = wrap_static_string(formula)
+    # The Markdown text format marker is not part of the formula syntax: it is
+    # kept as-is and only the bare formula is checked and, if needed, quoted.
+    text_format, bare_formula = split_format(formula)
+    if not bare_formula or is_valid_formula(bare_formula):
+        return formula
+
+    fallback = add_prefix(wrap_static_string(bare_formula), text_format)
     logger.warning(
         "The assistant produced an invalid formula, storing it as a static "
         "string literal instead: %s",

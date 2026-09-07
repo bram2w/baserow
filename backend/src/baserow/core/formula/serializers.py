@@ -16,6 +16,7 @@ from baserow.core.formula.parser.formula_validation_visitor import (
 )
 from baserow.core.formula.parser.parser import get_parse_tree_for_formula
 from baserow.core.formula.registries import formula_runtime_function_registry
+from baserow.core.formula.text_format import strip_format
 from baserow.core.formula.types import (
     BASEROW_FORMULA_MODE_ADVANCED,
     BASEROW_FORMULA_MODE_RAW,
@@ -117,7 +118,12 @@ class FormulaSerializerField(serializers.JSONField):
                 mode=BASEROW_FORMULA_MODE_SIMPLE,
             )
 
-        if not data["formula"] or data["mode"] == BASEROW_FORMULA_MODE_RAW:
+        # The stored formula may carry a text format marker, which is not part
+        # of the formula syntax: validate the bare formula and keep the stored
+        # value as it was given.
+        bare_formula = strip_format(data["formula"])
+
+        if not bare_formula or data["mode"] == BASEROW_FORMULA_MODE_RAW:
             return data
 
         # Inspect the `context` for an `ApplicationType`, we'll need to
@@ -132,7 +138,7 @@ class FormulaSerializerField(serializers.JSONField):
             )
 
         try:
-            tree = get_parse_tree_for_formula(data["formula"])
+            tree = get_parse_tree_for_formula(bare_formula)
             try:
                 BaserowFormulaValidationVisitor(
                     formula_runtime_function_registry,

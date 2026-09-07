@@ -10,6 +10,7 @@ from baserow.core.formula import (
     BaserowFormulaObject,
     get_parse_tree_for_formula,
 )
+from baserow.core.formula.text_format import add_prefix, split_format
 from baserow.core.formula.types import BASEROW_FORMULA_MODE_RAW
 from baserow.core.services.formula_importer import BaserowFormulaImporter
 
@@ -56,12 +57,18 @@ def import_formula(
 
     formula = BaserowFormulaObject.to_formula(formula)
 
-    if formula["mode"] == BASEROW_FORMULA_MODE_RAW or not formula["formula"]:
+    # The text format marker is not part of the formula syntax. It is stripped
+    # before the paths are rewritten and added back to the result.
+    text_format, bare_formula = split_format(formula["formula"])
+
+    if formula["mode"] == BASEROW_FORMULA_MODE_RAW or not bare_formula:
         return formula
 
     try:
-        tree = get_parse_tree_for_formula(formula["formula"])
-        new_formula = BuilderFormulaImporter(id_mapping, **kwargs).visit(tree)
+        tree = get_parse_tree_for_formula(bare_formula)
+        new_formula = add_prefix(
+            BuilderFormulaImporter(id_mapping, **kwargs).visit(tree), text_format
+        )
     except (
         BaserowFormulaException,
         RecursionError,

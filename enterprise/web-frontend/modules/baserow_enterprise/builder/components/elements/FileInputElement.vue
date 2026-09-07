@@ -7,13 +7,28 @@
     :required="element.required"
     :style="getStyleOverride('input')"
   >
+    <template #label>
+      <FormattedText
+        :content="resolvedLabel"
+        :format="labelFormat"
+        preset="inlineLinks"
+      />
+    </template>
     <ABFileInput
       v-model="computedInputValue"
       :multiple="element.multiple"
       :help-text="resolvedHelpText"
       :accept="allowedExtensions"
       :preview="element.preview"
-    />
+    >
+      <template #help-text>
+        <FormattedText
+          :content="resolvedHelpText"
+          :format="helpTextFormat"
+          preset="block"
+        />
+      </template>
+    </ABFileInput>
   </ABFormGroup>
 </template>
 
@@ -21,11 +36,14 @@
 import formElement from '@baserow/modules/builder/mixins/formElement'
 import { ensureString } from '@baserow/modules/core/utils/validator'
 import UserFileService from '@baserow/modules/core/services/userFile'
+import FormattedText from '@baserow/modules/builder/components/FormattedText'
+import { getFormulaFormat } from '@baserow/modules/core/formula/textFormat'
 
 import { FileInputElementType } from '@baserow_enterprise/builder/elementTypes'
 
 export default {
   name: 'FileInputElement',
+  components: { FormattedText },
   mixins: [formElement],
   props: {
     /**
@@ -50,6 +68,12 @@ export default {
     }
   },
   computed: {
+    labelFormat() {
+      return getFormulaFormat(this.element.label)
+    },
+    helpTextFormat() {
+      return getFormulaFormat(this.element.help_text)
+    },
     computedInputValue: {
       get() {
         return this.inputValue

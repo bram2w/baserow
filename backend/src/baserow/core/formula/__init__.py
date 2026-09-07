@@ -9,6 +9,7 @@ from baserow.core.formula.parser.generated.BaserowFormula import BaserowFormula
 from baserow.core.formula.parser.generated.BaserowFormulaVisitor import (
     BaserowFormulaVisitor,
 )
+from baserow.core.formula.text_format import strip_format
 from baserow.core.formula.types import (
     BASEROW_FORMULA_MODE_RAW,
     BaserowFormulaObject,
@@ -45,12 +46,16 @@ def resolve_formula(
     :return: the formula result.
     """
 
+    # The text format marker is not part of the formula: it is never resolved
+    # and never part of the result.
+    bare_formula = strip_format(formula["formula"])
+
     # If we receive a blank formula string, don't attempt to parse it.
-    if not formula["formula"]:
-        return formula["formula"]
+    if not bare_formula:
+        return bare_formula
 
     if formula["mode"] == BASEROW_FORMULA_MODE_RAW:
-        return formula["formula"]
+        return bare_formula
 
-    tree = get_parse_tree_for_formula(formula["formula"])
+    tree = get_parse_tree_for_formula(bare_formula)
     return BaserowFormulaExecutionVisitor(functions, formula_context).visit(tree)

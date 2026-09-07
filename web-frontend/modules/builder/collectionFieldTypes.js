@@ -24,6 +24,7 @@ import { pathParametersInError } from '@baserow/modules/builder/utils/params'
 import { ClickEvent } from '@baserow/modules/builder/eventTypes'
 import { ThemeConfigBlockType } from '@baserow/modules/builder/themeConfigBlockTypes'
 import { LINK_VARIANTS } from '@baserow/modules/builder/enums'
+import { getFormulaFormat } from '@baserow/modules/core/formula/textFormat'
 
 export class CollectionFieldType extends Registerable {
   get name() {
@@ -140,7 +141,10 @@ export class TextCollectionFieldType extends CollectionFieldType {
   }
 
   getProps(field, { resolveFormula, applicationContext }) {
-    return { value: ensureString(resolveFormula(field.value)) }
+    return {
+      value: ensureString(resolveFormula(field.value)),
+      format: getFormulaFormat(field.value),
+    }
   }
 
   getOrder() {

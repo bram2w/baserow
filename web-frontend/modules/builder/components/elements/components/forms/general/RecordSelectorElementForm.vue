@@ -73,6 +73,10 @@
         :placeholder="$t('generalForm.labelPlaceholder')"
       />
     </FormGroup>
+    <ValueFormatSelector
+      v-model="values.label"
+      :label="$t('textFormatSelector.labelFormat')"
+    />
     <FormGroup
       v-if="values.data_source_id"
       small-label
@@ -145,6 +149,7 @@ import {
 } from '@vuelidate/validators'
 import DataSourceDropdown from '@baserow/modules/builder/components/dataSource/DataSourceDropdown.vue'
 import PropertyOptionForm from '@baserow/modules/builder/components/elements/components/forms/general/settings/PropertyOptionForm'
+import ValueFormatSelector from '@baserow/modules/builder/components/elements/components/forms/ValueFormatSelector'
 
 export default {
   name: 'RecordSelectorElementForm',
@@ -153,6 +158,7 @@ export default {
     DataSourceDropdown,
     CustomStyleButton,
     InjectedFormulaInput,
+    ValueFormatSelector,
   },
   mixins: [formElementForm, collectionElementForm],
   emits: ['values-changed'],

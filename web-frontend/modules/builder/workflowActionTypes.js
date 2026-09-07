@@ -24,6 +24,7 @@ import { ensureString } from '@baserow/modules/core/utils/validator'
 import { pathParametersInError } from '@baserow/modules/builder/utils/params'
 import { handleDispatchError } from '@baserow/modules/builder/utils/error'
 import { SlackWriteMessageServiceType } from '@baserow/modules/integrations/slack/serviceTypes'
+import { getFormulaFormat } from '@baserow/modules/core/formula/textFormat'
 
 export class NotificationWorkflowActionType extends WorkflowActionType {
   static getType() {
@@ -53,7 +54,9 @@ export class NotificationWorkflowActionType extends WorkflowActionType {
   execute({ workflowAction: { title, description }, resolveFormula }) {
     return this.app.$store.dispatch('builderToast/info', {
       title: ensureString(resolveFormula(title)),
+      titleFormat: getFormulaFormat(title),
       message: ensureString(resolveFormula(description)),
+      messageFormat: getFormulaFormat(description),
     })
   }
 

@@ -38,6 +38,10 @@ import ButtonElementForm from '@baserow/modules/builder/components/elements/comp
 import { ClickEvent, SubmitEvent } from '@baserow/modules/builder/eventTypes'
 import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
 import { resolveFormula } from '@baserow/modules/core/formula'
+import {
+  getFormulaFormat,
+  splitFormat,
+} from '@baserow/modules/core/formula/textFormat'
 import FormContainerElement from '@baserow/modules/builder/components/elements/components/FormContainerElement.vue'
 import FormContainerElementForm from '@baserow/modules/builder/components/elements/components/forms/general/FormContainerElementForm.vue'
 import SimpleContainerElement from '@baserow/modules/builder/components/elements/components/SimpleContainerElement.vue'
@@ -1893,16 +1897,26 @@ export class ChoiceElementType extends FormElementType {
    * gathers all valid Values. When a Value null, the Name is used instead.
    * Otherwise, the Value itself is used.
    *
+   * The option names carry their own text format (see
+   * `core/formula/textFormat`): a manual option name is stored with the
+   * marker, a formula name formula is marked as a whole. The marker is
+   * neither displayed nor submitted as the value, so every option is returned
+   * with its bare `name` and a `format`.
+   *
    * @param element - The choice form element
    * @returns {Array} - An array of valid Values
    */
   getOptionsResolved(element, applicationContext) {
     switch (element.option_type) {
       case CHOICE_OPTION_TYPES.MANUAL:
-        return element.options.map(({ name, value }) => ({
-          name,
-          value: value === null ? name : value,
-        }))
+        return element.options.map(({ name, value }) => {
+          const { format, value: bareName } = splitFormat(name)
+          return {
+            name: bareName,
+            value: value === null ? bareName : value,
+            format,
+          }
+        })
       case CHOICE_OPTION_TYPES.FORMULAS: {
         const formulaValues = ensureArray(
           this.resolveFormula(element.formula_value, applicationContext)
@@ -1910,12 +1924,14 @@ export class ChoiceElementType extends FormElementType {
         const formulaNames = ensureArray(
           this.resolveFormula(element.formula_name, applicationContext)
         )
+        const format = getFormulaFormat(element.formula_name)
         return formulaValues.map((value, index) => ({
           id: index,
           value: ensureStringOrInteger(value),
           name: ensureString(
             index < formulaValues.length ? formulaNames[index] : value
           ),
+          format,
         }))
       }
       default:

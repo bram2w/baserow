@@ -1684,3 +1684,60 @@ def test_create_row_action_can_access_the_field_of_previous_action(
     # The ID of the new row that was created by the first Workflow Action
     row_id = action_1.service.table.get_model().objects.all()[2].id
     assert getattr(results[0], fields_2[0].db_column) == str(row_id)
+
+
+@pytest.mark.django_db
+def test_notification_workflow_action_markdown_title_and_description(
+    api_client, data_fixture
+):
+    """
+    A Markdown title or description is stored with the `__markdown__` marker in
+    front of the formula, which the API validates, stores and returns as-is.
+    """
+
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    element = data_fixture.create_builder_button_element(page=page)
+
+    url = reverse("api:builder:workflow_action:list", kwargs={"page_id": page.id})
+    response = api_client.post(
+        url,
+        {"type": "notification", "event": "click", "element_id": element.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    url = reverse(
+        "api:builder:workflow_action:item",
+        kwargs={"workflow_action_id": response.json()["id"]},
+    )
+    response = api_client.patch(
+        url,
+        {
+            "title": {"formula": "__markdown__'**Saved**'", "mode": "simple"},
+            "description": {
+                "formula": "__markdown__See [details](/details)",
+                "mode": "raw",
+            },
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    assert response.json()["title"]["formula"] == "__markdown__'**Saved**'"
+    assert response.json()["description"]["formula"] == (
+        "__markdown__See [details](/details)"
+    )
+
+    response = api_client.patch(
+        url,
+        {"title": {"formula": "__markdown__get('foobar.1')", "mode": "simple"}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response.json()["detail"]["title"][0]["code"] == "invalid_formula_argument"

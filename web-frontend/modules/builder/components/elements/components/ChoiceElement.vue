@@ -5,6 +5,13 @@
     :error-message="displayFormDataError ? $t('error.requiredField') : ''"
     :style="getStyleOverride('input')"
   >
+    <template #label>
+      <FormattedText
+        :content="labelResolved"
+        :format="labelFormat"
+        preset="inlineLinks"
+      />
+    </template>
     <ABDropdown
       v-if="element.show_as_dropdown"
       v-model="inputValue"
@@ -17,12 +24,39 @@
       :clearable="!element.multiple && !element.required"
       @hide="onFormElementTouch"
     >
+      <template v-if="hasMarkdownOptions" #value>
+        <span class="ab-dropdown__selected-text">
+          <template v-for="(option, index) in selectedOptions" :key="index">
+            <template v-if="index > 0">, </template>
+            <FormattedText
+              :content="option.name"
+              :format="option.format"
+              preset="inline"
+            />
+          </template>
+        </span>
+      </template>
       <ABDropdownItem
         v-for="option in optionsResolved"
         :key="option.id"
-        :name="option.name || (option.value ? `${option.value}` : '')"
+        :name="dropdownOptionName(option)"
         :value="option.value"
-      />
+      >
+        <!--
+        The search and the tooltip keep using the raw option name; only the
+        visible text is rendered.
+        -->
+        <span
+          class="ab-dropdownitem__item-name-text"
+          :title="dropdownOptionName(option)"
+        >
+          <FormattedText
+            :content="dropdownOptionName(option)"
+            :format="option.format"
+            preset="inline"
+          />
+        </span>
+      </ABDropdownItem>
     </ABDropdown>
     <template v-else>
       <template v-if="canHaveOptions">
@@ -35,7 +69,11 @@
             :model-value="inputValue.includes(option.value)"
             @update:model-value="onOptionChange(option, $event)"
           >
-            {{ option.name || option.value }}
+            <FormattedText
+              :content="optionName(option)"
+              :format="option.format"
+              preset="inline"
+            />
           </ABCheckbox>
         </template>
         <template v-else>
@@ -47,7 +85,11 @@
             :model-value="option.value === inputValue"
             @update:model-value="onOptionChange(option, $event)"
           >
-            {{ option.name || option.value }}
+            <FormattedText
+              :content="optionName(option)"
+              :format="option.format"
+              preset="inline"
+            />
           </ABRadio>
         </template>
       </template>
@@ -59,9 +101,13 @@
 <script>
 import formElement from '@baserow/modules/builder/mixins/formElement'
 import { ensureString } from '@baserow/modules/core/utils/validator'
+import { TEXT_FORMAT_TYPES } from '@baserow/modules/builder/enums'
+import FormattedText from '@baserow/modules/builder/components/FormattedText'
+import { getFormulaFormat } from '@baserow/modules/core/formula/textFormat'
 
 export default {
   name: 'ChoiceElement',
+  components: { FormattedText },
   mixins: [formElement],
   props: {
     /**
@@ -83,6 +129,9 @@ export default {
     },
   },
   computed: {
+    labelFormat() {
+      return getFormulaFormat(this.element.label)
+    },
     labelResolved() {
       return ensureString(this.resolveFormula(this.element.label))
     },
@@ -98,6 +147,29 @@ export default {
         this.applicationContext
       )
     },
+    hasMarkdownOptions() {
+      return this.optionsResolved.some(
+        (option) => option.format === TEXT_FORMAT_TYPES.MARKDOWN
+      )
+    },
+    /**
+     * The selected options, in the order the values are stored, used to render
+     * the collapsed dropdown when the options are Markdown.
+     */
+    selectedOptions() {
+      const values = this.element.multiple
+        ? this.inputValue || []
+        : [this.inputValue]
+      return values
+        .map((value) =>
+          this.optionsResolved.find((option) => option.value === value)
+        )
+        .filter(Boolean)
+        .map((option) => ({
+          name: this.dropdownOptionName(option),
+          format: option.format,
+        }))
+    },
   },
   watch: {
     'element.multiple'() {
@@ -105,6 +177,12 @@ export default {
     },
   },
   methods: {
+    optionName(option) {
+      return ensureString(option.name || option.value)
+    },
+    dropdownOptionName(option) {
+      return option.name || (option.value ? `${option.value}` : '')
+    },
     onOptionChange(option, value) {
       if (value) {
         if (this.element.multiple) {

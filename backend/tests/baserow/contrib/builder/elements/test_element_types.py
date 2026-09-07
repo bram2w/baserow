@@ -1665,3 +1665,28 @@ def test_element_type_get_event_names(data_fixture):
     assert get_event_names(form) == ["submit"]
     assert get_event_names(table) == [f"{button_field.uid}_click"]
     assert get_event_names(menu) == [f"{button_item_uid}_click"]
+
+
+@pytest.mark.django_db
+def test_choice_element_is_valid_with_markdown_option_names(data_fixture):
+    """
+    An option without a value falls back to its name. A Markdown option name is
+    stored with the `__markdown__` marker, which the frontend neither displays nor
+    submits, so the fallback value is the bare name.
+    """
+
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    choice = ElementService().create_element(
+        user=user,
+        element_type=element_type_registry.get("choice"),
+        page=page,
+    )
+    choice.choiceelementoption_set.create(value=None, name="__markdown__**Bold**")
+    choice.choiceelementoption_set.create(value="plain", name="__markdown__Plain")
+
+    assert ChoiceElementType().is_valid(choice, "**Bold**", {}) == "**Bold**"
+    assert ChoiceElementType().is_valid(choice, "plain", {}) == "plain"
+
+    with pytest.raises(ValueError):
+        ChoiceElementType().is_valid(choice, "__markdown__**Bold**", {})

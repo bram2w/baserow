@@ -1,4 +1,5 @@
 import json
+from collections import defaultdict
 from unittest.mock import MagicMock, patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -11,9 +12,11 @@ from baserow.api.exceptions import RequestBodyValidationException
 from baserow.contrib.builder.data_sources.builder_dispatch_context import (
     BuilderDispatchContext,
 )
+from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.elements.service import ElementService
 from baserow.contrib.builder.workflow_actions.models import EventTypes
+from baserow.core.utils import MirrorDict
 from baserow.test_utils.helpers import AnyInt, AnyStr
 from baserow_enterprise.builder.elements.element_types import (
     AuthFormElementType,
@@ -309,3 +312,34 @@ def test_auth_form_element_get_event_names(data_fixture):
     assert AuthFormElementType().get_event_names(auth_form) == [
         EventTypes.AFTER_LOGIN.value
     ]
+
+
+@pytest.mark.django_db
+def test_export_import_file_input_element_markdown_formulas(
+    data_fixture, enable_enterprise
+):
+    """
+    A Markdown label or help text is stored with the `__markdown__` marker in
+    front of the formula, which survives an export/import.
+    """
+
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    element = data_fixture.create_builder_element(
+        FileInputElementType,
+        user,
+        page=page,
+        label="__markdown__'Your **CV**'",
+        help_text="__markdown__'# Drop it'",
+    )
+    element_type = element.get_type()
+
+    exported = element_type.export_serialized(element)
+    assert exported["label"]["formula"] == "__markdown__'Your **CV**'"
+    assert exported["help_text"]["formula"] == "__markdown__'# Drop it'"
+
+    imported_element = ElementHandler().import_element(
+        page, exported, defaultdict(lambda: MirrorDict())
+    )
+    assert imported_element.label["formula"] == "__markdown__'Your **CV**'"
+    assert imported_element.help_text["formula"] == "__markdown__'# Drop it'"

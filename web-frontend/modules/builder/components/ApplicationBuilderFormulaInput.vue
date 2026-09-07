@@ -17,6 +17,7 @@
 import FormulaInputField from '@baserow/modules/core/components/formula/FormulaInputField'
 import { DataSourceDataProviderType } from '@baserow/modules/builder/dataProviderTypes'
 import { buildFormulaFunctionNodes } from '@baserow/modules/core/formula'
+import { addPrefix, splitFormat } from '@baserow/modules/core/formula/textFormat'
 import { getDataNodesFromDataProvider } from '@baserow/modules/core/utils/dataProviders'
 import { useApplicationContext } from '@baserow/modules/builder/mixins/useApplicationContext'
 
@@ -106,12 +107,19 @@ const nodesHierarchy = computed(() => {
 })
 
 /**
+ * The stored formula may begin with a text format marker (see
+ * `core/formula/textFormat`). It is not part of the formula: the editor never
+ * shows it, and it is added back to whatever the editor emits.
+ */
+const formulaParts = computed(() => splitFormat(currentValue.value.formula))
+
+/**
  * Extract the expression string from the value object, the FormulaInputField
  * component only needs the expression string itself.
  * @returns {String} The expression string.
  */
 const formulaStr = computed(() => {
-  return currentValue.value.formula
+  return formulaParts.value.value
 })
 
 const dataSourceLoading = computed(() => {
@@ -147,14 +155,15 @@ const dataExplorerLoading = computed(() => {
  * @param {String} newFormulaStr The new expression string.
  */
 const updatedFormulaStr = (newFormulaStr) => {
+  const formula = addPrefix(newFormulaStr, formulaParts.value.format)
   emit('input', {
     ...currentValue.value,
-    formula: newFormulaStr,
+    formula,
     mode: localMode.value,
   })
   emit('update:modelValue', {
     ...currentValue.value,
-    formula: newFormulaStr,
+    formula,
     mode: localMode.value,
   })
 }

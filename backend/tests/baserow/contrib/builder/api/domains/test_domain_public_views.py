@@ -2370,3 +2370,61 @@ def test_public_dispatch_data_source_with_refinements_referencing_trashed_field(
         "detail": "A data source sort is misconfigured: "
         "One or more sorted properties no longer exist.",
     }
+
+
+@pytest.mark.django_db
+def test_public_dispatch_data_source_view_returns_fields_behind_text_format_marker(
+    data_fixture,
+    api_client,
+    user_source_user_fixture,
+):
+    """
+    A field referenced only from a Markdown label, stored as `__markdown__get(...)`,
+    must be part of the public allowlist and returned by the dispatch.
+    """
+
+    user = user_source_user_fixture["user"]
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Food", "text"),
+            ("Spiciness", "number"),
+        ],
+        rows=[
+            ["Paneer Tikka", 5],
+            ["Gobi Manchurian", 8],
+        ],
+    )
+    page = user_source_user_fixture["page"]
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=page,
+        integration=user_source_user_fixture["integration"],
+        table=table,
+    )
+    data_fixture.create_builder_input_text_element(
+        page=page,
+        label=f"__markdown__get('data_source.{data_source.id}.*.field_{fields[0].id}')",
+    )
+
+    builder = user_source_user_fixture["builder"]
+    builder.workspace = None
+    builder.save()
+    data_fixture.create_builder_custom_domain(published_to=builder)
+
+    url = reverse(
+        "api:builder:domains:public_dispatch",
+        kwargs={"data_source_id": data_source.id},
+    )
+    user_token = user_source_user_fixture["user_source_user_token"]
+    response = api_client.post(url, HTTP_AUTHORIZATION=f"JWT {user_token}")
+
+    assert response.status_code == 200
+    # Only the field used by the Markdown label is returned.
+    assert response.json() == {
+        "has_next_page": False,
+        "results": [
+            {fields[0].name: "Paneer Tikka"},
+            {fields[0].name: "Gobi Manchurian"},
+        ],
+    }

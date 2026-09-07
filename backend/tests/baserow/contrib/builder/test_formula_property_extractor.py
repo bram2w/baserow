@@ -1130,3 +1130,39 @@ def test_get_builder_used_property_names_returns_merged_property_names_integrati
             ],  # From workflow_action2
         },
     }
+
+
+@pytest.mark.django_db
+def test_get_element_property_names_includes_fields_behind_text_format_marker(
+    data_fixture,
+):
+    """
+    A Markdown label is stored as `__markdown__get(...)`. The public page
+    allowlist must still see the fields it references, otherwise the published
+    element would render blank.
+    """
+
+    user = data_fixture.create_user()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[("Food", "text"), ("Spiciness", "number")],
+        rows=[["Paneer Tikka", 5]],
+    )
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(builder=builder)
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        page=page, integration=integration, table=table
+    )
+    element = data_fixture.create_builder_input_text_element(
+        page=page,
+        label=f"__markdown__get('data_source.{data_source.id}.*.field_{fields[0].id}')",
+    )
+
+    results = get_element_property_names([element], {element.id: element})
+
+    assert results == {
+        "external": {data_source.service_id: [f"field_{fields[0].id}"]},
+    }

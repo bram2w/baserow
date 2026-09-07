@@ -137,3 +137,49 @@ def test_formula_import_ignores_parseable_but_invalid_formula(
     result = import_formula(BaserowFormulaObject.create(invalid_formula), id_mapping)
 
     assert result["formula"] == invalid_formula
+
+
+@pytest.mark.django_db
+def test_formula_import_formula_keeps_text_format_marker(
+    mutable_builder_data_provider_registry,
+):
+    """
+    A Markdown formula is stored with the `__markdown__` marker in front of it.
+    The marker is not part of the formula: the `get()` paths behind it are
+    rewritten as usual and the marker is kept on the result.
+    """
+
+    mutable_builder_data_provider_registry.register(TestDataProviderTypeWithImport())
+    id_mapping = {"first": {1: 10}, "second": {10: 42}}
+
+    result = import_formula(
+        BaserowFormulaObject.create("__markdown__get('test_provider.1.10')"),
+        id_mapping,
+    )
+
+    assert result["formula"] == "__markdown__get('test_provider.10.42')"
+
+
+@pytest.mark.django_db
+# `stored_formula` rather than `formula`, which `pytest_generate_tests` above
+# parametrizes for the whole module.
+@pytest.mark.parametrize(
+    "stored_formula,mode",
+    [
+        ("__markdown__", "simple"),
+        ("__markdown__get('test_provider.1.10')", "raw"),
+        ("__markdown__'plain text'", "simple"),
+    ],
+)
+def test_formula_import_formula_marker_only_raw_or_literal(
+    stored_formula, mode, mutable_builder_data_provider_registry
+):
+    mutable_builder_data_provider_registry.register(TestDataProviderTypeWithImport())
+    id_mapping = {"first": {1: 10}, "second": {10: 42}}
+
+    result = import_formula(
+        BaserowFormulaObject.create(stored_formula, mode=mode),
+        id_mapping,
+    )
+
+    assert result["formula"] == stored_formula

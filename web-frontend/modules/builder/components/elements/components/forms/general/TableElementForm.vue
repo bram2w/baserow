@@ -114,7 +114,7 @@
             toggle-on-click
           >
             <template #title>
-              <span v-if="field.name">{{ field.name }}</span>
+              <span v-if="fieldName(field)">{{ fieldName(field) }}</span>
               <span v-else class="color-neutral">
                 ({{ $t('tableElementForm.noName') }})
               </span>
@@ -137,11 +137,17 @@
                 :error-message="v$.values.fields.$each.$message[index]?.[0]"
               >
                 <FormInput
-                  v-model="v$.values.fields.$model[index].name"
+                  :model-value="fieldName(field)"
                   class="table-element-form__field-label"
+                  @update:model-value="setFieldName(index, $event)"
                 >
                 </FormInput>
               </FormGroup>
+              <ValueFormatSelector
+                v-model="v$.values.fields.$model[index].name"
+                :label="$t('tableElementForm.nameFormat')"
+                horizontal
+              />
 
               <FormGroup
                 small-label
@@ -267,6 +273,11 @@ import {
 } from '@vuelidate/validators'
 import collectionElementForm from '@baserow/modules/builder/mixins/collectionElementForm'
 import { ORIENTATIONS } from '@baserow/modules/builder/enums'
+import {
+  addPrefix,
+  getFormat,
+  stripFormat,
+} from '@baserow/modules/core/formula/textFormat'
 import DeviceSelector from '@baserow/modules/builder/components/page/header/DeviceSelector.vue'
 import { mapActions, mapGetters } from 'vuex'
 import CustomStyleButton from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyleButton'
@@ -274,6 +285,7 @@ import ServiceSchemaPropertySelector from '@baserow/modules/core/components/serv
 import DataSourceDropdown from '@baserow/modules/builder/components/dataSource/DataSourceDropdown'
 import PropertyOptionForm from '@baserow/modules/builder/components/elements/components/forms/general/settings/PropertyOptionForm'
 import SidebarExpandable from '@baserow/modules/builder/components/SidebarExpandable.vue'
+import ValueFormatSelector from '@baserow/modules/builder/components/elements/components/forms/ValueFormatSelector'
 
 export default {
   name: 'TableElementForm',
@@ -285,6 +297,7 @@ export default {
     DeviceSelector,
     CustomStyleButton,
     SidebarExpandable,
+    ValueFormatSelector,
   },
   mixins: [collectionElementForm],
   emits: ['values-changed'],
@@ -344,11 +357,22 @@ export default {
     ...mapActions({
       actionSetDeviceTypeSelected: 'page/setDeviceTypeSelected',
     }),
+    /**
+     * The field name carries its own text format marker (see
+     * `core/formula/textFormat`), which the name input never shows.
+     */
+    fieldName(field) {
+      return stripFormat(field.name)
+    },
+    setFieldName(index, name) {
+      const field = this.v$.values.fields.$model[index]
+      field.name = addPrefix(name, getFormat(field.name))
+    },
     addField() {
       this.v$.values.fields.$model.push({
         name: getNextAvailableNameInSequence(
           this.$t('tableElementForm.fieldDefaultName'),
-          this.v$.values.fields.$model.map(({ name }) => name)
+          this.v$.values.fields.$model.map(({ name }) => stripFormat(name))
         ),
         value: {},
         type: 'text',

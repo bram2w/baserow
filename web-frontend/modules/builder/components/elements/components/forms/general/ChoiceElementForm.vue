@@ -17,6 +17,10 @@
         :placeholder="$t('generalForm.labelPlaceholder')"
       />
     </FormGroup>
+    <ValueFormatSelector
+      v-model="values.label"
+      :label="$t('textFormatSelector.labelFormat')"
+    />
     <FormGroup
       small-label
       :label="$t('generalForm.valueTitle')"
@@ -82,6 +86,10 @@
         type="button"
       />
     </FormGroup>
+    <TextFormatSelector
+      v-model="optionFormat"
+      :label="$t('choiceElementForm.optionFormat')"
+    />
     <template v-if="values.option_type === CHOICE_OPTION_TYPES.MANUAL">
       <template v-if="values.options.length">
         <div class="row" style="--gap: 6px">
@@ -100,13 +108,14 @@
         >
           <div class="col col-5">
             <FormInput
-              v-model="option.name"
+              :model-value="optionName(option)"
               :placeholder="$t('choiceOptionSelector.namePlaceholder')"
+              @update:model-value="setOptionName(option, $event)"
             />
           </div>
           <div class="col col-5">
             <FormInput
-              :value="option.value === null ? option.name : option.value"
+              :value="option.value === null ? optionName(option) : option.value"
               :placeholder="$t('choiceOptionSelector.valuePlaceholder')"
               :class="{
                 'choice-element__option-value--fake': option.value === null,
@@ -164,16 +173,31 @@
 
 <script>
 import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput.vue'
-import { CHOICE_OPTION_TYPES } from '@baserow/modules/builder/enums'
+import {
+  CHOICE_OPTION_TYPES,
+  TEXT_FORMAT_TYPES,
+} from '@baserow/modules/builder/enums'
 import CustomStyleButton from '@baserow/modules/builder/components/elements/components/forms/style/CustomStyleButton'
 import formElementForm from '@baserow/modules/builder/mixins/formElementForm'
 import { uuid } from '@baserow/modules/core/utils/string'
+import {
+  addPrefix,
+  getFormat,
+  getFormulaFormat,
+  setFormat,
+  setFormulaFormat,
+  stripFormat,
+} from '@baserow/modules/core/formula/textFormat'
+import TextFormatSelector from '@baserow/modules/builder/components/elements/components/forms/TextFormatSelector'
+import ValueFormatSelector from '@baserow/modules/builder/components/elements/components/forms/ValueFormatSelector'
 
 export default {
   name: 'ChoiceElementForm',
   components: {
     InjectedFormulaInput,
     CustomStyleButton,
+    TextFormatSelector,
+    ValueFormatSelector,
   },
   mixins: [formElementForm],
   props: {
@@ -211,10 +235,21 @@ export default {
         formula_value: {},
         styles: {},
       },
+      /**
+       * The option names carry their own text format marker (see
+       * `core/formula/textFormat`), so there is no `option_format` property to
+       * store: this element-level toggle is initialised from the stored option
+       * names and written back into every option name, or into the name formula
+       * when the options come from formulas.
+       */
+      optionFormat: TEXT_FORMAT_TYPES.PLAIN,
     }
   },
   computed: {
     CHOICE_OPTION_TYPES: () => CHOICE_OPTION_TYPES,
+    manualOptions() {
+      return Array.isArray(this.values.options) ? this.values.options : []
+    },
     element() {
       return this.$store.getters['element/getElementById'](
         this.elementPage,
@@ -262,10 +297,65 @@ export default {
     'element.options'(options) {
       this.values.options = { ...options }
     },
+    optionFormat(format) {
+      this.applyOptionFormat(format)
+    },
+    'values.option_type'() {
+      this.applyOptionFormat(this.optionFormat)
+    },
+  },
+  created() {
+    this.optionFormat = this.getStoredOptionFormat()
   },
   methods: {
+    /**
+     * The format the active option type is stored with: the manual options are
+     * Markdown when every option name is marked, the formula options when the
+     * name formula is.
+     */
+    getStoredOptionFormat() {
+      if (this.values.option_type === CHOICE_OPTION_TYPES.FORMULAS) {
+        return getFormulaFormat(this.values.formula_name)
+      }
+      const options = this.manualOptions
+      const allMarkdown =
+        options.length > 0 &&
+        options.every(
+          (option) => getFormat(option.name) === TEXT_FORMAT_TYPES.MARKDOWN
+        )
+      return allMarkdown ? TEXT_FORMAT_TYPES.MARKDOWN : TEXT_FORMAT_TYPES.PLAIN
+    },
+    /**
+     * Writes the toggle into the stored values of the active option type.
+     */
+    applyOptionFormat(format) {
+      if (this.values.option_type === CHOICE_OPTION_TYPES.FORMULAS) {
+        if (getFormulaFormat(this.values.formula_name) !== format) {
+          this.values.formula_name = setFormulaFormat(
+            this.values.formula_name,
+            format
+          )
+        }
+      } else {
+        this.manualOptions.forEach((option) => {
+          if (getFormat(option.name) !== format) {
+            option.name = setFormat(option.name, format)
+          }
+        })
+      }
+    },
+    optionName(option) {
+      return stripFormat(option.name)
+    },
+    setOptionName(option, name) {
+      option.name = addPrefix(name, this.optionFormat)
+    },
     createOption() {
-      this.values.options.push({ name: '', value: null, id: uuid() })
+      this.values.options.push({
+        name: addPrefix('', this.optionFormat),
+        value: null,
+        id: uuid(),
+      })
     },
     deleteOption({ id }) {
       this.values.options = this.values.options.filter(

@@ -99,6 +99,7 @@ from baserow.core.formula import (
 )
 from baserow.core.formula.field import BASEROW_FORMULA_VERSION_INITIAL
 from baserow.core.formula.registries import formula_runtime_function_registry
+from baserow.core.formula.text_format import strip_format
 from baserow.core.formula.types import (
     BASEROW_FORMULA_MODE_SIMPLE,
     BaserowFormula,
@@ -682,7 +683,7 @@ class RecordSelectorElementType(
                 # of the element so that we can resolve them.
                 formula_context = kwargs | self.import_context_addition(instance)
                 tree = get_parse_tree_for_formula(
-                    instance.option_name_suffix["formula"]
+                    strip_format(instance.option_name_suffix["formula"])
                 )
                 properties = merge_dicts_no_duplicates(
                     properties,
@@ -2062,8 +2063,11 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
         options_tuple = set(
             element.choiceelementoption_set.values_list("value", "name")
         )
+        # A `null` value falls back to the name, which the frontend displays
+        # and submits without its text format marker.
         options = [
-            value if value is not None else name for (value, name) in options_tuple
+            value if value is not None else strip_format(name)
+            for (value, name) in options_tuple
         ]
 
         if element.option_type == ChoiceElement.OPTION_TYPE.FORMULAS:

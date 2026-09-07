@@ -5,6 +5,7 @@ import {
   ensureArray,
   ensureNumeric,
 } from '@baserow/modules/core/utils/validator'
+import { TEXT_FORMATS } from '@baserow/modules/core/formula/textFormat'
 import {
   DataSourceDataProviderType,
   DataSourceContextDataProviderType,
@@ -53,10 +54,9 @@ export const ALLOWED_LINK_PROTOCOLS = [
   'tel:',
 ]
 
-export const TEXT_FORMAT_TYPES = {
-  PLAIN: 'plain',
-  MARKDOWN: 'markdown',
-}
+// The text format is stored inside the value itself, see
+// `core/formula/textFormat`. Only the Text element keeps a `format` column.
+export const TEXT_FORMAT_TYPES = TEXT_FORMATS
 
 export const IMAGE_SOURCE_TYPES = {
   UPLOAD: 'upload',
