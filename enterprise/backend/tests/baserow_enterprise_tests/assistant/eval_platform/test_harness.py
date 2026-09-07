@@ -1,12 +1,20 @@
 import asyncio
 import threading
 import time
-from unittest.mock import patch
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from asgiref.sync import async_to_sync
+from pydantic import BaseModel, TypeAdapter, ValidationError
 from pydantic_ai import Agent
 from pydantic_ai.models.test import TestModel
 
+from baserow.core.ai_provider.constants import (
+    AI_PROVIDER_FEATURE_KUMA,
+    AI_PROVIDER_FEATURE_MODE_MODEL,
+)
+from baserow.core.ai_provider.handler import AIProviderHandler
 from baserow_enterprise.assistant.agents import main_agent
 from baserow_enterprise.assistant.assistant import build_agent_run_context
 from baserow_enterprise.assistant.deps import ToolHelpers
@@ -16,15 +24,21 @@ from baserow_enterprise.assistant.evals.harness import (
     PROMPT_ATTR_TARGETS,
     EvalCaseTimeout,
     get_case_timeout_s,
-    override_assistant_model,
     override_assistant_prompts,
     run_case,
 )
 from baserow_enterprise.assistant.evals.prompt_sync import SYNCED_PROMPTS
 from baserow_enterprise.assistant.evals.scenarios import make_fixtures
 from baserow_enterprise.assistant.evals.types import CheckResult, EvalCase, EvalScenario
-from baserow_enterprise.assistant.model_profiles import ORCHESTRATOR, get_model_settings
+from baserow_enterprise.assistant.model_profiles import (
+    ORCHESTRATOR,
+    ResolvedAssistantModelProfile,
+    get_model_settings,
+    resolve_assistant_model,
+)
 from baserow_enterprise.assistant.retrying_model import RetryingModel
+from baserow_enterprise.assistant.tools.registries import assistant_tool_registry
+from baserow_enterprise.assistant.tools.toolset import InlineRefsToolset
 
 
 @pytest.fixture(autouse=True)
@@ -38,8 +52,38 @@ def _set_test_model(settings):
     settings.BASEROW_ENTERPRISE_ASSISTANT_LLM_MODEL = "groq/test-model"
 
 
-def _noop_tool_helpers() -> ToolHelpers:
-    return ToolHelpers(lambda x: None, lambda x: None)
+@pytest.fixture
+def configured_workspace(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    provider = AIProviderHandler.create_provider(
+        "openai",
+        api_key="database-secret",
+        workspace=workspace,
+        models_data=[
+            {
+                "model_identifier": "database-model",
+                "feature_types": [AI_PROVIDER_FEATURE_KUMA],
+            }
+        ],
+    )
+    AIProviderHandler.update_feature_setting(
+        AI_PROVIDER_FEATURE_KUMA,
+        AI_PROVIDER_FEATURE_MODE_MODEL,
+        workspace=workspace,
+        model=provider.models.get(),
+    )
+    return user, workspace
+
+
+def _noop_tool_helpers(workspace) -> ToolHelpers:
+    return ToolHelpers(
+        lambda x: None,
+        lambda x: None,
+        model_profile=resolve_assistant_model(
+            workspace=workspace, model="groq:test-model"
+        ),
+    )
 
 
 @pytest.mark.django_db
@@ -49,7 +93,7 @@ class TestBuildAgentRunContext:
         user = fixtures.create_user()
         workspace = fixtures.create_workspace(user=user)
 
-        ctx = build_agent_run_context(user, workspace, _noop_tool_helpers())
+        ctx = build_agent_run_context(user, workspace, _noop_tool_helpers(workspace))
 
         assert ctx.deps.database_manifest
         assert ctx.deps.application_manifest
@@ -59,40 +103,86 @@ class TestBuildAgentRunContext:
         assert ctx.deps.user is user
         assert ctx.deps.workspace is workspace
 
+    def test_passes_concrete_model_and_explicit_profile(self, configured_workspace):
+        user, workspace = configured_workspace
+        helpers = _noop_tool_helpers(workspace)
+        toolset = MagicMock()
 
-class TestOverrideAssistantModel:
-    def test_restores_previous_setting_on_exception(self, settings):
-        settings.BASEROW_ENTERPRISE_ASSISTANT_LLM_MODEL = "groq/original-model"
+        with patch.object(
+            assistant_tool_registry,
+            "build_toolset",
+            return_value=(toolset, "database", "application", "automation", "explain"),
+        ) as build_toolset:
+            ctx = build_agent_run_context(user, workspace, helpers)
 
-        with pytest.raises(ValueError):
-            with override_assistant_model("groq:override-model"):
-                assert (
-                    settings.BASEROW_ENTERPRISE_ASSISTANT_LLM_MODEL
-                    == "groq/override-model"
-                )
-                raise ValueError("boom")
+        assert ctx.toolset is toolset
+        assert ctx.deps.tool_helpers.model_profile is helpers.model_profile
+        assert (
+            resolve_assistant_model(workspace=workspace).model_string
+            == "openai:database-model"
+        )
+        build_toolset.assert_called_once_with(
+            user=user,
+            workspace=workspace,
+            model=ctx.model,
+            model_profile=helpers.model_profile,
+            deps=ctx.deps,
+        )
+        assert isinstance(ctx.model, RetryingModel)
 
-        assert settings.BASEROW_ENTERPRISE_ASSISTANT_LLM_MODEL == "groq/original-model"
+    def test_tool_arg_repair_owns_the_concrete_model_lifecycle(self, data_fixture):
+        """Preserve the concrete-model regression from the retired eval utilities."""
 
-    def test_restores_previous_setting_on_success(self, settings):
-        settings.BASEROW_ENTERPRISE_ASSISTANT_LLM_MODEL = "groq/original-model"
+        class ToolArgs(BaseModel):
+            count: int
 
-        with override_assistant_model("groq:override-model"):
-            assert (
-                settings.BASEROW_ENTERPRISE_ASSISTANT_LLM_MODEL == "groq/override-model"
+        user = data_fixture.create_user()
+        workspace = data_fixture.create_workspace(user=user)
+        model = MagicMock()
+        model.__aenter__.return_value = model
+        model.__aexit__.return_value = None
+
+        def build_toolset(**kwargs):
+            return (
+                InlineRefsToolset(
+                    MagicMock(),
+                    model=kwargs["model"],
+                    model_profile=kwargs["model_profile"],
+                ),
+                "database",
+                "application",
+                "automation",
+                "explain",
             )
 
-        assert settings.BASEROW_ENTERPRISE_ASSISTANT_LLM_MODEL == "groq/original-model"
+        with (
+            patch.object(
+                ResolvedAssistantModelProfile, "create_model", return_value=model
+            ),
+            patch.object(
+                assistant_tool_registry, "build_toolset", side_effect=build_toolset
+            ),
+            patch(
+                "pydantic_ai.Agent.run",
+                new=AsyncMock(return_value=SimpleNamespace(output='{"count": 2}')),
+            ),
+        ):
+            ctx = build_agent_run_context(
+                user, workspace, _noop_tool_helpers(workspace)
+            )
+            validator = TypeAdapter(ToolArgs)
+            ctx.toolset._schemas["example"] = ToolArgs.model_json_schema()
+            ctx.toolset._original_validators["example"] = validator
+            with pytest.raises(ValidationError) as exc_info:
+                validator.validate_python({"count": "invalid"})
 
-    def test_noop_for_non_string_model(self, settings):
-        settings.BASEROW_ENTERPRISE_ASSISTANT_LLM_MODEL = "groq/original-model"
-
-        with override_assistant_model(TestModel()):
-            assert (
-                settings.BASEROW_ENTERPRISE_ASSISTANT_LLM_MODEL == "groq/original-model"
+            fixed = async_to_sync(ctx.toolset._fix_tool_args)(
+                "example", {"count": "invalid"}, exc_info.value
             )
 
-        assert settings.BASEROW_ENTERPRISE_ASSISTANT_LLM_MODEL == "groq/original-model"
+        assert fixed == ToolArgs(count=2)
+        model.__aenter__.assert_awaited_once_with()
+        model.__aexit__.assert_awaited_once()
 
 
 @pytest.mark.django_db
@@ -102,9 +192,10 @@ class TestRunCase:
         def _build(fixtures) -> EvalScenario:
             return EvalScenario(user=user, workspace=workspace, ui_context=None)
 
-    def test_uses_production_model_wrapper_and_settings(self, data_fixture):
-        user = data_fixture.create_user()
-        workspace = data_fixture.create_workspace(user=user)
+    def test_uses_explicit_model_with_production_settings_and_lifecycle(
+        self, configured_workspace, settings
+    ):
+        user, workspace = configured_workspace
         self._register_scenario(user, workspace)
         case = EvalCase(
             id="harness-test/settings",
@@ -114,9 +205,8 @@ class TestRunCase:
             checks=lambda case, scenario, output: [],
         )
         model = "groq:openai/gpt-oss-120b"
-        test_model = TestModel(custom_output_text="hello", call_tools=[])
+        test_model = _LifecycleModel(custom_output_text="hello", call_tools=[])
         with (
-            main_agent.override(model=test_model),
             patch(
                 "baserow_enterprise.assistant.retrying_model._resolve_model",
                 return_value=test_model,
@@ -133,6 +223,16 @@ class TestRunCase:
         assert run.call_args.kwargs["model_settings"] == get_model_settings(
             model, ORCHESTRATOR
         )
+        profile = run.call_args.kwargs["deps"].tool_helpers.model_profile
+        assert profile.model_string == model
+        assert profile.source == "explicit"
+        assert (
+            resolve_assistant_model(workspace=workspace).model_string
+            == "openai:database-model"
+        )
+        assert settings.BASEROW_ENTERPRISE_ASSISTANT_LLM_MODEL == "groq/test-model"
+        assert test_model.entered
+        assert test_model.closed
 
     def test_returns_output_and_prepends_budget_check(self):
         fixtures = make_fixtures()
@@ -269,7 +369,22 @@ class TestOverrideAssistantPrompts:
             pass
 
 
-class _HangingModel(TestModel):
+class _LifecycleModel(TestModel):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.entered = False
+        self.closed = False
+
+    async def __aenter__(self):
+        self.entered = True
+        return await super().__aenter__()
+
+    async def __aexit__(self, *args):
+        self.closed = True
+        return await super().__aexit__(*args)
+
+
+class _HangingModel(_LifecycleModel):
     """Never answers, and records whether its request was actually cancelled."""
 
     def __init__(self, cancelled: threading.Event):
@@ -319,15 +434,18 @@ class TestCaseTimeout:
         monkeypatch.setenv("BASEROW_EVAL_CASE_TIMEOUT", "0.3")
         self._register_scenario()
         cancelled = threading.Event()
+        model = _HangingModel(cancelled)
 
         began = time.monotonic()
         with pytest.raises(EvalCaseTimeout, match="db/hangs exceeded 0.3s"):
-            run_case(self._case("db/hangs"), _HangingModel(cancelled))
+            run_case(self._case("db/hangs"), model)
         elapsed = time.monotonic() - began
 
         # The reason for wait_for over a worker thread: the provider call
         # really stops, instead of running on and burning quota.
         assert cancelled.is_set(), "the model request was abandoned, not cancelled"
+        assert model.entered
+        assert model.closed
         assert elapsed < 5, f"took {elapsed:.1f}s — it waited for the model"
 
     def test_a_normal_case_is_untouched_by_the_budget(self):

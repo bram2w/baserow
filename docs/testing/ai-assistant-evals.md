@@ -306,6 +306,10 @@ candidate list — extend it there. Any pydantic-ai `provider:model` string
 works via `--model`, or in the UI by picking **Custom…** and typing it. The
 model applies to the whole agent, sub-agents included.
 
+Eval runs use an explicit model profile, so the selected model takes precedence
+over workspace or instance provider settings without changing them. Model clients
+are closed when a run finishes or times out.
+
 Per-model overrides live in `_MODEL_PROFILES` in
 `enterprise/backend/src/baserow_enterprise/assistant/model_profiles.py`, keyed
 by exact model name.

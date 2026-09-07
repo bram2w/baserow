@@ -11,14 +11,13 @@ from contextlib import ExitStack, contextmanager
 from types import ModuleType
 from typing import Any
 
-from django.conf import settings
-
 from pydantic_ai import Agent
 from pydantic_ai._utils import run_until_complete  # noqa: PLC2701
 from pydantic_ai.messages import ModelRequest, ModelResponse, RetryPromptPart
 from pydantic_ai.models import Model
 from pydantic_ai.usage import UsageLimits
 
+from baserow.core.generative_ai.lifecycle import run_agent_with_model
 from baserow_enterprise.assistant.agents import main_agent
 from baserow_enterprise.assistant.assistant import build_agent_run_context
 from baserow_enterprise.assistant.deps import ToolHelpers
@@ -29,7 +28,10 @@ from baserow_enterprise.assistant.evals.types import (
     EvalCase,
     EvalRunOutput,
 )
-from baserow_enterprise.assistant.model_profiles import ORCHESTRATOR, get_model_settings
+from baserow_enterprise.assistant.model_profiles import (
+    ORCHESTRATOR,
+    resolve_assistant_model,
+)
 from baserow_enterprise.assistant.onboarding import onboarding_suggestions_agent
 from baserow_enterprise.assistant.tools.automation import agents as automation_agents
 from baserow_enterprise.assistant.tools.builder import agents as builder_agents
@@ -89,26 +91,6 @@ def override_assistant_prompts(prompt_texts: dict[str, str]) -> Iterator[None]:
             else:
                 raise ValueError(f"Unknown assistant prompt '{name}'")
         yield
-
-
-@contextmanager
-def override_assistant_model(model: str | Model) -> Iterator[None]:
-    """Scoped replacement for the old global settings mutation (single-worker only).
-
-    A no-op for non-string models (e.g. ``TestModel``/``FunctionModel``
-    instances used in tests): there is no setting value to derive from them.
-    """
-
-    if not isinstance(model, str):
-        yield
-        return
-
-    previous = settings.BASEROW_ENTERPRISE_ASSISTANT_LLM_MODEL
-    settings.BASEROW_ENTERPRISE_ASSISTANT_LLM_MODEL = model.replace(":", "/", 1)
-    try:
-        yield
-    finally:
-        settings.BASEROW_ENTERPRISE_ASSISTANT_LLM_MODEL = previous
 
 
 def format_message_history(result: Any) -> list[dict]:
@@ -268,39 +250,45 @@ def run_case(
 
     load_all()
     scenario = get_scenario(case.scenario)(make_fixtures())
-    tool_helpers = ToolHelpers(lambda x: None, lambda x: None)
+    model_profile = resolve_assistant_model(
+        workspace=scenario.workspace,
+        model=model if isinstance(model, str) else model.model_name,
+    )
+    tool_helpers = ToolHelpers(
+        lambda x: None, lambda x: None, model_profile=model_profile
+    )
+    ctx = build_agent_run_context(
+        scenario.user,
+        scenario.workspace,
+        tool_helpers,
+        model=None if isinstance(model, str) else model,
+    )
+    ctx.deps.mode = case.mode
+    ctx.deps.tool_helpers.request_context["ui_context"] = scenario.ui_context
 
-    with override_assistant_model(model):
-        ctx = build_agent_run_context(scenario.user, scenario.workspace, tool_helpers)
-        ctx.deps.mode = case.mode
-        ctx.deps.tool_helpers.request_context["ui_context"] = scenario.ui_context
-
-        timeout_s = get_case_timeout_s()
-        start = time.monotonic()
-        # wait_for on pydantic-ai's own loop: cancels the in-flight request
-        # instead of stranding a thread that keeps calling the provider.
-        try:
-            result = run_until_complete(
-                asyncio.wait_for(
-                    main_agent.run(
-                        user_prompt=case.prompt,
-                        deps=ctx.deps,
-                        model=ctx.model if isinstance(model, str) else model,
-                        model_settings=get_model_settings(
-                            model if isinstance(model, str) else model.model_name,
-                            ORCHESTRATOR,
-                        ),
-                        usage_limits=UsageLimits(request_limit=case.max_iters),
-                        toolsets=[ctx.toolset],
-                    ),
-                    timeout_s,
-                )
+    timeout_s = get_case_timeout_s()
+    start = time.monotonic()
+    # Cancelling the managed run closes the model client on the same event loop.
+    try:
+        result = run_until_complete(
+            asyncio.wait_for(
+                run_agent_with_model(
+                    main_agent,
+                    case.prompt,
+                    deps=ctx.deps,
+                    model=ctx.model,
+                    model_settings=model_profile.get_settings(ORCHESTRATOR),
+                    usage_limits=UsageLimits(request_limit=case.max_iters),
+                    toolsets=[ctx.toolset],
+                ),
+                timeout_s,
             )
-        except (TimeoutError, asyncio.CancelledError) as exc:
-            raise EvalCaseTimeout(
-                f"{case.id} exceeded {timeout_s:g}s and was cancelled"
-            ) from exc
-        duration_s = time.monotonic() - start
+        )
+    except (TimeoutError, asyncio.CancelledError) as exc:
+        raise EvalCaseTimeout(
+            f"{case.id} exceeded {timeout_s:g}s and was cancelled"
+        ) from exc
+    duration_s = time.monotonic() - start
 
     tool_error_count, tool_error_hint = count_tool_errors(result)
     output = EvalRunOutput(
