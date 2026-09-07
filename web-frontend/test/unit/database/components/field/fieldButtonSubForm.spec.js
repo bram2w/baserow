@@ -1102,3 +1102,74 @@ describe('FieldButtonSubForm', () => {
     })
   })
 })
+
+describe('FieldButtonSubForm integrations', () => {
+  let testApp = null
+  const DATABASE_ID = 2001
+
+  // A fresh app per test, so the store the in-flight request is remembered
+  // against is fresh too.
+  beforeEach(() => {
+    testApp = new TestApp()
+  })
+
+  afterEach(() => {
+    testApp.afterEach()
+  })
+
+  const seedDatabase = async () => {
+    await testApp.store.dispatch('application/forceSetAll', {
+      applications: [
+        {
+          id: DATABASE_ID,
+          name: 'Customers',
+          type: 'database',
+          workspace: { id: 1 },
+          tables: [],
+        },
+      ],
+    })
+    return testApp.store.getters['application/get'](DATABASE_ID)
+  }
+
+  const mountForm = async (database) =>
+    testApp.mount(FieldButtonSubForm, {
+      propsData: {
+        table: { id: 1 },
+        view: null,
+        primary: false,
+        allFieldsInTable: [{ id: 1, type: 'text', name: 'Name' }],
+        name: 'button',
+        database,
+        defaultValues: { type: 'button', id: 5, label: 'Go' },
+      },
+    })
+
+  test('a failed fetch is retried when the editor is reopened', async () => {
+    // The sub-form is not remounted between opens, so nothing in the action
+    // list runs again unless the user collapses and expands a card. Without a
+    // retry here a network blip leaves the bot dropdown empty for as long as
+    // the page lives.
+    const database = await seedDatabase()
+    testApp.dontFailOnErrorResponses()
+    testApp.mock
+      .onGet('database/field/5/workflow_actions/')
+      .reply(200, [{ id: 1, type: 'slack_write_message', service: {} }])
+    testApp.mock
+      .onGet(`application/${DATABASE_ID}/integrations/`)
+      .replyOnce(500)
+      .onGet(`application/${DATABASE_ID}/integrations/`)
+      .reply(200, [{ id: 7, type: 'slack_bot', name: 'Bot', order: '1' }])
+
+    const wrapper = await mountForm(database)
+    await flushPromises()
+    expect(database.integrations).toHaveLength(0)
+
+    await wrapper.vm.onShow()
+    await flushPromises()
+
+    expect(
+      testApp.store.getters['application/get'](DATABASE_ID).integrations
+    ).toHaveLength(1)
+  })
+})
