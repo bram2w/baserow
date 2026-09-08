@@ -1,13 +1,14 @@
+from json import JSONDecodeError
 from unittest.mock import patch
 
-from django.core.exceptions import ImproperlyConfigured
 from django.core.management import call_command
 
+import httpx
 import pytest
+from phoenix.client import Client
 
 from baserow_enterprise.assistant.deps import AgentMode
 from baserow_enterprise.assistant.evals import registry
-from baserow_enterprise.assistant.evals.phoenix import get_phoenix_client
 from baserow_enterprise.assistant.evals.sync import (
     build_dataset_examples,
     sync_datasets,
@@ -177,6 +178,57 @@ class TestSyncDatasets:
 
         assert counts == {}
         assert client.datasets.calls == []
+
+
+class TestSyncDatasetsFetchFailures:
+    """Only a confirmed missing dataset may be uploaded without its live examples."""
+
+    @pytest.mark.parametrize(
+        "response, error",
+        [
+            pytest.param(
+                httpx.Response(200, text="truncated JSON"),
+                JSONDecodeError,
+                id="invalid-json",
+            ),
+            pytest.param(
+                httpx.Response(200, json={"data": [{"id": "1"}, {"id": "2"}]}),
+                ValueError,
+                id="duplicate-name",
+            ),
+            pytest.param(httpx.Response(200, json={}), KeyError, id="missing-data"),
+            pytest.param(httpx.Response(403), httpx.HTTPStatusError, id="forbidden"),
+        ],
+    )
+    def test_failed_sdk_lookup_never_uploads(self, response, error):
+        registry.register_case(_make_case("db/case-a"))
+        with httpx.Client(
+            base_url="http://phoenix/",
+            transport=httpx.MockTransport(lambda request: response),
+        ) as http_client:
+            client = Client(http_client=http_client)
+            with patch.object(client.datasets, "create_dataset") as upload:
+                with pytest.raises(error):
+                    sync_datasets(client)
+
+                upload.assert_not_called()
+
+    def test_missing_dataset_name_allows_initial_upload(self):
+        registry.register_case(_make_case("db/case-a"))
+        with httpx.Client(
+            base_url="http://phoenix/",
+            transport=httpx.MockTransport(
+                lambda request: httpx.Response(200, json={"data": []})
+            ),
+        ) as http_client:
+            client = Client(http_client=http_client)
+            with patch.object(client.datasets, "create_dataset") as upload:
+                counts = sync_datasets(client)
+
+                assert counts == {"kuma-database": 1}
+                upload.assert_called_once()
+                assert upload.call_args.kwargs["name"] == "kuma-database"
+                assert upload.call_args.kwargs["examples"][0]["id"] == "db/case-a"
 
 
 class TestSyncDatasetsMergesForeignExamples:
@@ -431,40 +483,3 @@ class TestAssistantEvalSyncCommand:
             call_command("assistant_eval_sync")
 
         assert "kuma-system-prompt: unchanged" in capsys.readouterr().out
-
-
-class TestGetPhoenixClient:
-    def test_raises_when_no_url_configured(self, settings, monkeypatch):
-        settings.BASEROW_ASSISTANT_PHOENIX_URL = ""
-        monkeypatch.setenv("PHOENIX_ENDPOINT", "http://unrelated-project")
-
-        with pytest.raises(ImproperlyConfigured, match="ai-assistant-tracing.md"):
-            get_phoenix_client()
-
-    def test_builds_client_from_settings(self, settings, monkeypatch):
-        settings.BASEROW_ASSISTANT_PHOENIX_URL = "http://phoenix:6006"
-        settings.BASEROW_ASSISTANT_PHOENIX_API_KEY = ""
-        monkeypatch.delenv("PHOENIX_ENDPOINT", raising=False)
-        monkeypatch.delenv("PHOENIX_API_KEY", raising=False)
-
-        with patch("phoenix.client.Client") as mock_client_cls:
-            get_phoenix_client()
-
-        mock_client_cls.assert_called_once_with(
-            base_url="http://phoenix:6006", api_key=None
-        )
-
-    def test_unrelated_phoenix_endpoint_cannot_override_baserow(
-        self, settings, monkeypatch
-    ):
-        settings.BASEROW_ASSISTANT_PHOENIX_URL = "http://settings-url"
-        settings.BASEROW_ASSISTANT_PHOENIX_API_KEY = "settings-key"
-        monkeypatch.setenv("PHOENIX_ENDPOINT", "http://env-url")
-        monkeypatch.setenv("PHOENIX_API_KEY", "env-key")
-
-        with patch("phoenix.client.Client") as mock_client_cls:
-            get_phoenix_client()
-
-        mock_client_cls.assert_called_once_with(
-            base_url="http://settings-url", api_key="env-key"
-        )

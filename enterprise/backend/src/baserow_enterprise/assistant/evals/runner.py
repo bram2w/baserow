@@ -3,8 +3,8 @@
 ``submit_run`` only enqueues; a single daemon worker thread (started once by
 the ``assistant_eval_runner`` management command via ``start_worker``) drains
 the queue and executes each run through ``run.run_experiment_for``. Run state
-lives in-memory only — history is not meant to survive a restart, Phoenix is
-the durable record.
+lives in memory, with recent history saved across process restarts. Phoenix
+is the durable record across container recreation.
 """
 
 from __future__ import annotations
@@ -19,6 +19,7 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any, Literal
 from urllib.parse import parse_qs, urlsplit
 
@@ -126,6 +127,11 @@ def recent_runs() -> list[RunnerState]:
 
 
 def _save_history() -> None:
+    """Serialize history saves and atomically replace the last complete snapshot.
+
+    :return: None. Filesystem failures are logged without interrupting the runner.
+    """
+
     try:
         with _history_lock:
             payload = [
@@ -140,8 +146,11 @@ def _save_history() -> None:
                 }
                 for state in _history
             ]
-        with open(_HISTORY_FILE, "w") as handle:
-            json.dump(payload, handle)
+            with TemporaryDirectory(dir=Path(_HISTORY_FILE).parent) as directory:
+                temporary_file = Path(directory) / "history.json"
+                with temporary_file.open("w") as handle:
+                    json.dump(payload, handle)
+                os.replace(temporary_file, _HISTORY_FILE)
     except OSError as exc:
         logger.warning("Could not persist eval runner history: {}", exc)
 
@@ -539,7 +548,12 @@ def _settings_label(metadata: dict[str, Any]) -> str | None:
 
 
 def _experiment_summaries(dataset_node_id: str) -> list[dict[str, Any]]:
-    """Per-experiment mean scores for a dataset, newest first, via GraphQL."""
+    """Fetch per-experiment mean scores for a dataset, newest first.
+
+    :param dataset_node_id: Phoenix dataset node ID to query.
+    :return: The dataset's experiment summaries.
+    :raises ValueError: Phoenix reports errors or returns no dataset results.
+    """
 
     response = httpx.post(
         f"{_api_base()}/graphql",
@@ -551,7 +565,14 @@ def _experiment_summaries(dataset_node_id: str) -> list[dict[str, Any]]:
         timeout=30,
     )
     response.raise_for_status()
-    edges = response.json()["data"]["node"]["experiments"]["edges"]
+    payload = response.json()
+    if errors := payload.get("errors"):
+        messages = "; ".join(error["message"] for error in errors)
+        raise ValueError(f"Phoenix could not load results: {messages}")
+    node = (payload.get("data") or {}).get("node")
+    if node is None:
+        raise ValueError("Phoenix did not return results for this dataset.")
+    edges = node["experiments"]["edges"]
     return [edge["node"] for edge in edges]
 
 
@@ -564,13 +585,14 @@ def _results_json() -> bytes:
     for name, cases in cases_by_dataset().items():
         experiments: list[dict[str, Any]] = []
         summaries: list[dict[str, Any]] = []
+        error = None
         node_id = _dataset_ids.get(name)
         if node_id:
             try:
                 summaries = _experiment_summaries(node_id)
             except Exception as exc:
                 logger.warning("Could not fetch results for {}: {}", name, exc)
-                summaries = []
+                error = "Could not load results from Phoenix. Try again shortly."
             for node in summaries:
                 metadata = node.get("metadata") or {}
                 state = states.get(metadata.get("runner_run_id"))
@@ -653,7 +675,12 @@ def _results_json() -> bytes:
             )
         experiments.sort(key=lambda e: e.get("created_at") or "", reverse=True)
         datasets.append(
-            {"name": name, "case_count": len(cases), "experiments": experiments}
+            {
+                "name": name,
+                "case_count": len(cases),
+                "experiments": experiments,
+                "error": error,
+            }
         )
     return json.dumps({"datasets": datasets}).encode("utf-8")
 

@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -58,9 +57,7 @@ def _api_base() -> str:
 
 
 def _headers() -> dict[str, str]:
-    api_key = os.getenv("PHOENIX_API_KEY") or getattr(
-        settings, "BASEROW_ASSISTANT_PHOENIX_API_KEY", ""
-    )
+    api_key = getattr(settings, "BASEROW_ASSISTANT_PHOENIX_API_KEY", "")
     return {"Authorization": f"Bearer {api_key}"} if api_key else {}
 
 

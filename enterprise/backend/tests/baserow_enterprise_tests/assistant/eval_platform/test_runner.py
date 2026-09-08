@@ -3,6 +3,9 @@ from __future__ import annotations
 import io
 import json
 import queue as queue_module
+import threading
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 from urllib.parse import urlencode
 from wsgiref.util import setup_testing_defaults
@@ -22,7 +25,8 @@ def _isolated_registry(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def _isolated_runner_state(monkeypatch):
+def _isolated_runner_state(monkeypatch, tmp_path):
+    monkeypatch.setattr(runner, "_HISTORY_FILE", str(tmp_path / "history.json"))
     monkeypatch.setattr(runner, "_history", runner.deque(maxlen=runner.MAX_HISTORY))
     monkeypatch.setattr(runner, "_run_queue", queue_module.Queue())
     monkeypatch.setattr(runner, "_worker_started", False)
@@ -455,10 +459,6 @@ class TestSubmitRunRoute:
         assert history[0].model == "groq:test-model"
         assert history[0].status == "queued"
 
-    @pytest.fixture(autouse=True)
-    def _isolated_history_file(self, tmp_path, monkeypatch):
-        monkeypatch.setattr(runner, "_HISTORY_FILE", str(tmp_path / "history.json"))
-
     def test_history_survives_restart_and_marks_inflight_interrupted(self):
         _register_case("database/persist-a")
         done = runner.submit_run(dataset="kuma-database", model="groq:test-model")
@@ -483,6 +483,60 @@ class TestSubmitRunRoute:
         runner.load_history()
         restored = next(run for run in runner.recent_runs() if run.id == done.id)
         assert restored.phoenix_link == "http://localhost:6060/datasets/x"
+
+    def test_concurrent_history_saves_preserve_the_latest_state(self, monkeypatch):
+        state = runner.submit_run(dataset="kuma-database", model="groq:test-model")
+        first_write = threading.Event()
+        release_first = threading.Event()
+        second_save = threading.Event()
+        dump = json.dump
+
+        def delayed_dump(payload, handle):
+            if not first_write.is_set():
+                first_write.set()
+                assert release_first.wait(5)
+            dump(payload, handle)
+
+        def save_latest():
+            second_save.set()
+            runner._save_history()
+
+        monkeypatch.setattr(runner.json, "dump", delayed_dump)
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            first = pool.submit(runner._save_history)
+            try:
+                assert first_write.wait(5)
+                state.status = "done"
+                second = pool.submit(save_latest)
+                assert second_save.wait(5)
+                # A later save must not publish ahead of the blocked older save.
+                with pytest.raises(TimeoutError):
+                    second.result(timeout=0.1)
+            finally:
+                release_first.set()
+            first.result(timeout=5)
+            second.result(timeout=5)
+
+        runner._history.clear()
+        runner.load_history()
+        assert runner.recent_runs()[0].status == "done"
+
+    def test_failed_history_write_preserves_the_previous_file(self, monkeypatch):
+        state = runner.submit_run(dataset="kuma-database", model="groq:test-model")
+        history_file = Path(runner._HISTORY_FILE)
+        previous = history_file.read_text()
+        state.status = "done"
+
+        def failed_dump(payload, handle):
+            handle.write("[")
+            raise OSError("disk full")
+
+        monkeypatch.setattr(runner.json, "dump", failed_dump)
+
+        runner._save_history()
+
+        assert history_file.read_text() == previous
+        assert list(history_file.parent.iterdir()) == [history_file]
 
     def test_cross_dataset_selection_fans_out_one_run_per_dataset(self):
         _register_case("database/fanout-a")
@@ -1238,3 +1292,81 @@ class TestRunLogCapture:
         )
 
         assert status.startswith("404")
+
+
+class TestResultsErrors:
+    @pytest.mark.parametrize("data", [None, {"node": None}])
+    def test_phoenix_errors_preserve_the_explanation(self, monkeypatch, data):
+        response = MagicMock()
+        response.json.return_value = {
+            "data": data,
+            "errors": [{"message": "The dataset is unavailable."}],
+        }
+        monkeypatch.setattr(runner.httpx, "post", lambda *args, **kwargs: response)
+
+        with pytest.raises(ValueError, match="The dataset is unavailable"):
+            runner._experiment_summaries("dataset-id")
+
+    @pytest.mark.parametrize("payload", [{}, {"data": None}, {"data": {"node": None}}])
+    def test_missing_dataset_results_have_a_readable_error(self, monkeypatch, payload):
+        response = MagicMock()
+        response.json.return_value = payload
+        monkeypatch.setattr(runner.httpx, "post", lambda *args, **kwargs: response)
+
+        with pytest.raises(ValueError, match="Phoenix did not return results"):
+            runner._experiment_summaries("dataset-id")
+
+    def test_an_empty_experiment_list_is_a_successful_response(self, monkeypatch):
+        response = MagicMock()
+        response.json.return_value = {"data": {"node": {"experiments": {"edges": []}}}}
+        monkeypatch.setattr(runner.httpx, "post", lambda *args, **kwargs: response)
+
+        assert runner._experiment_summaries("dataset-id") == []
+
+    def test_results_report_a_failed_dataset_and_preserve_other_results(
+        self, monkeypatch
+    ):
+        _register_case("database/list-tables")
+        _register_case("core/list-databases", dataset="kuma-core")
+        monkeypatch.setattr(
+            runner,
+            "_dataset_ids",
+            {"kuma-database": "database-id", "kuma-core": "core-id"},
+        )
+        failed = MagicMock()
+        failed.json.return_value = {
+            "data": None,
+            "errors": [{"message": "The dataset is unavailable."}],
+        }
+        successful = MagicMock()
+        successful.json.return_value = {
+            "data": {
+                "node": {
+                    "experiments": {
+                        "edges": [{"node": {"id": "experiment-id", "name": "run"}}]
+                    }
+                }
+            }
+        }
+        monkeypatch.setattr(
+            runner.httpx,
+            "post",
+            lambda *args, **kwargs: failed
+            if kwargs["json"]["variables"]["datasetId"] == "database-id"
+            else successful,
+        )
+
+        status, _headers, body = _call_wsgi(
+            runner.make_wsgi_app(), "GET", "/results.json"
+        )
+
+        assert status == "200 OK"
+        datasets = {
+            dataset["name"]: dataset for dataset in json.loads(body)["datasets"]
+        }
+        assert datasets["kuma-database"]["error"] == (
+            "Could not load results from Phoenix. Try again shortly."
+        )
+        assert datasets["kuma-database"]["experiments"] == []
+        assert datasets["kuma-core"]["error"] is None
+        assert datasets["kuma-core"]["experiments"][0]["id"] == "experiment-id"

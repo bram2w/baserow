@@ -48,12 +48,23 @@ def _is_code_owned(example: dict[str, Any]) -> bool:
 def _fetch_existing_examples(
     client: "Client", dataset_name: str
 ) -> list[dict[str, Any]]:
-    """Current Phoenix examples for a dataset, or `[]` if it doesn't exist yet."""
+    """Fetch live examples, returning `[]` only for the SDK's missing-name error.
+
+    Other lookup failures must stop the replacement upload so UI-added examples
+    and curated reference answers cannot be discarded without being fetched.
+
+    :param client: The Phoenix client used to retrieve the dataset.
+    :param dataset_name: The registered dataset name to look up.
+    :return: The live examples, or an empty list when the dataset does not exist.
+    :raises ValueError: If the SDK lookup fails for any other reason.
+    """
 
     try:
         dataset = client.datasets.get_dataset(dataset=dataset_name)
-    except ValueError:
-        return []
+    except ValueError as exc:
+        if str(exc) == f"Dataset not found: {dataset_name}":
+            return []
+        raise
     return list(dataset.examples)
 
 

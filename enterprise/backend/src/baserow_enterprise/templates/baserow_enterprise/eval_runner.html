@@ -727,8 +727,17 @@
     function renderResults() {
       var body = document.getElementById("results-body");
       var selected = document.getElementById("results-experiment").value;
+      body.textContent = "";
+      var failedDatasets = resultsData.filter(function (dataset) { return dataset.error; });
+      failedDatasets.forEach(function (dataset) {
+        var error = document.createElement("p");
+        error.className = "status-failed";
+        error.setAttribute("role", "alert");
+        error.textContent = dataset.name + ": " + dataset.error;
+        body.appendChild(error);
+      });
       if (!selected) {
-        body.textContent = "No experiments yet — run something first.";
+        if (!failedDatasets.length) body.textContent = "No experiments yet — run something first.";
         return;
       }
       var table = document.createElement("table");
@@ -774,11 +783,11 @@
             modelCell.appendChild(line);
           });
         } else {
-          modelCell.textContent = "not run";
+          modelCell.textContent = dataset.error ? "–" : "not run";
         }
         row.appendChild(modelCell);
         var stateCell = document.createElement("td");
-        stateCell.textContent = experiment ? statusText(experiment) : "not run";
+        stateCell.textContent = experiment ? statusText(experiment) : dataset.error ? "unavailable" : "not run";
         row.appendChild(stateCell);
         METRICS.forEach(function (metric) {
           var value = experiment ? experiment.scores[metric] : null;
@@ -793,7 +802,6 @@
         table.appendChild(row);
       });
 
-      body.textContent = "";
       body.appendChild(table);
       var note = document.createElement("p");
       note.className = "results-note";
