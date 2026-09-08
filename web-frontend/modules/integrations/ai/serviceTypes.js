@@ -40,6 +40,18 @@ export class AIAgentServiceType extends WorkflowActionServiceTypeMixin(
     return service.schema
   }
 
+  /**
+   * Resolve the selected provider's models for service validation while the
+   * AI providers feature flag is enabled.
+   *
+   * @param {object} context The service and its owning application context.
+   * @param {object} context.service The AI Agent service to validate.
+   * @param {object|null} context.workspace The workspace with model availability.
+   * @param {object|null} context.application The application used to look up the
+   *   service's integration, when available.
+   * @returns {string[]|null} Available models, or null when the workspace or
+   *   integration has not loaded and availability cannot yet be checked.
+   */
   getEffectiveModels({ service, workspace, application }) {
     if (!workspace) {
       return null
@@ -74,6 +86,17 @@ export class AIAgentServiceType extends WorkflowActionServiceTypeMixin(
     })
   }
 
+  /**
+   * Validate configuration and, when enabled, AI Agent model availability.
+   *
+   * @param {object} context The service and its owning application context.
+   * @param {object|undefined} context.service The service, possibly redacted on
+   *   a public page or absent before configuration.
+   * @param {object|null} [context.workspace=null] The owning workspace.
+   * @param {object|null} [context.application=null] The owning application.
+   * @returns {string|null} The first configuration error, or null when valid or
+   *   when the relevant configuration is not available to the client.
+   */
   getErrorMessage({ service, workspace = null, application = null }) {
     if (service === undefined) {
       return null
@@ -120,6 +143,14 @@ export class AIAgentServiceType extends WorkflowActionServiceTypeMixin(
     return super.getErrorMessage({ service, workspace, application })
   }
 
+  /**
+   * Describe the selected provider and model, including configuration errors.
+   *
+   * @param {object} service The AI Agent service to describe.
+   * @param {object|null} application The application used to resolve the
+   *   workspace and integration, when available.
+   * @returns {string} The model selection and its first validation error.
+   */
   getDescription(service, application) {
     let description = this.name
 

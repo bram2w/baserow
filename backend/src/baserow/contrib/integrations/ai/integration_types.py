@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from django.contrib.auth.models import AbstractUser
 
@@ -60,7 +60,9 @@ class AIIntegrationType(IntegrationType):
 
         :param values: The integration values supplied by the caller.
         :param user: The user creating or updating the integration.
-        :return: The normalized values prepared by the base integration type.
+        :returns: The normalized values prepared by the base integration type.
+        :raises RequestBodyValidationException: If provider settings fail their
+            registered serializer's validation.
         """
 
         if "ai_settings" not in values:
@@ -80,14 +82,15 @@ class AIIntegrationType(IntegrationType):
 
     def get_integration_provider_settings(
         self, integration: AIIntegration, provider_type: str
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Return the integration-level settings override for a provider.
 
         :param integration: The AI integration to read the override from.
         :param provider_type: The generative AI provider type key.
-        :return: The override dictionary, or None when the provider is not
-            overridden on the integration.
+        :returns: The stored override, including an explicit empty dictionary, or
+            None when no dictionary is stored for this provider. This does not
+            validate whether the override defines a complete connection.
         """
 
         provider_settings = integration.ai_settings.get(provider_type)
@@ -106,7 +109,7 @@ class AIIntegrationType(IntegrationType):
 
         :param integration: The AI integration whose provider settings are requested.
         :param provider_type: The generative AI provider type.
-        :return: Explicit or legacy provider settings, or an empty dictionary when
+        :returns: Explicit or legacy provider settings, or an empty dictionary when
             database-backed workspace inheritance should be used.
         """
 

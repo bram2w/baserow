@@ -8,21 +8,23 @@ AI_AGENT_FEATURE = "ai_agent"
 
 def add_ai_agent_feature(apps, schema_editor):
     AIProviderModel = apps.get_model("core", "AIProviderModel")
+    provider_models = AIProviderModel.objects.using(schema_editor.connection.alias)
     models_to_update = []
-    for model in AIProviderModel.objects.only("id", "feature_types"):
+    for model in provider_models.only("id", "feature_types"):
         feature_types = list(model.feature_types or [])
         if AI_AGENT_FEATURE not in feature_types:
             model.feature_types = [*feature_types, AI_AGENT_FEATURE]
             models_to_update.append(model)
 
     if models_to_update:
-        AIProviderModel.objects.bulk_update(models_to_update, ["feature_types"])
+        provider_models.bulk_update(models_to_update, ["feature_types"])
 
 
 def remove_ai_agent_feature(apps, schema_editor):
     AIProviderModel = apps.get_model("core", "AIProviderModel")
+    provider_models = AIProviderModel.objects.using(schema_editor.connection.alias)
     models_to_update = []
-    for model in AIProviderModel.objects.only("id", "feature_types"):
+    for model in provider_models.only("id", "feature_types"):
         feature_types = list(model.feature_types or [])
         without_ai_agent = [
             feature_type
@@ -34,7 +36,7 @@ def remove_ai_agent_feature(apps, schema_editor):
             models_to_update.append(model)
 
     if models_to_update:
-        AIProviderModel.objects.bulk_update(models_to_update, ["feature_types"])
+        provider_models.bulk_update(models_to_update, ["feature_types"])
 
 
 class Migration(migrations.Migration):

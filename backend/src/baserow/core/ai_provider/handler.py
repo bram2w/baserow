@@ -72,6 +72,17 @@ class WorkspaceAIProviderConfig:
 class AIProviderHandler:
     @staticmethod
     def _normalize_feature_types(feature_types: list[str] | None) -> list[str]:
+        """
+        Validate explicit eligibility or preserve the legacy omission default.
+
+        :param feature_types: Requested feature identifiers, or None when omitted.
+            An explicit empty list leaves the model unavailable to every feature.
+        :returns: Unique feature identifiers in their original order, or the AI
+            Fields and AI Agent compatibility default for an omitted value.
+        :raises AIProviderModelFeatureTypeDoesNotExist: If an explicitly selected
+            feature type is not registered.
+        """
+
         if feature_types is None:
             # Older API callers predate per-feature model eligibility. Preserve
             # the consumers those models already served instead of silently

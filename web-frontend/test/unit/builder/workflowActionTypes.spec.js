@@ -135,6 +135,85 @@ describe('Builder workflow action types', () => {
     expect(workflowActionType.getErrorMessage(workflowAction, {})).toBeNull()
   })
 
+  test('validates AI Agent models using the builder integration override', () => {
+    const workflowActionType = testApp
+      .getRegistry()
+      .get('workflowAction', 'ai_agent')
+    const integration = {
+      id: 5,
+      type: 'ai',
+      ai_settings: {
+        openai: { api_key: 'integration-key', models: ['own-model'] },
+      },
+    }
+    const context = {
+      mode: 'editing',
+      builder: { id: 1, integrations: [integration] },
+      workspace: {
+        id: 2,
+        ai_features: { ai_agent: { models: { openai: ['db-model'] } } },
+      },
+    }
+    const workflowAction = {
+      type: 'ai_agent',
+      service: {
+        integration_id: 5,
+        ai_generative_ai_type: 'openai',
+        ai_generative_ai_model: 'own-model',
+        ai_prompt: { formula: 'Prompt' },
+        ai_output_type: 'text',
+      },
+    }
+
+    expect(
+      workflowActionType.getErrorMessage(workflowAction, context)
+    ).toBeNull()
+
+    integration.ai_settings = {}
+
+    expect(workflowActionType.getErrorMessage(workflowAction, context)).toBe(
+      'serviceType.errorAIModelUnavailable'
+    )
+
+    workflowAction.service.ai_generative_ai_model = 'db-model'
+
+    expect(
+      workflowActionType.getErrorMessage(workflowAction, context)
+    ).toBeNull()
+  })
+
+  test.each(['preview', 'public'])(
+    'does not reject an AI Agent integration model in %s without loaded overrides',
+    (mode) => {
+      const workflowActionType = testApp
+        .getRegistry()
+        .get('workflowAction', 'ai_agent')
+      const context = {
+        mode,
+        builder: { id: 1, integrations: [] },
+        workspace: {
+          id: 2,
+          ai_features: { ai_agent: { models: { openai: ['db-model'] } } },
+        },
+      }
+      const workflowAction = {
+        type: 'ai_agent',
+        service: {
+          integration_id: 5,
+          ai_generative_ai_type: 'openai',
+          ai_generative_ai_model: 'own-model',
+          ai_prompt: { formula: 'Prompt' },
+          ai_output_type: 'text',
+        },
+      }
+
+      expect(
+        workflowActionType.getErrorMessage(workflowAction, context)
+      ).toBeNull()
+      expect(workflowActionType.isInError(workflowAction, context)).toBe(false)
+    }
+  )
+
   test('open page action is in error when saved page parameters are outdated', () => {
     const workflowActionType = testApp
       .getRegistry()

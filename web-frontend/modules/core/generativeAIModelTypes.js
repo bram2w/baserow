@@ -54,6 +54,8 @@ export class GenerativeAIModelType extends Registerable {
   /**
    * Settings which must be present for an integration override to own the
    * provider connection instead of inheriting it from the workspace.
+   *
+   * @returns {string[]} The required connection setting keys.
    */
   getRequiredIntegrationSettings() {
     return this.getSetting('api_key') ? ['api_key'] : []
@@ -63,6 +65,9 @@ export class GenerativeAIModelType extends Registerable {
    * Whether an integration settings object contains its own complete
    * connection. Partial objects may narrow model availability, but must never
    * be combined with credentials inherited from another scope.
+   *
+   * @param {object|null} settings The integration's settings for this provider.
+   * @returns {boolean} Whether every required connection setting is nonempty.
    */
   isIntegrationSettingsComplete(settings) {
     if (!settings || typeof settings !== 'object') {
@@ -260,6 +265,9 @@ export class OllamaModelType extends GenerativeAIModelType {
     ]
   }
 
+  /**
+   * @returns {string[]} Ollama requires its own host to override the connection.
+   */
   getRequiredIntegrationSettings() {
     return ['host']
   }

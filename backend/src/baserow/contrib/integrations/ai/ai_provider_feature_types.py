@@ -12,7 +12,16 @@ class AIAgentAIProviderModelFeatureType(AIProviderModelFeatureType):
         self,
         workspace: Workspace | None,
         state: ScopedAIProviderState | None = None,
-    ) -> dict:
+    ) -> dict[str, bool | dict[str, list[str]]]:
+        """
+        Return the providers and models available to AI Agent consumers.
+
+        :param workspace: The workspace to resolve, or None for instance scope.
+        :param state: Optional provider state already loaded for the same scope.
+        :returns: Whether any eligible models exist and their identifiers grouped
+            by provider type.
+        """
+
         models = generative_ai_model_type_registry.get_enabled_models_per_type(
             workspace, feature_type=self.type, state=state
         )

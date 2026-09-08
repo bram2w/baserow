@@ -361,6 +361,14 @@ export class WorkflowActionServiceType extends WorkflowActionType {
     return null
   }
 
+  /**
+   * Validate the service using workspace and integration configuration in the
+   * editor. Preview and public pages do not load integration settings.
+   *
+   * @param {object} workflowAction The workflow action with its service.
+   * @param {object} applicationContext The owning workspace, builder, and mode.
+   * @returns {string|null} The first service or action configuration error.
+   */
   getErrorMessage(workflowAction, applicationContext) {
     const isEditing = applicationContext?.mode === 'editing'
     const serviceError = this.serviceType.getErrorMessage({

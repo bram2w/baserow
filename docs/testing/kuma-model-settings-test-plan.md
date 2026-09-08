@@ -88,7 +88,7 @@ EOF
 Run it after every settings change:
 
 ```bash
-WORKSPACE_IDS=1,2 just dc-dev exec -T backend -e WORKSPACE_IDS \
+WORKSPACE_IDS=1,2 just dc-dev exec -T -e WORKSPACE_IDS backend \
   /baserow/venv/bin/python /baserow/backend/src/baserow/manage.py shell < /tmp/kuma_state.py
 ```
 
@@ -137,8 +137,8 @@ refused instead — see 4.5.
 1. Sign in as **admin**, go to Admin → **AI providers**.
 2. **Add provider** → pick a provider type, enter the API key.
 3. In the model rows, enter a model identifier and note the new **Available for**
-   checkboxes (**AI Agent**, **AI fields**, **Kuma**), all ticked by default.
-4. Add a second model, untick **AI Agent** and **Kuma** on it, save.
+   checkboxes (**AI agent**, **AI fields**, **Kuma**), all ticked by default.
+4. Add a second model, untick **AI agent** and **Kuma** on it, save.
 5. Add a third model through the provider menu → **Add model**, and untick all three
    boxes.
 
@@ -392,8 +392,8 @@ survive the confirm dialog.
 ### 4.2 Removing the Kuma checkbox from the selected model
 
 Verify: same rejection, under the title *"The AI provider model could not be
-saved."*; the modal stays open and the row keeps **Available for: AI Agent, AI fields,
-Kuma**. Removing only the **AI Agent** or **AI fields** checkbox is allowed, because
+saved."*; the modal stays open and the row keeps all three feature labels.
+Removing only the **AI agent** or **AI fields** checkbox is allowed, because
 neither is a default-model feature.
 
 ### 4.3 Disabling the selected model or its provider
@@ -503,11 +503,13 @@ and that Kuma there also falls back rather than switching off.
 ### 6.1 Eligibility is per feature
 
 1. Create an AI field in a table of the workspace.
+2. Add an **AI prompt** node in Automation and an **AI prompt** action in Application
+   Builder, using AI integrations without provider overrides.
 
 Verify:
 - Models with **AI fields** unticked are not offered in the field's model dropdown.
-- Models with **AI Agent** unticked are not offered in an Automation AI Agent node's
-  or Application Builder AI Agent action's model dropdown.
+- Models with **AI agent** unticked are not offered as new choices in either
+  **AI prompt** model dropdown.
 - Models with only **AI fields** ticked are not offered in the Kuma **AI features**
   dropdown.
 - A model with no feature ticked appears nowhere.
@@ -550,6 +552,40 @@ Verify:
   back to the empty `Make a choice` placeholder, because the stored value is no longer
   among the options. That is today's behaviour, not a defect to file — but it means a
   tester must not expect an explicit "model unavailable" message here.
+
+### 6.4 Removing AI Agent eligibility from a model in use
+
+1. Select a working model in both **AI prompt** consumers from 6.1 and run them.
+2. Untick **AI agent** on that model while keeping the editor tabs open.
+
+Verify:
+
+- The change is allowed. The saved provider and model identifiers remain visible,
+  with an unavailable-model error, and the unavailable model cannot be selected anew.
+- Editing the prompt preserves the saved selection. The node/action reports a
+  configuration error, and backend execution refuses the model before calling its
+  provider.
+- Restoring eligibility clears the error and allows execution without reselecting
+  the model. Repeat with model disable/enable and provider disable/enable; use a
+  provider without a Kuma default so its protection does not block this check.
+
+### 6.5 Explicit integration overrides
+
+Use API-created AI integrations to test these built-in provider overrides in both
+feature-flag states, in Automation and Application Builder:
+
+| Override | Expected connection and model list |
+|---|---|
+| Complete connection with `models: ["custom-model"]` | Own connection and explicit list, independent of database eligibility |
+| Complete connection without `models` | Own connection and inherited allowed list, filtered for AI Agent while the flag is on |
+| Complete connection with `models: []` | No available models |
+| Incomplete connection with a model list | Inherited connection; only models also present in the inherited allowed list |
+| Incomplete connection without `models` | Inherited connection and allowed list |
+
+For a complete connection, verify that omitted optional settings such as OpenAI's
+`base_url` and `organization` are not inherited. For an incomplete connection, verify
+that its partial credentials or endpoint never reach the provider. An attempted model
+outside the effective list must fail during selection validation and execution.
 
 ---
 
@@ -693,6 +729,38 @@ and verify nothing from this feature leaks into the old path:
   A complete provider connection with no `models` key inherits that model list;
   explicit `models: []` remains empty. Partial overrides cannot introduce models
   outside the inherited list or supply connection settings from another scope.
+
+---
+
+## 11. Transition from legacy settings to database providers
+
+Rehearse on a disposable installation using the
+[upgrade and import sequence](../development/feature-flags.md#preparing-the-ai-providers-feature).
+Start with the flag off, working instance environment settings, a different workspace
+connection, and inherited **AI prompt** consumers in both Automation and Application
+Builder. Include a publication created while the flag is off.
+
+Verify:
+
+- Upgrading while the flag stays off preserves execution without imports or
+  republishing, subject to the explicit-override compatibility rules in 6.5.
+- Migration `core.0120` adds `ai_agent` once to existing provider models, including
+  models with an empty feature list, preserving other features and enabled states.
+- Instance and workspace import previews do not write. Applying each scope creates
+  missing providers with `ai_fields` and `ai_agent` eligibility; repeating the import
+  leaves existing configurations unchanged.
+- After enabling the flag and reloading editors, saved selections resolve with their
+  expected instance or workspace credentials. An enabled workspace model overrides
+  a matching instance model; other instance models remain inherited. A disabled
+  workspace model suppresses that identifier; disabling its provider reveals the
+  inherited instance layer.
+- A publication containing a complete legacy snapshot keeps using that snapshot
+  until republished. Review its draft first, then republish and verify that it follows
+  live workspace credential and eligibility changes. An explicit complete integration
+  override remains independent.
+- Before turning the flag off again, verify equivalent legacy settings exist. With
+  the schema retained, flag-off execution returns to those settings in drafts and
+  publications; database eligibility changes no longer filter the legacy model list.
 
 ---
 

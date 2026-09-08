@@ -14,7 +14,8 @@ server.
   disable Kuma in its workspace AI provider settings.
 - `BASEROW_ENTERPRISE_ASSISTANT_LLM_MODEL` remains the legacy fallback while the
   `ai-providers` feature is disabled, or while its Kuma selection is unconfigured
-  or invalid. An explicit instance or workspace disable remains authoritative.
+  or invalid. While the feature is enabled, an explicit instance or workspace
+  disable remains authoritative.
 - The assistant has been mostly tested with the `gpt-oss-120b` family. Other models can
   work as well.
 
@@ -33,8 +34,8 @@ For an existing installation, see the
 Schema migrations run during the normal upgrade. Provider imports and republishing
 are needed when adopting database-backed settings, not just to upgrade with the
 feature disabled. Integrations with explicit provider overrides retain their own
-connection settings; check the compatibility notes for partial overrides and
-optional endpoints. Review pending draft changes before republishing a site or
+connection settings; check the compatibility notes for model lists, partial overrides,
+and optional endpoints. Review pending draft changes before republishing a site or
 workflow, since those changes will also become live.
 
 The `migrate_ai_provider_settings` command imports legacy AI provider configuration;

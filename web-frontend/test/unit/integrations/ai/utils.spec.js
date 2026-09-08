@@ -65,4 +65,14 @@ describe('AI Agent integration model resolution', () => {
       })
     ).toEqual([])
   })
+
+  test('excludes a removed provider even when workspace models are stale', () => {
+    expect(
+      getEffectiveAIAgentModels({
+        workspaceModels: ['removed-model'],
+        integrationSettings: { models: ['removed-model'] },
+        modelType: null,
+      })
+    ).toEqual([])
+  })
 })

@@ -555,7 +555,15 @@ class GenerativeAIModelType(Instance):
         return self._get_complete_provider_settings(values)
 
     def _get_complete_provider_settings(self, values: Any) -> Optional[dict[str, Any]]:
-        """Validate and normalize one complete provider settings dictionary."""
+        """
+        Validate and normalize a built-in provider's complete connection.
+
+        :param values: The provider settings to validate, possibly missing or
+            incomplete legacy JSON.
+        :returns: The provider's own credentials, normalized model list and every
+            optional connection setting, with None for absent optional values.
+            Returns None for incomplete settings or an unsupported provider type.
+        """
 
         # The database-backed provider feature intentionally supports a closed
         # set of built-in provider types. GenerativeAIModelType remains an
@@ -587,16 +595,20 @@ class GenerativeAIModelType(Instance):
             },
         }
 
-    def get_atomic_settings_override(self, values: Any) -> Optional[dict[str, Any]]:
+    def get_atomic_settings_override(self, values: Any) -> dict[str, Any] | None:
         """Return a self-contained settings override, or ``None`` if incomplete.
 
         Built-in database-backed providers must supply their own complete
         connection so an override can never borrow credentials from another
-        scope. Out-of-tree providers own their settings contract and have
-        already validated it with their registered serializer, so their
-        dictionaries retain the legacy authoritative behavior. Extensions with
-        partial/inherited settings should override this hook and return ``None``
-        until their connection is complete.
+        scope. Out-of-tree providers own their validation and settings contract,
+        so their dictionaries retain the legacy authoritative behavior. Extensions
+        with partial/inherited settings should override this hook and return
+        ``None`` until their connection is complete.
+
+        :param values: The explicit provider settings to consider as an override.
+        :returns: A new dictionary containing the complete connection, or None
+            when the values cannot supply one. For out-of-tree providers, the
+            default implementation copies any dictionary without normalization.
         """
 
         if self.type not in AI_PROVIDER_TYPES:

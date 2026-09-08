@@ -227,9 +227,16 @@ export default {
     workspace() {
       return this.$store.getters['workspace/get'](this.application.workspace.id)
     },
+    /**
+     * @returns {boolean} Whether database provider eligibility is enforced.
+     */
     aiProvidersEnabled() {
       return this.$featureFlagIsEnabled(FF_AI_PROVIDERS)
     },
+    /**
+     * @returns {Object<string, string[]>} Workspace models available to AI Agent
+     *   under the active feature flag, grouped by provider type.
+     */
     workspaceEnabledModels() {
       return getEnabledModelsForAIProviderFeature(
         this.workspace,
@@ -237,6 +244,10 @@ export default {
         this.aiProvidersEnabled
       )
     },
+    /**
+     * @returns {Array<{type: string, name: string}>} Installed providers with
+     *   effective models, excluding any unavailable saved selection.
+     */
     baseAvailableProviders() {
       if (!this.integration) {
         return []
@@ -262,6 +273,10 @@ export default {
           }
         })
     },
+    /**
+     * @returns {Array<{type: string, name: string}>} Provider options, retaining
+     *   an unavailable saved provider for diagnosis when eligibility is enforced.
+     */
     availableProviders() {
       const providers = [...this.baseAvailableProviders]
 
@@ -280,6 +295,10 @@ export default {
       }
       return providers
     },
+    /**
+     * @returns {string[]} Selectable models for the integration and provider,
+     *   excluding any unavailable saved model.
+     */
     baseAvailableModels() {
       if (!this.integration || !this.values.ai_generative_ai_type) {
         return []
@@ -295,6 +314,10 @@ export default {
         modelType,
       })
     },
+    /**
+     * @returns {string[]} Model options, retaining an unavailable saved model
+     *   for diagnosis when eligibility is enforced.
+     */
     availableModels() {
       const models = this.baseAvailableModels
 
@@ -304,6 +327,9 @@ export default {
       }
       return models
     },
+    /**
+     * @returns {boolean} Whether eligibility prevents using the saved model.
+     */
     selectedModelUnavailable() {
       const current = this.values.ai_generative_ai_model
       return Boolean(

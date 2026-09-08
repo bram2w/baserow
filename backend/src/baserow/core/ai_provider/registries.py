@@ -16,9 +16,9 @@ class AIProviderModelFeatureType(Instance):
     (instance or workspace), stored as an ``AIProviderFeatureSetting`` row
     whose RESTRICT foreign key blocks deleting the selected model (Kuma).
     ``False`` means each consumer stores its own provider type and model
-    identifier, no setting row exists, and nothing blocks deletion; a removed
-    model surfaces as a validation or dispatch error on the consumer instead
-    (AI fields, AI Agent nodes).
+    identifier. Those references create no setting row and do not block deletion;
+    a removed model surfaces as a validation or dispatch error on the consumer
+    instead (AI fields, AI Agent nodes).
     """
 
     supports_default_model = False

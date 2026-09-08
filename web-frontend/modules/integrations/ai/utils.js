@@ -18,12 +18,26 @@ const builtInProviderTypes = new Set([
  * inherit the model allowlist when their override omits models; an explicit
  * list, including an empty one, remains authoritative. A partial override can
  * only narrow the feature-filtered workspace list.
+ *
+ * @param {object} options The inputs for one provider's model resolution.
+ * @param {string[]} [options.workspaceModels=[]] Effective workspace models,
+ *   already filtered for AI Agent eligibility when the provider flag is enabled.
+ * @param {object|null} [options.integrationSettings=null] Provider settings from
+ *   the selected integration.
+ * @param {GenerativeAIModelType|null} [options.modelType=null] The registered
+ *   provider type, or null when its extension is no longer installed.
+ * @returns {string[]} The available model identifiers. Treat the returned list
+ *   as read-only because it can be the original workspace or integration list.
  */
 export function getEffectiveAIAgentModels({
   workspaceModels = [],
   integrationSettings = null,
   modelType = null,
 }) {
+  if (!modelType) {
+    return []
+  }
+
   if (!integrationSettings || typeof integrationSettings !== 'object') {
     return workspaceModels
   }
@@ -36,7 +50,7 @@ export function getEffectiveAIAgentModels({
     'models'
   )
 
-  if (modelType?.isIntegrationSettingsComplete(integrationSettings)) {
+  if (modelType.isIntegrationSettingsComplete(integrationSettings)) {
     if (!hasModels && builtInProviderTypes.has(modelType.getType())) {
       return workspaceModels
     }

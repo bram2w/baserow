@@ -1,4 +1,4 @@
-from django.db import IntegrityError
+from django.db import IntegrityError, connection
 from django.utils import timezone
 
 import pytest
@@ -125,8 +125,9 @@ def test_0119_initializes_ai_provider_model_features_and_capabilities(
 
 @pytest.mark.once_per_day_in_ci
 def test_0120_makes_existing_ai_provider_models_available_to_ai_agents_and_reverses(
-    migrator, teardown_table_metadata
+    migrator, teardown_table_metadata, settings
 ):
+    settings.FEATURE_FLAGS = []
     old_state = migrator.migrate(
         [("core", "0119_aiproviderfeaturesetting_and_more")]
     )
@@ -159,6 +160,7 @@ def test_0120_makes_existing_ai_provider_models_available_to_ai_agents_and_rever
                 ["kuma"],
                 [],
                 ["ai_agent", "ai_fields"],
+                ["extension_feature", "kuma"],
             )
         )
     }
@@ -174,6 +176,7 @@ def test_0120_makes_existing_ai_provider_models_available_to_ai_agents_and_rever
         "kuma": ["kuma", "ai_agent"],
         "none": ["ai_agent"],
         "ai_agent": ["ai_agent", "ai_fields"],
+        "extension_feature": ["extension_feature", "kuma", "ai_agent"],
         "historical_default": ["ai_fields", "ai_agent"],
     }
     for key, model in models.items():
@@ -182,6 +185,21 @@ def test_0120_makes_existing_ai_provider_models_available_to_ai_agents_and_rever
         assert migrated_model.last_test_capabilities == {
             "text": {"status": "success", "error": ""}
         }
+
+    default_model = NewAIProviderModel.objects.create(
+        provider_config_id=provider.id, model_identifier="new-orm-default"
+    )
+    assert default_model.feature_types == ["ai_fields", "ai_agent"]
+    # Bypass the ORM's Python default to verify the actual database default.
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "INSERT INTO core_aiprovidermodel (provider_config_id, model_identifier) "
+            "VALUES (%s, %s) RETURNING id",
+            [provider.id, "new-database-default"],
+        )
+        database_default_id = cursor.fetchone()[0]
+    database_default_model = NewAIProviderModel.objects.get(id=database_default_id)
+    assert database_default_model.feature_types == ["ai_fields", "ai_agent"]
 
     rolled_back_state = migrator.migrate(
         [("core", "0119_aiproviderfeaturesetting_and_more")]
@@ -194,6 +212,7 @@ def test_0120_makes_existing_ai_provider_models_available_to_ai_agents_and_rever
         "kuma": ["kuma"],
         "none": [],
         "ai_agent": ["ai_fields"],
+        "extension_feature": ["extension_feature", "kuma"],
         "historical_default": ["ai_fields"],
     }
     for key, model in models.items():
@@ -202,3 +221,17 @@ def test_0120_makes_existing_ai_provider_models_available_to_ai_agents_and_rever
         assert rolled_back_model.last_test_capabilities == {
             "text": {"status": "success", "error": ""}
         }
+
+    default_model = RolledBackAIProviderModel.objects.create(
+        provider_config_id=provider.id, model_identifier="restored-orm-default"
+    )
+    assert default_model.feature_types == ["ai_fields"]
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "INSERT INTO core_aiprovidermodel (provider_config_id, model_identifier) "
+            "VALUES (%s, %s) RETURNING id",
+            [provider.id, "restored-database-default"],
+        )
+        database_default_id = cursor.fetchone()[0]
+    database_default_model = RolledBackAIProviderModel.objects.get(id=database_default_id)
+    assert database_default_model.feature_types == ["ai_fields"]

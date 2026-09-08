@@ -11,13 +11,21 @@ from .constants import (
 
 
 def get_default_ai_provider_model_feature_types() -> list[str]:
-    """Return the historical default referenced by migration 0119."""
+    """
+    Return the historical default referenced by migration 0119.
+
+    :returns: A new list containing only AI Fields eligibility.
+    """
 
     return [AI_PROVIDER_FEATURE_AI_FIELDS]
 
 
 def get_default_ai_provider_model_feature_types_v2() -> list[str]:
-    """Keep current ORM callers compatible with every legacy model consumer."""
+    """
+    Preserve the existing consumers when ORM callers omit model eligibility.
+
+    :returns: A new list containing AI Fields and AI Agent eligibility.
+    """
 
     return [AI_PROVIDER_FEATURE_AI_FIELDS, AI_PROVIDER_FEATURE_AI_AGENT]
 
