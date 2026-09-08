@@ -904,6 +904,8 @@ class CoreStartWorkflowWorkflowActionType(DatabaseWorkflowServiceActionType):
         :return: The imported action.
         """
 
+        from baserow.contrib.automation.workflows.models import AutomationWorkflow
+
         import_export_config = kwargs.get("import_export_config")
         # Read before the base class pops it.
         copied_by = kwargs.get("copied_by")
@@ -911,13 +913,24 @@ class CoreStartWorkflowWorkflowActionType(DatabaseWorkflowServiceActionType):
             parent, serialized_values, id_mapping, files_zip, storage, cache, **kwargs
         )
         service = created_instance.service.specific
-        if service.workflow_id is None:
+        # Asked for rather than read: the service type builds whatever type the
+        # file named, so a hand-edited or version skewed export can leave a
+        # start workflow action holding a service that has no workflow at all.
+        # There is then nothing to drop.
+        workflow_id = getattr(service, "workflow_id", None)
+        if workflow_id is None:
             return created_instance
         exported_workflow_id = (serialized_values.get("service") or {}).get(
             "workflow_id"
         )
-        if not self._may_carry_workflow(
-            service.workflow,
+        # Looked up rather than followed. Exporting a database without its
+        # automation names a workflow only the source installation has, and the
+        # foreign key is deferred, so the row is written and following the
+        # reference is what fails: the whole import job would end over a
+        # reference that simply has to go.
+        workflow = AutomationWorkflow.objects.filter(id=workflow_id).first()
+        if workflow is None or not self._may_carry_workflow(
+            workflow,
             exported_workflow_id,
             created_instance.field,
             id_mapping,

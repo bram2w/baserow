@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from django.db import connection
 from django.urls import reverse
 
 import pytest
@@ -23,6 +24,7 @@ from baserow.core.deferred_callbacks import deferred_callback_context
 from baserow.core.exceptions import PermissionException
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import ImportExportConfig
+from baserow.core.services.registries import service_type_registry
 
 
 def _denying(operation_name: str):
@@ -755,3 +757,69 @@ def test_a_template_install_drops_a_workflow_whose_id_collides(data_fixture):
         )
 
     assert imported.service.specific.workflow_id is None
+
+
+@pytest.mark.django_db
+def test_an_import_drops_a_workflow_this_installation_does_not_have(data_fixture):
+    """
+    Exporting only the database leaves the automation behind, so the file
+    names a workflow id that exists nowhere here. The foreign key is deferred,
+    so the row is written and only following the reference fails, which would
+    end the whole import job over a reference that simply has to go.
+    """
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    source_field = _button(data_fixture, user, workspace)
+    source_workflow = _workflow(data_fixture, user, workspace)
+    action = _action_starting(data_fixture, source_field, source_workflow)
+
+    action_type = database_workflow_action_type_registry.get("start_workflow")
+    exported = action_type.export_serialized(action.specific)
+    # A number no row here holds, the way the other installation's file names
+    # its own workflow.
+    exported["service"]["workflow_id"] = source_workflow.id + 10_000
+
+    destination_field = _button(data_fixture, user, workspace)
+    # Put back what the server runs with. The foreign key is deferrable and
+    # deferred in production, so the row is written and only the dereference
+    # fails; the `data_fixture` fixture makes every constraint immediate so
+    # tests can alter tables mid transaction, which refuses the insert instead
+    # and never reaches what this covers.
+    with connection.cursor() as cursor:
+        cursor.execute("SET CONSTRAINTS ALL DEFERRED")
+
+    with deferred_callback_context():
+        imported = action_type.import_serialized(destination_field, exported, {})
+
+    assert imported.service.specific.workflow_id is None
+
+
+@pytest.mark.django_db
+def test_an_import_survives_an_action_carrying_another_service_type(data_fixture):
+    """
+    A hand edited or version skewed file can give a start workflow action a
+    service block of another type, which the service type builds as written.
+    That service has no workflow at all, and reading one off it ended the
+    import job.
+    """
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    source_field = _button(data_fixture, user, workspace)
+    source_workflow = _workflow(data_fixture, user, workspace)
+    action = _action_starting(data_fixture, source_field, source_workflow)
+
+    action_type = database_workflow_action_type_registry.get("start_workflow")
+    exported = action_type.export_serialized(action.specific)
+    other_service = data_fixture.create_local_baserow_upsert_row_service(
+        integration=None
+    )
+    other_service_type = service_type_registry.get_by_model(other_service)
+    exported["service"] = other_service_type.export_serialized(other_service)
+
+    destination_field = _button(data_fixture, user, workspace)
+    with deferred_callback_context():
+        imported = action_type.import_serialized(destination_field, exported, {})
+
+    assert imported.service.specific.get_type().type == "local_baserow_upsert_row"
