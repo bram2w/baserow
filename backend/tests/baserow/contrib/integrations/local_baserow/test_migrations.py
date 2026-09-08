@@ -1,3 +1,9 @@
+from importlib import import_module
+
+from django.apps import apps
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
+
 import pytest
 
 from baserow.contrib.database.fields.registries import field_type_registry
@@ -302,6 +308,31 @@ def test_0006_migrate_local_baserow_table_service_filter_formulas_to_value_is_fo
             assert service_filter.value_is_formula is False, (
                 "A invalid formula was detected, but value_is_formula was not set to False."
             )  # noqa: E501
+
+
+@pytest.mark.django_db
+def test_0034_skips_filters_already_in_raw_mode(data_fixture):
+    """Already migrated filters must not issue updates, even in an all-raw batch."""
+    service_filter = data_fixture.create_local_baserow_table_service_filter(
+        service=data_fixture.create_local_baserow_list_rows_service(),
+        field=data_fixture.create_text_field(),
+        value={"formula": "plain text", "mode": "raw", "version": "0.1"},
+        value_is_formula=False,
+    )
+    original_value = service_filter.value.copy()
+    migration = import_module(
+        "baserow.contrib.integrations.migrations."
+        "0034_migrate_local_baserow_filter_value_mode"
+    )
+
+    with CaptureQueriesContext(connection) as queries:
+        migration.migrate_filter_values_to_raw_mode(apps, None)
+
+    assert not any(
+        query["sql"].lstrip().upper().startswith("UPDATE") for query in queries
+    )
+    service_filter.refresh_from_db()
+    assert service_filter.value == original_value
 
 
 @pytest.mark.once_per_day_in_ci

@@ -40,6 +40,8 @@ def migrate_filter_values_to_raw_mode(apps, schema_editor):
                 id__in=chunk_ids
             ):
                 value = service_filter.value
+                if isinstance(value, dict) and value.get("mode") == "raw":
+                    continue
                 if isinstance(value, dict):
                     value["mode"] = "raw"
                 else:
