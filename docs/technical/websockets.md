@@ -261,50 +261,73 @@ the replay limit and recovery buffer; their ordinary live delivery continues.
 Older clients retain event-by-event history replay. Only event types with an
 explicit snapshot recovery contract may bypass ordered replay.
 
-### Event cleanup and compact history
+### Event cleanup and retained sentinels
 
 Full payloads are replayable for one day, independently of JWT lifetime and cleanup
-progress. Cleanup replaces older payloads with compact routing records, retaining
-the latest event ID for each exact audience, originating socket and event type.
-The records contain recipient/exclusion metadata, not row contents or history
-entries. Repeated events for the same route share one summary, so summary volume
-follows distinct active routes rather than the number or size of changes.
+progress. Beyond that window, cleanup keeps the newest original event for each
+exact audience, originating socket and event type in `ws_realtime_events`. Its
+ID, timestamp and payload stay unchanged. This event acts as a sentinel: if it
+matches the reconnecting client and its ID is above the client's cursor, the client
+missed expired changes and must refresh. An older sentinel alone requires no refresh.
 
-Compact records expire seven days after the latest represented event was created
-(the one-day payload window is included in those seven days). Eviction atomically advances a global loss floor: cursors below it must
-refresh because complete history is no longer available. Within known history,
-only a relevant expired event requires a refresh. Own-socket and excluded-user
-filters remain identical to live delivery. These retention values are internal
-constants; no additional environment variables are needed.
+Sentinels expire seven days after their event was created, including the one-day
+replay window. Deleting evidence without a replacement atomically advances a global
+loss floor: cursors below it must refresh because complete history is no longer
+available. This floor occupies one metadata row; there is no separate event-summary
+table. Own-socket and excluded-user filters remain identical to live delivery.
+Both retention values are internal constants, with no additional environment variables.
+
+A nullable `sentinel_key` identifies events already retained by cleanup. Ordinary
+inserts leave it null and do not calculate audience hashes. A partial unique index
+finds the current sentinel for a route; a partial age index finds unprocessed
+expired events without repeatedly scanning retained sentinels. Cleanup checks exact
+routing equality before combining events, so a hash collision cannot hide changes.
+The full payload remains on each sentinel: storage follows distinct audiences and
+the size of their last events, rather than every change they made.
 
 The periodic Celery task runs every minute, including when recording is disabled,
-with a 30-second budget and at most 5,000 rows per committed batch. Payload and
-summary cleanup both receive work. Statements use three-second timeouts and 250 ms
-lock timeouts, preserving stricter settings. Locked rows wait for a later run;
-retention therefore bounds replay eligibility but is not a hard maximum row age.
+with a 30-second budget and at most 5,000 candidates per independently committed
+batch. Statements use three-second timeouts and 250 ms lock timeouts, preserving stricter settings.
+Locked rows wait for a later run; retention bounds replay eligibility but is not a
+hard maximum row age. The task uses a nonblocking cleanup lease. A batch that only
+retains new sentinels still makes progress, even when it deletes no rows.
 
-A statement-level PostgreSQL DELETE trigger writes summaries atomically with each
-payload deletion, including deletions from the previous application's cleanup
-worker during deployment. Replay reads payloads, summaries and the loss floor in
-one SQL snapshot; separate READ COMMITTED queries could miss an event moving
-between tables. Summary eviction and its floor update also commit together. Each
-batch commits independently and scheduled runs use a nonblocking cleanup lease.
+Replay reads retained events and the loss floor in one SQL snapshot, avoiding a
+race between history deletion and checking its floor. Expired payload contents are
+not returned by the replay query, since their age already requires a refresh.
+The event and metadata tables are UNLOGGED and use the primary database. The event
+sequence is LOGGED with its normal `CACHE 1`, preventing ID reuse after a crash.
+Missing history state waits for outstanding inserts before establishing a conservative
+floor. Migration activation also establishes a floor, so older cursors can require
+one refresh. Rollback cannot restore deleted events and leaves the sequence LOGGED.
 
-Both history tables are UNLOGGED and use the primary database. The event sequence
-is LOGGED with its normal `CACHE 1`, preventing ID reuse after a crash. When history
-state is missing, initialization briefly waits for outstanding inserts before
-establishing a conservative loss floor. Migration activation similarly establishes
-a floor, so pre-upgrade cursors can require one refresh. Rollback cannot restore
-expired payloads and leaves the sequence LOGGED. See PostgreSQL's
-[trigger](https://www.postgresql.org/docs/18/sql-createtrigger.html) and
-[unlogged-table](https://www.postgresql.org/docs/18/sql-createtable.html) semantics.
+#### Deployment and rollback
 
-The `(created_at, id)` index supports bounded expiration scans. Recipient indexes
-are restricted to the shared `users` channel; page events retain the
+Pause scheduled realtime cleanup and drain any in-flight cleanup task before
+applying `ws.0003`. Deploy the new code to **all ASGI and Celery workers**, then resume
+cleanup. WebSocket traffic and event recording can continue during this sequence.
+Older ASGI readers do not recognize the replay window or loss floor and could
+mistake retained sentinels for complete replay history; do not run the new cleanup
+while those readers remain. A legacy DELETE advances the floor for new readers,
+so accidental older cleanup cannot silently erase their evidence.
+
+The migration adds a nullable column without rewriting event payloads and builds
+its indexes concurrently. The builds still need disk and I/O headroom to scan the
+existing table. Brief schema locks are bounded; an interrupted migration can be retried. For rollback, pause and drain cleanup again and disable replay
+with the existing `BASEROW_REALTIME_REPLAY_MAX_EVENTS=0` before returning traffic to
+older readers. Reversing the migration cannot restore deleted events. Before
+re-enabling replay, clear recorded replay history while recording remains disabled
+so retained cursor IDs cannot falsely establish a complete pre-rollback history.
+
+The existing `(created_at, id)` index supports seven-day expiration. Recipient
+indexes remain restricted to the shared `users` channel; page events retain the
 `(channel_group, id)` index. Cleanup makes storage reusable through PostgreSQL
-vacuum; it does not normally shrink the table's allocated files. Monitor recording
-rate, committed cleanup progress, and database vacuum activity together; see
+vacuum; it does not normally shrink allocated files. Monitor recording rate,
+committed cleanup progress, and vacuum activity together; see
 [Monitoring](../installation/monitoring.md#websocket-and-realtime-metrics).
+See PostgreSQL's [partial-index](https://www.postgresql.org/docs/18/indexes-partial.html),
+[concurrent-index](https://www.postgresql.org/docs/18/sql-createindex.html#SQL-CREATEINDEX-CONCURRENTLY)
+and [unlogged-table](https://www.postgresql.org/docs/18/sql-createtable.html) documentation.
 
 The replay table uses the same autovacuum thresholds as the pending search values table:
 analyze threshold `2000` with scale factor `0.002`, and both update/delete and

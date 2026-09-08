@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Optional
 
 from django.conf import settings
 from django.db import connection, transaction
-from django.db.models import F, Q
+from django.db.models import Q
 from django.db.models.fields.json import KeyTextTransform, KeyTransform
 from django.db.models.query import QuerySet
 from django.utils import timezone
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from baserow.ws.models import RealtimeEvent
 
 REALTIME_EVENTS_RETENTION = timedelta(hours=24)
-REALTIME_EVENT_SUMMARIES_RETENTION = timedelta(days=7)
+REALTIME_EVENT_HISTORY_RETENTION = timedelta(days=7)
 REALTIME_EVENTS_CLEANUP_INTERVAL_MINUTES = 1
 REALTIME_EVENTS_CLEANUP_BATCH_SIZE = 5000
 REALTIME_EVENTS_CLEANUP_BUDGET_SECONDS = 30
@@ -158,50 +158,45 @@ class RealtimeEventHandler:
     def cleanup_old_realtime_events(
         retention: timedelta, *, deadline: float | None = None
     ) -> int:
-        """
-        Compact expired payloads and evict old history in bounded transactions.
-
-        :param retention: Maximum age of events to keep.
-        :param deadline: Optional earlier monotonic deadline, including time
-            already spent acquiring the task's cleanup lease.
-        :returns: Number of payload rows removed before the run finishes or its
-            budget expires. A later batch failure leaves earlier commits intact.
-        """
+        """Retain one original per expired route; discard history after seven days."""
 
         if retention.total_seconds() <= 0:
             return 0
         cutoff = timezone.now() - retention
+        history_cutoff = timezone.now() - REALTIME_EVENT_HISTORY_RETENTION
         budget_deadline = monotonic() + REALTIME_EVENTS_CLEANUP_BUDGET_SECONDS
         deadline = (
             min(deadline, budget_deadline) if deadline is not None else budget_deadline
         )
-        summaries_cutoff = timezone.now() - REALTIME_EVENT_SUMMARIES_RETENTION
-        summaries_finished = False
-        events_finished = False
+        expired_finished = compacted_finished = False
         with realtime_cleanup_run() as run:
             while monotonic() < deadline:
-                # Give both stores progress even with a sustained payload backlog.
-                if not summaries_finished:
-                    with realtime_cleanup_batch(storage="summaries") as batch:
+                # Both stages make progress even with a sustained payload backlog.
+                if not expired_finished:
+                    with realtime_cleanup_batch(operation="expire") as batch:
                         batch.deleted = (
-                            RealtimeEventHandler._expire_realtime_event_summaries_batch(
-                                summaries_cutoff, deadline
+                            RealtimeEventHandler._expire_realtime_events_batch(
+                                history_cutoff, deadline
                             )
                         )
-                    summaries_finished = (
+                    run.deleted += batch.deleted
+                    expired_finished = (
                         batch.deleted < REALTIME_EVENTS_CLEANUP_BATCH_SIZE
                     )
-                if events_finished:
-                    if summaries_finished:
-                        return run.deleted
-                    continue
-                with realtime_cleanup_batch() as batch:
-                    batch.deleted = RealtimeEventHandler._delete_realtime_events_batch(
-                        cutoff, deadline
+                if not compacted_finished:
+                    with realtime_cleanup_batch(operation="compact") as batch:
+                        batch.processed, batch.deleted = (
+                            RealtimeEventHandler._compact_realtime_events_batch(
+                                cutoff, deadline
+                            )
+                        )
+                    run.deleted += batch.deleted
+                    # Distinct routes retain every candidate, deleting zero rows.
+                    # Progress must therefore depend on candidates, not deletions.
+                    compacted_finished = (
+                        batch.processed < REALTIME_EVENTS_CLEANUP_BATCH_SIZE
                     )
-                run.deleted += batch.deleted
-                events_finished = batch.deleted < REALTIME_EVENTS_CLEANUP_BATCH_SIZE
-                if events_finished and summaries_finished:
+                if expired_finished and compacted_finished:
                     if monotonic() >= deadline:
                         run.outcome = "budget"
                     return run.deleted
@@ -209,76 +204,150 @@ class RealtimeEventHandler:
             return run.deleted
 
     @staticmethod
-    def _delete_realtime_events_batch(cutoff, deadline) -> int:
-        """Compact a bounded payload batch via the statement-level DELETE trigger."""
+    def _expire_realtime_events_batch(cutoff, deadline) -> int:
+        return RealtimeEventHandler._cleanup_realtime_batch(
+            cutoff, deadline, expire=True
+        )[1]
 
+    @staticmethod
+    def _compact_realtime_events_batch(cutoff, deadline) -> tuple[int, int]:
         return RealtimeEventHandler._cleanup_realtime_batch(cutoff, deadline)
 
     @staticmethod
-    def _expire_realtime_event_summaries_batch(cutoff, deadline) -> int:
-        """Evict old compact history and atomically advance the loss floor."""
+    def _cleanup_realtime_batch(cutoff, deadline, *, expire=False) -> tuple[int, int]:
+        class DeadlineExceeded(Exception):
+            pass
 
-        return RealtimeEventHandler._cleanup_realtime_batch(
-            cutoff, deadline, summaries=True
-        )
+        try:
+            with transaction.atomic(durable=True), connection.cursor() as cursor:
 
-    @staticmethod
-    def _cleanup_realtime_batch(cutoff, deadline, *, summaries=False) -> int:
-        # A caller must not accidentally turn many batches into one transaction.
-        # RealtimeEvent is UNLOGGED, so its storage is always on the primary DB.
-        with transaction.atomic(durable=True), connection.cursor() as cursor:
-            remaining_ms = int((deadline - monotonic()) * 1000)
-            if remaining_ms <= 0:
-                return 0
-            statement_timeout = (
-                f"{min(REALTIME_EVENTS_CLEANUP_STATEMENT_TIMEOUT_MS, remaining_ms)}ms"
-            )
-            lock_timeout = f"{REALTIME_EVENTS_CLEANUP_LOCK_TIMEOUT_MS}ms"
-            # Both limits are transaction-local and must preserve stricter
-            # database/operator settings. These expressions only read settings.
-            cursor.execute(
-                "SELECT "
-                "set_config('statement_timeout', CASE WHEN "
-                "current_setting('statement_timeout')::interval = interval '0' OR "
-                "current_setting('statement_timeout')::interval > %s::interval "
-                "THEN %s ELSE current_setting('statement_timeout') END, true), "
-                "set_config('lock_timeout', CASE WHEN "
-                "current_setting('lock_timeout')::interval = interval '0' OR "
-                "current_setting('lock_timeout')::interval > %s::interval "
-                "THEN %s ELSE current_setting('lock_timeout') END, true)",
-                [statement_timeout, statement_timeout, lock_timeout, lock_timeout],
-            )
-            if monotonic() >= deadline:
-                return 0
-            if summaries:
-                cursor.execute("SELECT ws_initialize_realtime_history()")
-                cursor.execute(
-                    "WITH expired AS MATERIALIZED ("
-                    "SELECT key FROM ws_realtime_event_summaries WHERE created_at < %s "
-                    "ORDER BY created_at, key LIMIT %s FOR UPDATE SKIP LOCKED"
-                    "), removed AS ("
-                    "DELETE FROM ws_realtime_event_summaries AS summary USING expired "
-                    "WHERE summary.key = expired.key RETURNING summary.last_event_id"
-                    "), advanced AS ("
-                    "UPDATE ws_realtime_event_history_state "
-                    "SET floor = GREATEST(floor, (SELECT MAX(last_event_id) FROM removed)) "
-                    "WHERE id = 1 AND EXISTS (SELECT 1 FROM removed)"
-                    ") SELECT COUNT(*) FROM removed",
-                    [cutoff, REALTIME_EVENTS_CLEANUP_BATCH_SIZE],
+                def execute(sql, params=None):
+                    remaining_ms = int((deadline - monotonic()) * 1000)
+                    if remaining_ms <= 0:
+                        raise DeadlineExceeded
+                    statement_limit = f"{min(REALTIME_EVENTS_CLEANUP_STATEMENT_TIMEOUT_MS, remaining_ms)}ms"
+                    lock_limit = f"{REALTIME_EVENTS_CLEANUP_LOCK_TIMEOUT_MS}ms"
+                    cursor.execute(
+                        "SELECT "
+                        "set_config('statement_timeout', CASE WHEN "
+                        "current_setting('statement_timeout')::interval = interval '0' OR "
+                        "current_setting('statement_timeout')::interval > %s::interval "
+                        "THEN %s ELSE current_setting('statement_timeout') END, true), "
+                        "set_config('lock_timeout', CASE WHEN "
+                        "current_setting('lock_timeout')::interval = interval '0' OR "
+                        "current_setting('lock_timeout')::interval > %s::interval "
+                        "THEN %s ELSE current_setting('lock_timeout') END, true)",
+                        [statement_limit, statement_limit, lock_limit, lock_limit],
+                    )
+                    if monotonic() >= deadline:
+                        raise DeadlineExceeded
+                    cursor.execute(sql, params)
+                    if monotonic() >= deadline:
+                        raise DeadlineExceeded
+
+                if expire:
+                    # Expiry never inherits the trusted compaction bypass.
+                    execute(
+                        "SELECT set_config('baserow.realtime_compacting', 'off', true)"
+                    )
+                    # The default DELETE trigger advances the loss floor atomically.
+                    execute(
+                        "WITH expired AS MATERIALIZED ("
+                        "SELECT id FROM ws_realtime_events WHERE created_at < %s "
+                        "ORDER BY created_at, id LIMIT %s FOR UPDATE SKIP LOCKED"
+                        ") DELETE FROM ws_realtime_events AS event "
+                        "USING expired WHERE event.id = expired.id",
+                        [cutoff, REALTIME_EVENTS_CLEANUP_BATCH_SIZE],
+                    )
+                    return cursor.rowcount, cursor.rowcount
+
+                execute(
+                    "WITH candidates AS MATERIALIZED ("
+                    "SELECT id, channel_group, payload FROM ws_realtime_events "
+                    "WHERE sentinel_key IS NULL AND created_at >= %s AND created_at < %s "
+                    "ORDER BY created_at, id LIMIT %s FOR UPDATE SKIP LOCKED"
+                    "), routes AS MATERIALIZED ("
+                    "SELECT id, channel_group, ws_realtime_event_routing(payload) AS route "
+                    "FROM candidates) "
+                    "SELECT id, sha256(convert_to(jsonb_build_array(channel_group, route)::text, 'UTF8')), "
+                    "channel_group, route::text FROM routes",
+                    [
+                        timezone.now() - REALTIME_EVENT_HISTORY_RETENTION,
+                        cutoff,
+                        REALTIME_EVENTS_CLEANUP_BATCH_SIZE,
+                    ],
                 )
-                return cursor.fetchone()[0]
-            # The (created_at, id) index finds the oldest bounded candidate set.
-            # The DELETE trigger compacts routing metadata in this transaction;
-            # Python need not load payloads or collect model rows.
-            cursor.execute(
-                "WITH expired AS MATERIALIZED ("
-                "SELECT id FROM ws_realtime_events WHERE created_at < %s "
-                "ORDER BY created_at, id LIMIT %s FOR UPDATE SKIP LOCKED"
-                ") DELETE FROM ws_realtime_events AS event "
-                "USING expired WHERE event.id = expired.id",
-                [cutoff, REALTIME_EVENTS_CLEANUP_BATCH_SIZE],
-            )
-            return cursor.rowcount
+                candidates = cursor.fetchall()
+                if not candidates:
+                    return 0, 0
+                winners = {}
+                candidate_ids = {row[0] for row in candidates}
+
+                def consider(rows):
+                    for event_id, key, channel, route in rows:
+                        key = bytes(key)
+                        previous = winners.get(key)
+                        if previous and previous[1:] != (channel, route):
+                            raise RuntimeError(
+                                "Realtime history sentinel key collision"
+                            )
+                        if previous is None or event_id > previous[0]:
+                            winners[key] = (event_id, channel, route)
+
+                consider(candidates)
+                execute(
+                    "SELECT id, sentinel_key, channel_group, "
+                    "ws_realtime_event_routing(payload)::text FROM ws_realtime_events "
+                    "WHERE sentinel_key = ANY(%s::bytea[]) ORDER BY sentinel_key FOR UPDATE",
+                    [list(winners)],
+                )
+                existing = cursor.fetchall()
+                consider(existing)
+                winner_ids = {value[0] for value in winners.values()}
+                existing_ids = {row[0] for row in existing}
+                losers = (candidate_ids | existing_ids) - winner_ids
+                deleted = 0
+                if losers:
+                    # Every loser has an existing, locked higher-ID original with
+                    # the exact same route. Deleting first also releases replaced
+                    # sentinel keys without rewriting rows we are about to remove.
+                    execute(
+                        "SELECT current_setting('baserow.realtime_compacting', true)"
+                    )
+                    previous_setting = cursor.fetchone()[0] or ""
+                    execute(
+                        "SELECT set_config('baserow.realtime_compacting', 'on', true)"
+                    )
+                    execute(
+                        "DELETE FROM ws_realtime_events WHERE id = ANY(%s)",
+                        [list(losers)],
+                    )
+                    deleted = cursor.rowcount
+                    execute(
+                        "SELECT set_config('baserow.realtime_compacting', %s, true)",
+                        [previous_setting],
+                    )
+                promoted = [
+                    (key, value[0])
+                    for key, value in winners.items()
+                    if value[0] in candidate_ids
+                ]
+                if promoted:
+                    # A conflict or exhausted deadline rolls the loser deletion
+                    # back too; original rows, IDs and timestamps stay intact.
+                    execute(
+                        "UPDATE ws_realtime_events AS event SET sentinel_key = promoted.key "
+                        "FROM unnest(%s::bytea[], %s::bigint[]) AS promoted(key, id) "
+                        "WHERE event.id = promoted.id",
+                        [
+                            [item[0] for item in promoted],
+                            [item[1] for item in promoted],
+                        ],
+                    )
+                return len(candidates), deleted
+        except DeadlineExceeded:
+            # Exiting atomic first rolls back any partial marker promotion.
+            return 0, 0
 
     @staticmethod
     def get_page_group_names(pages: "SubscribedPages") -> list[str]:
@@ -311,7 +380,7 @@ class RealtimeEventHandler:
         *,
         supports_row_history_refresh: bool = False,
     ) -> ReplayEventsResult:
-        """Recover from one snapshot of payloads, compact history and its loss floor.
+        """Recover from one snapshot of retained events and the history loss floor.
 
         History proves whether anything relevant happened after a cursor even when
         the cursor's original row has been compacted. Below the loss floor we no
@@ -348,10 +417,10 @@ class RealtimeEventHandler:
 
         cutoff = timezone.now() - REALTIME_EVENTS_RETENTION
         events = []
-        for _, _, event_id, channel_group, payload, created_at, compacted in rows:
+        for _, _, event_id, channel_group, payload, created_at in rows:
             if event_id is None:
                 continue
-            if compacted or created_at < cutoff:
+            if created_at < cutoff:
                 return refresh("expired_payload")
             events.append(
                 RealtimeEvent(
@@ -380,15 +449,13 @@ class RealtimeEventHandler:
 
     @staticmethod
     def get_latest_event_id() -> int:
-        """Return the high-water mark, including compacted or evicted history."""
+        """Return the high-water mark, including evicted history."""
 
         with connection.cursor() as cursor:
             sql = (
                 "SELECT GREATEST(floor, "
                 "COALESCE((SELECT id FROM ws_realtime_events "
-                "ORDER BY id DESC LIMIT 1), 0), "
-                "COALESCE((SELECT last_event_id FROM ws_realtime_event_summaries "
-                "ORDER BY last_event_id DESC LIMIT 1), 0)) "
+                "ORDER BY id DESC LIMIT 1), 0)) "
                 "FROM ws_realtime_event_history_state WHERE id = 1"
             )
             cursor.execute(sql)
@@ -408,18 +475,13 @@ class RealtimeEventHandler:
         *,
         supports_row_history_refresh=False,
     ):
-        """Read payloads and their compact replacements in a single SQL snapshot.
+        """Read relevant events and the loss floor in a single SQL snapshot.
 
-        READ COMMITTED transactions alone are insufficient: cleanup could move an
-        event between separate payload/history reads. The same audience predicates
-        apply to both tables. SQL parameters remain bound by Django's compiler.
+        Cleanup can delete events and advance the floor in one transaction. Read
+        both together so replay cannot observe deletions with the previous floor.
+        SQL parameters remain bound by Django's compiler.
         """
 
-        from baserow.ws.models import RealtimeEventSummary
-
-        audience = RealtimeEventHandler._get_replay_audience(
-            user_id, page_group_names, web_socket_id, supports_row_history_refresh
-        )
         events = RealtimeEventHandler.get_replay_window(
             user_id,
             page_group_names,
@@ -427,41 +489,26 @@ class RealtimeEventHandler:
             web_socket_id,
             supports_row_history_refresh=supports_row_history_refresh,
         )
-        summaries = (
-            RealtimeEventHandler._with_recipient_event_type(
-                RealtimeEventSummary.objects.all(), user_id
-            )
-            .filter(audience, last_event_id__gt=last_seen_id)
-            .annotate(event_id=F("last_event_id"))
-        )
         events_sql, events_params = events.values_list(
             "id", "channel_group", "payload", "created_at"
-        ).query.sql_with_params()
-        summaries_sql, summaries_params = summaries.values_list(
-            "event_id", "channel_group", "payload", "created_at"
         ).query.sql_with_params()
         sql = (
             "SELECT state.floor, GREATEST(state.floor, "  # noqa: S608
             "COALESCE((SELECT id FROM ws_realtime_events "
-            "ORDER BY id DESC LIMIT 1), 0), "
-            "COALESCE((SELECT last_event_id FROM ws_realtime_event_summaries "
-            "ORDER BY last_event_id DESC LIMIT 1), 0)), replay.* "
+            "ORDER BY id DESC LIMIT 1), 0)), replay.* "
             "FROM ws_realtime_event_history_state AS state "
             "LEFT JOIN LATERAL ("
-            f"SELECT events.*, false AS compacted FROM ({events_sql}) AS events "
+            "SELECT events.id, events.channel_group, "
+            "CASE WHEN events.created_at < %s THEN NULL ELSE events.payload END, "
+            "events.created_at "
+            f"FROM ({events_sql}) AS events "
             "WHERE state.floor <= %s "
-            "UNION ALL "
-            f"SELECT summaries.*, true FROM ({summaries_sql}) AS summaries "
-            "WHERE state.floor <= %s "
-            "ORDER BY 1 LIMIT %s"
-            ") AS replay ON true WHERE state.id = 1"
+            ") AS replay ON true WHERE state.id = 1 ORDER BY replay.id"
         )
         params = [
+            timezone.now() - REALTIME_EVENTS_RETENTION,
             *events_params,
             last_seen_id,
-            *summaries_params,
-            last_seen_id,
-            settings.BASEROW_REALTIME_REPLAY_MAX_EVENTS + 1,
         ]
         with connection.cursor() as cursor:
             cursor.execute(sql, params)
@@ -521,7 +568,7 @@ class RealtimeEventHandler:
 
         Keep the ID bound outside audience OR predicates so PostgreSQL's ordered
         index scan can start at the cursor instead of visiting retained prehistory.
-        Compact history separately establishes whether the whole gap is recoverable.
+        Retained expired events prove whether the gap needs a full refresh.
         """
 
         from baserow.ws.models import RealtimeEvent

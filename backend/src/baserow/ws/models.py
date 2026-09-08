@@ -1,7 +1,6 @@
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.indexes import GinIndex
 from django.db import models
-from django.db.models.functions import Now
 
 
 class RealtimeEvent(models.Model):
@@ -20,6 +19,8 @@ class RealtimeEvent(models.Model):
         models.IntegerField(), default=list, db_default=[], editable=False
     )
     all_users = models.BooleanField(default=False, db_default=False, editable=False)
+    # Set only when cleanup retains this original as expired routing evidence.
+    sentinel_key = models.BinaryField(null=True, db_default=None)
 
     class Meta:
         db_table = "ws_realtime_events"
@@ -44,37 +45,18 @@ class RealtimeEvent(models.Model):
                 fields=["created_at", "id"],
                 name="ws_realtime_created_id_idx",
             ),
+            models.Index(
+                fields=["created_at", "id"],
+                condition=models.Q(sentinel_key__isnull=True),
+                name="ws_realtime_pending_age_idx",
+            ),
         ]
-
-
-class RealtimeEventSummary(models.Model):
-    """Latest expired event for an exact audience, without application data."""
-
-    UNLOGGED = True
-
-    key = models.BinaryField(primary_key=True, db_default=b"")
-    channel_group = models.TextField(db_default="")
-    payload = models.JSONField(db_default={})
-    last_event_id = models.BigIntegerField(db_default=0)
-    created_at = models.DateTimeField(db_default=Now())
-
-    class Meta:
-        db_table = "ws_realtime_event_summaries"
-        indexes = [
-            models.Index(
-                fields=["channel_group", "last_event_id"],
-                name="ws_summary_group_event_idx",
-            ),
-            models.Index(fields=["last_event_id"], name="ws_summary_event_idx"),
-            models.Index(
-                fields=["created_at", "key"], name="ws_summary_created_key_idx"
-            ),
-            GinIndex(
-                fields=["payload"],
-                opclasses=["jsonb_path_ops"],
-                condition=models.Q(channel_group="users"),
-                name="ws_summary_users_payload_idx",
-            ),
+        constraints = [
+            models.UniqueConstraint(
+                fields=["sentinel_key"],
+                condition=models.Q(sentinel_key__isnull=False),
+                name="ws_realtime_sentinel_key_uniq",
+            )
         ]
 
 

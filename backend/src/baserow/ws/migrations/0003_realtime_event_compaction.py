@@ -1,6 +1,7 @@
-from django.contrib.postgres.indexes import GinIndex
-from django.db import migrations, models
-from django.db.models.functions import Now
+from django.db import migrations, models, transaction
+
+PENDING_INDEX = "ws_realtime_pending_age_idx"
+SENTINEL_INDEX = "ws_realtime_sentinel_key_uniq"
 
 INITIALIZE_HISTORY = """
 CREATE OR REPLACE FUNCTION ws_initialize_realtime_history() RETURNS void
@@ -73,43 +74,19 @@ RETURNS jsonb LANGUAGE sql IMMUTABLE STRICT AS $function$
 $function$;
 """
 
-COMPACT_DELETED_EVENTS = """
-CREATE OR REPLACE FUNCTION ws_compact_deleted_realtime_events() RETURNS trigger
+RECORD_DELETED_HISTORY = """
+CREATE OR REPLACE FUNCTION ws_record_deleted_realtime_history() RETURNS trigger
 LANGUAGE plpgsql AS $function$
-DECLARE
-    expected_count bigint;
-    written_count bigint;
 BEGIN
-    PERFORM ws_initialize_realtime_history();
-    WITH routed AS MATERIALIZED (
-        SELECT channel_group, ws_realtime_event_routing(payload) AS payload,
-               id, created_at
-        FROM ws_deleted_realtime_events
-    ), summarized AS MATERIALIZED (
-        SELECT sha256(convert_to(
-                   jsonb_build_array(channel_group, payload)::text, 'UTF8'
-               )) AS key,
-               channel_group, payload, max(id) AS last_event_id,
-               max(created_at) AS created_at
-        FROM routed GROUP BY channel_group, payload
-    ), written AS (
-        INSERT INTO ws_realtime_event_summaries AS existing
-            (key, channel_group, payload, last_event_id, created_at)
-        SELECT key, channel_group, payload, last_event_id, created_at
-        FROM summarized ORDER BY key
-        ON CONFLICT (key) DO UPDATE SET
-            last_event_id = greatest(existing.last_event_id, EXCLUDED.last_event_id),
-            created_at = greatest(existing.created_at, EXCLUDED.created_at)
-        WHERE existing.channel_group = EXCLUDED.channel_group
-          AND existing.payload = EXCLUDED.payload
-        RETURNING key
-    )
-    SELECT (SELECT count(*) FROM summarized), (SELECT count(*) FROM written)
-    INTO expected_count, written_count;
-    -- A hash collision must abort deletion, never silently lose an audience.
-    IF expected_count <> written_count THEN
-        RAISE EXCEPTION 'Realtime history summary key collision';
+    -- Only the new cleanup's exact-route, higher-ID replacement DELETE opts out.
+    -- Ordinary/legacy DELETEs must conservatively invalidate older cursors.
+    IF current_setting('baserow.realtime_compacting', true) = 'on' THEN
+        RETURN NULL;
     END IF;
+    PERFORM ws_initialize_realtime_history();
+    UPDATE ws_realtime_event_history_state
+    SET floor = greatest(floor, (SELECT max(id) FROM ws_deleted_realtime_events))
+    WHERE id = 1 AND EXISTS (SELECT 1 FROM ws_deleted_realtime_events);
     RETURN NULL;
 END;
 $function$;
@@ -117,8 +94,6 @@ $function$;
 
 
 def _set_timeouts(cursor):
-    # New tables are empty. Bound the brief existing-table/sequence DDL locks,
-    # preserving any stricter operator limit for this migration transaction.
     cursor.execute(
         "SELECT "
         "set_config('lock_timeout', CASE WHEN "
@@ -132,35 +107,48 @@ def _set_timeouts(cursor):
     )
 
 
+def _create_index(cursor, name, definition, *, unique=False):
+    # As in 0002/database.0215, recover interrupted concurrent builds on retry.
+    cursor.execute(
+        "SELECT indisvalid AND indisready FROM pg_index "
+        "WHERE indexrelid = to_regclass(%s) "
+        "AND indrelid = 'ws_realtime_events'::regclass",
+        [name],
+    )
+    existing = cursor.fetchone()
+    if existing is not None and not existing[0]:
+        cursor.execute(f'DROP INDEX CONCURRENTLY "{name}"')
+    qualifier = "UNIQUE " if unique else ""
+    cursor.execute(
+        f'CREATE {qualifier}INDEX CONCURRENTLY IF NOT EXISTS "{name}" '
+        f"ON ws_realtime_events {definition}"
+    )
+
+
 def forwards(apps, schema_editor):
-    with schema_editor.connection.cursor() as cursor:
+    db = schema_editor.connection
+    # Cleanup must be paused/drained until all ASGI and Celery workers use the
+    # new reader/retention rules. The parent reader cannot recognize sentinels.
+    # Short metadata changes are atomic; the large-table indexes build outside
+    # that transaction without blocking normal INSERTs.
+    with transaction.atomic(using=db.alias), db.cursor() as cursor:
         _set_timeouts(cursor)
-        # Block old cleanup and INSERTs only for installation. No DELETE may slip
-        # between the initial floor and activation of its atomic summary trigger.
         cursor.execute("LOCK TABLE ws_realtime_events IN SHARE ROW EXCLUSIVE MODE")
-        cursor.execute("ALTER TABLE ws_realtime_event_summaries SET UNLOGGED")
-        cursor.execute("ALTER TABLE ws_realtime_event_history_state SET UNLOGGED")
-        # Match 0002/database.0209: frequently updated summaries need fresh
-        # planner statistics and prompt reclamation of dead row versions.
         cursor.execute(
-            """
-            ALTER TABLE ws_realtime_event_summaries SET (
-                autovacuum_analyze_threshold = 2000,
-                autovacuum_analyze_scale_factor = 0.002,
-                autovacuum_vacuum_threshold = 5000,
-                autovacuum_vacuum_scale_factor = 0.01,
-                autovacuum_vacuum_insert_threshold = 5000,
-                autovacuum_vacuum_insert_scale_factor = 0.01
-            )
-            """
+            "ALTER TABLE ws_realtime_events ADD COLUMN IF NOT EXISTS sentinel_key bytea DEFAULT NULL"
         )
-        # 0001's SET UNLOGGED also changed the owned sequence. Keep IDs durable
-        # even when the event/summary/state tables are truncated after a crash.
-        # PostgreSQL 14 has only logged sequences and no SET LOGGED syntax.
+        cursor.execute(
+            "CREATE UNLOGGED TABLE IF NOT EXISTS ws_realtime_event_history_state ("
+            "id smallint DEFAULT 1 PRIMARY KEY CHECK (id >= 0), "
+            "floor bigint NOT NULL DEFAULT 0, "
+            "CONSTRAINT ws_history_state_singleton CHECK (id = 1))"
+        )
+        cursor.execute("ALTER TABLE ws_realtime_event_history_state SET UNLOGGED")
+        # 0001's SET UNLOGGED also changed its owned sequence on PostgreSQL15+.
+        # PostgreSQL14 has only logged sequences and no SET LOGGED syntax.
         cursor.execute(
             "DO $block$ DECLARE event_sequence regclass; BEGIN "
-            "event_sequence := pg_get_serial_sequence("
-            "'ws_realtime_events', 'id')::regclass; "
+            "event_sequence := pg_get_serial_sequence('ws_realtime_events', 'id')::regclass; "
             "IF EXISTS (SELECT 1 FROM pg_class "
             "WHERE oid = event_sequence AND relpersistence <> 'p') THEN "
             "EXECUTE format('ALTER SEQUENCE %s SET LOGGED', event_sequence); "
@@ -168,92 +156,108 @@ def forwards(apps, schema_editor):
         )
         cursor.execute(INITIALIZE_HISTORY)
         cursor.execute(ROUTING_PAYLOAD)
-        cursor.execute(COMPACT_DELETED_EVENTS)
+        cursor.execute(RECORD_DELETED_HISTORY)
         cursor.execute("SELECT ws_initialize_realtime_history()")
         cursor.execute(
-            "DROP TRIGGER IF EXISTS ws_realtime_events_compact_after_delete "
-            "ON ws_realtime_events"
+            "DROP TRIGGER IF EXISTS ws_realtime_events_history_after_delete ON ws_realtime_events"
         )
         cursor.execute(
-            "CREATE TRIGGER ws_realtime_events_compact_after_delete "
+            "CREATE TRIGGER ws_realtime_events_history_after_delete "
             "AFTER DELETE ON ws_realtime_events "
             "REFERENCING OLD TABLE AS ws_deleted_realtime_events "
-            "FOR EACH STATEMENT EXECUTE FUNCTION ws_compact_deleted_realtime_events()"
+            "FOR EACH STATEMENT EXECUTE FUNCTION ws_record_deleted_realtime_history()"
+        )
+    with db.cursor() as cursor:
+        _create_index(
+            cursor,
+            PENDING_INDEX,
+            "(created_at, id) WHERE sentinel_key IS NULL",
+        )
+        _create_index(
+            cursor,
+            SENTINEL_INDEX,
+            "(sentinel_key) WHERE sentinel_key IS NOT NULL",
+            unique=True,
         )
 
 
 def backwards(apps, schema_editor):
-    with schema_editor.connection.cursor() as cursor:
+    db = schema_editor.connection
+    with db.cursor() as cursor:
+        cursor.execute(f'DROP INDEX CONCURRENTLY IF EXISTS "{PENDING_INDEX}"')
+        cursor.execute(f'DROP INDEX CONCURRENTLY IF EXISTS "{SENTINEL_INDEX}"')
+    with transaction.atomic(using=db.alias), db.cursor() as cursor:
         _set_timeouts(cursor)
         cursor.execute("LOCK TABLE ws_realtime_events IN SHARE ROW EXCLUSIVE MODE")
         cursor.execute(
-            "DROP TRIGGER IF EXISTS ws_realtime_events_compact_after_delete "
-            "ON ws_realtime_events"
+            "DROP TRIGGER IF EXISTS ws_realtime_events_history_after_delete ON ws_realtime_events"
         )
-        cursor.execute("DROP FUNCTION IF EXISTS ws_compact_deleted_realtime_events()")
+        cursor.execute("DROP FUNCTION IF EXISTS ws_record_deleted_realtime_history()")
         cursor.execute("DROP FUNCTION IF EXISTS ws_realtime_event_routing(jsonb)")
         cursor.execute("DROP FUNCTION IF EXISTS ws_initialize_realtime_history()")
-        # Do not return the sequence to UNLOGGED: rollback must not reintroduce
-        # reuse of cursor IDs after an unclean PostgreSQL restart.
+        cursor.execute("DROP TABLE IF EXISTS ws_realtime_event_history_state")
+        cursor.execute(
+            "ALTER TABLE ws_realtime_events DROP COLUMN IF EXISTS sentinel_key"
+        )
+        # Preserve original rows and the durable sequence. Before restarting the
+        # old reader, rollback must clear/disable replay separately: retained old
+        # cursors could otherwise anchor across events already compacted away.
 
 
 class Migration(migrations.Migration):
+    atomic = False
     dependencies = [("ws", "0002_realtime_event_indexes")]
 
     operations = [
-        migrations.CreateModel(
-            name="RealtimeEventSummary",
-            fields=[
-                (
-                    "key",
-                    models.BinaryField(
-                        db_default=b"", primary_key=True, serialize=False
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunPython(forwards, backwards, atomic=False)
+            ],
+            state_operations=[
+                migrations.AddField(
+                    model_name="realtimeevent",
+                    name="sentinel_key",
+                    field=models.BinaryField(null=True, db_default=None),
+                ),
+                migrations.AddIndex(
+                    model_name="realtimeevent",
+                    index=models.Index(
+                        fields=["created_at", "id"],
+                        condition=models.Q(sentinel_key__isnull=True),
+                        name=PENDING_INDEX,
                     ),
                 ),
-                ("channel_group", models.TextField(db_default="")),
-                ("payload", models.JSONField(db_default={})),
-                ("last_event_id", models.BigIntegerField(db_default=0)),
-                ("created_at", models.DateTimeField(db_default=Now())),
-            ],
-            options={
-                "db_table": "ws_realtime_event_summaries",
-                "indexes": [
-                    models.Index(
-                        fields=["channel_group", "last_event_id"],
-                        name="ws_summary_group_event_idx",
-                    ),
-                    models.Index(fields=["last_event_id"], name="ws_summary_event_idx"),
-                    models.Index(
-                        fields=["created_at", "key"], name="ws_summary_created_key_idx"
-                    ),
-                    GinIndex(
-                        fields=["payload"],
-                        opclasses=["jsonb_path_ops"],
-                        condition=models.Q(channel_group="users"),
-                        name="ws_summary_users_payload_idx",
-                    ),
-                ],
-            },
-        ),
-        migrations.CreateModel(
-            name="RealtimeEventHistoryState",
-            fields=[
-                (
-                    "id",
-                    models.PositiveSmallIntegerField(
-                        db_default=1, primary_key=True, serialize=False
+                migrations.AddConstraint(
+                    model_name="realtimeevent",
+                    constraint=models.UniqueConstraint(
+                        fields=["sentinel_key"],
+                        condition=models.Q(sentinel_key__isnull=False),
+                        name=SENTINEL_INDEX,
                     ),
                 ),
-                ("floor", models.BigIntegerField(db_default=0)),
+                migrations.CreateModel(
+                    name="RealtimeEventHistoryState",
+                    fields=[
+                        (
+                            "id",
+                            models.PositiveSmallIntegerField(
+                                db_default=1,
+                                primary_key=True,
+                                serialize=False,
+                            ),
+                        ),
+                        ("floor", models.BigIntegerField(db_default=0)),
+                    ],
+                    options={
+                        "db_table": "ws_realtime_event_history_state",
+                        "constraints": [
+                            models.CheckConstraint(
+                                condition=models.Q(id=1),
+                                name="ws_history_state_singleton",
+                            )
+                        ],
+                    },
+                ),
             ],
-            options={
-                "db_table": "ws_realtime_event_history_state",
-                "constraints": [
-                    models.CheckConstraint(
-                        condition=models.Q(id=1), name="ws_history_state_singleton"
-                    ),
-                ],
-            },
         ),
-        migrations.RunPython(forwards, backwards),
     ]

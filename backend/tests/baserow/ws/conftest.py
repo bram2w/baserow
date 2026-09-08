@@ -31,7 +31,7 @@ def _install_realtime_compaction(_install_realtime_targets, django_db_blocker):
     # Install parent routing metadata first, then the compaction delete trigger,
     # before pytest-django opens any per-test atomic block.
     migration = import_module("baserow.ws.migrations.0003_realtime_event_compaction")
-    with django_db_blocker.unblock(), connection.schema_editor(atomic=True) as editor:
+    with django_db_blocker.unblock(), connection.schema_editor(atomic=False) as editor:
         migration.forwards(None, editor)
 
 

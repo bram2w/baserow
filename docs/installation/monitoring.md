@@ -167,8 +167,9 @@ for the execution and recovery model.
 | `baserow.websocket_replay_database_errors` | Database errors by reason, including errors occurring after the caller's deadline. |
 | `baserow.realtime_recording_events` | Attempted recording envelopes by `destination=users/page` and handler `outcome=success/error`. A successful handler does not guarantee an enclosing transaction committed. |
 | `baserow.realtime_recording_batch_size` / `baserow.realtime_recording_duration` | Envelopes per attempted batch and handler duration in milliseconds, including adaptation and database work. |
-| `baserow.realtime_cleanup_deleted` / `baserow.realtime_cleanup_batch_size` | Rows removed by successfully committed batches, split by `storage=events` (payloads compacted) and `storage=summaries` (history evicted). |
-| `baserow.realtime_cleanup_batch_duration` | Batch duration in milliseconds, including compaction/floor updates and commit, by `storage`. Failed batches have `outcome=error` and contribute no deleted rows. |
+| `baserow.realtime_cleanup_deleted` / `baserow.realtime_cleanup_batch_size` | Rows removed by successfully committed batches, split by `operation=compact` (duplicates removed, last original retained) and `operation=expire` (history older than seven days removed). |
+| `baserow.realtime_cleanup_processed` | Candidates processed by committed batches, by `operation`, including originals retained as sentinels. Compaction can make progress without deleting rows. |
+| `baserow.realtime_cleanup_batch_duration` | Batch duration in milliseconds, including sentinel/floor updates and commit, by `operation`. Failed batches have `outcome=error` and contribute no deleted rows. |
 | `baserow.realtime_cleanup_run_deleted` / `baserow.realtime_cleanup_run_duration` | Committed payload deletion count and total run duration in milliseconds, by outcome. Earlier commits still count if a later batch fails. |
 | `baserow.realtime_cleanup_skipped` | Scheduled attempts skipped for `reason=overlap` (another task owns the lease) or `reason=lock_error` (lease acquisition failed). |
 
@@ -214,10 +215,13 @@ health checks alone do not establish WebSocket responsiveness. Channel-capacity
 warnings describe full recipient queues, not a connection limit or proof that Redis
 has exhausted memory.
 
-Compare recording rate with committed cleanup deletions for `storage=events` over time; `storage=summaries` measures separate history eviction. A cleanup run
-ending with `budget` retained its earlier commits but exhausted its time allowance;
+Compare recording rate with committed cleanup processing and deletions over time.
+The `compact` operation retains one original per route; `expire` removes history
+older than seven days. Processing without deletions is expected for distinct routes.
+A cleanup run ending with `budget` retained its earlier commits but exhausted its time allowance;
 `success` can still leave locked rows for the next run. Repeated overlap or lock
-errors explain runs that never reached the database. Track oldest payload/summary age, both tables' sizes and distinct route counts,
+errors explain runs that never reached the database. Track oldest unprocessed event
+age (`sentinel_key IS NULL`), retained sentinel count, event-table size,
 `pg_stat_user_tables` live/dead tuple estimates and vacuum/analyze timestamps, and
 database I/O alongside these metrics. Deletion and vacuum make space reusable;
 they do not normally reduce allocated table files. Replay refresh fallbacks also

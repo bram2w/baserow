@@ -24,6 +24,7 @@ def storage_metrics(monkeypatch):
         "realtime_cleanup_deleted",
         "realtime_cleanup_batch_size",
         "realtime_cleanup_batch_duration",
+        "realtime_cleanup_processed",
         "realtime_cleanup_run_deleted",
         "realtime_cleanup_run_duration",
         "realtime_cleanup_skipped",
@@ -160,7 +161,7 @@ def _create_expired_events():
         [("table-987", {"payload": {"i": i}}) for i in range(4)]
     )
     RealtimeEvent.objects.filter(id__in=ids[:3]).update(
-        created_at=timezone.now() - timedelta(days=2)
+        created_at=timezone.now() - timedelta(days=8)
     )
     return ids
 
@@ -192,8 +193,8 @@ def test_cleanup_metrics_count_only_committed_rows(monkeypatch, storage_metrics)
         if entry.args[0] > 0
     ]
     assert successful_batches == [
-        call(2, {**attributes, "storage": "events"}),
-        call(1, {**attributes, "storage": "events"}),
+        call(2, {**attributes, "operation": "expire"}),
+        call(1, {**attributes, "operation": "expire"}),
     ]
     storage_metrics["realtime_cleanup_run_deleted"].record.assert_called_once_with(
         3, attributes
@@ -201,6 +202,37 @@ def test_cleanup_metrics_count_only_committed_rows(monkeypatch, storage_metrics)
     duration = storage_metrics["realtime_cleanup_run_duration"].record.call_args
     assert duration.args[0] > 0
     assert duration.args[1] == attributes
+
+
+@pytest.mark.django_db(transaction=True)
+def test_cleanup_metrics_observe_progress_when_distinct_routes_delete_nothing(
+    monkeypatch, storage_metrics
+):
+    monkeypatch.setattr(realtime_events, "REALTIME_EVENTS_CLEANUP_BATCH_SIZE", 2)
+    ids = RealtimeEventHandler.record_events(
+        [
+            (f"table-{index}", {"payload": {"type": "rows_updated"}})
+            for index in range(5)
+        ]
+    )
+    RealtimeEvent.objects.filter(pk__in=ids).update(
+        created_at=timezone.now() - timedelta(days=2)
+    )
+
+    assert RealtimeEventHandler.cleanup_old_realtime_events(timedelta(days=1)) == 0
+
+    assert RealtimeEvent.objects.filter(sentinel_key__isnull=False).count() == 5
+    attributes = {
+        "process.pid": os.getpid(),
+        "operation": "compact",
+    }
+    processed = [
+        entry
+        for entry in storage_metrics["realtime_cleanup_processed"].add.call_args_list
+        if entry.args[1]["operation"] == "compact"
+    ]
+    assert processed == [call(2, attributes), call(2, attributes), call(1, attributes)]
+    storage_metrics["realtime_cleanup_deleted"].add.assert_not_called()
 
 
 @pytest.mark.django_db(transaction=True)
@@ -229,7 +261,10 @@ def test_cleanup_error_keeps_earlier_committed_progress_visible(
     )
     attributes = {"process.pid": os.getpid()}
     storage_metrics["realtime_cleanup_deleted"].add.assert_called_once_with(
-        2, {**attributes, "storage": "events"}
+        2, {**attributes, "operation": "expire"}
+    )
+    storage_metrics["realtime_cleanup_processed"].add.assert_called_once_with(
+        2, {**attributes, "operation": "expire"}
     )
     storage_metrics["realtime_cleanup_run_deleted"].record.assert_called_once_with(
         2, {**attributes, "outcome": "error"}
@@ -238,9 +273,9 @@ def test_cleanup_error_keeps_earlier_committed_progress_visible(
         "realtime_cleanup_batch_duration"
     ].record.call_args_list
     assert [
-        (entry.args[1]["storage"], entry.args[1]["outcome"])
+        (entry.args[1]["operation"], entry.args[1]["outcome"])
         for entry in batch_durations
-    ] == [("summaries", "success"), ("events", "success"), ("events", "error")]
+    ] == [("expire", "success"), ("compact", "success"), ("expire", "error")]
 
 
 @pytest.mark.django_db(transaction=True)
@@ -251,7 +286,7 @@ def test_cleanup_budget_reports_progress_without_claiming_completion(
     monkeypatch.setattr(realtime_events, "REALTIME_EVENTS_CLEANUP_BATCH_SIZE", 2)
     now = [0.0]
     monkeypatch.setattr(realtime_events, "monotonic", lambda: now[0])
-    delete_batch = RealtimeEventHandler._delete_realtime_events_batch
+    delete_batch = RealtimeEventHandler._expire_realtime_events_batch
 
     def slow_batch(cutoff, deadline):
         deleted = delete_batch(cutoff, deadline)
@@ -259,7 +294,7 @@ def test_cleanup_budget_reports_progress_without_claiming_completion(
         return deleted
 
     monkeypatch.setattr(
-        RealtimeEventHandler, "_delete_realtime_events_batch", staticmethod(slow_batch)
+        RealtimeEventHandler, "_expire_realtime_events_batch", staticmethod(slow_batch)
     )
 
     assert RealtimeEventHandler.cleanup_old_realtime_events(timedelta(hours=24)) == 2
@@ -269,7 +304,7 @@ def test_cleanup_budget_reports_progress_without_claiming_completion(
     )
     attributes = {"process.pid": os.getpid()}
     storage_metrics["realtime_cleanup_deleted"].add.assert_called_once_with(
-        2, {**attributes, "storage": "events"}
+        2, {**attributes, "operation": "expire"}
     )
     storage_metrics["realtime_cleanup_run_deleted"].record.assert_called_once_with(
         2, {**attributes, "outcome": "budget"}

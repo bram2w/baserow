@@ -1,14 +1,15 @@
-import json
 from contextlib import closing
+from datetime import timedelta
 from importlib import import_module
 
 from django.db import DatabaseError, OperationalError, connection, transaction
+from django.utils import timezone
 
 import pytest
 
 from baserow.ws.models import (
+    RealtimeEvent,
     RealtimeEventHistoryState,
-    RealtimeEventSummary,
 )
 from baserow.ws.realtime_events import RealtimeEventHandler
 
@@ -41,54 +42,33 @@ def test_compaction_catalog_keeps_history_unlogged_and_event_sequence_logged():
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT relname, relpersistence FROM pg_class WHERE oid IN ("
-            "'ws_realtime_event_summaries'::regclass, "
             "'ws_realtime_event_history_state'::regclass, "
             "pg_get_serial_sequence('ws_realtime_events', 'id')::regclass)"
         )
         persistence = dict(cursor.fetchall())
-        assert persistence.pop("ws_realtime_event_summaries") == "u"
         assert persistence.pop("ws_realtime_event_history_state") == "u"
         assert list(persistence.values()) == ["p"]
 
         cursor.execute(
-            "SELECT format_type(atttypid, atttypmod) FROM pg_attribute "
-            "WHERE attrelid = 'ws_realtime_event_summaries'::regclass "
-            "AND attname = 'key'"
+            "SELECT format_type(atttypid, atttypmod), attnotnull FROM pg_attribute "
+            "WHERE attrelid = 'ws_realtime_events'::regclass "
+            "AND attname = 'sentinel_key'"
         )
-        assert cursor.fetchone()[0] == "bytea"
+        assert cursor.fetchone() == ("bytea", False)
         cursor.execute(
-            "SELECT indexrelid::regclass::text, indisvalid FROM pg_index "
-            "WHERE indrelid = 'ws_realtime_event_summaries'::regclass"
+            "SELECT indexrelid::regclass::text, indisvalid, indisunique, "
+            "pg_get_expr(indpred, indrelid) FROM pg_index "
+            "WHERE indexrelid IN ('ws_realtime_sentinel_key_uniq'::regclass, "
+            "'ws_realtime_pending_age_idx'::regclass)"
         )
-        assert dict(cursor.fetchall()) == {
-            "ws_realtime_event_summaries_pkey": True,
-            "ws_summary_group_event_idx": True,
-            "ws_summary_event_idx": True,
-            "ws_summary_created_key_idx": True,
-            "ws_summary_users_payload_idx": True,
+        assert {name: values for name, *values in cursor.fetchall()} == {
+            "ws_realtime_sentinel_key_uniq": [True, True, "(sentinel_key IS NOT NULL)"],
+            "ws_realtime_pending_age_idx": [True, False, "(sentinel_key IS NULL)"],
         }
-
-        cursor.execute(
-            "SELECT reloptions FROM pg_class "
-            "WHERE oid = 'ws_realtime_event_summaries'::regclass"
-        )
-        options = dict(option.split("=", 1) for option in cursor.fetchone()[0])
-        assert (
-            options.items()
-            >= {
-                "autovacuum_analyze_threshold": "2000",
-                "autovacuum_analyze_scale_factor": "0.002",
-                "autovacuum_vacuum_threshold": "5000",
-                "autovacuum_vacuum_scale_factor": "0.01",
-                "autovacuum_vacuum_insert_threshold": "5000",
-                "autovacuum_vacuum_insert_scale_factor": "0.01",
-            }.items()
-        )
-
         cursor.execute(
             "SELECT pg_get_triggerdef(oid), tgenabled FROM pg_trigger "
             "WHERE tgrelid = 'ws_realtime_events'::regclass "
-            "AND tgname = 'ws_realtime_events_compact_after_delete'"
+            "AND tgname = 'ws_realtime_events_history_after_delete'"
         )
         definition, enabled = cursor.fetchone()
     assert "AFTER DELETE" in definition
@@ -97,28 +77,23 @@ def test_compaction_catalog_keeps_history_unlogged_and_event_sequence_logged():
     assert enabled == "O"
 
 
-def test_reapplying_migration_preserves_summary_and_history_floor():
+def test_reapplying_migration_preserves_original_sentinel_and_history_floor():
     event_id = record()
-    with connection.cursor() as cursor:
-        cursor.execute("DELETE FROM ws_realtime_events WHERE id = %s", [event_id])
-    summary = RealtimeEventSummary.objects.get()
-    original = (summary.key, summary.payload, summary.last_event_id, summary.created_at)
+    RealtimeEvent.objects.filter(pk=event_id).update(
+        created_at=timezone.now() - timedelta(days=2)
+    )
+    RealtimeEventHandler.cleanup_old_realtime_events(timedelta(days=1))
+    original = RealtimeEvent.objects.values().get(pk=event_id)
     RealtimeEventHistoryState.objects.filter(pk=1).update(floor=event_id)
 
     for _ in range(2):
-        with connection.schema_editor(atomic=True) as editor:
+        with connection.schema_editor(atomic=False) as editor:
             migration().forwards(None, editor)
-        summary.refresh_from_db()
-        assert (
-            summary.key,
-            summary.payload,
-            summary.last_event_id,
-            summary.created_at,
-        ) == original
+        assert RealtimeEvent.objects.values().get(pk=event_id) == original
         assert RealtimeEventHistoryState.objects.get(pk=1).floor == event_id
 
 
-def test_legacy_delete_compacts_multiple_rows_into_one_canonical_audience():
+def test_compaction_uses_canonical_audience_but_preserves_original_payload():
     first = record(
         {
             "type": "broadcast_to_users",
@@ -137,28 +112,27 @@ def test_legacy_delete_compacts_multiple_rows_into_one_canonical_audience():
             "payload": {"type": "workspace_updated", "data": "second-secret"},
         }
     )
-    # This is intentionally raw SQL, as issued by an old cleanup worker. No new
-    # application recording/cleanup helper can provide the compaction here.
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "DELETE FROM ws_realtime_events WHERE id IN (%s, %s)", [first, second]
-        )
+    RealtimeEvent.objects.filter(pk__in=[first, second]).update(
+        created_at=timezone.now() - timedelta(days=2)
+    )
+    original = RealtimeEvent.objects.get(pk=second)
 
-    summary = RealtimeEventSummary.objects.get()
-    assert len(summary.key) == 32
-    assert summary.last_event_id == second
-    assert summary.payload["user_ids"] == [7, 42]
-    assert summary.payload["payload"] == {"type": "workspace_updated"}
-    assert summary.payload["ignore_web_socket_id"] == "same"
-    assert "secret" not in json.dumps(summary.payload)
+    assert RealtimeEventHandler.cleanup_old_realtime_events(timedelta(days=1)) == 1
+
+    retained = RealtimeEvent.objects.get()
+    assert len(retained.sentinel_key) == 32
+    assert retained.id == second
+    assert retained.payload == original.payload
+    assert retained.created_at == original.created_at
+    assert RealtimeEventHistoryState.objects.get(pk=1).floor == 0
 
 
-def test_reversed_delete_order_never_lowers_an_audience_high_water_mark():
+def test_reversed_legacy_delete_order_never_lowers_the_loss_floor():
     first, second = record(), record()
     with connection.cursor() as cursor:
         cursor.execute("DELETE FROM ws_realtime_events WHERE id = %s", [second])
         cursor.execute("DELETE FROM ws_realtime_events WHERE id = %s", [first])
-    assert RealtimeEventSummary.objects.get().last_event_id == second
+    assert RealtimeEventHistoryState.objects.get(pk=1).floor == second
 
 
 def test_history_reinitialization_after_data_loss_uses_allocated_sequence_ids():
@@ -170,10 +144,7 @@ def test_history_reinitialization_after_data_loss_uses_allocated_sequence_ids():
     assert allocated > committed
     # Simulate lost UNLOGGED relation contents, retaining the logged sequence.
     with connection.cursor() as cursor:
-        cursor.execute(
-            "TRUNCATE ws_realtime_events, ws_realtime_event_summaries, "
-            "ws_realtime_event_history_state"
-        )
+        cursor.execute("TRUNCATE ws_realtime_events, ws_realtime_event_history_state")
         cursor.execute("SELECT ws_initialize_realtime_history()")
     floor = RealtimeEventHistoryState.objects.get(pk=1).floor
     assert floor >= allocated

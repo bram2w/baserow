@@ -71,6 +71,11 @@ realtime_cleanup_deleted = meter.create_counter(
     unit="1",
     description="Realtime events removed by successfully committed cleanup batches.",
 )
+realtime_cleanup_processed = meter.create_counter(
+    "baserow.realtime_cleanup_processed",
+    unit="1",
+    description="Candidates processed by committed cleanup batches, including retained sentinels.",
+)
 realtime_cleanup_batch_size = meter.create_histogram(
     "baserow.realtime_cleanup_batch_size",
     unit="1",
@@ -165,11 +170,12 @@ def realtime_recording(events_data):
 @dataclass
 class _CleanupStats:
     deleted: int = 0
+    processed: int | None = None
     outcome: str = "success"
 
 
 @contextmanager
-def realtime_cleanup_batch(*, storage="events"):
+def realtime_cleanup_batch(*, operation="compact"):
     """Measure one batch; set ``deleted`` only after its transaction commits."""
 
     started_at = monotonic()
@@ -181,15 +187,20 @@ def realtime_cleanup_batch(*, storage="events"):
         outcome = "error"
         raise
     finally:
-        attributes = _attributes(outcome=outcome, storage=storage)
+        attributes = _attributes(outcome=outcome, operation=operation)
         realtime_cleanup_batch_duration.record(
             (monotonic() - started_at) * 1000, attributes
         )
         if outcome == "success":
             realtime_cleanup_batch_size.record(stats.deleted, attributes)
+            processed = stats.deleted if stats.processed is None else stats.processed
+            if processed:
+                realtime_cleanup_processed.add(
+                    processed, _attributes(operation=operation)
+                )
             if stats.deleted:
                 realtime_cleanup_deleted.add(
-                    stats.deleted, _attributes(storage=storage)
+                    stats.deleted, _attributes(operation=operation)
                 )
 
 

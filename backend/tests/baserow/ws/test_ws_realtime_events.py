@@ -937,7 +937,7 @@ def test_cleanup_deletes_old_rows():
         cursor.execute(
             "INSERT INTO ws_realtime_events "
             "(channel_group, payload, created_at) "
-            "VALUES (%s, %s, now() - interval '48 hours') RETURNING id",
+            "VALUES (%s, %s, now() - interval '8 days') RETURNING id",
             ["table-1", '{"type": "x"}'],
         )
         old_id = cursor.fetchone()[0]
@@ -1302,7 +1302,7 @@ def test_replay_events_result_future_last_seen_uses_one_query(
 
 @pytest.mark.django_db
 @pytest.mark.websockets
-def test_replay_events_result_compacted_last_seen_uses_one_query(
+def test_replay_events_result_deleted_last_seen_at_the_floor_uses_one_query(
     django_assert_num_queries,
 ):
     missing_id = _record_user_broadcast(1, {"type": "missing"})
@@ -1318,7 +1318,7 @@ def test_replay_events_result_compacted_last_seen_uses_one_query(
         )
 
     # The cursor's payload is no longer an anchor requirement. The delete trigger
-    # retained routing history, and only the newer full payload needs replaying.
+    # advanced the floor to this acknowledged ID, and newer payloads remain known.
     assert result.force_refresh is False
     assert result.latest_event_id == latest_id
     assert [event.id for event in result.replay_events] == [latest_id]

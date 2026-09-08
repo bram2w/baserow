@@ -16,7 +16,6 @@ from baserow.ws import replay as replay_module
 from baserow.ws.models import (
     RealtimeEvent,
     RealtimeEventHistoryState,
-    RealtimeEventSummary,
 )
 from baserow.ws.realtime_events import (
     FIRST_CONNECT_CURSOR,
@@ -104,7 +103,8 @@ def test_compacted_irrelevant_history_allows_recent_relevant_replay():
 
     cleanup()
 
-    assert not RealtimeEvent.objects.filter(pk__in=[baseline, irrelevant]).exists()
+    assert not RealtimeEvent.objects.filter(pk=baseline).exists()
+    assert RealtimeEvent.objects.filter(pk=irrelevant).exists()
     result = replay(baseline)
     assert result.force_refresh is False
     assert [event.id for event in result.replay_events] == [recent]
@@ -144,7 +144,7 @@ def test_compacted_irrelevant_history_allows_recent_relevant_replay():
         "own-individual",
     ],
 )
-def test_expired_payload_and_compact_summary_have_identical_routing(
+def test_expired_payload_and_retained_original_have_identical_routing(
     group, payload, relevant
 ):
     baseline = record("baseline", age=timedelta(days=3))
@@ -153,22 +153,24 @@ def test_expired_payload_and_compact_summary_have_identical_routing(
     # Payload time acceptance must not depend on whether Celery ran on time.
     assert replay(baseline).force_refresh is relevant
     cleanup()
-    assert not RealtimeEvent.objects.filter(pk=event_id).exists()
+    assert RealtimeEvent.objects.filter(pk=event_id).exists()
     result = replay(baseline)
     assert result.force_refresh is relevant
     assert result.replay_events == []
 
 
-def test_compaction_collapses_matching_audiences_and_strips_business_data():
+def test_compaction_keeps_the_latest_original_event_for_the_same_route():
     first = record(payload=group_event(value="old-secret"), age=timedelta(days=3))
     second = record(payload=group_event(value="new-secret"), age=timedelta(days=2))
-    delete_with_old_worker_sql([first, second])
+    original = RealtimeEvent.objects.get(pk=second)
+    cleanup()
 
-    summary = RealtimeEventSummary.objects.get()
-    assert summary.last_event_id == second
-    assert summary.channel_group == "table-1"
-    assert summary.payload["payload"] == {"type": "rows_updated"}
-    assert "secret" not in str(summary.payload)
+    retained = RealtimeEvent.objects.get()
+    assert retained.id == second
+    assert retained.channel_group == original.channel_group
+    assert retained.payload == original.payload
+    assert retained.created_at == original.created_at
+    assert RealtimeEventHistoryState.objects.get(pk=1).floor == 0
     assert replay(first).force_refresh is True
     assert replay(second).force_refresh is False
 
@@ -188,36 +190,186 @@ def test_absent_own_socket_key_keeps_full_and_compacted_routing_equivalent(event
         age=timedelta(days=2),
     )
     assert replay(baseline).force_refresh is True
-    delete_with_old_worker_sql([event_id])
+    cleanup()
+    assert RealtimeEvent.objects.filter(pk=event_id).exists()
     assert replay(baseline).force_refresh is True
 
 
 def test_compaction_keeps_own_socket_and_exclusion_audiences_distinct():
     ids = [
-        record(payload=group_event(own="own")),
-        record(payload=group_event(own="other")),
-        record(payload=group_event(excluded=[42])),
-        record(payload=group_event(excluded=[7])),
+        record(payload=group_event(own="own"), age=timedelta(days=2)),
+        record(payload=group_event(own="other"), age=timedelta(days=2)),
+        record(payload=group_event(excluded=[42]), age=timedelta(days=2)),
+        record(payload=group_event(excluded=[7]), age=timedelta(days=2)),
     ]
-    delete_with_old_worker_sql(ids)
-    assert set(
-        RealtimeEventSummary.objects.values_list("last_event_id", flat=True)
-    ) == set(ids)
+    cleanup()
+    assert set(RealtimeEvent.objects.values_list("id", flat=True)) == set(ids)
 
 
-def test_compaction_is_atomic_with_a_legacy_delete_statement():
+def test_distinct_oldest_routes_do_not_starve_later_duplicate_cleanup(monkeypatch):
+    monkeypatch.setattr(realtime_events, "REALTIME_EVENTS_CLEANUP_BATCH_SIZE", 2)
+    unique = [record(f"unique-{index}", age=timedelta(days=3)) for index in range(6)]
+    first = record("repeated", age=timedelta(days=2))
+    latest = record("repeated", age=timedelta(hours=36))
+
+    assert cleanup() == 1
+
+    assert set(RealtimeEvent.objects.values_list("id", flat=True)) == {
+        *unique,
+        latest,
+    }
+    assert not RealtimeEvent.objects.filter(pk=first).exists()
+    assert RealtimeEventHistoryState.objects.get(pk=1).floor == 0
+    assert cleanup() == 0
+
+
+def test_same_route_spanning_batches_keeps_one_exact_original(monkeypatch):
+    monkeypatch.setattr(realtime_events, "REALTIME_EVENTS_CLEANUP_BATCH_SIZE", 2)
+    ids = [
+        record(payload=group_event(value=index), age=timedelta(days=2))
+        for index in range(7)
+    ]
+    original = RealtimeEvent.objects.get(pk=ids[-1])
+
+    assert cleanup() == 6
+
+    retained = RealtimeEvent.objects.get()
+    assert retained.id == original.id
+    assert retained.payload == original.payload
+    assert retained.created_at == original.created_at
+    assert RealtimeEventHistoryState.objects.get(pk=1).floor == 0
+
+
+def test_later_cleanup_of_a_lower_id_cannot_replace_a_newer_sentinel():
+    first = record(payload=group_event(value="lower-id"), age=timedelta(hours=1))
+    latest = record(payload=group_event(value="highest-id"), age=timedelta(days=2))
+    cleanup()
+    original = RealtimeEvent.objects.get(pk=latest)
+    RealtimeEvent.objects.filter(pk=first).update(
+        created_at=timezone.now() - timedelta(days=2)
+    )
+
+    assert cleanup() == 1
+
+    retained = RealtimeEvent.objects.get()
+    assert retained.id == latest
+    assert retained.payload == original.payload
+    assert retained.created_at == original.created_at
+    assert RealtimeEventHistoryState.objects.get(pk=1).floor == 0
+
+
+def test_failed_sentinel_promotion_rolls_back_markers_and_originals():
+    ids = [
+        record(payload=group_event(value=index), age=timedelta(days=2))
+        for index in range(2)
+    ]
+
+    def fail_after_promotion(execute, sql, params, many, context):
+        result = execute(sql, params, many, context)
+        if sql.startswith("UPDATE ws_realtime_events") and "promoted" in sql:
+            raise OperationalError("Failure after sentinel promotion")
+        return result
+
+    with (
+        connection.execute_wrapper(fail_after_promotion),
+        pytest.raises(OperationalError),
+    ):
+        cleanup()
+
+    assert (
+        list(RealtimeEvent.objects.order_by("id").values_list("id", flat=True)) == ids
+    )
+    assert not RealtimeEvent.objects.filter(sentinel_key__isnull=False).exists()
+    assert RealtimeEventHistoryState.objects.get(pk=1).floor == 0
+
+
+@pytest.mark.parametrize("stage", ["promotion", "deletion"])
+def test_compaction_deadline_rolls_back_completed_writes(monkeypatch, stage):
+    ids = [
+        record(payload=group_event(value=index), age=timedelta(days=2))
+        for index in range(2)
+    ]
+    now = 0
+    deadline = realtime_events.REALTIME_EVENTS_CLEANUP_BUDGET_SECONDS
+    monkeypatch.setattr(realtime_events, "monotonic", lambda: now)
+
+    def exhaust_budget_after_write(execute, sql, params, many, context):
+        nonlocal now
+        result = execute(sql, params, many, context)
+        if (
+            stage == "promotion"
+            and sql.startswith("UPDATE ws_realtime_events")
+            and "promoted" in sql
+        ) or (
+            stage == "deletion"
+            and sql.startswith("DELETE FROM ws_realtime_events WHERE id = ANY")
+        ):
+            now = deadline + 1
+        return result
+
+    with connection.execute_wrapper(exhaust_budget_after_write):
+        result = RealtimeEventHandler._compact_realtime_events_batch(
+            timezone.now() - timedelta(days=1), deadline
+        )
+
+    assert now > deadline, "The selected write must finish before budget exhaustion"
+    assert result == (0, 0)
+    assert (
+        list(RealtimeEvent.objects.order_by("id").values_list("id", flat=True)) == ids
+    )
+    assert not RealtimeEvent.objects.filter(sentinel_key__isnull=False).exists()
+    assert RealtimeEventHistoryState.objects.get(pk=1).floor == 0
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT current_setting('baserow.realtime_compacting', true)")
+        assert cursor.fetchone()[0] != "on"
+
+
+def test_compaction_does_not_disable_loss_tracking_for_later_legacy_deletes():
+    first = record(age=timedelta(days=3))
+    latest = record(age=timedelta(days=2))
+    assert cleanup() == 1
+    assert not RealtimeEvent.objects.filter(pk=first).exists()
+    assert RealtimeEventHistoryState.objects.get(pk=1).floor == 0
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT current_setting('baserow.realtime_compacting', true)")
+        assert cursor.fetchone()[0] != "on"
+
+    delete_with_old_worker_sql([latest])
+
+    assert RealtimeEventHistoryState.objects.get(pk=1).floor == latest
+    assert replay(first).force_refresh is True
+
+
+def test_expired_original_payload_is_not_returned_by_the_replay_query():
+    baseline = record("baseline", age=timedelta(days=3))
+    expired = record(
+        payload=group_event(secret="large-private-data"), age=timedelta(days=2)
+    )
+    cleanup()
+
+    rows = RealtimeEventHandler._get_replay_snapshot(42, ["table-1"], baseline, "own")
+
+    assert len(rows) == 1
+    assert rows[0][2] == expired
+    assert rows[0][4] is None
+    assert RealtimeEvent.objects.get(pk=expired).payload["payload"]["secret"] == (
+        "large-private-data"
+    )
+
+
+def test_legacy_delete_advances_the_loss_floor_atomically():
     event_id = record(payload=group_event(value="private"))
     with pytest.raises(RuntimeError, match="rollback"):
         with transaction.atomic():
             delete_with_old_worker_sql([event_id])
             assert not RealtimeEvent.objects.filter(pk=event_id).exists()
-            assert RealtimeEventSummary.objects.filter(last_event_id=event_id).exists()
+            assert RealtimeEventHistoryState.objects.get(pk=1).floor == event_id
             raise RuntimeError("rollback")
 
     assert RealtimeEvent.objects.filter(pk=event_id).exists()
-    assert not RealtimeEventSummary.objects.exists()
+    assert RealtimeEventHistoryState.objects.get(pk=1).floor == 0
     delete_with_old_worker_sql([event_id])
-    assert RealtimeEventSummary.objects.filter(last_event_id=event_id).exists()
+    assert RealtimeEventHistoryState.objects.get(pk=1).floor == event_id
 
 
 @pytest.mark.parametrize("microseconds,replayable", [(0, True), (1, False)])
@@ -253,7 +405,8 @@ def test_row_history_is_ignored_only_for_clients_that_refetch_it(
         age=timedelta(days=2),
     )
     if compacted:
-        delete_with_old_worker_sql([baseline, event_id])
+        cleanup()
+        assert RealtimeEvent.objects.filter(pk=event_id).exists()
     result = replay(baseline, history_refresh=supports_refresh)
     assert result.force_refresh is not supports_refresh
     assert result.replay_events == []
@@ -270,12 +423,9 @@ def test_individual_row_history_filter_uses_the_current_recipients_payload(compa
         age=timedelta(days=2),
     )
     if compacted:
-        delete_with_old_worker_sql([baseline, event_id])
-        summary = RealtimeEventSummary.objects.get(channel_group="users")
-        assert summary.payload["payload_map"] == {
-            "42": {"type": "row_history_updated"},
-            "7": {"type": "workspace_updated"},
-        }
+        original = RealtimeEvent.objects.get(pk=event_id).payload
+        cleanup()
+        assert RealtimeEvent.objects.get(pk=event_id).payload == original
     assert replay(baseline, user=42, history_refresh=True).force_refresh is False
     assert replay(baseline, user=7, history_refresh=True).force_refresh is True
 
@@ -322,8 +472,6 @@ def test_first_connect_includes_compacted_history_high_water_mark():
 def test_history_expiry_advances_floor_past_a_locked_old_full_baseline():
     baseline = record("baseline", age=timedelta(days=9))
     evicted = record("other", age=timedelta(days=8))
-    delete_with_old_worker_sql([evicted])
-    RealtimeEventSummary.objects.update(created_at=timezone.now() - timedelta(days=8))
     with closing(
         connection.Database.connect(**connection.get_connection_params())
     ) as blocker:
@@ -333,43 +481,36 @@ def test_history_expiry_advances_floor_past_a_locked_old_full_baseline():
             )
         cleanup()
         assert RealtimeEvent.objects.filter(pk=baseline).exists()
-        assert not RealtimeEventSummary.objects.filter(last_event_id=evicted).exists()
+        assert not RealtimeEvent.objects.filter(pk=evicted).exists()
         assert RealtimeEventHistoryState.objects.get(pk=1).floor >= evicted
         assert replay(baseline).force_refresh is True
 
 
-def test_summary_retention_keeps_the_exact_seven_day_boundary(monkeypatch):
+def test_sentinel_retention_keeps_the_exact_seven_day_boundary(monkeypatch):
     now = timezone.now()
     monkeypatch.setattr(realtime_events.timezone, "now", lambda: now)
     expired = record("expired", age=timedelta(days=7, microseconds=1), now=now)
     boundary = record("boundary", age=timedelta(days=7), now=now)
-    delete_with_old_worker_sql([expired, boundary])
 
     cleanup()
 
-    assert list(
-        RealtimeEventSummary.objects.values_list("last_event_id", flat=True)
-    ) == [boundary]
+    assert list(RealtimeEvent.objects.values_list("id", flat=True)) == [boundary]
     assert RealtimeEventHistoryState.objects.get(pk=1).floor == expired
 
 
-def test_summary_expiry_and_floor_advance_roll_back_together():
+def test_sentinel_expiry_and_floor_advance_roll_back_together():
     expired = record("other", age=timedelta(days=8))
-    delete_with_old_worker_sql([expired])
 
     def fail_after_expiry(execute, sql, params, many, context):
         result = execute(sql, params, many, context)
-        if (
-            sql.startswith("WITH expired")
-            and "UPDATE ws_realtime_event_history_state" in sql
-        ):
+        if sql.startswith("WITH expired"):
             raise OperationalError("Failure before expiry transaction committed")
         return result
 
     with connection.execute_wrapper(fail_after_expiry), pytest.raises(OperationalError):
         cleanup()
 
-    assert RealtimeEventSummary.objects.filter(last_event_id=expired).exists()
+    assert RealtimeEvent.objects.filter(pk=expired).exists()
     assert RealtimeEventHistoryState.objects.get(pk=1).floor == 0
 
 
@@ -388,9 +529,7 @@ def test_concurrent_compaction_cannot_hide_a_relevant_event():
             if (
                 not moved
                 and sql.lstrip().upper().startswith("SELECT")
-                and (
-                    "ws_realtime_events" in sql or "ws_realtime_event_summaries" in sql
-                )
+                and "ws_realtime_events" in sql
             ):
                 moved = True
                 with cleaner.cursor() as cursor:
@@ -438,8 +577,14 @@ async def test_websocket_only_literal_history_capability_recovers_meaningful_eve
         meaningful = record("users", event)
         if compacted:
             cleanup()
-            assert not RealtimeEvent.objects.filter(pk__in=history_ids).exists()
-            assert RealtimeEventSummary.objects.filter(channel_group="users").exists()
+            assert (
+                list(
+                    RealtimeEvent.objects.filter(pk__in=history_ids).values_list(
+                        "id", flat=True
+                    )
+                )
+                == history_ids[-1:]
+            )
         else:
             assert RealtimeEvent.objects.filter(pk__in=history_ids).count() == 2
         return token, baseline, meaningful
@@ -478,8 +623,8 @@ async def test_websocket_only_literal_history_capability_recovers_meaningful_eve
                     "latest_event_id": meaningful,
                 }
             else:
-                # Neither expired business data nor compact routing summaries
-                # are emitted as client events, including to older clients.
+                # Retained expired originals are never emitted as client events,
+                # including to older clients.
                 assert response == {
                     "type": "replay_events_result",
                     "force_refresh": True,
