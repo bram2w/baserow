@@ -2,13 +2,21 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from time import monotonic
 from typing import TYPE_CHECKING, Any, Optional
 
 from django.conf import settings
+from django.db import connection, transaction
 from django.db.models import Max, Q
 from django.db.models.functions import Coalesce
 from django.db.models.query import QuerySet
 from django.utils import timezone
+
+from baserow.ws.telemetry import (
+    realtime_cleanup_batch,
+    realtime_cleanup_run,
+    realtime_recording,
+)
 
 # Lazy-imported: a module-level import here chains through the WS router
 # before ``get_asgi_application()`` runs and triggers AppRegistryNotReady
@@ -17,7 +25,13 @@ if TYPE_CHECKING:
     from baserow.ws.consumers import SubscribedPages
     from baserow.ws.models import RealtimeEvent
 
-REALTIME_EVENTS_CLEANUP_INTERVAL_MINUTES = 60
+REALTIME_EVENTS_RETENTION = timedelta(hours=24)
+REALTIME_EVENTS_CLEANUP_INTERVAL_MINUTES = 1
+REALTIME_EVENTS_CLEANUP_BATCH_SIZE = 5000
+REALTIME_EVENTS_CLEANUP_BUDGET_SECONDS = 30
+REALTIME_EVENTS_CLEANUP_STATEMENT_TIMEOUT_MS = 3000
+REALTIME_EVENTS_CLEANUP_LOCK_TIMEOUT_MS = 250
+REALTIME_EVENTS_CLEANUP_LOCK_SECONDS = 120
 
 # ``replay_events`` cursor sentinels. Must match the constants in
 # web-frontend/modules/core/plugins/realtimeProtocol.js.
@@ -37,6 +51,9 @@ class ReplayEventsResult:
     force_refresh: bool
     latest_event_id: int
     replay_events: list[RealtimeEvent]
+    # Transient infrastructure failure, rather than an unrecoverable replay gap.
+    # Older clients still receive the force-refresh fallback.
+    retry_after_ms: int | None = None
 
 
 class RealtimeEventHandler:
@@ -62,12 +79,13 @@ class RealtimeEventHandler:
 
         from baserow.ws.models import RealtimeEvent
 
-        objects = [
-            RealtimeEvent(channel_group=channel_group, payload=payload)
-            for channel_group, payload in events_data
-        ]
-        created = RealtimeEvent.objects.bulk_create(objects)
-        return [obj.id for obj in created]
+        with realtime_recording(events_data):
+            objects = [
+                RealtimeEvent(channel_group=channel_group, payload=payload)
+                for channel_group, payload in events_data
+            ]
+            created = RealtimeEvent.objects.bulk_create(objects)
+            return [obj.id for obj in created]
 
     @staticmethod
     def add_event_id_to_payload(event_id: int, payload: dict[str, Any]) -> None:
@@ -150,21 +168,82 @@ class RealtimeEventHandler:
         )
 
     @staticmethod
-    def cleanup_old_realtime_events(retention: timedelta) -> int:
+    def cleanup_old_realtime_events(
+        retention: timedelta, *, deadline: float | None = None
+    ) -> int:
         """
-        Delete ``RealtimeEvent`` rows older than ``retention``.
+        Delete expired events in separately committed, time-bounded batches.
 
         :param retention: Maximum age of events to keep.
-        :returns: Number of rows deleted.
+        :param deadline: Optional earlier monotonic deadline, including time
+            already spent acquiring the task's cleanup lease.
+        :returns: Number of rows committed before the run finishes or its work
+            budget expires. A later batch failure leaves earlier commits intact.
         """
-
-        from baserow.ws.models import RealtimeEvent
 
         if retention.total_seconds() <= 0:
             return 0
         cutoff = timezone.now() - retention
-        deleted, _ = RealtimeEvent.objects.filter(created_at__lt=cutoff).delete()
-        return deleted
+        budget_deadline = monotonic() + REALTIME_EVENTS_CLEANUP_BUDGET_SECONDS
+        deadline = (
+            min(deadline, budget_deadline) if deadline is not None else budget_deadline
+        )
+        with realtime_cleanup_run() as run:
+            while monotonic() < deadline:
+                with realtime_cleanup_batch() as batch:
+                    batch.deleted = RealtimeEventHandler._delete_realtime_events_batch(
+                        cutoff, deadline
+                    )
+                run.deleted += batch.deleted
+                if batch.deleted < REALTIME_EVENTS_CLEANUP_BATCH_SIZE:
+                    if monotonic() >= deadline:
+                        run.outcome = "budget"
+                    return run.deleted
+            run.outcome = "budget"
+            return run.deleted
+
+    @staticmethod
+    def _delete_realtime_events_batch(cutoff, deadline) -> int:
+        """Delete one bounded oldest-first batch and commit before returning."""
+
+        # A caller must not accidentally turn many batches into one transaction.
+        # RealtimeEvent is UNLOGGED, so its storage is always on the primary DB.
+        with transaction.atomic(durable=True), connection.cursor() as cursor:
+            remaining_ms = int((deadline - monotonic()) * 1000)
+            if remaining_ms <= 0:
+                return 0
+            statement_timeout = (
+                f"{min(REALTIME_EVENTS_CLEANUP_STATEMENT_TIMEOUT_MS, remaining_ms)}ms"
+            )
+            lock_timeout = f"{REALTIME_EVENTS_CLEANUP_LOCK_TIMEOUT_MS}ms"
+            # Both limits are transaction-local and must preserve stricter
+            # database/operator settings. These expressions only read settings.
+            cursor.execute(
+                "SELECT "
+                "set_config('statement_timeout', CASE WHEN "
+                "current_setting('statement_timeout')::interval = interval '0' OR "
+                "current_setting('statement_timeout')::interval > %s::interval "
+                "THEN %s ELSE current_setting('statement_timeout') END, true), "
+                "set_config('lock_timeout', CASE WHEN "
+                "current_setting('lock_timeout')::interval = interval '0' OR "
+                "current_setting('lock_timeout')::interval > %s::interval "
+                "THEN %s ELSE current_setting('lock_timeout') END, true)",
+                [statement_timeout, statement_timeout, lock_timeout, lock_timeout],
+            )
+            if monotonic() >= deadline:
+                return 0
+            # The (created_at, id) index finds the oldest bounded candidate set.
+            # This ephemeral log has no model deletion hooks or relationships;
+            # delete directly without loading payloads or collecting model rows.
+            cursor.execute(
+                "WITH expired AS MATERIALIZED ("
+                "SELECT id FROM ws_realtime_events WHERE created_at < %s "
+                "ORDER BY created_at, id LIMIT %s FOR UPDATE SKIP LOCKED"
+                ") DELETE FROM ws_realtime_events AS event "
+                "USING expired WHERE event.id = expired.id",
+                [cutoff, REALTIME_EVENTS_CLEANUP_BATCH_SIZE],
+            )
+            return cursor.rowcount
 
     @staticmethod
     def get_page_group_names(pages: "SubscribedPages") -> list[str]:
@@ -308,9 +387,12 @@ class RealtimeEventHandler:
 
         replay_filter |= Q(id=last_seen_id)
 
-        return RealtimeEvent.objects.filter(replay_filter).order_by("id")[
-            : settings.BASEROW_REALTIME_REPLAY_MAX_EVENTS + 2
-        ]
+        # Keep the cursor bound outside the OR so PostgreSQL can start an ordered
+        # primary-key scan at the cursor. Otherwise LIMIT can select a plan that
+        # scans the entire retained history before reaching the baseline.
+        return RealtimeEvent.objects.filter(
+            replay_filter, id__gte=last_seen_id
+        ).order_by("id")[: settings.BASEROW_REALTIME_REPLAY_MAX_EVENTS + 2]
 
     @staticmethod
     def get_relevant_events_filter(

@@ -4,7 +4,11 @@ import pytest
 from fakeredis.aioredis import FakeRedis
 
 from baserow.config.settings.test import _fake_redis_server
-from baserow.core.async_redis import set_async_redis
+from baserow.core.async_redis import (
+    get_cache_redis_url,
+    set_async_cache_redis,
+    set_async_redis,
+)
 from baserow.ws.registries import PageType, page_registry
 
 os.environ.setdefault("DJANGO_ALLOW_ASYNC_UNSAFE", "true")
@@ -20,8 +24,13 @@ def _inject_fake_async_redis():
 
     client = FakeRedis(server=_fake_redis_server, decode_responses=True)
     set_async_redis(client)
+    cache_db = int(get_cache_redis_url().rpartition("/")[2] or 0)
+    set_async_cache_redis(
+        FakeRedis(server=_fake_redis_server, decode_responses=False, db=cache_db)
+    )
     yield
     set_async_redis(None)
+    set_async_cache_redis(None)
 
 
 class PresenceTestPageType(PageType):

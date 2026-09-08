@@ -1,7 +1,9 @@
+import json
 from datetime import timedelta
 from unittest.mock import patch
 
 from django.conf import settings
+from django.db import connection
 from django.test import override_settings
 
 import pytest
@@ -926,7 +928,7 @@ def test_record_events_bulk():
     assert stored[2].channel_group == "users"
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 @pytest.mark.websockets
 def test_cleanup_deletes_old_rows():
     from django.db import connection
@@ -1155,6 +1157,47 @@ async def test_replay_events_force_refresh_when_recording_disabled(data_fixture)
     assert response["latest_event_id"] == NO_REPLAY_AVAILABLE
 
     await communicator.disconnect()
+
+
+@pytest.mark.django_db
+@pytest.mark.websockets
+@override_settings(BASEROW_REALTIME_REPLAY_MAX_EVENTS=2)
+def test_replay_window_ordered_scan_does_not_visit_events_before_cursor():
+    events = RealtimeEvent.objects.bulk_create(
+        [
+            RealtimeEvent(
+                channel_group="table-hot" if i % 5 == 0 else "table-other",
+                payload={"type": "broadcast_to_group", "payload": {}},
+            )
+            for i in range(1000)
+        ]
+    )
+    baseline = events[899].id
+
+    # At production cardinality PostgreSQL can prefer an ordered primary-key scan
+    # over a bitmap scan plus sort for this LIMIT. Exercise that valid plan even
+    # with a small fixture, then measure rows visited rather than wall-clock time.
+    with connection.cursor() as cursor:
+        cursor.execute("SET LOCAL enable_bitmapscan = off")
+        cursor.execute("SET LOCAL enable_seqscan = off")
+        cursor.execute("SET LOCAL max_parallel_workers_per_gather = 0")
+
+    window = RealtimeEventHandler.get_replay_window(42, ["table-hot"], baseline, None)
+    plan = json.loads(window.explain(analyze=True, format="json"))[0]["Plan"]
+    nodes = [plan]
+    rows_removed = 0
+    while nodes:
+        node = nodes.pop()
+        rows_removed += node.get("Rows Removed by Filter", 0)
+        nodes.extend(node.get("Plans", []))
+
+    assert [event.id for event in window] == [
+        baseline,
+        events[900].id,
+        events[905].id,
+        events[910].id,
+    ]
+    assert rows_removed < 50
 
 
 @pytest.mark.django_db

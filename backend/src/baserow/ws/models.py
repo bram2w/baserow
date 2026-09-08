@@ -17,11 +17,17 @@ class RealtimeEvent(models.Model):
                 fields=["channel_group", "id"],
                 name="ws_realtime_channel_group_idx",
             ),
-            # Supports ``payload @> {...}`` containment queries.
-            # ``jsonb_path_ops`` is ~5x smaller and sufficient for ``@>`` only.
+            # Recipient containment is queried only on the shared users channel.
+            # Page events use the group/id index; indexing their row snapshots
+            # adds substantial write amplification without helping replay.
             GinIndex(
                 fields=["payload"],
                 opclasses=["jsonb_path_ops"],
-                name="ws_realtime_payload_gin_idx",
+                condition=models.Q(channel_group="users"),
+                name="ws_realtime_users_payload_idx",
+            ),
+            models.Index(
+                fields=["created_at", "id"],
+                name="ws_realtime_created_id_idx",
             ),
         ]

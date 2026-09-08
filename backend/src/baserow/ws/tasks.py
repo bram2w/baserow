@@ -1,13 +1,12 @@
 from datetime import timedelta
+from time import monotonic
 from typing import Any, Dict, Iterable, List, Optional
 
-from django.conf import settings
-
 from asgiref.sync import async_to_sync
-from channels.db import database_sync_to_async
 from channels.layers import get_channel_layer
 
 from baserow.config.celery import app
+from baserow.ws.telemetry import run_database_sync
 from baserow.ws.types import ChannelGroupMessage, PayloadMap
 
 # Instance-level provider changes can affect every workspace. Keep both the amount of
@@ -185,9 +184,9 @@ async def send_messages_to_channel_group(
             or channel_group_message.message.get("payload_map") is not None
         ]
         if recordable:
-            event_ids = await database_sync_to_async(
-                RealtimeEventHandler.record_events
-            )(recordable)
+            event_ids = await run_database_sync(
+                "recording", RealtimeEventHandler.record_events, recordable
+            )
             for channel_group_message, event_id in zip(recordable, event_ids):
                 RealtimeEventHandler.add_event_id_to_payload(
                     event_id, channel_group_message.message
@@ -851,19 +850,46 @@ def broadcast_application_created(
 @app.task(bind=True)
 def cleanup_old_realtime_events(self):
     """
-    Periodic task that trims ``ws_realtime_events`` by retention age. When
-    recording is disabled there is nothing to trim, so the query is skipped
-    entirely to keep the feature zero-impact by default.
+    Trim expired replay data, including data left after recording is disabled.
+    Only one scheduled cleanup owns the lease; each run has a shorter work budget.
     """
 
-    from baserow.ws.realtime_events import RealtimeEventHandler
+    from django.core.cache import cache
 
-    if not RealtimeEventHandler.is_recording_enabled():
-        return
+    from redis.exceptions import LockNotOwnedError
 
-    RealtimeEventHandler.cleanup_old_realtime_events(
-        settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"]
+    from baserow.ws.realtime_events import (
+        REALTIME_EVENTS_CLEANUP_BUDGET_SECONDS,
+        REALTIME_EVENTS_CLEANUP_LOCK_SECONDS,
+        REALTIME_EVENTS_RETENTION,
+        RealtimeEventHandler,
     )
+    from baserow.ws.telemetry import record_realtime_cleanup_skipped
+
+    # A process paused around lease acquisition must not start a fresh budget
+    # after its ownership has already expired.
+    deadline = monotonic() + REALTIME_EVENTS_CLEANUP_BUDGET_SECONDS
+    try:
+        lock = cache.lock(
+            "realtime-events-cleanup", timeout=REALTIME_EVENTS_CLEANUP_LOCK_SECONDS
+        )
+        acquired = lock.acquire(blocking=False)
+    except Exception:
+        record_realtime_cleanup_skipped("lock_error")
+        raise
+    if not acquired:
+        record_realtime_cleanup_skipped("overlap")
+        return
+    try:
+        return RealtimeEventHandler.cleanup_old_realtime_events(
+            REALTIME_EVENTS_RETENTION, deadline=deadline
+        )
+    finally:
+        try:
+            lock.release()
+        except LockNotOwnedError:
+            # A stopped worker must never release a later owner's lease.
+            pass
 
 
 @app.on_after_finalize.connect
