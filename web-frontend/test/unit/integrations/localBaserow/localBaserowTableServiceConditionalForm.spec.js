@@ -45,7 +45,7 @@ const InjectedFormulaInputStub = defineComponent({
 
 const FormulaInputStub = defineComponent({
   name: 'FormulaInputStub',
-  template: '<button class="formula-input-field__raw-mode-toggle" />',
+  template: '<button class="formula-input-field__mode-toggle" />',
 })
 
 describe('LocalBaserowTableServiceConditionalForm', () => {
@@ -206,7 +206,7 @@ describe('LocalBaserowTableServiceConditionalForm', () => {
 
     expect(
       wrapper
-        .find('.filters__group-item .formula-input-field__raw-mode-toggle')
+        .find('.filters__group-item .formula-input-field__mode-toggle')
         .exists()
     ).toBe(true)
   })

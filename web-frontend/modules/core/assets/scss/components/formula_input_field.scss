@@ -31,7 +31,7 @@
   }
 }
 
-.formula-input-field__raw-mode-toggle {
+.formula-input-field__mode-toggle {
   flex: 0 0 auto;
   width: 20px;
   height: 20px;
@@ -59,7 +59,7 @@
   }
 }
 
-.formula-input-field__raw-mode-toggle--active {
+.formula-input-field__mode-toggle--active {
   color: $palette-blue-500;
 
   &:hover:not(.button-icon--loading):not([disabled]),

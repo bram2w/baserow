@@ -37,9 +37,9 @@
       </slot>
       <ButtonIcon
         v-if="allowRawValues && !readOnly"
-        class="formula-input-field__raw-mode-toggle"
+        class="formula-input-field__mode-toggle"
         :class="{
-          'formula-input-field__raw-mode-toggle--active': isRawMode,
+          'formula-input-field__mode-toggle--active': !isRawMode,
         }"
         icon="iconoir-sigma-function"
         type="secondary"

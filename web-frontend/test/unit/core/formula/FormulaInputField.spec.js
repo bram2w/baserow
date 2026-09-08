@@ -258,10 +258,27 @@ describe('FormulaInputField mode changes', () => {
   it('does not show the raw mode toggle unless raw values are allowed', async () => {
     const wrapper = await mountField({ allowRawValues: false })
 
-    expect(wrapper.find('.formula-input-field__raw-mode-toggle').exists()).toBe(
+    expect(wrapper.find('.formula-input-field__mode-toggle').exists()).toBe(
       false
     )
   })
+
+  it.each([
+    ['raw', false],
+    ['simple', true],
+    ['advanced', true],
+  ])(
+    'shows the formula toggle active state in %s mode',
+    async (mode, active) => {
+      const wrapper = await mountField({ mode })
+
+      expect(
+        wrapper
+          .find('.formula-input-field__mode-toggle')
+          .classes('formula-input-field__mode-toggle--active')
+      ).toBe(active)
+    }
+  )
 
   it('renders a default form input in raw mode', async () => {
     const wrapper = await mountField({
@@ -310,7 +327,7 @@ describe('FormulaInputField mode changes', () => {
       mode: 'raw',
     })
 
-    await wrapper.find('.formula-input-field__raw-mode-toggle').trigger('click')
+    await wrapper.find('.formula-input-field__mode-toggle').trigger('click')
 
     expect(wrapper.emitted('update:mode').at(-1)).toEqual(['simple'])
     expect(wrapper.emitted('input').at(-1)).toEqual(["#acc'8f8"])
@@ -322,7 +339,7 @@ describe('FormulaInputField mode changes', () => {
       mode: 'simple',
     })
 
-    await wrapper.find('.formula-input-field__raw-mode-toggle').trigger('click')
+    await wrapper.find('.formula-input-field__mode-toggle').trigger('click')
 
     expect(wrapper.vm.$refs.rawModeModal.$refs.modal.open).toBe(true)
     expect(wrapper.emitted('update:mode')).toBeUndefined()
@@ -335,7 +352,7 @@ describe('FormulaInputField mode changes', () => {
       mode: 'simple',
     })
 
-    await wrapper.find('.formula-input-field__raw-mode-toggle').trigger('click')
+    await wrapper.find('.formula-input-field__mode-toggle').trigger('click')
     wrapper.vm.$refs.rawModeModal.confirm()
 
     expect(wrapper.emitted('update:mode').at(-1)).toEqual(['raw'])
@@ -345,7 +362,7 @@ describe('FormulaInputField mode changes', () => {
   it('switches an empty simple formula to raw mode without confirmation', async () => {
     const wrapper = await mountField()
 
-    await wrapper.find('.formula-input-field__raw-mode-toggle').trigger('click')
+    await wrapper.find('.formula-input-field__mode-toggle').trigger('click')
 
     expect(wrapper.vm.$refs.rawModeModal.$refs.modal.open).toBe(false)
     expect(wrapper.emitted('update:mode').at(-1)).toEqual(['raw'])
