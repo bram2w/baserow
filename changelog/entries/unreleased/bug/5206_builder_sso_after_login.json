@@ -1,7 +1,7 @@
 {
     "type": "bug",
     "message": "Run configured Builder After login actions after returning from SSO.",
-    "issue_number": 5206,
+    "issue_number": null,
     "bullet_points": [
         "Resume actions only for the completed SSO attempt, with configured navigation taking priority over the next destination."
     ],
