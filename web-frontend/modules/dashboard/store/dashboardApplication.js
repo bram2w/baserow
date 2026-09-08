@@ -6,6 +6,10 @@ import debounce from 'lodash/debounce'
 
 export const state = () => ({
   dashboardId: null,
+  // Identifies the most recent `fetchInitial` call, so that a slower one that
+  // was started earlier can tell it has been superseded, also by a fetch of the
+  // same dashboard.
+  fetchRequestId: 0,
   loading: false,
   editMode: false,
   selectedWidgetId: null,
@@ -21,6 +25,9 @@ export const state = () => ({
 let debouncedWidgetUpdate = null
 
 export const mutations = {
+  INCREMENT_FETCH_REQUEST_ID(state) {
+    state.fetchRequestId += 1
+  },
   RESET(state) {
     state.dashboardId = null
     state.editMode = false
@@ -155,11 +162,17 @@ export const actions = {
   },
   async fetchInitial({ commit, dispatch, state }, { dashboardId, forEditing }) {
     const { $client } = this
+    commit('INCREMENT_FETCH_REQUEST_ID')
+    const requestId = state.fetchRequestId
     commit('RESET')
     commit('SET_LOADING', true)
     commit('SET_DASHBOARD_ID', dashboardId)
     const { data } = await WidgetService($client).getAllWidgets(dashboardId)
-    if (state.dashboardId !== dashboardId) {
+    // The dashboard page fetches without blocking the navigation, so another
+    // fetch can have been started while a request was running, for another
+    // dashboard or for the same one again. The store must then not receive the
+    // widgets and data sources of the superseded one.
+    if (requestId !== state.fetchRequestId) {
       return
     }
     data.forEach((widget) => {
@@ -168,12 +181,12 @@ export const actions = {
     // The widgets are known now, so they can be rendered while their data is
     // still being fetched. They show a loading state of their own.
     commit('SET_LOADING', false)
-    await dispatch('fetchNewDataSources', dashboardId)
+    await dispatch('fetchNewDataSources', { dashboardId, requestId })
 
     if (forEditing) {
       const { data: integrationsData } =
         await IntegrationService($client).fetchAll(dashboardId)
-      if (state.dashboardId !== dashboardId) {
+      if (requestId !== state.fetchRequestId) {
         return
       }
       integrationsData.forEach((integration) => {
@@ -181,11 +194,14 @@ export const actions = {
       })
     }
   },
-  async fetchNewDataSources({ commit, dispatch, getters, state }, dashboardId) {
+  async fetchNewDataSources(
+    { commit, dispatch, getters, state },
+    { dashboardId, requestId }
+  ) {
     const { $client } = this
     const { data: dataSourcesData } =
       await DataSourceService($client).getAllDataSources(dashboardId)
-    if (state.dashboardId !== dashboardId) {
+    if (requestId !== state.fetchRequestId) {
       return
     }
     dataSourcesData.forEach(async (dataSource) => {

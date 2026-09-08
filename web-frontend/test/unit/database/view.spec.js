@@ -367,7 +367,7 @@ describe('View Tests', () => {
     expect(tableComponent.find('div.grid-view').exists()).toBe(false)
   })
 
-  test.skip('API error during views loading is displayed correctly', async () => {
+  test('API error during views loading is displayed correctly', async () => {
     const viewsError = {
       statusCode: 400,
       data: {
@@ -380,16 +380,19 @@ describe('View Tests', () => {
       viewsError,
     })
 
-    await expect(
-      testApp.mount(Table, {
-        route: `/database/${application.id}/table/${table.id}/123?token=fake`,
-      })
-    ).rejects.toThrow('Request failed with status code 400')
+    const tableComponent = await testApp.mount(Table, {
+      route: `/database/${application.id}/table/${table.id}/123?token=fake`,
+    })
+
+    const error = useError()
+    await waitFor(() => error.value !== null)
+    expect(error.value.message).toContain('Request failed with status code 400')
+    clearError()
+    expect(tableComponent.find('div.grid-view').exists()).toBe(false)
   })
 
-  test.skip('API error during view rows loading', async () => {
+  test('API error during view rows loading', async () => {
     const rowsError = { statusCode: 500, data: { message: 'Unknown error' } }
-    const errorHandler = vi.fn()
 
     // views list readable, fields readable, rows not readable
     const { application, table, view } = await givenATableWithError({
@@ -398,19 +401,17 @@ describe('View Tests', () => {
 
     const tableComponent = await testApp.mount(Table, {
       route: `/database/${application.id}/table/${table.id}/${view.id}?token=fake`,
-      global: {
-        config: {
-          errorHandler,
-        },
-      },
     })
+    // The rows are fetched after the page has rendered, and their error is shown
+    // inside the table instead of replacing the page.
+    await waitFor(() => tableComponent.vm.dataError !== undefined)
 
     expect(tableComponent.vm.views).toMatchObject([view])
 
     // we're past views api call, so the table (with the error) and toolbar should be present
     expect(tableComponent.find('.header__filter-link').exists()).toBe(true)
 
-    expect(tableComponent.vm.error).toBeTruthy()
+    expect(tableComponent.vm.dataError).toBeTruthy()
 
     expect(tableComponent.find('.placeholder__title').exists()).toBe(true)
     expect(tableComponent.find('.placeholder__title').text()).toEqual(
