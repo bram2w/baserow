@@ -3,7 +3,6 @@ from django.db import models
 
 from django_cte import CTEManager
 
-from baserow.contrib.builder.constants import TextFormats
 from baserow.contrib.builder.elements.models import Element, NavigationElementMixin
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.formula.field import FormulaField
