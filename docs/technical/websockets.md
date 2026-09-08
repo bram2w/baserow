@@ -218,11 +218,11 @@ sends a `replay_events` message carrying its last seen event ID as `last_seen_id
 The server uses that cursor and those subscriptions to decide whether recovery is
 possible, with these completed outcomes:
 
-1. **Nothing missed** — The replay window contains only the client's `last_seen_id`. The client is already up to date for the channel groups being restored.
+1. **Nothing missed** — Retained payloads and compact history contain no relevant events after the cursor. The original cursor row can already have been compacted; its absence alone does not require a refresh.
 2. **Events replayed** — The server fetches the missed events for the client's page channel groups and implicit `users` group, filters out the client's own broadcasts (via its web socket id) and any events not relevant to that user, and re-invokes them through the consumer's handlers in order — exactly as if they had arrived live. The client catches up without a page reload.
-3. **Can't replay** — Either too many events were missed (more than `BASEROW_REALTIME_REPLAY_MAX_EVENTS`), the client's `last_seen_id` has already been cleaned up by retention, or the server finds a persisted event it cannot safely re-deliver through a websocket broadcast handler. The server responds with `force_refresh=true` and the client shows a "workspace data is outdated" toast with a refresh action.
+3. **Can't replay** — Either too many events were missed (more than `BASEROW_REALTIME_REPLAY_MAX_EVENTS`), a relevant missed payload is older than one day, history no longer covers the cursor, or the server finds a persisted event it cannot safely re-deliver through a websocket broadcast handler. The server responds with `force_refresh=true` and the client shows a "workspace data is outdated" toast with a refresh action.
 
-Every `replay_events_result` with `force_refresh=false` includes `latest_event_id`, the latest event ID the server can safely acknowledge for that replay decision. If a client connects without a `last_seen_id` (a fresh page load), the server returns the latest persisted event ID as the new baseline because there is nothing to replay. When replay succeeds, `latest_event_id` is the last event in the replay window and might be lower than the global latest persisted ID if newer events were irrelevant to that client. If the server responds with `force_refresh=true`, `latest_event_id` is not meaningful and the client should refresh instead.
+Every `replay_events_result` with `force_refresh=false` includes `latest_event_id`, the latest event ID the server can safely acknowledge for that replay decision. If a client connects without a `last_seen_id` (a fresh page load), the server returns the latest persisted event ID as the new baseline because there is nothing to replay. When replay succeeds, `latest_event_id` advances only through events actually replayed, or stays at the supplied cursor when nothing replays. A higher irrelevant ID must not advance the cursor past a relevant INSERT that has not committed yet. If the server responds with `force_refresh=true`, `latest_event_id` is not meaningful and the client should refresh instead.
 
 ### Replay resource limits and retries
 
@@ -243,8 +243,8 @@ connection attempt.
 For overload, timeouts, and database failures, clients advertising
 `supports_retry=true` receive `replay_events_retry` and retry on the same socket
 with backoff and jitter. Older clients receive the existing refresh fallback.
-An expired cursor, excessive event gap, or disabled recording still requires a
-refresh when recovering missed updates.
+Missing history, a relevant expired payload, excessive event gap, or disabled
+recording still requires a refresh when recovering missed updates.
 
 The frontend keeps one replay request or retry timer active and holds the original
 cursor across retries. It buffers persisted updates up to 1,000 event IDs and an
@@ -254,18 +254,50 @@ baseline preserves buffered live updates. Buffer overflow, or a disconnect befor
 the first baseline was established, requires a refresh because recovery can no
 longer be verified. An unrecoverable gap stays marked outdated across reconnects.
 
-### Event Cleanup
+Clients advertising `supports_row_history_refresh=true` recover row history through
+one primary-database HTTP snapshot of the active history panel. Hidden history is
+invalidated and fetched when opened. These additive history notifications bypass
+the replay limit and recovery buffer; their ordinary live delivery continues.
+Older clients retain event-by-event history replay. Only event types with an
+explicit snapshot recovery contract may bypass ordered replay.
 
-A periodic Celery task removes events older than 24 hours, independently of JWT refresh-token lifetime. It runs every minute, including when recording is disabled, with a 30-second work budget and at most 5,000 events per committed batch. Each deletion statement has a three-second timeout and a 250 ms lock timeout, preserving stricter database settings. Locked rows are left for a later run. Clients whose baseline has expired use the existing refresh fallback.
+### Event cleanup and compact history
 
-Each batch commits separately, so earlier deletions survive a later failure. A
-scheduled run skips cleanup while another task owns the nonblocking lease. The
-retention target is not a hard maximum row age: locked rows or a sustained cleanup
-backlog can remain until a later run.
+Full payloads are replayable for one day, independently of JWT lifetime and cleanup
+progress. Cleanup replaces older payloads with compact routing records, retaining
+the latest event ID for each exact audience, originating socket and event type.
+The records contain recipient/exclusion metadata, not row contents or history
+entries. Repeated events for the same route share one summary, so summary volume
+follows distinct active routes rather than the number or size of changes.
 
-A surviving baseline older than the retention window cannot prove complete
-history: cleanup may have skipped its lock while deleting newer expired events.
-Replay checks the baseline's age as well as its existence before acknowledging it.
+Compact records expire seven days after the latest represented event was created
+(the one-day payload window is included in those seven days). Eviction atomically advances a global loss floor: cursors below it must
+refresh because complete history is no longer available. Within known history,
+only a relevant expired event requires a refresh. Own-socket and excluded-user
+filters remain identical to live delivery. These retention values are internal
+constants; no additional environment variables are needed.
+
+The periodic Celery task runs every minute, including when recording is disabled,
+with a 30-second budget and at most 5,000 rows per committed batch. Payload and
+summary cleanup both receive work. Statements use three-second timeouts and 250 ms
+lock timeouts, preserving stricter settings. Locked rows wait for a later run;
+retention therefore bounds replay eligibility but is not a hard maximum row age.
+
+A statement-level PostgreSQL DELETE trigger writes summaries atomically with each
+payload deletion, including deletions from the previous application's cleanup
+worker during deployment. Replay reads payloads, summaries and the loss floor in
+one SQL snapshot; separate READ COMMITTED queries could miss an event moving
+between tables. Summary eviction and its floor update also commit together. Each
+batch commits independently and scheduled runs use a nonblocking cleanup lease.
+
+Both history tables are UNLOGGED and use the primary database. The event sequence
+is LOGGED with its normal `CACHE 1`, preventing ID reuse after a crash. When history
+state is missing, initialization briefly waits for outstanding inserts before
+establishing a conservative loss floor. Migration activation similarly establishes
+a floor, so pre-upgrade cursors can require one refresh. Rollback cannot restore
+expired payloads and leaves the sequence LOGGED. See PostgreSQL's
+[trigger](https://www.postgresql.org/docs/18/sql-createtrigger.html) and
+[unlogged-table](https://www.postgresql.org/docs/18/sql-createtable.html) semantics.
 
 The `(created_at, id)` index supports bounded expiration scans. Recipient indexes
 are restricted to the shared `users` channel; page events retain the

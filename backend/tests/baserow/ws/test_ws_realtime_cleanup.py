@@ -141,7 +141,7 @@ def test_cleanup_keeps_earlier_commits_when_a_later_batch_fails(monkeypatch):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_retention_boundary_preserves_fresh_replay_and_expires_old_cursor(settings):
+def test_retention_boundary_keeps_payload_at_cutoff_and_compacts_old_cursor(settings):
     settings.SIMPLE_JWT = {"REFRESH_TOKEN_LIFETIME": timedelta(days=7)}
     now = timezone.now()
     with patch.object(realtime_events.timezone, "now", return_value=now):
@@ -152,15 +152,17 @@ def test_retention_boundary_preserves_fresh_replay_and_expires_old_cursor(settin
 
         assert cleanup_old_realtime_events() == 1
 
-        assert list(
-            RealtimeEvent.objects.order_by("id").values_list("id", flat=True)
-        ) == [boundary, fresh, latest]
-        expired_result = RealtimeEventHandler.get_replay_events_result(
-            1, ["table-1"], expired, None
-        )
-        assert expired_result.force_refresh is True
-        assert expired_result.replay_events == []
-        for cursor, expected in ((boundary, [fresh, latest]), (fresh, [latest])):
+    assert list(RealtimeEvent.objects.order_by("id").values_list("id", flat=True)) == [
+        boundary,
+        fresh,
+        latest,
+    ]
+    with patch.object(realtime_events.timezone, "now", return_value=now):
+        for cursor, expected in (
+            (expired, [boundary, fresh, latest]),
+            (boundary, [fresh, latest]),
+            (fresh, [latest]),
+        ):
             result = RealtimeEventHandler.get_replay_events_result(
                 1, ["table-1"], cursor, None
             )
@@ -230,9 +232,12 @@ def test_cleanup_timeouts_are_local_and_preserve_stricter_settings(
             assert (
                 RealtimeEventHandler.cleanup_old_realtime_events(timedelta(days=1)) == 0
             )
-        assert observed == [
-            ("3s", "250ms") if statement_timeout == "0" else ("10ms", "5ms")
-        ]
+        # Summary eviction and payload compaction each get their own bounded
+        # transaction and must both preserve the operator's stricter limits.
+        assert (
+            observed
+            == [("3s", "250ms") if statement_timeout == "0" else ("10ms", "5ms")] * 2
+        )
         with connection.cursor() as cursor:
             cursor.execute("SHOW statement_timeout")
             assert cursor.fetchone()[0] == statement_timeout
@@ -299,30 +304,3 @@ def test_cleanup_skips_locked_rows_and_cleans_them_on_a_later_run():
         assert RealtimeEventHandler.cleanup_old_realtime_events(timedelta(days=1)) == 2
         assert list(RealtimeEvent.objects.values_list("id", flat=True)) == [expired[0]]
     assert RealtimeEventHandler.cleanup_old_realtime_events(timedelta(days=1)) == 1
-
-
-@pytest.mark.django_db(transaction=True)
-def test_locked_expired_baseline_cannot_hide_events_deleted_by_cleanup():
-    baseline, missed = create_events(timedelta(days=2), 2)
-    fresh = create_events(timedelta(hours=1), 1)[0]
-    with closing(
-        connection.Database.connect(**connection.get_connection_params())
-    ) as blocker:
-        with blocker.cursor() as cursor:
-            cursor.execute(
-                "SELECT id FROM ws_realtime_events WHERE id = %s FOR UPDATE",
-                [baseline],
-            )
-        assert RealtimeEventHandler.cleanup_old_realtime_events(timedelta(days=1)) == 1
-        assert not RealtimeEvent.objects.filter(id=missed).exists()
-        assert list(
-            RealtimeEvent.objects.order_by("id").values_list("id", flat=True)
-        ) == [baseline, fresh]
-
-        # The surviving anchor cannot prove completeness after SKIP LOCKED has
-        # deleted later expired events. Fresh updates must not mask that gap.
-        result = RealtimeEventHandler.get_replay_events_result(
-            1, ["table-1"], baseline, None
-        )
-        assert result.force_refresh is True
-        assert result.replay_events == []

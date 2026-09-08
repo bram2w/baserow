@@ -191,7 +191,10 @@ def test_cleanup_metrics_count_only_committed_rows(monkeypatch, storage_metrics)
         ].record.call_args_list
         if entry.args[0] > 0
     ]
-    assert successful_batches == [call(2, attributes), call(1, attributes)]
+    assert successful_batches == [
+        call(2, {**attributes, "storage": "events"}),
+        call(1, {**attributes, "storage": "events"}),
+    ]
     storage_metrics["realtime_cleanup_run_deleted"].record.assert_called_once_with(
         3, attributes
     )
@@ -226,7 +229,7 @@ def test_cleanup_error_keeps_earlier_committed_progress_visible(
     )
     attributes = {"process.pid": os.getpid()}
     storage_metrics["realtime_cleanup_deleted"].add.assert_called_once_with(
-        2, attributes
+        2, {**attributes, "storage": "events"}
     )
     storage_metrics["realtime_cleanup_run_deleted"].record.assert_called_once_with(
         2, {**attributes, "outcome": "error"}
@@ -234,10 +237,10 @@ def test_cleanup_error_keeps_earlier_committed_progress_visible(
     batch_durations = storage_metrics[
         "realtime_cleanup_batch_duration"
     ].record.call_args_list
-    assert [entry.args[1]["outcome"] for entry in batch_durations] == [
-        "success",
-        "error",
-    ]
+    assert [
+        (entry.args[1]["storage"], entry.args[1]["outcome"])
+        for entry in batch_durations
+    ] == [("summaries", "success"), ("events", "success"), ("events", "error")]
 
 
 @pytest.mark.django_db(transaction=True)
@@ -266,7 +269,7 @@ def test_cleanup_budget_reports_progress_without_claiming_completion(
     )
     attributes = {"process.pid": os.getpid()}
     storage_metrics["realtime_cleanup_deleted"].add.assert_called_once_with(
-        2, attributes
+        2, {**attributes, "storage": "events"}
     )
     storage_metrics["realtime_cleanup_run_deleted"].record.assert_called_once_with(
         2, {**attributes, "outcome": "budget"}

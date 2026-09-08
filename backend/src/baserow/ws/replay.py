@@ -234,7 +234,9 @@ def _get_executor():
 
 
 def _force_refresh():
-    return ReplayEventsResult(True, NO_REPLAY_AVAILABLE, [])
+    return ReplayEventsResult(
+        True, NO_REPLAY_AVAILABLE, [], refresh_reason="missing_cursor"
+    )
 
 
 def _retry_later():
@@ -258,7 +260,12 @@ def _remaining_timeout_ms(deadline):
 
 
 def _read_replay_events(
-    user_id, page_group_names, last_seen_id, web_socket_id, deadline
+    user_id,
+    page_group_names,
+    last_seen_id,
+    web_socket_id,
+    deadline,
+    supports_row_history_refresh=False,
 ):
     try:
         _remaining_timeout_ms(deadline)
@@ -278,7 +285,11 @@ def _read_replay_events(
                     [timeout, timeout],
                 )
             return RealtimeEventHandler.get_replay_events_result(
-                user_id, page_group_names, last_seen_id, web_socket_id
+                user_id,
+                page_group_names,
+                last_seen_id,
+                web_socket_id,
+                supports_row_history_refresh=supports_row_history_refresh,
             )
     except DatabaseError as exc:
         websocket_replay_database_errors.add(
@@ -303,7 +314,12 @@ def _replay_finished(task, reservation):
 
 
 async def get_replay_events_result(
-    user_id, page_group_names, last_seen_id, web_socket_id
+    user_id,
+    page_group_names,
+    last_seen_id,
+    web_socket_id,
+    *,
+    supports_row_history_refresh=False,
 ) -> ReplayEventsResult:
     """Replay within bounded capacity/time, retrying temporary resource failures.
 
@@ -315,6 +331,7 @@ async def get_replay_events_result(
 
     started_at = monotonic()
     outcome = "error"
+    reason = "none"
     try:
         if last_seen_id == NO_REPLAY_AVAILABLE:
             result = _force_refresh()
@@ -331,6 +348,7 @@ async def get_replay_events_result(
                         last_seen_id,
                         web_socket_id,
                         deadline,
+                        supports_row_history_refresh,
                         executor=reservation,
                     )
                 )
@@ -341,6 +359,7 @@ async def get_replay_events_result(
                 result = await asyncio.shield(task)
         if result.force_refresh:
             outcome = "refresh"
+            reason = result.refresh_reason or "unknown"
         elif last_seen_id == FIRST_CONNECT_CURSOR:
             outcome = "baseline"
         else:
@@ -362,6 +381,6 @@ async def get_replay_events_result(
         outcome = "cancelled"
         raise
     finally:
-        attributes = {"process.pid": os.getpid(), "outcome": outcome}
+        attributes = {"process.pid": os.getpid(), "outcome": outcome, "reason": reason}
         websocket_replay_requests.add(1, attributes)
         websocket_replay_duration.record((monotonic() - started_at) * 1000, attributes)

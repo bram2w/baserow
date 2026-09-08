@@ -12,7 +12,7 @@ from channels.testing import WebsocketCommunicator
 from loguru import logger
 
 from baserow.config.asgi import application
-from baserow.ws.models import RealtimeEvent
+from baserow.ws.models import RealtimeEvent, RealtimeEventHistoryState
 from baserow.ws.realtime_events import (
     FIRST_CONNECT_CURSOR,
     NO_REPLAY_AVAILABLE,
@@ -1192,7 +1192,6 @@ def test_replay_window_ordered_scan_does_not_visit_events_before_cursor():
         nodes.extend(node.get("Plans", []))
 
     assert [event.id for event in window] == [
-        baseline,
         events[900].id,
         events[905].id,
         events[910].id,
@@ -1303,12 +1302,12 @@ def test_replay_events_result_future_last_seen_uses_one_query(
 
 @pytest.mark.django_db
 @pytest.mark.websockets
-def test_replay_events_result_missing_last_seen_uses_one_query(
+def test_replay_events_result_compacted_last_seen_uses_one_query(
     django_assert_num_queries,
 ):
     missing_id = _record_user_broadcast(1, {"type": "missing"})
     RealtimeEvent.objects.filter(id=missing_id).delete()
-    _record_user_broadcast(1, {"type": "latest"})
+    latest_id = _record_user_broadcast(1, {"type": "latest"})
 
     with django_assert_num_queries(1):
         result = _replay_events_result(
@@ -1318,9 +1317,11 @@ def test_replay_events_result_missing_last_seen_uses_one_query(
             web_socket_id=None,
         )
 
-    assert result.force_refresh is True
-    assert result.latest_event_id == NO_REPLAY_AVAILABLE
-    assert result.replay_events == []
+    # The cursor's payload is no longer an anchor requirement. The delete trigger
+    # retained routing history, and only the newer full payload needs replaying.
+    assert result.force_refresh is False
+    assert result.latest_event_id == latest_id
+    assert [event.id for event in result.replay_events] == [latest_id]
 
 
 @pytest.mark.django_db
@@ -1758,13 +1759,12 @@ async def test_replay_events_replays_individual_payloads_event(data_fixture):
 @pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.websockets
-async def test_replay_events_cant_replay_when_last_seen_expired(data_fixture):
+async def test_replay_events_cant_replay_below_the_known_history_floor(data_fixture):
     user, token = await sync_to_async(data_fixture.create_user_and_token)()
     await sync_to_async(data_fixture.create_workspace)(user=user)
 
-    # Last-seen event cleaned by retention while a newer one survives: replay can't
-    # anchor, so it must force a refresh. Capture the real id — the sequence isn't
-    # reset between transactional tests.
+    # Compaction alone preserves replay knowledge. Advance the floor to represent
+    # genuinely expired routing history, while a newer full payload survives.
     stale_last_seen_id = await sync_to_async(_record_event)(
         "users",
         {
@@ -1776,7 +1776,7 @@ async def test_replay_events_cant_replay_when_last_seen_expired(data_fixture):
         },
     )
     await sync_to_async(RealtimeEvent.objects.filter(id=stale_last_seen_id).delete)()
-    await sync_to_async(_record_event)(
+    latest_id = await sync_to_async(_record_event)(
         "users",
         {
             "type": "broadcast_to_users",
@@ -1785,6 +1785,9 @@ async def test_replay_events_cant_replay_when_last_seen_expired(data_fixture):
             "payload": {"type": "user_data_updated"},
             "ignore_web_socket_id": "ws-other",
         },
+    )
+    await sync_to_async(RealtimeEventHistoryState.objects.filter(pk=1).update)(
+        floor=latest_id
     )
 
     communicator = WebsocketCommunicator(

@@ -26,10 +26,23 @@ def _install_realtime_targets(django_db_setup, django_db_blocker):
         migration.forwards(None, editor)
 
 
+@pytest.fixture(scope="session")
+def _install_realtime_compaction(_install_realtime_targets, django_db_blocker):
+    # Install parent routing metadata first, then the compaction delete trigger,
+    # before pytest-django opens any per-test atomic block.
+    migration = import_module("baserow.ws.migrations.0003_realtime_event_compaction")
+    with django_db_blocker.unblock(), connection.schema_editor(atomic=True) as editor:
+        migration.forwards(None, editor)
+
+
 @pytest.fixture
-def _django_db_helper(_install_realtime_targets, _django_db_helper):
-    # Wrapping pytest-django's helper does not request a DB for non-DB tests.
-    return _django_db_helper
+def _django_db_helper(_install_realtime_compaction, _django_db_helper):
+    # Wrap pytest-django's helper, preserving its transaction/rollback behavior.
+    # Marked DB tests and explicit db/transactional_db fixtures request this;
+    # database-free WebSocket tests never initialize the database through it.
+    from baserow.ws.models import RealtimeEventHistoryState
+
+    RealtimeEventHistoryState.objects.update_or_create(pk=1, defaults={"floor": 0})
 
 
 @pytest.fixture(autouse=True)
