@@ -1,3 +1,4 @@
+from collections import defaultdict
 from unittest.mock import patch
 
 from django.db import connection
@@ -25,6 +26,7 @@ from baserow.core.exceptions import PermissionException
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import ImportExportConfig
 from baserow.core.services.registries import service_type_registry
+from baserow.core.utils import MirrorDict
 
 
 def _denying(operation_name: str):
@@ -823,3 +825,38 @@ def test_an_import_survives_an_action_carrying_another_service_type(data_fixture
         imported = action_type.import_serialized(destination_field, exported, {})
 
     assert imported.service.specific.get_type().type == "local_baserow_upsert_row"
+
+
+@pytest.mark.django_db
+def test_a_mirror_dict_mapping_still_drops_a_colliding_workflow(data_fixture):
+    """
+    A `MirrorDict` answers `in` and `get` for every key, so asking it whether
+    this import remapped an id is answered yes for an id no import ever
+    touched, and the collision check below it never runs. Duplicating a
+    workflow installs one under this very key.
+    """
+
+    user = data_fixture.create_user()
+    source_workspace = data_fixture.create_workspace(user=user)
+    source_field = _button(data_fixture, user, source_workspace)
+    source_workflow = _workflow(data_fixture, user, source_workspace)
+    action = _action_starting(data_fixture, source_field, source_workflow)
+
+    action_type = database_workflow_action_type_registry.get("start_workflow")
+    exported = action_type.export_serialized(action.specific)
+
+    destination_workspace = data_fixture.create_workspace(user=user)
+    destination_field = _button(data_fixture, user, destination_workspace)
+    unrelated = _workflow(data_fixture, user, destination_workspace)
+    exported["service"]["workflow_id"] = unrelated.id
+
+    # Exactly what `AutomationWorkflowHandler.duplicate_workflow` builds.
+    id_mapping = defaultdict(lambda: MirrorDict())
+    id_mapping["automation_workflows"] = MirrorDict()
+
+    with deferred_callback_context():
+        imported = action_type.import_serialized(
+            destination_field, exported, id_mapping
+        )
+
+    assert imported.service.specific.workflow_id is None

@@ -973,7 +973,13 @@ class CoreStartWorkflowWorkflowActionType(DatabaseWorkflowServiceActionType):
         :return: True when the copy keeps it.
         """
 
-        remapped = exported_workflow_id in id_mapping.get("automation_workflows", {})
+        # `.keys()`, not `in`: an import can hand this a `MirrorDict`, which
+        # answers `in` and `get` for every key it is asked about. Read that
+        # way the collision check below never runs, and the copy keeps a
+        # workflow nobody picked. The key view answers only for what this
+        # import actually remapped.
+        workflow_mapping = id_mapping.get("automation_workflows", {})
+        remapped = exported_workflow_id in workflow_mapping.keys()
         stayed_here = getattr(
             import_export_config, "is_duplicate", False
         ) and not getattr(import_export_config, "is_template", False)
