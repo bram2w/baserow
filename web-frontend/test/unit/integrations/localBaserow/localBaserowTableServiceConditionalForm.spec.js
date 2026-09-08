@@ -34,10 +34,14 @@ const ViewFieldConditionsFormStub = defineComponent({
 
 const InjectedFormulaInputStub = defineComponent({
   name: 'InjectedFormulaInput',
+  props: {
+    modelValue: { type: Object, required: true },
+  },
   emits: ['input'],
   template: `
     <button
       class="formula-input-stub"
+      :data-mode="modelValue.mode"
       @click="$emit('input', { formula: &quot;'Alice'&quot;, mode: 'simple' })"
     />
   `,
@@ -210,6 +214,44 @@ describe('LocalBaserowTableServiceConditionalForm', () => {
         .exists()
     ).toBe(true)
   })
+
+  test.each([
+    ['raw', undefined, 'raw'],
+    ['simple', undefined, 'simple'],
+    ['advanced', undefined, 'advanced'],
+    ['advanced', true, 'advanced'],
+    ['simple', false, 'raw'],
+  ])(
+    'renders mode %s with legacy flag %s as %s',
+    async (mode, valueIsFormula, expectedMode) => {
+      const wrapper = await mountComponent(
+        {
+          modelValue: [
+            {
+              id: 'filter-1',
+              field: 1,
+              type: 'equal',
+              value: { formula: 'Alice', mode },
+              ...(valueIsFormula === undefined
+                ? {}
+                : { value_is_formula: valueIsFormula }),
+              group: null,
+            },
+          ],
+        },
+        {
+          stubs: {
+            ViewFieldConditionsForm: ViewFieldConditionsFormStub,
+            InjectedFormulaInput: InjectedFormulaInputStub,
+          },
+        }
+      )
+
+      expect(wrapper.find('.formula-input-stub').attributes('data-mode')).toBe(
+        expectedMode
+      )
+    }
+  )
 
   test('emits filters using formula mode instead of value_is_formula', async () => {
     const wrapper = await mountComponent(

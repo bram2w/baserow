@@ -352,18 +352,9 @@ export default {
       }
     },
     normalizeFormulaObject(filter) {
-      if (filter.value && typeof filter.value === 'object') {
-        const mode =
-          filter.value.mode || (filter.value_is_formula ? 'simple' : 'raw')
-        return {
-          ...filter.value,
-          mode: filter.value_is_formula === false ? 'raw' : mode,
-        }
-      }
-
       return {
-        formula: filter.value || '',
-        mode: filter.value_is_formula ? 'simple' : 'raw',
+        ...filter.value,
+        mode: filter.value_is_formula === false ? 'raw' : filter.value.mode,
       }
     },
   },
