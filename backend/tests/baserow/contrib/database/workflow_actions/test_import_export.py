@@ -2,6 +2,7 @@ from io import BytesIO
 
 import pytest
 
+from baserow.contrib.database.fields.actions import UpdateFieldActionType
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.table.handler import TableHandler
@@ -21,6 +22,8 @@ from baserow.contrib.integrations.local_baserow.models import (
     LocalBaserowTableServiceFieldMapping,
 )
 from baserow.contrib.integrations.slack.models import SlackBotIntegration
+from baserow.core.action.handler import ActionHandler
+from baserow.core.action.registries import action_type_registry
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import ImportExportConfig
 from baserow.core.snapshots.handler import SnapshotHandler
@@ -1419,3 +1422,49 @@ def test_an_imported_action_drops_an_integration_outside_its_database(data_fixtu
     )
     (action,) = DatabaseWorkflowAction.objects.filter(field=imported_button)
     assert action.specific.service.integration_id is None
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+def test_restoring_a_converted_button_keeps_its_action_target(data_fixture):
+    """
+    Converting away from a button deletes the row its actions cascade off, so
+    only the backup brings them back, through the same import path a duplicate
+    uses. Nothing else covers what a restored action ends up pointing at.
+    """
+
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(user=user, database=database)
+    target_table = data_fixture.create_database_table(user=user, database=database)
+    target_field = data_fixture.create_text_field(table=target_table, name="Name")
+    button_field = data_fixture.create_button_field(table=table, label="Go")
+    service = data_fixture.create_local_baserow_upsert_row_service(
+        integration=None, table=target_table
+    )
+    service.field_mappings.create(field=target_field, value="'hi'", enabled=True)
+    data_fixture.create_database_workflow_action(
+        LocalBaserowCreateRowWorkflowAction, field=button_field, service=service
+    )
+
+    action_type_registry.get_by_type(UpdateFieldActionType).do(
+        user, FieldHandler().get_specific_field_for_update(button_field.id), "text"
+    )
+    ActionHandler.undo(user, [UpdateFieldActionType.scope(table.id)], session_id)
+
+    (restored,) = DatabaseWorkflowAction.objects.filter(field_id=button_field.id)
+    restored_service = restored.specific.service.specific
+    assert restored_service.table_id == target_table.id, (
+        "The restore stays in the workspace it came from, so the target table "
+        "is still the right one. Resolving it as a file import would null it "
+        "and hand back an action that looks configured and does nothing."
+    )
+    # Queried fresh: the service instance carries the mappings it was created
+    # with, whose in-memory `value` isn't converted back into a formula object.
+    restored_mappings = LocalBaserowTableServiceFieldMapping.objects.filter(
+        service_id=restored_service.id
+    )
+    assert [(m.field_id, m.value["formula"]) for m in restored_mappings] == [
+        (target_field.id, "'hi'")
+    ], "The kept target table's fields have to come back with it."
