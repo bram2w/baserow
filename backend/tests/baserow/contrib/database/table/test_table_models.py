@@ -1424,11 +1424,9 @@ def test_order_by_fields_string_with_group_by_string_uses_group_by_sort_order(
         "", group_by_string=f"field_{ms_field.id}"
     )
     result_ids = [r.id for r in results]
-    idx1 = result_ids.index(row1.id)
-    idx3 = result_ids.index(row3.id)
-    assert abs(idx1 - idx3) == 1, (
-        f"Rows with same option set must be adjacent but were at "
-        f"positions {idx1} and {idx3}"
+    assert result_ids == [row1.id, row3.id, row2.id], (
+        f"Expected [{row1.id}, {row3.id}, {row2.id}] but got {result_ids}. "
+        f"Rows with same set {{A,C}} must precede {{B}} and tie-break by order/id."
     )
 
     # With group_by_string for grouping + a second M2M sort field:
@@ -1474,10 +1472,9 @@ def test_order_by_fields_string_with_group_by_string_uses_group_by_sort_order(
         f"Expected 3 rows but got {len(result_ids)}: {result_ids}"
     )
 
-    # Group-by must keep {A,C} rows adjacent despite M2M sort ordering
-    idx1 = result_ids.index(row1.id)
-    idx3 = result_ids.index(row3.id)
-    assert abs(idx1 - idx3) == 1, (
-        f"Rows with same group-by set must be adjacent but were at "
-        f"positions {idx1} and {idx3}: {result_ids}"
+    # Group {A,C} (row1, row3) before {B} (row2) in ASC.
+    # Within {A,C}: row1 sort={X,Y} before row3 sort={Y} in ASC.
+    assert result_ids == [row1.id, row3.id, row2.id], (
+        f"Expected group-first then sort ordering [row1, row3, row2] "
+        f"but got {result_ids}"
     )

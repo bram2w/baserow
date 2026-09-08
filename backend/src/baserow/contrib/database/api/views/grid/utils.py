@@ -73,8 +73,10 @@ def parse_adhoc_view_group_bys(
         or empty.
     """
 
-    if not raw_group_by:
+    if raw_group_by is None:
         return None
+    if raw_group_by == "":
+        return []
 
     if allowed_field_ids is not None:
         allowed_field_ids = set(allowed_field_ids)

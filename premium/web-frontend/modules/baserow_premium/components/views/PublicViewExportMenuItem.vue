@@ -82,9 +82,9 @@ export default {
       const orderBy = getOrderBy(this.view, true)
       values.order_by = orderBy
 
-      const groupBy = serializeGroupBys(this.view)
-      if (groupBy) {
-        values.group_by = groupBy
+      const viewType = this.$registry.get('view', this.view.type)
+      if (viewType.canGroupBy) {
+        values.group_by = serializeGroupBys(this.view)
       }
 
       values.fields =

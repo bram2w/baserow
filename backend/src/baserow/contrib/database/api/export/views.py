@@ -82,7 +82,7 @@ def _validate_options(data: Dict[str, Any]) -> Dict[str, Any]:
     option_serializers = table_exporter_registry.get_option_serializer_map()
     validated_exporter_type = validate_data(BaseExporterOptionsSerializer, data)
     serializer = option_serializers[validated_exporter_type["exporter_type"]]
-    return validate_data(serializer, data)
+    return validate_data(serializer, data, return_validated=True)
 
 
 class ExportTableView(APIView):

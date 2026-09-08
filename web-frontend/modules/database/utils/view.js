@@ -538,7 +538,7 @@ export function getGroupBy(rootGetters, viewId, adhocGroupBy = false) {
     const view = rootGetters['view/get'](viewId)
     return serializeGroupBys(view)
   } else {
-    return ''
+    return null
   }
 }
 

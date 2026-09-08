@@ -375,7 +375,7 @@ class GridViewView(APIView):
                 if hidden_field_ids
                 else None
             )
-            if group_by:
+            if group_by is not None:
                 adhoc_group_bys = parse_adhoc_view_group_bys(
                     group_by, model, allowed_field_ids=visible_field_ids
                 )
@@ -391,6 +391,7 @@ class GridViewView(APIView):
                 group_by_fields = [
                     model._field_objects[gb.field_id]["field"]
                     for gb in view.viewgroupby_set.all()
+                    if not hidden_field_ids or gb.field_id not in hidden_field_ids
                 ]
 
             if group_by_fields:
@@ -614,7 +615,11 @@ class GridViewGroupByDataView(APIView):
             allowed_field_ids=visible_field_ids,
         )
         if view_group_bys is None:
-            view_group_bys = list(view.viewgroupby_set.all())
+            view_group_bys = [
+                gb
+                for gb in view.viewgroupby_set.all()
+                if not hidden_field_ids or gb.field_id not in hidden_field_ids
+            ]
 
         if not view_group_bys:
             return Response(
@@ -1068,7 +1073,11 @@ class PublicGridViewGroupByDataView(APIView):
             allowed_field_ids=visible_field_ids,
         )
         if view_group_bys is None:
-            view_group_bys = list(view.viewgroupby_set.all())
+            view_group_bys = [
+                gb
+                for gb in view.viewgroupby_set.all()
+                if gb.field_id in visible_field_ids
+            ]
 
         if not view_group_bys:
             return Response(

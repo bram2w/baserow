@@ -206,7 +206,7 @@ class ExportPublicViewView(APIView):
 
         # Delete the provided view ID because it can be identified using the slug
         # path parameter.
-        del option_data["view_id"]
+        option_data.pop("view_id", None)
 
         job = ExportHandler.create_and_start_new_job(None, table, view, option_data)
         serialized_job = ExportJobSerializer(job).data
