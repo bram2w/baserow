@@ -739,8 +739,8 @@ export class SlackWriteMessageWorkflowActionType extends DatabaseExternalWorkflo
 }
 
 /**
- * Queues an automation workflow. The click hands the workflow over and reads
- * nothing back, so it is not an external action and describes no result.
+ * Queues an automation workflow. Nothing comes back, so it is not an
+ * external action and describes no result.
  */
 export class CoreStartWorkflowWorkflowActionType extends DatabaseWorkflowActionServiceType {
   static getType() {
@@ -762,15 +762,13 @@ export class CoreStartWorkflowWorkflowActionType extends DatabaseWorkflowActionS
     return false
   }
 
-  /** Nothing comes back, so the explorer must not offer a node for it. */
   getDataSchema() {
     return null
   }
 
   /**
-   * Trashing the automation leaves the id behind, and the shared service type
-   * has nothing to say about a workflow it cannot find. Said here rather than
-   * after a doomed click, which fails outright.
+   * Trashing the automation leaves the id behind; the shared service type
+   * does not report a workflow it cannot find.
    */
   getErrorMessage(workflowAction, applicationContext) {
     const inherited = super.getErrorMessage(workflowAction, applicationContext)
@@ -779,14 +777,9 @@ export class CoreStartWorkflowWorkflowActionType extends DatabaseWorkflowActionS
     }
 
     const workflowId = workflowAction.service?.workflow_id
-    // From the caller rather than the selected workspace: the list already
-    // knows which workspace the button field is in.
     const workspace = applicationContext?.workspace
-    // Quiet until the applications have been fetched: no automation is in the
-    // store then either, and an empty store is what a load still running
-    // looks like. Every automation of the workspace carries its workflows in
-    // that same payload, so once it has landed the store can be read for an
-    // answer.
+    // An empty store looks like a missing workflow until applications, which
+    // carry their workflows, have loaded.
     if (
       !workflowId ||
       !workspace?.id ||
@@ -805,10 +798,8 @@ export class CoreStartWorkflowWorkflowActionType extends DatabaseWorkflowActionS
         ).some((workflow) => workflow.id === workflowId)
       )
 
-    // Absence answers whether this editor can see the workflow, not whether
-    // it exists: the applications are filtered by what the caller may read,
-    // so a deleted workflow and one behind a role look the same from here.
-    // The copy says that rather than claiming it is gone.
+    // Applications are filtered by what the caller may read, so a deleted
+    // workflow and one behind a role look the same; the copy says "not found".
     return found
       ? null
       : this.app.$i18n.t('databaseWorkflowActionType.startWorkflowMissing')

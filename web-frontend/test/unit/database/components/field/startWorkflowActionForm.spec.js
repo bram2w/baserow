@@ -3,8 +3,7 @@ import { resolve } from 'path'
 import { TestApp } from '@baserow/test/helpers/testApp'
 import DatabaseWorkflowActionWithService from '@baserow/modules/database/components/field/DatabaseWorkflowActionWithService'
 
-// Read rather than imported: the i18n loader turns an imported locale file
-// into compiled message ASTs, which the copy below can't be read off of.
+// The i18n loader compiles imported locale files into message ASTs.
 const en = JSON.parse(
   readFileSync(
     resolve(process.cwd(), 'modules/integrations/locales/en.json'),
@@ -29,8 +28,7 @@ describe('start workflow action form', () => {
     testApp = new TestApp()
     const workspace = { id: WORKSPACE_ID, name: 'Acme', users: [] }
     await testApp.store.dispatch('workspace/forceCreate', workspace)
-    // Committed rather than dispatched: `workspace/select` fetches
-    // permissions and roles, which this form does not need.
+    // `workspace/select` would fetch permissions and roles.
     testApp.store.commit(
       'workspace/SET_SELECTED',
       testApp.store.getters['workspace/get'](WORKSPACE_ID)
@@ -120,8 +118,7 @@ describe('start workflow action form', () => {
       { database: database() }
     )
 
-    // `$t` returns the key here, so the copy is pinned against the locale
-    // file separately.
+    // `$t` returns the key here.
     expect(message).toBe('serviceType.errorWorkflowNotImmediateDispatch')
     expect(en.serviceType.errorWorkflowNotImmediateDispatch).toBe(
       'The selected workflow must use a trigger that can start immediately.'
@@ -138,8 +135,6 @@ describe('start workflow action form', () => {
   }
 
   test('a workflow the loaded applications do not hold is called out', async () => {
-    // Trashing the automation leaves the id on the action, and the click that
-    // follows fails with nothing said in the editor.
     await testApp.store.dispatch('application/forceSetAll', {
       applications: [
         {
@@ -172,9 +167,8 @@ describe('start workflow action form', () => {
       workspace: { id: WORKSPACE_ID },
     })
 
-    // `$t` returns the key here, so the copy is pinned separately. The
-    // applications are filtered by what the reader may see, so the copy may
-    // not claim the workflow was deleted: it can only say it cannot be found.
+    // `$t` returns the key here. The copy must not claim the workflow was
+    // deleted: applications are filtered by what the reader may see.
     expect(message).toBe('databaseWorkflowActionType.startWorkflowMissing')
     expect(enDatabase.databaseWorkflowActionType.startWorkflowMissing).toBe(
       "This action's workflow can't be found. It may have been deleted, or " +
@@ -184,8 +178,7 @@ describe('start workflow action form', () => {
   })
 
   test('nothing is said while the applications are still being fetched', () => {
-    // `forceCreate` never marks the list fetched, which is what a load still
-    // running looks like: the workflow is absent because nothing has landed.
+    // `forceCreate` never marks the list fetched.
     expect(testApp.store.getters['application/isLoaded']).toBe(false)
 
     const message = startWorkflowType().getErrorMessage(missingWorkflowAction, {

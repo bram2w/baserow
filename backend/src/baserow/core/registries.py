@@ -97,11 +97,9 @@ class ImportExportConfig:
 
     is_template: bool = False
     """
-    Indicates that the import is installing a template. A template is also
-    imported as a duplicate, since its ids must be treated the way a copy's are,
-    but it is the standing exception to `is_duplicate`'s promise: the file was
-    written on another installation, so the ids in it mean nothing here and
-    anything they name by number is a collision rather than a reference.
+    Indicates that the import is installing a template. A template is imported
+    as a duplicate, but the file was written on another installation, so ids in
+    it that were not remapped are collisions rather than references.
     """
 
     is_publishing: bool = False

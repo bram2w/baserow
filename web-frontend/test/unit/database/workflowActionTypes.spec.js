@@ -61,7 +61,6 @@ describe('databaseWorkflowActionType registry', () => {
     )
 
     expect(type.getOrder()).toBe(70)
-    // Fire and forget: it must not appear as a node in the data explorer.
     expect(type.producesResult).toBe(false)
     expect(type.getDataSchema({}, { service: {} })).toBe(null)
   })

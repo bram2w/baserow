@@ -188,8 +188,7 @@ def test_duplicating_a_single_field_copies_its_actions(data_fixture):
         "An id_mapping that maps the table to nothing nulls it, which produces "
         "a copy that looks correct and does nothing."
     )
-    # Queried fresh: the service instance carries the mappings it was created
-    # with, whose in-memory `value` isn't converted back into a formula object.
+    # The in-memory mappings' `value` isn't converted back into a formula.
     duplicated_mappings = LocalBaserowTableServiceFieldMapping.objects.filter(
         service_id=duplicated_service.id
     )
@@ -1460,8 +1459,7 @@ def test_restoring_a_converted_button_keeps_its_action_target(data_fixture):
         "is still the right one. Resolving it as a file import would null it "
         "and hand back an action that looks configured and does nothing."
     )
-    # Queried fresh: the service instance carries the mappings it was created
-    # with, whose in-memory `value` isn't converted back into a formula object.
+    # The in-memory mappings' `value` isn't converted back into a formula.
     restored_mappings = LocalBaserowTableServiceFieldMapping.objects.filter(
         service_id=restored_service.id
     )

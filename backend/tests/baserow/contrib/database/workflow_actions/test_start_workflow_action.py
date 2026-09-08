@@ -84,9 +84,7 @@ def _action_starting(data_fixture, field, workflow):
     CoreStartWorkflowService.objects.filter(id=action.service_id).update(
         workflow=workflow
     )
-    # The fixture handed the action its exact service instance, which the FK
-    # descriptor now caches. A row updated by id, not through it, needs this
-    # to reach an export.
+    # The FK descriptor cached the fixture's service instance.
     action.service.refresh_from_db()
     return action
 
@@ -110,7 +108,6 @@ def test_create_a_start_workflow_action(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK, response.json()
     data = response.json()
     assert data["type"] == "start_workflow"
-    # The action names its own service type, so the editor never sends it.
     assert data["service"]["type"] == "start_workflow"
     assert CoreStartWorkflowWorkflowAction.objects.count() == 1
 
@@ -271,9 +268,7 @@ def test_an_imported_action_drops_a_workflow_from_elsewhere(data_fixture):
     CoreStartWorkflowService.objects.filter(id=action.service_id).update(
         workflow=workflow
     )
-    # The fixture handed the action its exact service instance, which the FK
-    # descriptor now caches. A row updated by id, not through it, needs this
-    # to reach the export below.
+    # The FK descriptor cached the fixture's service instance.
     action.service.refresh_from_db()
 
     action_type = database_workflow_action_type_registry.get("start_workflow")
@@ -321,9 +316,7 @@ def test_a_duplicated_action_keeps_the_workflow(data_fixture):
     CoreStartWorkflowService.objects.filter(id=action.service_id).update(
         workflow=workflow
     )
-    # The fixture handed the action its exact service instance, which the FK
-    # descriptor now caches. A row updated by id, not through it, needs this
-    # to reach the export below.
+    # The FK descriptor cached the fixture's service instance.
     action.service.refresh_from_db()
 
     action_type = database_workflow_action_type_registry.get("start_workflow")
@@ -418,7 +411,6 @@ def test_a_click_on_an_unpublished_workflow_tells_the_clicker(data_fixture):
     with pytest.raises(WorkflowActionDispatchError) as exc:
         DatabaseWorkflowActionService().dispatch_workflow_actions(user, field, row)
 
-    # The reason reaches the clicker rather than becoming a 500.
     assert "published" in exc.value.message
 
 
@@ -602,8 +594,7 @@ def test_a_file_import_drops_a_workflow_whose_id_collides(data_fixture):
     destination_workspace = data_fixture.create_workspace(user=user)
     destination_field = _button(data_fixture, user, destination_workspace)
     unrelated = _workflow(data_fixture, user, destination_workspace)
-    # What the collision looks like in the file: a number this workspace owns,
-    # written by an installation that meant something else by it.
+    # An id this workspace owns, written by another installation.
     exported["service"]["workflow_id"] = unrelated.id
 
     with deferred_callback_context():
@@ -778,16 +769,12 @@ def test_an_import_drops_a_workflow_this_installation_does_not_have(data_fixture
 
     action_type = database_workflow_action_type_registry.get("start_workflow")
     exported = action_type.export_serialized(action.specific)
-    # A number no row here holds, the way the other installation's file names
-    # its own workflow.
+    # An id no row here holds.
     exported["service"]["workflow_id"] = source_workflow.id + 10_000
 
     destination_field = _button(data_fixture, user, workspace)
-    # Put back what the server runs with. The foreign key is deferrable and
-    # deferred in production, so the row is written and only the dereference
-    # fails; the `data_fixture` fixture makes every constraint immediate so
-    # tests can alter tables mid transaction, which refuses the insert instead
-    # and never reaches what this covers.
+    # `data_fixture` makes every constraint immediate; production defers the
+    # foreign key, so the row is written and only the dereference fails.
     with connection.cursor() as cursor:
         cursor.execute("SET CONSTRAINTS ALL DEFERRED")
 
@@ -850,7 +837,7 @@ def test_a_mirror_dict_mapping_still_drops_a_colliding_workflow(data_fixture):
     unrelated = _workflow(data_fixture, user, destination_workspace)
     exported["service"]["workflow_id"] = unrelated.id
 
-    # Exactly what `AutomationWorkflowHandler.duplicate_workflow` builds.
+    # What `AutomationWorkflowHandler.duplicate_workflow` builds.
     id_mapping = defaultdict(lambda: MirrorDict())
     id_mapping["automation_workflows"] = MirrorDict()
 

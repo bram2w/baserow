@@ -8248,12 +8248,8 @@ class ButtonFieldType(ReadOnlyFieldType):
         if isinstance(from_field, ButtonField):
             return
 
-        # A restore of what the conversion away from a button backed up, not a
-        # copy. `user` is still passed as the one asking: what an action
-        # carries is checked against them here too, so converting back does not
-        # hand someone a credential or a workflow they may not read (ADR 006
-        # section 5). Restoring an action somebody else configured can
-        # therefore come back with that reference dropped.
+        # `user` is checked against the restored actions (ADR 006 section 5),
+        # so a credential or workflow they may not read is dropped.
         self._recreate_workflow_actions(
             to_field, to_field_kwargs.get("workflow_actions") or [], user=user
         )
@@ -8276,10 +8272,8 @@ class ButtonFieldType(ReadOnlyFieldType):
             "database_fields": UnchangedIdMapping(),
         }
 
-        # A duplicated field and a type change both stay in the workspace they
-        # came from, so a reference outside the copied scope is still the right
-        # one. Said the way every other copy says it, since that is what the
-        # service and action types read to tell a copy from a file import.
+        # Marked as a duplicate so the action types keep references outside
+        # the copied scope: the data never leaves the workspace.
         import_export_config = ImportExportConfig(
             include_permission_data=True,
             reduce_disk_space_usage=False,
