@@ -57,9 +57,9 @@ class AutomationHistoryHandler:
             base_queryset = AutomationWorkflowHistory.objects.all()
 
         try:
-            return base_queryset.select_related(
-                "workflow__automation__workspace", "triggered_by"
-            ).get(id=history_id)
+            return base_queryset.select_related("workflow__automation__workspace").get(
+                id=history_id
+            )
         except AutomationWorkflowHistory.DoesNotExist:
             raise AutomationWorkflowHistoryDoesNotExist(history_id)
 
@@ -79,9 +79,8 @@ class AutomationHistoryHandler:
         """
         Creates a history entry for a Workflow run.
 
-        :param triggered_by: The user whose action started the run, when the
-            caller knows one. A button click does; a row or periodic trigger
-            does not.
+        :param triggered_by: The person who deliberately started the run, when
+            one did. An event-started run has none.
         """
 
         return AutomationWorkflowHistory.objects.create(

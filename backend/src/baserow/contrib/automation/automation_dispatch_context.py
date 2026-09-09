@@ -16,7 +16,7 @@ from baserow.core.services.dispatch_context import DispatchContext
 
 
 class AutomationDispatchContext(DispatchContext):
-    own_properties = ["workflow", "event_payload", "history", "triggered_by"]
+    own_properties = ["workflow", "event_payload", "history"]
 
     def __init__(
         self,
@@ -25,7 +25,6 @@ class AutomationDispatchContext(DispatchContext):
         event_payload: Optional[Union[Dict, List[Dict]]] = None,
         simulate_until_node: Optional[AutomationActionNode] = None,
         current_iterations: Optional[Dict[int, int]] = None,
-        triggered_by: Optional[AbstractUser] = None,
     ):
         """
         The `DispatchContext` implementation for automations. This context is provided
@@ -40,16 +39,11 @@ class AutomationDispatchContext(DispatchContext):
         :param simulate_until_node: Stop simulating the dispatch once this node
             is reached.
         :param current_iterations: Used by the Iterator node's children.
-        :param triggered_by: The person who started this run, when the history
-            knows one. Kept apart from `actor` on purpose: `actor` is who a
-            Local Baserow service acts as when it has no integration, and a
-            run must not change who it acts as by who started it.
         """
 
         self.workflow = workflow
         self.history = history
         self.simulate_until_node = simulate_until_node
-        self.triggered_by = triggered_by
         self.current_iterations: Dict[int, int] = {}
 
         if current_iterations:
@@ -80,6 +74,15 @@ class AutomationDispatchContext(DispatchContext):
         new_context = super().clone(**kwargs)
         new_context.current_iterations = {**self.current_iterations}
         return new_context
+
+    @property
+    def triggered_by(self) -> Optional[AbstractUser]:
+        """
+        Who started this run, from the history. Not `actor`: a run acts as its
+        integrations' users whoever started it (ADR 006 section 5).
+        """
+
+        return self.history.triggered_by if self.history else None
 
     def get_iteration_path(self, node):
         """
