@@ -421,6 +421,68 @@ def test_update_node(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize("service_type", ["", None])
+def test_update_node_service_without_type_uses_the_node_service_type(
+    api_client, data_fixture, service_type
+):
+    """
+    The node type pins the service type, so a payload that leaves it out, or
+    sends it empty, must validate against that type instead of failing on the
+    polymorphic serializer.
+    """
+
+    user, token = data_fixture.create_user_and_token()
+    workflow = data_fixture.create_automation_workflow(user)
+    node = data_fixture.create_local_baserow_get_row_action_node(
+        user=user, workflow=workflow
+    )
+    service = {"row_id": "'42'"}
+    if service_type is not None:
+        service["type"] = service_type
+
+    response = api_client.patch(
+        reverse(API_URL_ITEM, kwargs={"node_id": node.id}),
+        {"service": service},
+        **get_api_kwargs(token),
+    )
+
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json["service"]["type"] == "local_baserow_get_row"
+    assert response_json["service"]["row_id"]["formula"] == "'42'"
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("service_type", ["http_request", "unknown_service_type"])
+def test_update_node_service_with_a_type_the_node_does_not_use_is_refused(
+    api_client, data_fixture, service_type
+):
+    """
+    A different type would only pick which serializer the values are checked
+    against, after which they are applied to the node's own service type and
+    silently dropped. It must be refused instead, whether or not it exists.
+    """
+
+    user, token = data_fixture.create_user_and_token()
+    workflow = data_fixture.create_automation_workflow(user)
+    node = data_fixture.create_local_baserow_get_row_action_node(
+        user=user, workflow=workflow
+    )
+    response = api_client.patch(
+        reverse(API_URL_ITEM, kwargs={"node_id": node.id}),
+        {"service": {"type": service_type, "url": "'http://example.notexist/'"}},
+        **get_api_kwargs(token),
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    type_error = response_json["detail"]["service"]["type"][0]
+    assert type_error["code"] == "type_mismatch"
+    assert service_type in type_error["error"]
+    assert "local_baserow_get_row" in type_error["error"]
+
+
+@pytest.mark.django_db
 def test_updating_node_with_invalid_formula_arguments_throws_error(
     api_client, data_fixture
 ):

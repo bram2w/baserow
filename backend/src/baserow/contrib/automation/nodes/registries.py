@@ -33,12 +33,14 @@ from baserow.core.services.exceptions import (
     ServiceImproperlyConfiguredDispatchException,
 )
 from baserow.core.services.handler import ServiceHandler
+from baserow.core.services.mixins import ServiceBackedTypeMixin
 from baserow.core.services.registries import ServiceTypeSubClass, service_type_registry
 from baserow.core.services.types import DispatchResult
 from baserow.core.trash.registries import TrashOperationType
 
 
 class AutomationNodeType(
+    ServiceBackedTypeMixin,
     PublicCustomFieldsInstanceMixin,
     InstanceWithFormulaMixin,
     EasyImportExportMixin,
@@ -48,6 +50,7 @@ class AutomationNodeType(
     display_name = _("Unnamed node")
 
     service_type = None
+    service_field_help_text = "The service associated with this automation node."
     parent_property_name = "workflow"
     id_mapping_name = "automation_workflow_nodes"
 
