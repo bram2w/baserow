@@ -231,12 +231,23 @@ export const actions = {
     return createdWidget
   },
   async handleNewWidgetCreated(
-    { commit, dispatch },
-    { tempWidgetId, createdWidget }
+    { commit, dispatch, getters, state },
+    { tempWidgetId = null, createdWidget }
   ) {
-    commit('UPDATE_WIDGET', { widgetId: tempWidgetId, values: createdWidget })
-    dispatch('selectWidget', createdWidget.id)
-    await dispatch('fetchNewDataSources', createdWidget.dashboard_id)
+    if (tempWidgetId !== null && getters.getWidgetById(tempWidgetId)) {
+      // Created by this client, so the optimistically added widget is
+      // replaced by the real one and selected.
+      commit('UPDATE_WIDGET', { widgetId: tempWidgetId, values: createdWidget })
+      dispatch('selectWidget', createdWidget.id)
+    } else if (!getters.getWidgetById(createdWidget.id)) {
+      // Created elsewhere, e.g. by a collaborator or a trash restore, and
+      // received over realtime, so there is nothing to replace.
+      commit('ADD_WIDGET', createdWidget)
+    }
+    await dispatch('fetchNewDataSources', {
+      dashboardId: createdWidget.dashboard_id,
+      requestId: state.fetchRequestId,
+    })
   },
   async dispatchDataSource({ commit }, dataSourceId) {
     const { $client } = this
