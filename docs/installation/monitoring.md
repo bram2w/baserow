@@ -237,4 +237,6 @@ measurements; smaller indexes do not by themselves guarantee faster inserts.
 Refresh reasons separate storage coverage from event volume: `expired_payload`
 means a relevant event is compacted or outside the configured replay window;
 `unknown_history` means the cursor predates activation/reset or history lost to an unsafe deletion;
-`event_limit` means too many replayable changes remain.
+`event_limit` means too many replayable changes remain. History-panel snapshot
+recovery should reduce `event_limit` warnings for clients with row modals open.
+Measure its additional HTTP traffic alongside replay load.

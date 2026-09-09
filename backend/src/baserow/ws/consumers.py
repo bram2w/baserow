@@ -600,7 +600,13 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
         )
         with websocket_phase(phase):
             result = await get_replay_events_result(
-                user.id, page_group_names, last_seen_id, web_socket_id
+                user.id,
+                page_group_names,
+                last_seen_id,
+                web_socket_id,
+                supports_row_history_refresh=(
+                    content.get("supports_row_history_refresh") is True
+                ),
             )
 
         if result.retry_after_ms is not None and content.get("supports_retry") is True:

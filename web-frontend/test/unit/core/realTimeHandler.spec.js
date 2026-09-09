@@ -88,6 +88,7 @@ describe('RealTimeHandler replay_events flow', () => {
     expect(replayRequest).toEqual({
       type: 'replay_events',
       supports_retry: true,
+      supports_row_history_refresh: true,
       last_seen_id: FIRST_CONNECT_CURSOR,
     })
   })
@@ -116,6 +117,7 @@ describe('RealTimeHandler replay_events flow', () => {
     expect(replayRequest).toEqual({
       type: 'replay_events',
       supports_retry: true,
+      supports_row_history_refresh: true,
       last_seen_id: FIRST_CONNECT_CURSOR,
     })
   })
@@ -139,6 +141,7 @@ describe('RealTimeHandler replay_events flow', () => {
     expect(replayRequest).toEqual({
       type: 'replay_events',
       supports_retry: true,
+      supports_row_history_refresh: true,
       last_seen_id: 0,
     })
   })
@@ -237,8 +240,18 @@ describe('RealTimeHandler transient replay recovery', () => {
     expect(env.sentMessages).toHaveLength(1)
     vi.advanceTimersByTime(1)
     expect(env.sentMessages).toEqual([
-      { type: 'replay_events', last_seen_id: 10, supports_retry: true },
-      { type: 'replay_events', last_seen_id: 10, supports_retry: true },
+      {
+        type: 'replay_events',
+        last_seen_id: 10,
+        supports_retry: true,
+        supports_row_history_refresh: true,
+      },
+      {
+        type: 'replay_events',
+        last_seen_id: 10,
+        supports_retry: true,
+        supports_row_history_refresh: true,
+      },
     ])
     vi.advanceTimersByTime(60000)
     expect(env.sentMessages).toHaveLength(2)
@@ -258,8 +271,18 @@ describe('RealTimeHandler transient replay recovery', () => {
       expect(env.sentMessages).toHaveLength(1)
       vi.advanceTimersByTime(1)
       expect(env.sentMessages).toEqual([
-        { type: 'replay_events', last_seen_id: 10, supports_retry: true },
-        { type: 'replay_events', last_seen_id: 10, supports_retry: true },
+        {
+          type: 'replay_events',
+          last_seen_id: 10,
+          supports_retry: true,
+          supports_row_history_refresh: true,
+        },
+        {
+          type: 'replay_events',
+          last_seen_id: 10,
+          supports_retry: true,
+          supports_row_history_refresh: true,
+        },
       ])
       vi.advanceTimersByTime(60000)
       expect(env.sentMessages).toHaveLength(2)
@@ -279,9 +302,72 @@ describe('RealTimeHandler transient replay recovery', () => {
     expect(vi.getTimerCount()).toBe(pendingTimers)
     vi.advanceTimersByTime(60000)
     expect(env.sentMessages).toEqual([
-      { type: 'replay_events', last_seen_id: 10, supports_retry: true },
+      {
+        type: 'replay_events',
+        last_seen_id: 10,
+        supports_retry: true,
+        supports_row_history_refresh: true,
+      },
     ])
     expect(env.store._dispatched).toEqual([])
+  })
+
+  test('history traffic bypasses recovery buffering and requests a targeted refresh', () => {
+    const history = vi.fn()
+    const completed = vi.fn()
+    env.handler.registerEvent('row_history_updated', history)
+    env.handler.registerEvent('replay_completed', completed)
+    authenticate(10)
+    expect(env.sentMessages[0].supports_row_history_refresh).toBe(true)
+    receive({ type: 'replay_events_retry', retry_after_ms: 1000 })
+    for (let id = 11; id < 1012; id++) {
+      receive({ type: 'row_history_updated', _event_id: id })
+    }
+    expect(history).toHaveBeenCalledTimes(1001)
+    expect(env.handler.replayEventBuffer.size).toBe(0)
+    expect(env.store._dispatched).not.toContainEqual([
+      'toast/setWorkspaceOutdated',
+      true,
+    ])
+    receive({
+      type: 'replay_events_result',
+      force_refresh: false,
+      latest_event_id: 10,
+    })
+    expect(completed).toHaveBeenCalledOnce()
+    expect(completed.mock.calls[0][1]).toEqual({
+      type: 'replay_completed',
+      is_reconnect: true,
+    })
+    receive({
+      type: 'replay_events_result',
+      force_refresh: false,
+      latest_event_id: 10,
+    })
+    expect(completed).toHaveBeenCalledOnce()
+  })
+
+  test('an unrecoverable replay does not announce successful history recovery', () => {
+    const completed = vi.fn()
+    env.handler.registerEvent('replay_completed', completed)
+    authenticate(10)
+    receive({
+      type: 'replay_events_result',
+      force_refresh: true,
+      latest_event_id: NO_REPLAY_AVAILABLE,
+    })
+    expect(completed).not.toHaveBeenCalled()
+  })
+
+  test('history noise cannot evict deduplication of recovered row changes', () => {
+    const changed = vi.fn()
+    env.handler.registerEvent('rows_updated', changed)
+    receive({ type: 'rows_updated', _event_id: 10 })
+    for (let id = 11; id < 1012; id++) {
+      receive({ type: 'row_history_updated', _event_id: id })
+    }
+    receive({ type: 'rows_updated', _event_id: 10 })
+    expect(changed).toHaveBeenCalledOnce()
   })
 
   test('merges live and replay events in order without applying duplicates', () => {
@@ -1084,6 +1170,7 @@ describe('RealTimeHandler replay request params', () => {
     expect(msg).toEqual({
       type: 'replay_events',
       supports_retry: true,
+      supports_row_history_refresh: true,
       last_seen_id: 42,
     })
   })
@@ -1098,6 +1185,7 @@ describe('RealTimeHandler replay request params', () => {
     expect(msg).toEqual({
       type: 'replay_events',
       supports_retry: true,
+      supports_row_history_refresh: true,
       last_seen_id: FIRST_CONNECT_CURSOR,
     })
   })

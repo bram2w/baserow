@@ -37,7 +37,7 @@ async def test_replay_taking_more_than_one_second_completes_with_default_budget(
     release = threading.Event()
     expected = ReplayEventsResult(False, 42, [])
 
-    def read(*args):
+    def read(*args, **kwargs):
         assert release.wait(5)
         return expected
 
@@ -457,7 +457,7 @@ def test_replay_queue_capacity_only_reports_an_initialized_pool(monkeypatch):
 def test_replay_timeout_is_local_and_preserves_stricter_timeout(
     existing_timeout, expected_timeout
 ):
-    def read(*args):
+    def read(*args, **kwargs):
         with connection.cursor() as cursor:
             cursor.execute("SHOW statement_timeout")
             assert cursor.fetchone()[0] == expected_timeout
@@ -493,7 +493,7 @@ def test_replay_timeout_is_local_and_preserves_stricter_timeout(
 
 @pytest.mark.django_db(transaction=True)
 def test_postgresql_stops_slow_replay_and_closes_connection():
-    def slow_query(*args):
+    def slow_query(*args, **kwargs):
         with connection.cursor() as cursor:
             cursor.execute("SELECT pg_sleep(1)")
 

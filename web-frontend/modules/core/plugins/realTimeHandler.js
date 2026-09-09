@@ -214,6 +214,9 @@ export class RealTimeHandler {
       if (
         this.replayRequestCursor !== null &&
         typeof data?._event_id === 'number' &&
+        // History is recovered through its own HTTP snapshot. It must not crowd
+        // ordered row/schema updates out of the bounded replay buffer.
+        data.type !== 'row_history_updated' &&
         this._bufferReplayEvent(data, message.data.length * 2)
       ) {
         return
@@ -479,6 +482,7 @@ export class RealTimeHandler {
         type: 'replay_events',
         last_seen_id: this.replayRequestCursor,
         supports_retry: true,
+        supports_row_history_refresh: true,
       })
     )
   }
@@ -575,9 +579,13 @@ export class RealTimeHandler {
   }
 
   _dispatchEvent(data) {
-    if (typeof data?._event_id === 'number') {
+    if (
+      typeof data?._event_id === 'number' &&
+      data.type !== 'row_history_updated'
+    ) {
       // The channel layer can deliver a live copy after replay has completed.
       // Remember a bounded window so an old duplicate cannot revert newer state.
+      // History has its own entry-ID deduplication and must not evict these IDs.
       if (this.recentEventIds.has(data._event_id)) {
         return
       }
@@ -699,6 +707,12 @@ export class RealTimeHandler {
       // Later live events or reconnects cannot repair a gap declared unreplayable.
       this.replayAbandoned = data.force_refresh === true
       store.dispatch('toast/setWorkspaceOutdated', data.force_refresh === true)
+      if (!data.force_refresh && cursor !== null) {
+        this._dispatchEvent({
+          type: 'replay_completed',
+          is_reconnect: cursor !== FIRST_CONNECT_CURSOR,
+        })
+      }
     })
 
     this.registerEvent('user_data_updated', ({ store }, data) => {

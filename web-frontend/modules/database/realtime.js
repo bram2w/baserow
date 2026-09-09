@@ -13,6 +13,12 @@ import {
  * cases some other events like refreshing all the data needs to be triggered.
  */
 export const registerRealtimeEvents = (realtime) => {
+  realtime.registerEvent('replay_completed', ({ store }, data) => {
+    if (data.is_reconnect) {
+      store.dispatch('rowHistory/invalidate')
+    }
+  })
+
   realtime.registerEvent('ai_provider_updated', async ({ store }, data) => {
     if (data.model_availability_updated && store.getters['field/isLoaded']) {
       if (

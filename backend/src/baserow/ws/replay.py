@@ -265,6 +265,7 @@ def _read_replay_events(
     last_seen_id,
     web_socket_id,
     deadline,
+    supports_row_history_refresh=False,
 ):
     try:
         _remaining_timeout_ms(deadline)
@@ -288,6 +289,7 @@ def _read_replay_events(
                 page_group_names,
                 last_seen_id,
                 web_socket_id,
+                supports_row_history_refresh=supports_row_history_refresh,
             )
     except DatabaseError as exc:
         websocket_replay_database_errors.add(
@@ -316,6 +318,8 @@ async def get_replay_events_result(
     page_group_names,
     last_seen_id,
     web_socket_id,
+    *,
+    supports_row_history_refresh=False,
 ) -> ReplayEventsResult:
     """Replay within bounded capacity/time, retrying temporary resource failures.
 
@@ -344,6 +348,7 @@ async def get_replay_events_result(
                         last_seen_id,
                         web_socket_id,
                         deadline,
+                        supports_row_history_refresh,
                         executor=reservation,
                     )
                 )

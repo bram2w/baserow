@@ -1,18 +1,25 @@
+import os
 from contextlib import closing
 from datetime import timedelta
+from unittest.mock import MagicMock
 
 from django.db import OperationalError, connection, transaction
 from django.utils import timezone
 
 import pytest
+from asgiref.sync import sync_to_async
+from channels.testing import WebsocketCommunicator
 
+from baserow.config.asgi import application
 from baserow.ws import realtime_events
+from baserow.ws import replay as replay_module
 from baserow.ws.models import (
     RealtimeEvent,
     RealtimeEventHistoryState,
 )
 from baserow.ws.realtime_events import (
     FIRST_CONNECT_CURSOR,
+    NO_REPLAY_AVAILABLE,
     RealtimeEventHandler,
 )
 
@@ -69,12 +76,13 @@ def record(group="table-1", payload=None, *, age=timedelta(), now=None):
     return event_id
 
 
-def replay(cursor, *, user=42, groups=None, socket="own"):
+def replay(cursor, *, user=42, groups=None, socket="own", history_refresh=False):
     return RealtimeEventHandler.get_replay_events_result(
         user,
         ["table-1"] if groups is None else groups,
         cursor,
         socket,
+        supports_row_history_refresh=history_refresh,
     )
 
 
@@ -467,6 +475,48 @@ def test_cleanup_preserves_the_configured_full_retention_boundary(
     assert [event.id for event in result.replay_events] == [boundary, fresh]
 
 
+@pytest.mark.parametrize("compacted", [False, True])
+@pytest.mark.parametrize("supports_refresh", [False, True])
+@pytest.mark.parametrize("channel", ["page", "users"])
+def test_row_history_is_ignored_only_for_clients_that_refetch_it(
+    compacted, supports_refresh, channel
+):
+    baseline = record("baseline", age=timedelta(days=3))
+    payload = group_event(event_type="row_history_updated")
+    if channel == "users":
+        payload = users_event()
+        payload["payload"]["type"] = "row_history_updated"
+    event_id = record(
+        "users" if channel == "users" else "table-1",
+        payload=payload,
+        age=timedelta(days=2),
+    )
+    if compacted:
+        cleanup()
+        assert RealtimeEvent.objects.filter(pk=event_id).exists()
+    result = replay(baseline, history_refresh=supports_refresh)
+    assert result.force_refresh is not supports_refresh
+    assert result.replay_events == []
+
+
+@pytest.mark.parametrize("compacted", [False, True])
+def test_individual_row_history_filter_uses_the_current_recipients_payload(compacted):
+    baseline = record("baseline", age=timedelta(days=3))
+    event_id = record(
+        "users",
+        individual_event(
+            recipients={42: "row_history_updated", 7: "workspace_updated"}
+        ),
+        age=timedelta(days=2),
+    )
+    if compacted:
+        original = RealtimeEvent.objects.get(pk=event_id).payload
+        cleanup()
+        assert RealtimeEvent.objects.get(pk=event_id).payload == original
+    assert replay(baseline, user=42, history_refresh=True).force_refresh is False
+    assert replay(baseline, user=7, history_refresh=True).force_refresh is True
+
+
 def test_known_empty_history_accepts_zero_cursor():
     result = replay(0)
     assert result.force_refresh is False
@@ -607,3 +657,105 @@ def test_concurrent_compaction_cannot_hide_a_relevant_event():
     assert result.force_refresh or event_id in [
         event.id for event in result.replay_events
     ]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("compacted", [False, True], ids=["full", "compacted"])
+@pytest.mark.parametrize(
+    "supports_refresh",
+    [None, False, True, "true"],
+    ids=["absent", "false", "true", "string-true"],
+)
+async def test_websocket_only_literal_history_capability_recovers_meaningful_events(
+    data_fixture, settings, monkeypatch, compacted, supports_refresh
+):
+    settings.PRESENCE_VISIBLE_USERS = 0
+    settings.BASEROW_REALTIME_REPLAY_MAX_EVENTS = 1
+
+    def prepare():
+        user, token = data_fixture.create_user_and_token()
+        baseline = record("baseline", age=timedelta(days=3))
+        history_ids = []
+        for index in range(2):
+            event = users_event(recipients=[user.id])
+            event["payload"] = {
+                "type": "row_history_updated",
+                "private_history": f"never-replay-history-{index}",
+            }
+            age = timedelta(days=2) if compacted else timedelta(hours=1)
+            history_ids.append(record("users", event, age=age))
+        event = users_event(recipients=[user.id])
+        event["payload"] = {"type": "workspace_updated", "value": "current"}
+        meaningful = record("users", event)
+        if compacted:
+            cleanup()
+            assert (
+                list(
+                    RealtimeEvent.objects.filter(pk__in=history_ids).values_list(
+                        "id", flat=True
+                    )
+                )
+                == history_ids[-1:]
+            )
+        else:
+            assert RealtimeEvent.objects.filter(pk__in=history_ids).count() == 2
+        return token, baseline, meaningful
+
+    token, baseline, meaningful = await sync_to_async(prepare)()
+    requests = MagicMock()
+    monkeypatch.setattr(replay_module, "websocket_replay_requests", requests)
+    communicator = WebsocketCommunicator(
+        application, f"ws/core/?jwt_token={token}&web_socket_id=own"
+    )
+    with replay_module.ReplayExecutor(2) as executor:
+        monkeypatch.setattr(replay_module, "_executor", executor)
+        try:
+            assert (await communicator.connect())[0]
+            authentication = await communicator.receive_json_from()
+            assert authentication["success"] is True
+            assert authentication["replay_enabled"] is True
+            request = {"type": "replay_events", "last_seen_id": baseline}
+            if supports_refresh is not None:
+                request["supports_row_history_refresh"] = supports_refresh
+            await communicator.send_json_to(request)
+
+            response = await communicator.receive_json_from(timeout=2)
+            if supports_refresh is True:
+                # The two history updates exceed MAX_EVENTS=1, but this client
+                # refetches history and receives exactly the meaningful update.
+                assert response == {
+                    "type": "workspace_updated",
+                    "value": "current",
+                    "_event_id": meaningful,
+                }
+                response = await communicator.receive_json_from(timeout=2)
+                assert response == {
+                    "type": "replay_events_result",
+                    "force_refresh": False,
+                    "latest_event_id": meaningful,
+                }
+            else:
+                # Retained expired originals are never emitted as client events,
+                # including to older clients.
+                assert response == {
+                    "type": "replay_events_result",
+                    "force_refresh": True,
+                    "latest_event_id": NO_REPLAY_AVAILABLE,
+                }
+            assert await communicator.receive_nothing(timeout=0.05)
+            requests.add.assert_called_once_with(
+                1,
+                {
+                    "process.pid": os.getpid(),
+                    "outcome": "replayed" if supports_refresh is True else "refresh",
+                    "reason": (
+                        "none"
+                        if supports_refresh is True
+                        else "expired_payload"
+                        if compacted
+                        else "event_limit"
+                    ),
+                },
+            )
+        finally:
+            await communicator.disconnect(timeout=2)

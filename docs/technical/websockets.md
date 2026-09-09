@@ -255,6 +255,13 @@ baseline preserves buffered live updates. Buffer overflow, or a disconnect befor
 the first baseline was established, requires a refresh because recovery can no
 longer be verified. An unrecoverable gap stays marked outdated across reconnects.
 
+Clients advertising `supports_row_history_refresh=true` recover row history through
+one primary-database HTTP snapshot of the active history panel. Hidden history is
+invalidated and fetched when opened. These additive history notifications bypass
+the replay limit and recovery buffer; their ordinary live delivery continues.
+Older clients retain event-by-event history replay. Only event types with an
+explicit snapshot recovery contract may bypass ordered replay.
+
 ### Event cleanup and retained sentinels
 
 Full payloads are replayable for `BASEROW_REALTIME_REPLAY_RETENTION_HOURS` hours

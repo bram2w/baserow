@@ -1,8 +1,24 @@
 <template>
   <div>
-    <div v-if="!loaded && loading" class="loading-absolute-center" />
+    <div
+      v-if="!loaded && loading && entries.length === 0 && !historyLoadFailed"
+      class="loading-absolute-center"
+    />
     <template v-else>
       <div class="row-history">
+        <Alert v-if="historyLoadFailed" type="error">
+          <p>{{ $t('rowHistorySidebar.loadError') }}</p>
+          <template #actions>
+            <Button
+              type="secondary"
+              size="small"
+              :loading="loading"
+              @click="initialLoad(true)"
+            >
+              {{ $t('action.retry') }}
+            </Button>
+          </template>
+        </Alert>
         <div v-if="entriesWithContents.length > 0">
           <InfiniteScroll
             ref="infiniteScroll"
@@ -49,7 +65,7 @@
             </template>
           </InfiniteScroll>
         </div>
-        <div v-else class="row-history__empty">
+        <div v-else-if="!historyLoadFailed" class="row-history__empty">
           <i class="row-history__empty-icon baserow-icon-history"></i>
           <div class="row-history__empty-text">
             {{ $t('rowHistorySidebar.empty') }}
@@ -94,6 +110,11 @@ export default {
       required: true,
     },
   },
+  data() {
+    return {
+      historyLoadFailed: false,
+    }
+  },
   computed: {
     ...mapGetters({
       entries: 'rowHistory/getSortedEntries',
@@ -101,6 +122,7 @@ export default {
       loaded: 'rowHistory/getLoaded',
       currentCount: 'rowHistory/getCurrentCount',
       totalCount: 'rowHistory/getTotalCount',
+      historyRevision: 'rowHistory/getRevision',
     }),
     entriesWithContents() {
       const fieldIds = this.fields.map((f) => f.id)
@@ -121,30 +143,58 @@ export default {
     },
   },
   watch: {
+    historyRevision() {
+      this.initialLoad(true)
+    },
     row(newRow, oldRow) {
+      this.historyLoadFailed = false
       this.initialLoad()
     },
   },
   async created() {
     await this.initialLoad()
   },
+  beforeUnmount() {
+    this._historyLoad = null
+  },
   methods: {
-    async initialLoad() {
+    async initialLoad(realtimeRecovery = false) {
+      realtimeRecovery ||= this.historyRevision > 0 && !this.loaded
+      const tableId = this.table.id
+      const rowId = this.row.id
+      if (!Number.isInteger(rowId)) {
+        return
+      }
+      const key = `${tableId}:${rowId}`
+      if (this._historyLoad?.key === key) {
+        this._historyLoad.repeat = true
+        this._historyLoad.realtimeRecovery ||= realtimeRecovery
+        return
+      }
+      const request = { key, repeat: false, realtimeRecovery }
+      this._historyLoad = request
       try {
-        const tableId = this.table.id
-        const rowId = this.row.id
-
-        // If the row is not an integer, it can mean that the row hasn't been created
-        // in the backend yet. It's fine to not do anything then, because there is no
-        // history available anyway.
-        if (Number.isInteger(rowId)) {
+        do {
+          request.repeat = false
           await this.$store.dispatch('rowHistory/fetchInitial', {
             tableId,
             rowId,
+            realtimeRecovery: request.realtimeRecovery,
           })
+          // Reconnects during a request need one trailing snapshot, never a
+          // parallel request per notification. Unmounted/previous rows stop here.
+        } while (request.repeat && this._historyLoad === request)
+        if (this._historyLoad === request) {
+          this.historyLoadFailed = false
         }
       } catch (e) {
-        notifyIf(e, 'application')
+        if (this._historyLoad === request) {
+          this.historyLoadFailed = true
+        }
+      } finally {
+        if (this._historyLoad === request) {
+          this._historyLoad = null
+        }
       }
     },
     async loadNextPage() {
