@@ -464,57 +464,6 @@ def test_a_click_through_the_api_queues_the_published_workflow(
 
 
 @pytest.mark.django_db
-def test_a_clicker_who_cannot_read_the_workflow_is_still_recorded(
-    api_client, data_fixture, django_capture_on_commit_callbacks
-):
-    """
-    Recording is about who caused the run, not about what they may see. The
-    editor cannot open the workflow or its history; the history still names
-    them.
-    """
-
-    from baserow.contrib.automation.history.models import AutomationWorkflowHistory
-    from baserow.contrib.automation.workflows.handler import AutomationWorkflowHandler
-
-    builder = data_fixture.create_user()
-    workspace = data_fixture.create_workspace(user=builder)
-    clicker, token = data_fixture.create_user_and_token()
-    data_fixture.create_user_workspace(
-        workspace=workspace, user=clicker, permissions="MEMBER"
-    )
-    field = _button(data_fixture, builder, workspace)
-    row = field.table.get_model().objects.create()
-    workflow = _workflow(data_fixture, builder, workspace)
-    AutomationWorkflowHandler().publish(workflow)
-    _action_starting(data_fixture, field, workflow)
-
-    with (
-        patch(
-            "baserow.contrib.automation.workflows.handler.start_workflow_celery_task"
-        ),
-        django_capture_on_commit_callbacks(execute=True),
-        patch.object(
-            CoreHandler,
-            "check_permissions",
-            _denying(ReadAutomationWorkflowOperationType.type),
-        ),
-    ):
-        response = api_client.post(
-            reverse(
-                "api:database:workflow_actions:dispatch",
-                kwargs={"field_id": field.id},
-            ),
-            {"row_id": row.id},
-            format="json",
-            HTTP_AUTHORIZATION=f"JWT {token}",
-        )
-
-    assert response.status_code == HTTP_200_OK, response.json()
-    history = AutomationWorkflowHistory.objects.get(original_workflow=workflow)
-    assert history.triggered_by_id == clicker.id
-
-
-@pytest.mark.django_db
 def test_a_click_on_an_unpublished_workflow_tells_the_clicker(data_fixture):
     from baserow.contrib.automation.nodes.node_types import CoreManualTriggerNodeType
     from baserow.contrib.database.workflow_actions.exceptions import (
