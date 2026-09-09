@@ -1,4 +1,5 @@
 import { getClient } from "../../client"
+import { waitForJob } from "../job"
 import { Automation } from "./automation"
 
 export class AutomationWorkflow {
@@ -38,22 +39,5 @@ export async function publishAutomationWorkflow(
     `automation/workflows/${workflow.id}/publish/async/`,
     {},
   );
-
-  const deadline = Date.now() + 30_000;
-  while (Date.now() < deadline) {
-    const poll: any = await client.get(`jobs/${job.data.id}/`);
-    if (poll.data.state === "failed") {
-      throw new Error(
-        `Publishing "${workflow.name}" failed: ${
-          poll.data.human_readable_error || ""
-        }`,
-      );
-    }
-    if (poll.data.state === "finished") {
-      return;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 500));
-  }
-
-  throw new Error(`Publishing "${workflow.name}" did not finish in time`);
+  await waitForJob(client, job.data.id, `Publishing "${workflow.name}"`);
 }

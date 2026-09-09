@@ -1,10 +1,6 @@
 /**
- * Button field, start workflow action: who started the run.
- *
- * The backend tests prove the history row names the clicker and the unit test
- * proves the panel renders a name it is given. Nothing below this file runs
- * the whole loop: an editor's real click, the real Celery worker running the
- * workflow, and a builder reading "Started by" in the History panel.
+ * Button field, start workflow action: a real click, the real worker, and a
+ * builder reading "Started by" in the History panel.
  */
 
 import { Page } from "@playwright/test";
@@ -13,7 +9,6 @@ import { GridPage } from "../../pages/database/gridPage";
 import { AutomationWorkflowPage } from "../../pages/automation/automationWorkflowPage";
 import { PageConfig } from "../../pages/baserowPage";
 import {
-  actionItem,
   addAction,
   openFieldEditor,
   saveField,
@@ -33,7 +28,7 @@ import { createAutomationNode } from "../../fixtures/automation/automationNode";
 import { User, createUser } from "../../fixtures/user";
 import { addUserToWorkspace } from "../../fixtures/workspace";
 
-// Position in the right-hand section, the only field `beforeAll` creates.
+// Index of Start in the right-hand section; the first field `beforeAll` creates.
 const START_FIELD_INDEX = 0;
 
 let g: GridSetupResult;
@@ -43,10 +38,7 @@ let eventWorkflow: AutomationWorkflow;
 /** A member of the workspace who can click the button but not open the automation. */
 let editor: User;
 
-/**
- * The builder on the workflow page, with the AI panel kept shut so it does not
- * sit over the header's buttons.
- */
+/** The builder, who owns the automation, on the workflow page. */
 async function builderOnWorkflow(page: Page, goto: PageConfig["goto"]) {
   const workflowPage = new AutomationWorkflowPage(
     { page, goto },
@@ -54,9 +46,6 @@ async function builderOnWorkflow(page: Page, goto: PageConfig["goto"]) {
     workflow
   );
   await workflowPage.authenticate(g.user);
-  await page.evaluate(() => {
-    localStorage.setItem("baserow.rightSidebarOpen", "false");
-  });
   await workflowPage.goto();
   return workflowPage;
 }
@@ -130,9 +119,9 @@ test.describe("Button field, start workflow action", () => {
     await openHistoryPanel(page);
 
     const entry = historyEntries(page).first();
-    await expect(entry.locator(".workflow-history__header-actor")).toHaveText(
-      `Started by ${editor.name}`
-    );
+    await expect(
+      entry.locator("..").locator(".workflow-history__actor")
+    ).toHaveText(`Started by ${editor.name}`);
     // Not a test run: no prefix on the title. The worker in the e2e stack
     // runs the workflow for real, so it also completes.
     await expect(entry.locator(".workflow-history__header-title")).toHaveText(
@@ -153,9 +142,9 @@ test.describe("Button field, start workflow action", () => {
     await expect(
       entry.locator(".workflow-history__header-title")
     ).toContainText("[Test]");
-    await expect(entry.locator(".workflow-history__header-actor")).toHaveText(
-      `Started by ${g.user.name}`
-    );
+    await expect(
+      entry.locator("..").locator(".workflow-history__actor")
+    ).toHaveText(`Started by ${g.user.name}`);
   });
 
   test("the editor offers only workflows a click can start, and saves the pick", async ({
