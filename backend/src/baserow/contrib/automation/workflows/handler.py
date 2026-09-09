@@ -1153,9 +1153,8 @@ class AutomationWorkflowHandler:
 
         :param workflow: The AutomationWorkflow ID that should be executed.
         :param event_payload: The payload from the action.
-        :param triggered_by: The user whose action started the run, when one
-            is known. Recorded on the history entry, never used to authorise
-            the nodes.
+        :param triggered_by: The person who started the run, recorded on the
+            history entry.
         """
 
         error = None

@@ -407,11 +407,12 @@ message all act as the clicker or as this installation, and none of them borrows
 user's reach.
 
 The click itself is not anonymous, though. The run's history names the clicker in
-`triggered_by`, the run's dispatch context carries them under the same name, and the
-click is registered as a `dispatch_button_field` action, so the audit log holds who
-clicked which button on which row. None of that changes who the nodes act as. The
+`triggered_by`, the run's dispatch context exposes the same person under that name, and
+the click is registered as a `dispatch_button_field` action, so the audit log holds who
+clicked which button on which row. None of that changes who the nodes act as: the
 context's `actor` slot, which a Local Baserow node without an integration would act as,
-stays empty for a run: a node that has no integration fails the same way whoever clicked.
+stays empty for a run. A workflow that another workflow starts records nobody, since the
+person is not a member of wherever that second workflow lives.
 
 Not charging the button rate limit has one consequence worth stating plainly. When the
 automation module's own limits are what refuse a run, the clicker is not told:
@@ -571,10 +572,11 @@ the natural place to narrow this further when it is wanted.
   and leaves the actions as they were saved. Builder workflow actions are the same, and
   making either undoable needs a way to restore a deleted action with its service, which
   neither has.
-- **Audit log.** A click registers one `dispatch_button_field` action once it holds the
-  lock and before the first action runs, so a click refused for permission or for a run
-  still in progress leaves no entry, and a click that fails half way still does. Clicks
-  stay out of the undo stack.
+- **Audit log.** A click registers one `dispatch_button_field` action after every
+  permission check has passed and before the first action runs, inside the lock when
+  there is one, so a click refused for permission or as already running leaves no entry
+  and a click that fails half way still does. A button with only client actions takes no
+  lock, so a double click on it is two entries. Clicks stay out of the undo stack.
 - **Deleting a user.** Nothing breaks: actions run as whoever clicks, and v1 services
   have no integration, so no button depends on any particular account.
 - **Failure mid-sequence.** Execution stops, later actions are skipped, completed

@@ -2618,9 +2618,8 @@ class CoreStartWorkflowServiceType(CoreServiceType):
                 self.TRIGGER_NOT_ON_DEMAND_ERROR
             )
 
-        # The button field puts the clicker on the context as `actor`; the
-        # automation node and the builder action have none there. Recorded on
-        # the history only: the nodes still act as their integration's user.
+        # Only a button click has an actor here; a nested start-workflow node
+        # and the builder action do not, so their runs record nobody.
         AutomationWorkflowHandler().async_start_workflow(
             published_workflow, triggered_by=dispatch_context.actor
         )

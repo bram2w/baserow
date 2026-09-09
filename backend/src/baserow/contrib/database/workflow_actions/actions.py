@@ -13,12 +13,7 @@ from baserow.core.action.registries import ActionType, ActionTypeDescription
 
 
 class DispatchButtonFieldActionType(ActionType):
-    """
-    A click on a button field. Not undoable (ADR 006 section 8): the sequence
-    can have effects no rollback undoes. Registered so the audit log and
-    analytics see who clicked what, which is the only trace of the person
-    when the click starts an automation workflow.
-    """
+    """A button click, recorded for the audit log. Not undoable (ADR 006 s.8)."""
 
     type = "dispatch_button_field"
     description = ActionTypeDescription(

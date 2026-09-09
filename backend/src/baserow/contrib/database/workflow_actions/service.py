@@ -610,8 +610,7 @@ class DatabaseWorkflowActionService:
             raise WorkflowActionDispatchInProgress()
 
         try:
-            # Audited only once the click owns the lock: a refused click, for
-            # permission or for a run still in progress, leaves no entry.
+            # Inside the lock, so a click refused as already running leaves no entry.
             DispatchButtonFieldActionType.do(user, field, row, len(workflow_actions))
 
             # Remembering a result edits the button's configuration, so it
