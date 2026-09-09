@@ -2514,7 +2514,7 @@ class CoreStartWorkflowServiceType(CoreServiceType):
     WORKFLOW_DOES_NOT_EXIST_ERROR = "The workflow with ID {workflow_id} does not exist."
     TRIGGER_NOT_ON_DEMAND_ERROR = (
         "Only workflows whose trigger can start on demand, such as a manual "
-        "trigger, can be started."
+        "or periodic trigger, can be started."
     )
 
     allowed_fields = ["workflow"]

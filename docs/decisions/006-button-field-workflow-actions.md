@@ -405,6 +405,12 @@ for every other action type: the row actions, the HTTP request, the email and th
 message all act as the clicker or as this installation, and none of them borrows another
 user's reach.
 
+The click itself is not anonymous, though. The run's history names the clicker in
+`triggered_by`, the run's dispatch context carries them as `actor`, and the click is
+registered as a `dispatch_button_field` action, so the audit log holds who clicked which
+button on which row. None of that changes who the nodes act as: a Local Baserow node
+still prefers its integration's `authorized_user`, and every automation node has one.
+
 Not charging the button rate limit has one consequence worth stating plainly. When the
 automation module's own limits are what refuse a run, the clicker is not told:
 `async_start_workflow` catches the rate limit and the too-many-errors cases after dispatch
@@ -563,6 +569,9 @@ the natural place to narrow this further when it is wanted.
   and leaves the actions as they were saved. Builder workflow actions are the same, and
   making either undoable needs a way to restore a deleted action with its service, which
   neither has.
+- **Audit log.** Every allowed click registers one `dispatch_button_field` action, after
+  the permission checks and before the first action runs, so a refused click leaves no
+  entry and a click that fails half way still does. Clicks stay out of the undo stack.
 - **Deleting a user.** Nothing breaks: actions run as whoever clicks, and v1 services
   have no integration, so no button depends on any particular account.
 - **Failure mid-sequence.** Execution stops, later actions are skipped, completed
