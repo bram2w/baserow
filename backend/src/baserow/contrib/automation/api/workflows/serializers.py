@@ -1,5 +1,3 @@
-from django.contrib.auth import get_user_model
-
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
@@ -15,8 +13,6 @@ from baserow.contrib.automation.workflows.constants import (
     WorkflowState,
 )
 from baserow.contrib.automation.workflows.handler import AutomationWorkflowHandler
-
-User = get_user_model()
 
 
 class AutomationWorkflowSerializer(serializers.ModelSerializer):
@@ -128,18 +124,11 @@ class AutomationHistorySerializer(serializers.ModelSerializer):
         )
 
 
-class AutomationWorkflowHistoryTriggeredBySerializer(serializers.ModelSerializer):
-    """
-    Who started the run, in the `{id, name}` shape the frontend resolves
-    through the workspace's user store, so a rename shows without a refetch.
-    """
+class AutomationWorkflowHistoryTriggeredBySerializer(serializers.Serializer):
+    """Who started the run, in the `{id, name}` shape the collaborator UI reads."""
 
+    id = serializers.IntegerField(read_only=True)
     name = serializers.CharField(source="first_name", read_only=True)
-
-    class Meta:
-        model = User
-        fields = ("id", "name")
-        read_only_fields = fields
 
 
 class AutomationWorkflowHistorySerializer(AutomationHistorySerializer):
