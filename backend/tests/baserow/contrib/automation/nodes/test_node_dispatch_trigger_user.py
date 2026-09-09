@@ -34,11 +34,13 @@ def test_dispatch_node_hands_the_trigger_user_to_the_context(data_fixture):
     ):
         AutomationNodeHandler().dispatch_node(trigger.id, history.id)
 
-    assert [context.actor for context in captured] == [user]
+    assert [context.triggered_by for context in captured] == [user]
+    # Who started the run never becomes who its nodes act as.
+    assert [context.actor for context in captured] == [None]
 
 
 @pytest.mark.django_db
-def test_dispatch_node_hands_no_actor_when_nobody_triggered_it(data_fixture):
+def test_dispatch_node_hands_no_trigger_user_when_nobody_started_it(data_fixture):
     user = data_fixture.create_user()
     workflow = data_fixture.create_automation_workflow(
         user=user, trigger_type=CoreManualTriggerNodeType.type
@@ -52,4 +54,4 @@ def test_dispatch_node_hands_no_actor_when_nobody_triggered_it(data_fixture):
     ):
         AutomationNodeHandler().dispatch_node(trigger.id, history.id)
 
-    assert [context.actor for context in captured] == [None]
+    assert [context.triggered_by for context in captured] == [None]

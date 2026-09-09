@@ -314,9 +314,10 @@ down to the services:
 - No integration attached, which is every database button in v1: the service authorizes
   and executes as the actor, and fails if there is none.
 - Integration present, which is the builder, automation, and any future opt-in:
-  `authorized_user` authorizes, unchanged. Also recording the actor for auditing in this
-  branch is future work owned by the builder and automation teams, since today's
-  pipeline carries a single user; nothing in v1 depends on it.
+  `authorized_user` authorizes, unchanged. Who started the run is recorded beside that,
+  not instead of it: the run's history and its dispatch context carry the person as
+  `triggered_by`, a separate slot from `actor`, so a node that happens to have no
+  integration does not start acting as whoever clicked.
 
 Whether "no integration attached" is modeled as a nullable foreign key on the service or
 as a small purpose-built object with the same interface is an implementation choice, not
@@ -406,10 +407,11 @@ message all act as the clicker or as this installation, and none of them borrows
 user's reach.
 
 The click itself is not anonymous, though. The run's history names the clicker in
-`triggered_by`, the run's dispatch context carries them as `actor`, and the click is
-registered as a `dispatch_button_field` action, so the audit log holds who clicked which
-button on which row. None of that changes who the nodes act as: a Local Baserow node
-still prefers its integration's `authorized_user`, and every automation node has one.
+`triggered_by`, the run's dispatch context carries them under the same name, and the
+click is registered as a `dispatch_button_field` action, so the audit log holds who
+clicked which button on which row. None of that changes who the nodes act as. The
+context's `actor` slot, which a Local Baserow node without an integration would act as,
+stays empty for a run: a node that has no integration fails the same way whoever clicked.
 
 Not charging the button rate limit has one consequence worth stating plainly. When the
 automation module's own limits are what refuse a run, the clicker is not told:
@@ -569,9 +571,10 @@ the natural place to narrow this further when it is wanted.
   and leaves the actions as they were saved. Builder workflow actions are the same, and
   making either undoable needs a way to restore a deleted action with its service, which
   neither has.
-- **Audit log.** Every allowed click registers one `dispatch_button_field` action, after
-  the permission checks and before the first action runs, so a refused click leaves no
-  entry and a click that fails half way still does. Clicks stay out of the undo stack.
+- **Audit log.** A click registers one `dispatch_button_field` action once it holds the
+  lock and before the first action runs, so a click refused for permission or for a run
+  still in progress leaves no entry, and a click that fails half way still does. Clicks
+  stay out of the undo stack.
 - **Deleting a user.** Nothing breaks: actions run as whoever clicks, and v1 services
   have no integration, so no button depends on any particular account.
 - **Failure mid-sequence.** Execution stops, later actions are skipped, completed

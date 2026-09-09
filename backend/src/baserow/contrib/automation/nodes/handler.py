@@ -574,7 +574,7 @@ class AutomationNodeHandler:
             event_payload=workflow_history.event_payload,
             simulate_until_node=workflow_history.simulate_until_node,
             current_iterations=current_iterations,
-            actor=workflow_history.triggered_by,
+            triggered_by=workflow_history.triggered_by,
         )
         iteration_path = dispatch_context.get_iteration_path(node)
         node_type: Type[AutomationNodeActionNodeType] = node.get_type()

@@ -57,8 +57,8 @@ class AutomationWorkflowHistory(AutomationHistory):
         null=True,
         blank=True,
         related_name="+",
-        help_text="The user whose action started this run, when one is known. "
-        "Set by a button field click; null for every other trigger.",
+        help_text="The person who started this run, when one did. Null when "
+        "an event started it.",
     )
 
     class Meta(AutomationHistory.Meta):

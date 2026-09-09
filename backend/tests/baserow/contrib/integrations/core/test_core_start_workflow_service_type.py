@@ -226,7 +226,7 @@ def test_start_workflow_service_dispatch_without_workflow_raises(data_fixture):
 def test_start_workflow_service_dispatch_names_the_context_actor(data_fixture):
     """
     The button field puts the clicker on the context as `actor`; the
-    automation node and the builder action leave it None (see the two
+    automation node and the builder action have none there (see the two
     dispatch tests above). Whatever is there is what the history records.
     """
 

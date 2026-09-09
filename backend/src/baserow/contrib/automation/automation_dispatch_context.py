@@ -16,7 +16,7 @@ from baserow.core.services.dispatch_context import DispatchContext
 
 
 class AutomationDispatchContext(DispatchContext):
-    own_properties = ["workflow", "event_payload", "history"]
+    own_properties = ["workflow", "event_payload", "history", "triggered_by"]
 
     def __init__(
         self,
@@ -25,7 +25,7 @@ class AutomationDispatchContext(DispatchContext):
         event_payload: Optional[Union[Dict, List[Dict]]] = None,
         simulate_until_node: Optional[AutomationActionNode] = None,
         current_iterations: Optional[Dict[int, int]] = None,
-        actor: Optional[AbstractUser] = None,
+        triggered_by: Optional[AbstractUser] = None,
     ):
         """
         The `DispatchContext` implementation for automations. This context is provided
@@ -40,15 +40,16 @@ class AutomationDispatchContext(DispatchContext):
         :param simulate_until_node: Stop simulating the dispatch once this node
             is reached.
         :param current_iterations: Used by the Iterator node's children.
-        :param actor: The user whose action started this run, when the
-            history knows one. Carried for services that may fall back to
-            it; a node with an integration still acts as that integration's
-            user.
+        :param triggered_by: The person who started this run, when the history
+            knows one. Kept apart from `actor` on purpose: `actor` is who a
+            Local Baserow service acts as when it has no integration, and a
+            run must not change who it acts as by who started it.
         """
 
         self.workflow = workflow
         self.history = history
         self.simulate_until_node = simulate_until_node
+        self.triggered_by = triggered_by
         self.current_iterations: Dict[int, int] = {}
 
         if current_iterations:
@@ -73,7 +74,6 @@ class AutomationDispatchContext(DispatchContext):
             use_sample_data=bool(self.simulate_until_node),
             force_outputs=force_outputs,
             event_payload=event_payload,
-            actor=actor,
         )
 
     def clone(self, **kwargs):

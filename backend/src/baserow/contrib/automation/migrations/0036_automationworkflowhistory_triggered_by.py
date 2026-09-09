@@ -16,6 +16,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='automationworkflowhistory',
             name='triggered_by',
-            field=models.ForeignKey(blank=True, help_text='The user whose action started this run, when one is known. Set by a button field click; null for every other trigger.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(blank=True, help_text='The person who started this run, when one did. Null when an event started it.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL),
         ),
     ]
