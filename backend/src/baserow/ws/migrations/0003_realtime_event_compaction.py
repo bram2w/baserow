@@ -73,7 +73,7 @@ RETURNS jsonb LANGUAGE sql IMMUTABLE STRICT AS $function$
             ) AS excluded
         ),
         -- Keep inner event types, including each individual recipient's type:
-        -- row-history snapshot recovery differs from events requiring a full refresh.
+        -- their recovery rules can differ even when the audience is the same.
         -- Business data stays in the retained original row, outside this route key.
         'payload', jsonb_build_object('type', event_payload #> '{payload,type}'),
         'payload_map', (
@@ -95,8 +95,8 @@ LANGUAGE plpgsql AS $function$
 BEGIN
     -- Called once per DELETE statement by ws_realtime_events_history_after_delete.
     -- Its transition table, ws_deleted_realtime_events, contains all deleted rows.
-    -- _compact_realtime_events_batch() sets this transaction-local flag only around
-    -- deletes with a proven same-route, higher-ID replacement. All other DELETEs
+    -- _compact_realtime_events_batch() sets this flag in its owned transaction,
+    -- whose only DELETE has proven same-route, higher-ID replacements. Other DELETEs
     -- (including legacy cleanup) may lose history and must invalidate older cursors.
     IF current_setting('baserow.realtime_compacting', true) = 'on' THEN
         RETURN NULL;
@@ -166,16 +166,6 @@ def forwards(apps, schema_editor):
             "CONSTRAINT ws_history_state_singleton CHECK (id = 1))"
         )
         cursor.execute("ALTER TABLE ws_realtime_event_history_state SET UNLOGGED")
-        # 0001's SET UNLOGGED also changed its owned sequence on PostgreSQL15+.
-        # PostgreSQL14 has only logged sequences and no SET LOGGED syntax.
-        cursor.execute(
-            "DO $block$ DECLARE event_sequence regclass; BEGIN "
-            "event_sequence := pg_get_serial_sequence('ws_realtime_events', 'id')::regclass; "
-            "IF EXISTS (SELECT 1 FROM pg_class "
-            "WHERE oid = event_sequence AND relpersistence <> 'p') THEN "
-            "EXECUTE format('ALTER SEQUENCE %s SET LOGGED', event_sequence); "
-            "END IF; END $block$"
-        )
         cursor.execute(INITIALIZE_HISTORY)
         cursor.execute(ROUTING_PAYLOAD)
         cursor.execute(RECORD_DELETED_HISTORY)

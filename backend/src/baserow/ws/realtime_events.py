@@ -266,22 +266,14 @@ class RealtimeEventHandler:
                     # Every loser has an existing, locked higher-ID original with
                     # the exact same route. Deleting first also releases replaced
                     # sentinel keys without rewriting rows we are about to remove.
-                    execute(
-                        "SELECT current_setting('baserow.realtime_compacting', true)"
-                    )
-                    previous_setting = cursor.fetchone()[0] or ""
-                    execute(
-                        "SELECT set_config('baserow.realtime_compacting', 'on', true)"
-                    )
+                    # This is the transaction's only DELETE. Commit or rollback
+                    # restores the flag before any later cleanup can lose history.
+                    execute("SET LOCAL baserow.realtime_compacting = 'on'")
                     execute(
                         "DELETE FROM ws_realtime_events WHERE id = ANY(%s)",
                         [list(losers)],
                     )
                     deleted = cursor.rowcount
-                    execute(
-                        "SELECT set_config('baserow.realtime_compacting', %s, true)",
-                        [previous_setting],
-                    )
                 promoted = [
                     (key, value[0])
                     for key, value in winners.items()

@@ -198,6 +198,33 @@ def test_compaction_keeps_own_socket_and_exclusion_audiences_distinct():
     assert set(RealtimeEvent.objects.values_list("id", flat=True)) == set(ids)
 
 
+@pytest.mark.parametrize("individual", [False, True], ids=["group", "individual"])
+def test_compaction_keeps_distinct_inner_event_types(individual):
+    for event_type in ("rows_updated", "rows_deleted"):
+        record(
+            "users" if individual else "table-1",
+            payload=(
+                individual_event(recipients={42: event_type, 7: "workspace_updated"})
+                if individual
+                else group_event(event_type=event_type)
+            ),
+            age=timedelta(days=2),
+        )
+    originals = list(
+        RealtimeEvent.objects.order_by("id").values("id", "payload", "created_at")
+    )
+
+    assert cleanup() == 0
+
+    assert (
+        list(RealtimeEvent.objects.order_by("id").values("id", "payload", "created_at"))
+        == originals
+    )
+    keys = list(RealtimeEvent.objects.values_list("sentinel_key", flat=True))
+    assert all(key is not None for key in keys)
+    assert len(set(keys)) == 2
+
+
 def test_distinct_oldest_routes_do_not_starve_later_duplicate_cleanup(monkeypatch):
     monkeypatch.setattr(realtime_events, "REALTIME_EVENTS_CLEANUP_BATCH_SIZE", 2)
     unique = [record(f"unique-{index}", age=timedelta(days=3)) for index in range(6)]
