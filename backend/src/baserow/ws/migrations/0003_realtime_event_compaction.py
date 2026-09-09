@@ -11,21 +11,28 @@ DECLARE
     sequence_value bigint;
     sequence_called boolean;
 BEGIN
+    -- Called by this migration, RealtimeEventHandler._initialize_realtime_history()
+    -- when replay finds no history state, and ws_record_deleted_realtime_history().
+    -- Create a conservative boundary: replay cursors below this floor must refresh.
     IF EXISTS (SELECT 1 FROM ws_realtime_event_history_state WHERE id = 1) THEN
         RETURN;
     END IF;
     -- Only initialization takes this lock. Pending INSERTs must finish before
     -- their allocated IDs can become the floor returned to a fresh connection.
     LOCK TABLE ws_realtime_events IN SHARE MODE;
+    -- Another initializer may have created the state while we waited for the lock.
     IF EXISTS (SELECT 1 FROM ws_realtime_event_history_state WHERE id = 1) THEN
         RETURN;
     END IF;
     event_sequence := pg_get_serial_sequence('ws_realtime_events', 'id')::regclass;
+    -- Cached IDs must not be inserted later below the floor we are about to trust.
     IF NOT EXISTS (
         SELECT 1 FROM pg_sequence WHERE seqrelid = event_sequence AND seqcache = 1
     ) THEN
         RAISE EXCEPTION 'Realtime history requires CACHE 1 for the event sequence';
     END IF;
+    -- The logged sequence survives a crash that empties the UNLOGGED tables.
+    -- max(event.id) would lose that evidence; an unused sequence instead means 0.
     EXECUTE format('SELECT last_value, is_called FROM %s', event_sequence)
         INTO sequence_value, sequence_called;
     INSERT INTO ws_realtime_event_history_state (id, floor)
@@ -38,10 +45,15 @@ $function$;
 ROUTING_PAYLOAD = """
 CREATE OR REPLACE FUNCTION ws_realtime_event_routing(event_payload jsonb)
 RETURNS jsonb LANGUAGE sql IMMUTABLE STRICT AS $function$
+    -- Called only by RealtimeEventHandler._compact_realtime_events_batch(), not
+    -- on INSERT or replay. Return audience/recovery metadata for grouping old rows.
+    -- The caller combines this with channel_group, hashes it for sentinel_key, and
+    -- checks exact equality before deleting: a hash collision must not merge routes.
     SELECT jsonb_build_object(
         'type', event_payload->'type',
         'ignore_web_socket_id', event_payload->'ignore_web_socket_id',
         'send_to_all_users', COALESCE(event_payload->'send_to_all_users', 'false'),
+        -- Recipient and exclusion lists are sets: order/duplicates change no route.
         'user_ids', (
             SELECT COALESCE(jsonb_agg(value ORDER BY value), '[]')
             FROM (
@@ -60,6 +72,9 @@ RETURNS jsonb LANGUAGE sql IMMUTABLE STRICT AS $function$
                 )
             ) AS excluded
         ),
+        -- Keep inner event types, including each individual recipient's type:
+        -- row-history snapshot recovery differs from events requiring a full refresh.
+        -- Business data stays in the retained original row, outside this route key.
         'payload', jsonb_build_object('type', event_payload #> '{payload,type}'),
         'payload_map', (
             SELECT COALESCE(jsonb_object_agg(
@@ -78,12 +93,17 @@ RECORD_DELETED_HISTORY = """
 CREATE OR REPLACE FUNCTION ws_record_deleted_realtime_history() RETURNS trigger
 LANGUAGE plpgsql AS $function$
 BEGIN
-    -- Only the new cleanup's exact-route, higher-ID replacement DELETE opts out.
-    -- Ordinary/legacy DELETEs must conservatively invalidate older cursors.
+    -- Called once per DELETE statement by ws_realtime_events_history_after_delete.
+    -- Its transition table, ws_deleted_realtime_events, contains all deleted rows.
+    -- _compact_realtime_events_batch() sets this transaction-local flag only around
+    -- deletes with a proven same-route, higher-ID replacement. All other DELETEs
+    -- (including legacy cleanup) may lose history and must invalidate older cursors.
     IF current_setting('baserow.realtime_compacting', true) = 'on' THEN
         RETURN NULL;
     END IF;
     PERFORM ws_initialize_realtime_history();
+    -- Advance the global floor atomically with the deletion, never moving it back.
+    -- A statement deleting no rows leaves it unchanged; the trigger return is ignored.
     UPDATE ws_realtime_event_history_state
     SET floor = greatest(floor, (SELECT max(id) FROM ws_deleted_realtime_events))
     WHERE id = 1 AND EXISTS (SELECT 1 FROM ws_deleted_realtime_events);
@@ -108,7 +128,7 @@ def _set_timeouts(cursor):
 
 
 def _create_index(cursor, name, definition, *, unique=False):
-    # As in 0002/database.0215, recover interrupted concurrent builds on retry.
+    # As in database.0215, recover interrupted concurrent builds on retry.
     cursor.execute(
         "SELECT indisvalid AND indisready FROM pg_index "
         "WHERE indexrelid = to_regclass(%s) "
@@ -126,6 +146,8 @@ def _create_index(cursor, name, definition, *, unique=False):
 
 
 def forwards(apps, schema_editor):
+    """Install compaction helpers and initialize the floor; cleanup compacts later."""
+
     db = schema_editor.connection
     # Cleanup must be paused/drained until all ASGI and Celery workers use the
     # new reader/retention rules. The parent reader cannot recognize sentinels.
