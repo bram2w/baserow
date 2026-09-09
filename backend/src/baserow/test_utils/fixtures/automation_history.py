@@ -35,7 +35,7 @@ class AutomationHistoryFixtures:
         if status is None:
             status = HistoryStatusChoices.SUCCESS
 
-        is_test_run = kwargs.pop("status", False)
+        is_test_run = kwargs.pop("is_test_run", False)
 
         self.create_local_baserow_create_row_action_node(
             user=user, workflow=original_workflow
