@@ -1,4 +1,7 @@
 import os
+from importlib import import_module
+
+from django.db import connection
 
 import pytest
 from fakeredis.aioredis import FakeRedis
@@ -12,6 +15,21 @@ from baserow.core.async_redis import (
 from baserow.ws.registries import PageType, page_registry
 
 os.environ.setdefault("DJANGO_ALLOW_ASYNC_UNSAFE", "true")
+
+
+@pytest.fixture(scope="session")
+def _install_realtime_targets(django_db_setup, django_db_blocker):
+    # Test settings skip migrations. Install the database-derived routing fields
+    # once, before pytest-django starts any per-test transaction.
+    migration = import_module("baserow.ws.migrations.0002_realtime_event_indexes")
+    with django_db_blocker.unblock(), connection.schema_editor(atomic=False) as editor:
+        migration.forwards(None, editor)
+
+
+@pytest.fixture
+def _django_db_helper(_install_realtime_targets, _django_db_helper):
+    # Wrapping pytest-django's helper does not request a DB for non-DB tests.
+    return _django_db_helper
 
 
 @pytest.fixture(autouse=True)

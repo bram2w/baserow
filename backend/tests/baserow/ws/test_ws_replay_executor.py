@@ -2,7 +2,7 @@ import asyncio
 import threading
 from concurrent.futures import Future, ThreadPoolExecutor
 from time import monotonic
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django.db import DatabaseError, OperationalError, connection
 
@@ -245,6 +245,36 @@ async def test_cancellation_during_slot_handoff_does_not_leak_capacity(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("live_waiters", [0, 2])
+async def test_closed_waiter_loops_preserve_capacity_and_live_fifo(
+    replay_executor, live_waiters
+):
+    reservation = await replay_executor.acquire()
+    replay_executor.max_pending = 4
+    closed_loop = asyncio.new_event_loop()
+    closed_waiters = [closed_loop.create_future() for _ in range(2)]
+    closed_loop.close()
+    # These admission Futures survived shutdown of their owning loop.
+    replay_executor._waiters.extend(closed_waiters)
+    queued = []
+    for index in range(live_waiters):
+        queued.append(asyncio.create_task(replay_executor.acquire()))
+        await wait_for_queue_size(replay_executor, 3 + index)
+
+    reservation.release()
+
+    for index, task in enumerate(queued):
+        next_reservation = await asyncio.wait_for(task, timeout=1)
+        assert replay_executor._active == 1
+        assert all(not later.done() for later in queued[index + 1 :])
+        next_reservation.release()
+    assert replay_executor._active == 0
+    assert not replay_executor._waiters
+    next_reservation = await replay_executor.acquire()
+    next_reservation.release()
+
+
+@pytest.mark.asyncio
 async def test_child_cancelled_before_submission_releases_reservation(replay_executor):
     create_task = asyncio.create_task
 
@@ -334,10 +364,45 @@ async def test_database_failure_retries_and_releases_capacity(replay_executor):
         assert await replay.get_replay_events_result(1, [], 1, None) == expected
 
 
+@pytest.mark.parametrize("database_error", [False, True])
+def test_replay_closes_only_its_primary_connection(monkeypatch, database_error):
+    primary, replica = Mock(), Mock()
+
+    class Connections(dict):
+        def close_all(self):
+            for database in self.values():
+                database.close()
+
+    monkeypatch.setattr(
+        replay, "connections", Connections(default=primary, replica=replica)
+    )
+    expected = ReplayEventsResult(False, 42, [])
+    with (
+        patch.object(replay.transaction, "atomic"),
+        patch.object(replay.connection, "cursor"),
+        patch.object(
+            replay.RealtimeEventHandler,
+            "get_replay_events_result",
+            return_value=expected,
+            side_effect=DatabaseError("failed") if database_error else None,
+        ),
+    ):
+        if database_error:
+            with pytest.raises(DatabaseError):
+                replay._read_replay_events(1, [], 1, None, monotonic() + 3)
+        else:
+            assert (
+                replay._read_replay_events(1, [], 1, None, monotonic() + 3) == expected
+            )
+
+    primary.close.assert_called_once_with()
+    replica.close.assert_not_called()
+
+
 def test_expired_replay_budget_does_not_open_a_database_connection():
     with (
         patch.object(replay.transaction, "atomic") as atomic,
-        patch.object(replay.connections, "close_all") as close,
+        patch.object(replay.connections["default"], "close") as close,
     ):
         with pytest.raises(TimeoutError):
             replay._read_replay_events(1, [], 1, None, monotonic() - 1)
@@ -350,7 +415,7 @@ def test_postgresql_budget_deducts_time_before_thread_and_during_connection_setu
         patch.object(replay, "monotonic", side_effect=[1, 2]),
         patch.object(replay.transaction, "atomic"),
         patch.object(replay.connection, "cursor") as cursor,
-        patch.object(replay.connections, "close_all"),
+        patch.object(replay.connections["default"], "close"),
         patch.object(replay.RealtimeEventHandler, "get_replay_events_result"),
     ):
         replay._read_replay_events(1, [], 1, None, deadline=3)
@@ -365,7 +430,7 @@ def test_replay_skips_queries_when_connection_setup_exhausts_budget():
         patch.object(replay, "monotonic", side_effect=[1, 3]),
         patch.object(replay.transaction, "atomic"),
         patch.object(replay.connection, "cursor") as cursor,
-        patch.object(replay.connections, "close_all"),
+        patch.object(replay.connections["default"], "close"),
         patch.object(replay.RealtimeEventHandler, "get_replay_events_result") as read,
     ):
         with pytest.raises(TimeoutError):
@@ -402,7 +467,7 @@ def test_replay_timeout_is_local_and_preserves_stricter_timeout(
         )
     try:
         with (
-            patch.object(replay.connections, "close_all") as close,
+            patch.object(replay.connections["default"], "close") as close,
             # One second spent before thread entry and one on connection setup.
             patch.object(replay, "monotonic", side_effect=[1, 2]),
             patch.object(

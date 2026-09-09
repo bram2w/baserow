@@ -1,3 +1,4 @@
+import json
 from importlib import import_module
 from unittest.mock import patch
 
@@ -44,6 +45,201 @@ def _table_storage():
         return filenode, dict(option.split("=", 1) for option in options or [])
 
 
+def _legacy_insert(channel_group="users", payload=None):
+    # Old workers know nothing about the new fields and omit them from INSERT.
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "INSERT INTO ws_realtime_events (channel_group, payload, created_at) "
+            "VALUES (%s, %s::jsonb, now()) RETURNING id",
+            [
+                channel_group,
+                json.dumps(
+                    payload
+                    if payload is not None
+                    else {
+                        "type": "broadcast_to_users",
+                        "user_ids": [42],
+                        "send_to_all_users": False,
+                        "ignore_web_socket_id": None,
+                        "payload": {"type": "test"},
+                    }
+                ),
+            ],
+        )
+        return cursor.fetchone()[0]
+
+
+def _columns():
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT attname FROM pg_attribute "
+            "WHERE attrelid = 'ws_realtime_events'::regclass "
+            "AND attnum > 0 AND NOT attisdropped"
+        )
+        return {row[0] for row in cursor}
+
+
+@pytest.mark.django_db(transaction=True)
+def test_replay_reset_upgrade_and_rollback_keep_ids_and_old_writer_compatibility():
+    migration = _migration()
+    _apply("backwards")
+    try:
+        old_cursor = _legacy_insert()
+        old_filenode = _table_storage()[0]
+        _apply("forwards")
+        assert RealtimeEvent.objects.count() == 0
+        assert _table_storage()[0] != old_filenode
+        assert {"target_user_ids", "all_users"} <= _columns()
+
+        new_id = _legacy_insert()
+        assert new_id > old_cursor
+        event = RealtimeEvent.objects.get(id=new_id)
+        assert event.target_user_ids == [42]
+        assert event.all_users is False
+        assert RealtimeEventHandler.get_replay_events_result(
+            42, [], old_cursor, "socket"
+        ).force_refresh
+        indexes = _indexes()
+        assert migration.OLD_INDEX not in indexes
+        assert migration.USERS_INDEX not in indexes
+        assert indexes["ws_realtime_channel_group_idx"][0]
+        valid, predicate, definition = indexes[migration.TARGETS_INDEX]
+        assert valid and "'users'" in predicate
+        assert "USING gin (target_user_ids)" in definition
+        valid, predicate, definition = indexes[migration.ALL_USERS_INDEX]
+        assert valid and "'users'" in predicate and "all_users" in predicate
+        assert "USING btree (id)" in definition
+        valid, predicate, definition = indexes[migration.CREATED_INDEX]
+        assert valid and predicate is None
+        assert "USING btree (created_at, id)" in definition
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT relpersistence FROM pg_class WHERE oid IN "
+                "('ws_realtime_events'::regclass, "
+                "pg_get_serial_sequence('ws_realtime_events', 'id')::regclass) "
+                "ORDER BY relkind"
+            )
+            assert cursor.fetchall() == [("p",), ("u",)]
+
+        _apply("backwards")
+        assert not {"target_user_ids", "all_users"} & _columns()
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT count(*) FROM ws_realtime_events")
+            assert cursor.fetchone() == (0,)
+            cursor.execute(
+                "SELECT relpersistence FROM pg_class WHERE oid = "
+                "pg_get_serial_sequence('ws_realtime_events', 'id')::regclass"
+            )
+            assert cursor.fetchone() == ("p",)
+        assert _legacy_insert() > new_id
+        indexes = _indexes()
+        assert indexes[migration.OLD_INDEX][0]
+        assert indexes[migration.OLD_INDEX][1] is None
+        assert migration.TARGETS_INDEX not in indexes
+        assert migration.ALL_USERS_INDEX not in indexes
+        assert migration.CREATED_INDEX not in indexes
+    finally:
+        _apply("forwards")
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "payload, expected_ids, expected_all",
+    [
+        (
+            {
+                "type": "broadcast_to_users",
+                "user_ids": [42, 7, 42.0, -2147483648, 2147483647, 0],
+                "send_to_all_users": True,
+            },
+            [-2147483648, 0, 7, 42, 2147483647],
+            True,
+        ),
+        (
+            {
+                "type": "broadcast_to_users",
+                "user_ids": ["42", None, True, 42.5, 2147483648, -(10**100)],
+                "send_to_all_users": "true",
+            },
+            [],
+            False,
+        ),
+        (
+            {
+                "type": "broadcast_to_users_individual_payloads",
+                "payload_map": {
+                    key: {"sensitive": "body"}
+                    for key in [
+                        "42",
+                        "7",
+                        "-2147483648",
+                        "2147483647",
+                        "0",
+                        "-0",
+                        "0042",
+                        "+42",
+                        "42.0",
+                        "1e2",
+                        "2147483648",
+                        "9" * 100,
+                    ]
+                },
+                "send_to_all_users": True,
+            },
+            [-2147483648, 0, 7, 42, 2147483647],
+            False,
+        ),
+        ({"type": "broadcast_to_users", "user_ids": {"42": True}}, [], False),
+        (
+            {"type": "broadcast_to_users_individual_payloads", "payload_map": [42]},
+            [],
+            False,
+        ),
+        ({"type": "unknown", "user_ids": [42], "send_to_all_users": True}, [], False),
+    ],
+)
+def test_replay_target_trigger_handles_legacy_routing(
+    payload, expected_ids, expected_all
+):
+    event = RealtimeEvent.objects.get(id=_legacy_insert(payload=payload))
+    assert event.target_user_ids == expected_ids
+    assert event.all_users is expected_all
+    assert event.payload == payload
+
+
+@pytest.mark.django_db
+def test_replay_target_trigger_recomputes_legacy_updates_and_group_changes():
+    event_id = _legacy_insert()
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "UPDATE ws_realtime_events SET payload = %s::jsonb WHERE id = %s",
+            [
+                json.dumps(
+                    {
+                        "type": "broadcast_to_users_individual_payloads",
+                        "payload_map": {"7": {"private": "data"}},
+                    }
+                ),
+                event_id,
+            ],
+        )
+    assert RealtimeEvent.objects.get(id=event_id).target_user_ids == [7]
+    RealtimeEvent.objects.filter(id=event_id).update(channel_group="table-1")
+    event = RealtimeEvent.objects.get(id=event_id)
+    assert event.target_user_ids == [] and event.all_users is False
+    RealtimeEvent.objects.filter(id=event_id).update(channel_group="users")
+    assert RealtimeEvent.objects.get(id=event_id).target_user_ids == [7]
+    # Explicit caller metadata cannot override the envelope on INSERT.
+    event = RealtimeEvent.objects.create(
+        channel_group="table-1",
+        payload={"type": "broadcast_to_users", "send_to_all_users": True},
+        target_user_ids=[42],
+        all_users=True,
+    )
+    event.refresh_from_db()
+    assert event.target_user_ids == [] and event.all_users is False
+
+
 @pytest.mark.django_db(transaction=True)
 def test_replay_autovacuum_settings_are_reversible_and_retry_safe():
     expected = {
@@ -54,7 +250,7 @@ def test_replay_autovacuum_settings_are_reversible_and_retry_safe():
         "autovacuum_vacuum_insert_threshold": "5000",
         "autovacuum_vacuum_insert_scale_factor": "0.01",
     }
-    filenode, original_options = _table_storage()
+    _, original_options = _table_storage()
     unrelated = {
         name: value for name, value in original_options.items() if name not in expected
     }
@@ -62,16 +258,17 @@ def test_replay_autovacuum_settings_are_reversible_and_retry_safe():
     with connection.cursor() as cursor:
         cursor.execute("ALTER TABLE ws_realtime_events SET (fillfactor = 80)")
     try:
-        _apply("backwards")
-        assert _table_storage() == (filenode, unrelated)
-
-        for _ in range(2):
-            _apply("forwards")
-            assert _table_storage() == (filenode, {**unrelated, **expected})
-
-        for _ in range(2):
-            _apply("backwards")
-            assert _table_storage() == (filenode, unrelated)
+        for direction in [
+            "backwards",
+            "forwards",
+            "forwards",
+            "backwards",
+            "backwards",
+        ]:
+            _apply(direction)
+            assert _table_storage()[1] == (
+                {**unrelated, **expected} if direction == "forwards" else unrelated
+            )
     finally:
         _apply("forwards")
         with connection.cursor() as cursor:
@@ -85,141 +282,109 @@ def test_replay_autovacuum_settings_are_reversible_and_retry_safe():
 
 
 @pytest.mark.django_db(transaction=True)
-def test_replay_index_upgrade_and_rollback_preserve_delivery():
-    migration = _migration()
+@pytest.mark.parametrize(
+    "index_name",
+    [
+        "ws_realtime_users_payload_idx",
+        "ws_realtime_targets_idx",
+        "ws_realtime_created_id_idx",
+    ],
+)
+def test_replay_reset_replaces_invalid_indexes_from_interrupted_draft(index_name):
     _apply("backwards")
     try:
-        baseline = RealtimeEvent.objects.create(channel_group="other", payload={})
-
-        def group(label, **kwargs):
-            return (
-                "table-1",
-                {
-                    "type": "broadcast_to_group",
-                    "payload": {"label": label},
-                    "ignore_web_socket_id": None,
-                    **kwargs,
-                },
+        _legacy_insert()
+        _legacy_insert()
+        with connection.cursor() as cursor, pytest.raises(IntegrityError):
+            cursor.execute(
+                f'CREATE UNIQUE INDEX CONCURRENTLY "{index_name}" '
+                "ON ws_realtime_events (channel_group)"
             )
-
-        def users(label, **kwargs):
-            return (
-                "users",
-                {
-                    "type": "broadcast_to_users",
-                    "payload": {"label": label},
-                    "user_ids": [42],
-                    "send_to_all_users": False,
-                    "ignore_web_socket_id": None,
-                    **kwargs,
-                },
-            )
-
-        def individual(label, recipient="42", **kwargs):
-            return (
-                "users",
-                {
-                    "type": "broadcast_to_users_individual_payloads",
-                    "payload_map": {recipient: {"label": label}},
-                    "ignore_web_socket_id": None,
-                    **kwargs,
-                },
-            )
-
-        events = RealtimeEventHandler.record_events(
-            [
-                group("page"),
-                group("own-page", ignore_web_socket_id="same-socket"),
-                group("excluded-page", exclude_user_ids=[42]),
-                users("all-users", user_ids=[], send_to_all_users=True),
-                users("target-user"),
-                users("another-user", user_ids=[7]),
-                users("own-user", ignore_web_socket_id="same-socket"),
-                individual("individual"),
-                individual("another-individual", recipient="7"),
-                individual("own-individual", ignore_web_socket_id="same-socket"),
-            ]
-        )
-
-        def replay_ids():
-            return list(
-                RealtimeEventHandler.get_replay_window(
-                    42, ["table-1"], baseline.id, "same-socket"
-                ).values_list("id", flat=True)
-            )
-
-        expected = [baseline.id, events[0], events[3], events[4], events[7]]
-        assert replay_ids() == expected
-        assert migration.OLD_INDEX in _indexes()
-
+        assert _indexes()[index_name][0] is False
         _apply("forwards")
-        _apply("forwards")  # Retry after a completed but not recorded migration.
         indexes = _indexes()
-        assert migration.OLD_INDEX not in indexes
-        valid, predicate, definition = indexes[migration.USERS_INDEX]
-        assert valid
-        assert "channel_group" in predicate and "'users'" in predicate
-        assert "USING gin (payload jsonb_path_ops)" in definition
-        valid, predicate, definition = indexes[migration.CREATED_INDEX]
-        assert valid and predicate is None
-        assert "USING btree (created_at, id)" in definition
-        assert replay_ids() == expected
+        if index_name == _migration().USERS_INDEX:
+            assert index_name not in indexes
+        else:
+            assert indexes[index_name][0]
+        assert _migration().OLD_INDEX not in indexes
+    finally:
+        _apply("forwards")
 
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize("direction", ["forwards", "backwards"])
+def test_replay_reset_failure_rolls_back_rows_schema_and_indexes(direction):
+    if direction == "forwards":
         _apply("backwards")
-        indexes = _indexes()
-        assert indexes[migration.OLD_INDEX][0]
-        assert indexes[migration.OLD_INDEX][1] is None
-        assert migration.USERS_INDEX not in indexes
-        assert migration.CREATED_INDEX not in indexes
-        assert replay_ids() == expected
+    event_id = _legacy_insert()
+    before_storage = _table_storage()
+    before_indexes = _indexes()
+    before_columns = _columns()
+
+    def fail_after_index_creation(execute, sql, params, many, context):
+        result = execute(sql, params, many, context)
+        if sql.startswith("CREATE INDEX"):
+            raise RuntimeError("Interrupted after index creation")
+        return result
+
+    try:
+        with connection.execute_wrapper(fail_after_index_creation):
+            with pytest.raises(RuntimeError, match="Interrupted"):
+                _apply(direction)
+        assert _table_storage() == before_storage
+        assert _indexes() == before_indexes
+        assert _columns() == before_columns
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT id FROM ws_realtime_events")
+            assert cursor.fetchall() == [(event_id,)]
+        assert _legacy_insert() > event_id
+        if direction == "backwards":
+            assert RealtimeEvent.objects.get(id=event_id).target_user_ids == [42]
     finally:
         _apply("forwards")
 
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize(
-    "index_name", ["ws_realtime_users_payload_idx", "ws_realtime_created_id_idx"]
+    "configured, expected",
+    [("0", ("1s", "3s")), ("500ms", ("500ms", "500ms")), ("20s", ("1s", "3s"))],
 )
-def test_replay_index_migration_rebuilds_an_invalid_concurrent_index(index_name):
-    _apply("backwards")
-    try:
-        RealtimeEventHandler.record_events([("table-1", {}), ("table-1", {})])
-        # A failed concurrent uniqueness check leaves the same unusable catalog
-        # state as an interrupted concurrent build, without editing pg_index.
-        with connection.cursor() as cursor, pytest.raises(IntegrityError):
-            cursor.execute(
-                f'CREATE UNIQUE INDEX CONCURRENTLY "{index_name}" ON ws_realtime_events (channel_group)'
-            )
-        assert _indexes()[index_name][0] is False
-        _apply("forwards")
-        assert _indexes()[index_name][0] is True
-        assert _migration().OLD_INDEX not in _indexes()
-    finally:
-        _apply("forwards")
-
-
-@pytest.mark.django_db(transaction=True)
-def test_interrupted_replay_index_upgrade_keeps_old_index_until_both_are_ready():
+def test_replay_reset_preserves_stricter_timeouts_without_leaking(configured, expected):
     migration = _migration()
-    _apply("backwards")
-    create_index = migration._create_index
+    observed = []
+    drop_indexes = migration._drop_indexes
 
-    def fail_second_build(cursor, name, definition):
-        if name == migration.CREATED_INDEX:
-            raise RuntimeError("Interrupted between concurrent builds")
-        create_index(cursor, name, definition)
+    def inspect_timeouts(cursor):
+        cursor.execute(
+            "SELECT current_setting('lock_timeout'), current_setting('statement_timeout')"
+        )
+        observed.append(cursor.fetchone())
+        drop_indexes(cursor)
 
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT current_setting('lock_timeout'), current_setting('statement_timeout')"
+        )
+        original = cursor.fetchone()
+        cursor.execute(
+            "SELECT set_config('lock_timeout', %s, false), "
+            "set_config('statement_timeout', %s, false)",
+            [configured, configured],
+        )
     try:
-        with patch.object(migration, "_create_index", side_effect=fail_second_build):
-            with pytest.raises(RuntimeError, match="Interrupted"):
-                _apply("forwards")
-        indexes = _indexes()
-        assert indexes[migration.OLD_INDEX][0]
-        assert indexes[migration.USERS_INDEX][0]
-        assert migration.CREATED_INDEX not in indexes
-        _apply("forwards")
-        indexes = _indexes()
-        assert indexes[migration.CREATED_INDEX][0]
-        assert migration.OLD_INDEX not in indexes
+        with patch.object(migration, "_drop_indexes", side_effect=inspect_timeouts):
+            _apply("forwards")
+        assert observed == [expected]
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT current_setting('lock_timeout'), current_setting('statement_timeout')"
+            )
+            assert cursor.fetchone() == (configured, configured)
     finally:
-        _apply("forwards")
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT set_config('lock_timeout', %s, false), "
+                "set_config('statement_timeout', %s, false)",
+                list(original),
+            )

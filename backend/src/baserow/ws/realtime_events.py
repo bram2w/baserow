@@ -145,26 +145,10 @@ class RealtimeEventHandler:
         :return: A ``Q`` object matching users-channel events the user receives.
         """
 
-        user_id_str = str(user_id)
+        # The database maintains recipient metadata even for older writers.
+        # Every users-channel arm can use an index without reading payload_map.
         return Q(channel_group="users") & (
-            Q(
-                payload__contains={
-                    "type": "broadcast_to_users",
-                    "send_to_all_users": True,
-                },
-            )
-            | Q(
-                payload__contains={
-                    "type": "broadcast_to_users",
-                    "user_ids": [user_id],
-                },
-            )
-            | Q(
-                payload__contains={
-                    "type": "broadcast_to_users_individual_payloads",
-                },
-                payload__payload_map__has_key=user_id_str,
-            )
+            Q(all_users=True) | Q(target_user_ids__contains=[user_id])
         )
 
     @staticmethod

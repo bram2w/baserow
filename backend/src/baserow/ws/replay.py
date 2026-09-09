@@ -164,22 +164,26 @@ class ReplayExecutor:
             waiter.set_result(reservation)
 
     def _release(self):
-        waiter = None
-        with self._lock:
-            self._active -= 1
-            websocket_replay_inflight.add(-1, {"process.pid": os.getpid()})
-            if self._waiters:
-                waiter = self._waiters.popleft()
-                websocket_replay_queued.add(-1, {"process.pid": os.getpid()})
-                # Reserve before scheduling the wakeup to preserve FIFO ordering.
-                self._active += 1
-                websocket_replay_inflight.add(1, {"process.pid": os.getpid()})
-        if waiter is not None:
+        while True:
+            waiter = None
+            with self._lock:
+                self._active -= 1
+                websocket_replay_inflight.add(-1, {"process.pid": os.getpid()})
+                if self._waiters:
+                    waiter = self._waiters.popleft()
+                    websocket_replay_queued.add(-1, {"process.pid": os.getpid()})
+                    # Reserve before scheduling the wakeup to preserve FIFO ordering.
+                    self._active += 1
+                    websocket_replay_inflight.add(1, {"process.pid": os.getpid()})
+            if waiter is None:
+                return
             try:
                 waiter.get_loop().call_soon_threadsafe(self._deliver, waiter)
             except RuntimeError:
-                # The loop can have closed during process/test shutdown.
-                self._release()
+                # Release this handoff's reserved slot if its loop has closed,
+                # then try the next waiter.
+                continue
+            return
 
 
 _executor = None
@@ -284,7 +288,7 @@ def _read_replay_events(
     finally:
         # A dedicated pool adds a bounded number of connections under load, but
         # must not retain them when idle (even with CONN_MAX_AGE=None).
-        connections.close_all()
+        connections["default"].close()
 
 
 def _replay_finished(task, reservation):

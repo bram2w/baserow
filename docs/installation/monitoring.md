@@ -222,3 +222,9 @@ errors explain runs that never reached the database. Track oldest event age,
 database I/O alongside these metrics. Deletion and vacuum make space reusable;
 they do not normally reduce allocated table files. Replay refresh fallbacks also
 create HTTP reads, so include that traffic when assessing capacity.
+
+For users-channel replay, compare rows and heap blocks visited with events actually
+returned. Recipient selection should use `target_user_ids` and `all_users`, with
+`ws_realtime_targets_idx` and `ws_realtime_all_users_idx` available to the planner.
+There is no full-payload GIN index. Include recipient-trigger work in recording
+measurements; smaller indexes do not by themselves guarantee faster inserts.

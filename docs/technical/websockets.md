@@ -167,10 +167,41 @@ When replay recording is enabled, replayable broadcasts sent through `send_messa
 | `channel_group` | `TextField` | Which channel group this event targeted (e.g., `table-42`, `users`). |
 | `payload` | `JSONField` | The full broadcast message including type, user filters, and inner payload. |
 | `created_at` | `DateTimeField` | When the event was recorded. Used for retention cleanup. |
+| `target_user_ids` | `ArrayField(IntegerField)` | Recipients of users-channel events, derived by the database from the envelope. |
+| `all_users` | `BooleanField` | Whether a users-channel event targets every user. Derived by the database. |
 
 The `id` returned on insert is injected into the payload as `_event_id` before the message is sent.
 
 The table is created as a PostgreSQL `UNLOGGED` table. This skips write-ahead log (WAL) entries, significantly reducing write overhead for high-throughput event recording. The trade-offs are that contents are lost on unclean shutdown (acceptable — events are ephemeral and clients handle the can't-replay path gracefully) and that the table is invisible to streaming replication, so the database router routes all reads of unlogged models to the primary database. Any new unlogged model should follow the same convention.
+
+Recipient selection uses the small `target_user_ids` array and `all_users` flag,
+rather than searching every user's individual JSON payload map. A GIN index covers
+recipient arrays on the `users` channel, and a partial ID index covers broadcasts
+to all users. Page messages use the `(channel_group, id)` index. Full business
+payloads are not indexed.
+
+The `ws_set_realtime_event_targets` trigger derives both columns before insertion
+and when `payload` or `channel_group` changes. This also covers old workers that
+insert only the original columns during deployment. It reads routing metadata for
+users-channel events; page messages need no payload traversal. Live delivery and
+replay must continue to agree on recipient selection.
+
+Migration `ws.0002` resets this disposable buffer with `TRUNCATE ... CONTINUE
+IDENTITY` before installing the columns, trigger and replacement indexes. It does
+not backfill old payloads. The reset and schema changes commit together, with
+indexes built while the table is empty and locked. Lock waits are capped at one
+second and statements at three seconds, preserving stricter existing limits;
+failure rolls the reset back. The event sequence is kept LOGGED and is never
+restarted, so pre-reset cursors cannot match unrelated new events.
+
+Apply the migration before deploying new workers. Clients whose cursor was
+cleared must refresh their data. Older workers remain write-compatible through
+the trigger, but older readers still filter JSON without the previous payload
+index and can be slower during rollout. If replay is disabled in production,
+leave it disabled until all workers are updated. Reversing this migration also
+resets the buffer before restoring its old indexes; neither direction restores
+discarded history. These resets affect only realtime replay, not the underlying
+user data.
 
 ### Last Seen Event ID
 
@@ -231,8 +262,8 @@ scheduled run skips cleanup while another task owns the nonblocking lease. The
 retention target is not a hard maximum row age: locked rows or a sustained cleanup
 backlog can remain until a later run.
 
-The `(created_at, id)` index supports bounded expiration scans. Payload GIN indexing
-is restricted to the shared `users` channel; page events retain the
+The `(created_at, id)` index supports bounded expiration scans. Recipient indexes
+are restricted to the shared `users` channel; page events retain the
 `(channel_group, id)` index. Cleanup makes storage reusable through PostgreSQL
 vacuum; it does not normally shrink the table's allocated files. Monitor recording
 rate, committed cleanup progress, and database vacuum activity together; see

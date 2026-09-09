@@ -244,6 +244,46 @@ describe('RealTimeHandler transient replay recovery', () => {
     expect(env.sentMessages).toHaveLength(2)
   })
 
+  test.each([null, undefined, '5000', NaN, Infinity, -Infinity])(
+    'uses the base retry delay for invalid retry_after_ms %s',
+    (retryAfterMs) => {
+      authenticate(10)
+      // Call the registered callback directly: JSON would turn NaN/Infinity into
+      // null, concealing whether the retry scheduler handles non-finite values.
+      fire(env.handler, 'replay_events_retry', {
+        retry_after_ms: retryAfterMs,
+      })
+
+      vi.advanceTimersByTime(999)
+      expect(env.sentMessages).toHaveLength(1)
+      vi.advanceTimersByTime(1)
+      expect(env.sentMessages).toEqual([
+        { type: 'replay_events', last_seen_id: 10, supports_retry: true },
+        { type: 'replay_events', last_seen_id: 10, supports_retry: true },
+      ])
+      vi.advanceTimersByTime(60000)
+      expect(env.sentMessages).toHaveLength(2)
+    }
+  )
+
+  test('an abandoned replay does not schedule a retry for an in-flight request', () => {
+    authenticate(10)
+    // Keep the request in flight to exercise the abandoned-replay guard itself.
+    env.handler.replayAbandoned = true
+    env.store.dispatch('toast/setWorkspaceOutdated', true)
+    env.store._dispatched.length = 0
+    const pendingTimers = vi.getTimerCount()
+
+    receive({ type: 'replay_events_retry', retry_after_ms: 1000 })
+
+    expect(vi.getTimerCount()).toBe(pendingTimers)
+    vi.advanceTimersByTime(60000)
+    expect(env.sentMessages).toEqual([
+      { type: 'replay_events', last_seen_id: 10, supports_retry: true },
+    ])
+    expect(env.store._dispatched).toEqual([])
+  })
+
   test('merges live and replay events in order without applying duplicates', () => {
     const received = []
     env.handler.registerEvent('row_updated', (_context, data) => {

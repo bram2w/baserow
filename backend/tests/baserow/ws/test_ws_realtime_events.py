@@ -1202,6 +1202,49 @@ def test_replay_window_ordered_scan_does_not_visit_events_before_cursor():
 
 @pytest.mark.django_db
 @pytest.mark.websockets
+def test_stale_users_replay_does_not_filter_unrelated_individual_payloads():
+    baseline = _record_group_broadcast("other")
+    RealtimeEvent.objects.bulk_create(
+        [
+            RealtimeEvent(
+                channel_group="users",
+                payload={
+                    "type": "broadcast_to_users_individual_payloads",
+                    "payload_map": {str(100_000 + i): {"value": i}},
+                },
+            )
+            for i in range(5000)
+        ]
+    )
+    targeted = _record_event(
+        "users",
+        {
+            "type": "broadcast_to_users_individual_payloads",
+            "payload_map": {"42": {"value": "targeted"}},
+        },
+    )
+    everyone = _record_user_broadcast(99, send_to_all_users=True)
+    with connection.cursor() as cursor:
+        cursor.execute("ANALYZE ws_realtime_events")
+
+    window = RealtimeEventHandler.get_replay_window(42, [], baseline, None)
+    plan = json.loads(window.explain(analyze=True, format="json"))[0]["Plan"]
+    nodes = [plan]
+    filtered_rows = 0
+    while nodes:
+        node = nodes.pop()
+        filtered_rows += node.get("Rows Removed by Filter", 0)
+        filtered_rows += node.get("Rows Removed by Index Recheck", 0)
+        nodes.extend(node.get("Plans", []))
+
+    assert [event.id for event in window] == [baseline, targeted, everyone]
+    # The shared event type must not make replay inspect every other user's
+    # payload. Check work performed by PostgreSQL, rather than machine timing.
+    assert filtered_rows < 50
+
+
+@pytest.mark.django_db
+@pytest.mark.websockets
 def test_replay_events_result_baseline_uses_one_query(django_assert_num_queries):
     latest_id = _record_event("users", {"type": "x"})
 
