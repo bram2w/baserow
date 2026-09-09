@@ -240,16 +240,23 @@ def test_same_route_spanning_batches_keeps_one_exact_original(monkeypatch):
     assert RealtimeEventHistoryState.objects.get(pk=1).floor == 0
 
 
-def test_later_cleanup_of_a_lower_id_cannot_replace_a_newer_sentinel():
+def test_retention_increase_still_uses_newer_sentinel_as_replacement(settings):
+    settings.REALTIME_REPLAY_RETENTION_HOURS = 24
     first = record(payload=group_event(value="lower-id"), age=timedelta(hours=1))
     latest = record(payload=group_event(value="highest-id"), age=timedelta(days=2))
     cleanup()
     original = RealtimeEvent.objects.get(pk=latest)
+    settings.REALTIME_REPLAY_RETENTION_HOURS = 240
     RealtimeEvent.objects.filter(pk=first).update(
-        created_at=timezone.now() - timedelta(days=2)
+        created_at=timezone.now() - timedelta(days=11)
     )
 
-    assert cleanup() == 1
+    assert (
+        RealtimeEventHandler.cleanup_old_realtime_events(
+            RealtimeEventHandler.get_replay_retention()
+        )
+        == 1
+    )
 
     retained = RealtimeEvent.objects.get()
     assert retained.id == latest
@@ -373,19 +380,72 @@ def test_legacy_delete_advances_the_loss_floor_atomically():
 
 
 @pytest.mark.parametrize("microseconds,replayable", [(0, True), (1, False)])
+@pytest.mark.parametrize("retention_hours", [1, 24, 48, 240])
 def test_payload_age_cutoff_is_enforced_without_cleanup(
-    monkeypatch, microseconds, replayable
+    settings, monkeypatch, microseconds, replayable, retention_hours
 ):
+    settings.REALTIME_REPLAY_RETENTION_HOURS = retention_hours
     now = timezone.now()
     monkeypatch.setattr(realtime_events.timezone, "now", lambda: now)
-    baseline = record("baseline", age=timedelta(days=2), now=now)
-    event_id = record(age=timedelta(days=1, microseconds=microseconds), now=now)
+    baseline = record("baseline", age=timedelta(hours=retention_hours + 1), now=now)
+    event_id = record(
+        age=timedelta(hours=retention_hours, microseconds=microseconds), now=now
+    )
     result = replay(baseline)
     assert result.force_refresh is not replayable
     assert [event.id for event in result.replay_events] == (
         [event_id] if replayable else []
     )
     assert RealtimeEvent.objects.filter(pk=event_id).exists()
+
+
+def test_increasing_retention_cannot_replay_a_previous_sentinel(settings):
+    settings.REALTIME_REPLAY_RETENTION_HOURS = 24
+    baseline = record("baseline", age=timedelta(days=4))
+    removed = record(payload=group_event(value="missing"), age=timedelta(days=3))
+    retained = record(payload=group_event(value="retained"), age=timedelta(days=2))
+    cleanup()
+    assert not RealtimeEvent.objects.filter(pk=removed).exists()
+    assert RealtimeEvent.objects.get(pk=retained).sentinel_key is not None
+
+    settings.REALTIME_REPLAY_RETENTION_HOURS = 240
+    result = replay(baseline)
+
+    assert result.force_refresh is True
+    assert result.refresh_reason == "expired_payload"
+    assert result.replay_events == []
+    rows = RealtimeEventHandler._get_replay_snapshot(42, ["table-1"], baseline, "own")
+    assert rows[0][2] == retained
+    assert rows[0][4] is None
+
+
+@pytest.mark.parametrize("retention_hours", [1, 48, 240])
+def test_cleanup_preserves_the_configured_full_retention_boundary(
+    settings, monkeypatch, retention_hours
+):
+    from baserow.ws.tasks import cleanup_old_realtime_events
+
+    settings.REALTIME_REPLAY_RETENTION_HOURS = retention_hours
+    now = timezone.now()
+    monkeypatch.setattr(realtime_events.timezone, "now", lambda: now)
+    baseline = record(
+        "baseline", age=timedelta(hours=retention_hours, microseconds=1), now=now
+    )
+    boundary = record(age=timedelta(hours=retention_hours), now=now)
+    fresh = record(
+        age=timedelta(hours=retention_hours) - timedelta(microseconds=1), now=now
+    )
+
+    cleanup_old_realtime_events()
+
+    assert list(
+        RealtimeEvent.objects.filter(pk__in=[boundary, fresh])
+        .order_by("id")
+        .values_list("id", "sentinel_key")
+    ) == [(boundary, None), (fresh, None)]
+    result = replay(baseline)
+    assert result.force_refresh is False
+    assert [event.id for event in result.replay_events] == [boundary, fresh]
 
 
 @pytest.mark.parametrize("compacted", [False, True])
@@ -469,7 +529,7 @@ def test_first_connect_includes_compacted_history_high_water_mark():
     assert result.latest_event_id == event_id
 
 
-def test_history_expiry_advances_floor_past_a_locked_old_full_baseline():
+def test_legacy_delete_advances_floor_past_a_locked_surviving_baseline():
     baseline = record("baseline", age=timedelta(days=9))
     evicted = record("other", age=timedelta(days=8))
     with closing(
@@ -479,39 +539,64 @@ def test_history_expiry_advances_floor_past_a_locked_old_full_baseline():
             cursor.execute(
                 "SELECT id FROM ws_realtime_events WHERE id = %s FOR UPDATE", [baseline]
             )
-        cleanup()
+        delete_with_old_worker_sql([evicted])
         assert RealtimeEvent.objects.filter(pk=baseline).exists()
         assert not RealtimeEvent.objects.filter(pk=evicted).exists()
         assert RealtimeEventHistoryState.objects.get(pk=1).floor >= evicted
         assert replay(baseline).force_refresh is True
 
 
-def test_sentinel_retention_keeps_the_exact_seven_day_boundary(monkeypatch):
+@pytest.mark.parametrize("age_days", [30, 365])
+def test_old_sentinels_are_kept_until_a_newer_expired_original_replaces_them(
+    monkeypatch, age_days
+):
     now = timezone.now()
     monkeypatch.setattr(realtime_events.timezone, "now", lambda: now)
-    expired = record("expired", age=timedelta(days=7, microseconds=1), now=now)
-    boundary = record("boundary", age=timedelta(days=7), now=now)
+    discarded = record(
+        payload=group_event(value="old"), age=timedelta(days=age_days + 1)
+    )
+    retained = record(
+        payload=group_event(value="retained"), age=timedelta(days=age_days)
+    )
+    original = RealtimeEvent.objects.get(pk=retained)
 
-    cleanup()
+    assert cleanup() == 1
+    assert cleanup() == 0
 
-    assert list(RealtimeEvent.objects.values_list("id", flat=True)) == [boundary]
-    assert RealtimeEventHistoryState.objects.get(pk=1).floor == expired
+    assert not RealtimeEvent.objects.filter(pk=discarded).exists()
+    sentinel = RealtimeEvent.objects.get()
+    assert (sentinel.id, sentinel.payload, sentinel.created_at) == (
+        original.id,
+        original.payload,
+        original.created_at,
+    )
+    assert sentinel.sentinel_key is not None
+    newer = record(
+        payload=group_event(value="newest"), age=timedelta(days=age_days - 1)
+    )
+    replacement = RealtimeEvent.objects.get(pk=newer)
 
+    assert cleanup() == 1
 
-def test_sentinel_expiry_and_floor_advance_roll_back_together():
-    expired = record("other", age=timedelta(days=8))
-
-    def fail_after_expiry(execute, sql, params, many, context):
-        result = execute(sql, params, many, context)
-        if sql.startswith("WITH expired"):
-            raise OperationalError("Failure before expiry transaction committed")
-        return result
-
-    with connection.execute_wrapper(fail_after_expiry), pytest.raises(OperationalError):
-        cleanup()
-
-    assert RealtimeEvent.objects.filter(pk=expired).exists()
+    sentinel = RealtimeEvent.objects.get()
+    assert (sentinel.id, sentinel.payload, sentinel.created_at) == (
+        replacement.id,
+        replacement.payload,
+        replacement.created_at,
+    )
     assert RealtimeEventHistoryState.objects.get(pk=1).floor == 0
+
+
+def test_compaction_preserves_a_preexisting_loss_floor():
+    lost = record("other")
+    delete_with_old_worker_sql([lost])
+    record(age=timedelta(days=365))
+    retained = record(age=timedelta(days=30))
+
+    assert cleanup() == 1
+
+    assert list(RealtimeEvent.objects.values_list("id", flat=True)) == [retained]
+    assert RealtimeEventHistoryState.objects.get(pk=1).floor == lost
 
 
 def test_concurrent_compaction_cannot_hide_a_relevant_event():

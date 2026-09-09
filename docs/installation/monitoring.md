@@ -167,7 +167,7 @@ for the execution and recovery model.
 | `baserow.websocket_replay_database_errors` | Database errors by reason, including errors occurring after the caller's deadline. |
 | `baserow.realtime_recording_events` | Attempted recording envelopes by `destination=users/page` and handler `outcome=success/error`. A successful handler does not guarantee an enclosing transaction committed. |
 | `baserow.realtime_recording_batch_size` / `baserow.realtime_recording_duration` | Envelopes per attempted batch and handler duration in milliseconds, including adaptation and database work. |
-| `baserow.realtime_cleanup_deleted` / `baserow.realtime_cleanup_batch_size` | Rows removed by successfully committed batches, split by `operation=compact` (duplicates removed, last original retained) and `operation=expire` (history older than seven days removed). |
+| `baserow.realtime_cleanup_deleted` / `baserow.realtime_cleanup_batch_size` | Rows removed by successfully committed batches, with `operation=compact`: duplicates removed while the last original per exact route is retained. |
 | `baserow.realtime_cleanup_processed` | Candidates processed by committed batches, by `operation`, including originals retained as sentinels. Compaction can make progress without deleting rows. |
 | `baserow.realtime_cleanup_batch_duration` | Batch duration in milliseconds, including sentinel/floor updates and commit, by `operation`. Failed batches have `outcome=error` and contribute no deleted rows. |
 | `baserow.realtime_cleanup_run_deleted` / `baserow.realtime_cleanup_run_duration` | Committed payload deletion count and total run duration in milliseconds, by outcome. Earlier commits still count if a later batch fails. |
@@ -216,8 +216,9 @@ warnings describe full recipient queues, not a connection limit or proof that Re
 has exhausted memory.
 
 Compare recording rate with committed cleanup processing and deletions over time.
-The `compact` operation retains one original per route; `expire` removes history
-older than seven days. Processing without deletions is expected for distinct routes.
+The `compact` operation retains one original per route until replaced. Processing
+without deletions is expected for distinct routes; inactive routes can accumulate,
+so monitor retained sentinel count as well as recent event volume.
 A cleanup run ending with `budget` retained its earlier commits but exhausted its time allowance;
 `success` can still leave locked rows for the next run. Repeated overlap or lock
 errors explain runs that never reached the database. Track oldest unprocessed event
@@ -234,8 +235,8 @@ There is no full-payload GIN index. Include recipient-trigger work in recording
 measurements; smaller indexes do not by themselves guarantee faster inserts.
 
 Refresh reasons separate storage coverage from event volume: `expired_payload`
-means relevant data exists only outside the one-day replay window;
-`unknown_history` means the cursor predates activation/reset or evicted history;
+means a relevant event is compacted or outside the configured replay window;
+`unknown_history` means the cursor predates activation/reset or history lost to an unsafe deletion;
 `event_limit` means too many replayable changes remain. History-panel snapshot
 recovery should reduce `event_limit` warnings for clients with row modals open.
 Measure its additional HTTP traffic alongside replay load.

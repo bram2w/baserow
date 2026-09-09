@@ -919,7 +919,7 @@ def test_broadcast_to_permitted_users_does_not_fail_for_trashed_objects(data_fix
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize("max_events", [0, 5])
-def test_cleanup_task_removes_expired_data_independently_of_recording(
+def test_cleanup_task_compacts_expired_data_independently_of_recording(
     settings, max_events
 ):
     from baserow.ws.models import RealtimeEvent
@@ -930,14 +930,18 @@ def test_cleanup_task_removes_expired_data_independently_of_recording(
         cursor.execute(
             "INSERT INTO ws_realtime_events "
             "(channel_group, payload, created_at) "
-            "VALUES (%s, %s, now() - interval '60 days') RETURNING id",
-            ["table-1", '{"type": "x"}'],
+            "VALUES (%s, %s, now() - interval '60 days'), "
+            "(%s, %s, now() - interval '30 days') RETURNING id",
+            ["table-1", '{"type": "x"}', "table-1", '{"type": "x"}'],
         )
-        old_id = cursor.fetchone()[0]
+        old_id, retained_id = [row[0] for row in cursor.fetchall()]
 
     cleanup_old_realtime_events()
 
     assert not RealtimeEvent.objects.filter(id=old_id).exists()
+    retained = RealtimeEvent.objects.get(pk=retained_id)
+    assert retained.sentinel_key is not None
+    assert retained.payload == {"type": "x"}
 
 
 @pytest.mark.django_db

@@ -937,20 +937,23 @@ def test_cleanup_deletes_old_rows():
         cursor.execute(
             "INSERT INTO ws_realtime_events "
             "(channel_group, payload, created_at) "
-            "VALUES (%s, %s, now() - interval '8 days') RETURNING id",
-            ["table-1", '{"type": "x"}'],
+            "VALUES (%s, %s, now() - interval '8 days'), "
+            "(%s, %s, now() - interval '7 days') RETURNING id",
+            ["table-1", '{"type": "x"}', "table-1", '{"type": "x"}'],
         )
-        old_id = cursor.fetchone()[0]
+        old_id, retained_id = [row[0] for row in cursor.fetchall()]
 
     new_id = _record_event("table-1", {"type": "x"})
 
     deleted = RealtimeEventHandler.cleanup_old_realtime_events(
         retention=timedelta(hours=24)
     )
-    assert deleted >= 1
+    assert deleted == 1
 
     remaining = set(RealtimeEvent.objects.values_list("id", flat=True))
     assert old_id not in remaining
+    assert retained_id in remaining
+    assert RealtimeEvent.objects.get(pk=retained_id).sentinel_key is not None
     assert new_id in remaining
 
 

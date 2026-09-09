@@ -169,6 +169,7 @@ When replay recording is enabled, replayable broadcasts sent through `send_messa
 | `created_at` | `DateTimeField` | When the event was recorded. Used for retention cleanup. |
 | `target_user_ids` | `ArrayField(IntegerField)` | Recipients of users-channel events, derived by the database from the envelope. |
 | `all_users` | `BooleanField` | Whether a users-channel event targets every user. Derived by the database. |
+| `sentinel_key` | `BinaryField`, nullable | Cleanup marks retained originals with a hash of their exact delivery route. New events leave it null. |
 
 The `id` returned on insert is injected into the payload as `_event_id` before the message is sent.
 
@@ -220,7 +221,7 @@ possible, with these completed outcomes:
 
 1. **Nothing missed** — Retained payloads and compact history contain no relevant events after the cursor. The original cursor row can already have been compacted; its absence alone does not require a refresh.
 2. **Events replayed** — The server fetches the missed events for the client's page channel groups and implicit `users` group, filters out the client's own broadcasts (via its web socket id) and any events not relevant to that user, and re-invokes them through the consumer's handlers in order — exactly as if they had arrived live. The client catches up without a page reload.
-3. **Can't replay** — Either too many events were missed (more than `BASEROW_REALTIME_REPLAY_MAX_EVENTS`), a relevant missed payload is older than one day, history no longer covers the cursor, or the server finds a persisted event it cannot safely re-deliver through a websocket broadcast handler. The server responds with `force_refresh=true` and the client shows a "workspace data is outdated" toast with a refresh action.
+3. **Can't replay** — Either too many events were missed (more than `BASEROW_REALTIME_REPLAY_MAX_EVENTS`), a relevant missed event is compacted or older than the configured replay window, history no longer covers the cursor, or the server finds a persisted event it cannot safely re-deliver through a websocket broadcast handler. The server responds with `force_refresh=true` and the client shows a "workspace data is outdated" toast with a refresh action.
 
 Every `replay_events_result` with `force_refresh=false` includes `latest_event_id`, the latest event ID the server can safely acknowledge for that replay decision. If a client connects without a `last_seen_id` (a fresh page load), the server returns the latest persisted event ID as the new baseline because there is nothing to replay. When replay succeeds, `latest_event_id` advances only through events actually replayed, or stays at the supplied cursor when nothing replays. A higher irrelevant ID must not advance the cursor past a relevant INSERT that has not committed yet. If the server responds with `force_refresh=true`, `latest_event_id` is not meaningful and the client should refresh instead.
 
@@ -263,19 +264,21 @@ explicit snapshot recovery contract may bypass ordered replay.
 
 ### Event cleanup and retained sentinels
 
-Full payloads are replayable for one day, independently of JWT lifetime and cleanup
-progress. Beyond that window, cleanup keeps the newest original event for each
+Full payloads are replayable for `BASEROW_REALTIME_REPLAY_RETENTION_HOURS` hours
+(default `24`), independently of JWT lifetime and cleanup progress. Beyond that window, cleanup keeps the newest original event for each
 exact audience, originating socket and event type in `ws_realtime_events`. Its
 ID, timestamp and payload stay unchanged. This event acts as a sentinel: if it
 matches the reconnecting client and its ID is above the client's cursor, the client
 missed expired changes and must refresh. An older sentinel alone requires no refresh.
 
-Sentinels expire seven days after their event was created, including the one-day
-replay window. Deleting evidence without a replacement atomically advances a global
-loss floor: cursors below it must refresh because complete history is no longer
+Sentinels remain until a newer original for the same exact route replaces them.
+They have no separate age limit. Deleting evidence without a replacement (for
+example, through an older cleanup worker) atomically advances a global loss floor: cursors below it must refresh because complete history is no longer
 available. This floor occupies one metadata row; there is no separate event-summary
 table. Own-socket and excluded-user filters remain identical to live delivery.
-Both retention values are internal constants, with no additional environment variables.
+The hours setting controls both replay eligibility and the cleanup cutoff. It must
+be the same on ASGI and Celery workers. Increasing it cannot recover deleted events:
+an already-marked sentinel still requires refresh even inside the enlarged window.
 
 A nullable `sentinel_key` identifies events already retained by cleanup. Ordinary
 inserts leave it null and do not calculate audience hashes. A partial unique index
@@ -283,7 +286,9 @@ finds the current sentinel for a route; a partial age index finds unprocessed
 expired events without repeatedly scanning retained sentinels. Cleanup checks exact
 routing equality before combining events, so a hash collision cannot hide changes.
 The full payload remains on each sentinel: storage follows distinct audiences and
-the size of their last events, rather than every change they made.
+the size of their last events, rather than every change they made. Exact routes
+include socket IDs and recipient sets, so inactive routes can accumulate over time;
+the hours setting bounds full replay history, not total sentinel storage.
 
 The periodic Celery task runs every minute, including when recording is disabled,
 with a 30-second budget and at most 5,000 candidates per independently committed
@@ -293,19 +298,47 @@ hard maximum row age. The task uses a nonblocking cleanup lease. A batch that on
 retains new sentinels still makes progress, even when it deletes no rows.
 
 Replay reads retained events and the loss floor in one SQL snapshot, avoiding a
-race between history deletion and checking its floor. Expired payload contents are
-not returned by the replay query, since their age already requires a refresh.
+race between history deletion and checking its floor. Payload contents of expired
+events and marked sentinels are not returned, since either already requires refresh.
 The event and metadata tables are UNLOGGED and use the primary database. The event
 sequence is LOGGED with its normal `CACHE 1`, preventing ID reuse after a crash.
 Missing history state waits for outstanding inserts before establishing a conservative
 floor. Migration activation also establishes a floor, so older cursors can require
 one refresh. Rollback cannot restore deleted events and leaves the sequence LOGGED.
 
+The migration installs three PostgreSQL functions:
+
+- `ws_realtime_event_routing` extracts and normalizes recipients, exclusions, the
+  originating socket and event types. Cleanup hashes this small JSON value instead
+  of transferring full expired payloads to Python. It does not run on ordinary inserts.
+- `ws_initialize_realtime_history` creates a missing history boundary from the
+  durable event sequence, waiting for outstanding inserts first. It is shared by
+  migration activation, replay after an UNLOGGED reset, and deletion tracking.
+- `ws_record_deleted_realtime_history` runs once per DELETE statement and advances
+  the floor atomically with the deletion. Proven duplicate removal temporarily
+  bypasses it inside the same transaction; ordinary and legacy DELETEs do not.
+  It does not intercept TRUNCATE or arbitrary table replacement.
+
+The PostgreSQL functions are implementation choices: routing could be inline SQL,
+initialization could use a Python transaction, and controlled deletion could update
+its floor explicitly. The current functions centralize shared logic and preserve
+loss tracking for older or direct DELETE statements. Keeping a trustworthy boundary
+is necessary when the history supporting numeric replay cursors disappears.
+
 #### Deployment and rollback
 
-Pause scheduled realtime cleanup and drain any in-flight cleanup task before
-applying `ws.0003`. Deploy the new code to **all ASGI and Celery workers**, then resume
-cleanup. WebSocket traffic and event recording can continue during this sequence.
+The migration creates the schema and initializes the floor; it does not compact
+historical events. There is no separate activation gate: the updated cleanup task
+starts compaction whenever it executes. `BASEROW_REALTIME_REPLAY_MAX_EVENTS=0`
+disables recording and replay, but does not pause cleanup.
+
+Pause scheduled cleanup and drain running cleanup tasks before applying `ws.0003`.
+Pausing Beat does not remove queued or reserved task messages, so drain or prevent
+those tasks from executing.
+Update **all ASGI readers before starting any updated Celery worker** that could
+consume a cleanup task, then finish the Celery rollout. Submit one cleanup task,
+check its metrics and database load, and resume the one-minute schedule. WebSocket
+traffic and event recording can continue during this sequence.
 Older ASGI readers do not recognize the replay window or loss floor and could
 mistake retained sentinels for complete replay history; do not run the new cleanup
 while those readers remain. A legacy DELETE advances the floor for new readers,
@@ -319,8 +352,9 @@ older readers. Reversing the migration cannot restore deleted events. Before
 re-enabling replay, clear recorded replay history while recording remains disabled
 so retained cursor IDs cannot falsely establish a complete pre-rollback history.
 
-The existing `(created_at, id)` index supports seven-day expiration. Recipient
-indexes remain restricted to the shared `users` channel; page events retain the
+The existing `(created_at, id)` index remains available for age diagnostics and
+compatibility with earlier cleanup workers. Recipient indexes remain restricted
+to the shared `users` channel; page events retain the
 `(channel_group, id)` index. Cleanup makes storage reusable through PostgreSQL
 vacuum; it does not normally shrink allocated files. Monitor recording rate,
 committed cleanup progress, and vacuum activity together; see
@@ -341,6 +375,7 @@ an immediate `ANALYZE`.
 
 | Setting | Default | Purpose |
 |---|---|---|
+| `BASEROW_REALTIME_REPLAY_RETENTION_HOURS` | 24 | Positive integer hours of full replay history. Older events compact into the latest original per exact audience; sentinels remain until replaced. Increasing the window cannot restore compacted history. |
 | `BASEROW_REALTIME_REPLAY_MAX_EVENTS` | 200 | Maximum number of missed events the server will replay. Beyond this, the client is told to refresh. Set to `0` to disable event recording and replay; retention cleanup continues. Clients learn replay availability during authentication and use refresh when missed events cannot be recovered. |
 
 See [configuration.md](../installation/configuration.md) for the full settings reference.

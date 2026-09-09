@@ -14,10 +14,12 @@ from baserow.ws.tasks import cleanup_old_realtime_events
 
 
 @pytest.mark.parametrize("max_events", [0, 5])
+@pytest.mark.parametrize("retention_hours", [1, 24, 48, 240])
 def test_cleanup_task_uses_independent_retention_even_when_recording_disabled(
-    settings, max_events
+    settings, max_events, retention_hours
 ):
     settings.BASEROW_REALTIME_REPLAY_MAX_EVENTS = max_events
+    settings.REALTIME_REPLAY_RETENTION_HOURS = retention_hours
     settings.SIMPLE_JWT = {"REFRESH_TOKEN_LIFETIME": timedelta(days=7)}
     with (
         patch.object(RealtimeEventHandler, "cleanup_old_realtime_events") as cleanup,
@@ -25,7 +27,7 @@ def test_cleanup_task_uses_independent_retention_even_when_recording_disabled(
         patch.object(tasks, "monotonic", return_value=100),
     ):
         cleanup_old_realtime_events()
-    cleanup.assert_called_once_with(timedelta(hours=24), deadline=130)
+    cleanup.assert_called_once_with(timedelta(hours=retention_hours), deadline=130)
 
 
 def test_cleanup_task_skips_an_overlapping_run():
@@ -68,7 +70,7 @@ def test_cleanup_task_does_not_restart_budget_after_acquiring_lock(monkeypatch):
     with (
         patch("django.core.cache.cache.lock") as make_lock,
         patch.object(
-            RealtimeEventHandler, "_expire_realtime_events_batch", return_value=0
+            RealtimeEventHandler, "_compact_realtime_events_batch", return_value=(0, 0)
         ) as batch,
     ):
         make_lock.return_value.acquire.side_effect = delayed_acquire
@@ -92,30 +94,36 @@ def test_cleanup_commits_bounded_batches_and_preserves_recent_events(monkeypatch
     expired = create_events(timedelta(days=8), 5)
     recent = create_events(timedelta(hours=1), 1)
     committed_batches = []
-    original = RealtimeEventHandler._expire_realtime_events_batch
+    original = RealtimeEventHandler._compact_realtime_events_batch
 
     def record_committed_batch(*args):
-        deleted = original(*args)
+        result = original(*args)
         assert not connection.in_atomic_block
-        committed_batches.append(deleted)
-        return deleted
+        committed_batches.append(result)
+        return result
 
     with patch.object(
         RealtimeEventHandler,
-        "_expire_realtime_events_batch",
+        "_compact_realtime_events_batch",
         side_effect=record_committed_batch,
     ):
-        assert RealtimeEventHandler.cleanup_old_realtime_events(timedelta(days=1)) == 5
-    assert committed_batches == [2, 2, 1]
-    assert not RealtimeEvent.objects.filter(id__in=expired).exists()
-    assert list(RealtimeEvent.objects.values_list("id", flat=True)) == recent
+        assert RealtimeEventHandler.cleanup_old_realtime_events(timedelta(days=1)) == 4
+    assert committed_batches == [(2, 1), (2, 2), (1, 1)]
+    assert (
+        list(RealtimeEvent.objects.filter(id__in=expired).values_list("id", flat=True))
+        == expired[-1:]
+    )
+    assert list(RealtimeEvent.objects.order_by("id").values_list("id", flat=True)) == (
+        expired[-1:] + recent
+    )
+    assert RealtimeEvent.objects.get(pk=expired[-1]).sentinel_key is not None
 
 
 @pytest.mark.django_db(transaction=True)
 def test_cleanup_keeps_earlier_commits_when_a_later_batch_fails(monkeypatch):
     monkeypatch.setattr(realtime_events, "REALTIME_EVENTS_CLEANUP_BATCH_SIZE", 2)
     expired = create_events(timedelta(days=8), 5)
-    original = RealtimeEventHandler._expire_realtime_events_batch
+    original = RealtimeEventHandler._compact_realtime_events_batch
     calls = 0
 
     def fail_second_batch(*args):
@@ -128,7 +136,7 @@ def test_cleanup_keeps_earlier_commits_when_a_later_batch_fails(monkeypatch):
     with (
         patch.object(
             RealtimeEventHandler,
-            "_expire_realtime_events_batch",
+            "_compact_realtime_events_batch",
             side_effect=fail_second_batch,
         ),
         pytest.raises(OperationalError, match="second batch failed"),
@@ -136,7 +144,7 @@ def test_cleanup_keeps_earlier_commits_when_a_later_batch_fails(monkeypatch):
         RealtimeEventHandler.cleanup_old_realtime_events(timedelta(days=1))
     assert (
         list(RealtimeEvent.objects.order_by("id").values_list("id", flat=True))
-        == expired[2:]
+        == expired[1:]
     )
 
 
@@ -184,7 +192,7 @@ def test_cleanup_stops_at_its_work_budget(monkeypatch):
     create_events(timedelta(days=8), 5)
     now = 0
     monkeypatch.setattr(realtime_events, "monotonic", lambda: now)
-    original = RealtimeEventHandler._expire_realtime_events_batch
+    original = RealtimeEventHandler._compact_realtime_events_batch
 
     def consume_budget(*args):
         nonlocal now
@@ -194,11 +202,12 @@ def test_cleanup_stops_at_its_work_budget(monkeypatch):
 
     with patch.object(
         RealtimeEventHandler,
-        "_expire_realtime_events_batch",
+        "_compact_realtime_events_batch",
         side_effect=consume_budget,
     ):
-        assert RealtimeEventHandler.cleanup_old_realtime_events(timedelta(days=1)) == 2
-    assert RealtimeEvent.objects.count() == 3
+        assert RealtimeEventHandler.cleanup_old_realtime_events(timedelta(days=1)) == 1
+    assert RealtimeEvent.objects.count() == 4
+    assert RealtimeEvent.objects.filter(sentinel_key__isnull=False).count() == 1
 
 
 @pytest.mark.django_db(transaction=True)
@@ -220,7 +229,7 @@ def test_cleanup_timeouts_are_local_and_preserve_stricter_settings(
     observed = []
 
     def check_timeouts(execute, sql, params, many, context):
-        if sql.startswith(("WITH expired", "WITH candidates")):
+        if sql.startswith("WITH candidates"):
             with connection.cursor() as cursor:
                 cursor.execute("SHOW statement_timeout")
                 statement = cursor.fetchone()[0]
@@ -239,12 +248,10 @@ def test_cleanup_timeouts_are_local_and_preserve_stricter_settings(
             assert (
                 RealtimeEventHandler.cleanup_old_realtime_events(timedelta(days=1)) == 0
             )
-        # Expiration and route compaction each get their own bounded
-        # transaction and must both preserve the operator's stricter limits.
-        assert (
-            observed
-            == [("3s", "250ms") if statement_timeout == "0" else ("10ms", "5ms")] * 2
-        )
+        # Even an empty compaction batch preserves the operator's stricter limits.
+        assert observed == [
+            ("3s", "250ms") if statement_timeout == "0" else ("10ms", "5ms")
+        ]
         with connection.cursor() as cursor:
             cursor.execute("SHOW statement_timeout")
             assert cursor.fetchone()[0] == statement_timeout
@@ -262,7 +269,7 @@ def test_cleanup_statement_timeout_stops_slow_database_work(monkeypatch):
     expired = create_events(timedelta(days=8), 1)
 
     def slow_delete(execute, sql, params, many, context):
-        if sql.startswith("WITH expired"):
+        if sql.startswith("WITH candidates"):
             return execute("SELECT pg_sleep(1)", [], many, context)
         return execute(sql, params, many, context)
 
@@ -294,7 +301,8 @@ def test_cleanup_lock_timeout_does_not_wait_for_table_maintenance(monkeypatch):
             getattr(cause, "pgcode", None) or getattr(cause, "sqlstate", None)
         ) == "55P03"
     assert list(RealtimeEvent.objects.values_list("id", flat=True)) == expired
-    assert RealtimeEventHandler.cleanup_old_realtime_events(timedelta(days=1)) == 1
+    assert RealtimeEventHandler.cleanup_old_realtime_events(timedelta(days=1)) == 0
+    assert RealtimeEvent.objects.get(pk=expired[0]).sentinel_key is not None
 
 
 @pytest.mark.django_db(transaction=True)
@@ -308,6 +316,9 @@ def test_cleanup_skips_locked_rows_and_cleans_them_on_a_later_run():
                 "SELECT id FROM ws_realtime_events WHERE id = %s FOR UPDATE",
                 [expired[0]],
             )
-        assert RealtimeEventHandler.cleanup_old_realtime_events(timedelta(days=1)) == 2
-        assert list(RealtimeEvent.objects.values_list("id", flat=True)) == [expired[0]]
+        assert RealtimeEventHandler.cleanup_old_realtime_events(timedelta(days=1)) == 1
+        assert list(
+            RealtimeEvent.objects.order_by("id").values_list("id", flat=True)
+        ) == [expired[0], expired[-1]]
     assert RealtimeEventHandler.cleanup_old_realtime_events(timedelta(days=1)) == 1
+    assert list(RealtimeEvent.objects.values_list("id", flat=True)) == expired[-1:]

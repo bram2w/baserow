@@ -26,8 +26,6 @@ if TYPE_CHECKING:
     from baserow.ws.consumers import SubscribedPages
     from baserow.ws.models import RealtimeEvent
 
-REALTIME_EVENTS_RETENTION = timedelta(hours=24)
-REALTIME_EVENT_HISTORY_RETENTION = timedelta(days=7)
 REALTIME_EVENTS_CLEANUP_INTERVAL_MINUTES = 1
 REALTIME_EVENTS_CLEANUP_BATCH_SIZE = 5000
 REALTIME_EVENTS_CLEANUP_BUDGET_SECONDS = 30
@@ -67,6 +65,12 @@ class RealtimeEventHandler:
         """
 
         return settings.BASEROW_REALTIME_REPLAY_MAX_EVENTS > 0
+
+    @staticmethod
+    def get_replay_retention() -> timedelta:
+        """Maximum age of full events accepted by replay and retained by cleanup."""
+
+        return timedelta(hours=settings.REALTIME_REPLAY_RETENTION_HOURS)
 
     @staticmethod
     def record_events(
@@ -158,45 +162,27 @@ class RealtimeEventHandler:
     def cleanup_old_realtime_events(
         retention: timedelta, *, deadline: float | None = None
     ) -> int:
-        """Retain one original per expired route; discard history after seven days."""
+        """Keep the latest expired original per exact route until replaced."""
 
         if retention.total_seconds() <= 0:
             return 0
         cutoff = timezone.now() - retention
-        history_cutoff = timezone.now() - REALTIME_EVENT_HISTORY_RETENTION
         budget_deadline = monotonic() + REALTIME_EVENTS_CLEANUP_BUDGET_SECONDS
         deadline = (
             min(deadline, budget_deadline) if deadline is not None else budget_deadline
         )
-        expired_finished = compacted_finished = False
         with realtime_cleanup_run() as run:
             while monotonic() < deadline:
-                # Both stages make progress even with a sustained payload backlog.
-                if not expired_finished:
-                    with realtime_cleanup_batch(operation="expire") as batch:
-                        batch.deleted = (
-                            RealtimeEventHandler._expire_realtime_events_batch(
-                                history_cutoff, deadline
-                            )
+                with realtime_cleanup_batch(operation="compact") as batch:
+                    batch.processed, batch.deleted = (
+                        RealtimeEventHandler._compact_realtime_events_batch(
+                            cutoff, deadline
                         )
-                    run.deleted += batch.deleted
-                    expired_finished = (
-                        batch.deleted < REALTIME_EVENTS_CLEANUP_BATCH_SIZE
                     )
-                if not compacted_finished:
-                    with realtime_cleanup_batch(operation="compact") as batch:
-                        batch.processed, batch.deleted = (
-                            RealtimeEventHandler._compact_realtime_events_batch(
-                                cutoff, deadline
-                            )
-                        )
-                    run.deleted += batch.deleted
-                    # Distinct routes retain every candidate, deleting zero rows.
-                    # Progress must therefore depend on candidates, not deletions.
-                    compacted_finished = (
-                        batch.processed < REALTIME_EVENTS_CLEANUP_BATCH_SIZE
-                    )
-                if expired_finished and compacted_finished:
+                run.deleted += batch.deleted
+                # Distinct routes retain every candidate, deleting zero rows.
+                # Progress must therefore depend on candidates, not deletions.
+                if batch.processed < REALTIME_EVENTS_CLEANUP_BATCH_SIZE:
                     if monotonic() >= deadline:
                         run.outcome = "budget"
                     return run.deleted
@@ -204,17 +190,11 @@ class RealtimeEventHandler:
             return run.deleted
 
     @staticmethod
-    def _expire_realtime_events_batch(cutoff, deadline) -> int:
-        return RealtimeEventHandler._cleanup_realtime_batch(
-            cutoff, deadline, expire=True
-        )[1]
-
-    @staticmethod
     def _compact_realtime_events_batch(cutoff, deadline) -> tuple[int, int]:
         return RealtimeEventHandler._cleanup_realtime_batch(cutoff, deadline)
 
     @staticmethod
-    def _cleanup_realtime_batch(cutoff, deadline, *, expire=False) -> tuple[int, int]:
+    def _cleanup_realtime_batch(cutoff, deadline) -> tuple[int, int]:
         class DeadlineExceeded(Exception):
             pass
 
@@ -245,37 +225,17 @@ class RealtimeEventHandler:
                     if monotonic() >= deadline:
                         raise DeadlineExceeded
 
-                if expire:
-                    # Expiry never inherits the trusted compaction bypass.
-                    execute(
-                        "SELECT set_config('baserow.realtime_compacting', 'off', true)"
-                    )
-                    # The default DELETE trigger advances the loss floor atomically.
-                    execute(
-                        "WITH expired AS MATERIALIZED ("
-                        "SELECT id FROM ws_realtime_events WHERE created_at < %s "
-                        "ORDER BY created_at, id LIMIT %s FOR UPDATE SKIP LOCKED"
-                        ") DELETE FROM ws_realtime_events AS event "
-                        "USING expired WHERE event.id = expired.id",
-                        [cutoff, REALTIME_EVENTS_CLEANUP_BATCH_SIZE],
-                    )
-                    return cursor.rowcount, cursor.rowcount
-
                 execute(
                     "WITH candidates AS MATERIALIZED ("
                     "SELECT id, channel_group, payload FROM ws_realtime_events "
-                    "WHERE sentinel_key IS NULL AND created_at >= %s AND created_at < %s "
+                    "WHERE sentinel_key IS NULL AND created_at < %s "
                     "ORDER BY created_at, id LIMIT %s FOR UPDATE SKIP LOCKED"
                     "), routes AS MATERIALIZED ("
                     "SELECT id, channel_group, ws_realtime_event_routing(payload) AS route "
                     "FROM candidates) "
                     "SELECT id, sha256(convert_to(jsonb_build_array(channel_group, route)::text, 'UTF8')), "
                     "channel_group, route::text FROM routes",
-                    [
-                        timezone.now() - REALTIME_EVENT_HISTORY_RETENTION,
-                        cutoff,
-                        REALTIME_EVENTS_CLEANUP_BATCH_SIZE,
-                    ],
+                    [cutoff, REALTIME_EVENTS_CLEANUP_BATCH_SIZE],
                 )
                 candidates = cursor.fetchall()
                 if not candidates:
@@ -415,12 +375,12 @@ class RealtimeEventHandler:
         if last_seen_id > latest_event_id:
             return refresh("cursor_ahead")
 
-        cutoff = timezone.now() - REALTIME_EVENTS_RETENTION
+        cutoff = timezone.now() - RealtimeEventHandler.get_replay_retention()
         events = []
-        for _, _, event_id, channel_group, payload, created_at in rows:
+        for _, _, event_id, channel_group, payload, created_at, is_sentinel in rows:
             if event_id is None:
                 continue
-            if created_at < cutoff:
+            if is_sentinel or created_at < cutoff:
                 return refresh("expired_payload")
             events.append(
                 RealtimeEvent(
@@ -490,7 +450,7 @@ class RealtimeEventHandler:
             supports_row_history_refresh=supports_row_history_refresh,
         )
         events_sql, events_params = events.values_list(
-            "id", "channel_group", "payload", "created_at"
+            "id", "channel_group", "payload", "created_at", "sentinel_key"
         ).query.sql_with_params()
         sql = (
             "SELECT state.floor, GREATEST(state.floor, "  # noqa: S608
@@ -499,14 +459,15 @@ class RealtimeEventHandler:
             "FROM ws_realtime_event_history_state AS state "
             "LEFT JOIN LATERAL ("
             "SELECT events.id, events.channel_group, "
-            "CASE WHEN events.created_at < %s THEN NULL ELSE events.payload END, "
-            "events.created_at "
+            "CASE WHEN events.sentinel_key IS NOT NULL OR events.created_at < %s "
+            "THEN NULL ELSE events.payload END, "
+            "events.created_at, events.sentinel_key IS NOT NULL AS is_sentinel "
             f"FROM ({events_sql}) AS events "
             "WHERE state.floor <= %s "
             ") AS replay ON true WHERE state.id = 1 ORDER BY replay.id"
         )
         params = [
-            timezone.now() - REALTIME_EVENTS_RETENTION,
+            timezone.now() - RealtimeEventHandler.get_replay_retention(),
             *events_params,
             last_seen_id,
         ]
