@@ -469,9 +469,10 @@ export class CoreStartWorkflowServiceType extends WorkflowActionServiceTypeMixin
     return getWorkflowGroup(this.app)
   }
 
-  getWorkflow(workflowId) {
-    const workspace = this.app.$store.getters['workspace/getSelected']
-
+  getWorkflow(
+    workflowId,
+    workspace = this.app.$store.getters['workspace/getSelected']
+  ) {
     if (!workspace?.id || !workflowId) {
       return null
     }

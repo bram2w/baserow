@@ -13,6 +13,7 @@ import {
 } from '@baserow/modules/integrations/core/serviceTypes'
 import { SlackWriteMessageServiceType } from '@baserow/modules/integrations/slack/serviceTypes'
 import { SlackBotIntegrationType } from '@baserow/modules/integrations/slack/integrationTypes'
+import { WORKFLOW_STATES } from '@baserow/modules/automation/components/enums'
 import { resolveFormula } from '@baserow/modules/core/formula'
 import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
 import {
@@ -768,7 +769,8 @@ export class CoreStartWorkflowWorkflowActionType extends DatabaseWorkflowActionS
 
   /**
    * Trashing the automation leaves the id behind; the shared service type
-   * does not report a workflow it cannot find.
+   * does not report a workflow it cannot find, nor one a click cannot run
+   * yet because it is unpublished or not live.
    */
   getErrorMessage(workflowAction, applicationContext) {
     const inherited = super.getErrorMessage(workflowAction, applicationContext)
@@ -788,20 +790,21 @@ export class CoreStartWorkflowWorkflowActionType extends DatabaseWorkflowActionS
       return null
     }
 
-    const found = this.app.$store.getters['application/getAllOfWorkspace'](
-      workspace
-    )
-      .filter((application) => application.type === 'automation')
-      .some((automation) =>
-        this.app.$store.getters['automationWorkflow/getOrderedWorkflows'](
-          automation
-        ).some((workflow) => workflow.id === workflowId)
-      )
+    const workflow = this.serviceType.getWorkflow(workflowId, workspace)
 
     // Applications are filtered by what the caller may read, so a deleted
     // workflow and one behind a role look the same; the copy says "not found".
-    return found
-      ? null
-      : this.app.$i18n.t('databaseWorkflowActionType.startWorkflowMissing')
+    if (!workflow) {
+      return this.app.$i18n.t('databaseWorkflowActionType.startWorkflowMissing')
+    }
+    if (!workflow.published_on) {
+      return this.app.$i18n.t(
+        'databaseWorkflowActionType.startWorkflowUnpublished'
+      )
+    }
+    if (workflow.state !== WORKFLOW_STATES.LIVE) {
+      return this.app.$i18n.t('databaseWorkflowActionType.startWorkflowNotLive')
+    }
+    return null
   }
 }

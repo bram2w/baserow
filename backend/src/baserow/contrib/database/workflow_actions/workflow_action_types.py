@@ -50,6 +50,7 @@ from baserow.core.handler import CoreHandler
 from baserow.core.integrations.models import Integration
 from baserow.core.integrations.operations import ReadIntegrationOperationType
 from baserow.core.models import Workspace
+from baserow.core.registries import ImportExportConfig
 from baserow.core.registry import Instance
 from baserow.core.services.exceptions import (
     ServiceImproperlyConfiguredDispatchException,
@@ -61,6 +62,8 @@ from baserow.core.services.types import DispatchResult
 from baserow.core.workflow_actions.models import WorkflowAction
 
 if TYPE_CHECKING:
+    from baserow.contrib.automation.workflows.models import AutomationWorkflow
+    from baserow.contrib.database.fields.models import ButtonField
     from baserow.contrib.database.workflow_actions.dispatch_context import (
         DatabaseDispatchContext,
     )
@@ -285,7 +288,7 @@ class DatabaseWorkflowServiceActionType(DatabaseWorkflowActionType):
             database has.
         """
 
-        integration_id = self._integration_id_to_look_up(
+        integration_id = self._serialized_id_to_look_up(
             serialized_service.get("integration_id")
         )
         if integration_id is None:
@@ -309,7 +312,7 @@ class DatabaseWorkflowServiceActionType(DatabaseWorkflowActionType):
         ).first()
 
     @staticmethod
-    def _integration_id_to_look_up(value: Any) -> Optional[int]:
+    def _serialized_id_to_look_up(value: Any) -> Optional[int]:
         """
         The id a serialized service names, as an integer, or None when it
         names nothing usable.
@@ -318,7 +321,7 @@ class DatabaseWorkflowServiceActionType(DatabaseWorkflowActionType):
         hand-edited export would otherwise key the id mapping with a list or a
         dict and fail the whole import job with a `TypeError`, or slip a
         `True` through, which hashes equal to 1 and would pick up whatever
-        integration 1 was remapped to.
+        row 1 was remapped to.
 
         :param value: What the export named, which is whatever was in the file.
         :return: The id to look up, or None.
@@ -790,64 +793,92 @@ class CoreStartWorkflowWorkflowActionType(DatabaseWorkflowServiceActionType):
         user: AbstractUser,
         instance: Optional[WorkflowAction] = None,
     ) -> Dict[str, Any]:
-        """
-        Refuses a workflow outside the button's workspace. The service type
-        resolves the id against everything the user can read, across
-        workspaces.
-
-        :raises serializers.ValidationError: When the button may not start it.
-        """
-
         service_values = values.get("service") or {}
-        workflow_id = service_values.get("workflow_id")
-        if workflow_id is not None:
+        if service_values.get("workflow_id") is not None:
             field = values.get("field") or (instance.field if instance else None)
-            self._check_workflow(workflow_id, field)
+            # Resolved here rather than by the service type, whose lookup
+            # accepts any workflow the user can read, in any workspace.
+            service_values["workflow"] = self._check_workflow(
+                service_values.pop("workflow_id"), user, field
+            )
         return super().prepare_values(values, user, instance)
 
-    def _check_workflow(self, workflow_id: int, field) -> None:
+    def _check_workflow(
+        self, workflow_id: int, user: AbstractUser, field: "ButtonField"
+    ) -> "AutomationWorkflow":
+        """
+        Resolves the workflow a button may start. Permission is checked before
+        anything about the workflow is inspected, and refused the way a missing
+        one is, so a refusal never says whether a workflow exists or what kind
+        of trigger it has.
+
+        :param workflow_id: The workflow the caller wants to start.
+        :param user: Who is configuring the action.
+        :param field: The button field the action belongs to.
+        :raises serializers.ValidationError: When the workflow does not exist
+            in the button's workspace or cannot be started on demand.
+        :return: The workflow.
+        """
+
+        from baserow.contrib.automation.workflows.exceptions import (
+            AutomationWorkflowDoesNotExist,
+        )
+        from baserow.contrib.automation.workflows.service import (
+            AutomationWorkflowService,
+        )
+
+        try:
+            workflow = AutomationWorkflowService().get_workflow(user, workflow_id)
+        except (AutomationWorkflowDoesNotExist, PermissionException):
+            raise serializers.ValidationError(
+                CoreStartWorkflowServiceType.WORKFLOW_DOES_NOT_EXIST_ERROR.format(
+                    workflow_id=workflow_id
+                )
+            )
         reason = self._unusable_workflow_reason(
-            workflow_id, self._workspace_id_for(field, None)
+            workflow, self._workspace_id_for(field, None)
         )
         if reason is not None:
             raise serializers.ValidationError(reason)
+        return workflow
 
     @staticmethod
-    def _workspace_id_for(field, id_mapping: Optional[Dict[str, Any]]) -> Optional[int]:
+    def _workspace_id_for(
+        field: "ButtonField", id_mapping: Optional[Dict[str, Any]]
+    ) -> Optional[int]:
         """
-        A snapshot is created with `workspace=None` on the application, so
-        during an import the field alone cannot name the workspace.
+        :param field: The button field the action belongs to.
+        :param id_mapping: The import's mapping when this runs during an
+            import. A snapshot is created with `workspace=None` on the
+            application, so the field alone cannot name the workspace then.
+        :return: The workspace id.
         """
 
-        workspace_id = field.table.database.workspace_id if field else None
+        workspace_id = field.table.database.workspace_id
         if workspace_id is None and id_mapping is not None:
             workspace_id = id_mapping.get("import_workspace_id")
         return workspace_id
 
+    @staticmethod
     def _unusable_workflow_reason(
-        self, workflow_id: int, workspace_id: Optional[int]
+        workflow: "AutomationWorkflow", workspace_id: Optional[int]
     ) -> Optional[str]:
         """
-        Shared by save and import: the workflow must belong to the button's
-        workspace and have an immediate dispatch trigger.
+        The rule save and import both read: the workflow belongs to the
+        button's workspace and its trigger can start on demand.
 
-        :return: The refusal, worded as the service type words it so that
-            walking ids reveals nothing, or None when the button may start it.
+        :param workflow: The workflow the caller named.
+        :param workspace_id: The workspace the button belongs to.
+        :return: The refusal, worded as the service type words it, or None
+            when the button may start the workflow.
         """
 
-        from baserow.contrib.automation.workflows.models import AutomationWorkflow
-
-        workflow = (
-            AutomationWorkflow.objects.filter(
-                id=workflow_id, automation__workspace_id=workspace_id
-            ).first()
-            if workspace_id is not None
-            else None
-        )
-        if workflow is None:
-            return f"The workflow with ID {workflow_id} does not exist."
+        if workflow.automation.workspace_id != workspace_id:
+            return CoreStartWorkflowServiceType.WORKFLOW_DOES_NOT_EXIST_ERROR.format(
+                workflow_id=workflow.id
+            )
         if not workflow.can_be_immediately_dispatched():
-            return "Only workflows with an immediate dispatch trigger can be started."
+            return CoreStartWorkflowServiceType.TRIGGER_NOT_ON_DEMAND_ERROR
         return None
 
     def import_serialized(
@@ -860,50 +891,32 @@ class CoreStartWorkflowWorkflowActionType(DatabaseWorkflowServiceActionType):
         cache: Optional[Dict[str, Any]] = None,
         **kwargs,
     ) -> WorkflowAction:
-        """
-        Drops a workflow the copy may not start, leaving the action
-        unconfigured.
-        """
-
-        from baserow.contrib.automation.workflows.models import AutomationWorkflow
-
-        import_export_config = kwargs.get("import_export_config")
-        # The base class pops `copied_by`.
-        copied_by = kwargs.get("copied_by")
-        created_instance = super().import_serialized(
+        serialized_service = serialized_values.get("service") or {}
+        exported_workflow_id = serialized_service.get("workflow_id")
+        # Decided before the row is written: the import runs this after the
+        # application's transaction has committed, so a workflow id this
+        # installation does not have would fail on insert.
+        if exported_workflow_id is not None and not self._may_carry_workflow(
+            exported_workflow_id,
+            parent,
+            id_mapping,
+            kwargs.get("import_export_config"),
+            kwargs.get("copied_by"),
+        ):
+            serialized_values = {
+                **serialized_values,
+                "service": {**serialized_service, "workflow_id": None},
+            }
+        return super().import_serialized(
             parent, serialized_values, id_mapping, files_zip, storage, cache, **kwargs
         )
-        service = created_instance.service.specific
-        # A hand-edited or version skewed export can name a service type
-        # without a workflow.
-        workflow_id = getattr(service, "workflow_id", None)
-        if workflow_id is None:
-            return created_instance
-        exported_workflow_id = (serialized_values.get("service") or {}).get(
-            "workflow_id"
-        )
-        # The foreign key is deferred, so a workflow only the source
-        # installation has is written and fails only when followed.
-        workflow = AutomationWorkflow.objects.filter(id=workflow_id).first()
-        if workflow is None or not self._may_carry_workflow(
-            workflow,
-            exported_workflow_id,
-            created_instance.field,
-            id_mapping,
-            import_export_config,
-            copied_by,
-        ):
-            service.workflow = None
-            service.save(update_fields=["workflow"])
-        return created_instance
 
     def _may_carry_workflow(
         self,
-        workflow,
         exported_workflow_id: Any,
-        field,
+        field: "ButtonField",
         id_mapping: Dict[str, Any],
-        import_export_config: Optional[Any],
+        import_export_config: ImportExportConfig | None,
         copied_by: Optional[AbstractUser],
     ) -> bool:
         """
@@ -913,39 +926,58 @@ class CoreStartWorkflowWorkflowActionType(DatabaseWorkflowServiceActionType):
         workspace happens to own. The reference is kept only when this import
         remapped it, or when the data never left the instance (duplicate,
         snapshot). A file import and a template install keep neither.
+
+        :param exported_workflow_id: What the export named the workflow by,
+            which is whatever was in the file.
+        :param field: The button field the copy belongs to.
+        :param id_mapping: What this import has remapped so far.
+        :param import_export_config: What kind of import this is.
+        :param copied_by: Who asked for the copy, when a person did.
+        :return: True when the copy keeps it.
         """
+
+        from baserow.contrib.automation.workflows.exceptions import (
+            AutomationWorkflowDoesNotExist,
+        )
+        from baserow.contrib.automation.workflows.handler import (
+            AutomationWorkflowHandler,
+        )
+        from baserow.contrib.automation.workflows.service import (
+            AutomationWorkflowService,
+        )
+
+        exported_workflow_id = self._serialized_id_to_look_up(exported_workflow_id)
+        if exported_workflow_id is None:
+            return False
 
         # `.keys()`, not `in`: a `MirrorDict` answers `in` for every key, and
         # the key view only for what this import actually remapped.
         workflow_mapping = id_mapping.get("automation_workflows", {})
         remapped = exported_workflow_id in workflow_mapping.keys()
-        stayed_here = getattr(
-            import_export_config, "is_duplicate", False
-        ) and not getattr(import_export_config, "is_template", False)
+        stayed_here = bool(
+            import_export_config
+            and import_export_config.is_duplicate
+            and not import_export_config.is_template
+        )
         if not (remapped or stayed_here):
             return False
 
-        workspace_id = self._workspace_id_for(field, id_mapping)
-        if self._unusable_workflow_reason(workflow.id, workspace_id) is not None:
-            return False
-
-        if copied_by is None:
-            return True
-
-        from baserow.contrib.automation.workflows.operations import (
-            ReadAutomationWorkflowOperationType,
+        # The id the service type will write.
+        workflow_id = service_type_registry.get(self.service_type).deserialize_property(
+            "workflow_id", exported_workflow_id, id_mapping
         )
-
         try:
-            CoreHandler().check_permissions(
-                copied_by,
-                ReadAutomationWorkflowOperationType.type,
-                workspace=field.table.database.workspace,
-                context=workflow,
-            )
-        except PermissionException:
+            if copied_by is None:
+                workflow = AutomationWorkflowHandler().get_workflow(workflow_id)
+            else:
+                workflow = AutomationWorkflowService().get_workflow(
+                    copied_by, workflow_id
+                )
+        except (AutomationWorkflowDoesNotExist, PermissionException):
             return False
-        return True
+
+        workspace_id = self._workspace_id_for(field, id_mapping)
+        return self._unusable_workflow_reason(workflow, workspace_id) is None
 
 
 class OpenUrlWorkflowActionType(DatabaseWorkflowActionType):

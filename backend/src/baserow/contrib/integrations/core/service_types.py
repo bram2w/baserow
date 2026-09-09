@@ -2469,6 +2469,12 @@ class CoreStartWorkflowServiceType(CoreServiceType):
     model_class = CoreStartWorkflowService
     dispatch_types = [DispatchTypes.ACTION]
 
+    WORKFLOW_DOES_NOT_EXIST_ERROR = "The workflow with ID {workflow_id} does not exist."
+    TRIGGER_NOT_ON_DEMAND_ERROR = (
+        "Only workflows whose trigger can start on demand, such as a manual "
+        "trigger, can be started."
+    )
+
     allowed_fields = ["workflow"]
     serializer_field_names = ["workflow_id"]
     serializer_field_overrides = {
@@ -2520,13 +2526,11 @@ class CoreStartWorkflowServiceType(CoreServiceType):
             workflow = AutomationWorkflowService().get_workflow(user, workflow_id)
         except AutomationWorkflowDoesNotExist as exc:
             raise serializers.ValidationError(
-                f"The workflow with ID {workflow_id} does not exist."
+                self.WORKFLOW_DOES_NOT_EXIST_ERROR.format(workflow_id=workflow_id)
             ) from exc
 
         if not workflow.can_be_immediately_dispatched():
-            raise serializers.ValidationError(
-                "Only workflows with an immediate dispatch trigger can be started."
-            )
+            raise serializers.ValidationError(self.TRIGGER_NOT_ON_DEMAND_ERROR)
 
         values["workflow"] = workflow
         return values
@@ -2569,7 +2573,7 @@ class CoreStartWorkflowServiceType(CoreServiceType):
 
         if not published_workflow.can_be_immediately_dispatched():
             raise ServiceImproperlyConfiguredDispatchException(
-                "Only workflows with an immediate dispatch trigger can be started."
+                self.TRIGGER_NOT_ON_DEMAND_ERROR
             )
 
         AutomationWorkflowHandler().async_start_workflow(published_workflow)

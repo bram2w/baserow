@@ -1,11 +1,10 @@
 from collections import defaultdict
 from unittest.mock import patch
 
-from django.db import connection
 from django.urls import reverse
 
 import pytest
-from rest_framework.status import HTTP_200_OK
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
 from baserow.contrib.automation.nodes.node_types import CoreManualTriggerNodeType
 from baserow.contrib.automation.workflows.operations import (
@@ -146,6 +145,45 @@ def test_a_workflow_the_user_can_read_is_kept(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK, response.json()
     action.refresh_from_db()
     assert action.service.specific.workflow_id == workflow.id
+
+
+@pytest.mark.django_db
+def test_a_workflow_the_user_cannot_read_reveals_nothing(api_client, data_fixture):
+    """
+    Permission is checked before the trigger and refused as a missing
+    workflow is, so the answer is the same whatever the trigger and whether
+    the workflow exists.
+    """
+
+    from baserow.contrib.automation.nodes.node_types import CoreHTTPTriggerNodeType
+
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    field = _button(data_fixture, user, workspace)
+    workflow = _workflow(
+        data_fixture, user, workspace, trigger_type=CoreHTTPTriggerNodeType.type
+    )
+    action = data_fixture.create_database_workflow_action(
+        CoreStartWorkflowWorkflowAction, field=field
+    )
+
+    with patch.object(
+        CoreHandler,
+        "check_permissions",
+        _denying(ReadAutomationWorkflowOperationType.type),
+    ):
+        response = api_client.patch(
+            reverse(
+                "api:database:workflow_actions:item",
+                kwargs={"workflow_action_id": action.id},
+            ),
+            {"service": {"workflow_id": workflow.id}},
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST, response.json()
+    assert response.json() == [f"The workflow with ID {workflow.id} does not exist."]
 
 
 @pytest.mark.django_db
@@ -374,6 +412,54 @@ def test_a_click_starts_the_published_workflow(data_fixture):
         DatabaseWorkflowActionService().dispatch_workflow_actions(user, field, row)
 
     async_start_workflow.assert_called_once_with(published)
+
+
+@pytest.mark.django_db
+def test_a_click_through_the_api_queues_the_published_workflow(
+    api_client, data_fixture, django_capture_on_commit_callbacks
+):
+    """
+    A member who holds neither the automation nor the button clicks it. Only
+    the broker is mocked: the history entry is written and the run queued.
+    """
+
+    from baserow.contrib.automation.history.models import AutomationWorkflowHistory
+    from baserow.contrib.automation.workflows.handler import AutomationWorkflowHandler
+
+    builder = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=builder)
+    clicker, token = data_fixture.create_user_and_token()
+    data_fixture.create_user_workspace(
+        workspace=workspace, user=clicker, permissions="MEMBER"
+    )
+    field = _button(data_fixture, builder, workspace)
+    row = field.table.get_model().objects.create()
+    workflow = _workflow(data_fixture, builder, workspace)
+    published = AutomationWorkflowHandler().publish(workflow)
+    _action_starting(data_fixture, field, workflow)
+
+    with (
+        patch(
+            "baserow.contrib.automation.workflows.handler.start_workflow_celery_task"
+        ) as celery_task,
+        django_capture_on_commit_callbacks(execute=True),
+    ):
+        response = api_client.post(
+            reverse(
+                "api:database:workflow_actions:dispatch",
+                kwargs={"field_id": field.id},
+            ),
+            {"row_id": row.id},
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+    assert response.status_code == HTTP_200_OK, response.json()
+    assert response.json()["results"][0]["status"] == "completed"
+    history = AutomationWorkflowHistory.objects.get(original_workflow=workflow)
+    assert history.workflow_id == published.id
+    assert history.status == "started"
+    celery_task.delay.assert_called_once_with(published.id, history.id)
 
 
 @pytest.mark.django_db
@@ -701,6 +787,28 @@ def test_duplicating_a_table_drops_a_workflow_the_duplicator_cannot_read(data_fi
 
 
 @pytest.mark.django_db
+def test_duplicating_a_table_drops_a_workflow_that_was_trashed(data_fixture):
+    """
+    The action still holds the id, but the row is out of reach, and the copy
+    must not be written pointing at it.
+    """
+
+    from baserow.core.trash.handler import TrashHandler
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    button_field = _button(data_fixture, user, workspace)
+    workflow = _workflow(data_fixture, user, workspace)
+    _action_starting(data_fixture, button_field, workflow)
+    TrashHandler.trash(user, workspace, workflow.automation, workflow.automation)
+
+    duplicated = TableHandler().duplicate_table(user, button_field.table)
+
+    (copied,) = DatabaseWorkflowAction.objects.filter(field__table=duplicated)
+    assert copied.specific.service.specific.workflow_id is None
+
+
+@pytest.mark.django_db
 def test_duplicating_a_field_keeps_the_workflow(data_fixture):
     """
     Field duplication skips the serialization import path and builds its own
@@ -756,9 +864,9 @@ def test_a_template_install_drops_a_workflow_whose_id_collides(data_fixture):
 def test_an_import_drops_a_workflow_this_installation_does_not_have(data_fixture):
     """
     Exporting only the database leaves the automation behind, so the file
-    names a workflow id that exists nowhere here. The foreign key is deferred,
-    so the row is written and only following the reference fails, which would
-    end the whole import job over a reference that simply has to go.
+    names a workflow id that exists nowhere here. The import runs the action
+    callbacks after the application's transaction has committed, so a row
+    written with that id fails on insert.
     """
 
     user = data_fixture.create_user()
@@ -773,13 +881,34 @@ def test_an_import_drops_a_workflow_this_installation_does_not_have(data_fixture
     exported["service"]["workflow_id"] = source_workflow.id + 10_000
 
     destination_field = _button(data_fixture, user, workspace)
-    # `data_fixture` makes every constraint immediate; production defers the
-    # foreign key, so the row is written and only the dereference fails.
-    with connection.cursor() as cursor:
-        cursor.execute("SET CONSTRAINTS ALL DEFERRED")
 
     with deferred_callback_context():
         imported = action_type.import_serialized(destination_field, exported, {})
+
+    assert imported.service.specific.workflow_id is None
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("named", [[12], {"id": 12}, True, "12abc"])
+def test_an_import_survives_a_workflow_id_that_is_not_one(data_fixture, named):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    source_field = _button(data_fixture, user, workspace)
+    workflow = _workflow(data_fixture, user, workspace)
+    action = _action_starting(data_fixture, source_field, workflow)
+
+    action_type = database_workflow_action_type_registry.get("start_workflow")
+    exported = action_type.export_serialized(action.specific)
+    exported["service"]["workflow_id"] = named
+
+    destination_field = _button(data_fixture, user, workspace)
+    with deferred_callback_context():
+        imported = action_type.import_serialized(
+            destination_field,
+            exported,
+            {"automation_workflows": {1: workflow.id}},
+            import_export_config=_duplicate_config(),
+        )
 
     assert imported.service.specific.workflow_id is None
 

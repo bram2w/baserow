@@ -21,6 +21,50 @@ const WORKSPACE_ID = 1
 const DATABASE_ID = 100
 const AUTOMATION_ID = 200
 
+const applications = () => [
+  {
+    id: DATABASE_ID,
+    name: 'Customers',
+    type: 'database',
+    workspace: { id: WORKSPACE_ID },
+    tables: [],
+  },
+  {
+    id: AUTOMATION_ID,
+    name: 'Onboarding',
+    type: 'automation',
+    order: 1,
+    workspace: { id: WORKSPACE_ID },
+    workflows: [
+      {
+        id: 11,
+        name: 'Send welcome',
+        order: 1,
+        immediate_dispatch: true,
+        published_on: '2026-09-01T00:00:00Z',
+        state: 'live',
+      },
+      { id: 12, name: 'Nightly sync', order: 2, immediate_dispatch: false },
+      {
+        id: 13,
+        name: 'Still a draft',
+        order: 3,
+        immediate_dispatch: true,
+        published_on: null,
+        state: 'draft',
+      },
+      {
+        id: 14,
+        name: 'On hold',
+        order: 4,
+        immediate_dispatch: true,
+        published_on: '2026-09-01T00:00:00Z',
+        state: 'paused',
+      },
+    ],
+  },
+]
+
 describe('start workflow action form', () => {
   let testApp = null
 
@@ -33,23 +77,8 @@ describe('start workflow action form', () => {
       'workspace/SET_SELECTED',
       testApp.store.getters['workspace/get'](WORKSPACE_ID)
     )
-    await testApp.store.dispatch('application/forceCreate', {
-      id: DATABASE_ID,
-      name: 'Customers',
-      type: 'database',
-      workspace: { id: WORKSPACE_ID },
-      tables: [],
-    })
-    await testApp.store.dispatch('application/forceCreate', {
-      id: AUTOMATION_ID,
-      name: 'Onboarding',
-      type: 'automation',
-      order: 1,
-      workspace: { id: WORKSPACE_ID },
-      workflows: [
-        { id: 11, name: 'Send welcome', order: 1, immediate_dispatch: true },
-        { id: 12, name: 'Nightly sync', order: 2, immediate_dispatch: false },
-      ],
+    await testApp.store.dispatch('application/forceSetAll', {
+      applications: applications(),
     })
   })
 
@@ -90,7 +119,40 @@ describe('start workflow action form', () => {
     await wrapper.find('.select__item-link').trigger('click')
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.vm.values.service.workflow_id).toBe(11)
+    expect(wrapper.find('.dropdown__selected').text()).toBe('Send welcome')
+    const emitted = wrapper.emitted('values-changed')
+    expect(emitted.at(-1)[0].service.workflow_id).toBe(11)
+  })
+
+  test('an unpublished workflow says so', () => {
+    const message = startWorkflowType().getErrorMessage(
+      { id: 1, type: 'start_workflow', service: { workflow_id: 13 } },
+      { database: database(), workspace: { id: WORKSPACE_ID } }
+    )
+
+    expect(message).toBe('databaseWorkflowActionType.startWorkflowUnpublished')
+    expect(enDatabase.databaseWorkflowActionType.startWorkflowUnpublished).toBe(
+      "This workflow hasn't been published yet. Publish it before the " +
+        'button can start it.'
+    )
+  })
+
+  test('a paused workflow says so', () => {
+    const message = startWorkflowType().getErrorMessage(
+      { id: 1, type: 'start_workflow', service: { workflow_id: 14 } },
+      { database: database(), workspace: { id: WORKSPACE_ID } }
+    )
+
+    expect(message).toBe('databaseWorkflowActionType.startWorkflowNotLive')
+  })
+
+  test('a live workflow raises no error', () => {
+    const message = startWorkflowType().getErrorMessage(
+      { id: 1, type: 'start_workflow', service: { workflow_id: 11 } },
+      { database: database(), workspace: { id: WORKSPACE_ID } }
+    )
+
+    expect(message).toBeNull()
   })
 
   test('an action with no workflow yet says so', () => {
@@ -134,34 +196,7 @@ describe('start workflow action form', () => {
     service: { workflow_id: 999 },
   }
 
-  test('a workflow the loaded applications do not hold is called out', async () => {
-    await testApp.store.dispatch('application/forceSetAll', {
-      applications: [
-        {
-          id: DATABASE_ID,
-          name: 'Customers',
-          type: 'database',
-          workspace: { id: WORKSPACE_ID },
-          tables: [],
-        },
-        {
-          id: AUTOMATION_ID,
-          name: 'Onboarding',
-          type: 'automation',
-          order: 1,
-          workspace: { id: WORKSPACE_ID },
-          workflows: [
-            {
-              id: 11,
-              name: 'Send welcome',
-              order: 1,
-              immediate_dispatch: true,
-            },
-          ],
-        },
-      ],
-    })
-
+  test('a workflow the loaded applications do not hold is called out', () => {
     const message = startWorkflowType().getErrorMessage(missingWorkflowAction, {
       database: database(),
       workspace: { id: WORKSPACE_ID },
@@ -178,8 +213,7 @@ describe('start workflow action form', () => {
   })
 
   test('nothing is said while the applications are still being fetched', () => {
-    // `forceCreate` never marks the list fetched.
-    expect(testApp.store.getters['application/isLoaded']).toBe(false)
+    testApp.store.commit('application/SET_LOADED', false)
 
     const message = startWorkflowType().getErrorMessage(missingWorkflowAction, {
       database: database(),
