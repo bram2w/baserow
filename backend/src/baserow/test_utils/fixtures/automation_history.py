@@ -46,6 +46,7 @@ class AutomationHistoryFixtures:
             workflow=original_workflow,
             started_on=started_on,
             is_test_run=is_test_run,
+            triggered_by=kwargs.pop("triggered_by", None),
         )
 
         history.completed_on = completed_on

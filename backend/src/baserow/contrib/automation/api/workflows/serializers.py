@@ -1,3 +1,5 @@
+from django.contrib.auth import get_user_model
+
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
@@ -13,6 +15,8 @@ from baserow.contrib.automation.workflows.constants import (
     WorkflowState,
 )
 from baserow.contrib.automation.workflows.handler import AutomationWorkflowHandler
+
+User = get_user_model()
 
 
 class AutomationWorkflowSerializer(serializers.ModelSerializer):
@@ -124,8 +128,23 @@ class AutomationHistorySerializer(serializers.ModelSerializer):
         )
 
 
+class AutomationWorkflowHistoryTriggeredBySerializer(serializers.ModelSerializer):
+    """
+    Who started the run. Kept to what the history panel shows: the id, so the
+    frontend can match the current user, and the display name.
+    """
+
+    class Meta:
+        model = User
+        fields = ("id", "first_name")
+        read_only_fields = fields
+
+
 class AutomationWorkflowHistorySerializer(AutomationHistorySerializer):
     plugin_data = serializers.SerializerMethodField()
+    triggered_by = AutomationWorkflowHistoryTriggeredBySerializer(
+        read_only=True, allow_null=True
+    )
 
     class Meta:
         model = AutomationWorkflowHistory
@@ -133,6 +152,7 @@ class AutomationWorkflowHistorySerializer(AutomationHistorySerializer):
             "is_test_run",
             "simulate_until_node",
             "plugin_data",
+            "triggered_by",
         )
 
     @extend_schema_field(serializers.DictField())
