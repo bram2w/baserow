@@ -89,6 +89,7 @@ describe('ButtonFieldActionList', () => {
       'local_baserow_update_row',
       'local_baserow_delete_row',
       'slack_write_message',
+      'start_workflow',
     ])
     // `$t` returns the key in the test env, so the name is checked against
     // the key the type uses and the copy itself is pinned separately.
@@ -96,7 +97,9 @@ describe('ButtonFieldActionList', () => {
     expect(en.databaseWorkflowActionType.openUrl).toBe('Open URL')
     expect(items[0].props('icon')).toBe('iconoir-link')
     // Slack is drawn with its logo, which the item takes as an image.
-    const slack = items[items.length - 1]
+    const slack = items.find(
+      (item) => item.props('value') === 'slack_write_message'
+    )
     expect(slack.props('icon')).toBeNull()
     expect(slack.props('image')).toMatch(/svg/)
   })

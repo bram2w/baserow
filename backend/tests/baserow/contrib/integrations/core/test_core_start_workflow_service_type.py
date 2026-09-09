@@ -104,8 +104,7 @@ def test_start_workflow_service_prepare_values_rejects_workflow_without_trigger(
         )
 
     assert (
-        exc.value.detail[0]
-        == "Only workflows with an immediate dispatch trigger can be started."
+        exc.value.detail[0] == CoreStartWorkflowServiceType.TRIGGER_NOT_ON_DEMAND_ERROR
     )
 
 
@@ -153,8 +152,7 @@ def test_start_workflow_service_prepare_values_rejects_non_immediate_dispatch_wo
         )
 
     assert (
-        exc.value.detail[0]
-        == "Only workflows with an immediate dispatch trigger can be started."
+        exc.value.detail[0] == CoreStartWorkflowServiceType.TRIGGER_NOT_ON_DEMAND_ERROR
     )
 
 
@@ -179,10 +177,7 @@ def test_start_workflow_service_dispatch_rejects_non_immediate_dispatch_workflow
     with pytest.raises(ServiceImproperlyConfiguredDispatchException) as exc:
         ServiceHandler().dispatch_service(service, fake_dispatch_context())
 
-    assert (
-        str(exc.value)
-        == "Only workflows with an immediate dispatch trigger can be started."
-    )
+    assert str(exc.value) == CoreStartWorkflowServiceType.TRIGGER_NOT_ON_DEMAND_ERROR
 
 
 @pytest.mark.django_db

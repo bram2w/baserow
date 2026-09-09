@@ -8248,6 +8248,8 @@ class ButtonFieldType(ReadOnlyFieldType):
         if isinstance(from_field, ButtonField):
             return
 
+        # `user` is checked against the restored actions (ADR 006 section 5),
+        # so a credential or workflow they may not read is dropped.
         self._recreate_workflow_actions(
             to_field, to_field_kwargs.get("workflow_actions") or [], user=user
         )
@@ -8270,6 +8272,16 @@ class ButtonFieldType(ReadOnlyFieldType):
             "database_fields": UnchangedIdMapping(),
         }
 
+        # Marked as a duplicate so the action types keep references outside
+        # the copied scope: the data never leaves the workspace.
+        import_export_config = ImportExportConfig(
+            include_permission_data=True,
+            reduce_disk_space_usage=False,
+            is_duplicate=True,
+            exclude_sensitive_data=False,
+            copied_by=user,
+        )
+
         # Opened only because the action import registers a deferred callback,
         # which raises when no context is active.
         with deferred_callback_context():
@@ -8278,5 +8290,9 @@ class ButtonFieldType(ReadOnlyFieldType):
                     serialized_action["type"]
                 )
                 action_type.import_serialized(
-                    field, serialized_action, id_mapping, copied_by=user
+                    field,
+                    serialized_action,
+                    id_mapping,
+                    import_export_config=import_export_config,
+                    copied_by=user,
                 )

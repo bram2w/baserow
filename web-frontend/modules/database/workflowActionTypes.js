@@ -9,9 +9,11 @@ import {
 import {
   CoreHTTPRequestServiceType,
   CoreSMTPEmailServiceType,
+  CoreStartWorkflowServiceType,
 } from '@baserow/modules/integrations/core/serviceTypes'
 import { SlackWriteMessageServiceType } from '@baserow/modules/integrations/slack/serviceTypes'
 import { SlackBotIntegrationType } from '@baserow/modules/integrations/slack/integrationTypes'
+import { WORKFLOW_STATES } from '@baserow/modules/automation/components/enums'
 import { resolveFormula } from '@baserow/modules/core/formula'
 import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
 import {
@@ -734,5 +736,75 @@ export class SlackWriteMessageWorkflowActionType extends DatabaseExternalWorkflo
         },
       },
     }
+  }
+}
+
+/**
+ * Queues an automation workflow. Nothing comes back, so it is not an
+ * external action and describes no result.
+ */
+export class CoreStartWorkflowWorkflowActionType extends DatabaseWorkflowActionServiceType {
+  static getType() {
+    return 'start_workflow'
+  }
+
+  getOrder() {
+    return 70
+  }
+
+  get serviceType() {
+    return this.app.$registry.get(
+      'service',
+      CoreStartWorkflowServiceType.getType()
+    )
+  }
+
+  get producesResult() {
+    return false
+  }
+
+  getDataSchema() {
+    return null
+  }
+
+  /**
+   * Trashing the automation leaves the id behind; the shared service type
+   * does not report a workflow it cannot find, nor one a click cannot run
+   * yet because it is unpublished or not live.
+   */
+  getErrorMessage(workflowAction, applicationContext) {
+    const inherited = super.getErrorMessage(workflowAction, applicationContext)
+    if (inherited) {
+      return inherited
+    }
+
+    const workflowId = workflowAction.service?.workflow_id
+    const workspace = applicationContext?.workspace
+    // An empty store looks like a missing workflow until applications, which
+    // carry their workflows, have loaded.
+    if (
+      !workflowId ||
+      !workspace?.id ||
+      !this.app.$store.getters['application/isLoaded']
+    ) {
+      return null
+    }
+
+    const workflow = this.serviceType.getWorkflow(workflowId, workspace)
+
+    // Applications are filtered by what the caller may read, so a deleted
+    // workflow and one behind a role look the same; the copy says "not found".
+    if (!workflow) {
+      return this.app.$i18n.t('databaseWorkflowActionType.startWorkflowMissing')
+    }
+    if (!workflow.published_on) {
+      return this.app.$i18n.t(
+        'databaseWorkflowActionType.startWorkflowUnpublished'
+      )
+    }
+    if (workflow.state !== WORKFLOW_STATES.LIVE) {
+      return this.app.$i18n.t('databaseWorkflowActionType.startWorkflowNotLive')
+    }
+    return null
   }
 }
