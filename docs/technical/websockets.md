@@ -180,7 +180,8 @@ recipient arrays on the `users` channel, and a partial ID index covers broadcast
 to all users. Page messages use the `(channel_group, id)` index. Full business
 payloads are not indexed.
 
-The `ws_set_realtime_event_targets` trigger derives both columns before insertion
+The `ws_realtime_event_targets_before_write` trigger calls
+`ws_set_realtime_event_targets()` to derive both columns before insertion
 and when `payload` or `channel_group` changes. This also covers old workers that
 insert only the original columns during deployment. It reads routing metadata for
 users-channel events; page messages need no payload traversal. Live delivery and
@@ -261,6 +262,10 @@ Each batch commits separately, so earlier deletions survive a later failure. A
 scheduled run skips cleanup while another task owns the nonblocking lease. The
 retention target is not a hard maximum row age: locked rows or a sustained cleanup
 backlog can remain until a later run.
+
+A surviving baseline older than the retention window cannot prove complete
+history: cleanup may have skipped its lock while deleting newer expired events.
+Replay checks the baseline's age as well as its existence before acknowledging it.
 
 The `(created_at, id)` index supports bounded expiration scans. Recipient indexes
 are restricted to the shared `users` channel; page events retain the

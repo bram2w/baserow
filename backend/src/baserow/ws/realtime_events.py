@@ -304,11 +304,16 @@ class RealtimeEventHandler:
         if replay_window_events:
             # The first event must be the last seen event, and we must not exceed the
             # replay limit with the remaining events, for a successful replay.
+            baseline = replay_window_events[0]
             latest_event_id = replay_window_events[-1].id
             replay_events = replay_window_events[1:]
             max_events = settings.BASEROW_REALTIME_REPLAY_MAX_EVENTS
             can_replay = (
-                replay_window_events[0].id == last_seen_id
+                baseline.id == last_seen_id
+                # Cleanup can skip a locked expired baseline while deleting
+                # later expired events. That surviving row cannot prove that
+                # the replay window is complete.
+                and baseline.created_at >= timezone.now() - REALTIME_EVENTS_RETENTION
                 and len(replay_events) <= max_events
             )
             if can_replay:

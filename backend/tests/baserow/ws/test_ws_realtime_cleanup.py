@@ -152,23 +152,21 @@ def test_retention_boundary_preserves_fresh_replay_and_expires_old_cursor(settin
 
         assert cleanup_old_realtime_events() == 1
 
-    assert list(RealtimeEvent.objects.order_by("id").values_list("id", flat=True)) == [
-        boundary,
-        fresh,
-        latest,
-    ]
-    expired_result = RealtimeEventHandler.get_replay_events_result(
-        1, ["table-1"], expired, None
-    )
-    assert expired_result.force_refresh is True
-    assert expired_result.replay_events == []
-    for cursor, expected in ((boundary, [fresh, latest]), (fresh, [latest])):
-        result = RealtimeEventHandler.get_replay_events_result(
-            1, ["table-1"], cursor, None
+        assert list(
+            RealtimeEvent.objects.order_by("id").values_list("id", flat=True)
+        ) == [boundary, fresh, latest]
+        expired_result = RealtimeEventHandler.get_replay_events_result(
+            1, ["table-1"], expired, None
         )
-        assert result.force_refresh is False
-        assert result.latest_event_id == latest
-        assert [event.id for event in result.replay_events] == expected
+        assert expired_result.force_refresh is True
+        assert expired_result.replay_events == []
+        for cursor, expected in ((boundary, [fresh, latest]), (fresh, [latest])):
+            result = RealtimeEventHandler.get_replay_events_result(
+                1, ["table-1"], cursor, None
+            )
+            assert result.force_refresh is False
+            assert result.latest_event_id == latest
+            assert [event.id for event in result.replay_events] == expected
 
 
 @pytest.mark.django_db(transaction=True)
@@ -301,3 +299,30 @@ def test_cleanup_skips_locked_rows_and_cleans_them_on_a_later_run():
         assert RealtimeEventHandler.cleanup_old_realtime_events(timedelta(days=1)) == 2
         assert list(RealtimeEvent.objects.values_list("id", flat=True)) == [expired[0]]
     assert RealtimeEventHandler.cleanup_old_realtime_events(timedelta(days=1)) == 1
+
+
+@pytest.mark.django_db(transaction=True)
+def test_locked_expired_baseline_cannot_hide_events_deleted_by_cleanup():
+    baseline, missed = create_events(timedelta(days=2), 2)
+    fresh = create_events(timedelta(hours=1), 1)[0]
+    with closing(
+        connection.Database.connect(**connection.get_connection_params())
+    ) as blocker:
+        with blocker.cursor() as cursor:
+            cursor.execute(
+                "SELECT id FROM ws_realtime_events WHERE id = %s FOR UPDATE",
+                [baseline],
+            )
+        assert RealtimeEventHandler.cleanup_old_realtime_events(timedelta(days=1)) == 1
+        assert not RealtimeEvent.objects.filter(id=missed).exists()
+        assert list(
+            RealtimeEvent.objects.order_by("id").values_list("id", flat=True)
+        ) == [baseline, fresh]
+
+        # The surviving anchor cannot prove completeness after SKIP LOCKED has
+        # deleted later expired events. Fresh updates must not mask that gap.
+        result = RealtimeEventHandler.get_replay_events_result(
+            1, ["table-1"], baseline, None
+        )
+        assert result.force_refresh is True
+        assert result.replay_events == []
