@@ -8,6 +8,17 @@
           {{ historyTitlePrefix }}{{ statusTitle }}
         </span>
         <span
+          v-if="item.triggered_by"
+          class="workflow-history__header-actor"
+          :title="item.triggered_by.first_name"
+        >
+          {{
+            $t('historySidePanel.startedBy', {
+              name: item.triggered_by.first_name,
+            })
+          }}
+        </span>
+        <span
           v-if="item.completed_on"
           :title="completedDate"
           class="workflow-history__header-date"
