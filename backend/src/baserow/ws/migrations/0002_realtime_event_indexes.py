@@ -13,6 +13,11 @@ TARGETS_FUNCTION = """
 CREATE OR REPLACE FUNCTION ws_set_realtime_event_targets() RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
+    -- Called by ws_realtime_event_targets_before_write for INSERTs and updates
+    -- to payload/channel_group, including record_events() bulk inserts and old
+    -- workers that do not know these columns. These indexed fields are read by
+    -- RealtimeEventHandler.get_users_channel_live_delivery_filter() during replay.
+    -- Reset them first so changing an event's channel cannot leave stale targets.
     NEW.target_user_ids := ARRAY[]::integer[];
     NEW.all_users := false;
     -- Page broadcasts use channel_group/id and need no JSON traversal on INSERT.
@@ -21,9 +26,13 @@ BEGIN
     END IF;
 
     IF NEW.payload->>'type' = 'broadcast_to_users' THEN
+        -- Only the JSON boolean true denotes an all-user broadcast.
         NEW.all_users := COALESCE(
             NEW.payload->'send_to_all_users' = 'true'::jsonb, false
         );
+        -- Store a sorted set of int32 recipients. Guard the casts to ignore
+        -- malformed values without rejecting the write: numeric strings,
+        -- booleans, fractions and out-of-range numbers are not user IDs.
         SELECT COALESCE(array_agg(DISTINCT recipient ORDER BY recipient),
                         ARRAY[]::integer[])
         INTO NEW.target_user_ids
@@ -40,6 +49,9 @@ BEGIN
         ) recipients
         WHERE recipient IS NOT NULL;
     ELSIF NEW.payload->>'type' = 'broadcast_to_users_individual_payloads' THEN
+        -- Delivery looks up payload_map[str(user_id)], so accept only canonical
+        -- int32 keys ("42", not "0042" or "-0"). Length/range guards make casts safe;
+        -- the string round trip prevents treating a different key as a recipient.
         SELECT COALESCE(array_agg(DISTINCT recipient ORDER BY recipient),
                         ARRAY[]::integer[])
         INTO NEW.target_user_ids
@@ -85,6 +97,8 @@ def _drop_indexes(cursor):
 
 
 def forwards(apps, schema_editor):
+    """Reset the disposable buffer and install indexed targets for future writes."""
+
     db = schema_editor.connection
     with transaction.atomic(using=db.alias), db.cursor() as cursor:
         _reset_buffer(cursor)
