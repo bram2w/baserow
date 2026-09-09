@@ -35,7 +35,11 @@ import {
 import { QUERY_PARAM_TYPE_HANDLER_FUNCTIONS } from '@baserow/modules/builder/enums'
 import RecursiveWrapper from '@baserow/modules/core/components/RecursiveWrapper'
 import { ThemeConfigBlockType } from '@baserow/modules/builder/themeConfigBlockTypes'
-import { useRoute, useRouter } from '#imports'
+import { useRoute, useRouter, useRuntimeConfig } from '#imports'
+import {
+  getBuilderPreviewCookiePath,
+  getBuilderPreviewUserSourceCookieName,
+} from '@baserow/modules/builder/utils/preview'
 
 defineOptions({
   name: 'PublicPageContent',
@@ -45,6 +49,7 @@ const store = useStore()
 const route = useRoute()
 const router = useRouter()
 const nuxtApp = useNuxtApp()
+const config = useRuntimeConfig()
 
 const { $registry, $i18n } = nuxtApp
 
@@ -335,9 +340,9 @@ const maybeRedirectUserToLoginPage = async () => {
     )
     const url = prefixInternalResolvedUrl(
       loginPage.path,
-      props.builder,
       'page',
-      props.mode
+      props.mode,
+      props.builder.id
     )
 
     const currentPath = route.fullPath
@@ -364,10 +369,9 @@ const logOffAndReturnToLogin = async ({ builder, store, redirect }) => {
     application: builder,
   })
   // Redirect to home page after logout
-  return redirect({
-    name: 'application-builder-page',
-    params: { pathMatch: '/' },
-  })
+  return redirect(
+    prefixInternalResolvedUrl('/', 'page', props.mode, builder.id)
+  )
 }
 
 const checkProviderAuthentication = async () => {
@@ -389,9 +393,25 @@ const checkProviderAuthentication = async () => {
   }
 
   if (refreshTokenFromProvider) {
-    setToken(nuxtApp, refreshTokenFromProvider, userSourceCookieTokenName, {
-      sameSite: 'Lax',
-    })
+    const previewUserSourceCookie = props.mode === 'preview'
+    const cookieUrl =
+      props.mode === 'preview'
+        ? config.public.builderPreviewUrl
+        : config.public.publicWebFrontendUrl
+    setToken(
+      nuxtApp,
+      refreshTokenFromProvider,
+      previewUserSourceCookie
+        ? getBuilderPreviewUserSourceCookieName()
+        : userSourceCookieTokenName,
+      {
+        sameSite: 'Lax',
+        cookieUrl,
+        path: previewUserSourceCookie
+          ? getBuilderPreviewCookiePath(props.builder.id)
+          : '/',
+      }
+    )
     try {
       await store.dispatch('userSourceUser/refreshAuth', {
         application: props.builder,
