@@ -1,5 +1,7 @@
 from typing import Any, Dict, List, Optional, Union
 
+from django.contrib.auth.models import AbstractUser
+
 from baserow.contrib.automation.data_providers.registries import (
     automation_data_provider_type_registry,
 )
@@ -23,6 +25,7 @@ class AutomationDispatchContext(DispatchContext):
         event_payload: Optional[Union[Dict, List[Dict]]] = None,
         simulate_until_node: Optional[AutomationActionNode] = None,
         current_iterations: Optional[Dict[int, int]] = None,
+        actor: Optional[AbstractUser] = None,
     ):
         """
         The `DispatchContext` implementation for automations. This context is provided
@@ -37,6 +40,10 @@ class AutomationDispatchContext(DispatchContext):
         :param simulate_until_node: Stop simulating the dispatch once this node
             is reached.
         :param current_iterations: Used by the Iterator node's children.
+        :param actor: The user whose action started this run, when the
+            history knows one. Carried for services that may fall back to
+            it; a node with an integration still acts as that integration's
+            user.
         """
 
         self.workflow = workflow
@@ -66,6 +73,7 @@ class AutomationDispatchContext(DispatchContext):
             use_sample_data=bool(self.simulate_until_node),
             force_outputs=force_outputs,
             event_payload=event_payload,
+            actor=actor,
         )
 
     def clone(self, **kwargs):

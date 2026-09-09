@@ -57,9 +57,9 @@ class AutomationHistoryHandler:
             base_queryset = AutomationWorkflowHistory.objects.all()
 
         try:
-            return base_queryset.select_related("workflow__automation__workspace").get(
-                id=history_id
-            )
+            return base_queryset.select_related(
+                "workflow__automation__workspace", "triggered_by"
+            ).get(id=history_id)
         except AutomationWorkflowHistory.DoesNotExist:
             raise AutomationWorkflowHistoryDoesNotExist(history_id)
 
