@@ -2618,7 +2618,12 @@ class CoreStartWorkflowServiceType(CoreServiceType):
                 self.TRIGGER_NOT_ON_DEMAND_ERROR
             )
 
-        AutomationWorkflowHandler().async_start_workflow(published_workflow)
+        # The button field sets the clicker as the context's actor; the
+        # automation node and the builder action leave it None. Recorded on
+        # the history only: the nodes still act as their integration's user.
+        AutomationWorkflowHandler().async_start_workflow(
+            published_workflow, triggered_by=dispatch_context.actor
+        )
         return None
 
     def dispatch_transform(
