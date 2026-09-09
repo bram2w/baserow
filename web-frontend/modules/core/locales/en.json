@@ -1345,6 +1345,7 @@
   "subjectType": {
     "user": "User",
     "users": "Users",
+    "anonymousUser": "Anonymous user",
     "agent": "Agent",
     "agents": "Agents"
   },
