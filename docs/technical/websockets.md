@@ -281,7 +281,8 @@ be the same on ASGI and Celery workers. Increasing it cannot recover deleted eve
 an already-marked sentinel still requires refresh even inside the enlarged window.
 
 A nullable `sentinel_key` identifies events already retained by cleanup. Ordinary
-inserts leave it null and do not calculate audience hashes. A partial unique index
+inserts leave it null; audience hashes are calculated during cleanup. The recipient
+columns continue to be derived by the `ws.0002` trigger. A partial unique index
 finds the current sentinel for a route; a partial age index finds unprocessed
 expired events without repeatedly scanning retained sentinels. Cleanup checks exact
 routing equality before combining events, so a hash collision cannot hide changes.
@@ -308,7 +309,7 @@ Missing history state waits for outstanding inserts before establishing a conser
 floor. Migration activation also establishes a floor, so older cursors can require
 one refresh. Rollback cannot restore deleted events and leaves the sequence LOGGED.
 
-The migration installs three PostgreSQL functions:
+Compaction migration `ws.0003` installs three additional PostgreSQL functions:
 
 - `ws_realtime_event_routing` extracts and normalizes recipients, exclusions, the
   originating socket and event types. Cleanup hashes this small JSON value instead
@@ -329,8 +330,9 @@ is necessary when the history supporting numeric replay cursors disappears.
 
 #### Deployment and rollback
 
-The migration creates the schema and initializes the floor; it does not compact
-historical events. There is no separate activation gate: the updated cleanup task
+Migration `ws.0003` preserves events recorded since `ws.0002`'s buffer reset. It
+creates the schema and initializes the floor; it does not compact historical
+events. There is no separate activation gate: the updated cleanup task
 starts compaction whenever it executes. `BASEROW_REALTIME_REPLAY_MAX_EVENTS=0`
 disables recording and replay, but does not pause cleanup.
 

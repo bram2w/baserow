@@ -1239,7 +1239,7 @@ def test_stale_users_replay_does_not_filter_unrelated_individual_payloads():
         filtered_rows += node.get("Rows Removed by Index Recheck", 0)
         nodes.extend(node.get("Plans", []))
 
-    assert [event.id for event in window] == [baseline, targeted, everyone]
+    assert [event.id for event in window] == [targeted, everyone]
     # The shared event type must not make replay inspect every other user's
     # payload. Check work performed by PostgreSQL, rather than machine timing.
     assert filtered_rows < 50

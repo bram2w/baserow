@@ -6,7 +6,7 @@ from django.db import IntegrityError, connection
 
 import pytest
 
-from baserow.ws.models import RealtimeEvent
+from baserow.ws.models import RealtimeEvent, RealtimeEventHistoryState
 from baserow.ws.realtime_events import RealtimeEventHandler
 
 
@@ -85,14 +85,22 @@ def test_replay_reset_upgrade_and_rollback_keep_ids_and_old_writer_compatibility
     _apply("backwards")
     try:
         old_cursor = _legacy_insert()
+        missed_id = _legacy_insert()
         old_filenode = _table_storage()[0]
         _apply("forwards")
         assert RealtimeEvent.objects.count() == 0
         assert _table_storage()[0] != old_filenode
         assert {"target_user_ids", "all_users"} <= _columns()
 
+        # On a real upgrade ws0003 initializes history after the parent reset.
+        # The cursor crossed a discarded event, rather than merely losing its
+        # baseline row, which the compaction reader no longer requires.
+        RealtimeEventHistoryState.objects.all().delete()
+        RealtimeEventHandler._initialize_realtime_history()
+        assert RealtimeEventHistoryState.objects.get(pk=1).floor == missed_id
+
         new_id = _legacy_insert()
-        assert new_id > old_cursor
+        assert new_id > missed_id > old_cursor
         event = RealtimeEvent.objects.get(id=new_id)
         assert event.target_user_ids == [42]
         assert event.all_users is False
