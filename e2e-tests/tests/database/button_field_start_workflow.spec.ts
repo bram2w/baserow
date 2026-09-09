@@ -12,8 +12,17 @@ import { test, expect } from "../baserowTest";
 import { GridPage } from "../../pages/database/gridPage";
 import { AutomationWorkflowPage } from "../../pages/automation/automationWorkflowPage";
 import { PageConfig } from "../../pages/baserowPage";
+import {
+  actionItem,
+  addAction,
+  openFieldEditor,
+  saveField,
+} from "../../pages/database/buttonFieldEditor";
 import { setupGrid, GridSetupResult } from "../../fixtures/database/gridSetup";
-import { createStartWorkflowAction } from "../../fixtures/database/workflowAction";
+import {
+  createStartWorkflowAction,
+  listWorkflowActions,
+} from "../../fixtures/database/workflowAction";
 import { createAutomation } from "../../fixtures/automation/automation";
 import {
   AutomationWorkflow,
@@ -29,6 +38,8 @@ const START_FIELD_INDEX = 0;
 
 let g: GridSetupResult;
 let workflow: AutomationWorkflow;
+/** A workflow only an event can start, so the picker must leave it out. */
+let eventWorkflow: AutomationWorkflow;
 /** A member of the workspace who can click the button but not open the automation. */
 let editor: User;
 
@@ -65,7 +76,10 @@ test.describe("Button field, start workflow action", () => {
     g = await setupGrid({
       dbName: "Start workflow DB",
       tableName: "Jobs",
-      fields: [{ name: "Start", type: "button", settings: { label: "Start" } }],
+      fields: [
+        { name: "Start", type: "button", settings: { label: "Start" } },
+        { name: "Configure", type: "button", settings: { label: "Configure" } },
+      ],
       rows: [{ Name: "row one" }],
     });
 
@@ -76,6 +90,11 @@ test.describe("Button field, start workflow action", () => {
     workflow = await createAutomationWorkflow("Started by button", automation);
     await createAutomationNode(workflow, "manual");
     await publishAutomationWorkflow(workflow);
+    eventWorkflow = await createAutomationWorkflow(
+      "Waits for rows",
+      automation
+    );
+    await createAutomationNode(eventWorkflow, "local_baserow_rows_created");
     await createStartWorkflowAction(
       g.user,
       g.fieldByName["Start"],
@@ -137,5 +156,35 @@ test.describe("Button field, start workflow action", () => {
     await expect(entry.locator(".workflow-history__header-actor")).toHaveText(
       `Started by ${g.user.name}`
     );
+  });
+
+  test("the editor offers only workflows a click can start, and saves the pick", async ({
+    page,
+  }) => {
+    const grid = new GridPage(page, g.user);
+    await grid.goTo(g.database, g.table);
+    await openFieldEditor(page, "Configure");
+    const added = await addAction(page, "Start workflow");
+
+    await added
+      .locator(".button-field-action-list__form .dropdown")
+      .first()
+      .click();
+    const items = page.locator(".dropdown__items:visible");
+    await expect(items).toContainText(workflow.name);
+    // A rows-created trigger cannot start on demand, so it is not on offer.
+    await expect(items).not.toContainText(eventWorkflow.name);
+    await items.getByText(workflow.name).click();
+
+    await saveField(page);
+    await expect(page.locator(".button-field-action-list")).toBeHidden();
+
+    const actions = await listWorkflowActions(
+      g.user,
+      g.fieldByName["Configure"]
+    );
+    const saved = actions.find((action) => action.type === "start_workflow");
+    expect(saved, "the start workflow action was not saved").toBeDefined();
+    expect(saved.service.workflow_id).toBe(workflow.id);
   });
 });
