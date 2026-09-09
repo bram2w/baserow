@@ -41,12 +41,14 @@ class AutomationHistoryFixtures:
             user=user, workflow=original_workflow
         )
 
+        # Anything left is the handler's to accept or refuse, so a misspelt
+        # name fails here instead of quietly building a default row.
         history = AutomationHistoryHandler().create_workflow_history(
             original_workflow=original_workflow,
             workflow=original_workflow,
             started_on=started_on,
             is_test_run=is_test_run,
-            triggered_by=kwargs.pop("triggered_by", None),
+            **kwargs,
         )
 
         history.completed_on = completed_on

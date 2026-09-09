@@ -1,4 +1,5 @@
 import datetime
+from unittest.mock import patch
 
 from django.db.models import Count, Q
 from django.urls import reverse
@@ -20,7 +21,11 @@ from baserow.contrib.automation.api.workflows.serializers import (
 )
 from baserow.contrib.automation.history.constants import HistoryStatusChoices
 from baserow.contrib.automation.history.handler import AutomationHistoryHandler
-from baserow.contrib.automation.nodes.node_types import CorePeriodicTriggerNodeType
+from baserow.contrib.automation.history.models import AutomationWorkflowHistory
+from baserow.contrib.automation.nodes.node_types import (
+    CoreManualTriggerNodeType,
+    CorePeriodicTriggerNodeType,
+)
 from baserow.contrib.automation.workflows.constants import ALLOW_TEST_RUN_MINUTES
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.cache import local_cache
@@ -480,11 +485,6 @@ def test_enable_workflow_test_run(api_client, data_fixture):
 
 @pytest.mark.django_db
 def test_a_test_run_records_who_started_it(api_client, data_fixture):
-    from unittest.mock import patch
-
-    from baserow.contrib.automation.history.models import AutomationWorkflowHistory
-    from baserow.contrib.automation.nodes.node_types import CoreManualTriggerNodeType
-
     user, token = data_fixture.create_user_and_token()
     workflow = data_fixture.create_automation_workflow(
         user, trigger_type=CoreManualTriggerNodeType.type
