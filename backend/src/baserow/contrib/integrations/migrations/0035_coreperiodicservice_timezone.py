@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('integrations', '0033_coregotonodeservice'),
+        ('integrations', '0034_migrate_local_baserow_filter_value_mode'),
     ]
 
     operations = [
