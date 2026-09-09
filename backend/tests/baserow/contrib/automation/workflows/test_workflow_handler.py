@@ -1946,3 +1946,38 @@ def test_async_start_workflow_test_run_creates_test_clone(
     mock_start_workflow_celery_task.delay.assert_called_once_with(
         history.workflow_id, history.id
     )
+
+
+@pytest.mark.django_db
+def test_async_start_workflow_records_who_triggered_it(data_fixture):
+    user = data_fixture.create_user()
+    workflow = data_fixture.create_automation_workflow(user=user)
+    published = AutomationWorkflowHandler().publish(workflow)
+
+    with patch(
+        "baserow.contrib.automation.workflows.handler.start_workflow_celery_task"
+    ):
+        AutomationWorkflowHandler().async_start_workflow(published, triggered_by=user)
+
+    history = AutomationWorkflowHistory.objects.get(original_workflow=workflow)
+    assert history.triggered_by_id == user.id
+
+
+@pytest.mark.django_db
+def test_async_start_workflow_records_the_trigger_on_a_refused_run(data_fixture):
+    """The rate limited branch writes its own history row; it names the user too."""
+
+    user = data_fixture.create_user()
+    workflow = data_fixture.create_automation_workflow(user=user)
+    published = AutomationWorkflowHandler().publish(workflow)
+
+    with patch.object(
+        AutomationWorkflowHandler,
+        "before_run",
+        side_effect=AutomationWorkflowRateLimited("too fast"),
+    ):
+        AutomationWorkflowHandler().async_start_workflow(published, triggered_by=user)
+
+    history = AutomationWorkflowHistory.objects.get(original_workflow=workflow)
+    assert history.status == "error"
+    assert history.triggered_by_id == user.id

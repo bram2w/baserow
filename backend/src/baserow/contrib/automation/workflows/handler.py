@@ -1143,12 +1143,16 @@ class AutomationWorkflowHandler:
         self,
         workflow: AutomationWorkflow,
         event_payload: Optional[List[Dict]] = None,
+        triggered_by: Optional[AbstractUser] = None,
     ) -> None:
         """
         Runs the provided workflow in a celery task.
 
         :param workflow: The AutomationWorkflow ID that should be executed.
         :param event_payload: The payload from the action.
+        :param triggered_by: The user whose action started the run, when one
+            is known. Recorded on the history entry, never used to authorise
+            the nodes.
         """
 
         error = None
@@ -1216,6 +1220,7 @@ class AutomationWorkflowHandler:
                     completed_on=now,
                     message=error,
                     status=history_status,
+                    triggered_by=triggered_by,
                 )
             return
 
@@ -1226,6 +1231,7 @@ class AutomationWorkflowHandler:
             is_test_run=is_test_run,
             event_payload=event_payload,
             simulate_until_node=simulate_until_node,
+            triggered_by=triggered_by,
         )
 
         automation_workflow_dispatch_started.send(
