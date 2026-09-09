@@ -26,13 +26,14 @@
   font-size: 11px;
 }
 
-.workflow-history__header-actor {
+.workflow-history__actor {
+  margin-left: 26px;
+  margin-top: 4px;
   font-size: 11px;
   color: $palette-neutral-700;
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 160px;
+  white-space: nowrap;
 }
 
 .workflow-history__run-time {

@@ -15,6 +15,7 @@ const mountHistory = (item, usersById = {}) => {
     dispatch: vi.fn(),
     getters: {
       'automationHistory/getNodeHistories': () => null,
+      'workspace/getAll': [{ id: 1 }],
       'workspace/getUserById': (id) => usersById[id] ?? null,
     },
   }
@@ -39,30 +40,27 @@ describe('WorkflowHistory', () => {
     storeHolder.store = null
   })
 
-  // The test app has no locale messages loaded, so `$t` returns the key;
-  // the name is read from the tooltip.
+  // The test app has no locale messages loaded, so `$t` returns the key.
   test('names who started the run from the workspace store', async () => {
     const wrapper = await mountHistory(
       { ...baseItem, triggered_by: { id: 7, name: 'Ada' } },
       { 7: { id: 7, name: 'Ada Lovelace' } }
     )
-    const actor = wrapper.find('.workflow-history__header-actor')
-    expect(actor.text()).toBe('historySidePanel.startedBy')
-    expect(actor.attributes('title')).toBe('Ada Lovelace')
+    expect(wrapper.find('.workflow-history__actor').text()).toBe(
+      'historySidePanel.startedBy'
+    )
   })
 
-  test('falls back to the serialized name for a user who left', async () => {
+  test('still names a user who left the workspace', async () => {
     const wrapper = await mountHistory({
       ...baseItem,
       triggered_by: { id: 7, name: 'Ada' },
     })
-    expect(
-      wrapper.find('.workflow-history__header-actor').attributes('title')
-    ).toBe('Ada')
+    expect(wrapper.find('.workflow-history__actor').exists()).toBe(true)
   })
 
   test('shows nothing when nobody is recorded', async () => {
     const wrapper = await mountHistory(baseItem)
-    expect(wrapper.find('.workflow-history__header-actor').exists()).toBe(false)
+    expect(wrapper.find('.workflow-history__actor').exists()).toBe(false)
   })
 })

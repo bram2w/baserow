@@ -8,13 +8,6 @@
           {{ historyTitlePrefix }}{{ statusTitle }}
         </span>
         <span
-          v-if="triggeredByName"
-          class="workflow-history__header-actor"
-          :title="triggeredByName"
-        >
-          {{ $t('historySidePanel.startedBy', { name: triggeredByName }) }}
-        </span>
-        <span
           v-if="item.completed_on"
           :title="completedDate"
           class="workflow-history__header-date"
@@ -27,6 +20,9 @@
           "
           type="secondary"
         />
+      </div>
+      <div v-if="triggeredByName" class="workflow-history__actor">
+        {{ $t('historySidePanel.startedBy', { name: triggeredByName }) }}
       </div>
     </template>
 
@@ -86,6 +82,7 @@ import historySuccessIcon from '@baserow/modules/core/assets/images/history-succ
 import historyFailedIcon from '@baserow/modules/core/assets/images/history-failed.svg?url'
 import historyDisabledIcon from '@baserow/modules/core/assets/images/history-disabled.svg?url'
 import NodeHistory from '@baserow/modules/automation/components/workflow/sidePanels/NodeHistory.vue'
+import collaboratorName from '@baserow/modules/database/mixins/collaboratorName'
 
 const app = useNuxtApp()
 const store = useStore()
@@ -135,17 +132,9 @@ const nodeHistoriesEntry = computed(() =>
   store.getters['automationHistory/getNodeHistories'](props.item.id)
 )
 
-/**
- * Who started the run, read from the workspace's user store so a rename
- * shows without a refetch, with the serialized name as the fallback when
- * the user has left the workspace.
- */
-const triggeredByName = computed(() => {
-  const triggeredBy = props.item.triggered_by
-  if (!triggeredBy) return null
-  const user = store.getters['workspace/getUserById'](triggeredBy.id)
-  return user ? user.name : triggeredBy.name
-})
+const triggeredByName = computed(() =>
+  collaboratorName.methods.getCollaboratorName(props.item.triggered_by, store)
+)
 
 const statusTitle = computed(() => {
   switch (props.item.status) {
