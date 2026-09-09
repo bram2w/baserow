@@ -8,15 +8,11 @@
           {{ historyTitlePrefix }}{{ statusTitle }}
         </span>
         <span
-          v-if="item.triggered_by"
+          v-if="triggeredByName"
           class="workflow-history__header-actor"
-          :title="item.triggered_by.first_name"
+          :title="triggeredByName"
         >
-          {{
-            $t('historySidePanel.startedBy', {
-              name: item.triggered_by.first_name,
-            })
-          }}
+          {{ $t('historySidePanel.startedBy', { name: triggeredByName }) }}
         </span>
         <span
           v-if="item.completed_on"
@@ -138,6 +134,18 @@ const onToggle = () => {
 const nodeHistoriesEntry = computed(() =>
   store.getters['automationHistory/getNodeHistories'](props.item.id)
 )
+
+/**
+ * Who started the run, read from the workspace's user store so a rename
+ * shows without a refetch, with the serialized name as the fallback when
+ * the user has left the workspace.
+ */
+const triggeredByName = computed(() => {
+  const triggeredBy = props.item.triggered_by
+  if (!triggeredBy) return null
+  const user = store.getters['workspace/getUserById'](triggeredBy.id)
+  return user ? user.name : triggeredBy.name
+})
 
 const statusTitle = computed(() => {
   switch (props.item.status) {

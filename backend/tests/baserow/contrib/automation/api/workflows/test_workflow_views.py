@@ -479,6 +479,32 @@ def test_enable_workflow_test_run(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_a_test_run_records_who_started_it(api_client, data_fixture):
+    from unittest.mock import patch
+
+    from baserow.contrib.automation.history.models import AutomationWorkflowHistory
+    from baserow.contrib.automation.nodes.node_types import CoreManualTriggerNodeType
+
+    user, token = data_fixture.create_user_and_token()
+    workflow = data_fixture.create_automation_workflow(
+        user, trigger_type=CoreManualTriggerNodeType.type
+    )
+    url = reverse(API_URL_WORKFLOW_TEST, kwargs={"workflow_id": workflow.id})
+
+    with patch(
+        "baserow.contrib.automation.workflows.handler.start_workflow_celery_task"
+    ):
+        response = api_client.post(
+            url, format="json", HTTP_AUTHORIZATION=f"JWT {token}"
+        )
+
+    assert response.status_code == HTTP_202_ACCEPTED
+    history = AutomationWorkflowHistory.objects.get(original_workflow=workflow)
+    assert history.is_test_run is True
+    assert history.triggered_by_id == user.id
+
+
+@pytest.mark.django_db
 def test_disable_workflow_test_run(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     automation = data_fixture.create_automation_application(user=user)
@@ -698,7 +724,7 @@ def test_get_workflow_histories_names_who_triggered_the_run(api_client, data_fix
     assert response.status_code == HTTP_200_OK
     assert response.json()["results"][0]["triggered_by"] == {
         "id": user.id,
-        "first_name": "Ada",
+        "name": "Ada",
     }
 
 

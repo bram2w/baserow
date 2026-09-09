@@ -130,13 +130,15 @@ class AutomationHistorySerializer(serializers.ModelSerializer):
 
 class AutomationWorkflowHistoryTriggeredBySerializer(serializers.ModelSerializer):
     """
-    Who started the run. Kept to what the history panel shows: the id, so the
-    frontend can match the current user, and the display name.
+    Who started the run, in the `{id, name}` shape the frontend resolves
+    through the workspace's user store, so a rename shows without a refetch.
     """
+
+    name = serializers.CharField(source="first_name", read_only=True)
 
     class Meta:
         model = User
-        fields = ("id", "first_name")
+        fields = ("id", "name")
         read_only_fields = fields
 
 

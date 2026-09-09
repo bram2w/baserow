@@ -10,11 +10,12 @@ vi.mock('vuex', async (importOriginal) => ({
   useStore: () => storeHolder.store,
 }))
 
-const mountHistory = (item) => {
+const mountHistory = (item, usersById = {}) => {
   storeHolder.store = {
     dispatch: vi.fn(),
     getters: {
       'automationHistory/getNodeHistories': () => null,
+      'workspace/getUserById': (id) => usersById[id] ?? null,
     },
   }
   return mountSuspended(WorkflowHistory, {
@@ -38,16 +39,26 @@ describe('WorkflowHistory', () => {
     storeHolder.store = null
   })
 
-  test('names who started the run', async () => {
-    const wrapper = await mountHistory({
-      ...baseItem,
-      triggered_by: { id: 7, first_name: 'Ada' },
-    })
-    // The test app has no locale messages loaded, so `$t` returns the key;
-    // the name travels through the tooltip.
+  // The test app has no locale messages loaded, so `$t` returns the key;
+  // the name is read from the tooltip.
+  test('names who started the run from the workspace store', async () => {
+    const wrapper = await mountHistory(
+      { ...baseItem, triggered_by: { id: 7, name: 'Ada' } },
+      { 7: { id: 7, name: 'Ada Lovelace' } }
+    )
     const actor = wrapper.find('.workflow-history__header-actor')
     expect(actor.text()).toBe('historySidePanel.startedBy')
-    expect(actor.attributes('title')).toBe('Ada')
+    expect(actor.attributes('title')).toBe('Ada Lovelace')
+  })
+
+  test('falls back to the serialized name for a user who left', async () => {
+    const wrapper = await mountHistory({
+      ...baseItem,
+      triggered_by: { id: 7, name: 'Ada' },
+    })
+    expect(
+      wrapper.find('.workflow-history__header-actor').attributes('title')
+    ).toBe('Ada')
   })
 
   test('shows nothing when nobody is recorded', async () => {
