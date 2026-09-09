@@ -64,7 +64,6 @@ from baserow.contrib.integrations.utils import (
     get_http_request_function,
     read_response_within_limit,
 )
-from baserow.contrib.integrations.utils import get_http_request_function
 from baserow.core.datetime import get_timezones
 from baserow.core.formula.registries import formula_runtime_function_registry
 from baserow.core.formula.types import BaserowFormulaObject
