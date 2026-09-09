@@ -10,8 +10,11 @@ class RealtimeEvent(models.Model):
     channel_group = models.TextField()
     payload = models.JSONField()
     created_at = models.DateTimeField(auto_now_add=True)
-    # The database derives these from routing metadata, including writes by
-    # older workers during a rolling deployment. Replay avoids scanning JSON.
+    # PostgreSQL trigger ws_realtime_event_targets_before_write populates these
+    # from payload on INSERT or updates to payload/channel_group. It calls
+    # ws_set_realtime_event_targets() from migrations/0002_realtime_event_indexes.py,
+    # including for older workers during a rolling deployment, so replay can use
+    # recipient indexes instead of scanning JSON.
     target_user_ids = ArrayField(
         models.IntegerField(), default=list, db_default=[], editable=False
     )
