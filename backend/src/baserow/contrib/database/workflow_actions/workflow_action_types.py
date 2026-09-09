@@ -5,6 +5,8 @@ from django.contrib.auth.models import AbstractUser
 from django.core.files.storage import Storage
 from django.db.models import Manager, Prefetch, QuerySet
 
+from rest_framework import serializers
+
 from baserow.contrib.database.api.workflow_actions.serializers import (
     DatabasePolymorphicServiceSerializer,
 )
