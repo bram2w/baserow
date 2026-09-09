@@ -149,6 +149,6 @@
     "stylelint-config-standard": "^39.0.1",
     "stylelint-config-standard-scss": "^16.0.0",
     "stylelint-selector-bem-pattern": "^4.0.1",
-    "vitest": "4.1.9"
+    "vitest": "4.1.11"
   }
 }
