@@ -198,7 +198,7 @@ def test_builder_saml_assertion_consumer_service(
     with freeze_time("2024-12-17T15:53:00.00Z"):
         preview_relay_state = (
             f"{settings.BUILDER_PREVIEW_URL}/builder/preview/"
-            f"{user_source.application_id}/login?next=%2Ftoto"
+            f"{published_user_source.application_id}/login?next=%2Ftoto"
         )
         response = api_client.post(
             sp_sso_saml_acs_url,
@@ -211,11 +211,11 @@ def test_builder_saml_assertion_consumer_service(
 
         parsed_redirect = urlparse(response.headers["Location"])
         assert parsed_redirect.path == (
-            f"/builder/preview/{user_source.application_id}/login"
+            f"/builder/preview/{published_user_source.application_id}/login"
         )
         query_param = dict(parse_qsl(parsed_redirect.query))
         assert query_param["next"] == "/toto"
-        assert f"user_source_saml_token__{user_source.id}" in query_param
+        assert f"user_source_saml_token__{published_user_source.id}" in query_param
 
         response = api_client.post(
             sp_sso_saml_acs_url,
