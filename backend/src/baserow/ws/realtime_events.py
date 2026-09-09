@@ -173,7 +173,7 @@ class RealtimeEventHandler:
         )
         with realtime_cleanup_run() as run:
             while monotonic() < deadline:
-                with realtime_cleanup_batch(operation="compact") as batch:
+                with realtime_cleanup_batch() as batch:
                     batch.processed, batch.deleted = (
                         RealtimeEventHandler._compact_realtime_events_batch(
                             cutoff, deadline
@@ -191,10 +191,6 @@ class RealtimeEventHandler:
 
     @staticmethod
     def _compact_realtime_events_batch(cutoff, deadline) -> tuple[int, int]:
-        return RealtimeEventHandler._cleanup_realtime_batch(cutoff, deadline)
-
-    @staticmethod
-    def _cleanup_realtime_batch(cutoff, deadline) -> tuple[int, int]:
         class DeadlineExceeded(Exception):
             pass
 

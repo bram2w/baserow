@@ -296,6 +296,8 @@ batch. Statements use three-second timeouts and 250 ms lock timeouts, preserving
 Locked rows wait for a later run; retention bounds replay eligibility but is not a
 hard maximum row age. The task uses a nonblocking cleanup lease. A batch that only
 retains new sentinels still makes progress, even when it deletes no rows.
+The first cleanup run starts compacting existing history. A large backlog is
+processed over successive runs; startup never requires compacting the entire table.
 
 Replay reads retained events and the loss floor in one SQL snapshot, avoiding a
 race between history deletion and checking its floor. Payload contents of expired
@@ -346,7 +348,10 @@ so accidental older cleanup cannot silently erase their evidence.
 
 The migration adds a nullable column without rewriting event payloads and builds
 its indexes concurrently. The builds still need disk and I/O headroom to scan the
-existing table. Brief schema locks are bounded; an interrupted migration can be retried. For rollback, pause and drain cleanup again and disable replay
+existing table and can take much longer than the short schema-lock timeout. The
+routing function is only installed during migration; historical events are hashed,
+marked and deleted by cleanup. Brief schema locks are bounded; an interrupted
+migration can be retried. For rollback, pause and drain cleanup again and disable replay
 with the existing `BASEROW_REALTIME_REPLAY_MAX_EVENTS=0` before returning traffic to
 older readers. Reversing the migration cannot restore deleted events. Before
 re-enabling replay, clear recorded replay history while recording remains disabled

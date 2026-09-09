@@ -1,3 +1,4 @@
+import json
 from contextlib import closing
 from datetime import timedelta
 from importlib import import_module
@@ -7,11 +8,13 @@ from django.utils import timezone
 
 import pytest
 
+from baserow.ws import realtime_events
 from baserow.ws.models import (
     RealtimeEvent,
     RealtimeEventHistoryState,
 )
 from baserow.ws.realtime_events import RealtimeEventHandler
+from baserow.ws.tasks import cleanup_old_realtime_events
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.websockets]
 
@@ -91,6 +94,90 @@ def test_reapplying_migration_preserves_original_sentinel_and_history_floor():
             migration().forwards(None, editor)
         assert RealtimeEvent.objects.values().get(pk=event_id) == original
         assert RealtimeEventHistoryState.objects.get(pk=1).floor == event_id
+
+
+def test_migration_preserves_old_originals_until_the_first_scheduled_cleanup(
+    settings, monkeypatch
+):
+    settings.REALTIME_REPLAY_RETENTION_HOURS = 24
+    monkeypatch.setattr(realtime_events, "REALTIME_EVENTS_CLEANUP_BATCH_SIZE", 2)
+    schema_migration = migration()
+    original_batch = RealtimeEventHandler._compact_realtime_events_batch
+    committed_batches = []
+
+    def compact_batch(*args):
+        result = original_batch(*args)
+        assert not connection.in_atomic_block
+        committed_batches.append(result)
+        return result
+
+    def read_originals():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT id, channel_group, payload, created_at "
+                "FROM ws_realtime_events ORDER BY id"
+            )
+            return cursor.fetchall()
+
+    try:
+        # Exercise first installation on the old schema, not an idempotent
+        # reapplication after the trigger/column already existed.
+        with connection.schema_editor(atomic=False) as editor:
+            schema_migration.backwards(None, editor)
+        now = timezone.now()
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT count(*) FROM pg_attribute "
+                "WHERE attrelid = 'ws_realtime_events'::regclass "
+                "AND attname = 'sentinel_key' AND NOT attisdropped"
+            )
+            assert cursor.fetchone()[0] == 0
+            cursor.executemany(
+                "INSERT INTO ws_realtime_events (channel_group, payload, created_at) "
+                "VALUES (%s, %s, %s)",
+                [
+                    (
+                        "table-1",
+                        json.dumps(
+                            {
+                                "type": "broadcast_to_group",
+                                "payload": {"type": "rows_updated", "value": i},
+                            }
+                        ),
+                        now - (timedelta(days=2) if i < 5 else timedelta(hours=1)),
+                    )
+                    for i in range(6)
+                ],
+            )
+            cursor.execute("SELECT pg_relation_filenode('ws_realtime_events')")
+            original_filenode = cursor.fetchone()[0]
+        originals = read_originals()
+        assert len(originals) == 6
+
+        with connection.schema_editor(atomic=False) as editor:
+            schema_migration.forwards(None, editor)
+
+        assert read_originals() == originals
+        assert not RealtimeEvent.objects.filter(sentinel_key__isnull=False).exists()
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT pg_relation_filenode('ws_realtime_events')")
+            assert cursor.fetchone()[0] == original_filenode
+
+        monkeypatch.setattr(
+            RealtimeEventHandler,
+            "_compact_realtime_events_batch",
+            staticmethod(compact_batch),
+        )
+        assert cleanup_old_realtime_events() == 4
+
+        assert committed_batches == [(2, 1), (2, 2), (1, 1)]
+        assert read_originals() == originals[-2:]
+        assert RealtimeEvent.objects.get(pk=originals[-2][0]).sentinel_key is not None
+        assert RealtimeEvent.objects.get(pk=originals[-1][0]).sentinel_key is None
+    finally:
+        # The shared test database must retain its current schema on failure too.
+        with connection.schema_editor(atomic=False) as editor:
+            schema_migration.forwards(None, editor)
 
 
 def test_compaction_uses_canonical_audience_but_preserves_original_payload():

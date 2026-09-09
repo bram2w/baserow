@@ -170,12 +170,12 @@ def realtime_recording(events_data):
 @dataclass
 class _CleanupStats:
     deleted: int = 0
-    processed: int | None = None
+    processed: int = 0
     outcome: str = "success"
 
 
 @contextmanager
-def realtime_cleanup_batch(*, operation="compact"):
+def realtime_cleanup_batch():
     """Measure one batch; set ``deleted`` only after its transaction commits."""
 
     started_at = monotonic()
@@ -187,20 +187,19 @@ def realtime_cleanup_batch(*, operation="compact"):
         outcome = "error"
         raise
     finally:
-        attributes = _attributes(outcome=outcome, operation=operation)
+        attributes = _attributes(outcome=outcome, operation="compact")
         realtime_cleanup_batch_duration.record(
             (monotonic() - started_at) * 1000, attributes
         )
         if outcome == "success":
             realtime_cleanup_batch_size.record(stats.deleted, attributes)
-            processed = stats.deleted if stats.processed is None else stats.processed
-            if processed:
+            if stats.processed:
                 realtime_cleanup_processed.add(
-                    processed, _attributes(operation=operation)
+                    stats.processed, _attributes(operation="compact")
                 )
             if stats.deleted:
                 realtime_cleanup_deleted.add(
-                    stats.deleted, _attributes(operation=operation)
+                    stats.deleted, _attributes(operation="compact")
                 )
 
 
