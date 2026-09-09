@@ -25,3 +25,35 @@ export async function createAutomationWorkflow(
     automation,
   )
 }
+
+/**
+ * Publishes a workflow and waits for the publish job to finish, so a button
+ * or a test run can start it the moment this returns.
+ */
+export async function publishAutomationWorkflow(
+  workflow: AutomationWorkflow,
+): Promise<void> {
+  const client = getClient(workflow.automation.workspace.user);
+  const job: any = await client.post(
+    `automation/workflows/${workflow.id}/publish/async/`,
+    {},
+  );
+
+  const deadline = Date.now() + 30_000;
+  while (Date.now() < deadline) {
+    const poll: any = await client.get(`jobs/${job.data.id}/`);
+    if (poll.data.state === "failed") {
+      throw new Error(
+        `Publishing "${workflow.name}" failed: ${
+          poll.data.human_readable_error || ""
+        }`,
+      );
+    }
+    if (poll.data.state === "finished") {
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+
+  throw new Error(`Publishing "${workflow.name}" did not finish in time`);
+}
