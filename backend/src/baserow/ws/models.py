@@ -1,3 +1,4 @@
+from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.indexes import GinIndex
 from django.db import models
 
@@ -9,6 +10,15 @@ class RealtimeEvent(models.Model):
     channel_group = models.TextField()
     payload = models.JSONField()
     created_at = models.DateTimeField(auto_now_add=True)
+    # PostgreSQL trigger ws_realtime_event_targets_before_write populates these
+    # from payload on INSERT or updates to payload/channel_group. It calls
+    # ws_set_realtime_event_targets() from migrations/0002_realtime_event_indexes.py,
+    # including for older workers during a rolling deployment, so replay can use
+    # recipient indexes instead of scanning JSON.
+    target_user_ids = ArrayField(
+        models.IntegerField(), default=list, db_default=[], editable=False
+    )
+    all_users = models.BooleanField(default=False, db_default=False, editable=False)
 
     class Meta:
         db_table = "ws_realtime_events"
@@ -17,11 +27,20 @@ class RealtimeEvent(models.Model):
                 fields=["channel_group", "id"],
                 name="ws_realtime_channel_group_idx",
             ),
-            # Supports ``payload @> {...}`` containment queries.
-            # ``jsonb_path_ops`` is ~5x smaller and sufficient for ``@>`` only.
+            # Only shared users-channel events need recipient indexes. Page
+            # events use group/id, and no full business payload is indexed.
             GinIndex(
-                fields=["payload"],
-                opclasses=["jsonb_path_ops"],
-                name="ws_realtime_payload_gin_idx",
+                fields=["target_user_ids"],
+                condition=models.Q(channel_group="users"),
+                name="ws_realtime_targets_idx",
+            ),
+            models.Index(
+                fields=["id"],
+                condition=models.Q(channel_group="users", all_users=True),
+                name="ws_realtime_all_users_idx",
+            ),
+            models.Index(
+                fields=["created_at", "id"],
+                name="ws_realtime_created_id_idx",
             ),
         ]
