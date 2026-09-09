@@ -20,6 +20,7 @@ from baserow.contrib.database.api.export.errors import (
 )
 from baserow.contrib.database.api.export.serializers import (
     BaseExporterOptionsSerializer,
+    DisplayChoiceField,
     ExportJobSerializer,
 )
 from baserow.contrib.database.api.fields.errors import (
@@ -75,14 +76,26 @@ def _validate_options(data: Dict[str, Any]) -> Dict[str, Any]:
     options serializer based on the exporter_type and finally validates the data using
     that serializer.
 
+    Uses ``return_validated=True`` so that omitted optional fields (e.g.
+    ``group_by``) stay absent instead of appearing as ``None``.  Because
+    ``validated_data`` bypasses ``to_representation()``, we manually apply the
+    conversion for every ``DisplayChoiceField`` (delimiter, charset) so the
+    downstream code receives the actual Python values, not the display names.
+
     :param data: A dict of data to serialize using an exporter options serializer.
     :return: validated export options data
     """
 
     option_serializers = table_exporter_registry.get_option_serializer_map()
     validated_exporter_type = validate_data(BaseExporterOptionsSerializer, data)
-    serializer = option_serializers[validated_exporter_type["exporter_type"]]
-    return validate_data(serializer, data, return_validated=True)
+    serializer_class = option_serializers[validated_exporter_type["exporter_type"]]
+    validated = validate_data(serializer_class, data, return_validated=True)
+
+    for field_name, field in serializer_class().fields.items():
+        if isinstance(field, DisplayChoiceField) and field_name in validated:
+            validated[field_name] = field.to_representation(validated[field_name])
+
+    return validated
 
 
 class ExportTableView(APIView):

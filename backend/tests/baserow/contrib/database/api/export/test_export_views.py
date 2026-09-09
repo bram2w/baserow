@@ -10,6 +10,7 @@ from freezegun import freeze_time
 from rest_framework.fields import DateTimeField
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
+from baserow.contrib.database.api.export.views import _validate_options
 from baserow.contrib.database.rows.handler import RowHandler
 
 
@@ -549,3 +550,53 @@ def test_exporting_csv_with_formatted_number_field(
             )
             with open(file_path, "r", encoding="utf-8") as written_file:
                 assert written_file.read() == expected
+
+
+@pytest.mark.parametrize(
+    "separator_name,expected_char",
+    [
+        ("tab", "\t"),
+        ("record_separator", "\x1e"),
+        ("unit_separator", "\x1f"),
+        (",", ","),
+    ],
+)
+def test_validate_options_converts_display_separator_to_char(
+    separator_name, expected_char
+):
+    result = _validate_options(
+        {
+            "exporter_type": "csv",
+            "csv_column_separator": separator_name,
+        }
+    )
+    assert result["csv_column_separator"] == expected_char
+
+
+@pytest.mark.parametrize(
+    "charset_display,expected_python",
+    [
+        ("x-mac-cyrillic", "mac-cyrillic"),
+        ("windows-874", "cp874"),
+        ("utf-8", "utf-8"),
+    ],
+)
+def test_validate_options_converts_display_charset_to_python_encoding(
+    charset_display, expected_python
+):
+    result = _validate_options(
+        {
+            "exporter_type": "csv",
+            "export_charset": charset_display,
+        }
+    )
+    assert result["export_charset"] == expected_python
+
+
+def test_validate_options_omits_group_by_when_not_provided():
+    result = _validate_options(
+        {
+            "exporter_type": "csv",
+        }
+    )
+    assert "group_by" not in result
