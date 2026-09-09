@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Any, Optional
 from django.conf import settings
 from django.db import connection, transaction
 from django.db.models import Q
-from django.db.models.fields.json import KeyTextTransform, KeyTransform
 from django.db.models.query import QuerySet
 from django.utils import timezone
 
@@ -333,8 +332,6 @@ class RealtimeEventHandler:
         page_group_names: list[str],
         last_seen_id: int,
         web_socket_id: Optional[str],
-        *,
-        supports_row_history_refresh: bool = False,
     ) -> ReplayEventsResult:
         """Recover from one snapshot of retained events and the history loss floor.
 
@@ -363,7 +360,6 @@ class RealtimeEventHandler:
             page_group_names,
             last_seen_id,
             web_socket_id,
-            supports_row_history_refresh=supports_row_history_refresh,
         )
         if not rows or last_seen_id < rows[0][0]:
             return refresh("unknown_history")
@@ -428,8 +424,6 @@ class RealtimeEventHandler:
         page_group_names,
         last_seen_id,
         web_socket_id,
-        *,
-        supports_row_history_refresh=False,
     ):
         """Read relevant events and the loss floor in a single SQL snapshot.
 
@@ -443,7 +437,6 @@ class RealtimeEventHandler:
             page_group_names,
             last_seen_id,
             web_socket_id,
-            supports_row_history_refresh=supports_row_history_refresh,
         )
         events_sql, events_params = events.values_list(
             "id", "channel_group", "payload", "created_at", "sentinel_key"
@@ -477,49 +470,11 @@ class RealtimeEventHandler:
             return rows
 
     @staticmethod
-    def _get_replay_audience(
-        user_id, page_group_names, web_socket_id, supports_row_history_refresh
-    ):
-        audience = RealtimeEventHandler.get_not_own_event_filter(
-            web_socket_id
-        ) & RealtimeEventHandler.get_relevant_events_filter(user_id, page_group_names)
-        if supports_row_history_refresh:
-            # These capable clients invalidate/refetch their row-history snapshot
-            # on recovery. Older clients still require every additive entry.
-            audience &= Q(recipient_event_type__isnull=True) | ~Q(
-                recipient_event_type="row_history_updated"
-            )
-        return audience
-
-    @staticmethod
-    def _with_recipient_event_type(events, user_id):
-        from django.db.models import Case, When
-
-        # KeyTransform preserves numeric object keys in individual payload maps;
-        # a Django path lookup can otherwise interpret a user ID as an array index.
-        return events.alias(
-            recipient_event_type=Case(
-                When(
-                    payload__type="broadcast_to_users_individual_payloads",
-                    then=KeyTextTransform(
-                        "type",
-                        KeyTransform(
-                            str(user_id), KeyTransform("payload_map", "payload")
-                        ),
-                    ),
-                ),
-                default=KeyTextTransform("type", KeyTransform("payload", "payload")),
-            )
-        )
-
-    @staticmethod
     def get_replay_window(
         user_id: int,
         page_group_names: list[str],
         last_seen_id: int,
         web_socket_id: Optional[str],
-        *,
-        supports_row_history_refresh: bool = False,
     ) -> QuerySet[RealtimeEvent]:
         """Return relevant payloads after the cursor, capped at limit plus one.
 
@@ -530,21 +485,13 @@ class RealtimeEventHandler:
 
         from baserow.ws.models import RealtimeEvent
 
-        return (
-            RealtimeEventHandler._with_recipient_event_type(
-                RealtimeEvent.objects.all(), user_id
-            )
-            .filter(
-                RealtimeEventHandler._get_replay_audience(
-                    user_id,
-                    page_group_names,
-                    web_socket_id,
-                    supports_row_history_refresh,
-                ),
-                id__gt=last_seen_id,
-            )
-            .order_by("id")[: settings.BASEROW_REALTIME_REPLAY_MAX_EVENTS + 1]
-        )
+        return RealtimeEvent.objects.filter(
+            RealtimeEventHandler.get_not_own_event_filter(web_socket_id)
+            & RealtimeEventHandler.get_relevant_events_filter(
+                user_id, page_group_names
+            ),
+            id__gt=last_seen_id,
+        ).order_by("id")[: settings.BASEROW_REALTIME_REPLAY_MAX_EVENTS + 1]
 
     @staticmethod
     def get_relevant_events_filter(

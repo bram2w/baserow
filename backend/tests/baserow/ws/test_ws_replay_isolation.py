@@ -33,7 +33,7 @@ async def test_three_fresh_connections_get_baselines_without_refresh(settings):
     async def authenticate(token):
         return SimpleNamespace(id=int(token), is_authenticated=True)
 
-    def read(user_id, *args, **kwargs):
+    def read(user_id, *args):
         if user_id < 2:
             entered[user_id].set()
             assert release.wait(5)
@@ -156,7 +156,7 @@ async def test_slow_replay_does_not_block_another_websocket(settings, recording)
             return SimpleNamespace(id=1, is_authenticated=True)
         return await get_user(token)
 
-    def blocked_replay(*args, **kwargs):
+    def blocked_replay(*args):
         entered.set()
         assert release.wait(5), "Test failed to release the simulated slow query"
         return ReplayEventsResult(True, NO_REPLAY_AVAILABLE, [])

@@ -1056,7 +1056,6 @@
   },
   "rowHistorySidebar": {
     "name": "History",
-    "loadError": "Could not load the latest row history. Any entries shown may be incomplete. Please try again.",
     "empty": "No changes yet. You'll be able to track any changes to this row here.",
     "you": "You",
     "created": "created this row",
