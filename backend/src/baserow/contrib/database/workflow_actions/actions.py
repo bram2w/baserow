@@ -50,9 +50,7 @@ class DispatchButtonFieldActionType(ActionType):
     @classmethod
     def do(cls, user: AbstractUser, field: ButtonField, row: Any, action_count: int):
         """
-        Records the click. Called by the dispatch service after the permission
-        checks and before the first action runs, so a refused click leaves no
-        entry and a click that fails half way still does.
+        Records the click.
 
         :param user: The clicker.
         :param field: The clicked button field.

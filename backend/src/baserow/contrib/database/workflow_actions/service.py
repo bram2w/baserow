@@ -562,13 +562,6 @@ class DatabaseWorkflowActionService:
         for workflow_action_type in checked_types.values():
             workflow_action_type.raise_if_deactivated(field.table.database.workspace)
 
-        # After every refusal above and before anything runs, so the audit log
-        # holds one line per click that was allowed to start, whether or not
-        # the sequence finished. Undo is not involved: the type is not
-        # undoable, and `without_undo_redo_registration` below still sends
-        # `action_done`.
-        DispatchButtonFieldActionType.do(user, field, row, len(workflow_actions))
-
         # Frontend-only actions can't be dispatched here; the caller runs them
         # in the browser.
         client_actions = [
@@ -589,6 +582,7 @@ class DatabaseWorkflowActionService:
         # Nothing server side means no state to protect, so no lock: a button
         # that only opens a URL must not reject a second click.
         if not server_actions:
+            DispatchButtonFieldActionType.do(user, field, row, len(workflow_actions))
             return WorkflowActionsDispatchResult(
                 client_actions=client_actions, positions=positions
             )
@@ -616,6 +610,10 @@ class DatabaseWorkflowActionService:
             raise WorkflowActionDispatchInProgress()
 
         try:
+            # Audited only once the click owns the lock: a refused click, for
+            # permission or for a run still in progress, leaves no entry.
+            DispatchButtonFieldActionType.do(user, field, row, len(workflow_actions))
+
             # Remembering a result edits the button's configuration, so it
             # follows the field's update permission rather than the lower bar
             # for clicking (ADR 006 section 7). Only asked when an action of
