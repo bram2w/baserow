@@ -15,6 +15,9 @@ from baserow.contrib.database.fields.operations import (
     ReadFieldOperationType,
     UpdateFieldOperationType,
 )
+from baserow.contrib.database.workflow_actions.actions import (
+    DispatchButtonFieldActionType,
+)
 from baserow.contrib.database.workflow_actions.dispatch_context import (
     DatabaseDispatchContext,
 )
@@ -558,6 +561,13 @@ class DatabaseWorkflowActionService:
             checked_types.setdefault(workflow_action_type.type, workflow_action_type)
         for workflow_action_type in checked_types.values():
             workflow_action_type.raise_if_deactivated(field.table.database.workspace)
+
+        # After every refusal above and before anything runs, so the audit log
+        # holds one line per click that was allowed to start, whether or not
+        # the sequence finished. Undo is not involved: the type is not
+        # undoable, and `without_undo_redo_registration` below still sends
+        # `action_done`.
+        DispatchButtonFieldActionType.do(user, field, row, len(workflow_actions))
 
         # Frontend-only actions can't be dispatched here; the caller runs them
         # in the browser.
