@@ -26,6 +26,7 @@ import _ from 'lodash'
 import { prefixInternalResolvedUrl } from '@baserow/modules/builder/utils/urlResolution'
 import { userCanViewPage } from '@baserow/modules/builder/utils/visibility'
 import { getCustomFaviconLinks } from '@baserow/modules/builder/utils/favicon'
+import { consumeLoginError } from '@baserow/modules/builder/utils/auth'
 
 import {
   userSourceCookieTokenName,
@@ -34,7 +35,11 @@ import {
 import { QUERY_PARAM_TYPE_HANDLER_FUNCTIONS } from '@baserow/modules/builder/enums'
 import RecursiveWrapper from '@baserow/modules/core/components/RecursiveWrapper'
 import { ThemeConfigBlockType } from '@baserow/modules/builder/themeConfigBlockTypes'
-import { useRoute, useRouter } from '#imports'
+import { useRoute, useRouter, useRuntimeConfig } from '#imports'
+import {
+  getBuilderPreviewCookiePath,
+  getBuilderPreviewUserSourceCookieName,
+} from '@baserow/modules/builder/utils/preview'
 
 defineOptions({
   name: 'PublicPageContent',
@@ -44,6 +49,7 @@ const store = useStore()
 const route = useRoute()
 const router = useRouter()
 const nuxtApp = useNuxtApp()
+const config = useRuntimeConfig()
 
 const { $registry, $i18n } = nuxtApp
 
@@ -306,6 +312,7 @@ watch(
 
 onMounted(async () => {
   await checkProviderAuthentication()
+  checkProviderLoginError()
   await maybeRedirectUserToLoginPage()
 })
 
@@ -333,9 +340,9 @@ const maybeRedirectUserToLoginPage = async () => {
     )
     const url = prefixInternalResolvedUrl(
       loginPage.path,
-      props.builder,
       'page',
-      props.mode
+      props.mode,
+      props.builder.id
     )
 
     const currentPath = route.fullPath
@@ -362,10 +369,9 @@ const logOffAndReturnToLogin = async ({ builder, store, redirect }) => {
     application: builder,
   })
   // Redirect to home page after logout
-  return redirect({
-    name: 'application-builder-page',
-    params: { pathMatch: '/' },
-  })
+  return redirect(
+    prefixInternalResolvedUrl('/', 'page', props.mode, builder.id)
+  )
 }
 
 const checkProviderAuthentication = async () => {
@@ -387,9 +393,25 @@ const checkProviderAuthentication = async () => {
   }
 
   if (refreshTokenFromProvider) {
-    setToken(nuxtApp, refreshTokenFromProvider, userSourceCookieTokenName, {
-      sameSite: 'Lax',
-    })
+    const previewUserSourceCookie = props.mode === 'preview'
+    const cookieUrl =
+      props.mode === 'preview'
+        ? config.public.builderPreviewUrl
+        : config.public.publicWebFrontendUrl
+    setToken(
+      nuxtApp,
+      refreshTokenFromProvider,
+      previewUserSourceCookie
+        ? getBuilderPreviewUserSourceCookieName()
+        : userSourceCookieTokenName,
+      {
+        sameSite: 'Lax',
+        cookieUrl,
+        path: previewUserSourceCookie
+          ? getBuilderPreviewCookiePath(props.builder.id)
+          : '/',
+      }
+    )
     try {
       await store.dispatch('userSourceUser/refreshAuth', {
         application: props.builder,
@@ -411,6 +433,28 @@ const checkProviderAuthentication = async () => {
         throw error
       }
     }
+  }
+}
+
+/**
+ * When an SSO login fails, the provider redirects back with an error code
+ * in a query parameter. An auth form element reads and removes that
+ * parameter when it mounts and displays the message inline like the
+ * email/password flow.
+ *
+ * But an IdP can send the user straight to a deep page that the user
+ * isn't allowed to view, which isn't rendered at all. The elements of
+ * the page are mounted before this hook runs, so an error still present
+ * in the URL here means nothing displayed it, and we report it with a
+ * notification instead.
+ */
+const checkProviderLoginError = () => {
+  const message = consumeLoginError($registry, props.builder.user_sources)
+  if (message) {
+    store.dispatch('builderToast/error', {
+      title: $i18n.t('publicPage.loginErrorToastTitle'),
+      message,
+    })
   }
 }
 </script>

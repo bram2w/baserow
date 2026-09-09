@@ -40,7 +40,7 @@
     "@sentry/node": "10.69.0",
     "@sentry/nuxt": "10.69.0",
     "@sentry/vue": "10.47.0",
-    "@tiptap/core": "3.30.4",
+    "@tiptap/core": "3.30.5",
     "@tiptap/extension-blockquote": "3.27.4",
     "@tiptap/extension-bold": "3.27.4",
     "@tiptap/extension-bubble-menu": "3.27.4",
@@ -149,6 +149,6 @@
     "stylelint-config-standard": "^39.0.1",
     "stylelint-config-standard-scss": "^16.0.0",
     "stylelint-selector-bem-pattern": "^4.0.1",
-    "vitest": "4.1.9"
+    "vitest": "4.1.11"
   }
 }

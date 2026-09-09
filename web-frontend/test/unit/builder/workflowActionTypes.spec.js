@@ -1,4 +1,5 @@
 import { TestApp } from '@baserow/test/helpers/testApp'
+import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
 
 describe('Builder workflow action types', () => {
   let testApp = null
@@ -110,6 +111,28 @@ describe('Builder workflow action types', () => {
     expect(createRowAction.description).toBe(
       'serviceType.localBaserowCreateRowDescription'
     )
+  })
+
+  test('requires a title or description for notification actions', () => {
+    const workflowActionType = testApp
+      .getRegistry()
+      .get('workflowAction', 'notification')
+    const workflowAction = {
+      type: 'notification',
+      title: {},
+      description: {},
+    }
+
+    expect(workflowActionType.getErrorMessage(workflowAction, {})).toBe(
+      'workflowActionTypes.errorNotificationContentMissing'
+    )
+
+    workflowAction.title = { formula: "'Title'" }
+    expect(workflowActionType.getErrorMessage(workflowAction, {})).toBeNull()
+
+    workflowAction.title = {}
+    workflowAction.description = { formula: "'Description'" }
+    expect(workflowActionType.getErrorMessage(workflowAction, {})).toBeNull()
   })
 
   test('open page action is in error when saved page parameters are outdated', () => {
@@ -284,5 +307,34 @@ describe('Builder workflow action types', () => {
         false
       )
     }
+  })
+
+  test('service actions delegate preview routing to the store', async () => {
+    const workflowActionType = testApp
+      .getRegistry()
+      .get('workflowAction', 'create_row')
+    vi.spyOn(DataProviderType, 'getAllActionDispatchContext').mockReturnValue({
+      form: { name: 'Ada' },
+    })
+    const dispatch = vi
+      .spyOn(testApp.store, 'dispatch')
+      .mockResolvedValue({ id: 1 })
+
+    await workflowActionType.execute({
+      workflowAction: { id: 42 },
+      applicationContext: {
+        mode: 'preview',
+        builder: { id: 123 },
+      },
+    })
+
+    expect(dispatch).toHaveBeenCalledWith(
+      'builderWorkflowAction/dispatchAction',
+      {
+        workflowActionId: 42,
+        data: { form: { name: 'Ada' } },
+        files: {},
+      }
+    )
   })
 })

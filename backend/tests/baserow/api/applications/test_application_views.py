@@ -18,7 +18,7 @@ from rest_framework.status import (
 from baserow.contrib.database.models import Database
 from baserow.core.job_types import DuplicateApplicationJobType
 from baserow.core.jobs.handler import JobHandler
-from baserow.core.models import Template
+from baserow.core.models import Application, Template
 from baserow.core.operations import ListApplicationsWorkspaceOperationType
 from baserow.core.registries import application_type_registry
 
@@ -229,6 +229,31 @@ def test_list_applications_without_workspace(api_client, data_fixture):
     )
     response_json = response.json()
     assert response_json == []
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("application_type", ["", None])
+def test_create_application_without_a_type(api_client, data_fixture, application_type):
+    """
+    An empty type must not fall through to whichever application type is
+    registered first, which is what the registry's compat lookup would return.
+    """
+
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+
+    response = api_client.post(
+        reverse("api:applications:list", kwargs={"workspace_id": workspace.id}),
+        {"name": "Test 1", "type": application_type},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"]["type"][0]["code"] == "missing_type"
+    assert Application.objects.count() == 0
 
 
 @pytest.mark.django_db
