@@ -57,18 +57,20 @@ def self_hosted_license_plugin():
 def publish_builder_with_saml_provider(data_fixture, metadata):
     """
     Publishes a builder application on `test.com` with a SAML app auth provider
-    configured with the given IdP metadata, and returns the published user source.
+    configured with the given IdP metadata, and returns the draft user source and
+    the published one.
     """
 
     data = populate_local_baserow_test_data(data_fixture)
 
+    user_source = data["unpublished_user_source"]
     domain = data["domain"]
     domain.domain_name = "test.com"
     domain.save()
 
     data_fixture.create_app_auth_provider(
         SamlAppAuthProviderModel,
-        user_source=data["unpublished_user_source"],
+        user_source=user_source,
         domain="test.com",
         metadata=metadata,
     )
@@ -77,9 +79,10 @@ def publish_builder_with_saml_provider(data_fixture, metadata):
     domain = DomainHandler().publish(domain)
 
     local_baserow_user_source_type = user_source_type_registry.get("local_baserow")
-    return local_baserow_user_source_type.model_class.objects.get(
+    published_user_source = local_baserow_user_source_type.model_class.objects.get(
         application=domain.published_to
     )
+    return user_source, published_user_source
 
 
 def decode_saml_request(idp_redirect_url):
@@ -184,7 +187,9 @@ def test_builder_saml_assertion_consumer_service(
         saml_response,
     ) = enterprise_data_fixture.get_valid_saml_idp_metadata_and_response_for_builder()
 
-    published_user_source = publish_builder_with_saml_provider(data_fixture, metadata)
+    user_source, published_user_source = publish_builder_with_saml_provider(
+        data_fixture, metadata
+    )
 
     sp_sso_saml_acs_url = reverse(
         "api:user_sources:sso_saml:acs",
@@ -264,7 +269,9 @@ def test_builder_saml_acs_redirects_with_error_over_application_user_limit(
         saml_response,
     ) = enterprise_data_fixture.get_valid_saml_idp_metadata_and_response_for_builder()
 
-    published_user_source = publish_builder_with_saml_provider(data_fixture, metadata)
+    _, published_user_source = publish_builder_with_saml_provider(
+        data_fixture, metadata
+    )
     workspace = published_user_source.application.specific.get_workspace()
 
     sp_sso_saml_acs_url = reverse(
