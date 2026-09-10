@@ -303,7 +303,9 @@
     "username": "Username",
     "usernamePlaceholder": "your-email{'@'}example.com",
     "password": "Password",
-    "passwordPlaceholder": "your-password"
+    "passwordPlaceholder": "your-password",
+    "passwordConfigured": "A password is saved. Leave blank to keep it.",
+    "passwordKeepPlaceholder": "Leave blank to keep the saved password"
   },
   "smtpEmailForm": {
     "smtpConfigurationMode": "SMTP configuration",

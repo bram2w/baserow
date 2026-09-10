@@ -69,4 +69,55 @@ describe('SMTP integration form', () => {
 
     expect(wrapper.findAll('.control__messages--error')).toHaveLength(2)
   })
+
+  test('omits an untouched password from the submitted values', async () => {
+    const wrapper = await mountComponent({
+      defaultValues: {
+        host: 'smtp.example.com',
+        port: 587,
+        use_tls: true,
+        username: 'mailer',
+        has_password: true,
+      },
+    })
+
+    expect('password' in wrapper.vm.getFormValues()).toBe(false)
+  })
+
+  test('includes a password the user typed', async () => {
+    const wrapper = await mountComponent({
+      defaultValues: {
+        host: 'smtp.example.com',
+        port: 587,
+        use_tls: true,
+        username: 'mailer',
+        has_password: true,
+      },
+    })
+    const inputs = wrapper.findAll('.form-input__input')
+
+    await inputs.at(3).setValue('newsecret')
+    await flushPromises()
+
+    expect(wrapper.vm.getFormValues().password).toBe('newsecret')
+  })
+
+  test('sends an empty string when the user clears a typed password', async () => {
+    const wrapper = await mountComponent({
+      defaultValues: {
+        host: 'smtp.example.com',
+        port: 587,
+        use_tls: true,
+        username: 'mailer',
+        has_password: true,
+      },
+    })
+    const inputs = wrapper.findAll('.form-input__input')
+
+    await inputs.at(3).setValue('typed')
+    await inputs.at(3).setValue('')
+    await flushPromises()
+
+    expect(wrapper.vm.getFormValues().password).toBe('')
+  })
 })
