@@ -13,6 +13,7 @@ from django.db.models import (
     Transform,
     Value,
 )
+from django.db.models.functions import Coalesce
 
 
 # noinspection PyAbstractClass
@@ -478,3 +479,13 @@ class JSONArrayCompareIntervalValueExpr(BaserowFilterExpression):
         data = super().get_template_data(sql_value)
         data["comparison_op"] = self.comparison_op.value
         return data
+
+
+def safe_jsonb_array_elements(arg: Expression) -> Expression:
+    """
+    ``jsonb_array_elements`` that coalesces NULL to ``[]`` before extraction.
+    Prevents ``DataError: cannot extract elements from a scalar``.
+    """
+
+    guarded = Coalesce(arg, Value([], output_field=JSONField()))
+    return Func(guarded, function="jsonb_array_elements")

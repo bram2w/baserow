@@ -98,6 +98,7 @@ from baserow.contrib.database.formula.expression_generator.django_expressions im
     NotEqualsExpr,
     NotExpr,
     OrExpr,
+    safe_jsonb_array_elements,
 )
 from baserow.contrib.database.formula.expression_generator.exceptions import (
     BaserowToDjangoExpressionGenerationError,
@@ -1219,7 +1220,7 @@ class BaserowHasOption(TwoArgumentBaserowFunction):
     def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
         return EqualsExpr(
             Func(
-                Func(arg1, function="jsonb_array_elements"),
+                safe_jsonb_array_elements(arg1),
                 Value("value"),
                 function="jsonb_extract_path_text",
                 output_field=fields.CharField(),
@@ -2291,8 +2292,9 @@ class Baserow2dArrayAgg(OneArgumentBaserowFunction, CollapseManyBaserowFunction)
         return func_call.with_valid_type(arg.expression_type)
 
     def to_django_expression(self, arg: Expression) -> Expression:
+        coalesced_arg = Coalesce(arg, Value([], output_field=JSONField()))
         return Func(
-            Func(JSONBAgg(arg), function="jsonb_array_elements"),
+            Func(JSONBAgg(coalesced_arg), function="jsonb_array_elements"),
             function="jsonb_array_elements",
             output_field=JSONField(),
         )
@@ -2331,7 +2333,7 @@ class BaserowManyToManyCount(OneArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Func(arg, function="jsonb_array_elements")
+        return safe_jsonb_array_elements(arg)
 
     def to_django_expression_given_args(
         self,
@@ -2413,7 +2415,7 @@ class BaserowStringAggManyToManyValues(OneArgumentBaserowFunction):
 
     def to_django_expression(self, arg: Expression) -> Expression:
         return Func(
-            Func(arg, function="jsonb_array_elements"),
+            safe_jsonb_array_elements(arg),
             Value(self.value_key),
             function="jsonb_extract_path_text",
             output_field=fields.TextField(),
