@@ -50,3 +50,19 @@ def test_integration_deleted(mock_broadcast, data_fixture):
     args = mock_broadcast.delay.call_args
     assert args[0][4]["type"] == "integration_deleted"
     assert args[0][4]["integration_id"] == integration_id
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.core.integrations.ws.signals.broadcast_to_permitted_users")
+def test_integration_updated_does_not_broadcast_secret(mock_broadcast, data_fixture):
+    user = data_fixture.create_user()
+    integration = data_fixture.create_smtp_integration(
+        user=user, password="supersecret"
+    )
+
+    IntegrationService().update_integration(user, integration, name="Updated")
+
+    mock_broadcast.delay.assert_called_once()
+    payload = mock_broadcast.delay.call_args[0][4]["integration"]
+    assert "password" not in payload
+    assert payload["has_password"] is True

@@ -409,3 +409,116 @@ def test_get_integrations_context_data_present_when_databases_raises(
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
     assert response_json[0]["context_data"] == {"databases": []}
+
+
+@pytest.mark.django_db
+def test_get_integrations_does_not_return_smtp_password(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    application = data_fixture.create_builder_application(user=user)
+    data_fixture.create_smtp_integration(
+        application=application, password="supersecret"
+    )
+
+    url = reverse("api:integrations:list", kwargs={"application_id": application.id})
+    response = api_client.get(url, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
+
+    assert response.status_code == HTTP_200_OK
+    integration_json = response.json()[0]
+    assert "password" not in integration_json
+    assert integration_json["has_password"] is True
+    assert integration_json["host"] == "smtp.example.com"
+
+
+@pytest.mark.django_db
+def test_get_integrations_has_password_false_when_unset(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    application = data_fixture.create_builder_application(user=user)
+    data_fixture.create_smtp_integration(application=application, password="")
+
+    url = reverse("api:integrations:list", kwargs={"application_id": application.id})
+    response = api_client.get(url, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
+
+    assert response.status_code == HTTP_200_OK
+    assert response.json()[0]["has_password"] is False
+
+
+@pytest.mark.django_db
+def test_get_integrations_does_not_return_slack_token(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    application = data_fixture.create_builder_application(user=user)
+    data_fixture.create_slack_bot_integration(
+        application=application, token="xoxb-secret"
+    )
+
+    url = reverse("api:integrations:list", kwargs={"application_id": application.id})
+    response = api_client.get(url, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
+
+    assert response.status_code == HTTP_200_OK
+    integration_json = response.json()[0]
+    assert "token" not in integration_json
+    assert integration_json["has_token"] is True
+
+
+@pytest.mark.django_db
+def test_update_smtp_integration_response_omits_password(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    application = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_smtp_integration(application=application)
+
+    url = reverse("api:integrations:item", kwargs={"integration_id": integration.id})
+    # `host` is required on every SMTP patch; the form always sends it.
+    response = api_client.patch(
+        url,
+        {"host": integration.host, "password": "newsecret"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    assert "password" not in response.json()
+    assert response.json()["has_password"] is True
+    integration.refresh_from_db()
+    assert integration.password == "newsecret"
+
+
+@pytest.mark.django_db
+def test_update_slack_integration_without_token_succeeds(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    application = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_slack_bot_integration(
+        application=application, token="xoxb-secret"
+    )
+
+    url = reverse("api:integrations:item", kwargs={"integration_id": integration.id})
+    response = api_client.patch(
+        url,
+        {"name": "Renamed"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    integration.refresh_from_db()
+    assert integration.name == "Renamed"
+    assert integration.token == "xoxb-secret"
+
+
+@pytest.mark.django_db
+def test_update_slack_integration_with_empty_token_clears_it(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    application = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_slack_bot_integration(
+        application=application, token="xoxb-secret"
+    )
+
+    url = reverse("api:integrations:item", kwargs={"integration_id": integration.id})
+    response = api_client.patch(
+        url,
+        {"token": ""},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    integration.refresh_from_db()
+    assert integration.token == ""
