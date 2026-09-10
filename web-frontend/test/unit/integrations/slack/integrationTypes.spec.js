@@ -32,21 +32,30 @@ describe('SlackBotIntegrationType', () => {
     expect(integrationType().warning).toBe(
       'slackBotIntegrationType.slackBotWarning'
     )
-    // The integrations endpoint returns the token in the clear, so the
-    // warning must not claim otherwise.
+    // The token is write-only: it can be replaced but never read back, so the
+    // warning must not tell people it can be read.
     expect(en.slackBotIntegrationType.slackBotWarning).toBe(
       'Anyone who can build in this application can send messages through ' +
-        'this bot, and can read its token through the API. Use a bot whose ' +
-        'access you are happy to share.'
+        'this bot, and can replace its token. Use a bot whose access you are ' +
+        'happy to share.'
     )
+    expect(en.slackBotIntegrationType.slackBotWarning).not.toContain('read')
   })
 
   test('a bot with no token is summarised as unconfigured', () => {
-    expect(integrationType().getSummary({ token: '' })).toBe(
+    // The token never reaches the browser, so whether one is set can only be
+    // read from the flag the API sends in its place.
+    expect(integrationType().getSummary({ has_token: false })).toBe(
       'slackBotIntegrationType.slackBotNoToken'
     )
-    expect(integrationType().getSummary({ token: 'xoxb-real' })).toBe(
+    expect(integrationType().getSummary({ has_token: true })).toBe(
       'slackBotIntegrationType.slackBotSummary'
     )
+  })
+
+  test('the create form is not given a token default', () => {
+    // The form starts the token at null to mean "untouched". A default here
+    // would overwrite that sentinel through the mixin's defaultValues copy.
+    expect(integrationType().getDefaultValues()).not.toHaveProperty('token')
   })
 })
