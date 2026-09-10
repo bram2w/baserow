@@ -69,11 +69,13 @@ describe('NodeHelpTooltip', () => {
         example.find('.formula-input-field-stub').text()
       )
     ).toEqual(["upper('hello')", "upper(concat('a', 'b'))", "upper('MiXeD')"])
+    // The i18n mock only interpolates `count`, so the result line renders as
+    // the bare key.
     expect(
-      examples.every((example) =>
-        example.find('.control__helper-text').exists()
+      examples.map((example) =>
+        example.find('.node-help-tooltip__example-result').text()
       )
-    ).toBe(true)
+    ).toEqual(Array(3).fill('nodeHelpTooltip.result'))
   })
 
   test('renders no example section for a node without examples', async () => {
@@ -99,7 +101,12 @@ describe('NodeHelpTooltip', () => {
     const examples = wrapper.findAll('.node-help-tooltip__example')
     expect(examples).toHaveLength(1)
     expect(examples[0].find('.formula-input-field-stub').text()).toBe('get()')
-    expect(examples[0].find('.control__helper-text').exists()).toBe(false)
+    expect(
+      examples[0].find('.node-help-tooltip__example-result').exists()
+    ).toBe(false)
+    expect(
+      examples[0].find('.node-help-tooltip__example-footer').exists()
+    ).toBe(false)
   })
 
   test('renders no description for a node without one', async () => {
@@ -126,6 +133,9 @@ describe('NodeHelpTooltip', () => {
     expect(wrapper.find('.node-help-tooltip__examples-hint').exists()).toBe(
       false
     )
+    expect(
+      wrapper.find('.node-help-tooltip__example-insert-icon').exists()
+    ).toBe(false)
 
     await wrapper.findAll('.node-help-tooltip__example')[1].trigger('click')
 
@@ -147,10 +157,43 @@ describe('NodeHelpTooltip', () => {
     expect(wrapper.find('.node-help-tooltip__examples-hint').text()).toBe(
       'nodeHelpTooltip.clickToInsert'
     )
+    // Every example carries the insert arrow at the end of its footer.
+    expect(
+      wrapper
+        .findAll('.node-help-tooltip__example')
+        .map((example) =>
+          example
+            .find('.node-help-tooltip__example-footer > :last-child')
+            .classes()
+        )
+    ).toEqual(
+      Array(3).fill([
+        'node-help-tooltip__example-insert-icon',
+        'iconoir-arrow-right',
+      ])
+    )
 
     await wrapper.findAll('.node-help-tooltip__example')[1].trigger('click')
 
     expect(wrapper.emitted('example-click')).toEqual([[upperNode.examples[1]]])
+  })
+
+  test('shows the insert arrow for a clickable example without a result', async () => {
+    const wrapper = await mountTooltip({
+      clickableExamples: true,
+      node: {
+        ...upperNode,
+        examples: [{ formula: 'get()', result: '' }],
+      },
+    })
+
+    const footer = wrapper.find('.node-help-tooltip__example-footer')
+    expect(footer.find('.node-help-tooltip__example-result').exists()).toBe(
+      false
+    )
+    expect(
+      footer.find('.node-help-tooltip__example-insert-icon').exists()
+    ).toBe(true)
   })
 
   test('keeps example clicks from blurring the editor or reaching the document', async () => {

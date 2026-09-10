@@ -47,22 +47,28 @@
               @mousedown="onExampleMouseDown"
               @click="onExampleClick(example, $event)"
             >
-              <FormGroup
-                :helper-text="
-                  example.result
-                    ? $t('nodeHelpTooltip.result', { result: example.result })
-                    : null
-                "
-                required
+              <FormulaInputField
+                class="node-help-tooltip__example-code"
+                :value="example.formula"
+                :read-only="true"
+                :nodes-hierarchy="nodesHierarchy"
+                mode="advanced"
+              />
+              <div
+                v-if="example.result || clickableExamples"
+                class="node-help-tooltip__example-footer"
               >
-                <FormulaInputField
-                  class="node-help-tooltip__example-code"
-                  :value="example.formula"
-                  :read-only="true"
-                  :nodes-hierarchy="nodesHierarchy"
-                  mode="advanced"
-                />
-              </FormGroup>
+                <span
+                  v-if="example.result"
+                  class="node-help-tooltip__example-result"
+                >
+                  {{ $t('nodeHelpTooltip.result', { result: example.result }) }}
+                </span>
+                <i
+                  v-if="clickableExamples"
+                  class="node-help-tooltip__example-insert-icon iconoir-arrow-right"
+                ></i>
+              </div>
             </div>
           </div>
           <p v-if="clickableExamples" class="node-help-tooltip__examples-hint">
