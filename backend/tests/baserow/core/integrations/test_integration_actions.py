@@ -264,3 +264,29 @@ def test_update_smtp_integration_action_does_not_log_the_password(data_fixture):
     assert "password" not in logged.params["integration_original_params"]
     assert "password" not in logged.params["integration_new_params"]
     assert logged.params["integration_original_params"]["username"] is None
+
+
+@pytest.mark.django_db
+@pytest.mark.undo_redo
+def test_undo_redo_smtp_host_change_bypasses_the_credential_check(data_fixture):
+    session_id = str(uuid.uuid4())
+    user = data_fixture.create_user(session_id=session_id)
+    application = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_smtp_integration(
+        user=user,
+        application=application,
+        host="smtp.original.com",
+        password="secret",
+    )
+
+    UpdateIntegrationActionType.do(
+        user, integration, host="smtp.changed.com", password="newsecret"
+    )
+
+    ActionHandler.undo(user, _scope(application), session_id)
+    integration.refresh_from_db()
+    assert integration.host == "smtp.original.com"
+
+    ActionHandler.redo(user, _scope(application), session_id)
+    integration.refresh_from_db()
+    assert integration.host == "smtp.changed.com"

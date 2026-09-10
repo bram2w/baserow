@@ -19,6 +19,7 @@ from baserow.api.decorators import (
     validate_body_custom_fields,
 )
 from baserow.api.integrations.errors import (
+    ERROR_INTEGRATION_CREDENTIAL_REQUIRED,
     ERROR_INTEGRATION_DOES_NOT_EXIST,
     ERROR_INTEGRATION_NOT_IN_SAME_APPLICATION,
 )
@@ -47,6 +48,7 @@ from baserow.core.integrations.actions import (
     UpdateIntegrationActionType,
 )
 from baserow.core.integrations.exceptions import (
+    IntegrationCredentialRequired,
     IntegrationDoesNotExist,
     IntegrationNotInSameApplication,
 )
@@ -199,6 +201,7 @@ class IntegrationView(APIView):
             400: get_error_schema(
                 [
                     "ERROR_REQUEST_BODY_VALIDATION",
+                    "ERROR_INTEGRATION_CREDENTIAL_REQUIRED",
                 ]
             ),
             404: get_error_schema(
@@ -212,6 +215,7 @@ class IntegrationView(APIView):
     @map_exceptions(
         {
             IntegrationDoesNotExist: ERROR_INTEGRATION_DOES_NOT_EXIST,
+            IntegrationCredentialRequired: ERROR_INTEGRATION_CREDENTIAL_REQUIRED,
         }
     )
     @require_request_data_type(dict)

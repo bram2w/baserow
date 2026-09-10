@@ -522,3 +522,76 @@ def test_update_slack_integration_with_empty_token_clears_it(api_client, data_fi
     assert response.status_code == HTTP_200_OK
     integration.refresh_from_db()
     assert integration.token == ""
+
+
+@pytest.mark.django_db
+def test_update_smtp_integration_host_without_password_returns_400(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    application = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_smtp_integration(
+        application=application, host="smtp.original.com", password="secret"
+    )
+
+    url = reverse("api:integrations:item", kwargs={"integration_id": integration.id})
+    response = api_client.patch(
+        url,
+        {"host": "smtp.attacker.com"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_INTEGRATION_CREDENTIAL_REQUIRED"
+    integration.refresh_from_db()
+    assert integration.host == "smtp.original.com"
+    assert integration.password == "secret"
+
+
+@pytest.mark.django_db
+def test_update_smtp_integration_without_password_keeps_the_stored_one(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    application = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_smtp_integration(
+        application=application, host="smtp.original.com", password="secret"
+    )
+
+    url = reverse("api:integrations:item", kwargs={"integration_id": integration.id})
+    response = api_client.patch(
+        url,
+        {"host": "smtp.original.com", "username": "mailer"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    integration.refresh_from_db()
+    assert integration.username == "mailer"
+    assert integration.password == "secret"
+
+
+@pytest.mark.django_db
+def test_update_smtp_integration_with_empty_password_clears_it(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    application = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_smtp_integration(
+        application=application, host="smtp.original.com", password="secret"
+    )
+
+    url = reverse("api:integrations:item", kwargs={"integration_id": integration.id})
+    response = api_client.patch(
+        url,
+        {"host": "smtp.original.com", "password": ""},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    assert response.json()["has_password"] is False
+    integration.refresh_from_db()
+    assert integration.password == ""

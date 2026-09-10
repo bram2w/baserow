@@ -131,7 +131,10 @@ class UpdateIntegrationActionType(UndoableActionType):
             params.integration_id
         )
         IntegrationService().update_integration(
-            user, integration, **params.integration_original_params
+            user,
+            integration,
+            enforce_secret_dependencies=False,
+            **params.integration_original_params,
         )
 
     @classmethod
@@ -140,7 +143,10 @@ class UpdateIntegrationActionType(UndoableActionType):
             params.integration_id
         )
         IntegrationService().update_integration(
-            user, integration, **params.integration_new_params
+            user,
+            integration,
+            enforce_secret_dependencies=False,
+            **params.integration_new_params,
         )
 
 

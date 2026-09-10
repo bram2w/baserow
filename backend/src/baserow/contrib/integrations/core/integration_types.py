@@ -20,6 +20,9 @@ class SMTPIntegrationType(IntegrationType):
     allowed_fields = ["host", "port", "use_tls", "username", "password"]
     sensitive_fields = ["host", "port", "use_tls", "username", "password"]
     secret_fields = ["password"]
+    # Changing where the request goes, or downgrading it to plaintext, would
+    # send the stored password somewhere its owner never agreed to.
+    secret_field_dependencies = {"password": ["host", "port", "use_tls"]}
 
     request_serializer_field_names = ["host", "port", "use_tls", "username", "password"]
     request_serializer_field_overrides = {}

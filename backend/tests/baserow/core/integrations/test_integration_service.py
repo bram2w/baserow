@@ -5,6 +5,7 @@ import pytest
 
 from baserow.core.exceptions import PermissionException
 from baserow.core.integrations.exceptions import (
+    IntegrationCredentialRequired,
     IntegrationDoesNotExist,
     IntegrationNotInSameApplication,
 )
@@ -369,3 +370,133 @@ def test_move_integration_trigger_order_recalculated(
     integration_orders_recalculated_mock.send.assert_called_once_with(
         service, application=application
     )
+
+
+@pytest.mark.django_db
+def test_update_smtp_integration_host_without_password_is_rejected(data_fixture):
+    user = data_fixture.create_user()
+    integration = data_fixture.create_smtp_integration(
+        user=user, host="smtp.original.com", password="secret"
+    )
+
+    with pytest.raises(IntegrationCredentialRequired):
+        IntegrationService().update_integration(
+            user, integration, host="smtp.attacker.com"
+        )
+
+    integration.refresh_from_db()
+    assert integration.host == "smtp.original.com"
+    assert integration.password == "secret"
+
+
+@pytest.mark.django_db
+def test_update_smtp_integration_port_without_password_is_rejected(data_fixture):
+    user = data_fixture.create_user()
+    integration = data_fixture.create_smtp_integration(
+        user=user, port=587, password="secret"
+    )
+
+    with pytest.raises(IntegrationCredentialRequired):
+        IntegrationService().update_integration(user, integration, port=2525)
+
+
+@pytest.mark.django_db
+def test_update_smtp_integration_disabling_tls_without_password_is_rejected(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    integration = data_fixture.create_smtp_integration(
+        user=user, use_tls=True, password="secret"
+    )
+
+    with pytest.raises(IntegrationCredentialRequired):
+        IntegrationService().update_integration(user, integration, use_tls=False)
+
+
+@pytest.mark.django_db
+def test_update_smtp_integration_host_with_password_succeeds(data_fixture):
+    user = data_fixture.create_user()
+    integration = data_fixture.create_smtp_integration(
+        user=user, host="smtp.original.com", password="secret"
+    )
+
+    IntegrationService().update_integration(
+        user, integration, host="smtp.new.com", password="newsecret"
+    )
+
+    integration.refresh_from_db()
+    assert integration.host == "smtp.new.com"
+    assert integration.password == "newsecret"
+
+
+@pytest.mark.django_db
+def test_update_smtp_integration_unchanged_host_does_not_require_password(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    integration = data_fixture.create_smtp_integration(
+        user=user, host="smtp.original.com", password="secret"
+    )
+
+    IntegrationService().update_integration(
+        user, integration, host="smtp.original.com", username="mailer"
+    )
+
+    integration.refresh_from_db()
+    assert integration.username == "mailer"
+    assert integration.password == "secret"
+
+
+@pytest.mark.django_db
+def test_update_smtp_integration_name_only_keeps_the_password(data_fixture):
+    user = data_fixture.create_user()
+    integration = data_fixture.create_smtp_integration(user=user, password="secret")
+
+    IntegrationService().update_integration(user, integration, name="Renamed")
+
+    integration.refresh_from_db()
+    assert integration.name == "Renamed"
+    assert integration.password == "secret"
+
+
+@pytest.mark.django_db
+def test_update_smtp_integration_empty_password_clears_it(data_fixture):
+    user = data_fixture.create_user()
+    integration = data_fixture.create_smtp_integration(user=user, password="secret")
+
+    IntegrationService().update_integration(user, integration, password="")
+
+    integration.refresh_from_db()
+    assert integration.password == ""
+
+
+@pytest.mark.django_db
+def test_update_smtp_integration_can_skip_the_dependency_check(data_fixture):
+    user = data_fixture.create_user()
+    integration = data_fixture.create_smtp_integration(
+        user=user, host="smtp.original.com", password="secret"
+    )
+
+    IntegrationService().update_integration(
+        user,
+        integration,
+        enforce_secret_dependencies=False,
+        host="smtp.replayed.com",
+    )
+
+    integration.refresh_from_db()
+    assert integration.host == "smtp.replayed.com"
+
+
+@pytest.mark.django_db
+def test_update_slack_integration_has_no_target_dependency(data_fixture):
+    user = data_fixture.create_user()
+    integration = data_fixture.create_slack_bot_integration(
+        user=user, token="xoxb-secret"
+    )
+
+    IntegrationService().update_integration(user, integration, name="Renamed")
+
+    integration.refresh_from_db()
+    assert integration.name == "Renamed"
+    assert integration.token == "xoxb-secret"

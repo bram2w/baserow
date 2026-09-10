@@ -45,6 +45,16 @@ class IntegrationType(
     ordinary configuration such as the host and port.
     """
 
+    secret_field_dependencies: Dict[str, List[str]] = {}
+    """
+    Maps a secret field to the request-target fields it protects. If any target
+    field changes value, the secret must be re-supplied in the same request,
+    otherwise the stored credential would be sent to a destination its owner
+    never chose.
+
+    Example: {"password": ["host", "port", "use_tls"]}
+    """
+
     def enhance_queryset(self, queryset):
         """
         Allow to enhance the queryset when querying the integration mainly to improve
