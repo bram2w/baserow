@@ -3,7 +3,13 @@ from contextlib import closing
 from datetime import timedelta
 from importlib import import_module
 
-from django.db import DatabaseError, OperationalError, connection, transaction
+from django.db import (
+    DatabaseError,
+    IntegrityError,
+    OperationalError,
+    connection,
+    transaction,
+)
 from django.utils import timezone
 
 import pytest
@@ -98,6 +104,49 @@ def test_reapplying_migration_preserves_original_sentinel_and_history_floor():
         assert RealtimeEventHistoryState.objects.get(pk=1).floor == event_id
 
 
+def test_migration_rebuilds_a_failed_concurrent_sentinel_index():
+    first, second = record(), record()
+    floor = RealtimeEventHistoryState.objects.get(pk=1).floor
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("DROP INDEX CONCURRENTLY ws_realtime_sentinel_key_uniq")
+            RealtimeEvent.objects.filter(pk__in=[first, second]).update(
+                sentinel_key=b"duplicate"
+            )
+            # A failed concurrent build leaves an invalid index behind. Merely
+            # using CREATE INDEX IF NOT EXISTS would silently keep that index.
+            with pytest.raises(IntegrityError):
+                cursor.execute(
+                    "CREATE UNIQUE INDEX CONCURRENTLY ws_realtime_sentinel_key_uniq "
+                    "ON ws_realtime_events (sentinel_key) WHERE sentinel_key IS NOT NULL"
+                )
+            cursor.execute(
+                "SELECT indisvalid FROM pg_index "
+                "WHERE indexrelid = 'ws_realtime_sentinel_key_uniq'::regclass"
+            )
+            assert cursor.fetchone() == (False,)
+
+        RealtimeEvent.objects.filter(pk=second).update(sentinel_key=None)
+        originals = list(RealtimeEvent.objects.order_by("id").values())
+        with connection.schema_editor(atomic=False) as editor:
+            migration().forwards(None, editor)
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT indisvalid, indisready, indisunique FROM pg_index "
+                "WHERE indexrelid = 'ws_realtime_sentinel_key_uniq'::regclass"
+            )
+            assert cursor.fetchone() == (True, True, True)
+        assert list(RealtimeEvent.objects.order_by("id").values()) == originals
+        assert RealtimeEventHistoryState.objects.get(pk=1).floor == floor
+        with pytest.raises(IntegrityError):
+            RealtimeEvent.objects.filter(pk=second).update(sentinel_key=b"duplicate")
+    finally:
+        RealtimeEvent.objects.filter(pk=second).update(sentinel_key=None)
+        with connection.schema_editor(atomic=False) as editor:
+            migration().forwards(None, editor)
+
+
 def test_migration_preserves_old_originals_until_the_first_scheduled_cleanup(
     settings, monkeypatch
 ):
@@ -170,6 +219,8 @@ def test_migration_preserves_old_originals_until_the_first_scheduled_cleanup(
                 "pg_relation_filenode('ws_realtime_created_id_idx')"
             )
             assert cursor.fetchone() == original_filenodes
+            cursor.execute("SELECT to_regprocedure('ws_realtime_event_routing(jsonb)')")
+            assert cursor.fetchone()[0] is None
 
         monkeypatch.setattr(
             RealtimeEventHandler,

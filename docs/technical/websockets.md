@@ -304,11 +304,12 @@ Missing history state waits for outstanding inserts before establishing a conser
 floor. Migration activation also establishes a floor, so older cursors can require
 one refresh. Rollback cannot restore deleted events and leaves the sequence LOGGED.
 
-Compaction migration `ws.0003` installs three additional PostgreSQL functions:
+Cleanup's SQL extracts and normalizes recipients, exclusions, the originating
+socket and event types. It hashes this small JSON value instead of transferring
+full expired payloads to Python. Ordinary inserts do not calculate this route.
 
-- `ws_realtime_event_routing` extracts and normalizes recipients, exclusions, the
-  originating socket and event types. Cleanup hashes this small JSON value instead
-  of transferring full expired payloads to Python. It does not run on ordinary inserts.
+Compaction migration `ws.0003` installs two additional PostgreSQL functions:
+
 - `ws_initialize_realtime_history` creates a missing history boundary from the
   durable event sequence, waiting for outstanding inserts first. It is shared by
   migration activation, replay after an UNLOGGED reset, and deletion tracking.
@@ -317,11 +318,10 @@ Compaction migration `ws.0003` installs three additional PostgreSQL functions:
   bypasses it inside the same transaction; ordinary and legacy DELETEs do not.
   It does not intercept TRUNCATE or arbitrary table replacement.
 
-The PostgreSQL functions are implementation choices: routing could be inline SQL,
-initialization could use a Python transaction, and controlled deletion could update
-its floor explicitly. The current functions centralize shared logic and preserve
-loss tracking for older or direct DELETE statements. Keeping a trustworthy boundary
-is necessary when the history supporting numeric replay cursors disappears.
+The initializer centralizes logic shared by migration, replay and the deletion
+trigger. The trigger preserves loss tracking for older or direct DELETE statements.
+Keeping a trustworthy boundary is necessary when the history supporting numeric
+replay cursors disappears.
 
 #### Deployment and rollback
 
@@ -345,10 +345,10 @@ so accidental older cleanup cannot silently erase their evidence.
 
 The migration adds a nullable column without rewriting event payloads and builds
 the sentinel unique index concurrently. This build needs disk and I/O headroom to
-scan the existing table and can take much longer than the short schema-lock timeout. The
-routing function is only installed during migration; historical events are hashed,
-marked and deleted by cleanup. Brief schema locks are bounded; an interrupted
-migration can be retried. For rollback, pause and drain cleanup again and disable replay
+scan the existing table and can take much longer than the short schema-lock timeout.
+Historical events are only hashed, marked and deleted by cleanup. Brief schema
+locks are bounded; an interrupted migration can be retried. For rollback, pause and
+drain cleanup again and disable replay
 with the existing `BASEROW_REALTIME_REPLAY_MAX_EVENTS=0` before returning traffic to
 older readers. Reversing the migration cannot restore deleted events. Before
 re-enabling replay, clear recorded replay history while recording remains disabled

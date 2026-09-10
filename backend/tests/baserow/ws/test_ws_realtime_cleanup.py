@@ -91,7 +91,7 @@ def create_events(age, count):
 @pytest.mark.django_db(transaction=True)
 def test_cleanup_commits_bounded_batches_and_preserves_recent_events(monkeypatch):
     monkeypatch.setattr(realtime_events, "REALTIME_EVENTS_CLEANUP_BATCH_SIZE", 2)
-    expired = create_events(timedelta(days=8), 5)
+    expired = create_events(timedelta(days=2), 5)
     recent = create_events(timedelta(hours=1), 1)
     committed_batches = []
     original = RealtimeEventHandler._compact_realtime_events_batch
@@ -122,7 +122,7 @@ def test_cleanup_commits_bounded_batches_and_preserves_recent_events(monkeypatch
 @pytest.mark.django_db(transaction=True)
 def test_cleanup_keeps_earlier_commits_when_a_later_batch_fails(monkeypatch):
     monkeypatch.setattr(realtime_events, "REALTIME_EVENTS_CLEANUP_BATCH_SIZE", 2)
-    expired = create_events(timedelta(days=8), 5)
+    expired = create_events(timedelta(days=2), 5)
     original = RealtimeEventHandler._compact_realtime_events_batch
     calls = 0
 
@@ -189,7 +189,7 @@ def test_retention_boundary_keeps_payload_at_cutoff_and_compacts_old_cursor(sett
 @pytest.mark.django_db(transaction=True)
 def test_cleanup_stops_at_its_work_budget(monkeypatch):
     monkeypatch.setattr(realtime_events, "REALTIME_EVENTS_CLEANUP_BATCH_SIZE", 2)
-    create_events(timedelta(days=8), 5)
+    create_events(timedelta(days=2), 5)
     now = 0
     monkeypatch.setattr(realtime_events, "monotonic", lambda: now)
     original = RealtimeEventHandler._compact_realtime_events_batch
@@ -262,11 +262,83 @@ def test_cleanup_timeouts_are_local_and_preserve_stricter_settings(
 
 
 @pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize(
+    "statement_timeout,lock_timeout,expected_statements,expected_lock",
+    [
+        ("0", "0", ["3s", "3s", "2s", "1s"], "250ms"),
+        ("1500ms", "50ms", ["1500ms", "1500ms", "1500ms", "1s"], "50ms"),
+    ],
+)
+def test_cleanup_tightens_timeouts_as_the_batch_uses_its_remaining_budget(
+    monkeypatch, statement_timeout, lock_timeout, expected_statements, expected_lock
+):
+    expired = create_events(timedelta(days=2), 2)
+    now = 0
+    monkeypatch.setattr(realtime_events, "monotonic", lambda: now)
+    observed = []
+    timeout_updates = 0
+    statement_times = {
+        "WITH candidates": 5,
+        "SELECT id, sentinel_key, channel_group": 8,
+        "DELETE FROM ws_realtime_events WHERE id = ANY": 9,
+        "UPDATE ws_realtime_events AS event SET sentinel_key": 9,
+    }
+
+    def observe_settings_and_advance_clock(execute, sql, params, many, context):
+        nonlocal now, timeout_updates
+        if "set_config('statement_timeout'" in sql:
+            timeout_updates += 1
+        for prefix, finished_at in statement_times.items():
+            if sql.startswith(prefix):
+                with connection.cursor() as cursor:
+                    cursor.execute("SHOW statement_timeout")
+                    statement = cursor.fetchone()[0]
+                    cursor.execute("SHOW lock_timeout")
+                    lock = cursor.fetchone()[0]
+                observed.append((prefix, statement, lock))
+                result = execute(sql, params, many, context)
+                now = finished_at
+                return result
+        return execute(sql, params, many, context)
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT set_config('statement_timeout', %s, false)", [statement_timeout]
+        )
+        cursor.execute("SELECT set_config('lock_timeout', %s, false)", [lock_timeout])
+    try:
+        with connection.execute_wrapper(observe_settings_and_advance_clock):
+            assert RealtimeEventHandler._compact_realtime_events_batch(
+                timezone.now() - timedelta(days=1), deadline=10
+            ) == (2, 1)
+        assert observed == [
+            (prefix, statement, expected_lock)
+            for prefix, statement in zip(statement_times, expected_statements)
+        ]
+        # The second read reuses the initial cap; only the final two statements
+        # need shorter limits as the remaining budget falls below three seconds.
+        assert timeout_updates == 3
+        assert list(RealtimeEvent.objects.values_list("id", flat=True)) == expired[-1:]
+        assert RealtimeEvent.objects.get(pk=expired[-1]).sentinel_key is not None
+        with connection.cursor() as cursor:
+            cursor.execute("SHOW statement_timeout")
+            assert cursor.fetchone()[0] == statement_timeout
+            cursor.execute("SHOW lock_timeout")
+            assert cursor.fetchone()[0] == lock_timeout
+            cursor.execute(
+                "SELECT current_setting('baserow.realtime_compacting', true)"
+            )
+            assert cursor.fetchone()[0] != "on"
+    finally:
+        connection.close()
+
+
+@pytest.mark.django_db(transaction=True)
 def test_cleanup_statement_timeout_stops_slow_database_work(monkeypatch):
     monkeypatch.setattr(
         realtime_events, "REALTIME_EVENTS_CLEANUP_STATEMENT_TIMEOUT_MS", 25
     )
-    expired = create_events(timedelta(days=8), 1)
+    expired = create_events(timedelta(days=2), 1)
 
     def slow_delete(execute, sql, params, many, context):
         if sql.startswith("WITH candidates"):
@@ -288,7 +360,7 @@ def test_cleanup_statement_timeout_stops_slow_database_work(monkeypatch):
 @pytest.mark.django_db(transaction=True)
 def test_cleanup_lock_timeout_does_not_wait_for_table_maintenance(monkeypatch):
     monkeypatch.setattr(realtime_events, "REALTIME_EVENTS_CLEANUP_LOCK_TIMEOUT_MS", 25)
-    expired = create_events(timedelta(days=8), 1)
+    expired = create_events(timedelta(days=2), 1)
     with closing(
         connection.Database.connect(**connection.get_connection_params())
     ) as blocker:
@@ -307,7 +379,7 @@ def test_cleanup_lock_timeout_does_not_wait_for_table_maintenance(monkeypatch):
 
 @pytest.mark.django_db(transaction=True)
 def test_cleanup_skips_locked_rows_and_cleans_them_on_a_later_run():
-    expired = create_events(timedelta(days=8), 3)
+    expired = create_events(timedelta(days=2), 3)
     with closing(
         connection.Database.connect(**connection.get_connection_params())
     ) as blocker:

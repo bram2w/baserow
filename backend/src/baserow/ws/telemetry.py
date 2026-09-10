@@ -176,7 +176,7 @@ class _CleanupStats:
 
 @contextmanager
 def realtime_cleanup_batch():
-    """Measure one batch; set ``deleted`` only after its transaction commits."""
+    """Measure one batch; set its row counts only after its transaction commits."""
 
     started_at = monotonic()
     stats = _CleanupStats()
@@ -187,20 +187,16 @@ def realtime_cleanup_batch():
         outcome = "error"
         raise
     finally:
-        attributes = _attributes(outcome=outcome, operation="compact")
+        attributes = _attributes(outcome=outcome)
         realtime_cleanup_batch_duration.record(
             (monotonic() - started_at) * 1000, attributes
         )
         if outcome == "success":
             realtime_cleanup_batch_size.record(stats.deleted, attributes)
             if stats.processed:
-                realtime_cleanup_processed.add(
-                    stats.processed, _attributes(operation="compact")
-                )
+                realtime_cleanup_processed.add(stats.processed, _attributes())
             if stats.deleted:
-                realtime_cleanup_deleted.add(
-                    stats.deleted, _attributes(operation="compact")
-                )
+                realtime_cleanup_deleted.add(stats.deleted, _attributes())
 
 
 @contextmanager

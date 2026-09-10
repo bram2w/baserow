@@ -41,53 +41,6 @@ END;
 $function$;
 """
 
-ROUTING_PAYLOAD = """
-CREATE OR REPLACE FUNCTION ws_realtime_event_routing(event_payload jsonb)
-RETURNS jsonb LANGUAGE sql IMMUTABLE STRICT AS $function$
-    -- Called only by RealtimeEventHandler._compact_realtime_events_batch(), not
-    -- on INSERT or replay. Return audience/recovery metadata for grouping old rows.
-    -- The caller combines this with channel_group, hashes it for sentinel_key, and
-    -- checks exact equality before deleting: a hash collision must not merge routes.
-    SELECT jsonb_build_object(
-        'type', event_payload->'type',
-        'ignore_web_socket_id', event_payload->'ignore_web_socket_id',
-        'send_to_all_users', COALESCE(event_payload->'send_to_all_users', 'false'),
-        -- Recipient and exclusion lists are sets: order/duplicates change no route.
-        'user_ids', (
-            SELECT COALESCE(jsonb_agg(value ORDER BY value), '[]')
-            FROM (
-                SELECT DISTINCT value FROM jsonb_array_elements(
-                    CASE WHEN jsonb_typeof(event_payload->'user_ids') = 'array'
-                    THEN event_payload->'user_ids' ELSE '[]' END
-                )
-            ) AS recipients
-        ),
-        'exclude_user_ids', (
-            SELECT COALESCE(jsonb_agg(value ORDER BY value), '[]')
-            FROM (
-                SELECT DISTINCT value FROM jsonb_array_elements(
-                    CASE WHEN jsonb_typeof(event_payload->'exclude_user_ids') = 'array'
-                    THEN event_payload->'exclude_user_ids' ELSE '[]' END
-                )
-            ) AS excluded
-        ),
-        -- Keep inner event types, including each individual recipient's type:
-        -- their recovery rules can differ even when the audience is the same.
-        -- Business data stays in the retained original row, outside this route key.
-        'payload', jsonb_build_object('type', event_payload #> '{payload,type}'),
-        'payload_map', (
-            SELECT COALESCE(jsonb_object_agg(
-                recipient, jsonb_build_object('type', message->'type')
-            ), '{}')
-            FROM jsonb_each(
-                CASE WHEN jsonb_typeof(event_payload->'payload_map') = 'object'
-                THEN event_payload->'payload_map' ELSE '{}' END
-            ) AS messages(recipient, message)
-        )
-    );
-$function$;
-"""
-
 RECORD_DELETED_HISTORY = """
 CREATE OR REPLACE FUNCTION ws_record_deleted_realtime_history() RETURNS trigger
 LANGUAGE plpgsql AS $function$
@@ -126,24 +79,6 @@ def _set_timeouts(cursor):
     )
 
 
-def _create_index(cursor, name, definition, *, unique=False):
-    # As in database.0215, recover interrupted concurrent builds on retry.
-    cursor.execute(
-        "SELECT indisvalid AND indisready FROM pg_index "
-        "WHERE indexrelid = to_regclass(%s) "
-        "AND indrelid = 'ws_realtime_events'::regclass",
-        [name],
-    )
-    existing = cursor.fetchone()
-    if existing is not None and not existing[0]:
-        cursor.execute(f'DROP INDEX CONCURRENTLY "{name}"')
-    qualifier = "UNIQUE " if unique else ""
-    cursor.execute(
-        f'CREATE {qualifier}INDEX CONCURRENTLY IF NOT EXISTS "{name}" '
-        f"ON ws_realtime_events {definition}"
-    )
-
-
 def forwards(apps, schema_editor):
     """Install compaction helpers and initialize the floor; cleanup compacts later."""
 
@@ -154,7 +89,6 @@ def forwards(apps, schema_editor):
     # that transaction without blocking normal INSERTs.
     with transaction.atomic(using=db.alias), db.cursor() as cursor:
         _set_timeouts(cursor)
-        cursor.execute("LOCK TABLE ws_realtime_events IN SHARE ROW EXCLUSIVE MODE")
         cursor.execute(
             "ALTER TABLE ws_realtime_events ADD COLUMN IF NOT EXISTS sentinel_key bytea DEFAULT NULL"
         )
@@ -166,7 +100,6 @@ def forwards(apps, schema_editor):
         )
         cursor.execute("ALTER TABLE ws_realtime_event_history_state SET UNLOGGED")
         cursor.execute(INITIALIZE_HISTORY)
-        cursor.execute(ROUTING_PAYLOAD)
         cursor.execute(RECORD_DELETED_HISTORY)
         cursor.execute("SELECT ws_initialize_realtime_history()")
         cursor.execute(
@@ -179,11 +112,19 @@ def forwards(apps, schema_editor):
             "FOR EACH STATEMENT EXECUTE FUNCTION ws_record_deleted_realtime_history()"
         )
     with db.cursor() as cursor:
-        _create_index(
-            cursor,
-            SENTINEL_INDEX,
-            "(sentinel_key) WHERE sentinel_key IS NOT NULL",
-            unique=True,
+        # As in database.0215, recover interrupted concurrent builds on retry.
+        cursor.execute(
+            "SELECT indisvalid AND indisready FROM pg_index "
+            "WHERE indexrelid = to_regclass(%s) "
+            "AND indrelid = 'ws_realtime_events'::regclass",
+            [SENTINEL_INDEX],
+        )
+        existing = cursor.fetchone()
+        if existing is not None and not existing[0]:
+            cursor.execute(f'DROP INDEX CONCURRENTLY "{SENTINEL_INDEX}"')
+        cursor.execute(
+            f'CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS "{SENTINEL_INDEX}" '
+            "ON ws_realtime_events (sentinel_key) WHERE sentinel_key IS NOT NULL"
         )
 
 
@@ -193,12 +134,10 @@ def backwards(apps, schema_editor):
         cursor.execute(f'DROP INDEX CONCURRENTLY IF EXISTS "{SENTINEL_INDEX}"')
     with transaction.atomic(using=db.alias), db.cursor() as cursor:
         _set_timeouts(cursor)
-        cursor.execute("LOCK TABLE ws_realtime_events IN SHARE ROW EXCLUSIVE MODE")
         cursor.execute(
             "DROP TRIGGER IF EXISTS ws_realtime_events_history_after_delete ON ws_realtime_events"
         )
         cursor.execute("DROP FUNCTION IF EXISTS ws_record_deleted_realtime_history()")
-        cursor.execute("DROP FUNCTION IF EXISTS ws_realtime_event_routing(jsonb)")
         cursor.execute("DROP FUNCTION IF EXISTS ws_initialize_realtime_history()")
         cursor.execute("DROP TABLE IF EXISTS ws_realtime_event_history_state")
         cursor.execute(

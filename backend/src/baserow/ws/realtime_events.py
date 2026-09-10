@@ -40,6 +40,45 @@ REALTIME_EVENTS_CLEANUP_LOCK_SECONDS = 120
 FIRST_CONNECT_CURSOR = -1
 NO_REPLAY_AVAILABLE = -2
 
+# Compute routes during cleanup without transferring full payloads to Python.
+# Both candidate and existing-sentinel reads use this same expression; the caller
+# combines it with channel_group and checks exact equality before deleting rows.
+_REALTIME_EVENT_ROUTING_SQL = """
+jsonb_build_object(
+    'type', payload->'type',
+    'ignore_web_socket_id', payload->'ignore_web_socket_id',
+    'send_to_all_users', COALESCE(payload->'send_to_all_users', 'false'),
+    -- Recipient and exclusion lists are sets: order/duplicates change no route.
+    'user_ids', (
+        SELECT COALESCE(jsonb_agg(DISTINCT value ORDER BY value), '[]')
+        FROM jsonb_array_elements(
+            CASE WHEN jsonb_typeof(payload->'user_ids') = 'array'
+            THEN payload->'user_ids' ELSE '[]' END
+        )
+    ),
+    'exclude_user_ids', (
+        SELECT COALESCE(jsonb_agg(DISTINCT value ORDER BY value), '[]')
+        FROM jsonb_array_elements(
+            CASE WHEN jsonb_typeof(payload->'exclude_user_ids') = 'array'
+            THEN payload->'exclude_user_ids' ELSE '[]' END
+        )
+    ),
+    -- Keep inner event types, including each individual recipient's type:
+    -- their recovery rules can differ even when the audience is the same.
+    -- Business data stays in the retained original row, outside this route key.
+    'payload', jsonb_build_object('type', payload #> '{payload,type}'),
+    'payload_map', (
+        SELECT COALESCE(jsonb_object_agg(
+            recipient, jsonb_build_object('type', message->'type')
+        ), '{}')
+        FROM jsonb_each(
+            CASE WHEN jsonb_typeof(payload->'payload_map') = 'object'
+            THEN payload->'payload_map' ELSE '{}' END
+        ) AS messages(recipient, message)
+    )
+)
+"""
+
 
 @dataclass(frozen=True)
 class ReplayEventsResult:
@@ -195,25 +234,37 @@ class RealtimeEventHandler:
 
         try:
             with transaction.atomic(durable=True), connection.cursor() as cursor:
+                configured_timeout_ms = None
 
                 def execute(sql, params=None):
+                    nonlocal configured_timeout_ms
                     remaining_ms = int((deadline - monotonic()) * 1000)
                     if remaining_ms <= 0:
                         raise DeadlineExceeded
-                    statement_limit = f"{min(REALTIME_EVENTS_CLEANUP_STATEMENT_TIMEOUT_MS, remaining_ms)}ms"
-                    lock_limit = f"{REALTIME_EVENTS_CLEANUP_LOCK_TIMEOUT_MS}ms"
-                    cursor.execute(
-                        "SELECT "
-                        "set_config('statement_timeout', CASE WHEN "
-                        "current_setting('statement_timeout')::interval = interval '0' OR "
-                        "current_setting('statement_timeout')::interval > %s::interval "
-                        "THEN %s ELSE current_setting('statement_timeout') END, true), "
-                        "set_config('lock_timeout', CASE WHEN "
-                        "current_setting('lock_timeout')::interval = interval '0' OR "
-                        "current_setting('lock_timeout')::interval > %s::interval "
-                        "THEN %s ELSE current_setting('lock_timeout') END, true)",
-                        [statement_limit, statement_limit, lock_limit, lock_limit],
+                    timeout_ms = min(
+                        REALTIME_EVENTS_CLEANUP_STATEMENT_TIMEOUT_MS, remaining_ms
                     )
+                    if timeout_ms != configured_timeout_ms:
+                        # Reuse the batch setup until the remaining budget tightens
+                        # its statement limit, preserving stricter operator limits.
+                        # This owned transaction deletes only proven duplicates;
+                        # commit/rollback restores its flag before other cleanup.
+                        statement_limit = f"{timeout_ms}ms"
+                        lock_limit = f"{REALTIME_EVENTS_CLEANUP_LOCK_TIMEOUT_MS}ms"
+                        cursor.execute(
+                            "SELECT "
+                            "set_config('statement_timeout', CASE WHEN "
+                            "current_setting('statement_timeout')::interval = interval '0' OR "
+                            "current_setting('statement_timeout')::interval > %s::interval "
+                            "THEN %s ELSE current_setting('statement_timeout') END, true), "
+                            "set_config('lock_timeout', CASE WHEN "
+                            "current_setting('lock_timeout')::interval = interval '0' OR "
+                            "current_setting('lock_timeout')::interval > %s::interval "
+                            "THEN %s ELSE current_setting('lock_timeout') END, true), "
+                            "set_config('baserow.realtime_compacting', 'on', true)",
+                            [statement_limit, statement_limit, lock_limit, lock_limit],
+                        )
+                        configured_timeout_ms = timeout_ms
                     if monotonic() >= deadline:
                         raise DeadlineExceeded
                     cursor.execute(sql, params)
@@ -221,12 +272,12 @@ class RealtimeEventHandler:
                         raise DeadlineExceeded
 
                 execute(
-                    "WITH candidates AS MATERIALIZED ("
+                    "WITH candidates AS MATERIALIZED ("  # noqa: S608
                     "SELECT id, channel_group, payload FROM ws_realtime_events "
                     "WHERE sentinel_key IS NULL AND created_at < %s "
                     "ORDER BY created_at, id LIMIT %s FOR UPDATE SKIP LOCKED"
                     "), routes AS MATERIALIZED ("
-                    "SELECT id, channel_group, ws_realtime_event_routing(payload) AS route "
+                    f"SELECT id, channel_group, {_REALTIME_EVENT_ROUTING_SQL} AS route "
                     "FROM candidates) "
                     "SELECT id, sha256(convert_to(jsonb_build_array(channel_group, route)::text, 'UTF8')), "
                     "channel_group, route::text FROM routes",
@@ -251,8 +302,8 @@ class RealtimeEventHandler:
 
                 consider(candidates)
                 execute(
-                    "SELECT id, sentinel_key, channel_group, "
-                    "ws_realtime_event_routing(payload)::text FROM ws_realtime_events "
+                    "SELECT id, sentinel_key, channel_group, "  # noqa: S608
+                    f"({_REALTIME_EVENT_ROUTING_SQL})::text FROM ws_realtime_events "
                     "WHERE sentinel_key = ANY(%s::bytea[]) ORDER BY sentinel_key FOR UPDATE",
                     [list(winners)],
                 )
@@ -266,9 +317,6 @@ class RealtimeEventHandler:
                     # Every loser has an existing, locked higher-ID original with
                     # the exact same route. Deleting first also releases replaced
                     # sentinel keys without rewriting rows we are about to remove.
-                    # This is the transaction's only DELETE. Commit or rollback
-                    # restores the flag before any later cleanup can lose history.
-                    execute("SET LOCAL baserow.realtime_compacting = 'on'")
                     execute(
                         "DELETE FROM ws_realtime_events WHERE id = ANY(%s)",
                         [list(losers)],

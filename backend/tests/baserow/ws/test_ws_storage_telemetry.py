@@ -161,7 +161,7 @@ def _create_expired_events():
         [("table-987", {"payload": {"i": i}}) for i in range(4)]
     )
     RealtimeEvent.objects.filter(id__in=ids[:3]).update(
-        created_at=timezone.now() - timedelta(days=8)
+        created_at=timezone.now() - timedelta(days=2)
     )
     return ids
 
@@ -195,16 +195,13 @@ def test_cleanup_metrics_count_only_committed_rows(monkeypatch, storage_metrics)
         ].record.call_args_list
         if entry.args[0] > 0
     ]
-    assert successful_batches == [
-        call(1, {**attributes, "operation": "compact"}),
-        call(1, {**attributes, "operation": "compact"}),
-    ]
+    assert successful_batches == [call(1, attributes), call(1, attributes)]
     storage_metrics["realtime_cleanup_run_deleted"].record.assert_called_once_with(
         2, attributes
     )
     assert storage_metrics["realtime_cleanup_processed"].add.call_args_list == [
-        call(2, {"process.pid": os.getpid(), "operation": "compact"}),
-        call(1, {"process.pid": os.getpid(), "operation": "compact"}),
+        call(2, {"process.pid": os.getpid()}),
+        call(1, {"process.pid": os.getpid()}),
     ]
     duration = storage_metrics["realtime_cleanup_run_duration"].record.call_args
     assert duration.args[0] > 0
@@ -229,15 +226,8 @@ def test_cleanup_metrics_observe_progress_when_distinct_routes_delete_nothing(
     assert RealtimeEventHandler.cleanup_old_realtime_events(timedelta(days=1)) == 0
 
     assert RealtimeEvent.objects.filter(sentinel_key__isnull=False).count() == 5
-    attributes = {
-        "process.pid": os.getpid(),
-        "operation": "compact",
-    }
-    processed = [
-        entry
-        for entry in storage_metrics["realtime_cleanup_processed"].add.call_args_list
-        if entry.args[1]["operation"] == "compact"
-    ]
+    attributes = {"process.pid": os.getpid()}
+    processed = storage_metrics["realtime_cleanup_processed"].add.call_args_list
     assert processed == [call(2, attributes), call(2, attributes), call(1, attributes)]
     storage_metrics["realtime_cleanup_deleted"].add.assert_not_called()
 
@@ -268,10 +258,10 @@ def test_cleanup_error_keeps_earlier_committed_progress_visible(
     )
     attributes = {"process.pid": os.getpid()}
     storage_metrics["realtime_cleanup_deleted"].add.assert_called_once_with(
-        1, {**attributes, "operation": "compact"}
+        1, attributes
     )
     storage_metrics["realtime_cleanup_processed"].add.assert_called_once_with(
-        2, {**attributes, "operation": "compact"}
+        2, attributes
     )
     storage_metrics["realtime_cleanup_run_deleted"].record.assert_called_once_with(
         1, {**attributes, "outcome": "error"}
@@ -279,10 +269,10 @@ def test_cleanup_error_keeps_earlier_committed_progress_visible(
     batch_durations = storage_metrics[
         "realtime_cleanup_batch_duration"
     ].record.call_args_list
-    assert [
-        (entry.args[1]["operation"], entry.args[1]["outcome"])
-        for entry in batch_durations
-    ] == [("compact", "success"), ("compact", "error")]
+    assert [entry.args[1]["outcome"] for entry in batch_durations] == [
+        "success",
+        "error",
+    ]
 
 
 @pytest.mark.django_db(transaction=True)
@@ -311,7 +301,7 @@ def test_cleanup_budget_reports_progress_without_claiming_completion(
     )
     attributes = {"process.pid": os.getpid()}
     storage_metrics["realtime_cleanup_deleted"].add.assert_called_once_with(
-        1, {**attributes, "operation": "compact"}
+        1, attributes
     )
     storage_metrics["realtime_cleanup_run_deleted"].record.assert_called_once_with(
         1, {**attributes, "outcome": "budget"}

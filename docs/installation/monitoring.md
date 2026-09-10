@@ -167,9 +167,9 @@ for the execution and recovery model.
 | `baserow.websocket_replay_database_errors` | Database errors by reason, including errors occurring after the caller's deadline. |
 | `baserow.realtime_recording_events` | Attempted recording envelopes by `destination=users/page` and handler `outcome=success/error`. A successful handler does not guarantee an enclosing transaction committed. |
 | `baserow.realtime_recording_batch_size` / `baserow.realtime_recording_duration` | Envelopes per attempted batch and handler duration in milliseconds, including adaptation and database work. |
-| `baserow.realtime_cleanup_deleted` / `baserow.realtime_cleanup_batch_size` | Rows removed by successfully committed batches, with `operation=compact`: duplicates removed while the last original per exact route is retained. |
-| `baserow.realtime_cleanup_processed` | Candidates processed by committed batches, by `operation`, including originals retained as sentinels. Compaction can make progress without deleting rows. |
-| `baserow.realtime_cleanup_batch_duration` | Batch duration in milliseconds, including sentinel/floor updates and commit, by `operation`. Failed batches have `outcome=error` and contribute no deleted rows. |
+| `baserow.realtime_cleanup_deleted` / `baserow.realtime_cleanup_batch_size` | Rows removed by successfully committed batches: duplicates removed while the last original per exact route is retained. |
+| `baserow.realtime_cleanup_processed` | Candidates processed by committed batches, including originals retained as sentinels. Compaction can make progress without deleting rows. |
+| `baserow.realtime_cleanup_batch_duration` | Batch duration in milliseconds, including sentinel updates and commit. Failed batches have `outcome=error` and contribute no deleted rows. |
 | `baserow.realtime_cleanup_run_deleted` / `baserow.realtime_cleanup_run_duration` | Committed payload deletion count and total run duration in milliseconds, by outcome. Earlier commits still count if a later batch fails. |
 | `baserow.realtime_cleanup_skipped` | Scheduled attempts skipped for `reason=overlap` (another task owns the lease) or `reason=lock_error` (lease acquisition failed). |
 
@@ -216,7 +216,7 @@ warnings describe full recipient queues, not a connection limit or proof that Re
 has exhausted memory.
 
 Compare recording rate with committed cleanup processing and deletions over time.
-The `compact` operation retains one original per route until replaced. Processing
+Compaction retains one original per route until replaced. Processing
 without deletions is expected for distinct routes; inactive routes can accumulate,
 so monitor retained sentinel count as well as recent event volume.
 A cleanup run ending with `budget` retained its earlier commits but exhausted its time allowance;
