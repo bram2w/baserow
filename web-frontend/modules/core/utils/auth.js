@@ -24,7 +24,7 @@ export const setToken = (
     const config = useRuntimeConfig()
     const cookie = useCookie(
       getCookieName(config, key),
-      getTokenCookieOptions(config, configuration.sameSite)
+      getTokenCookieOptions(config, configuration)
     )
     cookie.value = token
   })
@@ -75,11 +75,15 @@ export const setUserSessionCookie = (
   })
 }
 
-export const unsetToken = (appOrContext, key = cookieTokenName) => {
+export const unsetToken = (
+  appOrContext,
+  key = cookieTokenName,
+  configuration = {}
+) => {
   const { runWithContext } = appOrContext
   return runWithContext(() => {
     const config = useRuntimeConfig()
-    const cookie = useCookie(getCookieName(config, key))
+    const cookie = useCookie(getCookieName(config, key), configuration)
     cookie.value = null
   })
 }
@@ -96,20 +100,25 @@ export const unsetUserSessionCookie = (
   })
 }
 
-export const getToken = async (appOrContext, key = cookieTokenName) => {
+export const getToken = async (
+  appOrContext,
+  key = cookieTokenName,
+  configuration = {}
+) => {
   const { runWithContext } = appOrContext
   return await runWithContext(() => {
     const config = useRuntimeConfig()
-    const cookie = useCookie(getCookieName(config, key))
+    const cookie = useCookie(getCookieName(config, key), configuration)
     return cookie.value
   })
 }
 
 export const getTokenIfEnoughTimeLeft = async (
   appOrContext,
-  key = cookieTokenName
+  key = cookieTokenName,
+  configuration = {}
 ) => {
-  const token = await getToken(appOrContext, key)
+  const token = await getToken(appOrContext, key, configuration)
   const now = Math.ceil(new Date().getTime() / 1000)
 
   let data

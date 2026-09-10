@@ -93,7 +93,7 @@ test.describe("Builder element visibility on published pages", () => {
     const builderPage = await createBuilderPage(
       "Visibility",
       "/visibility",
-      builder,
+      builder
     );
     for (const cfg of ELEMENTS) {
       const element = await createBuilderElement(builderPage, "heading", {
@@ -125,7 +125,7 @@ test.describe("Builder element visibility on published pages", () => {
     await updateRows(
       user,
       table,
-      rows.map((r) => ({ id: r.id, Password: PASSWORD })),
+      rows.map((r) => ({ id: r.id, Password: PASSWORD }))
     );
 
     const integration = await createLocalBaserowIntegration(builder);
@@ -138,28 +138,28 @@ test.describe("Builder element visibility on published pages", () => {
         name: fieldByName.Name,
         role: fieldByName.Role,
         password: fieldByName.Password,
-      },
+      }
     );
 
     // --- Publish. The published copy filters elements by visibility.
     const published = await publishBuilder(
       builder,
-      `e2e-visibility-${userSource.id}-${Date.now()}.example.com`,
+      `e2e-visibility-${userSource.id}-${Date.now()}.example.com`
     );
 
     // --- Authenticate each user source user against the published user source.
     const blankAuth = await userSourceTokenAuth(
       published.userSourceId,
       "blank@example.com",
-      PASSWORD,
+      PASSWORD
     );
     const editorAuth = await userSourceTokenAuth(
       published.userSourceId,
       "editor@example.com",
-      PASSWORD,
+      PASSWORD
     );
 
-    const previewUrl = `${baserowConfig.PUBLIC_WEB_FRONTEND_URL}${published.previewPath()}`;
+    const publishedUrl = `${baserowConfig.PUBLIC_WEB_FRONTEND_URL}${published.renderPath()}`;
     const frontendHost = new URL(baserowConfig.PUBLIC_WEB_FRONTEND_URL)
       .hostname;
     const cookieName = `${baserowConfig.BASEROW_FRONTEND_COOKIE_PREFIX}user_source_token`;
@@ -169,7 +169,7 @@ test.describe("Builder element visibility on published pages", () => {
     const assertVisibleFor = async (
       refreshToken: string | null,
       expectedLabels: string[],
-      callbackProvider?: "saml" | "oidc",
+      callbackProvider?: "saml" | "oidc"
     ) => {
       // Reset to a clean visitor: no Baserow session, no user source token.
       await page.context().clearCookies();
@@ -184,11 +184,11 @@ test.describe("Builder element visibility on published pages", () => {
         ]);
       }
 
-      const target = new URL(previewUrl);
+      const target = new URL(publishedUrl);
       if (callbackProvider && refreshToken) {
         target.searchParams.set(
           `user_source_${callbackProvider}_token__${published.userSourceId}`,
-          refreshToken,
+          refreshToken
         );
       }
 
@@ -203,18 +203,18 @@ test.describe("Builder element visibility on published pages", () => {
         if (callbackProvider) {
           const bridge = await response?.request().redirectedFrom()?.response();
           expect(bridge?.status()).toBe(303);
-          expect(ssrPage.url()).toBe(previewUrl);
+          expect(ssrPage.url()).toBe(publishedUrl);
           const html = await response!.text();
           // Do not print credentials if this assertion fails. Existing Vuex
           // token serialization is outside this test's scope.
           expect(html.includes(`user_source_${callbackProvider}_token__`)).toBe(
-            false,
+            false
           );
         }
         for (const label of ALL_LABELS) {
           const heading = ssrPage.locator(".ab-heading", { hasText: label });
           await expect(heading).toHaveCount(
-            expectedLabels.includes(label) ? 1 : 0,
+            expectedLabels.includes(label) ? 1 : 0
           );
         }
         // Keep any refresh-token rotation performed during SSR.
@@ -223,11 +223,11 @@ test.describe("Builder element visibility on published pages", () => {
         await ssrContext.close();
       }
 
-      await page.goto(previewUrl, { waitUntil: "networkidle" });
+      await page.goto(publishedUrl, { waitUntil: "networkidle" });
 
       // E1_ALL is visible to everyone, so wait for it to confirm the page rendered.
       await expect(
-        page.locator(".ab-heading", { hasText: "E1_ALL" }),
+        page.locator(".ab-heading", { hasText: "E1_ALL" })
       ).toBeVisible();
 
       for (const label of ALL_LABELS) {
@@ -252,12 +252,12 @@ test.describe("Builder element visibility on published pages", () => {
       const callbackAuth = await userSourceTokenAuth(
         published.userSourceId,
         "editor@example.com",
-        PASSWORD,
+        PASSWORD
       );
       await assertVisibleFor(
         callbackAuth.refreshToken,
         EXPECTED.loggedInEditor,
-        provider,
+        provider
       );
     }
   });

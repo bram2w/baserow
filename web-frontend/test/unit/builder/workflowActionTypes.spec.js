@@ -1,4 +1,5 @@
 import { TestApp } from '@baserow/test/helpers/testApp'
+import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
 
 describe('Builder workflow action types', () => {
   let testApp = null
@@ -110,6 +111,28 @@ describe('Builder workflow action types', () => {
     expect(createRowAction.description).toBe(
       'serviceType.localBaserowCreateRowDescription'
     )
+  })
+
+  test('requires a title or description for notification actions', () => {
+    const workflowActionType = testApp
+      .getRegistry()
+      .get('workflowAction', 'notification')
+    const workflowAction = {
+      type: 'notification',
+      title: {},
+      description: {},
+    }
+
+    expect(workflowActionType.getErrorMessage(workflowAction, {})).toBe(
+      'workflowActionTypes.errorNotificationContentMissing'
+    )
+
+    workflowAction.title = { formula: "'Title'" }
+    expect(workflowActionType.getErrorMessage(workflowAction, {})).toBeNull()
+
+    workflowAction.title = {}
+    workflowAction.description = { formula: "'Description'" }
+    expect(workflowActionType.getErrorMessage(workflowAction, {})).toBeNull()
   })
 
   test('open page action is in error when saved page parameters are outdated', () => {
@@ -224,5 +247,94 @@ describe('Builder workflow action types', () => {
         builder,
       })
     ).toBe(false)
+  })
+
+  test('service-backed action flags its trashed integration as in-error', () => {
+    const workflowActionType = testApp
+      .getRegistry()
+      .get('workflowAction', 'create_row')
+
+    // The builder's only live integration is id 5; id 41 has been trashed and is
+    // therefore no longer present on the builder.
+    const builder = {
+      id: 1,
+      integrations: [{ id: 5, type: 'local_baserow' }],
+    }
+
+    // Live integration + a table selected → not in error.
+    expect(
+      workflowActionType.getErrorMessage(
+        { type: 'create_row', service: { integration_id: 5, table_id: 99 } },
+        { builder, mode: 'editing' }
+      )
+    ).toBe(null)
+
+    // Integration 41 is absent (trashed) → the action is misconfigured.
+    const trashedAction = {
+      type: 'create_row',
+      service: { integration_id: 41, table_id: 99 },
+    }
+    expect(
+      workflowActionType.getErrorMessage(trashedAction, {
+        builder,
+        mode: 'editing',
+      })
+    ).toBe('serviceType.errorMisconfiguredIntegration')
+    expect(
+      workflowActionType.isInError(trashedAction, { builder, mode: 'editing' })
+    ).toBe(true)
+  })
+
+  test('integration check is skipped outside the editor', () => {
+    const workflowActionType = testApp
+      .getRegistry()
+      .get('workflowAction', 'create_row')
+
+    // Preview/public mode never loads the builder's integrations, so a
+    // configured action must not be flagged as misconfigured there (it would
+    // hide its element from the rendered page).
+    const builder = { id: 1, integrations: [] }
+    const action = {
+      type: 'create_row',
+      service: { integration_id: 41, table_id: 99 },
+    }
+
+    for (const mode of ['preview', 'public']) {
+      expect(
+        workflowActionType.getErrorMessage(action, { builder, mode })
+      ).toBe(null)
+      expect(workflowActionType.isInError(action, { builder, mode })).toBe(
+        false
+      )
+    }
+  })
+
+  test('service actions delegate preview routing to the store', async () => {
+    const workflowActionType = testApp
+      .getRegistry()
+      .get('workflowAction', 'create_row')
+    vi.spyOn(DataProviderType, 'getAllActionDispatchContext').mockReturnValue({
+      form: { name: 'Ada' },
+    })
+    const dispatch = vi
+      .spyOn(testApp.store, 'dispatch')
+      .mockResolvedValue({ id: 1 })
+
+    await workflowActionType.execute({
+      workflowAction: { id: 42 },
+      applicationContext: {
+        mode: 'preview',
+        builder: { id: 123 },
+      },
+    })
+
+    expect(dispatch).toHaveBeenCalledWith(
+      'builderWorkflowAction/dispatchAction',
+      {
+        workflowActionId: 42,
+        data: { form: { name: 'Ada' } },
+        files: {},
+      }
+    )
   })
 })

@@ -2178,6 +2178,7 @@ class CoreHandler:
                 include_permission_data=False,
                 reduce_disk_space_usage=False,
                 is_duplicate=True,
+                is_template=True,
             ),
             storage=storage,
             progress_builder=progress_builder,

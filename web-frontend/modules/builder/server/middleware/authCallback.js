@@ -15,6 +15,10 @@ import {
   consumeUserSourceCallback,
   getLoginCompletionCookieName,
 } from '../../../core/utils/userSourceCallback'
+import {
+  getBuilderPreviewCookiePath,
+  getBuilderPreviewUserSourceCookieName,
+} from '../../utils/preview'
 
 // Consume the backend callback before Nuxt renders the public page or its payload.
 export default defineEventHandler((event) => {
@@ -24,12 +28,31 @@ export default defineEventHandler((event) => {
   }
 
   const config = useRuntimeConfig(event)
+  const previewBuilderId = callback.url.pathname.match(
+    /^\/builder\/preview\/(\d+)(?:\/|$)/
+  )?.[1]
+  const isPreview =
+    previewBuilderId &&
+    [config.public.builderPreviewUrl, config.public.publicWebFrontendUrl].some(
+      (url) => url && new URL(url).hostname === callback.url.hostname
+    )
   if (callback.token) {
     setCookie(
       event,
-      getCookieName(config, userSourceCookieTokenName),
+      getCookieName(
+        config,
+        isPreview
+          ? getBuilderPreviewUserSourceCookieName()
+          : userSourceCookieTokenName
+      ),
       callback.token,
-      getTokenCookieOptions(config, 'lax')
+      getTokenCookieOptions(config, {
+        sameSite: 'lax',
+        ...(isPreview && {
+          cookieUrl: config.public.builderPreviewUrl,
+          path: getBuilderPreviewCookiePath(previewBuilderId),
+        }),
+      })
     )
   }
   if (callback.token && callback.attemptId) {
@@ -38,7 +61,10 @@ export default defineEventHandler((event) => {
       getCookieName(config, getLoginCompletionCookieName(callback.attemptId)),
       '1',
       {
-        ...getTokenCookieOptions(config, 'lax'),
+        ...getTokenCookieOptions(config, {
+          sameSite: 'lax',
+          ...(isPreview && { cookieUrl: config.public.builderPreviewUrl }),
+        }),
         maxAge: 60,
       }
     )

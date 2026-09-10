@@ -7,6 +7,7 @@ import uuid
 from datetime import datetime
 from smtplib import SMTPAuthenticationError, SMTPConnectError, SMTPNotSupportedError
 from typing import Any, Callable, Dict, Generator, List, Optional, Tuple
+from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
@@ -34,6 +35,7 @@ from baserow.contrib.integrations.core.constants import (
     HTTP_METHOD,
     PERIODIC_INTERVAL_CHOICES,
     PERIODIC_INTERVAL_MINUTE,
+    PERIODIC_TIMEZONE_DEFAULT,
     SMTP_EMAIL_TIMEOUT,
 )
 from baserow.contrib.integrations.core.exceptions import (
@@ -62,6 +64,7 @@ from baserow.contrib.integrations.utils import (
     get_http_request_function,
     read_response_within_limit,
 )
+from baserow.core.datetime import get_timezones
 from baserow.core.formula.registries import formula_runtime_function_registry
 from baserow.core.formula.types import BaserowFormulaObject
 from baserow.core.formula.validator import (
@@ -285,6 +288,26 @@ class CoreHTTPRequestServiceType(CoreServiceType):
         changes: Dict[str, Tuple],
     ):
         return self.after_create(instance, values)
+
+    def export_prepared_values(self, instance: Service) -> dict[str, Any]:
+        values = super().export_prepared_values(instance)
+        # Headers, query params and form data live on related models (rebuilt in
+        # `after_create`), so the base export - which only reads `allowed_fields` -
+        # misses them. Capture them in the same shape `after_create` restores them
+        # from, so that changing them can be undone/redone.
+        values["headers"] = [
+            {"key": header.key, "value": header.value}
+            for header in instance.headers.all()
+        ]
+        values["query_params"] = [
+            {"key": query_param.key, "value": query_param.value}
+            for query_param in instance.query_params.all()
+        ]
+        values["form_data"] = [
+            {"key": form_data.key, "value": form_data.value}
+            for form_data in instance.form_data.all()
+        ]
+        return values
 
     def formula_generator(
         self, service: ServiceType
@@ -1585,6 +1608,7 @@ class CorePeriodicServiceType(TriggerServiceTypeMixin, CoreServiceType):
 
     allowed_fields = [
         "interval",
+        "timezone",
         "minute",
         "hour",
         "day_of_week",
@@ -1593,17 +1617,23 @@ class CorePeriodicServiceType(TriggerServiceTypeMixin, CoreServiceType):
 
     serializer_field_names = [
         "interval",
+        "timezone",
         "minute",
         "hour",
         "day_of_week",
         "day_of_month",
-        "next_run_at",
     ]
 
     serializer_field_overrides = {
         "interval": serializers.ChoiceField(
             choices=PERIODIC_INTERVAL_CHOICES,
+            required=False,
+            allow_null=True,
             help_text=CorePeriodicService._meta.get_field("interval").help_text,
+        ),
+        "timezone": serializers.CharField(
+            required=False,
+            help_text=CorePeriodicService._meta.get_field("timezone").help_text,
         ),
         "minute": serializers.IntegerField(
             min_value=0,
@@ -1641,11 +1671,11 @@ class CorePeriodicServiceType(TriggerServiceTypeMixin, CoreServiceType):
 
     class SerializedDict(ServiceDict):
         interval: str
+        timezone: str
         minute: int
         hour: int
         day_of_week: int
         day_of_month: int
-        next_run_at: datetime
 
     def prepare_values(
         self,
@@ -1657,6 +1687,8 @@ class CorePeriodicServiceType(TriggerServiceTypeMixin, CoreServiceType):
         Responsible for preparing and validating the periodic service values.
         If the `interval` is set to `MINUTE`, it ensures that the `minute` value
         is greater than or equal to the minimum allowed value defined in the settings.
+        The `timezone` is validated here so that an unknown one can't be persisted,
+        as it would then raise every time the schedule is calculated.
 
         :param values: The values to prepare.
         :param user: The user creating or updating the service.
@@ -1672,43 +1704,44 @@ class CorePeriodicServiceType(TriggerServiceTypeMixin, CoreServiceType):
                     f"or equal to {settings.INTEGRATIONS_PERIODIC_MINUTE_MIN}."
                 )
 
-        return super().prepare_values(values, user, instance)
-
-    def serialize_property(
-        self,
-        service: CorePeriodicService,
-        prop_name: str,
-        files_zip=None,
-        storage=None,
-        cache=None,
-    ):
-        if prop_name == "next_run_at":
-            return (
-                service.next_run_at.isoformat()
-                if service.next_run_at is not None
-                else None
+        service_timezone = values.get("timezone", None)
+        if service_timezone is not None and service_timezone not in get_timezones():
+            raise AutomationNodeMisconfiguredService(
+                f"The timezone `{service_timezone}` is not a valid timezone."
             )
 
-        return super().serialize_property(
-            service, prop_name, files_zip=files_zip, storage=storage, cache=cache
-        )
+        return super().prepare_values(values, user, instance)
 
-    def deserialize_property(
+    def create_instance_from_serialized(
         self,
-        prop_name: str,
-        value: Any,
-        id_mapping: Dict[str, Any],
+        serialized_values: Dict[str, Any],
+        id_mapping,
         files_zip=None,
         storage=None,
         cache=None,
+        import_export_config: Optional[ImportExportConfig] = None,
         **kwargs,
-    ):
-        if prop_name == "next_run_at" and value is not None:
-            return datetime.fromisoformat(value)
+    ) -> CorePeriodicService:
+        """
+        Initialize the runtime-only `next_run_at` when publishing. Draft services are
+        never dispatched, so this value is intentionally omitted from serialization.
 
-        return super().deserialize_property(
-            prop_name,
-            value,
+        :param serialized_values: The deserialized values.
+        :return: The created service.
+        """
+
+        if import_export_config and import_export_config.is_publishing:
+            serialized_values["next_run_at"] = calculate_next_periodic_run(
+                interval=serialized_values.get("interval"),
+                minute=serialized_values.get("minute"),
+                hour=serialized_values.get("hour"),
+                day_of_week=serialized_values.get("day_of_week"),
+                day_of_month=serialized_values.get("day_of_month"),
+                tz=serialized_values.get("timezone"),
+            )
+
+        return super().create_instance_from_serialized(
+            serialized_values,
             id_mapping,
             files_zip=files_zip,
             storage=storage,
@@ -1748,10 +1781,30 @@ class CorePeriodicServiceType(TriggerServiceTypeMixin, CoreServiceType):
         super().stop_listening()
         self._cancel_periodic_task()
 
+    def _localize(
+        self, service: CorePeriodicService, value: Optional[datetime]
+    ) -> Optional[str]:
+        """
+        Formats a run timestamp in the service's own timezone. The instant is
+        unchanged and the string keeps its UTC offset, so downstream formulas
+        parse it as before, but a user scheduling "23:30 Europe/London" sees
+        23:30 in the payload rather than the UTC equivalent.
+
+        :param service: The service whose timezone the value is formatted in.
+        :param value: The timestamp to format, or `None` if there isn't one.
+        :return: An ISO 8601 string, or `None`.
+        """
+
+        if value is None:
+            return None
+
+        zone = ZoneInfo(service.timezone or PERIODIC_TIMEZONE_DEFAULT)
+        return value.astimezone(zone).isoformat()
+
     def _get_dispatch_payload(self, service: CorePeriodicService) -> Dict[str, str]:
         return {
-            "triggered_at": service.last_periodic_run.isoformat(),
-            "next_run_at": service.next_run_at.isoformat(),
+            "triggered_at": self._localize(service, service.last_periodic_run),
+            "next_run_at": self._localize(service, service.next_run_at),
         }
 
     def _get_simulation_payload(self, service: CorePeriodicService) -> Dict[str, str]:
@@ -1763,10 +1816,11 @@ class CorePeriodicServiceType(TriggerServiceTypeMixin, CoreServiceType):
             day_of_week=service.day_of_week,
             day_of_month=service.day_of_month,
             from_time=now,
+            tz=service.timezone,
         )
         return {
-            "triggered_at": now.isoformat(),
-            "next_run_at": next_run.isoformat(),
+            "triggered_at": self._localize(service, now),
+            "next_run_at": self._localize(service, next_run),
         }
 
     def dispatch_data(
@@ -1808,8 +1862,15 @@ class CorePeriodicServiceType(TriggerServiceTypeMixin, CoreServiceType):
 
         return (
             CorePeriodicService.objects.filter(
+                # A service without an interval hasn't been configured yet, so it
+                # has no schedule to be due against.
+                Q(interval__isnull=False),
+                # Publishing sets `next_run_at` during import. Draft services and
+                # records created before that behavior can still have a null value.
+                # Treat them as due so the parent can select dispatchable services;
+                # any dispatched service is rescheduled below.
                 Q(next_run_at__lte=current.replace(second=0, microsecond=0))
-                | Q(next_run_at__isnull=True)
+                | Q(next_run_at__isnull=True),
             )
             .select_for_update(
                 of=("self",),
@@ -1874,6 +1935,7 @@ class CorePeriodicServiceType(TriggerServiceTypeMixin, CoreServiceType):
                     hour=dispatched_service.hour,
                     day_of_week=dispatched_service.day_of_week,
                     day_of_month=dispatched_service.day_of_month,
+                    tz=dispatched_service.timezone,
                     from_time=next_run,
                 )
 
@@ -2449,6 +2511,12 @@ class CoreStartWorkflowServiceType(CoreServiceType):
     model_class = CoreStartWorkflowService
     dispatch_types = [DispatchTypes.ACTION]
 
+    WORKFLOW_DOES_NOT_EXIST_ERROR = "The workflow with ID {workflow_id} does not exist."
+    TRIGGER_NOT_ON_DEMAND_ERROR = (
+        "Only workflows whose trigger can start on demand, such as a manual "
+        "trigger, can be started."
+    )
+
     allowed_fields = ["workflow"]
     serializer_field_names = ["workflow_id"]
     serializer_field_overrides = {
@@ -2500,13 +2568,11 @@ class CoreStartWorkflowServiceType(CoreServiceType):
             workflow = AutomationWorkflowService().get_workflow(user, workflow_id)
         except AutomationWorkflowDoesNotExist as exc:
             raise serializers.ValidationError(
-                f"The workflow with ID {workflow_id} does not exist."
+                self.WORKFLOW_DOES_NOT_EXIST_ERROR.format(workflow_id=workflow_id)
             ) from exc
 
         if not workflow.can_be_immediately_dispatched():
-            raise serializers.ValidationError(
-                "Only workflows with an immediate dispatch trigger can be started."
-            )
+            raise serializers.ValidationError(self.TRIGGER_NOT_ON_DEMAND_ERROR)
 
         values["workflow"] = workflow
         return values
@@ -2549,7 +2615,7 @@ class CoreStartWorkflowServiceType(CoreServiceType):
 
         if not published_workflow.can_be_immediately_dispatched():
             raise ServiceImproperlyConfiguredDispatchException(
-                "Only workflows with an immediate dispatch trigger can be started."
+                self.TRIGGER_NOT_ON_DEMAND_ERROR
             )
 
         AutomationWorkflowHandler().async_start_workflow(published_workflow)

@@ -334,3 +334,45 @@ def test_google_provider_names_pydantic_ai_accepts():
         infer_provider_class("google-gla")
     with pytest.raises(ValueError, match="Unknown provider"):
         infer_provider_class("google-vertex")
+
+
+# ---------------------------------------------------------------------------
+# Step 6: model profile propagation
+# ---------------------------------------------------------------------------
+
+
+def test_every_sub_agent_run_passes_its_model_profile():
+    """Sub-agent calls must pass model_settings for per-model profiles to apply."""
+
+    import re
+    from pathlib import Path
+
+    assistant = (
+        Path(__file__).resolve().parents[3] / "src" / "baserow_enterprise" / "assistant"
+    )
+    assert assistant.is_dir(), f"cannot find the assistant package at {assistant}"
+    # The harness has a behavioral profile regression. The judge and connectivity
+    # probe do not use assistant tool profiles.
+    exempt = {"evals/harness.py", "evals/judge.py", "model_profiles.py"}
+
+    offenders = []
+    scanned = 0
+    for path in assistant.rglob("*.py"):
+        scanned += 1
+        rel = path.relative_to(assistant).as_posix()
+        if rel in exempt:
+            continue
+        source = path.read_text()
+        for match in re.finditer(r"\b(\w*agent)\.run(?:_sync)?\(", source):
+            if source[match.start() - 1] == "`":
+                continue
+            call = source[match.start() : match.start() + 400]
+            if "model_settings" not in call:
+                line = source[: match.start()].count("\n") + 1
+                offenders.append(f"{rel}:{line} {match.group(1)}")
+
+    assert scanned > 50, f"only scanned {scanned} files; the glob is wrong"
+    assert not offenders, (
+        "these agent calls skip get_model_settings(), so per-model profiles "
+        f"never reach them: {offenders}"
+    )

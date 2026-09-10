@@ -270,6 +270,7 @@ class DatabaseConfig(AppConfig):
         from .workflow_actions.workflow_action_types import (
             CoreHTTPRequestWorkflowActionType,
             CoreSMTPEmailWorkflowActionType,
+            CoreStartWorkflowWorkflowActionType,
             LocalBaserowCreateRowWorkflowActionType,
             LocalBaserowDeleteRowWorkflowActionType,
             LocalBaserowUpdateRowWorkflowActionType,
@@ -295,6 +296,9 @@ class DatabaseConfig(AppConfig):
         )
         database_workflow_action_type_registry.register(
             SlackWriteMessageWorkflowActionType()
+        )
+        database_workflow_action_type_registry.register(
+            CoreStartWorkflowWorkflowActionType()
         )
 
         from .fields.field_aggregations import (

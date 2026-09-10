@@ -49,7 +49,7 @@ Reusable skills live in `.agents/skills/`. Each subdirectory is a self-contained
 
 | Skill directory                   | When to use                                                                                                                                                          |
 | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `add-django-config-env-var`       | Adding a new Django setting backed by an env var and propagating it to `base.py`, docker-compose files, `env-remap.mjs`, and `docs/installation/configuration.md`    |
+| `add-config-env-var`              | Adding a backend or frontend configuration env var and propagating it through settings, Nuxt runtime config, Docker Compose, docs, consumers, and tests as needed  |
 | `write-frontend-unit-test`        | Writing or fixing frontend unit tests in `web-frontend`, `premium/web-frontend`, or `enterprise/web-frontend`                                                        |
 | `create-update-service`           | Creating or updating an integration type or service type in `contrib/integrations`                                                                                   |
 | `create-in-app-notification`      | Creating or updating a Baserow in-app notification for an event, including backend and frontend registration, target routing data, and duplicate-prevention behavior |
@@ -64,7 +64,7 @@ Do not commit secrets or local overrides. Use `.env.local` for development, keep
 
 - On a specific branch, always merge backend migrations file instead of creating new ones only if it was created on the very same branch.
 - Django migrations must be executed with zero downtime. This means the new database schema must remain compatible with the previous application version during the deployment.
-    - Every new field must define a `db_default`.
+    - Every new field must define a `db_default` or accept `null` values if they are created on a previously existing model.
     - Do not remove fields unless you are certain they are no longer used by the previous application version. Instead, keep the field and add a `# TODO ZDM: remove this field in the next version` comment so it can be safely removed in a subsequent release.
 - CSS classes respect BEM methodology.
 - When working on translations, only update english unless told otherwise. Other languages are handled with Weblate. Don't nest keys too much, just keep one level of nesting.

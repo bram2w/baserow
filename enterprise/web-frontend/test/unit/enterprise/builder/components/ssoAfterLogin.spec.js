@@ -161,8 +161,8 @@ describe('SSO After login workflow', () => {
             `http://localhost/login?${errorParam}=ERROR_INVALID_CREDENTIALS`
           )
         )
-        // A fatal SSR error never mounts PublicPageContent. Only the client
-        // plugin runs; a later authenticated visit must not replay this login.
+        // The plugin clears failed attempts before the page consumes the error;
+        // a later authenticated visit must not replay this login.
         await pendingLoginPlugin(app)
         vi.spyOn(window, 'location', 'get').mockReturnValue(
           new URL('http://localhost/login')

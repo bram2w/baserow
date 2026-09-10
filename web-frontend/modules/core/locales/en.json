@@ -442,6 +442,10 @@
     "andMore": "... and {count} more",
     "unnamed": "Unnamed {type} {id}"
   },
+  "trashType": {
+    "integration": "integration",
+    "user_source": "user source"
+  },
   "trashModal": {
     "emptyTitle": "No workspaces found",
     "emptyMessage": "You aren't a member of any workspace. Applications like databases belong to a workspace, so in order to create them you need to create a workspace.",
@@ -933,7 +937,9 @@
     "errorInvalidFormula": "The formula is invalid.",
     "advancedFormulaMode": "Advanced formula mode",
     "invalidFormulaTitle": "Invalid formula",
-    "invalidSyntax": "Not a valid expert formula, please check the syntax."
+    "invalidSyntax": "Not a valid expert formula, please check the syntax.",
+    "useFormulaMode": "Use formula mode",
+    "useRawMode": "Use raw mode"
   },
   "formulaInputErrorContext": {
     "viewFullError": "View full error"
@@ -1313,8 +1319,9 @@
     "notAllowedDescription": "Adding 2FA is only possible to password-based accounts."
   },
   "nodeHelpTooltip": {
-    "exampleLabel": "Example",
-    "result": "Result: {result}"
+    "exampleLabel": "Example | Examples",
+    "result": "Result: {result}",
+    "clickToInsert": "Click an example to insert it"
   },
   "enableWithQRCode": {
     "scanQRCode": "Scan QR code",

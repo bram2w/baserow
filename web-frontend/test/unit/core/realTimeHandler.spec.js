@@ -87,6 +87,7 @@ describe('RealTimeHandler replay_events flow', () => {
     )
     expect(replayRequest).toEqual({
       type: 'replay_events',
+      supports_retry: true,
       last_seen_id: FIRST_CONNECT_CURSOR,
     })
   })
@@ -114,6 +115,7 @@ describe('RealTimeHandler replay_events flow', () => {
     )
     expect(replayRequest).toEqual({
       type: 'replay_events',
+      supports_retry: true,
       last_seen_id: FIRST_CONNECT_CURSOR,
     })
   })
@@ -136,6 +138,7 @@ describe('RealTimeHandler replay_events flow', () => {
     )
     expect(replayRequest).toEqual({
       type: 'replay_events',
+      supports_retry: true,
       last_seen_id: 0,
     })
   })
@@ -181,6 +184,365 @@ describe('RealTimeHandler replay_events flow', () => {
     ).toBe(false)
     expect(env.handler.lastSeenEventId).toBe(99)
   })
+})
+
+describe('RealTimeHandler transient replay recovery', () => {
+  let env
+
+  function receive(data, socket = env.handler.socket) {
+    socket.onmessage({ data: JSON.stringify(data) })
+  }
+
+  function authenticate(cursor = FIRST_CONNECT_CURSOR) {
+    env.handler.lastSeenEventId = cursor
+    receive({ type: 'authentication', success: true, replay_enabled: true })
+  }
+
+  async function openSocket() {
+    await env.handler.connect(false)
+    const socket = env.handler.socket
+    socket.readyState = WebSocket.OPEN
+    socket.send = (payload) => env.sentMessages.push(JSON.parse(payload))
+    socket.onopen()
+    return socket
+  }
+
+  beforeEach(async () => {
+    vi.useFakeTimers()
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    env = makeHandler()
+    env.handler.socket = null
+    await openSocket()
+  })
+
+  afterEach(() => {
+    env.handler.disconnect()
+    vi.restoreAllMocks()
+    vi.useRealTimers()
+  })
+
+  test('retries once with the original cursor and leaves the existing warning alone', () => {
+    authenticate(10)
+    env.store.dispatch('toast/setWorkspaceOutdated', true)
+    env.store._dispatched.length = 0
+
+    receive({ type: 'replay_events_retry', retry_after_ms: 1000 })
+    // Duplicate responses and manual attempts must not create extra requests.
+    receive({ type: 'replay_events_retry', retry_after_ms: 1000 })
+    env.handler._sendReplayEventsRequest()
+    expect(env.sentMessages).toHaveLength(1)
+    expect(env.store._dispatched).toEqual([])
+
+    vi.advanceTimersByTime(999)
+    expect(env.sentMessages).toHaveLength(1)
+    vi.advanceTimersByTime(1)
+    expect(env.sentMessages).toEqual([
+      { type: 'replay_events', last_seen_id: 10, supports_retry: true },
+      { type: 'replay_events', last_seen_id: 10, supports_retry: true },
+    ])
+    vi.advanceTimersByTime(60000)
+    expect(env.sentMessages).toHaveLength(2)
+  })
+
+  test.each([null, undefined, '5000', NaN, Infinity, -Infinity])(
+    'uses the base retry delay for invalid retry_after_ms %s',
+    (retryAfterMs) => {
+      authenticate(10)
+      // Call the registered callback directly: JSON would turn NaN/Infinity into
+      // null, concealing whether the retry scheduler handles non-finite values.
+      fire(env.handler, 'replay_events_retry', {
+        retry_after_ms: retryAfterMs,
+      })
+
+      vi.advanceTimersByTime(999)
+      expect(env.sentMessages).toHaveLength(1)
+      vi.advanceTimersByTime(1)
+      expect(env.sentMessages).toEqual([
+        { type: 'replay_events', last_seen_id: 10, supports_retry: true },
+        { type: 'replay_events', last_seen_id: 10, supports_retry: true },
+      ])
+      vi.advanceTimersByTime(60000)
+      expect(env.sentMessages).toHaveLength(2)
+    }
+  )
+
+  test('an abandoned replay does not schedule a retry for an in-flight request', () => {
+    authenticate(10)
+    // Keep the request in flight to exercise the abandoned-replay guard itself.
+    env.handler.replayAbandoned = true
+    env.store.dispatch('toast/setWorkspaceOutdated', true)
+    env.store._dispatched.length = 0
+    const pendingTimers = vi.getTimerCount()
+
+    receive({ type: 'replay_events_retry', retry_after_ms: 1000 })
+
+    expect(vi.getTimerCount()).toBe(pendingTimers)
+    vi.advanceTimersByTime(60000)
+    expect(env.sentMessages).toEqual([
+      { type: 'replay_events', last_seen_id: 10, supports_retry: true },
+    ])
+    expect(env.store._dispatched).toEqual([])
+  })
+
+  test('merges live and replay events in order without applying duplicates', () => {
+    const received = []
+    env.handler.registerEvent('row_updated', (_context, data) => {
+      received.push(data._event_id)
+    })
+    authenticate(10)
+    receive({ type: 'replay_events_retry', retry_after_ms: 1000 })
+    receive({ type: 'row_updated', _event_id: 12 })
+    // Ephemeral events continue immediately while persistent updates await replay.
+    receive({ type: 'presence.space_discard', space: 'table-1' })
+    expect(env.store._dispatched).toContainEqual([
+      'presence/clearSpace',
+      { space: 'table-1' },
+    ])
+    expect(received).toEqual([])
+
+    vi.advanceTimersByTime(1000)
+    expect(env.sentMessages.at(-1).last_seen_id).toBe(10)
+    receive({ type: 'row_updated', _event_id: 10 })
+    receive({ type: 'row_updated', _event_id: 11 })
+    receive({ type: 'row_updated', _event_id: 12 })
+    receive({
+      type: 'replay_events_result',
+      force_refresh: false,
+      latest_event_id: 12,
+    })
+
+    expect(received).toEqual([11, 12])
+    expect(env.handler.lastSeenEventId).toBe(12)
+    expect(env.store._dispatched).not.toContainEqual([
+      'toast/setWorkspaceOutdated',
+      true,
+    ])
+    receive({ type: 'row_updated', _event_id: 13 })
+    // Channel-layer copies can remain queued until after replay completes.
+    receive({ type: 'row_updated', _event_id: 11 })
+    receive({ type: 'row_updated', _event_id: 12 })
+    expect(received).toEqual([11, 12, 13])
+  })
+
+  test('retries the first-connect baseline and applies live events below it', () => {
+    const callback = vi.fn()
+    env.handler.registerEvent('row_updated', callback)
+    authenticate()
+    receive({ type: 'replay_events_retry', retry_after_ms: 1000 })
+    receive({ type: 'row_updated', _event_id: 12 })
+    vi.advanceTimersByTime(1000)
+    expect(env.sentMessages.at(-1).last_seen_id).toBe(FIRST_CONNECT_CURSOR)
+
+    receive({
+      type: 'replay_events_result',
+      force_refresh: false,
+      latest_event_id: 15,
+    })
+    expect(callback).toHaveBeenCalledExactlyOnceWith(env.context, {
+      type: 'row_updated',
+      _event_id: 12,
+    })
+    expect(env.handler.lastSeenEventId).toBe(15)
+  })
+
+  test('backs off with jitter, caps the delay, and resets after a result', () => {
+    authenticate(10)
+    Math.random.mockReturnValue(0.5)
+    for (const delay of [1125, 2250, 4500, 8500, 16500, 29500, 29500]) {
+      const sentBefore = env.sentMessages.length
+      receive({ type: 'replay_events_retry', retry_after_ms: 1000 })
+      vi.advanceTimersByTime(delay - 1)
+      expect(env.sentMessages).toHaveLength(sentBefore)
+      vi.advanceTimersByTime(1)
+      expect(env.sentMessages).toHaveLength(sentBefore + 1)
+    }
+
+    receive({
+      type: 'replay_events_result',
+      force_refresh: false,
+      latest_event_id: 15,
+    })
+    env.handler._sendReplayEventsRequest()
+    const sentBefore = env.sentMessages.length
+    receive({ type: 'replay_events_retry', retry_after_ms: 1000 })
+    vi.advanceTimersByTime(1125)
+    expect(env.sentMessages).toHaveLength(sentBefore + 1)
+    expect(env.sentMessages.at(-1).last_seen_id).toBe(15)
+  })
+
+  test('a result cancels a scheduled retry', () => {
+    authenticate(10)
+    receive({ type: 'replay_events_retry', retry_after_ms: 1000 })
+    receive({
+      type: 'replay_events_result',
+      force_refresh: false,
+      latest_event_id: 10,
+    })
+    vi.advanceTimersByTime(60000)
+    expect(env.sentMessages).toHaveLength(1)
+  })
+
+  test.each([FIRST_CONNECT_CURSOR, 10])(
+    'socket replacement preserves buffered events and safely recovers cursor %s',
+    async (cursor) => {
+      const callback = vi.fn()
+      env.handler.registerEvent('row_updated', callback)
+      authenticate(cursor)
+      receive({ type: 'replay_events_retry', retry_after_ms: 1000 })
+      receive({ type: 'row_updated', _event_id: 12 })
+      const oldSocket = env.handler.socket
+      oldSocket.readyState = WebSocket.CLOSED
+      oldSocket.onclose()
+      vi.advanceTimersByTime(2000)
+      expect(env.sentMessages).toHaveLength(1)
+
+      await openSocket()
+      receive({ type: 'authentication', success: true, replay_enabled: true })
+      expect(env.sentMessages.at(-1).last_seen_id).toBe(
+        cursor === FIRST_CONNECT_CURSOR ? NO_REPLAY_AVAILABLE : cursor
+      )
+      // Delayed callbacks from the old socket must not affect the new attempt.
+      receive({ type: 'replay_events_retry', retry_after_ms: 1000 }, oldSocket)
+      receive(
+        {
+          type: 'replay_events_result',
+          force_refresh: true,
+          latest_event_id: 99,
+        },
+        oldSocket
+      )
+      vi.advanceTimersByTime(2000)
+      expect(env.sentMessages).toHaveLength(2)
+      expect(callback).not.toHaveBeenCalled()
+      expect(env.store._dispatched).not.toContainEqual([
+        'toast/setWorkspaceOutdated',
+        true,
+      ])
+
+      receive({
+        type: 'replay_events_result',
+        force_refresh: cursor === FIRST_CONNECT_CURSOR,
+        latest_event_id:
+          cursor === FIRST_CONNECT_CURSOR ? NO_REPLAY_AVAILABLE : 15,
+      })
+      expect(callback).toHaveBeenCalledTimes(1)
+      expect(env.store._dispatched).toContainEqual([
+        'toast/setWorkspaceOutdated',
+        cursor === FIRST_CONNECT_CURSOR,
+      ])
+    }
+  )
+
+  test('disconnect cancels retry and starts the next session with a new baseline', async () => {
+    authenticate(10)
+    receive({ type: 'replay_events_retry', retry_after_ms: 1000 })
+    const oldSocket = env.handler.socket
+    env.handler.disconnect()
+    receive({ type: 'replay_events_retry', retry_after_ms: 1000 }, oldSocket)
+    vi.advanceTimersByTime(60000)
+    expect(env.sentMessages).toHaveLength(1)
+
+    await openSocket()
+    receive({ type: 'authentication', success: true, replay_enabled: true })
+    expect(env.sentMessages.at(-1).last_seen_id).toBe(FIRST_CONNECT_CURSOR)
+  })
+
+  test('reconnecting to a server without replay preserves the unrecovered-gap warning', async () => {
+    const callback = vi.fn()
+    env.handler.registerEvent('row_updated', callback)
+    authenticate(10)
+    receive({ type: 'replay_events_retry', retry_after_ms: 1000 })
+    receive({ type: 'row_updated', _event_id: 12 })
+    env.handler.socket.readyState = WebSocket.CLOSED
+    env.handler.socket.onclose()
+    await openSocket()
+    receive({ type: 'authentication', success: true, replay_enabled: false })
+
+    expect(callback).toHaveBeenCalledTimes(1)
+    expect(env.store._dispatched).toContainEqual([
+      'toast/setWorkspaceOutdated',
+      true,
+    ])
+    vi.advanceTimersByTime(60000)
+    expect(env.sentMessages).toHaveLength(1)
+  })
+
+  test('an unreplayable gap stays outdated after live messages and another reconnect', async () => {
+    authenticate(10)
+    receive({ type: 'row_updated', _event_id: 12 })
+    receive({
+      type: 'replay_events_result',
+      force_refresh: true,
+      latest_event_id: NO_REPLAY_AVAILABLE,
+    })
+    expect(env.store._dispatched).toContainEqual([
+      'toast/setWorkspaceOutdated',
+      true,
+    ])
+    env.store._dispatched.length = 0
+
+    env.handler.socket.readyState = WebSocket.CLOSED
+    env.handler.socket.onclose()
+    await openSocket()
+    receive({ type: 'authentication', success: true, replay_enabled: true })
+    receive({
+      type: 'replay_events_result',
+      force_refresh: false,
+      latest_event_id: 12,
+    })
+    expect(env.sentMessages).toHaveLength(1)
+    expect(env.store._dispatched).not.toContainEqual([
+      'toast/setWorkspaceOutdated',
+      false,
+    ])
+  })
+
+  test.each(['count', 'bytes'])(
+    'buffer %s overflow requires refresh and a late result cannot clear it',
+    async (limit) => {
+      authenticate(10)
+      receive({ type: 'replay_events_retry', retry_after_ms: 1000 })
+      if (limit === 'count') {
+        for (let id = 11; id <= 1011; id++) {
+          receive({ type: 'row_updated', _event_id: id })
+        }
+      } else {
+        receive({
+          type: 'row_updated',
+          _event_id: 11,
+          text: 'x'.repeat(3 * 1024 * 1024),
+        })
+      }
+      expect(env.store._dispatched).toContainEqual([
+        'toast/setWorkspaceOutdated',
+        true,
+      ])
+      env.store._dispatched.length = 0
+      receive({
+        type: 'replay_events_result',
+        force_refresh: false,
+        latest_event_id: 1011,
+      })
+      vi.advanceTimersByTime(60000)
+      expect(env.sentMessages).toHaveLength(1)
+      expect(env.store._dispatched).toEqual([])
+
+      env.handler.socket.readyState = WebSocket.CLOSED
+      env.handler.socket.onclose()
+      await openSocket()
+      receive({ type: 'authentication', success: true, replay_enabled: true })
+      expect(env.sentMessages).toHaveLength(1)
+      expect(env.store._dispatched).not.toContainEqual([
+        'toast/setWorkspaceOutdated',
+        false,
+      ])
+
+      env.handler.disconnect()
+      await openSocket()
+      receive({ type: 'authentication', success: true, replay_enabled: true })
+      expect(env.sentMessages.at(-1).last_seen_id).toBe(FIRST_CONNECT_CURSOR)
+    }
+  )
 })
 
 describe('RealTimeHandler high-water mark', () => {
@@ -721,6 +1083,7 @@ describe('RealTimeHandler replay request params', () => {
     const msg = sentMessages.find((m) => m.type === 'replay_events')
     expect(msg).toEqual({
       type: 'replay_events',
+      supports_retry: true,
       last_seen_id: 42,
     })
   })
@@ -734,6 +1097,7 @@ describe('RealTimeHandler replay request params', () => {
     const msg = sentMessages.find((m) => m.type === 'replay_events')
     expect(msg).toEqual({
       type: 'replay_events',
+      supports_retry: true,
       last_seen_id: FIRST_CONNECT_CURSOR,
     })
   })

@@ -7,9 +7,12 @@ export const getCookieName = (config, key) => {
   return `${config.public.baserowFrontendCookiePrefix || ''}${key}`
 }
 
-export const getTokenCookieOptions = (config, sameSite = null) => ({
-  path: '/',
+export const getTokenCookieOptions = (config, configuration = {}) => ({
+  path: configuration.path || '/',
   maxAge: refreshTokenMaxAge,
-  sameSite: sameSite || config.public.baserowFrontendSameSiteCookie,
-  secure: isSecureURL(config.public.publicWebFrontendUrl),
+  sameSite:
+    configuration.sameSite || config.public.baserowFrontendSameSiteCookie,
+  secure:
+    configuration.secure ??
+    isSecureURL(configuration.cookieUrl || config.public.publicWebFrontendUrl),
 })

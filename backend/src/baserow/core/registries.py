@@ -95,6 +95,13 @@ class ImportExportConfig:
     The data then doesn't leave the instance.
     """
 
+    is_template: bool = False
+    """
+    Indicates that the import is installing a template. A template is imported
+    as a duplicate, but the file was written on another installation, so ids in
+    it that were not remapped are collisions rather than references.
+    """
+
     is_publishing: bool = False
     """
     Indicates whether or not we are currently publishing. This class is used

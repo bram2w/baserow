@@ -21,6 +21,7 @@ from baserow.core.services.exceptions import (
     AddressNotAllowedDispatchException,
     RemoteRefusedDispatchException,
     ResponseTooLargeDispatchException,
+    ServiceImproperlyConfiguredDispatchException,
     UnexpectedDispatchException,
 )
 from baserow.core.services.registries import DispatchTypes, ServiceType
@@ -105,12 +106,25 @@ class SlackWriteMessageServiceType(ServiceType):
             service's fields, including the message text.
         :param dispatch_context: The context in which the dispatch is occurring.
         :return: A dictionary containing the response data from the Slack API.
+        :raises ServiceImproperlyConfiguredDispatchException: If the integration is
+            not a Slack bot, or is one with no token.
         :raises UnexpectedDispatchException: If there's an error after the HTTP request.
         :raises RemoteRefusedDispatchException: If Slack refused the message.
         """
 
+        # Both refused before the request, so the click is not charged for them.
+        if service.integration.get_type().type != self.integration_type:
+            raise ServiceImproperlyConfiguredDispatchException(
+                "The integration of this action is not a Slack bot."
+            )
+        token = service.integration.specific.token
+        if not token:
+            raise ServiceImproperlyConfiguredDispatchException(
+                "This Slack bot has no token. Add a new bot with its token, or "
+                "paste one into this bot, before this action can post."
+            )
+
         try:
-            token = service.integration.specific.token
             response = get_http_request_function()(
                 method="POST",
                 url=f"{settings.INTEGRATIONS_SLACK_API_URL}/chat.postMessage",

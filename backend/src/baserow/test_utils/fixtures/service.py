@@ -105,6 +105,16 @@ class ServiceFixtures:
             kwargs["type"] = "equal"
         if "order" not in kwargs:
             kwargs["order"] = 0
+        if kwargs.get("value_is_formula") is False and "value" in kwargs:
+            value = kwargs["value"]
+            if isinstance(value, dict):
+                value["mode"] = "raw"
+            else:
+                kwargs["value"] = {
+                    "formula": "" if value is None else str(value),
+                    "mode": "raw",
+                    "version": "0.1",
+                }
         return LocalBaserowTableServiceFilter.objects.create(**kwargs)
 
     def create_local_baserow_table_service_filter_group(
@@ -140,6 +150,9 @@ class ServiceFixtures:
         return self.create_service(AIAgentService, **kwargs)
 
     def create_slack_write_message_service(self, **kwargs):
+        # A bot with no token is refused before the dispatch sends anything.
+        if "integration" not in kwargs:
+            kwargs.setdefault("integration_args", {}).setdefault("token", "xoxb-test")
         return self.create_service(SlackWriteMessageService, **kwargs)
 
     def create_core_iterator_service(self, **kwargs):

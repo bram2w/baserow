@@ -1780,6 +1780,90 @@ def test_builder_application_import_with_complex_elements(data_fixture):
 
 
 @pytest.mark.django_db
+def test_builder_application_import_with_element_referencing_trashed_data_source(
+    data_fixture,
+):
+    user = data_fixture.create_user(email="test@baserow.io")
+    workspace = data_fixture.create_workspace(user=user)
+    builder = data_fixture.create_builder_application(workspace=workspace)
+    page = data_fixture.create_builder_page(builder=builder)
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        page=page
+    )
+    data_fixture.create_builder_repeat_element(page=page, data_source=data_source)
+
+    # Trash the page's only data source; the element keeps its dangling reference.
+    TrashHandler.trash(user, workspace, builder, data_source)
+
+    config = ImportExportConfig(include_permission_data=True)
+    serialized = BuilderApplicationType().export_serialized(builder, config)
+    serialized = json.loads(json.dumps(serialized))
+
+    imported = BuilderApplicationType().import_serialized(
+        workspace, serialized, config, {}
+    )
+
+    imported_page = imported.visible_pages.get(name=page.name)
+    imported_element = imported_page.element_set.get().specific
+    assert imported_element.data_source_id is None
+
+
+@pytest.mark.django_db
+def test_builder_application_import_with_user_source_referencing_trashed_integration(
+    data_fixture,
+):
+    user = data_fixture.create_user(email="test@baserow.io")
+    workspace = data_fixture.create_workspace(user=user)
+    builder = data_fixture.create_builder_application(workspace=workspace)
+    trashed_integration = data_fixture.create_local_baserow_integration(
+        application=builder
+    )
+    live_integration = data_fixture.create_local_baserow_integration(
+        application=builder
+    )
+    user_source = data_fixture.create_user_source_with_first_type(
+        application=builder, integration=trashed_integration, name="Dangling"
+    )
+    other_user_source = data_fixture.create_user_source_with_first_type(
+        application=builder, integration=live_integration, name="Live"
+    )
+    # A data source referencing an integration exercises the data source import
+    # path too, which resolves integrations through the same mapping.
+    page = data_fixture.create_builder_page(builder=builder)
+    data_fixture.create_builder_local_baserow_list_rows_data_source(
+        page=page, integration=live_integration
+    )
+
+    TrashHandler.trash(user, workspace, builder, trashed_integration)
+
+    config = ImportExportConfig(include_permission_data=True)
+    serialized = BuilderApplicationType().export_serialized(builder, config)
+    serialized = json.loads(json.dumps(serialized))
+
+    imported = BuilderApplicationType().import_serialized(
+        workspace, serialized, config, {}
+    )
+
+    # The dangling reference is dropped, while the live one is remapped.
+    imported_dangling = imported.user_sources.get(name=user_source.name)
+    assert imported_dangling.integration_id is None
+    imported_live = imported.user_sources.get(name=other_user_source.name)
+    assert imported_live.integration_id is not None
+    assert imported_live.integration_id != live_integration.id
+
+    # Second failure mode: with no live integrations at all, the export contains
+    # no integrations and the `integrations` mapping key is never initialized.
+    TrashHandler.trash(user, workspace, builder, live_integration)
+    serialized = BuilderApplicationType().export_serialized(builder, config)
+    serialized = json.loads(json.dumps(serialized))
+
+    imported = BuilderApplicationType().import_serialized(
+        workspace, serialized, config, {}
+    )
+    assert all(us.integration_id is None for us in imported.user_sources.all())
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize(
     "page_property,value",
     [
@@ -2239,16 +2323,16 @@ def test_get_default_application_urls(data_fixture):
     )
 
     assert builder.get_type().get_application_urls(builder) == [
-        f"http://localhost:3000/builder/{builder.id}/preview/"
+        f"http://localhost:3000/builder/preview/{builder.id}/"
     ]
     assert builder_to.get_type().get_application_urls(builder_to) == [
         "http://mytest.com:3000",
-        f"http://localhost:3000/builder/{builder.id}/preview/",
+        f"http://localhost:3000/builder/preview/{builder.id}/",
     ]
 
 
 @pytest.mark.django_db
-def test_get_application_id_for_url(data_fixture):
+def test_get_application_id_for_url(data_fixture, settings):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
     builder_to = data_fixture.create_builder_application(workspace=None)
@@ -2257,8 +2341,11 @@ def test_get_application_id_for_url(data_fixture):
     )
 
     assert (
+        builder.get_type().get_application_id_for_url("http://localhost:3000/") is None
+    )
+    assert (
         builder.get_type().get_application_id_for_url(
-            f"http://localhost:3000/builder/{builder.id}/preview/"
+            f"{settings.BUILDER_PREVIEW_URL}/builder/preview/{builder.id}/"
         )
         == builder.id
     )

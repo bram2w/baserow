@@ -50,6 +50,19 @@ export class NotificationWorkflowActionType extends WorkflowActionType {
     return this.app.$i18n.t('workflowActionTypes.notificationDescription')
   }
 
+  getErrorMessage(workflowAction, applicationContext) {
+    if (
+      !workflowAction.title?.formula &&
+      !workflowAction.description?.formula
+    ) {
+      return this.app.$i18n.t(
+        'workflowActionTypes.errorNotificationContentMissing'
+      )
+    }
+
+    return super.getErrorMessage(workflowAction, applicationContext)
+  }
+
   execute({ workflowAction: { title, description }, resolveFormula }) {
     return this.app.$store.dispatch('builderToast/info', {
       title: ensureString(resolveFormula(title)),
@@ -353,6 +366,15 @@ export class WorkflowActionServiceType extends WorkflowActionType {
   getErrorMessage(workflowAction, applicationContext) {
     const serviceError = this.serviceType.getErrorMessage({
       service: workflowAction.service,
+      // Pass the builder so the service type can resolve the service's integration
+      // and flag the action as in-error when that integration has been trashed.
+      // Editor only: integrations are never loaded in preview/public mode, so
+      // there the check would flag every configured action as misconfigured and
+      // hide its element.
+      application:
+        applicationContext.mode === 'editing'
+          ? applicationContext.builder
+          : undefined,
     })
 
     if (serviceError) {
