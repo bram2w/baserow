@@ -5383,28 +5383,64 @@ class MultipleSelectFieldType(
             for value in raw_values
         ]
 
+    def _get_through_sort_expression(self, field, field_name, sort_type):
+        """
+        Returns the expression to aggregate inside a through-table subquery,
+        referencing the related model's column via ``related_field__<attr>``.
+        """
+
+        if sort_type == SINGLE_SELECT_SORT_BY_ORDER:
+            return "order"
+        return "value"
+
     def get_order(
         self, field, field_name, order_direction, sort_type, table_model=None
     ):
         """
-        Order by the concatenated values of the select options, separated by a comma.
+        Order by the concatenated values of the select options, separated by a
+        comma.  Uses a correlated subquery against the through table when
+        ``table_model`` is available, preserving insertion order and preventing
+        M2M join multiplication.
         """
 
-        # FIXME: this is broken because the field sort items by insertion order with the
-        # id in the through table. It's fixable here using a subquery on the m2m table
-        # instead of a `StringAgg`, but it will be very difficult to fix in the formula
-        # language. Also the frontend is not matching exactly the backend sorting and we
-        # should also consider the possibility that a comma can be part of the value.
         sort_column_name = f"{field_name}_agg_sort"
-        query = Coalesce(
-            StringAgg(
-                self.get_sortable_column_expression(field, field_name, sort_type),
-                ",",
+
+        if table_model is not None:
+            through_model = table_model._meta.get_field(field_name).remote_field.through
+            reversed_field = through_model._meta.get_fields()[1].name
+            related_field = through_model._meta.get_fields()[2].name
+            sort_attr = self._get_through_sort_expression(field, field_name, sort_type)
+
+            query = Coalesce(
+                Subquery(
+                    through_model.objects.filter(
+                        **{f"{reversed_field}_id": OuterRef("id")}
+                    )
+                    .values(f"{reversed_field}_id")
+                    .annotate(
+                        _agg=StringAgg(
+                            F(f"{related_field}__{sort_attr}"),
+                            ",",
+                            ordering=F("id"),
+                            output_field=models.TextField(),
+                        )
+                    )
+                    .values("_agg")[:1]
+                ),
+                Value(""),
                 output_field=models.TextField(),
-            ),
-            Value(""),
-            output_field=models.TextField(),
-        )
+            )
+        else:
+            query = Coalesce(
+                StringAgg(
+                    self.get_sortable_column_expression(field, field_name, sort_type),
+                    ",",
+                    output_field=models.TextField(),
+                ),
+                Value(""),
+                output_field=models.TextField(),
+            )
+
         annotation = {sort_column_name: query}
         order = collate_expression(F(sort_column_name))
 
@@ -5420,9 +5456,10 @@ class MultipleSelectFieldType(
     ):
         """
         Group-by treats a cell as a set of options: ``{A, B}`` and ``{B, A}``
-        are the same group. Uses ``ArrayAgg(ARRAY[order, id])`` to produce a
+        are the same group.  Uses ``ArrayAgg(ARRAY[order, id])`` to produce a
         collision-proof, deterministic sort key based on the field-defined
-        option order.
+        option order.  Wrapped in a correlated subquery when ``table_model`` is
+        available to prevent M2M join multiplication.
         """
 
         sort_column_name = f"{field_name}_group_by_agg_sort"
@@ -5437,7 +5474,7 @@ class MultipleSelectFieldType(
             output_field=pair_field,
         )
 
-        query = Coalesce(
+        agg = Coalesce(
             ArrayAgg(
                 option_key,
                 filter=Q(**{f"{field_name}__id__isnull": False}),
@@ -5446,6 +5483,16 @@ class MultipleSelectFieldType(
             Value([], output_field=sort_key_field),
             output_field=sort_key_field,
         )
+
+        if table_model is not None:
+            query = Subquery(
+                table_model.objects.filter(id=OuterRef("id"))
+                .values("id")
+                .annotate(_group_agg=agg)
+                .values("_group_agg")[:1]
+            )
+        else:
+            query = agg
 
         annotation = {sort_column_name: query}
         order = F(sort_column_name)
@@ -7339,24 +7386,49 @@ class MultipleCollaboratorsFieldType(
         self, field, field_name, order_direction, sort_type, table_model=None
     ):
         """
-        If the user wants to sort the results they expect them to be ordered
-        alphabetically based on the user's name and not in the id which is
-        stored in the table. This method generates a Case expression which maps
-        the id to the correct position.
+        Sort collaborators alphabetically by name.  Uses a correlated subquery
+        against the through table when ``table_model`` is available, preserving
+        insertion order and preventing M2M join multiplication.
         """
 
         sort_column_name = f"{field_name}_agg_sort"
-        query = Coalesce(
-            StringAgg(
-                self.get_sortable_column_expression(field, field_name, sort_type),
-                "",
-                output_field=models.TextField(),
-            ),
-            Value(""),
-            output_field=models.TextField(),
-        )
-        annotation = {sort_column_name: query}
 
+        if table_model is not None:
+            through_model = table_model._meta.get_field(field_name).remote_field.through
+            reversed_field = through_model._meta.get_fields()[1].name
+            related_field = through_model._meta.get_fields()[2].name
+
+            query = Coalesce(
+                Subquery(
+                    through_model.objects.filter(
+                        **{f"{reversed_field}_id": OuterRef("id")}
+                    )
+                    .values(f"{reversed_field}_id")
+                    .annotate(
+                        _agg=StringAgg(
+                            F(f"{related_field}__first_name"),
+                            "",
+                            ordering=F("id"),
+                            output_field=models.TextField(),
+                        )
+                    )
+                    .values("_agg")[:1]
+                ),
+                Value(""),
+                output_field=models.TextField(),
+            )
+        else:
+            query = Coalesce(
+                StringAgg(
+                    self.get_sortable_column_expression(field, field_name, sort_type),
+                    "",
+                    output_field=models.TextField(),
+                ),
+                Value(""),
+                output_field=models.TextField(),
+            )
+
+        annotation = {sort_column_name: query}
         order = collate_expression(F(sort_column_name))
 
         if order_direction == "DESC":
@@ -7371,9 +7443,10 @@ class MultipleCollaboratorsFieldType(
     ):
         """
         Group-by treats a cell as a set of collaborators: ``{A, B}`` and
-        ``{B, A}`` are the same group. Uses ``ArrayAgg(ARRAY[first_name, id])``
+        ``{B, A}`` are the same group.  Uses ``ArrayAgg(ARRAY[first_name, id])``
         ordered by ``(first_name, id)`` to produce a collision-proof sort key
-        with alphabetical group ordering.
+        with alphabetical group ordering.  Wrapped in a correlated subquery when
+        ``table_model`` is available to prevent M2M join multiplication.
         """
 
         sort_column_name = f"{field_name}_group_by_agg_sort"
@@ -7394,7 +7467,7 @@ class MultipleCollaboratorsFieldType(
             output_field=pair_field,
         )
 
-        query = Coalesce(
+        agg = Coalesce(
             ArrayAgg(
                 option_key,
                 filter=Q(**{f"{field_name}__id__isnull": False}),
@@ -7403,6 +7476,16 @@ class MultipleCollaboratorsFieldType(
             Value([], output_field=sort_key_field),
             output_field=sort_key_field,
         )
+
+        if table_model is not None:
+            query = Subquery(
+                table_model.objects.filter(id=OuterRef("id"))
+                .values("id")
+                .annotate(_group_agg=agg)
+                .values("_group_agg")[:1]
+            )
+        else:
+            query = agg
 
         annotation = {sort_column_name: query}
         order = F(sort_column_name)
