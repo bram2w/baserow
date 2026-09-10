@@ -80,6 +80,25 @@ class IntegrationType(
 
         return values
 
+    def get_missing_required_secrets(self, values: Dict[str, Any]) -> List[str]:
+        """
+        Returns the secrets that a create must supply but did not.
+
+        The request serializer makes every secret optional, so that an update
+        which does not retype one still validates. A create has nothing stored
+        to keep, so a secret whose model field is neither blank nor nullable
+        has to be present.
+        """
+
+        missing = []
+        for name in self.secret_fields:
+            model_field = self.model_class._meta.get_field(name)
+            if model_field.blank or model_field.null:
+                continue
+            if not values.get(name):
+                missing.append(name)
+        return missing
+
     def get_field_names(
         self, request_serializer: bool, extra_params=None, **kwargs
     ) -> List[str]:
@@ -143,8 +162,14 @@ class IntegrationType(
                     help_text=model_field.help_text,
                 )
         else:
+            # Mirror the filter in `get_field_names`: declaring a `has_` field
+            # that the name list does not carry makes DRF assert on every read.
+            field_names = self.get_field_names(
+                request_serializer, extra_params, **kwargs
+            )
             for name in self.secret_fields:
-                overrides[f"has_{name}"] = HasSecretField(name)
+                if f"has_{name}" in field_names:
+                    overrides[f"has_{name}"] = HasSecretField(name)
 
         return overrides
 

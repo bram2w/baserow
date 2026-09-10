@@ -460,6 +460,47 @@ def test_get_integrations_does_not_return_slack_token(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_create_slack_integration_without_a_token_is_rejected(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    application = data_fixture.create_builder_application(user=user)
+
+    # Making the token optional so that an update need not retype it must not
+    # make it optional on a create, where there is nothing stored to keep.
+    url = reverse("api:integrations:list", kwargs={"application_id": application.id})
+    response = api_client.post(
+        url,
+        {"type": "slack_bot", "name": "No token"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response.json()["detail"]["token"][0]["code"] == "required"
+
+
+@pytest.mark.django_db
+def test_create_smtp_integration_without_a_password_is_allowed(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    application = data_fixture.create_builder_application(user=user)
+
+    # Unlike the Slack token, the SMTP password is blankable: a relay that
+    # accepts anonymous mail needs no credential.
+    url = reverse("api:integrations:list", kwargs={"application_id": application.id})
+    response = api_client.post(
+        url,
+        {"type": "smtp", "name": "Mailer", "host": "smtp.example.com"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    assert response.json()["has_password"] is False
+
+
+@pytest.mark.django_db
 def test_update_smtp_integration_response_omits_password(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     application = data_fixture.create_builder_application(user=user)

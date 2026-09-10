@@ -130,11 +130,14 @@ class UpdateIntegrationActionType(UndoableActionType):
         integration = IntegrationHandler().get_integration_for_update(
             params.integration_id
         )
-        # The dependency check applies here too. Replaying a recorded target
-        # change would otherwise re-point a credential the acting user never
-        # supplied: an attacker can set a hostile host with a throwaway
-        # password, undo it, wait for the owner to store a real password, and
-        # replay the change to send that password to their own server.
+        # A replay carries no credential, so a recorded target change would
+        # re-point a stored password the acting user never supplied. What stops
+        # that is the exclusion in `update_integration`: the targets are
+        # sensitive fields, so they never reach the log and cannot be replayed.
+        # The dependency check below is a second line of defence for a type
+        # that one day declares a dependency on a non-sensitive target. Note
+        # that `IntegrationCredentialRequired` is not mapped on the undo/redo
+        # endpoint, so such a type would need one before it can fire.
         IntegrationService().update_integration(
             user, integration, **params.integration_original_params
         )
@@ -144,7 +147,7 @@ class UpdateIntegrationActionType(UndoableActionType):
         integration = IntegrationHandler().get_integration_for_update(
             params.integration_id
         )
-        # See the note in `undo`: the check applies to a replay as well.
+        # See the note in `undo`: the same reasoning covers a redo.
         IntegrationService().update_integration(
             user, integration, **params.integration_new_params
         )

@@ -1,10 +1,11 @@
 <template>
   <div>
     <FormGroup
-      required
+      :required="!hasToken"
       :label="$t('slackBotForm.tokenLabel')"
       small-label
       class="margin-bottom-3"
+      :helper-text="hasToken ? $t('slackBotForm.tokenConfigured') : ''"
       :error-message="getFirstErrorMessage('token')"
     >
       <FormInput
