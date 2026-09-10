@@ -57,6 +57,7 @@
       <FormInput
         v-model="values.password"
         type="password"
+        autocomplete="new-password"
         :placeholder="
           hasPassword
             ? $t('smtpForm.passwordKeepPlaceholder')

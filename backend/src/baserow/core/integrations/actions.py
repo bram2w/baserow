@@ -130,11 +130,13 @@ class UpdateIntegrationActionType(UndoableActionType):
         integration = IntegrationHandler().get_integration_for_update(
             params.integration_id
         )
+        # The dependency check applies here too. Replaying a recorded target
+        # change would otherwise re-point a credential the acting user never
+        # supplied: an attacker can set a hostile host with a throwaway
+        # password, undo it, wait for the owner to store a real password, and
+        # replay the change to send that password to their own server.
         IntegrationService().update_integration(
-            user,
-            integration,
-            enforce_secret_dependencies=False,
-            **params.integration_original_params,
+            user, integration, **params.integration_original_params
         )
 
     @classmethod
@@ -142,11 +144,9 @@ class UpdateIntegrationActionType(UndoableActionType):
         integration = IntegrationHandler().get_integration_for_update(
             params.integration_id
         )
+        # See the note in `undo`: the check applies to a replay as well.
         IntegrationService().update_integration(
-            user,
-            integration,
-            enforce_secret_dependencies=False,
-            **params.integration_new_params,
+            user, integration, **params.integration_new_params
         )
 
 

@@ -149,6 +149,13 @@ class IntegrationService:
         """
 
         for secret, targets in integration_type.secret_field_dependencies.items():
+            # Nothing stored means nothing to redirect. Without this an
+            # integration that authenticates anonymously could never have its
+            # host changed: the form sends no password, so the check would
+            # demand one that does not exist.
+            if not getattr(integration, secret, None):
+                continue
+
             target_changed = any(
                 target in values and values[target] != getattr(integration, target)
                 for target in targets
@@ -163,7 +170,6 @@ class IntegrationService:
         self,
         user: AbstractUser,
         integration: IntegrationForUpdate,
-        enforce_secret_dependencies: bool = True,
         **kwargs,
     ) -> UpdatedIntegration:
         """
@@ -172,12 +178,6 @@ class IntegrationService:
 
         :param user: The user trying to update the integration.
         :param integration: The integration that should be updated.
-        :param enforce_secret_dependencies: Whether changing a request-target
-            field requires the credential it protects to be re-supplied. Undo and
-            redo pass False: any target change in the action's history already
-            passed this check, which means a fresh credential was supplied at the
-            time and the original owner's credential is already gone, so replaying
-            the change cannot redirect anything the acting user did not set.
         :param kwargs: Additional attributes of the integration.
         :return: The updated integration together with the values that changed.
         :raises IntegrationCredentialRequired: When a request-target field changes
@@ -201,16 +201,20 @@ class IntegrationService:
             if kwargs.get(secret, "") is None:
                 del kwargs[secret]
 
-        if enforce_secret_dependencies:
-            self._check_secret_dependencies(integration, integration_type, kwargs)
+        self._check_secret_dependencies(integration, integration_type, kwargs)
 
         # Capture the original and new values (in the service-level vocabulary, so
         # FK fields are stored as their ids) before `prepare_values` mutates them, so
         # the update can be undone/redone.
-        # Only the credentials are withheld from the action log. The rest of the
-        # configuration must be recorded or the update cannot be undone.
+        # Keep every sensitive field out of the action log. Narrowing this to
+        # `secret_fields` was tried and reverted: it put the SMTP host into a
+        # replayable log, and undo/redo replay carries no credential, so an
+        # attacker could set a hostile host with a throwaway password, undo,
+        # wait for the owner to store the real password, then redo and send it
+        # to their own server. It also wrote the AI integration's provider API
+        # keys into the log, and from there into the audit log.
         original_values, new_values = extract_undo_redo_values(
-            integration, kwargs, integration_type.secret_fields
+            integration, kwargs, integration_type.sensitive_fields
         )
 
         prepared_values = integration_type.prepare_values(kwargs, user)

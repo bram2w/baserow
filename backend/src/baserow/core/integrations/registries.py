@@ -96,8 +96,13 @@ class IntegrationType(
         if request_serializer or not self.secret_fields:
             return field_names
 
+        # Only the secrets this type actually serialises get a flag, so an
+        # inconsistent declaration cannot surface a `has_` for a field the
+        # response never carried.
+        serialised_secrets = [n for n in field_names if n in self.secret_fields]
+
         return [name for name in field_names if name not in self.secret_fields] + [
-            f"has_{name}" for name in self.secret_fields
+            f"has_{name}" for name in serialised_secrets
         ]
 
     def get_field_overrides(
@@ -125,6 +130,9 @@ class IntegrationType(
         overrides = {**overrides}
 
         if request_serializer:
+            # This replaces any type-specific override for the same name. No
+            # type sets one today; a type that needs to should build on the
+            # field below rather than expect its own to survive.
             for name in self.secret_fields:
                 model_field = self.model_class._meta.get_field(name)
                 overrides[name] = serializers.CharField(

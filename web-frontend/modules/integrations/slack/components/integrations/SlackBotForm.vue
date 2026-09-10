@@ -10,6 +10,7 @@
       <FormInput
         v-model="values.token"
         type="password"
+        autocomplete="new-password"
         :placeholder="
           hasToken
             ? $t('slackBotForm.tokenKeepPlaceholder')

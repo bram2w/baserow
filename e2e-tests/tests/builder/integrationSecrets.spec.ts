@@ -77,14 +77,21 @@ test.describe("Write-only integration secrets", () => {
     // Every response the browser receives, from the moment it loads the
     // builder. A single one carrying the password is the bug this guards.
     const leaked: string[] = [];
-    page.on("response", async (response) => {
+    // Playwright does not await a listener's promise, so every body read has
+    // to be collected and awaited before asserting, or a leaking response
+    // still in flight would slip past and the test would pass on nothing.
+    const reads: Promise<void>[] = [];
+    page.on("response", (response) => {
       if (!response.url().includes("/api/")) return;
-      try {
-        const body = await response.text();
-        if (body.includes(PASSWORD)) leaked.push(response.url());
-      } catch {
-        // Redirects and responses without a body cannot leak anything.
-      }
+      reads.push(
+        response
+          .text()
+          .then((body) => {
+            if (body.includes(PASSWORD)) leaked.push(response.url());
+          })
+          // Redirects and responses without a body cannot leak anything.
+          .catch(() => {})
+      );
     });
 
     await builderPagePage.goto();
@@ -113,6 +120,7 @@ test.describe("Write-only integration secrets", () => {
     expect(integration.has_password).toBe(true);
     expect(integration).not.toHaveProperty("password");
 
+    await Promise.all(reads);
     expect(leaked, "the password was sent to the browser").toEqual([]);
   });
 

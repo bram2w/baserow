@@ -9,6 +9,7 @@ from baserow.core.integrations.exceptions import (
     IntegrationDoesNotExist,
     IntegrationNotInSameApplication,
 )
+from baserow.core.integrations.handler import IntegrationHandler
 from baserow.core.integrations.models import Integration
 from baserow.core.integrations.registries import integration_type_registry
 from baserow.core.integrations.service import IntegrationService
@@ -471,21 +472,23 @@ def test_update_smtp_integration_empty_password_clears_it(data_fixture):
 
 
 @pytest.mark.django_db
-def test_update_smtp_integration_can_skip_the_dependency_check(data_fixture):
+def test_update_smtp_integration_without_a_stored_password_allows_host_change(
+    data_fixture,
+):
+    """
+    An integration that authenticates anonymously has no credential to
+    redirect, so the check must not demand one that does not exist.
+    """
+
     user = data_fixture.create_user()
     integration = data_fixture.create_smtp_integration(
-        user=user, host="smtp.original.com", password="secret"
+        user=user, host="smtp.original.com", password=""
     )
 
-    IntegrationService().update_integration(
-        user,
-        integration,
-        enforce_secret_dependencies=False,
-        host="smtp.replayed.com",
-    )
+    IntegrationService().update_integration(user, integration, host="smtp.other.com")
 
     integration.refresh_from_db()
-    assert integration.host == "smtp.replayed.com"
+    assert integration.host == "smtp.other.com"
 
 
 @pytest.mark.django_db
@@ -500,3 +503,32 @@ def test_update_slack_integration_has_no_target_dependency(data_fixture):
     integration.refresh_from_db()
     assert integration.name == "Renamed"
     assert integration.token == "xoxb-secret"
+
+
+@pytest.mark.django_db
+def test_ai_integration_settings_are_kept_out_of_the_action_log(data_fixture):
+    """
+    The AI integration has not opted into `secret_fields`, so its exclude list
+    stays `sensitive_fields`. Its provider API keys live inside `ai_settings`
+    and must not reach the action log, which the audit log copies verbatim.
+    """
+
+    user = data_fixture.create_user()
+    application = data_fixture.create_builder_application(user=user)
+    integration_type = integration_type_registry.get("ai")
+    created = IntegrationService().create_integration(
+        user,
+        integration_type,
+        application=application,
+        ai_settings={"openai": {"api_key": "OLDKEY", "models": ["gpt-4"]}},
+    )
+    for_update = IntegrationHandler().get_integration_for_update(created.id)
+
+    updated = IntegrationService().update_integration(
+        user,
+        for_update,
+        ai_settings={"openai": {"api_key": "NEWKEY", "models": ["gpt-4"]}},
+    )
+
+    assert "ai_settings" not in updated.original_values
+    assert "ai_settings" not in updated.new_values
