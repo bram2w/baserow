@@ -1262,15 +1262,9 @@ class BaserowFormulaArrayType(
 
     def placeholder_empty_value(self):
         """
-        Array fields should default to ``[]`` rather than NULL.
-
-        ``jsonb_array_elements`` (used by ``array_agg_unnesting`` and
-        related aggregates) raises
-        ``django.db.utils.DataError: cannot extract elements from a scalar``
-        on NULL input. The call sites in ``function_defs.py`` guard against
-        this with ``Coalesce(arg, Value([]))`` / ``safe_jsonb_array_elements``,
-        but initialising to ``[]`` here avoids relying on those guards during
-        the initial fill before recalculation.
+        Array fields default to ``[]`` rather than NULL so that
+        ``array_agg_unnesting`` (double ``jsonb_array_elements``) does not
+        produce a JSON scalar ``null`` via ``jsonb_agg(NULL) → [null]``.
         """
 
         return Value([], output_field=JSONField())

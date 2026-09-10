@@ -1585,6 +1585,7 @@ class FieldType(
         serialized_field: Dict[str, Any],
         serialized_fields_map: Dict[int, Dict[str, Any]],
         primary_table_fields_map: Dict[int, int],
+        same_table_fields: Optional[List[Dict[str, Any]]] = None,
     ) -> Optional[Set[Tuple[Union[int, str], Union[int, str]]]]:
         """
         Returns a list of field dependencies that must be imported before this field. If

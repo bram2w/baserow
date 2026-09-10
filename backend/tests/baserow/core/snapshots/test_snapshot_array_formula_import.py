@@ -98,16 +98,13 @@ def test_snapshot_with_explicit_array_primary_dependency(data_fixture):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_snapshot_with_implicit_array_primary_does_not_crash(data_fixture):
+def test_snapshot_with_implicit_array_primary_dependency(data_fixture):
     """
     When the formula uses field('LinkField') (implicit primary reference),
-    the dependency graph is incomplete and the consumer may recalculate
-    before the producer. Previously this crashed with:
-        DataError: cannot extract elements from a scalar
-
-    With the safe_jsonb_array_elements guard, the snapshot completes without
-    error. The imported values may be empty (dependency ordering issue) but
-    the operation must not crash.
+    the import-time dependency graph must still resolve the linked table's
+    primary so recalculation order is correct and values are preserved.
+    Previously this crashed with DataError because the consumer formula ran
+    before the producer's column was populated.
     """
 
     user = data_fixture.create_user()
@@ -169,6 +166,11 @@ def test_snapshot_with_implicit_array_primary_does_not_crash(data_fixture):
     )
     rh.create_row(user, parent_table, values={parent_link.db_column: [child_row.id]})
 
+    expected = list(
+        parent_table.get_model().objects.values_list(consumer.db_column, flat=True)
+    )
+    assert expected[0] and expected[0][0]["value"] == "ID-D1"
+
     snapshot = data_fixture.create_snapshot(
         snapshot_from_application=database, created_by=user
     )
@@ -178,4 +180,10 @@ def test_snapshot_with_implicit_array_primary_does_not_crash(data_fixture):
     imported_parent = snapshot.snapshot_to_application.specific.table_set.get(
         name="Parents"
     )
-    assert imported_parent is not None
+    imported_consumer = imported_parent.field_set.get(name="ActiveChildren")
+    actual = list(
+        imported_parent.get_model().objects.values_list(
+            imported_consumer.db_column, flat=True
+        )
+    )
+    assert actual == expected

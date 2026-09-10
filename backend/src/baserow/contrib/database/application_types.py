@@ -496,6 +496,7 @@ class DatabaseApplicationType(ApplicationType):
                         serialized_field,
                         id_mapping["database_fields_map"],
                         id_mapping["primary_table_fields_map"],
+                        same_table_fields=serialized_table["fields"],
                     )
                 )
 
