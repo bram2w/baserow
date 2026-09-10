@@ -1,6 +1,5 @@
 from django.db import migrations, models, transaction
 
-PENDING_INDEX = "ws_realtime_pending_age_idx"
 SENTINEL_INDEX = "ws_realtime_sentinel_key_uniq"
 
 INITIALIZE_HISTORY = """
@@ -151,7 +150,7 @@ def forwards(apps, schema_editor):
     db = schema_editor.connection
     # Cleanup must be paused/drained until all ASGI and Celery workers use the
     # new reader/retention rules. The parent reader cannot recognize sentinels.
-    # Short metadata changes are atomic; the large-table indexes build outside
+    # Short metadata changes are atomic; the sentinel index builds outside
     # that transaction without blocking normal INSERTs.
     with transaction.atomic(using=db.alias), db.cursor() as cursor:
         _set_timeouts(cursor)
@@ -182,11 +181,6 @@ def forwards(apps, schema_editor):
     with db.cursor() as cursor:
         _create_index(
             cursor,
-            PENDING_INDEX,
-            "(created_at, id) WHERE sentinel_key IS NULL",
-        )
-        _create_index(
-            cursor,
             SENTINEL_INDEX,
             "(sentinel_key) WHERE sentinel_key IS NOT NULL",
             unique=True,
@@ -196,7 +190,6 @@ def forwards(apps, schema_editor):
 def backwards(apps, schema_editor):
     db = schema_editor.connection
     with db.cursor() as cursor:
-        cursor.execute(f'DROP INDEX CONCURRENTLY IF EXISTS "{PENDING_INDEX}"')
         cursor.execute(f'DROP INDEX CONCURRENTLY IF EXISTS "{SENTINEL_INDEX}"')
     with transaction.atomic(using=db.alias), db.cursor() as cursor:
         _set_timeouts(cursor)
@@ -230,14 +223,6 @@ class Migration(migrations.Migration):
                     model_name="realtimeevent",
                     name="sentinel_key",
                     field=models.BinaryField(null=True, db_default=None),
-                ),
-                migrations.AddIndex(
-                    model_name="realtimeevent",
-                    index=models.Index(
-                        fields=["created_at", "id"],
-                        condition=models.Q(sentinel_key__isnull=True),
-                        name=PENDING_INDEX,
-                    ),
                 ),
                 migrations.AddConstraint(
                     model_name="realtimeevent",

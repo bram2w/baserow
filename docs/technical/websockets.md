@@ -276,8 +276,10 @@ an already-marked sentinel still requires refresh even inside the enlarged windo
 A nullable `sentinel_key` identifies events already retained by cleanup. Ordinary
 inserts leave it null; audience hashes are calculated during cleanup. The recipient
 columns continue to be derived by the `ws.0002` trigger. A partial unique index
-finds the current sentinel for a route; a partial age index finds unprocessed
-expired events without repeatedly scanning retained sentinels. Cleanup checks exact
+finds the current sentinel for a route. The existing `(created_at, id)` index
+supports oldest-first cleanup, which filters out rows with a non-null `sentinel_key`.
+Reusing it avoids another age-index build and maintenance cost, though batches can
+scan retained sentinels before finding unprocessed events. Cleanup checks exact
 routing equality before combining events, so a hash collision cannot hide changes.
 The full payload remains on each sentinel: storage follows distinct audiences and
 the size of their last events, rather than every change they made. Exact routes
@@ -342,8 +344,8 @@ while those readers remain. A legacy DELETE advances the floor for new readers,
 so accidental older cleanup cannot silently erase their evidence.
 
 The migration adds a nullable column without rewriting event payloads and builds
-its indexes concurrently. The builds still need disk and I/O headroom to scan the
-existing table and can take much longer than the short schema-lock timeout. The
+the sentinel unique index concurrently. This build needs disk and I/O headroom to
+scan the existing table and can take much longer than the short schema-lock timeout. The
 routing function is only installed during migration; historical events are hashed,
 marked and deleted by cleanup. Brief schema locks are bounded; an interrupted
 migration can be retried. For rollback, pause and drain cleanup again and disable replay
@@ -352,9 +354,9 @@ older readers. Reversing the migration cannot restore deleted events. Before
 re-enabling replay, clear recorded replay history while recording remains disabled
 so retained cursor IDs cannot falsely establish a complete pre-rollback history.
 
-The existing `(created_at, id)` index remains available for age diagnostics and
-compatibility with earlier cleanup workers. Recipient indexes remain restricted
-to the shared `users` channel; page events retain the
+The reused `(created_at, id)` index also supports age diagnostics and earlier
+cleanup workers. Recipient indexes remain restricted to the shared `users`
+channel; page events retain the
 `(channel_group, id)` index. Cleanup makes storage reusable through PostgreSQL
 vacuum; it does not normally shrink allocated files. Monitor recording rate,
 committed cleanup progress, and vacuum activity together; see

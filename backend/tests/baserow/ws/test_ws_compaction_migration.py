@@ -62,12 +62,14 @@ def test_compaction_catalog_keeps_history_unlogged_and_event_sequence_logged():
             "SELECT indexrelid::regclass::text, indisvalid, indisunique, "
             "pg_get_expr(indpred, indrelid) FROM pg_index "
             "WHERE indexrelid IN ('ws_realtime_sentinel_key_uniq'::regclass, "
-            "'ws_realtime_pending_age_idx'::regclass)"
+            "'ws_realtime_created_id_idx'::regclass)"
         )
         assert {name: values for name, *values in cursor.fetchall()} == {
             "ws_realtime_sentinel_key_uniq": [True, True, "(sentinel_key IS NOT NULL)"],
-            "ws_realtime_pending_age_idx": [True, False, "(sentinel_key IS NULL)"],
+            "ws_realtime_created_id_idx": [True, False, None],
         }
+        cursor.execute("SELECT to_regclass('ws_realtime_pending_age_idx')")
+        assert cursor.fetchone()[0] is None
         cursor.execute(
             "SELECT pg_get_triggerdef(oid), tgenabled FROM pg_trigger "
             "WHERE tgrelid = 'ws_realtime_events'::regclass "
@@ -149,8 +151,11 @@ def test_migration_preserves_old_originals_until_the_first_scheduled_cleanup(
                     for i in range(6)
                 ],
             )
-            cursor.execute("SELECT pg_relation_filenode('ws_realtime_events')")
-            original_filenode = cursor.fetchone()[0]
+            cursor.execute(
+                "SELECT pg_relation_filenode('ws_realtime_events'), "
+                "pg_relation_filenode('ws_realtime_created_id_idx')"
+            )
+            original_filenodes = cursor.fetchone()
         originals = read_originals()
         assert len(originals) == 6
 
@@ -160,8 +165,11 @@ def test_migration_preserves_old_originals_until_the_first_scheduled_cleanup(
         assert read_originals() == originals
         assert not RealtimeEvent.objects.filter(sentinel_key__isnull=False).exists()
         with connection.cursor() as cursor:
-            cursor.execute("SELECT pg_relation_filenode('ws_realtime_events')")
-            assert cursor.fetchone()[0] == original_filenode
+            cursor.execute(
+                "SELECT pg_relation_filenode('ws_realtime_events'), "
+                "pg_relation_filenode('ws_realtime_created_id_idx')"
+            )
+            assert cursor.fetchone() == original_filenodes
 
         monkeypatch.setattr(
             RealtimeEventHandler,

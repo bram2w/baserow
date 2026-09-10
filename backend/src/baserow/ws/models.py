@@ -45,11 +45,6 @@ class RealtimeEvent(models.Model):
                 fields=["created_at", "id"],
                 name="ws_realtime_created_id_idx",
             ),
-            models.Index(
-                fields=["created_at", "id"],
-                condition=models.Q(sentinel_key__isnull=True),
-                name="ws_realtime_pending_age_idx",
-            ),
         ]
         constraints = [
             models.UniqueConstraint(
