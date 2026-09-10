@@ -160,8 +160,10 @@ class IntegrationService:
         # Capture the original and new values (in the service-level vocabulary, so
         # FK fields are stored as their ids) before `prepare_values` mutates them, so
         # the update can be undone/redone.
+        # Only the credentials are withheld from the action log. The rest of the
+        # configuration must be recorded or the update cannot be undone.
         original_values, new_values = extract_undo_redo_values(
-            integration, kwargs, integration_type.sensitive_fields
+            integration, kwargs, integration_type.secret_fields
         )
 
         prepared_values = integration_type.prepare_values(kwargs, user)
