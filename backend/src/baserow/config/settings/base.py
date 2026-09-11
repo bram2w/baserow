@@ -685,12 +685,15 @@ BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB = int(
     Decimal(os.getenv("BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB", 1024 * 1024)) * 1024 * 1024
 )  # ~1TB by default
 
-DATA_UPLOAD_MAX_MEMORY_SIZE = int(
-    os.getenv("BASEROW_DATA_UPLOAD_MAX_MEMORY_SIZE") or 200 * 1024 * 1024  # 200MB
+# The max size of a JSON or form encoded request body.
+_body_limit_mb = os.getenv("BASEROW_REQUEST_BODY_SIZE_LIMIT_MB", "").strip()
+DATA_UPLOAD_MAX_MEMORY_SIZE = (
+    int(Decimal(_body_limit_mb) * 1024 * 1024) if _body_limit_mb else None
 )
-if DATA_UPLOAD_MAX_MEMORY_SIZE <= 0:
+if DATA_UPLOAD_MAX_MEMORY_SIZE is not None and DATA_UPLOAD_MAX_MEMORY_SIZE <= 0:
     raise ImproperlyConfigured(
-        "BASEROW_DATA_UPLOAD_MAX_MEMORY_SIZE must be a positive integer (bytes)."
+        "BASEROW_REQUEST_BODY_SIZE_LIMIT_MB must be greater than zero. Unset it "
+        "to allow request bodies of any size."
     )
 
 FILE_UPLOAD_ACTIVE_CONTENT_POLICY = os.getenv(
