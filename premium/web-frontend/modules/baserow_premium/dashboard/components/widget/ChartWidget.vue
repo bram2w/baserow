@@ -10,7 +10,6 @@
         </Chart>
       </div>
     </template>
-    <div v-else class="dashboard-chart-widget__loading loading-spinner"></div>
   </div>
 </template>
 
