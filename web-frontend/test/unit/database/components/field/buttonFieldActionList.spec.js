@@ -846,7 +846,13 @@ describe('ButtonFieldActionList', () => {
       testApp.mock
         .onGet(`application/${DATABASE_ID}/integrations/`)
         .replyOnce(200, [
-          { id: 7, type: 'slack_bot', name: 'Bot', order: '1', has_token: false },
+          {
+            id: 7,
+            type: 'slack_bot',
+            name: 'Bot',
+            order: '1',
+            has_token: false,
+          },
         ])
       testApp.mock
         .onGet(`application/${DATABASE_ID}/integrations/`)
@@ -932,7 +938,13 @@ describe('ButtonFieldActionList', () => {
       testApp.mock
         .onGet(`application/${DATABASE_ID}/integrations/`)
         .reply(200, [
-          { id: 7, type: 'slack_bot', name: 'Bot', order: '1', has_token: false },
+          {
+            id: 7,
+            type: 'slack_bot',
+            name: 'Bot',
+            order: '1',
+            has_token: false,
+          },
         ])
 
       const wrapper = await mountWith(
