@@ -225,31 +225,37 @@ export class NodeType extends Registerable {
    * Returns whether the node is in-error or not.
    * By default, this is derived from the service type's `isInError`
    * method, but can be overridden by the node type.
+   * @param {object} context The node's service and application context.
+   * @param {object} context.service The service of the node.
+   * @param {object|null} [context.workspace=null] The owning workspace.
+   * @param {object|null} [context.application=null] The owning automation.
    * @returns {boolean} - Whether the properties are in-error.
    */
-  isInError({ service, workspace = null }) {
+  isInError({ service, workspace = null, application = null }) {
     if (workspace && this.isDeactivated({ workspace })) {
       return true
     }
-    return this.serviceType.isInError({ service })
+    return this.serviceType.isInError({ service, workspace, application })
   }
 
   /**
    * Returns the error message we should show when the node is in-error.
    * By default, this is derived from the service type's `getErrorMessage`
    * method, but can be overridden by the node type.
-   * @param {object} service - The service of the node.
-   * @param {object} node - The node for which the
-   *  error message is being retrieved.
-   * @returns {string} - The error message.
+   * @param {object} context The node and its service and application context.
+   * @param {object} context.service The service of the node.
+   * @param {object} context.node The node whose error is being retrieved.
+   * @param {object|null} [context.workspace=null] The owning workspace.
+   * @param {object|null} [context.application=null] The owning automation.
+   * @returns {string|null} The error message, or null when valid.
    */
-  getErrorMessage({ service, node, workspace = null }) {
+  getErrorMessage({ service, node, workspace = null, application = null }) {
     const deactivatedReason =
       workspace && this.isDeactivatedReason({ workspace })
     if (deactivatedReason) {
       return deactivatedReason
     }
-    return this.serviceType.getErrorMessage({ service })
+    return this.serviceType.getErrorMessage({ service, workspace, application })
   }
 
   /**

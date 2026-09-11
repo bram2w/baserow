@@ -361,18 +361,22 @@ export class WorkflowActionServiceType extends WorkflowActionType {
     return null
   }
 
+  /**
+   * Validate the service using workspace and integration configuration in the
+   * editor. Preview and public pages do not load integration settings.
+   *
+   * @param {object} workflowAction The workflow action with its service.
+   * @param {object} applicationContext The owning workspace, builder, and mode.
+   * @returns {string|null} The first service or action configuration error.
+   */
   getErrorMessage(workflowAction, applicationContext) {
+    const isEditing = applicationContext?.mode === 'editing'
     const serviceError = this.serviceType.getErrorMessage({
       service: workflowAction.service,
-      // Pass the builder so the service type can resolve the service's integration
-      // and flag the action as in-error when that integration has been trashed.
-      // Editor only: integrations are never loaded in preview/public mode, so
-      // there the check would flag every configured action as misconfigured and
-      // hide its element.
-      application:
-        applicationContext.mode === 'editing'
-          ? applicationContext.builder
-          : undefined,
+      // Outside the editor, missing integration overrides must not turn a valid
+      // action into a configuration error and hide its element.
+      workspace: isEditing ? applicationContext.workspace : undefined,
+      application: isEditing ? applicationContext.builder : undefined,
     })
 
     if (serviceError) {

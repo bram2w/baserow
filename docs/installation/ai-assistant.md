@@ -14,7 +14,8 @@ server.
   disable Kuma in its workspace AI provider settings.
 - `BASEROW_ENTERPRISE_ASSISTANT_LLM_MODEL` remains the legacy fallback while the
   `ai-providers` feature is disabled, or while its Kuma selection is unconfigured
-  or invalid. An explicit instance or workspace disable remains authoritative.
+  or invalid. While the feature is enabled, an explicit instance or workspace
+  disable remains authoritative.
 - The assistant has been mostly tested with the `gpt-oss-120b` family. Other models can
   work as well.
 
@@ -22,55 +23,23 @@ server.
 
 For a fresh database-backed setup, enable `ai-providers`, then add a provider and
 its models in the admin UI. On each model, choose whether it is available to Kuma,
-AI Fields, or both, then select the Kuma model in the **AI features** section.
-Availability permits a feature to choose a model; it does not force AI Fields to
-use Kuma's model. Use **Test model** to check every selected feature. AI Fields
-check for a text response, while Kuma also checks tool calling.
+AI Fields, AI Agent actions, or any combination of them, then select the
+Kuma model in the **AI features** section. Availability permits a feature to choose
+a model; it does not force AI Fields or AI Agent actions to use Kuma's model. Use
+**Test model** to check every selected feature. AI Fields and AI Agent actions check
+for a text response, while Kuma also checks tool calling.
 
-For every existing installation, deploy this release with `ai-providers` still
-disabled and wait for the previous web and worker processes to drain. If the
-installation uses the `*` catch-all flag, first roll out an explicit list of the
-other flags to every process on the currently installed release. Wait for all
-wildcard-configured processes to drain before deploying the new image; do not combine
-these changes in one rolling update. If configuration cannot be rolled out
-separately, stop the old processes before starting the new release with the explicit
-flag list. Pause changes to instance and workspace AI settings through the import and
-feature switch.
-The database-backed Google and Groq providers are configured through the admin UI,
-not new provider environment variables. Add either provider after the old frontend
-processes have drained; older
-bundles cannot render these provider types. Also require active users to reload
-Baserow, or close and reopen their tabs, before either provider can appear in API
-or realtime payloads: draining the frontend processes does not replace JavaScript
-already loaded by a browser. Keep the settings-write pause in place until that
-client cutover is complete.
-Preview both scopes before applying them, then enable the feature:
+For an existing installation, see the
+[AI provider upgrade and import instructions](../development/feature-flags.md#preparing-the-ai-providers-feature).
+Schema migrations run during the normal upgrade. Provider imports and republishing
+are needed when adopting database-backed settings, not just to upgrade with the
+feature disabled. Integrations with explicit provider overrides retain their own
+connection settings; check the compatibility notes for model lists, partial overrides,
+and optional endpoints. Review pending draft changes before republishing a site or
+workflow, since those changes will also become live.
 
-```bash
-baserow migrate_ai_provider_settings --scope instance
-baserow migrate_ai_provider_settings --scope workspace
-baserow migrate_ai_provider_settings --scope instance --apply
-baserow migrate_ai_provider_settings --scope workspace --apply
-```
-
-Review every warning before enabling the feature. Repair or explicitly accept
-incomplete legacy settings and differences from an existing database provider. The
-importer keeps an existing database provider in a conflict, while an incomplete
-workspace override can inherit the instance provider after the switch. Keep the
-settings-write pause in place while you redeploy or restart every web, backend, and
-worker process with `ai-providers` enabled. Wait for every feature-disabled process
-to drain before ending the pause; otherwise different process generations can resolve
-different settings, or a workspace can change its legacy JSON after the command reads
-it.
-
-After the switch, republish each Application Builder site or Automation workflow that
-uses an AI integration without its own provider override. Older publications contain
-a snapshot of the inherited legacy workspace settings, while a new publication uses
-the live database-backed workspace provider. Integrations with an explicit provider
-override remain self-contained and do not need to be republished for this reason.
-
-This command imports Baserow's legacy AI provider configuration; it does not
-import `BASEROW_ENTERPRISE_ASSISTANT_LLM_MODEL` or the provider-native credentials
+The `migrate_ai_provider_settings` command imports legacy AI provider configuration;
+it does not import `BASEROW_ENTERPRISE_ASSISTANT_LLM_MODEL` or the provider-native credentials
 used by Kuma. The assistant therefore stays on its legacy fallback until an
 administrator configures the same provider connection in the database, marks and
 tests a model for Kuma, and explicitly selects it. A database selection is

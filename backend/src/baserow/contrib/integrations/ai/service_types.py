@@ -7,6 +7,10 @@ from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from baserow.contrib.integrations.ai.integration_types import AIIntegrationType
 from baserow.contrib.integrations.ai.models import AIAgentService, AIOutputType
+from baserow.core.ai_provider.constants import (
+    AI_PROVIDER_FEATURE_AI_AGENT,
+    AI_PROVIDER_TYPES,
+)
 from baserow.core.feature_flags import FF_AI_PROVIDERS, feature_flag_is_enabled
 from baserow.core.formula.serializers import FormulaSerializerField
 from baserow.core.formula.validator import ensure_string
@@ -14,9 +18,13 @@ from baserow.core.generative_ai.exceptions import (
     GenerativeAIPromptError,
     GenerativeAITypeDoesNotExist,
 )
-from baserow.core.generative_ai.registries import generative_ai_model_type_registry
+from baserow.core.generative_ai.registries import (
+    GenerativeAIModelType,
+    generative_ai_model_type_registry,
+)
 from baserow.core.integrations.exceptions import IntegrationDoesNotExist
 from baserow.core.integrations.handler import IntegrationHandler
+from baserow.core.models import Workspace
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.services.exceptions import (
     ServiceImproperlyConfiguredDispatchException,
@@ -132,20 +140,124 @@ class AIAgentServiceType(ServiceType):
             parent, serialized_values, id_mapping, *args, **kwargs
         )
 
+    @staticmethod
+    def _resolve_available_models_and_settings_override(
+        ai_model_type: GenerativeAIModelType,
+        workspace: Workspace | None,
+        integration_settings: dict[str, Any] | None,
+        providers_enabled: bool,
+    ) -> tuple[list[str], dict[str, Any] | None]:
+        """Resolve one integration override without mixing configuration scopes.
+
+        A self-contained override owns its connection and any explicit model
+        list. Built-in overrides without a model list inherit the active
+        allowlist. An incomplete connection can only narrow inherited models;
+        its other fields are ignored so it never borrows credentials.
+
+        :param ai_model_type: The registered provider resolving the model list.
+        :param workspace: The owning workspace, or None if unavailable.
+        :param integration_settings: The explicit provider override, or None when
+            the integration inherits all settings.
+        :param providers_enabled: Whether to enforce AI Agent eligibility through
+            database-backed providers rather than the legacy model allowlist.
+        :returns: The selectable model identifiers and the complete connection
+            override to pass to the provider, or None to inherit its connection.
+        """
+
+        atomic_settings = (
+            ai_model_type.get_atomic_settings_override(integration_settings)
+            if integration_settings is not None
+            else None
+        )
+        if atomic_settings is not None and (
+            ai_model_type.type not in AI_PROVIDER_TYPES
+            or "models" in integration_settings
+        ):
+            if providers_enabled:
+                available_models = ai_model_type.get_enabled_models_for_feature(
+                    AI_PROVIDER_FEATURE_AI_AGENT,
+                    workspace=workspace,
+                    settings_override=atomic_settings,
+                )
+            else:
+                available_models = ai_model_type.call_get_enabled_models(
+                    workspace=workspace,
+                    settings_override=atomic_settings,
+                )
+            return available_models, atomic_settings
+
+        if providers_enabled:
+            available_models = ai_model_type.get_enabled_models_for_feature(
+                AI_PROVIDER_FEATURE_AI_AGENT,
+                workspace=workspace,
+            )
+        else:
+            available_models = ai_model_type.call_get_enabled_models(
+                workspace=workspace,
+            )
+
+        if atomic_settings is not None:
+            # Legacy callers may override only their connection. Preserve the
+            # omitted model list's inheritance without inheriting credentials or
+            # optional connection settings. An explicit empty list stays empty.
+            return available_models, {**atomic_settings, "models": available_models}
+
+        if integration_settings is not None and "models" in integration_settings:
+            model_limit = integration_settings["models"]
+            if not isinstance(model_limit, list):
+                return [], None
+            inherited_models = set(available_models)
+            available_models = [
+                model for model in model_limit if model in inherited_models
+            ]
+
+        return available_models, None
+
     def prepare_values(
         self,
         values: Dict[str, Any],
         user: AbstractUser,
         instance: Optional[AIAgentService] = None,
     ) -> Dict[str, Any]:
+        """
+        Validate the effective provider selection before creating or updating.
+
+        With database providers enabled, an unchanged selection is retained even
+        when its model becomes unavailable. Dispatch still checks availability.
+        Legacy selections are validated on every update. An unavailable integration
+        skips the model check. The base type preserves trashed references for undo/redo
+        but rejects missing IDs; dispatch blocks trashed integrations until restored.
+
+        :param values: The service values supplied for creation or a partial update.
+        :param user: The user creating or updating the service.
+        :param instance: The current service when updating, or None when creating.
+        :returns: The prepared values, with any integration ID resolved by the
+            base service type.
+        :raises DRFValidationError: If the selection being validated names an
+            unknown provider, an unavailable model, or an invalid integration.
+        """
+
         ai_type = values.get("ai_generative_ai_type") or (
             instance.ai_generative_ai_type if instance else None
         )
         ai_model = values.get("ai_generative_ai_model") or (
             instance.ai_generative_ai_model if instance else None
         )
+        integration_id = values.get("integration_id") or (
+            instance.integration_id if instance else None
+        )
+        selection_changed = instance is None or (
+            ai_type != instance.ai_generative_ai_type
+            or ai_model != instance.ai_generative_ai_model
+            or integration_id != instance.integration_id
+        )
+        providers_enabled = feature_flag_is_enabled(FF_AI_PROVIDERS)
 
-        if ai_type:
+        # The relaxed validation gate belongs to the database-backed provider
+        # feature only. The legacy path has always validated the stored selection
+        # against the environment/workspace allowlist, including on unrelated
+        # updates.
+        if ai_type and (selection_changed or not providers_enabled):
             try:
                 ai_model_type = generative_ai_model_type_registry.get(ai_type)
             except GenerativeAITypeDoesNotExist as e:
@@ -153,38 +265,37 @@ class AIAgentServiceType(ServiceType):
                     {"ai_generative_ai_type": f"AI type '{ai_type}' does not exist."}
                 ) from e
 
-            # Get the integration to check available models
-            integration_id = values.get("integration_id") or (
-                instance.integration_id if instance else None
-            )
             if integration_id and ai_model:
                 try:
                     integration = (
                         IntegrationHandler().get_integration(integration_id).specific
                     )
                 except IntegrationDoesNotExist:
-                    # The integration has been trashed (e.g. a concurrent edit), so its
-                    # available models can't be resolved. Skip the best-effort model
-                    # validation rather than raising a 500; the trashed integration is
-                    # surfaced as a misconfiguration separately (at dispatch).
-                    integration = None
+                    # Preserve trashed references for undo/redo. The base type
+                    # rejects missing IDs; dispatch blocks trashed integrations.
+                    return super().prepare_values(values, user, instance)
 
-                if integration is not None:
-                    integration_type = AIIntegrationType()
-                    provider_settings = integration_type.get_provider_settings(
+                integration_type = AIIntegrationType()
+                integration_settings = (
+                    integration_type.get_integration_provider_settings(
                         integration, ai_type
                     )
-                    available_models = ai_model_type.call_get_enabled_models(
-                        workspace=integration.application.workspace,
-                        settings_override=provider_settings or None,
+                )
+                available_models, _ = (
+                    self._resolve_available_models_and_settings_override(
+                        ai_model_type,
+                        integration.application.workspace,
+                        integration_settings,
+                        providers_enabled,
                     )
-
-                    if available_models and ai_model not in available_models:
-                        raise DRFValidationError(
-                            {
-                                "ai_generative_ai_model": f"Model '{ai_model}' is not available for provider '{ai_type}'."
-                            }
-                        )
+                )
+                if ai_model not in available_models:
+                    raise DRFValidationError(
+                        {
+                            "ai_generative_ai_model": f"Model '{ai_model}' is not "
+                            f"available for provider '{ai_type}'."
+                        }
+                    )
 
         return super().prepare_values(values, user, instance)
 
@@ -204,6 +315,23 @@ class AIAgentServiceType(ServiceType):
         resolved_values: Dict[str, Any],
         dispatch_context: DispatchContext,
     ) -> Dict[str, Any]:
+        """
+        Resolve the current provider configuration and execute the AI prompt.
+
+        Published applications recover their owning workspace from the dispatch
+        context. Model eligibility is rechecked so changes made after saving the
+        service take effect before a provider receives the prompt.
+
+        :param service: The AI Agent service to execute.
+        :param resolved_values: Formula results, including the resolved AI prompt.
+        :param dispatch_context: The current Builder or Automation execution context.
+        :returns: The provider response under the result key.
+        :raises ServiceImproperlyConfiguredDispatchException: If required input,
+            workspace context, provider registration, or model availability is
+            missing, or choice output has no non-empty options.
+        :raises UnexpectedDispatchException: If the provider raises a prompt error.
+        """
+
         if not service.ai_generative_ai_type:
             raise ServiceImproperlyConfiguredDispatchException(
                 "The AI provider type is missing."
@@ -233,9 +361,14 @@ class AIAgentServiceType(ServiceType):
                     "At least one non-empty choice is required when output type is 'choice'."
                 )
 
-        ai_model_type = generative_ai_model_type_registry.get(
-            service.ai_generative_ai_type
-        )
+        try:
+            ai_model_type = generative_ai_model_type_registry.get(
+                service.ai_generative_ai_type
+            )
+        except GenerativeAITypeDoesNotExist as exc:
+            raise ServiceImproperlyConfiguredDispatchException(
+                f"AI provider type '{service.ai_generative_ai_type}' is unavailable."
+            ) from exc
         integration = service.integration.specific
         integration_type = AIIntegrationType()
         workspace = integration.application.workspace
@@ -251,28 +384,27 @@ class AIAgentServiceType(ServiceType):
                 if workflow is not None:
                     workspace = workflow.get_original().automation.workspace
 
-        # This returns explicit integration settings, or the legacy workspace fallback
-        # while database-backed providers are disabled.
-        provider_settings = integration_type.get_provider_settings(
+        providers_enabled = feature_flag_is_enabled(FF_AI_PROVIDERS)
+        integration_settings = integration_type.get_integration_provider_settings(
             integration, service.ai_generative_ai_type
         )
-        settings_override = provider_settings or None
-
-        providers_enabled = feature_flag_is_enabled(FF_AI_PROVIDERS)
-        if providers_enabled:
-            if settings_override is None and workspace is None:
-                raise ServiceImproperlyConfiguredDispatchException(
-                    "The workspace context for the AI integration is missing."
-                )
-            available_models = ai_model_type.call_get_enabled_models(
-                workspace=workspace,
-                settings_override=settings_override,
+        available_models, settings_override = (
+            self._resolve_available_models_and_settings_override(
+                ai_model_type,
+                workspace,
+                integration_settings,
+                providers_enabled,
             )
-            if service.ai_generative_ai_model not in available_models:
-                raise ServiceImproperlyConfiguredDispatchException(
-                    f"The AI model '{service.ai_generative_ai_model}' is not "
-                    f"available for provider '{service.ai_generative_ai_type}'."
-                )
+        )
+        if providers_enabled and settings_override is None and workspace is None:
+            raise ServiceImproperlyConfiguredDispatchException(
+                "The workspace context for the AI integration is missing."
+            )
+        if service.ai_generative_ai_model not in available_models:
+            raise ServiceImproperlyConfiguredDispatchException(
+                f"Model '{service.ai_generative_ai_model}' is not available "
+                f"for provider '{service.ai_generative_ai_type}'."
+            )
 
         kwargs = {}
         if service.ai_temperature is not None:

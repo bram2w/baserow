@@ -37,8 +37,10 @@ class AIIntegrationType(IntegrationType):
             required=False,
             default=dict,
             help_text="Per-provider AI settings overrides. If a provider key is not "
-            "present, workspace settings are inherited. If present, these values "
-            "override workspace settings. Structure: "
+            "present, workspace settings are inherited. A complete connection uses "
+            "its own credentials and explicit model list; omitting models inherits "
+            "available models, while an empty list disables them. An incomplete "
+            "connection can only restrict inherited model availability. Structure: "
             '{"openai": {"api_key": "...", "models": [...], "organization": ""}, ...}',
         ),
     }
@@ -53,12 +55,14 @@ class AIIntegrationType(IntegrationType):
     ) -> Dict[str, Any]:
         """Validate explicit per-integration provider settings before saving.
 
-        Database-only providers are valid here because these overrides are passed
-        directly to the runtime instead of being stored in legacy workspace settings.
+        Database-only providers are valid here because complete overrides are passed
+        atomically to the runtime instead of being stored in legacy workspace settings.
 
         :param values: The integration values supplied by the caller.
         :param user: The user creating or updating the integration.
-        :return: The normalized values prepared by the base integration type.
+        :returns: The normalized values prepared by the base integration type.
+        :raises RequestBodyValidationException: If provider settings fail their
+            registered serializer's validation.
         """
 
         if "ai_settings" not in values:
@@ -76,6 +80,24 @@ class AIIntegrationType(IntegrationType):
 
         return super().prepare_values(values, user)
 
+    def get_integration_provider_settings(
+        self, integration: AIIntegration, provider_type: str
+    ) -> dict[str, Any] | None:
+        """
+        Return the integration-level settings override for a provider.
+
+        :param integration: The AI integration to read the override from.
+        :param provider_type: The generative AI provider type key.
+        :returns: The stored override, including an explicit empty dictionary, or
+            None when no dictionary is stored for this provider. This does not
+            validate whether the override defines a complete connection.
+        """
+
+        provider_settings = integration.ai_settings.get(provider_type)
+        if isinstance(provider_settings, dict):
+            return provider_settings
+        return None
+
     def get_provider_settings(
         self, integration: AIIntegration, provider_type: str
     ) -> Dict[str, Any]:
@@ -87,15 +109,15 @@ class AIIntegrationType(IntegrationType):
 
         :param integration: The AI integration whose provider settings are requested.
         :param provider_type: The generative AI provider type.
-        :return: Explicit or legacy provider settings, or an empty dictionary when
+        :returns: Explicit or legacy provider settings, or an empty dictionary when
             database-backed workspace inheritance should be used.
         """
 
-        # Check if provider has overrides in integration settings
-        if provider_type in integration.ai_settings:
-            provider_settings = integration.ai_settings[provider_type]
-            if isinstance(provider_settings, dict):
-                return provider_settings
+        provider_settings = self.get_integration_provider_settings(
+            integration, provider_type
+        )
+        if provider_settings is not None:
+            return provider_settings
 
         if feature_flag_is_enabled(FF_AI_PROVIDERS):
             return {}
