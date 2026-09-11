@@ -134,7 +134,19 @@ const actions = {
     })
 
     try {
-      await IntegrationService($client).update(integration.id, values)
+      const { data } = await IntegrationService($client).update(
+        integration.id,
+        values
+      )
+      // The response carries the derived `has_*` flags for write-only
+      // credentials. Nothing else refreshes them: the acting user is excluded
+      // from the `integration_updated` broadcast, and the optimistic update
+      // above cannot know them.
+      await dispatch('forceUpdate', {
+        application,
+        integration,
+        values: data,
+      })
     } catch (error) {
       await dispatch('forceUpdate', {
         application,

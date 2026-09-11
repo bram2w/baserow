@@ -21,7 +21,7 @@
   "slackBotIntegrationType": {
     "slackBotSummary": "Slack Bot",
     "slackBotNoToken": "Slack Bot - Not configured",
-    "slackBotWarning": "Anyone who can build in this application can send messages through this bot, and can read its token through the API. Use a bot whose access you are happy to share."
+    "slackBotWarning": "Anyone who can build in this application can send messages through this bot, and can replace its token. Use a bot whose access you are happy to share."
   },
   "serviceType": {
     "localBaserowGetRow": "Get a single row",
@@ -272,7 +272,9 @@
     "supportPairingHeading": "2. Pairing with your Slack app",
     "supportPairingStep1": "If your app is new: navigate to 'Settings' > 'Install App'. Click the green button to install the app to your workspace.",
     "supportPairingStep2": "Copy your 'Bot User OAuth Token' and store it in the 'Bot User Token' field in this form.",
-    "supportPairingStep3": "Finally, if your app is new: in Slack, invite your app to your chosen channel with {command}"
+    "supportPairingStep3": "Finally, if your app is new: in Slack, invite your app to your chosen channel with {command}",
+    "tokenKeepPlaceholder": "Leave blank to keep the saved token",
+    "tokenConfigured": "A token is saved. Leave blank to keep it."
   },
   "slackWriteMessageServiceForm": {
     "alertMessage": "This action must be paired with a Slack app. Please follow the guide in the integrations popup to get started.",
@@ -303,7 +305,9 @@
     "username": "Username",
     "usernamePlaceholder": "your-email{'@'}example.com",
     "password": "Password",
-    "passwordPlaceholder": "your-password"
+    "passwordPlaceholder": "your-password",
+    "passwordConfigured": "A password is saved. Leave blank to keep it.",
+    "passwordKeepPlaceholder": "Leave blank to keep the saved password"
   },
   "smtpEmailForm": {
     "smtpConfigurationMode": "SMTP configuration",

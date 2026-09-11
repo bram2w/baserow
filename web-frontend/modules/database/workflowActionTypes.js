@@ -699,7 +699,8 @@ export class SlackWriteMessageWorkflowActionType extends DatabaseExternalWorkflo
     if (!bot) {
       return null
     }
-    if (!bot.token) {
+    // The token is write-only: the list only says whether one is set.
+    if (!bot.has_token) {
       return this.app.$i18n.t('databaseWorkflowActionType.slackTokenMissing')
     }
     return null

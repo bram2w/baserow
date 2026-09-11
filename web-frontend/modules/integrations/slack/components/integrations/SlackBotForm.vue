@@ -1,15 +1,22 @@
 <template>
   <div>
     <FormGroup
-      required
+      :required="!hasToken"
       :label="$t('slackBotForm.tokenLabel')"
       small-label
       class="margin-bottom-3"
+      :helper-text="hasToken ? $t('slackBotForm.tokenConfigured') : ''"
       :error-message="getFirstErrorMessage('token')"
     >
       <FormInput
         v-model="values.token"
-        :placeholder="$t('slackBotForm.tokenPlaceholder')"
+        type="password"
+        autocomplete="new-password"
+        :placeholder="
+          hasToken
+            ? $t('slackBotForm.tokenKeepPlaceholder')
+            : $t('slackBotForm.tokenPlaceholder')
+        "
       />
     </FormGroup>
     <hr />
@@ -98,7 +105,7 @@
 <script>
 import form from '@baserow/modules/core/mixins/form'
 import { useVuelidate } from '@vuelidate/core'
-import { required, helpers } from '@vuelidate/validators'
+import { helpers } from '@vuelidate/validators'
 
 export default {
   mixins: [form],
@@ -113,15 +120,41 @@ export default {
   },
   data() {
     return {
-      values: { token: '' },
+      // `null` means the user has not touched the field. See the same pattern
+      // in SMTPForm: the API never returns the token, so an untouched field is
+      // dropped from the request and an empty string is a deliberate clear.
+      values: { token: null },
       allowedValues: ['token'],
     }
+  },
+  computed: {
+    hasToken() {
+      return this.defaultValues.has_token === true
+    },
+  },
+  methods: {
+    getFormValues(deep = false) {
+      const values = Object.assign(
+        {},
+        this.values,
+        this.getChildFormsValues(deep)
+      )
+      if (values.token === null) {
+        delete values.token
+      }
+      return values
+    },
   },
   validations() {
     return {
       values: {
         token: {
-          required,
+          // A token that is already saved need not be retyped, but a brand new
+          // integration still needs one.
+          required: helpers.withMessage(
+            this.$t('error.requiredField'),
+            (value) => this.hasToken || !!value
+          ),
           startsWith: helpers.withMessage(
             this.$t('slackBotForm.tokenMustStartWith'),
             (value) => !value || value.startsWith('xoxb-')

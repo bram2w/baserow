@@ -16,6 +16,7 @@ class SlackBotIntegrationType(IntegrationType):
     serializer_field_names = ["token"]
     allowed_fields = ["token"]
     sensitive_fields = ["token"]
+    secret_fields = ["token"]
 
     request_serializer_field_names = ["token"]
     request_serializer_field_overrides = {}

@@ -18,7 +18,9 @@ from baserow.api.decorators import (
     validate_body,
     validate_body_custom_fields,
 )
+from baserow.api.exceptions import RequestBodyValidationException
 from baserow.api.integrations.errors import (
+    ERROR_INTEGRATION_CREDENTIAL_REQUIRED,
     ERROR_INTEGRATION_DOES_NOT_EXIST,
     ERROR_INTEGRATION_NOT_IN_SAME_APPLICATION,
 )
@@ -47,6 +49,7 @@ from baserow.core.integrations.actions import (
     UpdateIntegrationActionType,
 )
 from baserow.core.integrations.exceptions import (
+    IntegrationCredentialRequired,
     IntegrationDoesNotExist,
     IntegrationNotInSameApplication,
 )
@@ -130,6 +133,7 @@ class IntegrationsView(APIView):
         request=DiscriminatorCustomFieldsMappingSerializer(
             integration_type_registry,
             CreateIntegrationSerializer,
+            request=True,
         ),
         responses={
             200: DiscriminatorCustomFieldsMappingSerializer(
@@ -164,6 +168,23 @@ class IntegrationsView(APIView):
         before = IntegrationHandler().get_integration(before_id) if before_id else None
 
         integration_type = integration_type_registry.get(type_name)
+
+        # The request serializer makes every secret optional so that an update
+        # which does not retype one still validates. That must not weaken the
+        # create, where there is nothing stored to keep.
+        missing = integration_type.get_missing_required_secrets(data)
+        if missing:
+            raise RequestBodyValidationException(
+                {
+                    name: [
+                        {"error": "This field may not be blank.", "code": "blank"}
+                        if name in data
+                        else {"error": "This field is required.", "code": "required"}
+                    ]
+                    for name in missing
+                }
+            )
+
         integration = CreateIntegrationActionType.do(
             request.user, integration_type, application, before=before, **data
         )
@@ -191,6 +212,7 @@ class IntegrationView(APIView):
         request=CustomFieldRegistryMappingSerializer(
             integration_type_registry,
             UpdateIntegrationSerializer,
+            request=True,
         ),
         responses={
             200: DiscriminatorCustomFieldsMappingSerializer(
@@ -199,6 +221,7 @@ class IntegrationView(APIView):
             400: get_error_schema(
                 [
                     "ERROR_REQUEST_BODY_VALIDATION",
+                    "ERROR_INTEGRATION_CREDENTIAL_REQUIRED",
                 ]
             ),
             404: get_error_schema(
@@ -212,6 +235,7 @@ class IntegrationView(APIView):
     @map_exceptions(
         {
             IntegrationDoesNotExist: ERROR_INTEGRATION_DOES_NOT_EXIST,
+            IntegrationCredentialRequired: ERROR_INTEGRATION_CREDENTIAL_REQUIRED,
         }
     )
     @require_request_data_type(dict)

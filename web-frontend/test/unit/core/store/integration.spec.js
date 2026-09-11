@@ -34,6 +34,39 @@ describe('integration store', () => {
 
   const application = () => store.getters['application/get'](APPLICATION_ID)
 
+  test('an update merges the response, without storing the credential', async () => {
+    await store.dispatch('integration/forceCreate', {
+      application: application(),
+      integration: {
+        id: 11,
+        type: 'smtp',
+        name: 'Mailer',
+        order: '1',
+        host: 'smtp.example.com',
+        has_password: false,
+      },
+    })
+
+    testApp.mock.onPatch('integration/11/').reply(200, {
+      id: 11,
+      type: 'smtp',
+      name: 'Mailer',
+      order: '1',
+      host: 'smtp.example.com',
+      has_password: true,
+    })
+
+    await store.dispatch('integration/update', {
+      application: application(),
+      integrationId: 11,
+      values: { password: 'secret' },
+    })
+
+    const stored = application().integrations.find((i) => i.id === 11)
+    expect(stored.has_password).toBe(true)
+    expect(stored.password).toBeUndefined()
+  })
+
   test('a fetch fills the application it names', async () => {
     testApp.mock
       .onGet(`application/${APPLICATION_ID}/integrations/`)

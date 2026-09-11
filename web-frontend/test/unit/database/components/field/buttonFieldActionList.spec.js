@@ -846,7 +846,13 @@ describe('ButtonFieldActionList', () => {
       testApp.mock
         .onGet(`application/${DATABASE_ID}/integrations/`)
         .replyOnce(200, [
-          { id: 7, type: 'slack_bot', name: 'Bot', order: '1', token: '' },
+          {
+            id: 7,
+            type: 'slack_bot',
+            name: 'Bot',
+            order: '1',
+            has_token: false,
+          },
         ])
       testApp.mock
         .onGet(`application/${DATABASE_ID}/integrations/`)
@@ -856,7 +862,7 @@ describe('ButtonFieldActionList', () => {
             type: 'slack_bot',
             name: 'Bot',
             order: '1',
-            token: 'xoxb-pasted-since',
+            has_token: true,
           },
         ])
 
@@ -932,7 +938,13 @@ describe('ButtonFieldActionList', () => {
       testApp.mock
         .onGet(`application/${DATABASE_ID}/integrations/`)
         .reply(200, [
-          { id: 7, type: 'slack_bot', name: 'Bot', order: '1', token: '' },
+          {
+            id: 7,
+            type: 'slack_bot',
+            name: 'Bot',
+            order: '1',
+            has_token: false,
+          },
         ])
 
       const wrapper = await mountWith(
@@ -970,7 +982,7 @@ describe('ButtonFieldActionList', () => {
             type: 'slack_bot',
             name: 'Bot',
             order: '1',
-            token: 'xoxb-real',
+            has_token: true,
           },
         ])
 

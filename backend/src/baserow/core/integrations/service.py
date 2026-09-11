@@ -1,10 +1,13 @@
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from django.contrib.auth.models import AbstractUser
 
 from baserow.core.exceptions import CannotCalculateIntermediateOrder
 from baserow.core.handler import CoreHandler
-from baserow.core.integrations.exceptions import IntegrationNotInSameApplication
+from baserow.core.integrations.exceptions import (
+    IntegrationCredentialRequired,
+    IntegrationNotInSameApplication,
+)
 from baserow.core.integrations.handler import IntegrationHandler
 from baserow.core.integrations.models import Integration
 from baserow.core.integrations.operations import (
@@ -134,8 +137,40 @@ class IntegrationService:
 
         return new_integration
 
+    def _check_secret_dependencies(
+        self,
+        integration: IntegrationForUpdate,
+        integration_type: IntegrationType,
+        values: Dict[str, Any],
+    ):
+        """
+        Raises if a request-target field is being changed without the credential
+        it protects being supplied in the same request.
+        """
+
+        for secret, targets in integration_type.secret_field_dependencies.items():
+            # Nothing stored means nothing to redirect. Without this an
+            # integration that authenticates anonymously could never have its
+            # host changed: the form sends no password, so the check would
+            # demand one that does not exist.
+            if not getattr(integration, secret, None):
+                continue
+
+            target_changed = any(
+                target in values and values[target] != getattr(integration, target)
+                for target in targets
+            )
+            if target_changed and secret not in values:
+                raise IntegrationCredentialRequired(
+                    f"The `{secret}` must be supplied again when the connection "
+                    f"target changes."
+                )
+
     def update_integration(
-        self, user: AbstractUser, integration: IntegrationForUpdate, **kwargs
+        self,
+        user: AbstractUser,
+        integration: IntegrationForUpdate,
+        **kwargs,
     ) -> UpdatedIntegration:
         """
         Updates and integration with values. Will also check if the values are allowed
@@ -143,9 +178,10 @@ class IntegrationService:
 
         :param user: The user trying to update the integration.
         :param integration: The integration that should be updated.
-        :param values: The values that should be set on the integration.
         :param kwargs: Additional attributes of the integration.
         :return: The updated integration together with the values that changed.
+        :raises IntegrationCredentialRequired: When a request-target field changes
+            without its credential.
         """
 
         CoreHandler().check_permissions(
@@ -157,9 +193,24 @@ class IntegrationService:
 
         integration_type = integration.get_type()
 
+        # A secret that the caller did not supply still arrives here as None,
+        # because the request serializer materialises every nullable field it
+        # knows about. None therefore means "not supplied, keep what is stored";
+        # an empty string is a deliberate clear.
+        for secret in integration_type.secret_fields:
+            if kwargs.get(secret, "") is None:
+                del kwargs[secret]
+
+        self._check_secret_dependencies(integration, integration_type, kwargs)
+
         # Capture the original and new values (in the service-level vocabulary, so
         # FK fields are stored as their ids) before `prepare_values` mutates them, so
         # the update can be undone/redone.
+        # Keep every sensitive field out of the action log, not only the
+        # secrets. A replay carries no credential, so a logged host change
+        # could be redone after the owner stores a new password, sending it to
+        # a host someone else chose. The AI integration's API keys also live in
+        # a sensitive field, and the audit log copies the action log verbatim.
         original_values, new_values = extract_undo_redo_values(
             integration, kwargs, integration_type.sensitive_fields
         )

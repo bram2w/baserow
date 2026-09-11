@@ -858,7 +858,9 @@
   "integrationCreateEditModal": {
     "createTitle": "New integration",
     "editTitle": "Edit integration",
-    "warningTitle": "Warning"
+    "warningTitle": "Warning",
+    "credentialRequiredTitle": "Credential required",
+    "credentialRequiredMessage": "Enter the password again to change where this integration connects."
   },
   "integrationEditForm": {
     "name": "Name",
