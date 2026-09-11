@@ -206,13 +206,11 @@ class IntegrationService:
         # Capture the original and new values (in the service-level vocabulary, so
         # FK fields are stored as their ids) before `prepare_values` mutates them, so
         # the update can be undone/redone.
-        # Keep every sensitive field out of the action log. Narrowing this to
-        # `secret_fields` was tried and reverted: it put the SMTP host into a
-        # replayable log, and undo/redo replay carries no credential, so an
-        # attacker could set a hostile host with a throwaway password, undo,
-        # wait for the owner to store the real password, then redo and send it
-        # to their own server. It also wrote the AI integration's provider API
-        # keys into the log, and from there into the audit log.
+        # Keep every sensitive field out of the action log, not only the
+        # secrets. A replay carries no credential, so a logged host change
+        # could be redone after the owner stores a new password, sending it to
+        # a host someone else chose. The AI integration's API keys also live in
+        # a sensitive field, and the audit log copies the action log verbatim.
         original_values, new_values = extract_undo_redo_values(
             integration, kwargs, integration_type.sensitive_fields
         )

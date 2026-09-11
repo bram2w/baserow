@@ -508,9 +508,9 @@ def test_update_slack_integration_has_no_target_dependency(data_fixture):
 @pytest.mark.django_db
 def test_ai_integration_settings_are_kept_out_of_the_action_log(data_fixture):
     """
-    The AI integration has not opted into `secret_fields`, so its exclude list
-    stays `sensitive_fields`. Its provider API keys live inside `ai_settings`
-    and must not reach the action log, which the audit log copies verbatim.
+    The AI integration's provider API keys live inside `ai_settings`, a
+    sensitive field, and must not reach the action log, which the audit log
+    copies verbatim.
     """
 
     user = data_fixture.create_user()

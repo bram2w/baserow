@@ -135,9 +135,9 @@ class UpdateIntegrationActionType(UndoableActionType):
         # that is the exclusion in `update_integration`: the targets are
         # sensitive fields, so they never reach the log and cannot be replayed.
         # The dependency check below is a second line of defence for a type
-        # that one day declares a dependency on a non-sensitive target. Note
-        # that `IntegrationCredentialRequired` is not mapped on the undo/redo
-        # endpoint, so such a type would need one before it can fire.
+        # that one day declares a dependency on a non-sensitive target. If it
+        # fires, the action handler rolls the undo back and records the error
+        # on the action.
         IntegrationService().update_integration(
             user, integration, **params.integration_original_params
         )
