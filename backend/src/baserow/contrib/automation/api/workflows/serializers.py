@@ -124,8 +124,18 @@ class AutomationHistorySerializer(serializers.ModelSerializer):
         )
 
 
+class AutomationWorkflowHistoryTriggeredBySerializer(serializers.Serializer):
+    """Who started the run, in the `{id, name}` shape the collaborator UI reads."""
+
+    id = serializers.IntegerField(read_only=True)
+    name = serializers.CharField(source="first_name", read_only=True)
+
+
 class AutomationWorkflowHistorySerializer(AutomationHistorySerializer):
     plugin_data = serializers.SerializerMethodField()
+    triggered_by = AutomationWorkflowHistoryTriggeredBySerializer(
+        read_only=True, allow_null=True
+    )
 
     class Meta:
         model = AutomationWorkflowHistory
@@ -133,6 +143,7 @@ class AutomationWorkflowHistorySerializer(AutomationHistorySerializer):
             "is_test_run",
             "simulate_until_node",
             "plugin_data",
+            "triggered_by",
         )
 
     @extend_schema_field(serializers.DictField())

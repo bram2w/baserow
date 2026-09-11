@@ -1,12 +1,12 @@
 from typing import Any, Dict, List, Optional, Union
 
+from django.contrib.auth.models import AbstractUser
+
 from baserow.contrib.automation.data_providers.registries import (
     automation_data_provider_type_registry,
 )
 from baserow.contrib.automation.history.handler import AutomationHistoryHandler
-from baserow.contrib.automation.history.models import (
-    AutomationNodeHistory,
-)
+from baserow.contrib.automation.history.models import AutomationWorkflowHistory
 from baserow.contrib.automation.nodes.models import AutomationActionNode
 from baserow.contrib.automation.workflows.models import AutomationWorkflow
 from baserow.core.cache import local_cache
@@ -19,7 +19,7 @@ class AutomationDispatchContext(DispatchContext):
     def __init__(
         self,
         workflow: AutomationWorkflow,
-        history: AutomationNodeHistory,
+        history: Optional[AutomationWorkflowHistory],
         event_payload: Optional[Union[Dict, List[Dict]]] = None,
         simulate_until_node: Optional[AutomationActionNode] = None,
         current_iterations: Optional[Dict[int, int]] = None,
@@ -72,6 +72,15 @@ class AutomationDispatchContext(DispatchContext):
         new_context = super().clone(**kwargs)
         new_context.current_iterations = {**self.current_iterations}
         return new_context
+
+    @property
+    def triggered_by(self) -> Optional[AbstractUser]:
+        """
+        Who started this run, from the history. Not `actor`: a run acts as its
+        integrations' users whoever started it (ADR 006 section 5).
+        """
+
+        return self.history.triggered_by if self.history else None
 
     def get_iteration_path(self, node):
         """

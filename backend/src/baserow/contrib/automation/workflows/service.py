@@ -354,4 +354,6 @@ class AutomationWorkflowService:
             context=workflow,
         )
 
-        self.handler.toggle_test_run(workflow, simulate_until_node=simulate_until_node)
+        self.handler.toggle_test_run(
+            workflow, simulate_until_node=simulate_until_node, triggered_by=user
+        )

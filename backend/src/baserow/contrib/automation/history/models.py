@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 from baserow.contrib.automation.history.constants import HistoryStatusChoices
@@ -48,6 +49,16 @@ class AutomationWorkflowHistory(AutomationHistory):
         null=True,
         blank=True,
         help_text="Event payload received by the workflow.",
+    )
+
+    triggered_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+        help_text="The person who started this run, when one did. Null when "
+        "an event started it.",
     )
 
     class Meta(AutomationHistory.Meta):

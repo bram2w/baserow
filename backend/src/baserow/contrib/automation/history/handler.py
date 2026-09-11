@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional, Union
 
+from django.contrib.auth.models import AbstractUser
 from django.db.models import Prefetch, QuerySet
 
 from baserow.contrib.automation.history.constants import HistoryStatusChoices
@@ -34,7 +35,7 @@ class AutomationHistoryHandler:
         if base_queryset is None:
             base_queryset = AutomationWorkflowHistory.objects.all()
 
-        return base_queryset.filter(
+        return base_queryset.select_related("triggered_by").filter(
             original_workflow=workflow,
             simulate_until_node__isnull=True,
         )
@@ -73,8 +74,14 @@ class AutomationHistoryHandler:
         status: HistoryStatusChoices = HistoryStatusChoices.STARTED,
         completed_on: Optional[datetime] = None,
         message: str = "",
+        triggered_by: Optional[AbstractUser] = None,
     ) -> AutomationWorkflowHistory:
-        """Creates a history entry for a Workflow run."""
+        """
+        Creates a history entry for a Workflow run.
+
+        :param triggered_by: The person who deliberately started the run, when
+            one did. An event-started run has none.
+        """
 
         return AutomationWorkflowHistory.objects.create(
             workflow=workflow,
@@ -86,6 +93,7 @@ class AutomationHistoryHandler:
             status=status,
             completed_on=completed_on,
             message=message,
+            triggered_by=triggered_by,
         )
 
     def create_node_history(

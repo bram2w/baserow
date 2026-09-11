@@ -21,6 +21,9 @@
           type="secondary"
         />
       </div>
+      <div v-if="triggeredByName" class="workflow-history__actor">
+        {{ $t('historySidePanel.startedBy', { name: triggeredByName }) }}
+      </div>
     </template>
 
     <template #default>
@@ -79,6 +82,7 @@ import historySuccessIcon from '@baserow/modules/core/assets/images/history-succ
 import historyFailedIcon from '@baserow/modules/core/assets/images/history-failed.svg?url'
 import historyDisabledIcon from '@baserow/modules/core/assets/images/history-disabled.svg?url'
 import NodeHistory from '@baserow/modules/automation/components/workflow/sidePanels/NodeHistory.vue'
+import collaboratorName from '@baserow/modules/database/mixins/collaboratorName'
 
 const app = useNuxtApp()
 const store = useStore()
@@ -126,6 +130,10 @@ const onToggle = () => {
 
 const nodeHistoriesEntry = computed(() =>
   store.getters['automationHistory/getNodeHistories'](props.item.id)
+)
+
+const triggeredByName = computed(() =>
+  collaboratorName.methods.getCollaboratorName(props.item.triggered_by, store)
 )
 
 const statusTitle = computed(() => {

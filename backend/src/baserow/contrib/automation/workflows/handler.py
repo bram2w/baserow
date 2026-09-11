@@ -810,6 +810,7 @@ class AutomationWorkflowHandler:
         self,
         workflow: AutomationWorkflow,
         simulate_until_node: AutomationNode | None,
+        triggered_by: Optional[AbstractUser] = None,
     ):
         """
         Trigger a test run if none is in progress or cancel the planned run. If the
@@ -820,6 +821,8 @@ class AutomationWorkflowHandler:
 
         :param workflow: The workflow we want to trigger the test run for.
         :param simulate_until_node: If we want to simulate until a particular node.
+        :param triggered_by: The person starting the test run, recorded on its
+            history entry.
         """
 
         if workflow.simulate_until_node is not None or workflow.allow_test_run_until:
@@ -832,7 +835,7 @@ class AutomationWorkflowHandler:
             if workflow.can_be_immediately_dispatched():
                 # If the service related to the trigger can immediately dispatch,
                 # we immediately trigger the workflow run.
-                self.async_start_workflow(workflow)
+                self.async_start_workflow(workflow, triggered_by=triggered_by)
         else:
             AutomationWorkflowHandler().set_workflow_temporary_states(
                 workflow, simulate_until_node=simulate_until_node
@@ -857,7 +860,7 @@ class AutomationWorkflowHandler:
                 # If the trigger is immediately dispatchable or if we already have
                 # the sample data for it we can immediately dispatch the workflow
                 # except if we are updating the trigger sample data by itself
-                self.async_start_workflow(workflow)
+                self.async_start_workflow(workflow, triggered_by=triggered_by)
 
     @baserow_trace(tracer)
     def clear_old_history(self) -> None:
@@ -1143,12 +1146,15 @@ class AutomationWorkflowHandler:
         self,
         workflow: AutomationWorkflow,
         event_payload: Optional[List[Dict]] = None,
+        triggered_by: Optional[AbstractUser] = None,
     ) -> None:
         """
         Runs the provided workflow in a celery task.
 
         :param workflow: The AutomationWorkflow ID that should be executed.
         :param event_payload: The payload from the action.
+        :param triggered_by: The person who started the run, recorded on the
+            history entry.
         """
 
         error = None
@@ -1216,6 +1222,7 @@ class AutomationWorkflowHandler:
                     completed_on=now,
                     message=error,
                     status=history_status,
+                    triggered_by=triggered_by,
                 )
             return
 
@@ -1226,6 +1233,7 @@ class AutomationWorkflowHandler:
             is_test_run=is_test_run,
             event_payload=event_payload,
             simulate_until_node=simulate_until_node,
+            triggered_by=triggered_by,
         )
 
         automation_workflow_dispatch_started.send(
