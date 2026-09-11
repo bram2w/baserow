@@ -401,6 +401,11 @@ def test_workspace_name_validation(api_client, data_fixture):
         "www.evil.com",
         "https://evil.com",
         "bad\nname",
+        "🅰🅱🅲-❶❷❸❹❺❻◆⓿◆🅐❶❷'s workspace",
+        "💬🅰🅱🅲-❶❷❸-₁₂₃🅂❹❺.'s workspace",
+        "群1234567890聯絡加入's workspace",
+        "優惠活動1234567890加群12's workspace",
+        "call 0\u200b6\u200b1\u200b2\u200b3\u200b4\u200b5\u200b6",
     ]
     for invalid_name in invalid_names:
         response = api_client.post(
@@ -428,8 +433,18 @@ def test_workspace_name_validation(api_client, data_fixture):
     workspace.refresh_from_db()
     assert workspace.name == "Old name"
 
-    # Dotted names without a high risk TLD or path must still be allowed.
-    valid_names = ["Dept. Marketing", "rocket.ia", "team.exenra"]
+    # Dotted names without a high risk TLD or path, emoji, flags and short numbers
+    # must still be allowed.
+    valid_names = [
+        "Dept. Marketing",
+        "rocket.ia",
+        "team.exenra",
+        "🚀 Marketing",
+        "🇳🇱 Sales",
+        "2025-2026 Budget",
+        "12345 Main",
+        "👨\u200d👩\u200d👧 Family",
+    ]
     for valid_name in valid_names:
         url = reverse("api:workspaces:item", kwargs={"workspace_id": workspace.id})
         response = api_client.patch(
