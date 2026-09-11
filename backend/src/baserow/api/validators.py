@@ -35,6 +35,20 @@ STYLIZED_CHARS_REGEX = re.compile(
 LONG_DIGIT_RUN_REGEX = re.compile(r"\d{6,}")
 
 
+def _normalize_name(value: str) -> str:
+    """
+    NFKC folds lookalike characters (fullwidth, sub/superscript, mathematical
+    letters) into their ASCII form, and invisible format characters (zero-width
+    spaces, joiners, bidi controls) are stripped because they can be inserted
+    between digits or letters to break up a pattern without changing how the name
+    renders. They're stripped rather than rejected because zero-width joiners are
+    legitimate in emoji sequences and some scripts.
+    """
+
+    normalized = unicodedata.normalize("NFKC", value)
+    return "".join(c for c in normalized if unicodedata.category(c) != "Cf")
+
+
 def no_url_validation(value):
     """
     Rejects values containing URL-like content or control characters to prevent abuse
@@ -42,9 +56,7 @@ def no_url_validation(value):
     emails sent to others.
     """
 
-    # NFKC folds lookalike characters (fullwidth, sub/superscript, mathematical
-    # letters) into their ASCII form so they can't be used to evade the URL check.
-    normalized = unicodedata.normalize("NFKC", value)
+    normalized = _normalize_name(value)
 
     if CONTROL_CHARS_REGEX.search(value) or URL_LIKE_NAME_REGEX.search(normalized):
         raise serializers.ValidationError(
@@ -62,7 +74,7 @@ def no_spam_validation(value):
     invitation emails.
     """
 
-    normalized = unicodedata.normalize("NFKC", value)
+    normalized = _normalize_name(value)
 
     if STYLIZED_CHARS_REGEX.search(value) or LONG_DIGIT_RUN_REGEX.search(normalized):
         raise serializers.ValidationError(

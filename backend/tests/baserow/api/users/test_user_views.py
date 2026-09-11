@@ -234,6 +234,8 @@ def test_create_user_with_url_in_name_is_rejected(client, data_fixture):
         "群1234567890聯絡加入",
         "優惠活動1234567890加群12",
         "call 0612345678",
+        "call 0\u200b6\u200b1\u200b2\u200b3\u200b4\u200b5\u200b6",
+        "evil\u200b.com",
     ]
     for invalid_name in invalid_names:
         response = client.post(
@@ -267,6 +269,7 @@ def test_create_user_with_url_in_name_is_rejected(client, data_fixture):
         "山田太郎",
         "John 2026",
         "Ｊｏｈｎ",
+        "John 👨\u200d👩\u200d👧",
     ]
     for index, valid_name in enumerate(valid_names):
         response = client.post(

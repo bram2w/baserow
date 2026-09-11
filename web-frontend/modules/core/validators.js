@@ -50,13 +50,21 @@ const STYLIZED_CHARS_REGEX = new RegExp(
 // transactional emails. Short numbers like `Team 2026` or `2025-2026` stay allowed.
 const LONG_DIGIT_RUN_REGEX = /\d{6,}/
 
+// NFKC folds lookalike characters (fullwidth, sub/superscript, mathematical
+// letters) into their ASCII form, and invisible format characters (zero-width
+// spaces, joiners, bidi controls) are stripped because they can be inserted
+// between digits or letters to break up a pattern without changing how the name
+// renders. They're stripped rather than rejected because zero-width joiners are
+// legitimate in emoji sequences and some scripts.
+const normalizeName = (value) => value.normalize('NFKC').replace(/\p{Cf}/gu, '')
+
 export const nameContainsNoUrl = (value) =>
-  !URL_LIKE_NAME_REGEX.test(value.normalize('NFKC')) &&
+  !URL_LIKE_NAME_REGEX.test(normalizeName(value)) &&
   !CONTROL_CHARS_REGEX.test(value)
 
 export const nameContainsNoSpam = (value) =>
   !STYLIZED_CHARS_REGEX.test(value) &&
-  !LONG_DIGIT_RUN_REGEX.test(value.normalize('NFKC'))
+  !LONG_DIGIT_RUN_REGEX.test(normalizeName(value))
 
 export const nameIsNotEmail = (value) =>
   !EMAIL_LIKE_NAME_REGEX.test(value.trim())

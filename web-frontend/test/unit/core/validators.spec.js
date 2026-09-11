@@ -35,6 +35,7 @@ describe('nameContainsNoUrl', () => {
     'bad\nname',
     'bad\tname',
     'ｅｖｉｌ．ｃｏｍ',
+    'evil\u200b.com',
   ]
 
   test.each(validNames)('accepts %j', (name) => {
@@ -59,6 +60,7 @@ describe('nameContainsNoSpam', () => {
     '🇳🇱 Sales',
     'Area m²',
     'Ｊｏｈｎ',
+    '👨\u200d👩\u200d👧 Family',
   ]
 
   const invalidNames = [
@@ -69,6 +71,7 @@ describe('nameContainsNoSpam', () => {
     '群1234567890聯絡加入',
     '優惠活動1234567890加群12',
     'call 0612345678',
+    'call 0\u200b6\u200b1\u200b2\u200b3\u200b4\u200b5\u200b6',
   ]
 
   test.each(validNames)('accepts %j', (name) => {
