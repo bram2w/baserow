@@ -79,8 +79,30 @@ export class GenerativeAIModelType extends Registerable {
     })
   }
 
+  /**
+   * Whether the backend owns this provider's settings contract in
+   * `AI_PROVIDER_TYPES`, which lets an integration override that omits `models`
+   * inherit the workspace allowlist.
+   *
+   * @returns {boolean} Whether Baserow ships this provider type itself.
+   */
+  isBuiltInProviderType() {
+    return false
+  }
+
   getModelIdentifierDescription() {
     return null
+  }
+}
+
+/**
+ * Base class for the provider types Baserow ships and the backend knows in
+ * `AI_PROVIDER_TYPES`. Plugin providers extend `GenerativeAIModelType` directly
+ * and keep their own authoritative integration model list.
+ */
+export class BuiltInGenerativeAIModelType extends GenerativeAIModelType {
+  isBuiltInProviderType() {
+    return true
   }
 }
 
@@ -99,7 +121,7 @@ const modelSettings = (label, description) => ({
   },
 })
 
-export class OpenAIModelType extends GenerativeAIModelType {
+export class OpenAIModelType extends BuiltInGenerativeAIModelType {
   static getType() {
     return 'openai'
   }
@@ -152,7 +174,7 @@ export class OpenAIModelType extends GenerativeAIModelType {
   }
 }
 
-export class AnthropicModelType extends GenerativeAIModelType {
+export class AnthropicModelType extends BuiltInGenerativeAIModelType {
   static getType() {
     return 'anthropic'
   }
@@ -196,7 +218,7 @@ export class AnthropicModelType extends GenerativeAIModelType {
   }
 }
 
-export class MistralModelType extends GenerativeAIModelType {
+export class MistralModelType extends BuiltInGenerativeAIModelType {
   static getType() {
     return 'mistral'
   }
@@ -240,7 +262,7 @@ export class MistralModelType extends GenerativeAIModelType {
   }
 }
 
-export class OllamaModelType extends GenerativeAIModelType {
+export class OllamaModelType extends BuiltInGenerativeAIModelType {
   static getType() {
     return 'ollama'
   }
@@ -291,7 +313,7 @@ export class OllamaModelType extends GenerativeAIModelType {
   }
 }
 
-export class OpenRouterModelType extends GenerativeAIModelType {
+export class OpenRouterModelType extends BuiltInGenerativeAIModelType {
   static getType() {
     return 'openrouter'
   }
@@ -338,7 +360,7 @@ export class OpenRouterModelType extends GenerativeAIModelType {
   }
 }
 
-export class GoogleModelType extends GenerativeAIModelType {
+export class GoogleModelType extends BuiltInGenerativeAIModelType {
   static getType() {
     return 'google'
   }
@@ -382,7 +404,7 @@ export class GoogleModelType extends GenerativeAIModelType {
   }
 }
 
-export class GroqModelType extends GenerativeAIModelType {
+export class GroqModelType extends BuiltInGenerativeAIModelType {
   static getType() {
     return 'groq'
   }

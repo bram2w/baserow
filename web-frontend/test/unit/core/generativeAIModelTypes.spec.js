@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 
 import { TestApp } from '@baserow/test/helpers/testApp'
+import { GenerativeAIModelType } from '@baserow/modules/core/generativeAIModelTypes'
 import GenerativeAIWorkspaceSettings from '@baserow/modules/core/components/workspace/GenerativeAIWorkspaceSettings'
 
 describe('Generative AI model types', () => {
@@ -30,6 +31,28 @@ describe('Generative AI model types', () => {
       'ollama',
       'openrouter',
     ])
+  })
+
+  test('marks every registered provider as a built-in provider type', () => {
+    const modelTypes = testApp.getRegistry().getOrderedList('generativeAIModel')
+
+    expect(
+      modelTypes
+        .filter((modelType) => !modelType.isBuiltInProviderType())
+        .map((modelType) => modelType.getType())
+    ).toEqual([])
+  })
+
+  test('does not treat a plugin provider as a built-in provider type', () => {
+    class ExtensionModelType extends GenerativeAIModelType {
+      static getType() {
+        return 'extension'
+      }
+    }
+
+    expect(
+      new ExtensionModelType({ app: testApp.getApp() }).isBuiltInProviderType()
+    ).toBe(false)
   })
 
   test('keeps database-only providers out of legacy workspace settings', () => {

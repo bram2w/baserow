@@ -1,20 +1,8 @@
-// These providers share the backend AI_PROVIDER_TYPES settings contract.
-// Extension providers keep their authoritative integration model lists.
-const builtInProviderTypes = new Set([
-  'openai',
-  'anthropic',
-  'google',
-  'groq',
-  'mistral',
-  'ollama',
-  'openrouter',
-])
-
 /**
  * Resolve the AI Agent models shown by the client using the same precedence as
  * the backend.
  *
- * A complete integration override owns its connection. Built-in providers
+ * A complete integration override owns its connection. Built-in provider types
  * inherit the model allowlist when their override omits models; an explicit
  * list, including an empty one, remains authoritative. A partial override can
  * only narrow the feature-filtered workspace list.
@@ -51,7 +39,7 @@ export function getEffectiveAIAgentModels({
   )
 
   if (modelType.isIntegrationSettingsComplete(integrationSettings)) {
-    if (!hasModels && builtInProviderTypes.has(modelType.getType())) {
+    if (!hasModels && modelType.isBuiltInProviderType()) {
       return workspaceModels
     }
     return integrationModels

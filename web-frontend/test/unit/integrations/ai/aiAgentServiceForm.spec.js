@@ -50,12 +50,14 @@ const openAIModelType = {
   getName: () => 'OpenAI',
   getMaxTemperature: () => 2,
   isIntegrationSettingsComplete: (settings) => Boolean(settings.api_key),
+  isBuiltInProviderType: () => true,
 }
 const anthropicModelType = {
   getType: () => 'anthropic',
   getName: () => 'Anthropic',
   getMaxTemperature: () => 1,
   isIntegrationSettingsComplete: (settings) => Boolean(settings.api_key),
+  isBuiltInProviderType: () => true,
 }
 const modelTypes = { openai: openAIModelType, anthropic: anthropicModelType }
 
