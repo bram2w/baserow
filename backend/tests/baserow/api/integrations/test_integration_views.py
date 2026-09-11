@@ -480,6 +480,25 @@ def test_create_slack_integration_without_a_token_is_rejected(api_client, data_f
 
 
 @pytest.mark.django_db
+def test_create_slack_integration_with_a_blank_token_is_rejected(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    application = data_fixture.create_builder_application(user=user)
+
+    url = reverse("api:integrations:list", kwargs={"application_id": application.id})
+    response = api_client.post(
+        url,
+        {"type": "slack_bot", "name": "Blank token", "token": ""},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["detail"]["token"][0]["code"] == "blank"
+
+
+@pytest.mark.django_db
 def test_create_smtp_integration_without_a_password_is_allowed(
     api_client, data_fixture
 ):

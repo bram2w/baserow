@@ -133,6 +133,7 @@ class IntegrationsView(APIView):
         request=DiscriminatorCustomFieldsMappingSerializer(
             integration_type_registry,
             CreateIntegrationSerializer,
+            request=True,
         ),
         responses={
             200: DiscriminatorCustomFieldsMappingSerializer(
@@ -175,7 +176,11 @@ class IntegrationsView(APIView):
         if missing:
             raise RequestBodyValidationException(
                 {
-                    name: [{"error": "This field is required.", "code": "required"}]
+                    name: [
+                        {"error": "This field may not be blank.", "code": "blank"}
+                        if name in data
+                        else {"error": "This field is required.", "code": "required"}
+                    ]
                     for name in missing
                 }
             )
@@ -207,6 +212,7 @@ class IntegrationView(APIView):
         request=CustomFieldRegistryMappingSerializer(
             integration_type_registry,
             UpdateIntegrationSerializer,
+            request=True,
         ),
         responses={
             200: DiscriminatorCustomFieldsMappingSerializer(

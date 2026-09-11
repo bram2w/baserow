@@ -40,9 +40,9 @@ class IntegrationType(
     Credentials that are write-only: they can be set and overwritten, but are
     never serialized back to any user, the creator included.
 
-    This is deliberately narrower than `sensitive_fields`, which only governs
-    what is stripped from a workspace export and which, for some types, covers
-    ordinary configuration such as the host and port.
+    This is deliberately narrower than `sensitive_fields`, which is stripped
+    from workspace exports and kept out of the action log, and which for some
+    types covers ordinary configuration such as the host and port.
     """
 
     secret_field_dependencies: Dict[str, List[str]] = {}
@@ -147,12 +147,17 @@ class IntegrationType(
             return overrides
 
         overrides = {**overrides}
+        # Only declare fields the name list carries: DRF asserts on every read
+        # and write if a declared field is missing from it.
+        field_names = self.get_field_names(request_serializer, extra_params, **kwargs)
 
         if request_serializer:
             # This replaces any type-specific override for the same name. No
             # type sets one today; a type that needs to should build on the
             # field below rather than expect its own to survive.
             for name in self.secret_fields:
+                if name not in field_names:
+                    continue
                 model_field = self.model_class._meta.get_field(name)
                 overrides[name] = serializers.CharField(
                     required=False,
@@ -162,11 +167,6 @@ class IntegrationType(
                     help_text=model_field.help_text,
                 )
         else:
-            # Mirror the filter in `get_field_names`: declaring a `has_` field
-            # that the name list does not carry makes DRF assert on every read.
-            field_names = self.get_field_names(
-                request_serializer, extra_params, **kwargs
-            )
             for name in self.secret_fields:
                 if f"has_{name}" in field_names:
                     overrides[f"has_{name}"] = HasSecretField(name)
