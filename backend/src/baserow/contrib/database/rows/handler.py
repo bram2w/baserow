@@ -3045,7 +3045,9 @@ class RowHandler:
         )
 
         workspace = table.database.workspace
-        TrashHandler.trash(user, workspace, table.database, row)
+        TrashHandler.trash(
+            user_for_row_audit_columns(user), workspace, table.database, row
+        )
         rows_deleted_counter.add(1)
 
         (
@@ -3261,7 +3263,12 @@ class RowHandler:
             # for example used when storing the names in the trash.
             trashed_rows.rows = rows
 
-            TrashHandler.trash(user, workspace, table.database, trashed_rows)
+            TrashHandler.trash(
+                user_for_row_audit_columns(user),
+                workspace,
+                table.database,
+                trashed_rows,
+            )
 
         rows_deleted_counter.add(len(row_ids))
 
