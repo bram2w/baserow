@@ -1844,6 +1844,7 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
         "placeholder",
         "multiple",
         "show_as_dropdown",
+        "show_search",
         "option_type",
         "formula_value",
         "formula_name",
@@ -1856,6 +1857,7 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
         "options",
         "multiple",
         "show_as_dropdown",
+        "show_search",
         "option_type",
         "formula_value",
         "formula_name",
@@ -1868,6 +1870,7 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
         "options",
         "multiple",
         "show_as_dropdown",
+        "show_search",
         "option_type",
         "formula_value",
         "formula_name",
@@ -1888,6 +1891,7 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
         options: List
         multiple: bool
         show_as_dropdown: bool
+        show_search: bool
         option_type: str
         formula_value: BaserowFormulaObject
         formula_name: BaserowFormulaObject
@@ -1932,6 +1936,11 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
             "show_as_dropdown": serializers.BooleanField(
                 help_text=ChoiceElement._meta.get_field("show_as_dropdown").help_text,
                 default=True,
+                required=False,
+            ),
+            "show_search": serializers.BooleanField(
+                help_text=ChoiceElement._meta.get_field("show_search").help_text,
+                default=False,
                 required=False,
             ),
             "option_type": serializers.ChoiceField(
@@ -2064,6 +2073,7 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
             ),
             "multiple": False,
             "show_as_dropdown": True,
+            "show_search": False,
             "option_type": ChoiceElement.OPTION_TYPE.MANUAL,
             "formula_value": BaserowFormulaObject(
                 formula="",
