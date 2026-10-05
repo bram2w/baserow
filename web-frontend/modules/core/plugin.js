@@ -21,7 +21,11 @@ import {
   DeleteAccountSettingsType,
   TwoFactorAuthSettingsType,
 } from '@baserow/modules/core/settingsTypes'
-import { GenerativeAIWorkspaceSettingsType } from '@baserow/modules/core/workspaceSettingsTypes'
+import {
+  GenerativeAIWorkspaceSettingsType,
+  SkillsWorkspaceSettingsType,
+} from '@baserow/modules/core/workspaceSettingsTypes'
+import { SkillPromptAttachmentType } from '@baserow/modules/core/promptAttachmentTypes'
 import {
   OpenAIModelType,
   OllamaModelType,
@@ -169,6 +173,7 @@ export default defineNuxtPlugin({
     registry.registerNamespace('field')
     registry.registerNamespace('settings')
     registry.registerNamespace('workspaceSettings')
+    registry.registerNamespace('promptAttachment')
     registry.registerNamespace('userFileUpload')
     registry.registerNamespace('membersPagePlugins')
     registry.registerNamespace('runtimeFormulaFunction')
@@ -215,6 +220,14 @@ export default defineNuxtPlugin({
     registry.register(
       'workspaceSettings',
       new GenerativeAIWorkspaceSettingsType(context)
+    )
+    registry.register(
+      'workspaceSettings',
+      new SkillsWorkspaceSettingsType(context)
+    )
+    registry.register(
+      'promptAttachment',
+      new SkillPromptAttachmentType(context)
     )
 
     registry.register('generativeAIModel', new OpenAIModelType(context))
