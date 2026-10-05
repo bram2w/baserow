@@ -903,7 +903,9 @@
   "crudTable": {
     "empty": "No items yet",
     "noResults": "No results found. Try adjusting your search or filters.",
-    "rowActions": "Row actions"
+    "rowActions": "Row actions",
+    "expandRow": "Expand row details",
+    "collapseRow": "Collapse row details"
   },
   "crudTableSearch": {
     "search": "Search"
