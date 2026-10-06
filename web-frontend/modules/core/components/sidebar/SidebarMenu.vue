@@ -71,7 +71,7 @@
             selectedWorkspace.id
           )
         "
-        v-slot="{ href, navigate, isExactActive, prefetch, shouldPrefetch }"
+        v-slot="{ href, navigate, prefetch, shouldPrefetch }"
         custom
         prefetch-on="interaction"
         :to="{
@@ -84,7 +84,7 @@
         <li
           class="tree__item"
           :class="{
-            active: isExactActive,
+            active: isManagementPage,
           }"
           data-highlight="members"
         >
@@ -203,6 +203,14 @@ export default {
           this.selectedWorkspace.id
         )
       )
+    },
+    isManagementPage() {
+      return [
+        'settings-members',
+        'settings-invites',
+        'settings-teams',
+        'settings-agents',
+      ].includes(this.$route.name)
     },
     sidebarWorkspaceComponents() {
       return Object.values(this.$registry.getAll('plugin'))

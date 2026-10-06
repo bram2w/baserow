@@ -5,6 +5,7 @@
       :service="service"
       :columns="columns"
       row-id-key="id"
+      :search-placeholder="$t('membersSettings.membersTable.search')"
       @row-context="onRowContext"
       @edit-role-context="onEditRoleContext"
     >
@@ -40,7 +41,7 @@
           "
           type="primary"
           size="large"
-          class="margin-left-2"
+          icon="iconoir-plus"
           @click="$refs.inviteModal.show()"
         >
           {{ $t('membersSettings.membersTable.inviteMember') }}
@@ -85,6 +86,7 @@ import { getWorkspaceMembersCount } from '@baserow/modules/core/utils/workspace'
 
 import CrudTable from '@baserow/modules/core/components/crudTable/CrudTable'
 import WorkspaceService from '@baserow/modules/core/services/workspace'
+import ManagementNameField from '@baserow/modules/core/components/settings/ManagementNameField'
 import CrudTableColumn from '@baserow/modules/core/crudTable/crudTableColumn'
 import SimpleField from '@baserow/modules/core/components/crudTable/fields/SimpleField'
 import TwoFactorAuthField from '@baserow/modules/core/components/crudTable/fields/TwoFactorAuthField'
@@ -148,9 +150,11 @@ export default {
         new CrudTableColumn(
           'name',
           this.$t('membersSettings.membersTable.columns.name'),
-          SimpleField,
+          ManagementNameField,
           true,
-          true
+          true,
+          false,
+          { userId: this.userId }
         ),
         new CrudTableColumn(
           'email',

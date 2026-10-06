@@ -13,6 +13,10 @@ export class WorkspaceSettingsPageType extends Registerable {
     return null
   }
 
+  getBadge() {
+    return null
+  }
+
   constructor(...args) {
     super(...args)
     this.type = this.getType()
@@ -55,6 +59,10 @@ export class WorkspaceSettingsPageType extends Registerable {
 }
 
 export class MembersWorkspaceSettingsPageType extends WorkspaceSettingsPageType {
+  getOrder() {
+    return 10
+  }
+
   static getType() {
     return 'members'
   }
@@ -75,6 +83,10 @@ export class MembersWorkspaceSettingsPageType extends WorkspaceSettingsPageType 
 }
 
 export class InvitesWorkspaceSettingsPageType extends WorkspaceSettingsPageType {
+  getOrder() {
+    return 20
+  }
+
   static getType() {
     return 'invites'
   }
@@ -107,8 +119,16 @@ export class InvitesWorkspaceSettingsPageType extends WorkspaceSettingsPageType 
 }
 
 export class AgentsWorkspaceSettingsPageType extends WorkspaceSettingsPageType {
+  getOrder() {
+    return 40
+  }
+
   static getType() {
     return 'agents'
+  }
+
+  getBadge() {
+    return this.app.$i18n.t('agents.new')
   }
 
   getName() {

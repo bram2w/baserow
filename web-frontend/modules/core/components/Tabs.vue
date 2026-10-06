@@ -40,6 +40,7 @@
             v-if="tab.developmentStage"
             :stage="tab.developmentStage"
           />
+          <Badge v-else-if="tab.badge" color="cyan" size="small" class="margin-left-1">{{ tab.badge }}</Badge>
           <i v-if="tab.appendIcon" :class="tab.appendIcon"></i>
         </a>
       </li>
