@@ -1596,7 +1596,7 @@
     "create": "Create agent",
     "createTitle": "Create agent",
     "updateTitle": "Edit agent",
-    "save": "Save agent",
+    "save": "Save changes",
     "edit": "Edit agent",
     "delete": "Delete agent",
     "general": "General",
@@ -1608,7 +1608,8 @@
     "search": "Search agents",
     "emptyTitle": "No agents yet",
     "emptyDescription": "Create an agent to connect AI tools to your workspace. Choose its role and teams to control what it can access.",
-    "new": "New"
+    "new": "New",
+    "roleHelpText": "Start with No access, then grant access to specific databases, tables or views as needed."
   },
   "managementPages": {
     "you": "You"
