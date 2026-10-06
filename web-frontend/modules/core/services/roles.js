@@ -5,6 +5,7 @@ export default (client, $hasFeature, $registry) => {
       return {
         data: Object.values($registry.getAll('roles')).map((role) => ({
           uid: role.getUid(),
+          icon: role.getIconClass(),
           description: role.getDescription(),
           invitationSubtitle: role.getInvitationSubtitle(workspace.id),
           showIsBillable: role.showIsBillable(workspace.id),
