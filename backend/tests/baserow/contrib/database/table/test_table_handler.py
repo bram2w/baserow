@@ -1372,3 +1372,21 @@ def test_duplicate_table_reverse_link_follows_the_duplicate_primary_field(
     assert code_2.db_column in lookup.internal_formula
     assert getattr(row, lookup.db_column)[0]["value"] == "new"
     RowHandler().create_row(user, projects, {team.db_column: [team_row.id]})
+
+
+@pytest.mark.django_db
+def test_an_agent_identity_can_create_a_table(data_fixture):
+    from baserow.core.models import Agent
+
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    # An agent acting for an AI agent application has no profile to read a
+    # language from.
+    identity = Agent.objects.create(workspace=database.workspace, name="Bot")
+
+    table, _ = TableHandler().create_table(
+        identity, database, name="Made by the agent", fill_example=True
+    )
+
+    assert table.name == "Made by the agent"
+    assert table.field_set.count() > 0

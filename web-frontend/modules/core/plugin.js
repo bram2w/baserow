@@ -192,6 +192,7 @@ export default defineNuxtPlugin({
     registry.registerNamespace('workspaceSettingsPage')
     registry.registerNamespace('agentExtension')
     registry.registerNamespace('agentSettings')
+    registry.registerNamespace('agentChatChannel')
     registry.registerNamespace('subject')
     registry.registerNamespace('errorPage')
     registry.registerNamespace('twoFactorAuth')
