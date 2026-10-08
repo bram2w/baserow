@@ -285,7 +285,7 @@ caddy:
 | `global.baserow.backendDomain`                                     | Configure the domain for the backend application.                                       | `api.cluster.local`     |
 | `global.baserow.objectsDomain`                                     | Configure the domain for the external facing minio api.                                 | `objects.cluster.local` |
 | `global.baserow.assistantLLMModel`                                 | Deprecated. Select the Kuma model under Admin tools > AI providers > AI features. Retained as an environment fallback; explicit disables prevent fallback. | `""`                    |
-| `global.baserow.applicationBuilderDomains`                         | Extra domains routed to the frontend, for Application Builder apps served on their own domain. | `[]`                    |
+| `global.baserow.applicationBuilderDomains`                         | Extra domains routed to the frontend, for Application Builder apps served on their own domain. Wildcards such as "*.apps.mydomain.com" are supported. Only needed when ingress.catchAll.enabled is false. | `[]`                    |
 | `global.baserow.containerSecurityContext.enabled`                  | Enabled containers' Security Context                                                    | `false`                 |
 | `global.baserow.containerSecurityContext.seLinuxOptions`           | Set SELinux options in container                                                        | `{}`                    |
 | `global.baserow.containerSecurityContext.runAsUser`                | Set containers' Security Context runAsUser                                              | `""`                    |
@@ -541,6 +541,7 @@ caddy:
 | `ingress.enabled`                                 | Enable the Ingress resource                                                    | `true`                                    |
 | `ingress.className`                               | IngressClass to handle the Ingress resource, omitted from the manifest when empty | `""`                                   |
 | `ingress.annotations.kubernetes.io/ingress.class` | Ingress class annotation                                                       | `{"kubernetes.io/ingress.class":"caddy"}` |
+| `ingress.catchAll.enabled`                        | Route requests for any host not matched by another rule to the frontend. Required for Application Builder custom domains with Caddy on-demand TLS; disable on a shared ingress controller and list the domains in global.baserow.applicationBuilderDomains instead. | `true`                                    |
 | `ingress.tls`                                     | TLS configuration for the Ingress resource                                     | `[]`                                      |
 
 ### Redis Configuration

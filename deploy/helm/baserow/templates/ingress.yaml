@@ -13,7 +13,7 @@ spec:
   ingressClassName: {{ . }}
   {{- end }}
   rules:
-    - host: {{ .Values.global.baserow.backendDomain | default (printf "api.%s" .Values.global.baserow.domain) }}
+    - host: {{ .Values.global.baserow.backendDomain | default (printf "api.%s" .Values.global.baserow.domain) | quote }}
       http:
         paths:
           - path: /ws/
@@ -44,7 +44,7 @@ spec:
                 name: {{ include "baserow.fullname" (index .Subcharts "baserow-backend-wsgi") }}
                 port:
                   number: 80
-    - host: {{ .Values.global.baserow.domain }}
+    - host: {{ .Values.global.baserow.domain | quote }}
       http:
         paths:
           - path: /
@@ -55,7 +55,7 @@ spec:
                 port:
                   number: 80
     {{- range .Values.global.baserow.applicationBuilderDomains }}
-    - host: {{ . }}
+    - host: {{ . | quote }}
       http:
         paths:
           - path: /
@@ -67,7 +67,7 @@ spec:
                   number: 80
     {{- end }}
     {{- if .Values.minio.enabled }}
-    - host: {{ .Values.global.baserow.objectsDomain }}
+    - host: {{ .Values.global.baserow.objectsDomain | quote }}
       http:
         paths:
           - path: /
@@ -77,6 +77,17 @@ spec:
                 name: {{ include "common.names.fullname" .Subcharts.minio }}
                 port:
                   number: 9000
+    {{- end }}
+    {{- if .Values.ingress.catchAll.enabled }}
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "baserow.fullname" (index .Subcharts "baserow-frontend") }}
+                port:
+                  number: 80
     {{- end }}
   {{- with .Values.ingress.tls }}
   tls:
