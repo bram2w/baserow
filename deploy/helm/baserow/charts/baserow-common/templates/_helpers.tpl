@@ -169,10 +169,11 @@ Image Pull secrets combine the global and local imagePullSecrets
 Create image url to use
 */}}
 {{- define "baserow.image" -}}
+{{- $tag := .Values.image.tag | default .Values.global.baserow.image.tag | default .Chart.AppVersion -}}
 {{- if and .Values.global.baserow.imageRegistry .Values.global.baserow.image.tag -}}
-{{- printf "%s/%s:%s" .Values.global.baserow.imageRegistry .Values.image.repository .Values.global.baserow.image.tag }}
+{{- printf "%s/%s:%s" .Values.global.baserow.imageRegistry .Values.image.repository $tag }}
 {{- else -}}
-{{- printf "%s:%s" .Values.image.repository .Values.image.tag }}
+{{- printf "%s:%s" .Values.image.repository $tag }}
 {{- end }}
 {{- end }}
 

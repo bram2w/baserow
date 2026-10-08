@@ -78,12 +78,12 @@ global:
 ## Baserow application image version
 ## ref: https://hub.docker.com/r/baserow/baserow/tags/
 ## @param image.repository [default: baserow/baserow] Baserow image repository
-## @skip image.tag Baserow image tag (immutable tags are recommended)
+## @param image.tag Baserow image tag, overrides global.baserow.image.tag when set (immutable tags are recommended)
 ## @param image.pullPolicy Baserow image pull policy
 ##
 image:
   repository: baserow/baserow # Docker image repository
-  tag: 2.4.0 # Docker image tag
+  tag: "" # Docker image tag, falls back to global.baserow.image.tag
   pullPolicy: IfNotPresent # Image pull policy
 
 ## @param workingDir Application container working directory

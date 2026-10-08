@@ -1,0 +1,9 @@
+{
+    "type": "bug",
+    "message": "Fix the Helm chart embeddings service failing to deploy: it used the Baserow version as image tag, which does not exist, its probes were rejected for having two handlers, and it ran in the wrong working directory. A component's image.tag now overrides global.baserow.image.tag",
+    "issue_origin": "github",
+    "issue_number": 6211,
+    "domain": "core",
+    "bullet_points": [],
+    "created_at": "2026-10-08"
+}

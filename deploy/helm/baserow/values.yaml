@@ -665,6 +665,8 @@ baserow-celery-flower:
 ## Configuration for the Baserow Embeddings service
 ## @param baserow-embeddings.enabled Set to true to enable the Baserow Embeddings service.
 ## @param baserow-embeddings.image.repository Docker image repository for the Embeddings service.
+## @param baserow-embeddings.image.tag Docker image tag for the Embeddings service, which is versioned separately from Baserow.
+## @param baserow-embeddings.workingDir Working directory for the container, empty to use the image's own.
 ## @param baserow-embeddings.resources Resource requests and limits for the Embeddings service.
 ## @param baserow-embeddings.autoscaling.enabled Enable autoscaling for the Embeddings service.
 ## @param baserow-embeddings.autoscaling.minReplicas Minimum number of replicas for autoscaling.
@@ -682,6 +684,8 @@ baserow-embeddings:
   enabled: false
   image:
     repository: embeddings
+    tag: "1.0.0"
+  workingDir: ""
   resources:
     requests:
       cpu: 800m
@@ -691,6 +695,7 @@ baserow-embeddings:
       memory: 1536Mi
   readinessProbe:
     enabled: true
+    exec: null # drop the subchart default exec probe, a probe takes one handler
     httpGet:
       path: /health
       port: 80
@@ -701,6 +706,7 @@ baserow-embeddings:
     failureThreshold: 3
   livenessProbe:
     enabled: true
+    exec: null # drop the subchart default exec probe, a probe takes one handler
     httpGet:
       path: /health
       port: 80
