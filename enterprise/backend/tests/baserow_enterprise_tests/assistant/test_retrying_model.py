@@ -90,7 +90,7 @@ def _assert_balanced_model_scope(inner_mock, expected_count=1):
 async def _request_anthropic(model, streaming):
     args = (
         [ModelRequest(parts=[UserPromptPart("OK")])],
-        {"timeout": 0.01},
+        {"timeout": 0.01, "max_tokens": 16},
         ModelRequestParameters(),
     )
     if streaming:
