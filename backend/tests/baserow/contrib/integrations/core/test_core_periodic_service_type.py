@@ -43,7 +43,7 @@ def test_periodic_trigger_service_type_generate_schema(data_fixture):
     workflow = data_fixture.create_automation_workflow(
         automation=automation, state=WorkflowState.LIVE, create_trigger=False
     )
-    trigger_node = data_fixture.create_periodic_trigger_node(
+    trigger_node = data_fixture.create_core_periodic_trigger_node(
         workflow=workflow,
         service_kwargs={
             "interval": PERIODIC_INTERVAL_MINUTE,
@@ -198,7 +198,7 @@ def test_call_periodic_services_in_draft_workflow(mock_start_workflow, data_fixt
         interval=PERIODIC_INTERVAL_MINUTE,
         last_periodic_run=None,
     )
-    data_fixture.create_periodic_trigger_node(
+    data_fixture.create_core_periodic_trigger_node(
         workflow=workflow,
         service=service,
     )
@@ -226,7 +226,7 @@ def test_call_periodic_services_in_paused_workflow(mock_start_workflow, data_fix
         interval=PERIODIC_INTERVAL_MINUTE,
         last_periodic_run=None,
     )
-    data_fixture.create_periodic_trigger_node(
+    data_fixture.create_core_periodic_trigger_node(
         workflow=workflow,
         service=service,
     )
@@ -254,7 +254,7 @@ def test_call_periodic_services_that_are_locked(mock_start_workflow, data_fixtur
         interval=PERIODIC_INTERVAL_MINUTE,
         last_periodic_run=None,
     )
-    trigger = data_fixture.create_periodic_trigger_node(
+    trigger = data_fixture.create_core_periodic_trigger_node(
         workflow=workflow,
         service=service,
     )
@@ -296,7 +296,7 @@ def test_call_multiple_periodic_services_that_are_due(
             last_periodic_run=None,
             next_run_at=datetime(2025, 2, 15, 10, 30, 0, tzinfo=timezone.utc),
         )
-        data_fixture.create_periodic_trigger_node(
+        data_fixture.create_core_periodic_trigger_node(
             workflow=workflow_1,
             service=service_1,
         )
@@ -305,7 +305,7 @@ def test_call_multiple_periodic_services_that_are_due(
             last_periodic_run=None,
             next_run_at=datetime(2025, 2, 15, 10, 30, 0, tzinfo=timezone.utc),
         )
-        data_fixture.create_periodic_trigger_node(
+        data_fixture.create_core_periodic_trigger_node(
             workflow=workflow_2,
             service=service_2,
         )
@@ -354,7 +354,7 @@ def test_call_periodic_services_that_are_due(
     # Create the service at the frozen time so next_run_at is calculated correctly
     with freeze_time(frozen_time):
         service = data_fixture.create_core_periodic_service(**service_kwargs)
-        trigger = data_fixture.create_periodic_trigger_node(
+        trigger = data_fixture.create_core_periodic_trigger_node(
             workflow=workflow,
             service=service,
         )
@@ -415,7 +415,7 @@ def test_publishing_a_workflow_does_not_trigger_an_unscheduled_run(data_fixture)
     workflow = data_fixture.create_automation_workflow(
         automation=automation, state=WorkflowState.DRAFT, create_trigger=False
     )
-    data_fixture.create_periodic_trigger_node(
+    data_fixture.create_core_periodic_trigger_node(
         workflow=workflow,
         service_kwargs={
             "interval": PERIODIC_INTERVAL_WEEK,
@@ -466,7 +466,7 @@ def test_unconfigured_periodic_service_is_never_due(data_fixture):
     workflow = data_fixture.create_automation_workflow(
         automation=automation, state=WorkflowState.LIVE, create_trigger=False
     )
-    trigger = data_fixture.create_periodic_trigger_node(
+    trigger = data_fixture.create_core_periodic_trigger_node(
         workflow=workflow, service_kwargs={"interval": None}
     )
 
@@ -544,7 +544,7 @@ def test_periodic_service_keeps_local_time_when_advancing_across_dst(data_fixtur
     workflow = data_fixture.create_automation_workflow(
         automation=automation, state=WorkflowState.LIVE, create_trigger=False
     )
-    trigger = data_fixture.create_periodic_trigger_node(
+    trigger = data_fixture.create_core_periodic_trigger_node(
         workflow=workflow,
         service_kwargs={
             "interval": PERIODIC_INTERVAL_WEEK,
@@ -619,7 +619,7 @@ def test_late_periodic_service_catches_up_once_and_resumes(data_fixture):
     workflow = data_fixture.create_automation_workflow(
         automation=automation, state=WorkflowState.LIVE, create_trigger=False
     )
-    trigger = data_fixture.create_periodic_trigger_node(
+    trigger = data_fixture.create_core_periodic_trigger_node(
         workflow=workflow,
         service_kwargs={
             "interval": PERIODIC_INTERVAL_WEEK,
@@ -673,7 +673,7 @@ def test_existing_utc_periodic_service_is_unaffected_across_dst(data_fixture):
     workflow = data_fixture.create_automation_workflow(
         automation=automation, state=WorkflowState.LIVE, create_trigger=False
     )
-    trigger = data_fixture.create_periodic_trigger_node(
+    trigger = data_fixture.create_core_periodic_trigger_node(
         workflow=workflow,
         service_kwargs={
             "interval": PERIODIC_INTERVAL_WEEK,

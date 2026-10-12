@@ -531,7 +531,7 @@ def test_updating_node_with_invalid_formula_arguments_throws_error(
 def test_update_http_trigger_node_ignores_uid(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     workflow = data_fixture.create_automation_workflow(user, create_trigger=False)
-    node = data_fixture.create_http_trigger_node(user=user, workflow=workflow)
+    node = data_fixture.create_core_http_trigger_node(user=user, workflow=workflow)
     service = node.service
     original_uid = service.uid
 
@@ -1222,7 +1222,7 @@ def test_simulate_dispatch_action_node_with_sample_data(
 def test_update_periodic_trigger_before_an_interval_is_chosen(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     workflow = data_fixture.create_automation_workflow(user, create_trigger=False)
-    node = data_fixture.create_periodic_trigger_node(
+    node = data_fixture.create_core_periodic_trigger_node(
         user=user, workflow=workflow, service_kwargs={"interval": None}
     )
 

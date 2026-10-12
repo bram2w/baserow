@@ -26,7 +26,7 @@ def test_response_timeout_serializer_uses_configured_maximum():
 
 @pytest.mark.django_db
 def test_generate_schema(data_fixture):
-    trigger_node = data_fixture.create_http_trigger_node(
+    trigger_node = data_fixture.create_core_http_trigger_node(
         service_kwargs={"is_public": True},
     )
     service = trigger_node.service
@@ -103,7 +103,7 @@ def test_process_webhook_request_raises_if_invalid_service(data_fixture):
 
 @pytest.mark.django_db
 def test_process_webhook_request_raises_if_exclude_get(data_fixture):
-    trigger_node = data_fixture.create_http_trigger_node(
+    trigger_node = data_fixture.create_core_http_trigger_node(
         service_kwargs={"is_public": True, "exclude_get": True},
     )
     service = trigger_node.service
@@ -125,7 +125,7 @@ def test_process_webhook_request_raises_if_exclude_get(data_fixture):
 def test_process_webhook_request_raises_if_missing_service(
     data_fixture, is_public, simulate
 ):
-    trigger_node = data_fixture.create_http_trigger_node(
+    trigger_node = data_fixture.create_core_http_trigger_node(
         service_kwargs={"is_public": is_public},
     )
     service = trigger_node.service
@@ -145,7 +145,7 @@ def test_process_webhook_request_raises_if_missing_service(
     ],
 )
 def test_process_webhook_request_calls_on_event(data_fixture, is_public, simulate):
-    trigger_node = data_fixture.create_http_trigger_node(
+    trigger_node = data_fixture.create_core_http_trigger_node(
         service_kwargs={"is_public": is_public},
     )
     service = trigger_node.service
@@ -167,7 +167,7 @@ def test_process_webhook_request_calls_on_event(data_fixture, is_public, simulat
     [True, False],
 )
 def test_import_serialized_sets_is_public(data_fixture, is_publishing):
-    trigger_node = data_fixture.create_http_trigger_node()
+    trigger_node = data_fixture.create_core_http_trigger_node()
     service = trigger_node.service
 
     service_type = CoreHTTPTriggerServiceType()

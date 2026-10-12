@@ -625,7 +625,7 @@ def test_core_http_trigger_node(api_client, data_fixture):
         user=user, application=automation
     )
 
-    trigger_node = data_fixture.create_http_trigger_node(
+    trigger_node = data_fixture.create_core_http_trigger_node(
         workflow=workflow,
         service_kwargs={"is_public": True},
     )
@@ -669,7 +669,9 @@ def test_core_http_trigger_node_duplicating_application_sets_unique_uid(data_fix
     workflow = data_fixture.create_automation_workflow(
         user=user, state=WorkflowState.LIVE, create_trigger=False
     )
-    trigger_node = data_fixture.create_http_trigger_node(user=user, workflow=workflow)
+    trigger_node = data_fixture.create_core_http_trigger_node(
+        user=user, workflow=workflow
+    )
     assert isinstance(trigger_node.service.uid, uuid.UUID)
 
     duplicated_automation = CoreHandler().duplicate_application(
@@ -692,7 +694,9 @@ def test_core_http_trigger_node_duplicating_workflow_sets_unique_uid(data_fixtur
     workflow = data_fixture.create_automation_workflow(
         user=user, state=WorkflowState.LIVE, create_trigger=False
     )
-    trigger_node = data_fixture.create_http_trigger_node(user=user, workflow=workflow)
+    trigger_node = data_fixture.create_core_http_trigger_node(
+        user=user, workflow=workflow
+    )
     assert isinstance(trigger_node.service.uid, uuid.UUID)
 
     duplicated_workflow = AutomationWorkflowService().duplicate_workflow(user, workflow)
@@ -726,7 +730,7 @@ def test_periodic_trigger_node_on_event_only_updates_dispatched_services(data_fi
         state=WorkflowState.DRAFT,
         create_trigger=False,
     )
-    trigger_node_a = data_fixture.create_periodic_trigger_node(
+    trigger_node_a = data_fixture.create_core_periodic_trigger_node(
         workflow=workflow_a,
         service_kwargs={
             "interval": PERIODIC_INTERVAL_DAY,
@@ -740,7 +744,7 @@ def test_periodic_trigger_node_on_event_only_updates_dispatched_services(data_fi
     workflow_b1 = data_fixture.create_automation_workflow(
         automation=automation, create_trigger=False
     )
-    trigger_node_b1 = data_fixture.create_periodic_trigger_node(
+    trigger_node_b1 = data_fixture.create_core_periodic_trigger_node(
         workflow=workflow_b1,
         service_kwargs={
             "interval": PERIODIC_INTERVAL_DAY,
@@ -753,7 +757,7 @@ def test_periodic_trigger_node_on_event_only_updates_dispatched_services(data_fi
     workflow_b2 = data_fixture.create_automation_workflow(
         state=WorkflowState.LIVE, create_trigger=False
     )
-    trigger_node_b2 = data_fixture.create_periodic_trigger_node(
+    trigger_node_b2 = data_fixture.create_core_periodic_trigger_node(
         workflow=workflow_b2,
         service_kwargs={
             "interval": PERIODIC_INTERVAL_DAY,
@@ -771,7 +775,7 @@ def test_periodic_trigger_node_on_event_only_updates_dispatched_services(data_fi
         state=WorkflowState.DRAFT,
         create_trigger=False,
     )
-    trigger_node_c1 = data_fixture.create_periodic_trigger_node(
+    trigger_node_c1 = data_fixture.create_core_periodic_trigger_node(
         workflow=workflow_c1,
         service_kwargs={
             "interval": PERIODIC_INTERVAL_DAY,
@@ -787,7 +791,7 @@ def test_periodic_trigger_node_on_event_only_updates_dispatched_services(data_fi
         state=WorkflowState.DRAFT,
         create_trigger=False,
     )
-    trigger_node_c2 = data_fixture.create_periodic_trigger_node(
+    trigger_node_c2 = data_fixture.create_core_periodic_trigger_node(
         workflow=workflow_c2,
         service_kwargs={
             "interval": PERIODIC_INTERVAL_DAY,

@@ -52,7 +52,7 @@ def post_webhook(api_client, uid, body, content_type):
 )
 @pytest.mark.django_db
 def test_rejects_disallowed_methods(api_client, data_fixture, http_method):
-    node = data_fixture.create_http_trigger_node()
+    node = data_fixture.create_core_http_trigger_node()
 
     url = get_url(node.service.uid)
     resp = getattr(api_client, http_method)(url)
@@ -64,7 +64,7 @@ def test_rejects_disallowed_methods(api_client, data_fixture, http_method):
 def test_rejects_http_get_if_service_excludes_get(
     api_client, data_fixture, django_assert_num_queries
 ):
-    node = data_fixture.create_http_trigger_node()
+    node = data_fixture.create_core_http_trigger_node()
     node.service.exclude_get = True
     node.service.save()
 
@@ -82,7 +82,7 @@ def test_rejects_http_get_if_service_excludes_get(
     ["get", "post", "put", "patch", "delete"],
 )
 def test_allows_valid_http_methods(api_client, data_fixture, http_method):
-    node = data_fixture.create_http_trigger_node()
+    node = data_fixture.create_core_http_trigger_node()
 
     url = get_url(node.service.uid) + "?test=true"
     resp = getattr(api_client, http_method)(url)
@@ -92,7 +92,7 @@ def test_allows_valid_http_methods(api_client, data_fixture, http_method):
 
 @pytest.mark.django_db
 def test_non_utf8_json_body_triggers_with_replaced_raw_body(api_client, data_fixture):
-    node = data_fixture.create_http_trigger_node()
+    node = data_fixture.create_core_http_trigger_node()
 
     resp, request_data = post_webhook(
         api_client,
@@ -108,7 +108,7 @@ def test_non_utf8_json_body_triggers_with_replaced_raw_body(api_client, data_fix
 
 @pytest.mark.django_db
 def test_declared_charset_is_used_to_decode_the_body(api_client, data_fixture):
-    node = data_fixture.create_http_trigger_node()
+    node = data_fixture.create_core_http_trigger_node()
 
     resp, request_data = post_webhook(
         api_client,
@@ -124,7 +124,7 @@ def test_declared_charset_is_used_to_decode_the_body(api_client, data_fixture):
 
 @pytest.mark.django_db
 def test_invalid_declared_charset_falls_back_to_utf8(api_client, data_fixture):
-    node = data_fixture.create_http_trigger_node()
+    node = data_fixture.create_core_http_trigger_node()
 
     resp, request_data = post_webhook(
         api_client,
@@ -139,7 +139,7 @@ def test_invalid_declared_charset_falls_back_to_utf8(api_client, data_fixture):
 
 @pytest.mark.django_db
 def test_binary_body_triggers(api_client, data_fixture):
-    node = data_fixture.create_http_trigger_node()
+    node = data_fixture.create_core_http_trigger_node()
 
     resp, request_data = post_webhook(
         api_client,
@@ -157,7 +157,7 @@ def test_binary_body_triggers(api_client, data_fixture):
 
 @pytest.mark.django_db
 def test_plain_text_body_triggers_with_raw_body(api_client, data_fixture):
-    node = data_fixture.create_http_trigger_node()
+    node = data_fixture.create_core_http_trigger_node()
 
     resp, request_data = post_webhook(
         api_client, node.service.uid, b"hello world", "text/plain"
@@ -170,7 +170,7 @@ def test_plain_text_body_triggers_with_raw_body(api_client, data_fixture):
 
 @pytest.mark.django_db
 def test_malformed_json_body_falls_back_to_empty_body(api_client, data_fixture):
-    node = data_fixture.create_http_trigger_node()
+    node = data_fixture.create_core_http_trigger_node()
 
     resp, request_data = post_webhook(
         api_client, node.service.uid, b'{"name": ', "application/json"
@@ -183,7 +183,7 @@ def test_malformed_json_body_falls_back_to_empty_body(api_client, data_fixture):
 
 @pytest.mark.django_db
 def test_valid_json_body_is_parsed(api_client, data_fixture):
-    node = data_fixture.create_http_trigger_node()
+    node = data_fixture.create_core_http_trigger_node()
 
     resp, request_data = post_webhook(
         api_client,
@@ -199,7 +199,7 @@ def test_valid_json_body_is_parsed(api_client, data_fixture):
 
 @pytest.mark.django_db
 def test_form_urlencoded_body_preserves_multi_value_fields(api_client, data_fixture):
-    node = data_fixture.create_http_trigger_node()
+    node = data_fixture.create_core_http_trigger_node()
 
     resp, request_data = post_webhook(
         api_client,
@@ -214,7 +214,7 @@ def test_form_urlencoded_body_preserves_multi_value_fields(api_client, data_fixt
 
 @pytest.mark.django_db
 def test_multipart_body_keeps_only_serializable_form_fields(api_client, data_fixture):
-    node = data_fixture.create_http_trigger_node()
+    node = data_fixture.create_core_http_trigger_node()
 
     with patch.object(
         service_type_registry.get("http_trigger"), "on_event"
@@ -242,7 +242,7 @@ def test_multipart_body_keeps_only_serializable_form_fields(api_client, data_fix
 def test_http_trigger_with_response_node_returns_workflow_response(
     api_client, data_fixture
 ):
-    trigger = data_fixture.create_http_trigger_node(
+    trigger = data_fixture.create_core_http_trigger_node(
         service_kwargs={
             "wait_for_response": True,
             "response_timeout_seconds": 1,
@@ -343,7 +343,7 @@ def test_workflow_response_strips_shared_origin_state_headers(header_name):
 def test_http_trigger_does_not_wait_for_response_when_disabled(
     api_client, data_fixture
 ):
-    trigger = data_fixture.create_http_trigger_node()
+    trigger = data_fixture.create_core_http_trigger_node()
     workflow = trigger.workflow
     workflow.state = WorkflowState.LIVE
     workflow.allow_test_run_until = timezone.now()
@@ -386,7 +386,7 @@ def test_http_trigger_does_not_wait_for_node_simulation(api_request_factory):
 def test_http_trigger_rolls_back_mutations_before_waiting(api_client, data_fixture):
     """A mutation failure rolls back history and discards deferred scheduling."""
 
-    trigger = data_fixture.create_http_trigger_node(
+    trigger = data_fixture.create_core_http_trigger_node(
         service_kwargs={"wait_for_response": True}
     )
     workflow = trigger.workflow

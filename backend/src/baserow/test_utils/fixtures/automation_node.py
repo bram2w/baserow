@@ -210,35 +210,35 @@ class AutomationNodeFixtures:
             fallback_output_node=fallback_output_node,
         )
 
-    def create_core_goto_node(self, user=None, **kwargs):
+    def create_core_goto_action_node(self, user=None, **kwargs):
         return self.create_automation_node(
             user=user,
             type=CoreGotoActionNodeType.type,
             **kwargs,
         )
 
-    def create_periodic_trigger_node(self, user=None, **kwargs):
+    def create_core_periodic_trigger_node(self, user=None, **kwargs):
         return self.create_automation_node(
             user=user,
             type=CorePeriodicTriggerNodeType.type,
             **kwargs,
         )
 
-    def create_http_trigger_node(self, user=None, **kwargs):
+    def create_core_http_trigger_node(self, user=None, **kwargs):
         return self.create_automation_node(
             user=user,
             type=CoreHTTPTriggerNodeType.type,
             **kwargs,
         )
 
-    def create_inbound_email_trigger_node(self, user=None, **kwargs):
+    def create_core_inbound_email_trigger_node(self, user=None, **kwargs):
         return self.create_automation_node(
             user=user,
             type=CoreInboundEmailTriggerNodeType.type,
             **kwargs,
         )
 
-    def create_manual_trigger_node(self, user=None, **kwargs):
+    def create_core_manual_trigger_node(self, user=None, **kwargs):
         return self.create_automation_node(
             user=user,
             type=CoreManualTriggerNodeType.type,

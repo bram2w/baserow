@@ -667,7 +667,7 @@ def test_get_destination_labels(data_fixture):
     destination = data_fixture.create_local_baserow_create_row_action_node(
         workflow=workflow, reference_node=trigger, label="destination node"
     )
-    goto_node = data_fixture.create_core_goto_node(
+    goto_node = data_fixture.create_core_goto_action_node(
         workflow=workflow, reference_node=destination
     )
     goto_node.service.specific.destination_service = destination.service
@@ -710,7 +710,7 @@ def test_get_destination_labels_without_custom_label(data_fixture):
     destination = data_fixture.create_local_baserow_create_row_action_node(
         workflow=workflow, reference_node=trigger
     )
-    goto_node = data_fixture.create_core_goto_node(
+    goto_node = data_fixture.create_core_goto_action_node(
         workflow=workflow, reference_node=destination
     )
     goto_node.service.specific.destination_service = destination.service
@@ -749,7 +749,7 @@ def test_get_destination_labels_query_count_does_not_grow_with_loops(data_fixtur
     destination = data_fixture.create_local_baserow_create_row_action_node(
         workflow=workflow, reference_node=trigger, label="destination node"
     )
-    goto_node = data_fixture.create_core_goto_node(
+    goto_node = data_fixture.create_core_goto_action_node(
         workflow=workflow, reference_node=destination
     )
     goto_node.service.specific.destination_service = destination.service
