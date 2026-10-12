@@ -16,7 +16,7 @@ import CoreRouterServiceForm from '@baserow/modules/integrations/core/components
 import CoreGotoServiceForm from '@baserow/modules/integrations/core/components/services/CoreGotoServiceForm'
 import CoreIteratorServiceForm from '@baserow/modules/integrations/core/components/services/CoreIteratorServiceForm'
 import CoreCSVFileReaderServiceForm from '@baserow/modules/integrations/core/components/services/CoreCSVFileReaderServiceForm'
-import CorePeriodicServiceForm from '@baserow/modules/integrations/core/components/services/CorePeriodicServiceForm.vue'
+import CorePeriodicTriggerServiceForm from '@baserow/modules/integrations/core/components/services/CorePeriodicTriggerServiceForm.vue'
 import CoreStartWorkflowServiceForm from '@baserow/modules/integrations/core/components/services/CoreStartWorkflowServiceForm.vue'
 import { SMTPIntegrationType } from '@baserow/modules/integrations/core/integrationTypes'
 import CoreResponseServiceForm from '@baserow/modules/integrations/core/components/services/CoreResponseServiceForm.vue'
@@ -641,7 +641,7 @@ export class CorePeriodicTriggerServiceType extends TriggerServiceTypeMixin(
   }
 
   get formComponent() {
-    return CorePeriodicServiceForm
+    return CorePeriodicTriggerServiceForm
   }
 
   get icon() {

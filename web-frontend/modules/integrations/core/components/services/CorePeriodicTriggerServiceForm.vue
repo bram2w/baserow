@@ -149,7 +149,7 @@ import form from '@baserow/modules/core/mixins/form'
 import PaginatedDropdown from '@baserow/modules/core/components/PaginatedDropdown'
 
 export default {
-  name: 'CorePeriodicServiceForm',
+  name: 'CorePeriodicTriggerServiceForm',
   components: { PaginatedDropdown },
   mixins: [form],
   setup() {
