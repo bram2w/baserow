@@ -1,94 +1,99 @@
-# ADR 010: Group reusable agents in workspace applications
+# ADR 010: Represent each reusable agent as a workspace application
 
 |              |                                                |
 | ------------ | ---------------------------------------------- |
 | Status       | Proposed                                       |
-| Date         | 2026-10-09                                     |
+| Date         | 2026-10-12                                     |
 | Issue        | https://github.com/baserow/baserow/issues/6259 |
 | Author       | Davide Silvestri (@silvestrid)                 |
 | Contributors | To be confirmed                                |
 
 ## Summary
 
-Users need reusable agents whose creation, configuration and use can be controlled
-through Baserow's RBAC and whose tools reuse existing capabilities. We will introduce
-an Agent Builder workspace application containing one or more independently configured
-and permissioned agents, following the database and tables model.
+Each reusable agent will be a workspace application of type `agent`, with its own
+configuration, permissions and lifecycle. Users create an Agent directly, without first
+creating a builder or team and then a child agent. We prioritize a simple starting point
+over the immediate complexity of grouping for future needs whose benefits are unproven.
 
 ## Context
 
-Baserow organizes databases and tables, builders and pages, and automations and workflows
-under workspace applications. These provide management and portability entry points, but
-each application type must implement the preservation of its own content.
+Baserow already provides workspace application creation, navigation, roles, duplication,
+export/import, templates, snapshots and trash. An agent can use these entry points as a
+complete application, without introducing a subordinate agent-definition resource.
 
-The [permissions system](../technical/permissions-guide.md) supports operations on
-objects in a hierarchy, with inherited roles and assignments at narrower scopes. Shared
-integration and service types implement connections, input resolution and backend
-workflow actions. These building blocks are available to new application types too.
+The CEO's product judgment is that users will usually start by wanting to build a single
+agent. Requiring them to first name and create a builder or team introduces another
+concept and management step before they can configure that agent. This is a product
+judgment, rather than a conclusion established by customer research in this record.
 
-The requirements driving this choice are:
+The factors driving this decision are:
 
-- Control agent creation, configuration and invocation through application roles and
-  individual agent assignments, as for databases and tables.
-- Reuse an agent from conversations and automatic jobs without copying its definition
-  into each entry point.
-- Reuse internal tools and service-backed workflow actions, including their permissions
-  and connections.
-- Let users organize related agents and recover or share their supported configuration
-  through familiar application operations.
+- Make creating and opening one agent a direct, familiar application operation.
+- Give each agent independent access, configuration, copying and recovery boundaries.
+- Reuse existing application infrastructure and supported tools and backend services.
+- Avoid adding ownership, child permissions and navigation for grouped agents before
+  there is a demonstrated need to manage them together.
+
+Grouping could reduce repeated administration and provide boundaries like databases do
+for tables and Application Builders do for pages. We accept the cost of reconsidering
+that ownership model later if those needs become concrete. Supporting several agents
+or collaboration between them does not, by itself, require a common owning application.
 
 This record chooses the ownership and reuse boundary. The launch catalogue, execution
-engine, approvals and multi-agent orchestration are separate decisions. The
+engine, approvals and orchestration are separate decisions. The
 [delivery issue](https://github.com/baserow/baserow/issues/6259) defines release scope.
 
-| Term               | Meaning                                                                                               |
-| ------------------ | ----------------------------------------------------------------------------------------------------- |
-| Agent application  | The Agent Builder workspace application that groups related agent definitions.                        |
-| Agent definition   | A reusable child object with its own instructions, tool configuration and supported entry points.     |
-| Execution identity | The actor whose permissions and connections govern effects performed by an agent.                     |
-| Agent team         | A group of agent definitions in an application; it does not imply autonomous delegation or execution. |
+| Term               | Meaning                                                                                   |
+| ------------------ | ----------------------------------------------------------------------------------------- |
+| Agent application  | A workspace application representing one reusable agent and owning its configuration.     |
+| Execution identity | The actor whose permissions and connections govern effects performed by an agent.         |
+| Agent group        | A possible future way to manage related agents; this decision introduces no owning group. |
 
-Baserow's existing core `Agent` is a workspace-owned permission subject: it can serve as
-an execution identity, but is distinct from the configurable agent definition above.
+Baserow's existing core `Agent` is a workspace-owned permission subject. It can serve as
+an execution identity and remains distinct from the configurable agent application.
 
 ## Decision
 
-### 1. One application can contain several agents
+### 1. One application represents one agent
 
-Each agent definition belongs to one Agent Builder application and has independent
-configuration. Supported callers, including conversations and triggers, select it by ID
-instead of owning copies. A single-agent application uses the same structure.
+Register the application type as `agent`. Creating it creates the agent itself;
+configuration belongs directly to that application. There is no builder/team parent or
+child-agent creation, selection or configuration layer.
 
-### 2. Use the existing permission hierarchy
+Supported callers, including conversations and automatic jobs, reference the application
+ID instead of owning copies of its definition. Related agents remain independently owned
+applications. Future collaboration can be evaluated using references between them;
+orchestration and group management are deferred.
 
-Use application and child-agent scopes and operations in the existing permission system,
-with inherited application roles and individual agent assignments. Separate application
-creation, agent creation, configuration, invocation and conversation/run visibility. A
-user can use an agent without editing it or reading another person's conversation.
+### 2. Use application permissions
 
-Enforce permissions in backend APIs, lists and realtime events. A user assigned to one
-child can navigate to it without seeing unauthorized siblings. Application membership
-does not implicitly share conversations, memory or execution authority between agents.
+Use the existing application scope, inherited workspace roles and individual application
+assignments. Introduce no team or child-agent permission scope. Separate configuration,
+invocation and conversation/run visibility: a user can use an agent without editing it
+or reading another person's conversation.
 
-Invocation does not make the caller the execution identity or grant direct access to
-tool resources. Check current resource permissions and tool policies under the authorized
-execution identity when tools run, including after resuming suspended work.
+Enforce permissions in backend APIs, lists and realtime events. Invocation alone does not
+select the execution identity or grant direct access to tool resources. Check current
+resource permissions and tool policies under the authorized execution identity when tools
+run, including after resuming suspended work.
 
-### 3. Adapt shared capabilities instead of duplicating them
+### 3. Reuse shared capabilities with explicit authorization
 
-Adapt existing internal tool implementations and supported backend service types as agent
-tools. Reuse input/formula resolution, dispatch and result handling. Frontend-only actions
-and services requiring a particular workflow context need separate qualification.
+Adapt existing internal tools and supported backend service types, reusing input/formula
+resolution, dispatch and result handling. Frontend-only actions and services requiring a
+particular workflow context need separate qualification. Automations can invoke an agent
+by reference without owning it.
 
-Implementation reuse does not grant access to another application's actions or
-credentials. Respect integration ownership and authorization, requiring configuration or
-reconnection where needed. Automations can invoke agents by reference without owning them.
+Implementation reuse does not authorize access to another application's configured
+actions or credentials. Respect connection ownership and authorization. Moving
+integrations to workspaces is a planned separate change; it may reduce repeated
+connection setup, but does not itself define shared agent settings or resource access.
 
-### 4. Honor the shared application lifecycle
+### 4. Keep each agent's application lifecycle independent
 
 Support duplication, export/import, templates, snapshots, trash/restore and deletion for
 owned configuration. Remap references, honor permissions and sensitive-data options, and
-report missing dependencies. Copies and snapshot restorations create independent
+report missing dependencies. Copies and snapshot restorations create independent agent
 applications with automatic entry points disabled until explicitly enabled.
 
 Copies exclude ordinary private conversations, live executions and pending approvals.
@@ -97,75 +102,50 @@ identities. Restoring configuration does not reverse external effects.
 
 ## Options considered
 
-All options can use the permission system and shared service implementations. The
-comparison is about the ownership, permission hierarchy and lifecycle work each requires.
-
-### Agent Builder application with child agents — selected
-
-Groups related agents, roles and integrations while permitting child assignments, like
-tables in a database. Related agents can be copied or installed together. Costs include
-child scopes, filtered navigation and preserving every agent in lifecycle operations;
-independently running agents still share a packaging boundary.
-
-### One workspace application per agent
-
-Provides direct application roles and independent copy, snapshot and deletion boundaries
-with fewer new hierarchy concepts. Related agents become separate sidebar entries and
-assignments; coordinated reuse needs another grouping mechanism. Prefer this if
-independent agent lifecycles matter more than managing a related set.
-
-### Standalone workspace-owned agent definitions
-
-Offers discovery across applications and direct workspace ownership. RBAC and shared
-services remain possible, but navigation, snapshots, templates, trash and integration
-ownership need new entry points or adapters. This adds a parallel lifecycle without a
-current requirement for a workspace-wide live catalogue.
-
-### Agents owned by Automation workflows or nodes
-
-Reuses AI agent actions, service dispatch and event-driven execution. Fits a task confined
-to one workflow, but couples a reusable agent's ownership and lifecycle to that workflow.
-Independent conversations and callers would need a separate definition anyway. Keep
-workflows as possible callers.
-
-### Configurable profiles inside the existing assistant
-
-Reuses conversation UI and internal tools; suits personal customization. Independent
-creation/invocation permissions, delegated identities, automatic entry points and portable
-configuration would require another managed resource model. Reuse assistant components
-without making the assistant the ownership boundary.
+| Option                                              | Assessment                                                                                                                                                     |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| One workspace application per agent — selected      | Direct creation and independent permissions/lifecycle using existing infrastructure; managing related sets requires additional work.                           |
+| Agent Builder/team application with child agents    | Provides a common boundary for roles, settings, connections and packaging, but adds an upfront concept, child permissions and navigation for an unproven need. |
+| Standalone workspace-owned definitions              | Allows a separate agent catalogue, but needs new navigation and lifecycle entry points or adapters without a current requirement for that parallel model.      |
+| Agents owned by Automation workflows/nodes          | Fits workflow-local tasks, but couples reusable agent ownership to one caller. Workflows remain possible callers.                                              |
+| Configurable profiles inside the existing assistant | Reuses conversation UI and tools, but independently governed, portable agents would still need a managed resource model.                                       |
 
 ## Consequences
 
-- Users can treat an application as an agent team: one place to find, configure and use
-  related agents, analogous to navigating tables in a database. A future team entry point
-  could route a request to the appropriate permitted agent, reducing the need to choose
-  among many agents. Routing, delegation or a swarm must preserve each agent's access
-  and execution identity; grouping alone does not introduce those capabilities.
-- Application roles reduce repeated administration, while child roles keep agents
-  independently accessible. This requires filtered navigation and separate conversation
-  and run visibility, rather than treating access to the group as access to everything.
-- Shared tool and service implementations reduce duplicated connection and execution
-  logic. Adapters, supported catalogues and permission checks still require maintenance;
-  sharing an application does not authorize every agent to use every connection.
-- The application becomes the boundary for packaging and recovery. Moving an agent to
-  another application or releasing it independently requires handling its references,
-  integrations and inherited roles explicitly.
-- Lifecycle support is part of releasing each capability. We must verify real round
-  trips, denied access, missing dependencies and inactive copies; a snapshot cannot
-  recover external effects or historical versions of shared workspace resources.
+- Creating one agent requires one application and one name. There is no empty container
+  to create or child list to manage. Each additional agent occupies its own application
+  entry, which can make navigation more crowded as usage grows.
+- Each agent has independent permissions and recovery. Workspace roles still apply,
+  but managing a selected set together can require repeated application assignments,
+  resource-access configuration and settings changes. The planned integration move may
+  address connection reuse; shared governance and settings remain separate problems.
+- **Identity and references become lasting contracts.** Agent IDs are application IDs;
+  APIs, callers and exported references will build on this. Introducing an owning group
+  later must preserve these contracts or migrate them and support older references.
+- **Permissions and configuration ownership become costly to regroup.** Moving existing
+  agents under a new parent would require explicit rules for inherited roles, resource
+  access and shared settings/connections, including resolving conflicting assignments
+  while preserving effective access.
+- **Packaging and recovery are per agent.** Related agents have separate copy, snapshot,
+  restore and deletion boundaries. Coordinated installation, versioning or recovery
+  requires dependency handling and new lifecycle rules; visual grouping alone supplies
+  none of those guarantees.
+- Collaboration remains possible across applications. Cross-agent references need
+  authorization and policies for copying, missing dependencies and deletion when that
+  capability is introduced. A common owner could simplify some of that work.
+- We deliberately accept possible future redesign in exchange for simpler behavior now.
+  Adding a true owning group later is more expensive than choosing it before persisted
+  identities, permission assignments and lifecycle contracts become established.
 
 ## Revisit triggers
 
-- Customers need one live agent definition shared across applications or workspaces,
-  with updates propagated to all callers instead of independent installed copies.
-- Independent versioning, promotion between environments, transfer of ownership or
-  recovery of individual agents becomes more common than managing a team together.
-- Permission assignment or navigation for large agent groups becomes too costly or
-  confusing, and measured usage favors a workspace-wide catalogue or another hierarchy.
-- An agent must belong to several independently governed teams, or delegation needs
-  relationships and recovery across application boundaries that one owner cannot represent.
-- Reusing configured actions and connections across applications becomes a core need
-  that cannot be met cleanly by the existing integration ownership model.
-- Agent execution must move to independently deployed runtimes or support external
-  agent definitions whose identity and lifecycle Baserow applications cannot own.
+- Users repeatedly assign the same roles or resource access to related agents.
+- Repeated connection setup remains costly, including after workspace integrations
+  become available.
+- Users need shared settings across a selected group of agents, with changes propagated
+  to its members.
+- Customers need explicit management and access boundaries for related agents,
+  analogous to databases/tables or Application Builders/pages.
+- Related agents regularly need coordinated installation, release, recovery or deletion.
+- Live sharing across workspaces or independently deployed runtimes requires ownership
+  or identity contracts that agent applications cannot represent cleanly.
