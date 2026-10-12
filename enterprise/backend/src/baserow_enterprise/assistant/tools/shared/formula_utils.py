@@ -53,9 +53,7 @@ def needs_formula(value: str | None) -> bool:
     if not value:
         return False
     stripped = value.strip()
-    return stripped.lower().startswith(FORMULA_PREFIX) or bool(
-        RAW_FORMULA_RE.search(stripped)
-    )
+    return FORMULA_PREFIX in stripped.lower() or bool(RAW_FORMULA_RE.search(stripped))
 
 
 def formula_desc(value: str) -> str:
@@ -63,6 +61,9 @@ def formula_desc(value: str) -> str:
     Extract the formula description from a value.
 
     For ``$formula:`` prefixed values, strips the prefix.
+    For text with ``$formula:`` markers after static text (e.g.
+    ``New deal: $formula: the deal name``), describes the whole template so
+    the generator keeps the static parts and resolves each marker.
     For raw formula expressions, returns the value as-is so the
     formula generator can convert it to a proper formula.
 
@@ -73,6 +74,13 @@ def formula_desc(value: str) -> str:
     stripped = value.strip()
     if stripped.lower().startswith(FORMULA_PREFIX):
         return stripped[len(FORMULA_PREFIX) :].strip()
+    if FORMULA_PREFIX in stripped.lower():
+        return (
+            "Text mixing static parts and dynamic values. Keep the static text "
+            f"as written and replace each '{FORMULA_PREFIX} <description>' part "
+            "(up to the end of its line) with the value it describes: "
+            f"{stripped}"
+        )
     # Raw formula expression — pass through for the generator to fix up
     return stripped
 

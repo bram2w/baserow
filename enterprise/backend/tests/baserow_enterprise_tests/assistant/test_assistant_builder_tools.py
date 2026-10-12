@@ -162,6 +162,17 @@ class TestFormulaUtils:
         assert formula_desc("$formula: the product name") == "the product name"
         assert formula_desc("  $formula:  spaced  ") == "spaced"
 
+    def test_needs_formula_with_inline_marker(self):
+        assert needs_formula("New deal: $formula: the deal name")
+        assert needs_formula("Name: $formula: the name\nEmail: $formula: the email")
+
+    def test_formula_desc_keeps_static_text_around_inline_marker(self):
+        desc = formula_desc("New deal: $formula: the deal name")
+        assert "New deal: $formula: the deal name" in desc
+
+    def test_literal_or_placeholder_inline_marker(self):
+        assert literal_or_placeholder("New deal: $formula: the deal name") == "''"
+
     def test_formula_desc_passes_raw(self):
         assert formula_desc("get('page_parameter.id')") == "get('page_parameter.id')"
 
