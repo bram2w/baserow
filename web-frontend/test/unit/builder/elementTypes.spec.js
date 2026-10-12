@@ -625,6 +625,32 @@ describe('elementTypes tests', () => {
         elementType.isValid({ required: false, validation_type: 'email' }, '')
       ).toBe(true)
     })
+    // The backend validates with Django's `validate_email`, so the values it
+    // rejects must be rejected here too, not only on submit.
+    test.each(['aaa@aa', 'dzd@vz', 'a@b', 'Dörte@Sörensen.example.com'])(
+      'InputTextElementType | required | email | backend-rejected value %s.',
+      (value) => {
+        const elementType = new InputTextElementType()
+        expect(
+          elementType.isValid(
+            { required: true, validation_type: 'email' },
+            value
+          )
+        ).toBe(false)
+      }
+    )
+    test.each(['foo@bar.com', 'user@localhost', 'user@пример.рф'])(
+      'InputTextElementType | required | email | backend-accepted value %s.',
+      (value) => {
+        const elementType = new InputTextElementType()
+        expect(
+          elementType.isValid(
+            { required: true, validation_type: 'email' },
+            value
+          )
+        ).toBe(true)
+      }
+    )
     test('InputTextElementType with any value.', () => {
       const elementType = new InputTextElementType()
       expect(elementType.isValid({ validation_type: 'any' }, 42)).toBe(true)

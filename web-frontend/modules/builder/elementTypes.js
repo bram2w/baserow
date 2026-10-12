@@ -66,7 +66,7 @@ import {
   CollectionElementTypeMixin,
   MultiPageElementTypeMixin,
 } from '@baserow/modules/builder/elementTypeMixins'
-import { isValidEmail } from '@baserow/modules/core/utils/string'
+import { isValidStrictEmail } from '@baserow/modules/core/utils/string'
 import { getBuilderBreakpoints } from '@baserow/modules/builder/utils/breakpoints'
 
 import {
@@ -1523,7 +1523,10 @@ export class InputTextElementType extends FormElementType {
         // Failed parsing leaves raw text in form data for display.
         return Number.isFinite(value)
       case 'email':
-        return isValidEmail(value)
+        // The backend validates with Django's `validate_email`, so the
+        // permissive `isValidEmail` of the database email field must not be
+        // used here: it would accept values the submit then rejects.
+        return isValidStrictEmail(value)
       default:
         return true
     }
