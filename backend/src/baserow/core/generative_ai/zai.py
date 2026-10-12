@@ -33,7 +33,7 @@ class ZaiChatProvider(ZaiProvider):
         return merge_profile(
             ZaiProvider.model_profile(model_name),
             OpenAIModelProfile(
-                openai_supports_tool_choice_required=False,
+                supports_forced_tool_choice=False,
                 openai_chat_supports_max_completion_tokens=False,
                 openai_supports_strict_tool_definition=False,
                 openai_chat_supports_document_input=False,
