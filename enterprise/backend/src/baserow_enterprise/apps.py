@@ -17,7 +17,7 @@ def register_code_runner_features():
     )
     from baserow.core.code_runner.registries import code_runner_type_registry
     from baserow.core.services.registries import service_type_registry
-    from baserow_enterprise.automation.nodes.node_types import CoreCodeNodeType
+    from baserow_enterprise.automation.nodes.node_types import CoreCodeActionNodeType
     from baserow_enterprise.builder.workflow_actions.workflow_action_types import (
         CoreCodeActionType,
     )
@@ -29,7 +29,7 @@ def register_code_runner_features():
     code_runner_type_registry.register(WasmtimeQuickJSCodeRunnerType())
     service_type_registry.register(CoreCodeServiceType())
     builder_workflow_action_type_registry.register(CoreCodeActionType())
-    automation_node_type_registry.register(CoreCodeNodeType())
+    automation_node_type_registry.register(CoreCodeActionNodeType())
 
 
 def register_xls_file_reader_features():
@@ -40,7 +40,9 @@ def register_xls_file_reader_features():
         builder_workflow_action_type_registry,
     )
     from baserow.core.services.registries import service_type_registry
-    from baserow_enterprise.automation.nodes.node_types import CoreXLSFileReaderNodeType
+    from baserow_enterprise.automation.nodes.node_types import (
+        CoreXLSFileReaderActionNodeType,
+    )
     from baserow_enterprise.builder.workflow_actions.workflow_action_types import (
         CoreXLSFileReaderActionType,
     )
@@ -50,7 +52,7 @@ def register_xls_file_reader_features():
 
     service_type_registry.register(CoreXLSFileReaderServiceType())
     builder_workflow_action_type_registry.register(CoreXLSFileReaderActionType())
-    automation_node_type_registry.register(CoreXLSFileReaderNodeType())
+    automation_node_type_registry.register(CoreXLSFileReaderActionNodeType())
 
 
 class BaserowEnterpriseConfig(AppConfig):

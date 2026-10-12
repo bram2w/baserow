@@ -36,7 +36,7 @@ from baserow.core.services.types import DispatchResult
 from baserow.test_utils.helpers import AnyInt, AnyStr
 
 TRIGGER_NODE_TYPE_PATH = (
-    "baserow.contrib.automation.nodes.node_types.LocalBaserowRowsCreatedNodeTriggerType"
+    "baserow.contrib.automation.nodes.node_types.LocalBaserowRowsCreatedTriggerNodeType"
 )
 HTTP_NODE_TYPE_PATH = (
     "baserow.contrib.automation.nodes.node_types.CoreHttpRequestNodeType"

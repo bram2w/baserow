@@ -104,7 +104,7 @@ from baserow.core.services.registries import service_type_registry
 from baserow.core.services.types import DispatchResult
 
 
-class AutomationNodeActionNodeType(AutomationNodeType):
+class AutomationActionNodeType(AutomationNodeType):
     is_workflow_action = True
 
     # The retry condition is a formula on the node itself, not on its service,
@@ -164,7 +164,7 @@ class ContainerNodeTypeMixin:
         super().before_move(node, reference_node, position, output)
 
 
-class LocalBaserowUpsertRowNodeType(AutomationNodeActionNodeType):
+class LocalBaserowUpsertRowActionNodeType(AutomationActionNodeType):
     type = "local_baserow_upsert_row"
     compat_type = "upsert_row"
     service_type = LocalBaserowUpsertRowServiceType.type
@@ -174,14 +174,14 @@ class LocalBaserowUpsertRowNodeType(AutomationNodeActionNodeType):
         return {"service": service}
 
 
-class LocalBaserowCreateRowNodeType(LocalBaserowUpsertRowNodeType):
+class LocalBaserowCreateRowActionNodeType(LocalBaserowUpsertRowActionNodeType):
     display_name = _("Local Baserow create row")
     type = "local_baserow_create_row"
     compat_type = "create_row"
     model_class = LocalBaserowCreateRowActionNode
 
 
-class LocalBaserowCreateRowsNodeType(AutomationNodeActionNodeType):
+class LocalBaserowCreateRowsActionNodeType(AutomationActionNodeType):
     type = "local_baserow_create_rows"
     model_class = LocalBaserowCreateRowsActionNode
     service_type = LocalBaserowCreateRowsServiceType.type
@@ -191,8 +191,8 @@ class LocalBaserowCreateRowsNodeType(AutomationNodeActionNodeType):
         return {"service": service}
 
 
-class LocalBaserowUpdateRowNodeType(
-    UpdateRowRequiresRowIdMixin, LocalBaserowUpsertRowNodeType
+class LocalBaserowUpdateRowActionNodeType(
+    UpdateRowRequiresRowIdMixin, LocalBaserowUpsertRowActionNodeType
 ):
     display_name = _("Local Baserow update row")
     type = "local_baserow_update_row"
@@ -200,7 +200,7 @@ class LocalBaserowUpdateRowNodeType(
     model_class = LocalBaserowUpdateRowActionNode
 
 
-class LocalBaserowUpdateRowsNodeType(AutomationNodeActionNodeType):
+class LocalBaserowUpdateRowsActionNodeType(AutomationActionNodeType):
     type = "local_baserow_update_rows"
     model_class = LocalBaserowUpdateRowsActionNode
     service_type = LocalBaserowUpdateRowsServiceType.type
@@ -210,7 +210,7 @@ class LocalBaserowUpdateRowsNodeType(AutomationNodeActionNodeType):
         return {"service": service}
 
 
-class LocalBaserowDeleteRowNodeType(AutomationNodeActionNodeType):
+class LocalBaserowDeleteRowActionNodeType(AutomationActionNodeType):
     display_name = _("Local Baserow delete row")
     type = "local_baserow_delete_row"
     compat_type = "delete_row"
@@ -218,7 +218,7 @@ class LocalBaserowDeleteRowNodeType(AutomationNodeActionNodeType):
     service_type = LocalBaserowDeleteRowServiceType.type
 
 
-class LocalBaserowGetRowNodeType(AutomationNodeActionNodeType):
+class LocalBaserowGetRowActionNodeType(AutomationActionNodeType):
     display_name = _("Local Baserow get row")
     type = "local_baserow_get_row"
     compat_type = "get_row"
@@ -226,7 +226,7 @@ class LocalBaserowGetRowNodeType(AutomationNodeActionNodeType):
     service_type = LocalBaserowGetRowUserServiceType.type
 
 
-class LocalBaserowListRowsNodeType(AutomationNodeActionNodeType):
+class LocalBaserowListRowsActionNodeType(AutomationActionNodeType):
     display_name = _("Local Baserow list rows")
     type = "local_baserow_list_rows"
     compat_type = "list_rows"
@@ -234,7 +234,7 @@ class LocalBaserowListRowsNodeType(AutomationNodeActionNodeType):
     service_type = LocalBaserowListRowsUserServiceType.type
 
 
-class LocalBaserowAggregateRowsNodeType(AutomationNodeActionNodeType):
+class LocalBaserowAggregateRowsActionNodeType(AutomationActionNodeType):
     display_name = _("Local Baserow aggregate rows")
     type = "local_baserow_aggregate_rows"
     compat_type = "aggregate_rows"
@@ -242,34 +242,34 @@ class LocalBaserowAggregateRowsNodeType(AutomationNodeActionNodeType):
     service_type = LocalBaserowAggregateRowsUserServiceType.type
 
 
-class CoreHttpRequestNodeType(AutomationNodeActionNodeType):
+class CoreHTTPRequestActionNodeType(AutomationActionNodeType):
     display_name = _("HTTP request")
     type = "http_request"
     model_class = CoreHTTPRequestActionNode
     service_type = CoreHTTPRequestServiceType.type
 
 
-class CoreIteratorNodeType(ContainerNodeTypeMixin, AutomationNodeActionNodeType):
+class CoreIteratorActionNodeType(ContainerNodeTypeMixin, AutomationActionNodeType):
     display_name = _("Iterator")
     type = "iterator"
     model_class = CoreIteratorActionNode
     service_type = CoreIteratorServiceType.type
 
 
-class CoreCSVFileReaderNodeType(AutomationNodeActionNodeType):
+class CoreCSVFileReaderActionNodeType(AutomationActionNodeType):
     type = "csv_file_reader"
     model_class = CoreCSVFileReaderActionNode
     service_type = CoreCSVFileReaderServiceType.type
 
 
-class CoreSMTPEmailNodeType(AutomationNodeActionNodeType):
+class CoreSMTPEmailActionNodeType(AutomationActionNodeType):
     display_name = _("Send email")
     type = "smtp_email"
     model_class = CoreSMTPEmailActionNode
     service_type = CoreSMTPEmailServiceType.type
 
 
-class CoreStartWorkflowNodeType(AutomationNodeActionNodeType):
+class CoreStartWorkflowActionNodeType(AutomationActionNodeType):
     type = "start_workflow"
     model_class = CoreStartWorkflowActionNode
     service_type = CoreStartWorkflowServiceType.type
@@ -293,7 +293,7 @@ class CoreStartWorkflowNodeType(AutomationNodeActionNodeType):
         return super().prepare_values(values, user, instance)
 
 
-class CoreResponseNodeType(AutomationNodeActionNodeType):
+class CoreResponseActionNodeType(AutomationActionNodeType):
     display_name = _("Response")
     type = "response"
     model_class = CoreResponseActionNode
@@ -321,14 +321,14 @@ class CoreResponseNodeType(AutomationNodeActionNodeType):
         return super().prepare_values(values, user, instance)
 
 
-class AIAgentActionNodeType(AutomationNodeActionNodeType):
+class AIAgentActionNodeType(AutomationActionNodeType):
     display_name = _("AI agent")
     type = "ai_agent"
     model_class = AIAgentActionNode
     service_type = AIAgentServiceType.type
 
 
-class CoreRouterActionNodeType(AutomationNodeActionNodeType):
+class CoreRouterActionNodeType(AutomationActionNodeType):
     display_name = _("Router")
     type = "router"
     model_class = CoreRouterActionNode
@@ -437,7 +437,7 @@ class CoreRouterActionNodeType(AutomationNodeActionNodeType):
         return super().prepare_values(values, user, instance)
 
 
-class CoreGotoActionNodeType(AutomationNodeActionNodeType):
+class CoreGotoActionNodeType(AutomationActionNodeType):
     type = "goto"
     model_class = CoreGotoActionNode
     service_type = CoreGotoServiceType.type
@@ -695,7 +695,7 @@ class CoreGotoActionNodeType(AutomationNodeActionNodeType):
             )
 
 
-class AutomationNodeTriggerType(AutomationNodeType):
+class AutomationTriggerNodeType(AutomationNodeType):
     is_workflow_trigger = True
 
     def after_register(self):
@@ -790,7 +790,7 @@ class AutomationNodeTriggerType(AutomationNodeType):
         return histories
 
 
-class LocalBaserowRowsCreatedNodeTriggerType(AutomationNodeTriggerType):
+class LocalBaserowRowsCreatedTriggerNodeType(AutomationTriggerNodeType):
     display_name = _("Local Baserow rows created")
     type = "local_baserow_rows_created"
     compat_type = "rows_created"
@@ -798,7 +798,7 @@ class LocalBaserowRowsCreatedNodeTriggerType(AutomationNodeTriggerType):
     service_type = LocalBaserowRowsCreatedServiceType.type
 
 
-class LocalBaserowRowsUpdatedNodeTriggerType(AutomationNodeTriggerType):
+class LocalBaserowRowsUpdatedTriggerNodeType(AutomationTriggerNodeType):
     display_name = _("Local Baserow rows updated")
     type = "local_baserow_rows_updated"
     compat_type = "rows_updated"
@@ -806,7 +806,7 @@ class LocalBaserowRowsUpdatedNodeTriggerType(AutomationNodeTriggerType):
     service_type = LocalBaserowRowsUpdatedServiceType.type
 
 
-class LocalBaserowRowsDeletedNodeTriggerType(AutomationNodeTriggerType):
+class LocalBaserowRowsDeletedTriggerNodeType(AutomationTriggerNodeType):
     display_name = _("Local Baserow rows deleted")
     type = "local_baserow_rows_deleted"
     compat_type = "rows_deleted"
@@ -814,14 +814,14 @@ class LocalBaserowRowsDeletedNodeTriggerType(AutomationNodeTriggerType):
     service_type = LocalBaserowRowsDeletedServiceType.type
 
 
-class LocalBaserowFieldsUpdatedNodeTriggerType(AutomationNodeTriggerType):
+class LocalBaserowFieldsUpdatedTriggerNodeType(AutomationTriggerNodeType):
     type = "local_baserow_fields_updated"
     model_class = LocalBaserowFieldsUpdatedTriggerNode
     service_type = LocalBaserowFieldsUpdatedServiceType.type
 
 
 class CorePeriodicTriggerNodeType(
-    AutomationNodeTriggerType,
+    AutomationTriggerNodeType,
 ):
     display_name = _("Periodic trigger")
     type = "periodic"
@@ -829,14 +829,14 @@ class CorePeriodicTriggerNodeType(
     service_type = CorePeriodicServiceType.type
 
 
-class CoreHTTPTriggerNodeType(AutomationNodeTriggerType):
+class CoreHTTPTriggerNodeType(AutomationTriggerNodeType):
     display_name = _("HTTP trigger")
     type = "http_trigger"
     model_class = CoreHTTPTriggerNode
     service_type = CoreHTTPTriggerServiceType.type
 
 
-class CoreInboundEmailTriggerNodeType(AutomationNodeTriggerType):
+class CoreInboundEmailTriggerNodeType(AutomationTriggerNodeType):
     display_name = _("Email trigger")
     type = "email_trigger"
     model_class = CoreInboundEmailTriggerNode
@@ -849,13 +849,13 @@ class CoreInboundEmailTriggerNodeType(AutomationNodeTriggerType):
         return not is_inbound_email_configured()
 
 
-class CoreManualTriggerNodeType(AutomationNodeTriggerType):
+class CoreManualTriggerNodeType(AutomationTriggerNodeType):
     type = "manual"
     model_class = CoreManualTriggerNode
     service_type = CoreManualTriggerServiceType.type
 
 
-class SlackWriteMessageActionNodeType(AutomationNodeActionNodeType):
+class SlackWriteMessageActionNodeType(AutomationActionNodeType):
     display_name = _("Slack write message")
     type = "slack_write_message"
     model_class = SlackWriteMessageActionNode

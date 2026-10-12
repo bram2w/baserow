@@ -21,7 +21,7 @@ from baserow.contrib.automation.models import Automation, AutomationWorkflow
 from baserow.contrib.automation.nodes.node_types import (
     CoreManualTriggerNodeType,
     CorePeriodicTriggerNodeType,
-    LocalBaserowRowsCreatedNodeTriggerType,
+    LocalBaserowRowsCreatedTriggerNodeType,
 )
 from baserow.contrib.automation.workflows.actions import (
     UpdateAutomationWorkflowActionType,
@@ -1332,7 +1332,7 @@ def test_toggle_test_mode_on(
     mock_async_start_workflow, mock_automation_workflow_updated, data_fixture
 ):
     workflow = data_fixture.create_automation_workflow(
-        trigger_type=LocalBaserowRowsCreatedNodeTriggerType.type
+        trigger_type=LocalBaserowRowsCreatedTriggerNodeType.type
     )
 
     frozen_time = "2025-06-04 11:00"
@@ -1383,7 +1383,7 @@ def test_toggle_test_mode_off(
 ):
     workflow = data_fixture.create_automation_workflow(
         allow_test_run_until=datetime.datetime.now(),
-        trigger_type=LocalBaserowRowsCreatedNodeTriggerType.type,
+        trigger_type=LocalBaserowRowsCreatedTriggerNodeType.type,
     )
 
     AutomationWorkflowHandler().toggle_test_run(workflow, None)
@@ -1404,7 +1404,7 @@ def test_toggle_simulate_mode_on(
     mock_async_start_workflow, mock_automation_workflow_updated, data_fixture
 ):
     workflow = data_fixture.create_automation_workflow(
-        trigger_type=LocalBaserowRowsCreatedNodeTriggerType.type
+        trigger_type=LocalBaserowRowsCreatedTriggerNodeType.type
     )
 
     AutomationWorkflowHandler().toggle_test_run(
@@ -1427,7 +1427,7 @@ def test_toggle_simulate_mode_off(
     mock_async_start_workflow, mock_automation_workflow_updated, data_fixture
 ):
     workflow = data_fixture.create_automation_workflow(
-        trigger_type=LocalBaserowRowsCreatedNodeTriggerType.type
+        trigger_type=LocalBaserowRowsCreatedTriggerNodeType.type
     )
     trigger = workflow.get_trigger()
 
@@ -2235,7 +2235,7 @@ def test_a_test_run_waiting_for_its_event_records_who_started_it(data_fixture):
     table = data_fixture.create_database_table(user=user)
     workflow = data_fixture.create_automation_workflow(
         user,
-        trigger_type=LocalBaserowRowsCreatedNodeTriggerType.type,
+        trigger_type=LocalBaserowRowsCreatedTriggerNodeType.type,
         trigger_service_kwargs={"table": table},
     )
 
@@ -2262,7 +2262,7 @@ def test_a_simulation_waiting_for_its_event_records_who_started_it(data_fixture)
     table = data_fixture.create_database_table(user=user)
     workflow = data_fixture.create_automation_workflow(
         user,
-        trigger_type=LocalBaserowRowsCreatedNodeTriggerType.type,
+        trigger_type=LocalBaserowRowsCreatedTriggerNodeType.type,
         trigger_service_kwargs={"table": table},
     )
 
@@ -2287,7 +2287,7 @@ def test_a_simulation_waiting_for_its_event_records_who_started_it(data_fixture)
 def test_cancelling_a_waiting_test_run_forgets_who_started_it(data_fixture):
     user = data_fixture.create_user()
     workflow = data_fixture.create_automation_workflow(
-        user, trigger_type=LocalBaserowRowsCreatedNodeTriggerType.type
+        user, trigger_type=LocalBaserowRowsCreatedTriggerNodeType.type
     )
     handler = AutomationWorkflowHandler()
 
@@ -2306,7 +2306,7 @@ def test_a_waiting_test_run_whose_starter_was_deleted_records_nobody(data_fixtur
     user = data_fixture.create_user()
     starter = data_fixture.create_user()
     workflow = data_fixture.create_automation_workflow(
-        user, trigger_type=LocalBaserowRowsCreatedNodeTriggerType.type
+        user, trigger_type=LocalBaserowRowsCreatedTriggerNodeType.type
     )
 
     AutomationWorkflowHandler().toggle_test_run(
@@ -2330,7 +2330,7 @@ def test_opening_the_test_run_window_through_an_update_records_who_opened_it(
     workflow = data_fixture.create_automation_workflow(
         first,
         automation=automation,
-        trigger_type=LocalBaserowRowsCreatedNodeTriggerType.type,
+        trigger_type=LocalBaserowRowsCreatedTriggerNodeType.type,
         trigger_service_kwargs={"table": table},
     )
 
@@ -2356,7 +2356,7 @@ def test_opening_the_test_run_window_through_an_update_records_who_opened_it(
 def test_resetting_temporary_states_forgets_the_starter_type(data_fixture):
     user = data_fixture.create_user()
     workflow = data_fixture.create_automation_workflow(
-        user, trigger_type=LocalBaserowRowsCreatedNodeTriggerType.type
+        user, trigger_type=LocalBaserowRowsCreatedTriggerNodeType.type
     )
     workflow.test_run_triggered_by_id = 1
     workflow.test_run_triggered_by_type = "core.Token"
@@ -2375,7 +2375,7 @@ def test_scheduling_a_test_run_without_a_starter_forgets_an_earlier_one(
 ):
     user = data_fixture.create_user()
     workflow = data_fixture.create_automation_workflow(
-        user, trigger_type=LocalBaserowRowsCreatedNodeTriggerType.type
+        user, trigger_type=LocalBaserowRowsCreatedTriggerNodeType.type
     )
     handler = AutomationWorkflowHandler()
     workflow.test_run_triggered_by_id = user.id
@@ -2398,7 +2398,7 @@ def test_undoing_an_unrelated_update_keeps_the_test_run_starter(data_fixture):
     workflow = data_fixture.create_automation_workflow(
         first,
         automation=automation,
-        trigger_type=LocalBaserowRowsCreatedNodeTriggerType.type,
+        trigger_type=LocalBaserowRowsCreatedTriggerNodeType.type,
     )
     AutomationWorkflowHandler().toggle_test_run(
         workflow, simulate_until_node=None, triggered_by=first

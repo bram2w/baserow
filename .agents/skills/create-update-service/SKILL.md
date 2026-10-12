@@ -27,7 +27,7 @@ Decide the intended product surface before editing:
 | Builder data source | `DataSource.service` in `backend/src/baserow/contrib/builder/data_sources/**` | Service type registered in `web-frontend/modules/integrations/plugin.js` and used by builder data source UI | `DispatchTypes.DATA` |
 | Dashboard data source | `DashboardDataSource.service` in `backend/src/baserow/contrib/dashboard/**` | Service type registered in integrations plugin and dashboard form/UI | `DispatchTypes.DATA` |
 | Builder workflow action | `BuilderWorkflowServiceActionType` subclass in `backend/src/baserow/contrib/builder/workflow_actions/workflow_action_types.py` plus a workflow action model | `WorkflowActionType` subclass in `web-frontend/modules/builder/workflowActionTypes.js` | `DispatchTypes.ACTION` |
-| Automation action node | `AutomationNodeActionNodeType` subclass in `backend/src/baserow/contrib/automation/nodes/node_types.py` plus an automation node model | `ActionNodeTypeMixin` node type in `web-frontend/modules/automation/nodeTypes.js` | `DispatchTypes.ACTION` |
+| Automation action node | `AutomationActionNodeType` subclass in `backend/src/baserow/contrib/automation/nodes/node_types.py` plus an automation node model | `ActionNodeTypeMixin` node type in `web-frontend/modules/automation/nodeTypes.js` | `DispatchTypes.ACTION` |
 | Automation trigger node | trigger node type in `backend/src/baserow/contrib/automation/nodes/node_types.py`, often using `TriggerServiceTypeMixin` | `TriggerNodeTypeMixin` node type in `web-frontend/modules/automation/nodeTypes.js` | trigger-capable service type |
 
 For data sources, a service with `DispatchTypes.DATA` is normally enough because the product object points directly at the service. For workflow actions and automation nodes, also add wrapper types/models so the service appears in the action/node registries.
@@ -138,7 +138,7 @@ regression test that imports with an old-to-new `id_mapping`.
 
 1. Ensure the backend service type has `DispatchTypes.ACTION`.
 2. Add or reuse an automation node model in `backend/src/baserow/contrib/automation/nodes/models.py`.
-3. Add an `AutomationNodeActionNodeType` subclass with `type`, `model_class`, `service_type`, and `get_pytest_params`.
+3. Add an `AutomationActionNodeType` subclass with `type`, `model_class`, `service_type`, and `get_pytest_params`.
 4. Register it in `backend/src/baserow/contrib/automation/apps.py`.
 5. Add a frontend node type using `ActionNodeTypeMixin` in `web-frontend/modules/automation/nodeTypes.js`.
 6. Register it in `web-frontend/modules/automation/plugin.js`.
@@ -252,7 +252,7 @@ Use `rg -n "<pattern>" <paths>` as a faster equivalent when `rg` is available.
 - `grep -RInE "TriggerServiceTypeMixin|ListServiceTypeMixin" backend/src/baserow/contrib/integrations`
 - `grep -RInE "register\\(" backend/src/baserow/contrib/integrations/apps.py web-frontend/modules/integrations/plugin.js`
 - `grep -RInE "BuilderWorkflowServiceActionType|builder_workflow_action_type_registry" backend/src/baserow/contrib/builder`
-- `grep -RInE "AutomationNodeActionNodeType|TriggerNodeType|automation_node_type_registry" backend/src/baserow/contrib/automation`
+- `grep -RInE "AutomationActionNodeType|TriggerNodeType|automation_node_type_registry" backend/src/baserow/contrib/automation`
 - `grep -RInE "WorkflowActionType|register\\('workflowAction'" web-frontend/modules/builder`
 - `grep -RInE "ActionNodeTypeMixin|TriggerNodeTypeMixin|register\\('node'" web-frontend/modules/automation`
 - `grep -RInE "getType\\(\\)" web-frontend/modules/integrations`

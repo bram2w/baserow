@@ -16,7 +16,7 @@ from baserow.contrib.automation.nodes.models import AutomationNode
 from baserow.contrib.automation.nodes.node_types import (
     CoreInboundEmailTriggerNodeType,
     CorePeriodicTriggerNodeType,
-    LocalBaserowRowsCreatedNodeTriggerType,
+    LocalBaserowRowsCreatedTriggerNodeType,
 )
 from baserow.test_utils.helpers import AnyDict, AnyInt, AnyStr
 from tests.baserow.contrib.automation.api.utils import get_api_kwargs
@@ -970,7 +970,7 @@ def test_simulate_dispatch_trigger_node(
     )
     workflow = data_fixture.create_automation_workflow(
         user=user,
-        trigger_type=LocalBaserowRowsCreatedNodeTriggerType.type,
+        trigger_type=LocalBaserowRowsCreatedTriggerNodeType.type,
         trigger_service_kwargs={"table": table},
     )
 
@@ -1074,7 +1074,7 @@ def test_simulate_dispatch_trigger_node_with_sample_data(
 
     workflow = data_fixture.create_automation_workflow(
         user=user,
-        trigger_type=LocalBaserowRowsCreatedNodeTriggerType.type,
+        trigger_type=LocalBaserowRowsCreatedTriggerNodeType.type,
         trigger_service_kwargs={
             "table": table,
             "integration": data_fixture.create_local_baserow_integration(user=user),
@@ -1120,7 +1120,7 @@ def test_simulate_dispatch_action_node(
     workflow = data_fixture.create_automation_workflow(
         user=user,
         trigger_service_kwargs={"table": table_1},
-        trigger_type=LocalBaserowRowsCreatedNodeTriggerType.type,
+        trigger_type=LocalBaserowRowsCreatedTriggerNodeType.type,
     )
 
     # Create an action node with service
@@ -1176,7 +1176,7 @@ def test_simulate_dispatch_action_node_with_sample_data(
     workflow = data_fixture.create_automation_workflow(
         user=user,
         trigger_service_kwargs={"table": table_1},
-        trigger_type=LocalBaserowRowsCreatedNodeTriggerType.type,
+        trigger_type=LocalBaserowRowsCreatedTriggerNodeType.type,
     )
 
     # Create an action node with service

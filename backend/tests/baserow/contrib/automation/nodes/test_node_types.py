@@ -56,7 +56,7 @@ def test_automation_node_type_is_replaceable_with():
     assert not action_node_type.is_replaceable_with(update_trigger_node_type)
 
 
-def test_local_baserow_fields_updated_node_trigger_type_is_registered():
+def test_local_baserow_fields_updated_trigger_node_type_is_registered():
     node_type = automation_node_type_registry.get("local_baserow_fields_updated")
 
     assert node_type.is_workflow_trigger is True
@@ -109,7 +109,7 @@ def test_core_response_node_preserves_provided_status_code(data_fixture):
 @patch(
     "baserow.contrib.automation.workflows.service.AutomationWorkflowHandler.async_start_workflow"
 )
-def test_automation_service_node_trigger_type_on_event(
+def test_automation_service_trigger_node_type_on_event(
     mock_async_start_workflow, data_fixture
 ):
     user = data_fixture.create_user()
@@ -370,7 +370,7 @@ def test_automation_node_type_delete_row_dispatch(mock_dispatch, data_fixture):
 )
 def test_on_event_excludes_disabled_workflows(mock_async_start_workflow, data_fixture):
     """
-    Ensure that the AutomationNodeTriggerType::on_event() excludes any disabled
+    Ensure that the AutomationTriggerNodeType::on_event() excludes any disabled
     workflows.
     """
 
