@@ -25,18 +25,18 @@ import {
   CoreHTTPTriggerNodeType,
   CoreInboundEmailTriggerNodeType,
   LocalBaserowAggregateRowsActionNodeType,
-  CoreCSVFileReaderNodeType,
-  CoreHttpRequestNodeType,
-  CoreIteratorNodeType,
-  CoreSMTPEmailNodeType,
-  CoreRouterNodeType,
-  CoreGotoNodeType,
+  CoreCSVFileReaderActionNodeType,
+  CoreHTTPRequestActionNodeType,
+  CoreIteratorActionNodeType,
+  CoreSMTPEmailActionNodeType,
+  CoreRouterActionNodeType,
+  CoreGotoActionNodeType,
   CorePeriodicTriggerNodeType,
-  CoreResponseNodeType,
-  CoreStartWorkflowNodeType,
+  CoreResponseActionNodeType,
+  CoreStartWorkflowActionNodeType,
   CoreManualTriggerNodeType,
   AIAgentActionNodeType,
-  SlackWriteMessageNodeType,
+  SlackWriteMessageActionNodeType,
 } from '@baserow/modules/automation/nodeTypes'
 import {
   ForLoopNodeRecipeType,
@@ -137,15 +137,15 @@ export default defineNuxtPlugin({
       'node',
       new LocalBaserowUpdateRowsActionNodeType(context)
     )
-    $registry.register('node', new CoreHttpRequestNodeType(context))
-    $registry.register('node', new CoreSMTPEmailNodeType(context))
-    $registry.register('node', new CoreRouterNodeType(context))
-    $registry.register('node', new CoreGotoNodeType(context))
-    $registry.register('node', new CoreResponseNodeType(context))
-    $registry.register('node', new CoreIteratorNodeType(context))
-    $registry.register('node', new CoreCSVFileReaderNodeType(context))
-    $registry.register('node', new CoreStartWorkflowNodeType(context))
-    $registry.register('node', new SlackWriteMessageNodeType(context))
+    $registry.register('node', new CoreHTTPRequestActionNodeType(context))
+    $registry.register('node', new CoreSMTPEmailActionNodeType(context))
+    $registry.register('node', new CoreRouterActionNodeType(context))
+    $registry.register('node', new CoreGotoActionNodeType(context))
+    $registry.register('node', new CoreResponseActionNodeType(context))
+    $registry.register('node', new CoreIteratorActionNodeType(context))
+    $registry.register('node', new CoreCSVFileReaderActionNodeType(context))
+    $registry.register('node', new CoreStartWorkflowActionNodeType(context))
+    $registry.register('node', new SlackWriteMessageActionNodeType(context))
     $registry.register('node', new LocalBaserowDeleteRowActionNodeType(context))
     $registry.register('node', new LocalBaserowGetRowActionNodeType(context))
     $registry.register('node', new LocalBaserowListRowsActionNodeType(context))

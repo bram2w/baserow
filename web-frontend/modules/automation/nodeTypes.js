@@ -2,8 +2,8 @@ import { Registerable } from '@baserow/modules/core/registry'
 import {
   ActionNodeTypeMixin,
   TriggerNodeTypeMixin,
-  UtilityNodeMixin,
-  containerNodeTypeMixin,
+  UtilityNodeTypeMixin,
+  ContainerNodeTypeMixin,
 } from '@baserow/modules/automation/nodeTypeMixins'
 import {
   LocalBaserowCreateRowWorkflowServiceType,
@@ -464,7 +464,7 @@ export class LocalBaserowNodeType extends NodeType {
   }
 }
 
-export class LocalBaserowSignalTriggerType extends LocalBaserowNodeType {
+export class LocalBaserowSignalTriggerNodeType extends LocalBaserowNodeType {
   /**
    * All Local Baserow signal triggers return an array of rows,
    * so we override the `dataType` method to return 'array'.
@@ -476,7 +476,7 @@ export class LocalBaserowSignalTriggerType extends LocalBaserowNodeType {
 }
 
 export class LocalBaserowRowsCreatedTriggerNodeType extends TriggerNodeTypeMixin(
-  LocalBaserowSignalTriggerType
+  LocalBaserowSignalTriggerNodeType
 ) {
   static getType() {
     return 'local_baserow_rows_created'
@@ -499,7 +499,7 @@ export class LocalBaserowRowsCreatedTriggerNodeType extends TriggerNodeTypeMixin
 }
 
 export class LocalBaserowRowsUpdatedTriggerNodeType extends TriggerNodeTypeMixin(
-  LocalBaserowSignalTriggerType
+  LocalBaserowSignalTriggerNodeType
 ) {
   static getType() {
     return 'local_baserow_rows_updated'
@@ -522,7 +522,7 @@ export class LocalBaserowRowsUpdatedTriggerNodeType extends TriggerNodeTypeMixin
 }
 
 export class LocalBaserowFieldsUpdatedTriggerNodeType extends TriggerNodeTypeMixin(
-  LocalBaserowSignalTriggerType
+  LocalBaserowSignalTriggerNodeType
 ) {
   static getType() {
     return 'local_baserow_fields_updated'
@@ -586,7 +586,7 @@ export class LocalBaserowFieldsUpdatedTriggerNodeType extends TriggerNodeTypeMix
 }
 
 export class LocalBaserowRowsDeletedTriggerNodeType extends TriggerNodeTypeMixin(
-  LocalBaserowSignalTriggerType
+  LocalBaserowSignalTriggerNodeType
 ) {
   static getType() {
     return 'local_baserow_rows_deleted'
@@ -938,7 +938,9 @@ export class LocalBaserowAggregateRowsActionNodeType extends ActionNodeTypeMixin
   }
 }
 
-export class CoreHttpRequestNodeType extends ActionNodeTypeMixin(NodeType) {
+export class CoreHTTPRequestActionNodeType extends ActionNodeTypeMixin(
+  NodeType
+) {
   static getType() {
     return 'http_request'
   }
@@ -959,7 +961,7 @@ export class CoreHttpRequestNodeType extends ActionNodeTypeMixin(NodeType) {
   }
 }
 
-export class CoreResponseNodeType extends ActionNodeTypeMixin(NodeType) {
+export class CoreResponseActionNodeType extends ActionNodeTypeMixin(NodeType) {
   static getType() {
     return 'response'
   }
@@ -977,8 +979,8 @@ export class CoreResponseNodeType extends ActionNodeTypeMixin(NodeType) {
   }
 }
 
-export class CoreIteratorNodeType extends containerNodeTypeMixin(
-  ActionNodeTypeMixin(UtilityNodeMixin(NodeType))
+export class CoreIteratorActionNodeType extends ContainerNodeTypeMixin(
+  ActionNodeTypeMixin(UtilityNodeTypeMixin(NodeType))
 ) {
   static getType() {
     return 'iterator'
@@ -1056,7 +1058,9 @@ export class CoreIteratorNodeType extends containerNodeTypeMixin(
   }
 }
 
-export class CoreCSVFileReaderNodeType extends ActionNodeTypeMixin(NodeType) {
+export class CoreCSVFileReaderActionNodeType extends ActionNodeTypeMixin(
+  NodeType
+) {
   static getType() {
     return 'csv_file_reader'
   }
@@ -1081,7 +1085,9 @@ export class CoreCSVFileReaderNodeType extends ActionNodeTypeMixin(NodeType) {
   }
 }
 
-export class CoreStartWorkflowNodeType extends ActionNodeTypeMixin(NodeType) {
+export class CoreStartWorkflowActionNodeType extends ActionNodeTypeMixin(
+  NodeType
+) {
   static getType() {
     return 'start_workflow'
   }
@@ -1124,7 +1130,7 @@ export class CoreStartWorkflowNodeType extends ActionNodeTypeMixin(NodeType) {
   }
 }
 
-export class CoreSMTPEmailNodeType extends ActionNodeTypeMixin(NodeType) {
+export class CoreSMTPEmailActionNodeType extends ActionNodeTypeMixin(NodeType) {
   static getType() {
     return 'smtp_email'
   }
@@ -1142,8 +1148,8 @@ export class CoreSMTPEmailNodeType extends ActionNodeTypeMixin(NodeType) {
   }
 }
 
-export class CoreRouterNodeType extends ActionNodeTypeMixin(
-  UtilityNodeMixin(NodeType)
+export class CoreRouterActionNodeType extends ActionNodeTypeMixin(
+  UtilityNodeTypeMixin(NodeType)
 ) {
   static getType() {
     return 'router'
@@ -1293,8 +1299,8 @@ export class CoreRouterNodeType extends ActionNodeTypeMixin(
   }
 }
 
-export class CoreGotoNodeType extends ActionNodeTypeMixin(
-  UtilityNodeMixin(NodeType)
+export class CoreGotoActionNodeType extends ActionNodeTypeMixin(
+  UtilityNodeTypeMixin(NodeType)
 ) {
   static getType() {
     return 'goto'
@@ -1519,7 +1525,9 @@ export class AIAgentActionNodeType extends ActionNodeTypeMixin(NodeType) {
   }
 }
 
-export class SlackWriteMessageNodeType extends ActionNodeTypeMixin(NodeType) {
+export class SlackWriteMessageActionNodeType extends ActionNodeTypeMixin(
+  NodeType
+) {
   static getType() {
     return 'slack_write_message'
   }

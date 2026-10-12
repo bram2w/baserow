@@ -111,8 +111,8 @@ import {
   CoreXLSFileReaderWorkflowActionType,
 } from '@baserow_enterprise/builder/workflowActionTypes'
 import {
-  CoreCodeNodeType,
-  CoreXLSFileReaderNodeType,
+  CoreCodeActionNodeType,
+  CoreXLSFileReaderActionNodeType,
 } from '@baserow_enterprise/automation/nodeTypes'
 import { KumaAIProviderModelFeatureType } from '@baserow_enterprise/aiProviderModelFeatureTypes'
 
@@ -198,14 +198,14 @@ export default defineNuxtPlugin({
         'workflowAction',
         new CoreCodeWorkflowActionType(context)
       )
-      $registry.register('node', new CoreCodeNodeType(context))
+      $registry.register('node', new CoreCodeActionNodeType(context))
     }
     $registry.register('service', new CoreXLSFileReaderServiceType(context))
     $registry.register(
       'workflowAction',
       new CoreXLSFileReaderWorkflowActionType(context)
     )
-    $registry.register('node', new CoreXLSFileReaderNodeType(context))
+    $registry.register('node', new CoreXLSFileReaderActionNodeType(context))
 
     $registry.register(
       'appAuthProvider',
