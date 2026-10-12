@@ -7,11 +7,11 @@ import {
   LocalBaserowGetRowServiceType,
   LocalBaserowListRowsServiceType,
   LocalBaserowAggregateRowsServiceType,
-  LocalBaserowCreateRowsWorkflowServiceType,
-  LocalBaserowCreateRowWorkflowServiceType,
-  LocalBaserowDeleteRowWorkflowServiceType,
-  LocalBaserowUpdateRowWorkflowServiceType,
-  LocalBaserowUpdateRowsWorkflowServiceType,
+  LocalBaserowCreateRowsServiceType,
+  LocalBaserowCreateRowServiceType,
+  LocalBaserowDeleteRowServiceType,
+  LocalBaserowUpdateRowServiceType,
+  LocalBaserowUpdateRowsServiceType,
   LocalBaserowRowsCreatedTriggerServiceType,
   LocalBaserowRowsUpdatedTriggerServiceType,
   LocalBaserowRowsDeletedTriggerServiceType,
@@ -21,7 +21,7 @@ import {
   CoreCSVFileReaderServiceType,
   CoreInboundEmailTriggerServiceType,
   CoreHTTPRequestServiceType,
-  PeriodicTriggerServiceType,
+  CorePeriodicTriggerServiceType,
   CoreRouterServiceType,
   CoreGotoServiceType,
   CoreSMTPEmailServiceType,
@@ -59,26 +59,17 @@ export default defineNuxtPlugin({
       'service',
       new LocalBaserowAggregateRowsServiceType(context)
     )
+    $registry.register('service', new LocalBaserowCreateRowServiceType(context))
     $registry.register(
       'service',
-      new LocalBaserowCreateRowWorkflowServiceType(context)
+      new LocalBaserowCreateRowsServiceType(context)
     )
+    $registry.register('service', new LocalBaserowUpdateRowServiceType(context))
     $registry.register(
       'service',
-      new LocalBaserowCreateRowsWorkflowServiceType(context)
+      new LocalBaserowUpdateRowsServiceType(context)
     )
-    $registry.register(
-      'service',
-      new LocalBaserowUpdateRowWorkflowServiceType(context)
-    )
-    $registry.register(
-      'service',
-      new LocalBaserowUpdateRowsWorkflowServiceType(context)
-    )
-    $registry.register(
-      'service',
-      new LocalBaserowDeleteRowWorkflowServiceType(context)
-    )
+    $registry.register('service', new LocalBaserowDeleteRowServiceType(context))
     $registry.register('service', new CoreHTTPRequestServiceType(context))
     $registry.register('service', new CoreSMTPEmailServiceType(context))
     $registry.register('service', new CoreRouterServiceType(context))
@@ -94,7 +85,7 @@ export default defineNuxtPlugin({
     $registry.register('service', new CoreStartWorkflowServiceType(context))
     $registry.register('service', new CoreResponseServiceType(context))
     $registry.register('service', new AIAgentServiceType(context))
-    $registry.register('service', new PeriodicTriggerServiceType(context))
+    $registry.register('service', new CorePeriodicTriggerServiceType(context))
     $registry.register('service', new SlackWriteMessageServiceType(context))
     $registry.register(
       'service',

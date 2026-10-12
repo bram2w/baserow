@@ -6,11 +6,11 @@ import {
   ContainerNodeTypeMixin,
 } from '@baserow/modules/automation/nodeTypeMixins'
 import {
-  LocalBaserowCreateRowWorkflowServiceType,
-  LocalBaserowCreateRowsWorkflowServiceType,
-  LocalBaserowUpdateRowWorkflowServiceType,
-  LocalBaserowUpdateRowsWorkflowServiceType,
-  LocalBaserowDeleteRowWorkflowServiceType,
+  LocalBaserowCreateRowServiceType,
+  LocalBaserowCreateRowsServiceType,
+  LocalBaserowUpdateRowServiceType,
+  LocalBaserowUpdateRowsServiceType,
+  LocalBaserowDeleteRowServiceType,
   LocalBaserowRowsCreatedTriggerServiceType,
   LocalBaserowRowsDeletedTriggerServiceType,
   LocalBaserowRowsUpdatedTriggerServiceType,
@@ -768,7 +768,7 @@ export class LocalBaserowCreateRowActionNodeType extends ActionNodeTypeMixin(
   get serviceType() {
     return this.app.$registry.get(
       'service',
-      LocalBaserowCreateRowWorkflowServiceType.getType()
+      LocalBaserowCreateRowServiceType.getType()
     )
   }
 }
@@ -791,7 +791,7 @@ export class LocalBaserowCreateRowsActionNodeType extends ActionNodeTypeMixin(
   get serviceType() {
     return this.app.$registry.get(
       'service',
-      LocalBaserowCreateRowsWorkflowServiceType.getType()
+      LocalBaserowCreateRowsServiceType.getType()
     )
   }
 }
@@ -814,7 +814,7 @@ export class LocalBaserowUpdateRowActionNodeType extends ActionNodeTypeMixin(
   get serviceType() {
     return this.app.$registry.get(
       'service',
-      LocalBaserowUpdateRowWorkflowServiceType.getType()
+      LocalBaserowUpdateRowServiceType.getType()
     )
   }
 }
@@ -837,7 +837,7 @@ export class LocalBaserowUpdateRowsActionNodeType extends ActionNodeTypeMixin(
   get serviceType() {
     return this.app.$registry.get(
       'service',
-      LocalBaserowUpdateRowsWorkflowServiceType.getType()
+      LocalBaserowUpdateRowsServiceType.getType()
     )
   }
 }
@@ -860,7 +860,7 @@ export class LocalBaserowDeleteRowActionNodeType extends ActionNodeTypeMixin(
   get serviceType() {
     return this.app.$registry.get(
       'service',
-      LocalBaserowDeleteRowWorkflowServiceType.getType()
+      LocalBaserowDeleteRowServiceType.getType()
     )
   }
 }

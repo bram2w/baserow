@@ -2,8 +2,8 @@ import {
   LocalBaserowListRowsServiceType,
   LocalBaserowGetRowServiceType,
   LocalBaserowTableServiceType,
-  LocalBaserowCreateRowWorkflowServiceType,
-  LocalBaserowDeleteRowWorkflowServiceType,
+  LocalBaserowCreateRowServiceType,
+  LocalBaserowDeleteRowServiceType,
   LocalBaserowFieldsUpdatedTriggerServiceType,
 } from '@baserow/modules/integrations/localBaserow/serviceTypes'
 import { TestApp } from '@baserow/test/helpers/testApp'
@@ -224,9 +224,9 @@ describe('Local baserow service types', () => {
     expect(result.length).toBe(3)
   })
 
-  test('LocalBaserowCreateRowWorkflowServiceType supportedTables returns non data-synced tables or two-way data-synced tables.', () => {
+  test('LocalBaserowCreateRowServiceType supportedTables returns non data-synced tables or two-way data-synced tables.', () => {
     const fakeApp = {}
-    const serviceType = new LocalBaserowCreateRowWorkflowServiceType(fakeApp)
+    const serviceType = new LocalBaserowCreateRowServiceType(fakeApp)
 
     const tables = [
       {
@@ -267,9 +267,9 @@ describe('Local baserow service types', () => {
     expect(result.length).toBe(2)
   })
 
-  test('LocalBaserowDeleteRowWorkflowServiceType supportedTables returns non data-synced tables or two-way data-synced tables', () => {
+  test('LocalBaserowDeleteRowServiceType supportedTables returns non data-synced tables or two-way data-synced tables', () => {
     const fakeApp = {}
-    const serviceType = new LocalBaserowDeleteRowWorkflowServiceType(fakeApp)
+    const serviceType = new LocalBaserowDeleteRowServiceType(fakeApp)
 
     const tables = [
       {

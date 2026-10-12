@@ -625,7 +625,7 @@ export class CoreResponseServiceType extends WorkflowActionServiceTypeMixin(
   }
 }
 
-export class PeriodicTriggerServiceType extends TriggerServiceTypeMixin(
+export class CorePeriodicTriggerServiceType extends TriggerServiceTypeMixin(
   ServiceType
 ) {
   static getType() {
