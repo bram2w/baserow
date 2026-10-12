@@ -388,3 +388,221 @@ exports[`GridViewRows component with decoration > View with decoration configure
   </div>
 </teleport-stub>
 `;
+
+exports[`GridViewRows component with decoration > View with decoration configured 2`] = `
+<teleport-stub
+  to="body"
+>
+  <div
+    class="context"
+  >
+    
+    <div
+      class="decorator-context"
+    >
+      <div
+        class="decorator-context__list"
+      >
+        
+        <div
+          class="decorator-context__decorator"
+        >
+          <div
+            class="decorator-context__decorator-header"
+          >
+            <div
+              class="decorator-context__decorator-header-info"
+            >
+              <div
+                class="decorator-item"
+              >
+                <img
+                  class="decorator-item__image"
+                  src="fake/url.png"
+                />
+                <div
+                  class="decorator-item__content"
+                >
+                  <div
+                    class="decorator-item__title"
+                  >
+                    Fake decorator 
+                    <!--v-if-->
+                  </div>
+                  <div
+                    class="decorator-item__description"
+                  >
+                    Fake decorator description
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              class="decorator-context__decorator-header-select"
+            >
+              <div
+                class="dropdown"
+              >
+                <a
+                  class="dropdown__selected"
+                >
+                  <i
+                    class="dropdown__selected-icon iconoir-filter"
+                  />
+                  <span
+                    class="dropdown__selected-text"
+                  >
+                    Fake value provider
+                  </span>
+                  <i
+                    class="dropdown__toggle-icon iconoir-nav-arrow-down"
+                  />
+                </a>
+                <teleport-stub
+                  to="body"
+                >
+                  <div
+                    class="picker__context context visibility-hidden context--overflow-scroll"
+                  >
+                    <!--v-if-->
+                  </div>
+                </teleport-stub>
+              </div>
+            </div>
+            <div
+              class="decorator-context__decorator-header-trash"
+            >
+              <button
+                class="button-icon"
+              >
+                <i
+                  class="button-icon__icon iconoir-bin"
+                />
+              </button>
+            </div>
+          </div>
+          <div>
+            fake_value_provider_form
+          </div>
+          <!--v-if-->
+        </div>
+        <div
+          class="decorator-context__decorator"
+        >
+          <div
+            class="decorator-context__decorator-header"
+          >
+            <div
+              class="decorator-context__decorator-header-info"
+            >
+              <div
+                class="decorator-item"
+              >
+                <img
+                  class="decorator-item__image"
+                  src="fake/url.png"
+                />
+                <div
+                  class="decorator-item__content"
+                >
+                  <div
+                    class="decorator-item__title"
+                  >
+                    Fake decorator 
+                    <!--v-if-->
+                  </div>
+                  <div
+                    class="decorator-item__description"
+                  >
+                    Fake decorator description
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              class="decorator-context__decorator-header-select"
+              style="display: none;"
+            >
+              <!--v-if-->
+            </div>
+            <div
+              class="decorator-context__decorator-header-trash"
+            >
+              <button
+                class="button-icon"
+              >
+                <i
+                  class="button-icon__icon iconoir-bin"
+                />
+              </button>
+            </div>
+          </div>
+          <div
+            class="value-provider-list value-provider-list--row"
+          >
+            
+            <div
+              class="value-provider-list__item"
+            >
+              <div
+                class="value-provider-item"
+              >
+                <div
+                  class="value-provider-item__title"
+                >
+                  <i
+                    class="iconoir-filter value-provider-item__icon"
+                  />
+                  <span
+                    class="value-provider-item__title-text"
+                  >
+                    Fake value provider
+                  </span>
+                </div>
+                <div
+                  class="value-provider-item__description"
+                >
+                  Fake value provider description.
+                </div>
+              </div>
+              <!--v-if-->
+            </div>
+            
+          </div>
+          <!--v-if-->
+        </div>
+        
+      </div>
+      <div
+        class="context__footer"
+      >
+        <button
+          class="button-text choose-select-field__link margin-right-auto"
+        >
+          <i
+            class="button-text__icon iconoir-plus"
+          />
+          <!--v-if-->
+          <span
+            class="button-text__label"
+          >
+            
+            viewDecoratorContext.addDecorator
+            
+          </span>
+        </button>
+        <teleport-stub
+          to="body"
+        >
+          <div
+            class="context visibility-hidden context--overflow-scroll"
+          >
+            <!--v-if-->
+          </div>
+        </teleport-stub>
+      </div>
+    </div>
+    
+  </div>
+</teleport-stub>
+`;

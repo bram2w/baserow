@@ -1114,6 +1114,7 @@ def test_get_public_timeline_view(api_client, premium_data_fixture):
                     "database_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
                     "workspace_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
                     "db_index": False,
+                    "vector_search_enabled": False,
                     "field_constraints": [],
                 },
                 {
@@ -1135,6 +1136,7 @@ def test_get_public_timeline_view(api_client, premium_data_fixture):
                     "database_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
                     "workspace_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
                     "db_index": False,
+                    "vector_search_enabled": False,
                     "field_constraints": [],
                 },
                 {
@@ -1156,6 +1158,7 @@ def test_get_public_timeline_view(api_client, premium_data_fixture):
                     "database_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
                     "workspace_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
                     "db_index": False,
+                    "vector_search_enabled": False,
                     "field_constraints": [],
                 },
             ]

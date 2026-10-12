@@ -17,6 +17,9 @@ def populate_search_table():
     def _populate(table, field, rows):
         workspace = table.database.workspace
         SearchHandler.create_workspace_search_table_if_not_exists(workspace.id)
+        # The model carries the vector columns when pgvector is available, so
+        # a plain `create` needs them to exist.
+        SearchHandler.ensure_workspace_search_table_columns(workspace.id)
         search_model = SearchHandler.get_workspace_search_table_model(workspace.id)
 
         model = table.get_model()

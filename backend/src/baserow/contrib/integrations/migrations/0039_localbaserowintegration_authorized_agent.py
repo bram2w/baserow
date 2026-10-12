@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ("core", "0121_agent"),
         ("database", "0226_rowhistory_actor"),
-        ("integrations", "0037_coreresponseservice_and_more"),
+        ("integrations", "0038_smtpintegration_use_ssl"),
     ]
 
     operations = [

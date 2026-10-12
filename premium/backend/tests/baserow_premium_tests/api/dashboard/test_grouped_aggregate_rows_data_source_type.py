@@ -121,6 +121,7 @@ def test_grouped_aggregate_rows_get_dashboard_data_sources(
                     "database_id": table.database.id,
                     "workspace_id": table.database.workspace.id,
                     "db_index": False,
+                    "vector_search_enabled": False,
                     "field_constraints": [],
                 },
             },

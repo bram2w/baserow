@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
     dependencies = [
         ("automation", "0035_coregotoactionnode"),
-        ("baserow_premium", "0031_ai_field_scheduled_update"),
+        ("baserow_premium", "0032_aifield_long_text_enable_rich_text"),
         ("core", "0121_agent"),
         ("database", "0226_rowhistory_actor"),
     ]
