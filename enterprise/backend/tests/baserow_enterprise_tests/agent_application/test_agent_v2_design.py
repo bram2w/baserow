@@ -546,3 +546,30 @@ def test_email_tool_inheriting_acting_as_user_runs_without_a_user(agent_with_tab
 
     seen = _call_first_service_tool(agent, _service_deps(user, workspace, None))
     assert seen == {"actor": None, "override": False}
+
+
+@pytest.mark.django_db
+def test_run_agent_tool_inheriting_acting_as_user_needs_a_user(
+    agent_with_table, enterprise_data_fixture
+):
+    user, token, workspace, application, agent, table, field = agent_with_table
+    application.act_as_user = True
+    application.save()
+    other = (
+        CoreHandler()
+        .create_application(user, workspace, "agent", init_with_data=True, name="B")
+        .specific
+    )
+    AgentToolHandler().create_tool(
+        user,
+        agent,
+        "service",
+        name="Ask B",
+        service_type_str="run_agent",
+        service_values={"agent_application_id": other.id},
+    )
+
+    # Without a user it would start the other agent as the system.
+    deps = _service_deps(user, workspace, None)
+    assert _call_first_service_tool(agent, deps) is None
+    assert any("has none" in note for note in deps.system_notes)

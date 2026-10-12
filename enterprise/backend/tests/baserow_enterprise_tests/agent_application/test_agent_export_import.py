@@ -344,6 +344,11 @@ def test_pinned_conversations_travel_as_examples_but_not_on_duplicate(
         artifacts={"events": [{"type": "tool_call", "name": "list_rows"}]},
     )
     AgentChatMessage.objects.create(chat=example, role="system", content="internal")
+    # A pinned private conversation is its owner's and never leaves.
+    private = AgentChat.objects.create(
+        agent=agent, user=user, title="Mine", pinned=True, private=True
+    )
+    AgentChatMessage.objects.create(chat=private, role="human", content="Secret")
     application_type = application_type_registry.get("agent")
 
     exported = application_type.export_serialized(application, _export_config())

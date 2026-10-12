@@ -1,4 +1,5 @@
 import {
+  approvalActsAsUser,
   hasMoreAccess,
   workspaceToolIdentities,
   listToolIdentityExceptions,
@@ -68,5 +69,52 @@ describe('agentToolIdentities acting as the user', () => {
       'Add row',
     ])
     expect(exceptions[0].identity).toEqual({ id: 'user', name: 'The user' })
+  })
+})
+
+describe('approvalActsAsUser', () => {
+  const catalog = [{ name: 'create_rows' }, { name: 'list_tables' }]
+  const workspaceTool = (identities = {}) => ({
+    type: 'workspace',
+    config: { tool_identities: identities },
+  })
+
+  test('follows the workspace tool identities and the application', () => {
+    const tools = [workspaceTool({ create_rows: 'user', list_tables: 3 })]
+    const application = { act_as_user: false }
+    expect(
+      approvalActsAsUser('create_rows_in_table_12', {
+        tools,
+        catalog,
+        application,
+      })
+    ).toBe(true)
+    expect(
+      approvalActsAsUser('list_tables', { tools, catalog, application })
+    ).toBe(false)
+    expect(
+      approvalActsAsUser('list_tables', {
+        tools: [workspaceTool()],
+        catalog,
+        application: { act_as_user: true },
+      })
+    ).toBe(true)
+  })
+
+  test('follows action tools and their own identity', () => {
+    const application = { act_as_user: true }
+    const tools = [
+      { type: 'service', name: 'Add row', identity_id: null },
+      { type: 'service', name: 'Mail', identity_id: 4 },
+    ]
+    expect(approvalActsAsUser('add_row', { tools, catalog, application })).toBe(
+      true
+    )
+    expect(approvalActsAsUser('mail', { tools, catalog, application })).toBe(
+      false
+    )
+    expect(approvalActsAsUser('unknown', { tools, catalog, application })).toBe(
+      false
+    )
   })
 })

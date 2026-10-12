@@ -61,7 +61,7 @@
 </template>
 
 <script>
-import { defineComponent, ref, computed } from 'vue'
+import { defineComponent, ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useI18n } from '#imports'
 import moment from '@baserow/modules/core/moment'
@@ -157,7 +157,15 @@ export default defineComponent({
     )
     const initials = (name) => (name || '?').slice(0, 1).toUpperCase()
     const relativeTime = computed(() => moment(props.createdOn).fromNow())
-    const absoluteTime = computed(() => moment(props.createdOn).format('LLL'))
+    // Formatted in the browser only: the server renders in its own timezone
+    // and hydration doesn't correct attributes.
+    const isMounted = ref(false)
+    onMounted(() => {
+      isMounted.value = true
+    })
+    const absoluteTime = computed(() =>
+      isMounted.value ? moment(props.createdOn).format('LLL') : undefined
+    )
 
     return {
       expanded,

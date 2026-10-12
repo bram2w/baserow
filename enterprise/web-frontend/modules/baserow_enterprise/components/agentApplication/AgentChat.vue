@@ -75,7 +75,7 @@
           <AgentToolApprovals
             v-else-if="block.type === 'approval_set'"
             :approvals="approvalsForIds(block.ids)"
-            :can-decide="canDecide"
+            :can-decide="canDecideApprovals(approvalsForIds(block.ids))"
             :disabled="decidingApprovals"
             :agent-name="agent?.name || application.name"
             :tool-label="toolLabel"
@@ -327,7 +327,10 @@ import AgentChatTriggerRow from '@baserow_enterprise/components/agentApplication
 import AgentChatToolGroup from '@baserow_enterprise/components/agentApplication/AgentChatToolGroup'
 import FileFieldModal from '@baserow/modules/database/components/field/FileFieldModal'
 import { useAgentContext } from '@baserow_enterprise/composables/useAgentContext'
-import { ACT_AS_USER } from '@baserow_enterprise/utils/agentToolIdentities'
+import {
+  ACT_AS_USER,
+  approvalActsAsUser,
+} from '@baserow_enterprise/utils/agentToolIdentities'
 
 const MIN_ROWS = 1
 const MAX_ROWS = 6
@@ -530,6 +533,31 @@ export default defineComponent({
         props.application.workspace.id
       )
     )
+    // A step running on behalf of the conversation's user is theirs alone to
+    // decide, whatever their role; others need the role that decides.
+    const canDecideApprovals = (approvals) => {
+      const context = {
+        tools: store.getters[`${storePrefix}agentApplication/getTools`],
+        catalog:
+          store.getters[
+            `${storePrefix}agentApplication/getWorkspaceToolCatalog`
+          ],
+        application: props.application,
+      }
+      const isOwner =
+        chatOwnerId.value !== null &&
+        chatOwnerId.value === store.getters['auth/getUserId']
+      return approvals.every((approval) =>
+        approvalActsAsUser(approval.tool_name, context)
+          ? isOwner &&
+            hasPermission(
+              'agent_application.read_chat',
+              props.application,
+              props.application.workspace.id
+            )
+          : canDecide.value
+      )
+    }
     const canUpdateAgent = computed(() =>
       hasPermission(
         'agent_application.update_agent',
@@ -862,7 +890,8 @@ export default defineComponent({
       () =>
         canWrite.value &&
         (isNewConversation.value ||
-          (chatOwnerId.value !== null &&
+          (['manual', 'setup'].includes(source.value) &&
+            chatOwnerId.value !== null &&
             chatOwnerId.value === store.getters['auth/getUserId'] &&
             hasPermission(
               'agent_application.update_chat',
@@ -961,6 +990,7 @@ export default defineComponent({
 
     return {
       canDecide,
+      canDecideApprovals,
       canUpdateAgent,
       canContinueChat,
       canStartChat,

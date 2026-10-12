@@ -15,3 +15,14 @@ ERROR_OAUTH2_NOT_SUPPORTED = (
     HTTP_400_BAD_REQUEST,
     "This integration type cannot be connected to an account.",
 )
+ERROR_OAUTH2_INVALID_STATE = (
+    "ERROR_OAUTH2_INVALID_STATE",
+    HTTP_400_BAD_REQUEST,
+    "The connection request expired, was already used or was started by "
+    "someone else. Start again from the integration.",
+)
+ERROR_OAUTH2_TOKEN_REQUEST_FAILED = (
+    "ERROR_OAUTH2_TOKEN_REQUEST_FAILED",
+    HTTP_400_BAD_REQUEST,
+    "{e}",
+)

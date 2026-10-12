@@ -79,6 +79,7 @@ export default {
     canChangePrivacy() {
       return (
         this.canUpdate &&
+        ['manual', 'setup'].includes(this.chat.source) &&
         this.chat.user_id !== null &&
         this.chat.user_id === this.$store.getters['auth/getUserId']
       )

@@ -1,6 +1,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlparse
+from uuid import uuid4
 
 from django.core import signing
 from django.test import override_settings
@@ -53,13 +54,21 @@ def test_authorization_url_carries_a_signed_state(data_fixture):
     assert params["redirect_uri"] == ["http://api/api/integration/oauth2/callback/"]
     assert params["access_type"] == ["offline"]
     assert params["prompt"] == ["consent"]
-    assert "gmail.send" in params["scope"][0]
+    assert "gmail.modify" in params["scope"][0]
     state = signing.loads(params["state"][0], salt=STATE_SALT)
+    assert state.pop("nonce")
     assert state == {
         "integration_id": integration.id,
         "user_id": user.id,
         "return_url": f"{FRONTEND}/automation/1/settings",
     }
+
+
+@override_settings(OAUTH_BACKEND_URL="https://example.com/baserow-api/")
+def test_redirect_uri_keeps_the_backend_sub_path():
+    assert OAuth2IntegrationHandler().get_redirect_uri() == (
+        "https://example.com/baserow-api/api/integration/oauth2/callback/"
+    )
 
 
 @pytest.mark.django_db
@@ -74,8 +83,15 @@ def test_authorization_needs_credentials_a_local_return_url_and_permission(
         handler.get_authorization_url(user, integration, f"{FRONTEND}/x")
 
     integration = data_fixture.create_google_integration(user=user)
-    with pytest.raises(OAuth2InvalidReturnUrl):
-        handler.get_authorization_url(user, integration, "https://evil.example/x")
+    for return_url in [
+        "https://evil.example/x",
+        f"{FRONTEND}.evil.example/x",
+        f"{FRONTEND}@evil.example/x",
+        "https://localhost:3000/x",
+    ]:
+        with pytest.raises(OAuth2InvalidReturnUrl):
+            handler.get_authorization_url(user, integration, return_url)
+    assert handler.get_authorization_url(user, integration, FRONTEND)
 
     stranger = data_fixture.create_user()
     with pytest.raises(UserNotInWorkspace):
@@ -99,9 +115,9 @@ def test_callback_stores_the_tokens_and_the_account(data_fixture):
         fake_response(200, {"email": "me@example.com"}),
     ]
     with patch(SEND, side_effect=responses) as send:
-        return_url = handler.complete_authorization("the-code", state)
+        data = handler.complete_authorization(user, "the-code", state)
 
-    assert return_url == f"{FRONTEND}/back"
+    assert data["return_url"] == f"{FRONTEND}/back"
     token_call = send.call_args_list[0]
     assert token_call.args[:2] == ("POST", GoogleIntegrationType.token_url)
     assert token_call.kwargs["data"] == {
@@ -127,12 +143,19 @@ def test_callback_refuses_a_bad_state_or_a_refused_code(data_fixture):
     integration = data_fixture.create_google_integration(user=user, refresh_token="")
     handler = OAuth2IntegrationHandler()
     with pytest.raises(OAuth2InvalidState):
-        handler.complete_authorization("code", "not-a-state")
+        handler.complete_authorization(user, "code", "not-a-state")
 
-    state = signing.dumps(
-        {"integration_id": integration.id, "user_id": user.id, "return_url": "x"},
-        salt=STATE_SALT,
-    )
+    def state():
+        return signing.dumps(
+            {
+                "integration_id": integration.id,
+                "user_id": user.id,
+                "return_url": "x",
+                "nonce": uuid4().hex,
+            },
+            salt=STATE_SALT,
+        )
+
     with patch(
         SEND,
         return_value=fake_response(
@@ -140,13 +163,49 @@ def test_callback_refuses_a_bad_state_or_a_refused_code(data_fixture):
         ),
     ):
         with pytest.raises(OAuth2TokenRequestFailed) as exc:
-            handler.complete_authorization("code", state)
+            handler.complete_authorization(user, "code", state())
     assert "Bad code" in str(exc.value)
     # A first connection must come with a refresh token or it cannot last.
     with patch(SEND, return_value=fake_response(200, {"access_token": "at"})):
         with pytest.raises(OAuth2TokenRequestFailed) as exc:
-            handler.complete_authorization("code", state)
+            handler.complete_authorization(user, "code", state())
     assert "refresh token" in str(exc.value)
+
+
+@pytest.mark.django_db
+@override_settings(PUBLIC_WEB_FRONTEND_URL=FRONTEND)
+def test_callback_can_only_be_completed_once_by_the_initiating_user(data_fixture):
+    user = data_fixture.create_user()
+    integration = data_fixture.create_google_integration(user=user, refresh_token="")
+    other = data_fixture.create_user(workspace=integration.application.workspace)
+    handler = OAuth2IntegrationHandler()
+    url = handler.get_authorization_url(user, integration, f"{FRONTEND}/back")
+    state = parse_qs(urlparse(url).query)["state"][0]
+
+    with patch(SEND) as send:
+        with pytest.raises(OAuth2InvalidState):
+            handler.complete_authorization(other, "the-code", state)
+    send.assert_not_called()
+
+    responses = [
+        fake_response(200, {"access_token": "at", "refresh_token": "rt"}),
+        fake_response(200, {"email": "me@example.com"}),
+    ]
+    with patch(SEND, side_effect=responses):
+        handler.complete_authorization(user, "the-code", state)
+
+    with patch(SEND) as send:
+        with pytest.raises(OAuth2InvalidState):
+            handler.complete_authorization(user, "the-code", state)
+    send.assert_not_called()
+
+    # Older states without a nonce cannot be marked as used, so are refused.
+    legacy = signing.dumps(
+        {"integration_id": integration.id, "user_id": user.id, "return_url": "x"},
+        salt=STATE_SALT,
+    )
+    with pytest.raises(OAuth2InvalidState):
+        handler.complete_authorization(user, "the-code", legacy)
 
 
 @pytest.mark.django_db

@@ -1,11 +1,12 @@
+import secrets
 from datetime import timedelta
 from typing import Optional
-from urllib.parse import urljoin
+from urllib.parse import urlparse
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.core import signing
+from django.core.cache import cache
 from django.urls import reverse
 from django.utils import timezone
 
@@ -30,6 +31,7 @@ from .models import TOKEN_FIELDS
 STATE_SALT = "baserow.integrations.oauth2"
 # How long a consent screen may stay open before the callback is refused.
 STATE_MAX_AGE_SECONDS = 15 * 60
+USED_STATE_CACHE_KEY = "oauth2_integration_state_used_{nonce}"
 # Refresh ahead of expiry so a token is never handed out about to lapse.
 ACCESS_TOKEN_MARGIN = timedelta(seconds=60)
 
@@ -37,14 +39,29 @@ ACCESS_TOKEN_MARGIN = timedelta(seconds=60)
 class OAuth2IntegrationHandler:
     """
     Connects an OAuth2 integration to an account: builds the consent URL with
-    a signed state, finishes the exchange when the provider calls back, and
+    a signed state, finishes the exchange once the person who started it is
+    back in Baserow with the provider's code, and
     hands services a valid access token, refreshing it when needed.
     """
 
     def get_redirect_uri(self) -> str:
         # One callback for every provider; the state says which integration.
-        return urljoin(
-            settings.OAUTH_BACKEND_URL, reverse("api:integrations:oauth2_callback")
+        # Concatenated rather than joined so a backend served under a sub-path
+        # keeps it.
+        return settings.OAUTH_BACKEND_URL.rstrip("/") + reverse(
+            "api:integrations:oauth2_callback"
+        )
+
+    def is_frontend_url(self, url: str) -> bool:
+        # Compared part by part because a prefix check lets through hosts like
+        # `baserow.example.com.evil.net` or `baserow.example.com@evil.net`.
+        frontend = urlparse(settings.PUBLIC_WEB_FRONTEND_URL)
+        parsed = urlparse(url)
+        base_path = frontend.path.rstrip("/")
+        return (
+            parsed.scheme == frontend.scheme
+            and parsed.netloc == frontend.netloc
+            and (parsed.path == base_path or parsed.path.startswith(base_path + "/"))
         )
 
     def get_authorization_url(
@@ -63,14 +80,15 @@ class OAuth2IntegrationHandler:
         )
         if not integration.client_id or not integration.client_secret:
             raise OAuth2IntegrationNotConfigured()
-        # The callback redirects the browser here, so only this frontend.
-        if not return_url.startswith(settings.PUBLIC_WEB_FRONTEND_URL.rstrip("/")):
+        # The browser is sent back here once connected, so only this frontend.
+        if not self.is_frontend_url(return_url):
             raise OAuth2InvalidReturnUrl()
         state = signing.dumps(
             {
                 "integration_id": integration.id,
                 "user_id": user.id,
                 "return_url": return_url,
+                "nonce": secrets.token_urlsafe(16),
             },
             salt=STATE_SALT,
         )
@@ -86,23 +104,35 @@ class OAuth2IntegrationHandler:
         except signing.BadSignature as e:
             raise OAuth2InvalidState() from e
 
-    def complete_authorization(self, code: str, state: str) -> str:
+    def complete_authorization(self, user: AbstractUser, code: str, state: str) -> dict:
         """
         Trades the code for tokens and stores them on the integration the
-        state names. Returns the frontend page to send the browser back to.
+        state names. Returns the verified state, which holds the frontend page
+        to send the browser back to.
 
-        :raises OAuth2InvalidState: When the state does not verify.
+        :raises OAuth2InvalidState: When the state does not verify, was issued
+            to someone else or was used before.
         :raises OAuth2TokenRequestFailed: When the provider refuses the code.
         """
 
         data = self.parse_state(state)
+        # Whoever follows a consent link connects their own account, so only
+        # the person who started the flow may finish it; otherwise a shared
+        # link would attach a stranger's account to this integration.
+        if data.get("user_id") != user.id or not data.get("nonce"):
+            raise OAuth2InvalidState()
+        # Marked before the exchange so two concurrent completions cannot both
+        # pass; kept as long as the state itself is valid.
+        if not cache.add(
+            USED_STATE_CACHE_KEY.format(nonce=data["nonce"]),
+            True,
+            timeout=STATE_MAX_AGE_SECONDS,
+        ):
+            raise OAuth2InvalidState()
         try:
             integration = IntegrationHandler().get_integration(data["integration_id"])
         except IntegrationDoesNotExist as e:
             raise OAuth2InvalidState() from e
-        user = get_user_model().objects.filter(id=data["user_id"]).first()
-        if user is None:
-            raise OAuth2InvalidState()
         # The person who started the flow must still be allowed to change the
         # integration; the state alone must not grant that.
         CoreHandler().check_permissions(
@@ -126,7 +156,7 @@ class OAuth2IntegrationHandler:
             integration_type.fetch_account_email(integration.access_token) or ""
         )
         integration.save(update_fields=list(TOKEN_FIELDS))
-        return data["return_url"]
+        return data
 
     def get_access_token(self, integration: Integration) -> str:
         """

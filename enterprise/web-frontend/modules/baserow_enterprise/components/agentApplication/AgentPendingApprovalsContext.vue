@@ -84,7 +84,10 @@
               }}</pre>
             </template>
           </div>
-          <div v-if="canDecide" class="agent-tool-approvals__item-side">
+          <div
+            v-if="canDecideApproval(approval)"
+            class="agent-tool-approvals__item-side"
+          >
             <div class="agent-tool-approvals__item-actions">
               <Button
                 size="small"
@@ -122,6 +125,7 @@ import { summarizeToolArgs } from '@baserow_enterprise/utils/agentChatEvents'
 import { buildApprovalPreview } from '@baserow_enterprise/utils/agentApprovalPreview'
 import AgentApprovalPreview from '@baserow_enterprise/components/agentApplication/AgentApprovalPreview'
 import { useAgentContext } from '@baserow_enterprise/composables/useAgentContext'
+import { approvalActsAsUser } from '@baserow_enterprise/utils/agentToolIdentities'
 
 export default defineComponent({
   name: 'AgentPendingApprovalsContext',
@@ -151,6 +155,20 @@ export default defineComponent({
         props.application.workspace.id
       )
     )
+
+    // A step running on behalf of a conversation's user is theirs alone to
+    // decide; others need the role that decides approvals.
+    const canDecideApproval = (approval) =>
+      approvalActsAsUser(approval.tool_name, {
+        tools: store.getters[`${storePrefix}agentApplication/getTools`],
+        catalog:
+          store.getters[
+            `${storePrefix}agentApplication/getWorkspaceToolCatalog`
+          ],
+        application: props.application,
+      })
+        ? approval.chat_user_id === store.getters['auth/getUserId']
+        : canDecide.value
 
     const toggle = (...args) => context.value.toggle(...args)
     const hide = () => context.value.hide()
@@ -248,6 +266,7 @@ export default defineComponent({
       loading,
       deciding,
       canDecide,
+      canDecideApproval,
       toggle,
       hide,
       fetch,

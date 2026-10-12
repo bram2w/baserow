@@ -129,7 +129,8 @@ class AgentChatRolePermissionManagerType(PermissionManagerType):
         """
         The actor's role uids so the frontend can compare them with the
         application's minimum roles, which change live with the application.
-        Applications created later fall back to the workspace level roles.
+        Applications created later, the workspace's first one included, fall
+        back to the workspace level roles.
         """
 
         if workspace is None:
@@ -141,10 +142,10 @@ class AgentChatRolePermissionManagerType(PermissionManagerType):
                 content_type=ContentType.objects.get_for_model(AgentApplication),
             ).only("id", "workspace_id")
         )
-        if not applications:
-            # Nothing to restrict; keeps the role lookup off other workspaces.
-            return None
         default, by_application = get_role_uids(actor, workspace, applications)
+        if not default and not any(by_application.values()):
+            # Not a member: nothing here applies to them.
+            return None
         return {
             "default": sorted(default),
             "applications": {

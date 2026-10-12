@@ -310,3 +310,150 @@ def test_only_the_starter_switches_a_chat_between_private_and_public(
         )
     other_list = api_client.get(list_url, HTTP_AUTHORIZATION=f"JWT {other_token}")
     assert [c["uuid"] for c in other_list.json()["results"]] == [str(chat.uuid)]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_running_chat_made_private_stops_streaming_to_others(data_fixture):
+    from baserow_enterprise.agent_application.realtime import broadcast_chat_event
+
+    owner = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=owner)
+    application, agent = _create_agent(owner, workspace)
+    # The runner keeps the instance it loaded when the run started.
+    running = AgentChat.objects.create(agent=agent, user=owner)
+
+    with (
+        patch(
+            "baserow_enterprise.agent_application.realtime.broadcast_to_channel_group"
+        ),
+        patch("baserow_enterprise.agent_application.realtime.broadcast_to_users"),
+    ):
+        AgentChatHandler().update_chat(
+            AgentChat.objects.get(id=running.id), private=True
+        )
+
+    with (
+        patch(
+            "baserow_enterprise.agent_application.realtime.broadcast_to_channel_group"
+        ) as group_mock,
+        patch(
+            "baserow_enterprise.agent_application.realtime.broadcast_to_users"
+        ) as users_mock,
+    ):
+        broadcast_chat_event(running, {"type": "ai/answer_chunk", "content": "x"})
+
+    assert not group_mock.delay.called
+    assert users_mock.delay.call_args[0][0] == [owner.id]
+
+
+@pytest.mark.django_db
+def test_a_picked_up_triggered_chat_cannot_be_made_private(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    application, agent = _create_agent(user, workspace)
+    # Writing in a triggered conversation makes the writer its user.
+    chat = AgentChatHandler().create_triggered_chat(agent, "periodic")
+    chat.user = user
+    chat.save()
+
+    response = api_client.patch(
+        reverse("api:agent:chat_item", kwargs={"chat_uuid": chat.uuid}),
+        {"private": True},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_403_FORBIDDEN
+    chat.refresh_from_db()
+    assert chat.private is False
+
+
+@pytest.mark.django_db(transaction=True)
+def test_steps_acting_as_the_user_are_decided_by_that_user_only(
+    api_client, data_fixture, enable_enterprise, synced_roles
+):
+    from baserow_enterprise.agent_application.models import AgentChatToolApproval
+    from baserow_enterprise.agent_application.tools.handler import AgentToolHandler
+    from baserow_enterprise.agent_application.tools.service_tool import (
+        get_service_tool_name,
+    )
+
+    admin = data_fixture.create_user()
+    editor, editor_token = data_fixture.create_user_and_token()
+    builder, builder_token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(
+        user=admin, custom_permissions=[(editor, "EDITOR"), (builder, "BUILDER")]
+    )
+    application, agent = _create_agent(admin, workspace)
+    application.act_as_user = True
+    application.save()
+    tool = AgentToolHandler().create_tool(
+        admin, agent, "service", name="Notify", service_type_str="smtp_email"
+    )
+
+    def decide(token, tool_name):
+        chat = AgentChat.objects.create(
+            agent=agent, user=editor, status=AgentChat.Status.AWAITING_APPROVAL
+        )
+        approval = AgentChatToolApproval.objects.create(
+            chat=chat, tool_call_id="c1", tool_name=tool_name, tool_args={}
+        )
+        with (
+            patch("baserow_enterprise.agent_application.tasks.resume_agent_chat"),
+            patch(
+                "baserow_enterprise.agent_application.realtime."
+                "broadcast_to_channel_group"
+            ),
+            patch(
+                "baserow_enterprise.agent_application.realtime."
+                "broadcast_to_permitted_users"
+            ),
+        ):
+            return api_client.post(
+                reverse("api:agent:chat_approvals", kwargs={"chat_uuid": chat.uuid}),
+                {"decisions": [{"id": approval.id, "approved": True}]},
+                format="json",
+                HTTP_AUTHORIZATION=f"JWT {token}",
+            )
+
+    acting = get_service_tool_name(tool)
+    # It spends the editor's permissions, so it's the editor's call alone.
+    assert decide(builder_token, acting).status_code == HTTP_401_UNAUTHORIZED
+    assert decide(editor_token, acting).status_code == HTTP_200_OK
+    # Other steps keep needing the role that decides approvals.
+    assert decide(editor_token, "send_email").status_code == HTTP_401_UNAUTHORIZED
+    assert decide(builder_token, "send_email").status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db(transaction=True)
+def test_run_agent_chats_need_the_continue_role(
+    api_client, data_fixture, enable_enterprise, synced_roles
+):
+    admin = data_fixture.create_user()
+    editor, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(
+        user=admin, custom_permissions=[(editor, "EDITOR")]
+    )
+    application, agent = _create_agent(admin, workspace)
+    application.continue_chat_min_role = "BUILDER"
+    application.save()
+    # Started by an automation: nobody owns it yet.
+    chat = AgentChat.objects.create(agent=agent, source=AgentChat.Source.SERVICE)
+
+    with (
+        patch("baserow_enterprise.agent_application.tasks.run_agent_chat.delay"),
+        patch(
+            "baserow_enterprise.agent_application.realtime.broadcast_to_channel_group"
+        ),
+    ):
+        response = api_client.post(
+            reverse(
+                "api:agent:chat_messages",
+                kwargs={"application_id": application.id, "chat_uuid": chat.uuid},
+            ),
+            {"content": "Hello"},
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    chat.refresh_from_db()
+    assert chat.user_id is None

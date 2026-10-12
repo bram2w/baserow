@@ -239,6 +239,7 @@ def clean_up_old_agent_chats(self):
     new messages. Manual conversations are only deleted by users.
     """
 
+    from .channels.registries import agent_chat_channel_type_registry
     from .handler import AgentChatHandler
     from .models import AgentChat
     from .realtime import broadcast_chat_updated
@@ -252,7 +253,7 @@ def clean_up_old_agent_chats(self):
             updated_on__lt=stuck_cutoff,
         )
         .defer("message_history")
-        .select_related("agent")
+        .select_related("agent", "channel")
     )
     for chat in stuck_chats:
         chat.status = AgentChat.Status.ERROR
@@ -260,6 +261,11 @@ def clean_up_old_agent_chats(self):
         chat.completed_on = timezone.now()
         chat.save(update_fields=["status", "error", "completed_on", "updated_on"])
         broadcast_chat_updated(chat)
+        # A run that never finished never replayed what waited for it.
+        if chat.channel_id is not None:
+            channel_type = agent_chat_channel_type_registry.get(chat.channel.type)
+            if channel_type.queues_while_busy:
+                channel_type.replay_queued_mail(chat.channel, chat)
 
     cutoff = timezone.now() - timedelta(
         days=settings.AGENT_APPLICATION_CHAT_HISTORY_MAX_DAYS

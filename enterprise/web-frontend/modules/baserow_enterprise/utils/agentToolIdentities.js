@@ -1,3 +1,5 @@
+import { slugifyToolName } from '@baserow_enterprise/utils/agentChatEvents'
+
 /**
  * Helpers for tools that run as another workspace agent than the
  * application's identity: the `tool_identities` map of the workspace tool
@@ -7,6 +9,33 @@
 // The identity value of a tool that acts on behalf of the Baserow user of
 // the conversation instead of a workspace agent.
 export const ACT_AS_USER = 'user'
+
+const DYNAMIC_ROW_TOOL = /^(create|update|delete)_rows_in_table_\d+$/
+
+/**
+ * Whether an approved step would run on behalf of the conversation's user,
+ * which makes deciding it that user's call alone. Mirrors the backend's
+ * `approval_acts_as_user`.
+ */
+export function approvalActsAsUser(toolName, { tools, catalog, application }) {
+  const name = String(toolName)
+  const catalogName = name.replace(DYNAMIC_ROW_TOOL, '$1_rows')
+  const workspaceTool = tools.find((tool) => tool.type === 'workspace')
+  if (workspaceTool && catalog.some((tool) => tool.name === catalogName)) {
+    const identity = workspaceToolIdentities(workspaceTool.config)[catalogName]
+    if (identity !== undefined) {
+      return identity === ACT_AS_USER
+    }
+    return Boolean(application.act_as_user)
+  }
+  const actionTool = tools.find(
+    (tool) => tool.type === 'service' && slugifyToolName(tool.name) === name
+  )
+  if (!actionTool || actionTool.identity_id) {
+    return false
+  }
+  return Boolean(actionTool.act_as_user || application.act_as_user)
+}
 
 // Built-in role uids by the amount of access they grant, so a per-tool
 // identity can be flagged when it may do more than the agent itself.

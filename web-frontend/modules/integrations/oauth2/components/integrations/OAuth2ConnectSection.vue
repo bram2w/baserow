@@ -1,6 +1,7 @@
 <template>
   <div class="oauth2-connect">
     <FormGroup
+      v-if="redirectUri"
       :label="$t('oauth2Connect.redirectUriLabel')"
       :helper-text="$t('oauth2Connect.redirectUriHelp', { provider })"
       small-label
@@ -68,11 +69,12 @@
 import error from '@baserow/modules/core/mixins/error'
 import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
 import OAuth2Service from '@baserow/modules/integrations/oauth2/services/oauth2'
+import { startOAuth2Flow } from '@baserow/modules/integrations/oauth2/utils/flow'
 
 /**
  * The part of a Google or Microsoft integration form that connects the saved
  * integration to an account. It redirects the whole page to the provider,
- * which calls Baserow back; the backend then returns the browser here.
+ * which calls Baserow back; the completion page then returns the browser here.
  */
 export default {
   name: 'OAuth2ConnectSection',
@@ -88,7 +90,7 @@ export default {
     },
   },
   data() {
-    return { connecting: false }
+    return { connecting: false, redirectUri: null }
   },
   computed: {
     saved() {
@@ -102,9 +104,16 @@ export default {
     connected() {
       return this.integration.has_refresh_token === true
     },
-    redirectUri() {
-      return `${this.$config.public.publicBackendUrl}/api/integration/oauth2/callback/`
-    },
+  },
+  async mounted() {
+    // The backend decides the URI it sends to the provider, so it must be the
+    // one shown here.
+    try {
+      const { data } = await OAuth2Service(this.$client).getRedirectUri()
+      this.redirectUri = data.redirect_uri
+    } catch (err) {
+      this.handleError(err)
+    }
   },
   methods: {
     copyRedirectUri() {
@@ -119,6 +128,7 @@ export default {
           this.integration.id,
           window.location.href
         )
+        startOAuth2Flow(this.integration.id, window.location.href)
         window.location.href = data.authorization_url
       } catch (err) {
         this.connecting = false

@@ -78,12 +78,13 @@ from baserow_enterprise.agent_application.instructions import (
 )
 from baserow_enterprise.agent_application.models import (
     AgentApplication,
+    AgentChat,
     AgentChatMessage,
+    AgentChatToolApproval,
 )
 from baserow_enterprise.agent_application.operations import (
     CancelAgentChatOperationType,
     CreateAgentToolOperationType,
-    DecideAgentToolApprovalOperationType,
     DeleteAgentChatChannelOperationType,
     DeleteAgentChatOperationType,
     DeleteAgentToolOperationType,
@@ -615,13 +616,15 @@ class AgentChatCancelView(APIView):
         chat = _get_chat_and_check(request, chat_uuid, CancelAgentChatOperationType)
         if chat.is_awaiting_approval:
             # Cancelling a paused run rejects its pending steps, which is a
-            # decision reserved to those who may decide approvals.
-            application = chat.agent.application
-            CoreHandler().check_permissions(
+            # decision reserved to those who may decide them.
+            AgentChatHandler().check_can_decide_approvals(
                 request.user,
-                DecideAgentToolApprovalOperationType.type,
-                workspace=application.workspace,
-                context=application.application_ptr,
+                chat,
+                list(
+                    chat.tool_approvals.filter(
+                        status=AgentChatToolApproval.Status.PENDING
+                    ).values_list("tool_name", flat=True)
+                ),
             )
         with transaction.atomic():
             action_type_registry.get_by_type(CancelAgentChatRunActionType).do(
@@ -712,7 +715,12 @@ class AgentChatView(APIView):
     @validate_body(UpdateAgentChatSerializer, return_validated=True)
     def patch(self, request, chat_uuid, data: dict):
         chat = _get_chat_and_check(request, chat_uuid, UpdateAgentChatOperationType)
-        if "private" in data and chat.user_id != request.user.id:
+        # Picking up a triggered or delegated conversation makes someone its
+        # user, but it isn't theirs to hide from the others.
+        if "private" in data and (
+            chat.user_id != request.user.id
+            or chat.source not in (AgentChat.Source.MANUAL, AgentChat.Source.SETUP)
+        ):
             raise AgentChatNotOwned(
                 f"Only the user who started the chat {chat.id} can change who sees it."
             )
@@ -1426,8 +1434,15 @@ class AgentChatApprovalsView(APIView):
     )
     @validate_body(DecideAgentToolApprovalsSerializer, return_validated=True)
     def post(self, request, chat_uuid, data: dict):
-        chat = _get_chat_and_check(
-            request, chat_uuid, DecideAgentToolApprovalOperationType
+        chat = _get_chat_and_check(request, chat_uuid, ReadAgentChatOperationType)
+        AgentChatHandler().check_can_decide_approvals(
+            request.user,
+            chat,
+            list(
+                chat.tool_approvals.filter(
+                    id__in=[decision["id"] for decision in data["decisions"]]
+                ).values_list("tool_name", flat=True)
+            ),
         )
         if any(decision.get("dont_ask_again") for decision in data["decisions"]):
             # "Don't ask again" rewrites the tool configuration, which is a

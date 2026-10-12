@@ -3,7 +3,7 @@ import secrets
 from dataclasses import dataclass, field
 from datetime import timedelta
 from email.utils import formataddr, make_msgid
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Callable, Optional
 
 from django.conf import settings
 from django.core.cache import cache
@@ -48,7 +48,13 @@ SUBJECT_MATCH_WINDOW = timedelta(days=14)
 # Enough for the person's own words; a longer mail is almost always a quote
 # or a forward, which the model does not need in full.
 MAX_BODY_CHARS = 20000
+# What is read of the raw body before quotes and markup are stripped: plenty
+# for a real mail with heavy HTML, while a huge body can't hold up the poll.
+MAX_RAW_BODY_CHARS = MAX_BODY_CHARS * 25
 MAX_REFERENCES = 20
+# Marks a human message stored while its conversation was busy; it starts a
+# turn of its own once the conversation is free.
+QUEUED_MAIL_ARTIFACT = "queued_email"
 # Letters and digits only, so the key survives as a `+tag` and in headers.
 _SESSION_KEY_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789"
 _LOCALPART_REGEX = re.compile(r"^[a-z0-9][a-z0-9._-]{1,63}$")
@@ -89,10 +95,15 @@ class ReceivedEmail:
     # User file dicts, already uploaded.
     attachments: list = field(default_factory=list)
     attachment_names: list = field(default_factory=list)
+    # Returns `(attachments, attachment_names)`. Called only once the mail
+    # is accepted, so mail that is turned away never stores any files.
+    load_attachments: Optional[Callable[[], tuple[list, list]]] = None
 
     @property
     def body(self) -> str:
-        text = self.text or html_to_text(self.html)
+        text = (self.text or "")[:MAX_RAW_BODY_CHARS] or html_to_text(
+            (self.html or "")[:MAX_RAW_BODY_CHARS]
+        )
         return strip_quoted_reply(text)[:MAX_BODY_CHARS]
 
 
@@ -104,6 +115,23 @@ class ReplyTarget:
     references: list
     thread_key: str
     provider_message_id: str
+
+
+def domains_aligned(domain: str, from_domain: str) -> bool:
+    """
+    Whether an authenticated domain vouches for the From domain: the same
+    domain, or one of them a subdomain of the other, as DMARC's relaxed
+    alignment allows.
+    """
+
+    domain, from_domain = domain.strip().lower(), from_domain.strip().lower()
+    if not domain or not from_domain:
+        return False
+    return (
+        domain == from_domain
+        or from_domain.endswith(f".{domain}")
+        or domain.endswith(f".{from_domain}")
+    )
 
 
 def new_session_key() -> str:
@@ -178,17 +206,67 @@ class EmailAgentChatChannelType(AgentChatChannelType):
 
     def deliver_outcome(self, channel, chat, status, text) -> None:
         # A failed run or a pending approval is the team's business, not the
-        # correspondent's, and the answer itself was sent by the tool.
-        return None
+        # correspondent's, and the answer itself was sent by the tool. Mail
+        # that came in meanwhile gets its turn now.
+        self.replay_queued_mail(channel, chat)
 
-    def on_message_while_busy(self, channel, chat, text, sender_name="") -> None:
+    # Mail is never refused for a busy conversation: it waits in the chat
+    # and is answered once the current run or approval is done.
+    queues_while_busy = True
+
+    def on_message_while_busy(
+        self, channel, chat, text, sender_name="", attachments=None
+    ) -> None:
         from ..handler import AgentChatHandler
         from ..models import AgentChatMessage
 
-        # Kept in the conversation so the reviewer sees the person wrote
-        # again; the next run picks the thread up from there.
+        # Shown in the conversation right away so a reviewer sees the person
+        # wrote again.
         content = f"{sender_name}: {text}" if sender_name else text
-        AgentChatHandler().create_message(chat, AgentChatMessage.Role.HUMAN, content)
+        message = AgentChatHandler().create_message(
+            chat, AgentChatMessage.Role.HUMAN, content, attachments=attachments
+        )
+        AgentChatMessage.objects.filter(id=message.id).update(
+            artifacts={**message.artifacts, QUEUED_MAIL_ARTIFACT: True}
+        )
+        # The run may have ended between the status check and storing the
+        # mail, after it looked for queued mail.
+        self.replay_queued_mail(channel, chat)
+
+    def replay_queued_mail(
+        self, channel: "AgentChatChannel", chat: "AgentChat"
+    ) -> None:
+        """
+        Starts a turn for the oldest mail that waited for the conversation,
+        when the conversation is free. Each finished turn calls this again,
+        so queued mails are answered one by one, in order.
+        """
+
+        from ..exceptions import AgentChatAlreadyRunning, AgentChatAwaitingApproval
+        from ..handler import AgentChatHandler
+        from ..models import AgentChat, AgentChatMessage
+
+        chat.refresh_from_db(fields=["status"])
+        if chat.status not in (AgentChat.Status.IDLE, AgentChat.Status.ERROR):
+            return
+        queued = (
+            chat.messages.filter(
+                role=AgentChatMessage.Role.HUMAN,
+                **{f"artifacts__{QUEUED_MAIL_ARTIFACT}": True},
+            )
+            .order_by("id")
+            .first()
+        )
+        if queued is None:
+            return
+        try:
+            AgentChatHandler().start_chat_run(chat, queued)
+        except (AgentChatAlreadyRunning, AgentChatAwaitingApproval):
+            # Someone else started a turn; its end replays this mail.
+            return
+        artifacts = dict(queued.artifacts)
+        artifacts.pop(QUEUED_MAIL_ARTIFACT, None)
+        AgentChatMessage.objects.filter(id=queued.id).update(artifacts=artifacts)
 
     # --- receiving ---------------------------------------------------------
 
@@ -272,6 +350,15 @@ class EmailAgentChatChannelType(AgentChatChannelType):
                 channel.id,
             )
             return False
+        # An allowlist is only worth something when the From can't be forged.
+        if channel.config.get("allowed_sender_domains") and not (
+            received.sender_verified
+        ):
+            logger.info(
+                "Email channel {} ignored mail whose sender is not verified",
+                channel.id,
+            )
+            return False
         if (
             received.message_id
             and AgentEmailMessage.objects.filter(
@@ -281,6 +368,10 @@ class EmailAgentChatChannelType(AgentChatChannelType):
             return False
         if self.is_rate_limited(channel):
             return False
+        if received.load_attachments is not None:
+            received.attachments, received.attachment_names = (
+                received.load_attachments()
+            )
 
         session_key = self.find_session_key(channel, received)
         if session_key is None:
@@ -601,7 +692,11 @@ class AgentEmailInboundRouteType(InboundEmailRouteType):
             in_reply_to=email.in_reply_to,
             references=list(email.references),
             recipient_tag=tag,
-            sender_verified=email.sender_validated,
+            sender_verified=email.sender_validated
+            or any(
+                domains_aligned(domain, email.from_.address.rpartition("@")[2])
+                for domain in email.dkim_verified_domains
+            ),
             # The receiver forwards attachment names and sizes only.
             attachment_names=[a.filename for a in email.attachments if a.filename],
         )

@@ -1,5 +1,7 @@
 import base64
 import html
+import re
+import secrets
 import time
 from email.message import EmailMessage
 from io import BytesIO
@@ -22,7 +24,12 @@ from baserow.core.integrations.models import Integration
 from baserow.core.services.exceptions import DispatchException
 from baserow.core.user_files.handler import UserFileHandler
 
-from .email import EmailAgentChatChannelType, EmailReplyNotPossible, ReceivedEmail
+from .email import (
+    EmailAgentChatChannelType,
+    EmailReplyNotPossible,
+    ReceivedEmail,
+    domains_aligned,
+)
 
 if TYPE_CHECKING:
     from ..models import AgentChatChannel
@@ -31,9 +38,16 @@ REQUEST_TIMEOUT_SECONDS = 15
 # New messages taken per poll; the rest wait for the next tick rather than
 # one slow mailbox holding the worker.
 MAX_MESSAGES_PER_POLL = 25
+# Keeps a poll well within its lock; a longer backlog continues from the
+# saved cursor on the next tick.
+MAX_PAGES_PER_POLL = 10
+# Outlook's first round only lists ids, so it can take bigger pages.
+OUTLOOK_SYNC_PAGE_SIZE = 50
 MAX_ATTACHMENTS = 10
 MAX_ATTACHMENT_BYTES = 15 * 1024 * 1024
 POLL_LOCK_SECONDS = 300
+# Mail the person wrote, or that Gmail filed away, is never for the agent.
+GMAIL_SKIPPED_LABELS = {"SENT", "DRAFT", "SPAM", "TRASH"}
 
 GMAIL_API_URL = "https://gmail.googleapis.com/gmail/v1/users/me"
 GRAPH_API_URL = "https://graph.microsoft.com/v1.0"
@@ -87,6 +101,8 @@ class MailboxAgentChatChannelType(EmailAgentChatChannelType):
     """
 
     integration_model = None
+    # Where polling stands; kept out of the public config and never copied.
+    state_keys = ("cursor", "label_id", "sync_link")
 
     def prepare_config(self, config: dict, existing_config: dict | None = None) -> dict:
         existing_config = existing_config or {}
@@ -102,7 +118,7 @@ class MailboxAgentChatChannelType(EmailAgentChatChannelType):
         # The cursor belongs to the mailbox and integration; a new
         # integration starts from now.
         if prepared["integration_id"] == existing_config.get("integration_id"):
-            for key in ("cursor", "label_id"):
+            for key in self.state_keys:
                 if key in existing_config:
                     prepared[key] = existing_config[key]
         return prepared
@@ -110,15 +126,15 @@ class MailboxAgentChatChannelType(EmailAgentChatChannelType):
     def prepare_imported_config(self, config: dict) -> dict:
         config = dict(config or {})
         # Integration ids are remapped by the import; the copy starts fresh.
-        config.pop("cursor", None)
-        config.pop("label_id", None)
+        for key in self.state_keys:
+            config.pop(key, None)
         return config
 
     def get_public_config(self, channel: "AgentChatChannel") -> dict:
         config = {
             key: value
             for key, value in channel.config.items()
-            if key not in ("cursor", "label_id")
+            if key not in self.state_keys
         }
         config["polling"] = bool(channel.config.get("cursor"))
         return config
@@ -212,9 +228,9 @@ class GmailAgentChatChannelType(MailboxAgentChatChannelType):
         params = {"startHistoryId": cursor, "historyTypes": "messageAdded"}
         if label_id:
             params["labelId"] = label_id
-        message_ids: list[str] = []
-        newest_history_id = cursor
-        while True:
+        new_cursor = cursor
+        seen: set[str] = set()
+        for _ in range(MAX_PAGES_PER_POLL):
             status, body = _json_request(
                 "GET", f"{GMAIL_API_URL}/history", headers, params=params
             )
@@ -224,27 +240,30 @@ class GmailAgentChatChannelType(MailboxAgentChatChannelType):
                 return
             if status != 200 or not isinstance(body, dict):
                 raise MailboxRequestFailed(f"history answered {status}")
-            newest_history_id = str(body.get("historyId") or newest_history_id)
             for entry in body.get("history") or []:
                 for added in entry.get("messagesAdded") or []:
                     message = added.get("message") or {}
-                    labels = message.get("labelIds") or []
-                    if "SENT" in labels or "DRAFT" in labels:
+                    if GMAIL_SKIPPED_LABELS & set(message.get("labelIds") or []):
                         continue
-                    if message.get("id") and message["id"] not in message_ids:
-                        message_ids.append(message["id"])
-            if (
-                not body.get("nextPageToken")
-                or len(message_ids) >= MAX_MESSAGES_PER_POLL
-            ):
+                    message_id = message.get("id")
+                    if not message_id or message_id in seen:
+                        continue
+                    seen.add(message_id)
+                    received = self._fetch_message(channel, headers, message_id)
+                    if received is not None:
+                        self.receive_email(channel, received)
+                # Only whole history records count as done, so the next poll
+                # resumes right after the last one taken.
+                new_cursor = str(entry.get("id") or new_cursor)
+                if len(seen) >= MAX_MESSAGES_PER_POLL:
+                    break
+            if len(seen) >= MAX_MESSAGES_PER_POLL:
+                break
+            if not body.get("nextPageToken"):
+                new_cursor = str(body.get("historyId") or new_cursor)
                 break
             params["pageToken"] = body["nextPageToken"]
-
-        for message_id in message_ids[:MAX_MESSAGES_PER_POLL]:
-            received = self._fetch_message(channel, headers, message_id)
-            if received is not None:
-                self.receive_email(channel, received)
-        self.save_cursor(channel, cursor=newest_history_id)
+        self.save_cursor(channel, cursor=new_cursor)
 
     def _label_id(self, channel: "AgentChatChannel", headers: dict) -> str:
         label = channel.config.get("label")
@@ -272,6 +291,9 @@ class GmailAgentChatChannelType(MailboxAgentChatChannelType):
         )
         if status != 200 or not isinstance(message, dict):
             return None
+        # The labels may have changed since the history entry was written.
+        if GMAIL_SKIPPED_LABELS & set(message.get("labelIds") or []):
+            return None
         payload = message.get("payload") or {}
         header_values = {
             (h.get("name") or "").lower(): h.get("value") or ""
@@ -287,9 +309,8 @@ class GmailAgentChatChannelType(MailboxAgentChatChannelType):
         if not self.alias_matches(channel, to_addresses):
             return None
 
-        text, markup, attachments, names = self._walk_parts(
-            headers, message_id, payload
-        )
+        text, markup, files = self._walk_parts(payload)
+        names = [filename for filename, _ in files]
         return ReceivedEmail(
             from_address=from_address,
             from_name=from_name,
@@ -302,15 +323,21 @@ class GmailAgentChatChannelType(MailboxAgentChatChannelType):
             references=header_values.get("references", "").split(),
             thread_key=message.get("threadId") or "",
             provider_message_id=message_id,
-            # Gmail only delivers what passed its own checks; SPF/DKIM
-            # results are not exposed per message.
-            sender_verified=True,
-            attachments=attachments,
+            sender_verified=sender_authenticated(
+                _first_header(payload.get("headers"), "authentication-results"),
+                from_address,
+            ),
             attachment_names=names,
+            load_attachments=lambda: (
+                self._download_attachments(headers, message_id, files),
+                names,
+            ),
         )
 
-    def _walk_parts(self, headers, message_id, payload):
-        text, markup, attachments, names = "", "", [], []
+    def _walk_parts(self, payload):
+        """The text and HTML bodies, and `(filename, attachment id)` pairs."""
+
+        text, markup, files = "", "", []
         stack = [payload]
         while stack:
             part = stack.pop(0)
@@ -318,26 +345,32 @@ class GmailAgentChatChannelType(MailboxAgentChatChannelType):
             body = part.get("body") or {}
             filename = part.get("filename") or ""
             if filename:
-                names.append(filename)
-                if len(attachments) < MAX_ATTACHMENTS and body.get("attachmentId"):
-                    status, data = _json_request(
-                        "GET",
-                        f"{GMAIL_API_URL}/messages/{quote(message_id, safe='')}/"
-                        f"attachments/{quote(body['attachmentId'], safe='')}",
-                        headers,
-                    )
-                    if status == 200 and isinstance(data, dict) and data.get("data"):
-                        stored = self.upload_attachment(
-                            filename, _b64url_decode(data["data"])
-                        )
-                        if stored:
-                            attachments.append(stored)
+                files.append((filename, body.get("attachmentId")))
             elif mime == "text/plain" and body.get("data") and not text:
                 text = _b64url_decode(body["data"]).decode("utf-8", "replace")
             elif mime == "text/html" and body.get("data") and not markup:
                 markup = _b64url_decode(body["data"]).decode("utf-8", "replace")
             stack.extend(part.get("parts") or [])
-        return text, markup, attachments, names
+        return text, markup, files
+
+    def _download_attachments(self, headers, message_id, files) -> list:
+        attachments = []
+        for filename, attachment_id in files:
+            if len(attachments) >= MAX_ATTACHMENTS:
+                break
+            if not attachment_id:
+                continue
+            status, data = _json_request(
+                "GET",
+                f"{GMAIL_API_URL}/messages/{quote(message_id, safe='')}/"
+                f"attachments/{quote(attachment_id, safe='')}",
+                headers,
+            )
+            if status == 200 and isinstance(data, dict) and data.get("data"):
+                stored = self.upload_attachment(filename, _b64url_decode(data["data"]))
+                if stored:
+                    attachments.append(stored)
+        return attachments
 
     def send_email(self, channel, chat, target, body: str) -> str:
         headers = self.auth_headers(channel)
@@ -384,6 +417,7 @@ class OutlookAgentChatChannelType(MailboxAgentChatChannelType):
         prepared["folder"] = str(folder or "inbox").strip()[:255]
         if prepared["folder"] != existing_config.get("folder"):
             prepared.pop("cursor", None)
+            prepared.pop("sync_link", None)
         return prepared
 
     def _folder_url(self, channel: "AgentChatChannel") -> str:
@@ -391,28 +425,19 @@ class OutlookAgentChatChannelType(MailboxAgentChatChannelType):
         return f"{GRAPH_API_URL}/me/mailFolders/{quote(folder, safe='')}/messages/delta"
 
     def poll(self, channel: "AgentChatChannel") -> None:
-        headers = {**self.auth_headers(channel), "Prefer": "odata.maxpagesize=50"}
+        headers = self.auth_headers(channel)
         cursor = channel.config.get("cursor")
         if not cursor:
-            # The first delta round lists the whole folder; it is walked
-            # without reading anything so only mail from now on counts.
-            url = self._folder_url(channel)
-            params = {"$select": "id"}
-            while True:
-                status, body = _json_request("GET", url, headers, params=params)
-                if status != 200 or not isinstance(body, dict):
-                    raise MailboxRequestFailed(f"delta answered {status}")
-                if body.get("@odata.deltaLink"):
-                    self.save_cursor(channel, cursor=body["@odata.deltaLink"])
-                    return
-                url, params = body.get("@odata.nextLink"), None
-                if not url:
-                    raise MailboxRequestFailed("delta ended without a delta link")
+            self._skip_existing_mail(channel, headers)
+            return
 
-        url, params = cursor, None
-        message_ids: list[str] = []
-        while True:
-            status, body = _json_request("GET", url, headers, params=params)
+        # A page never holds more than one poll takes, so a poll stops at
+        # most one page past the limit.
+        headers["Prefer"] = f"odata.maxpagesize={MAX_MESSAGES_PER_POLL}"
+        url, new_cursor = cursor, cursor
+        seen: set[str] = set()
+        for _ in range(MAX_PAGES_PER_POLL):
+            status, body = _json_request("GET", url, headers)
             if status == 410:
                 # The delta token expired; start over from now.
                 self.save_cursor(channel, cursor="")
@@ -422,20 +447,48 @@ class OutlookAgentChatChannelType(MailboxAgentChatChannelType):
             for entry in body.get("value") or []:
                 if "@removed" in entry or not entry.get("id"):
                     continue
-                if entry["id"] not in message_ids:
-                    message_ids.append(entry["id"])
+                if entry["id"] in seen:
+                    continue
+                seen.add(entry["id"])
+                received = self._fetch_message(channel, headers, entry["id"])
+                if received is not None:
+                    self.receive_email(channel, received)
             if body.get("@odata.deltaLink"):
                 new_cursor = body["@odata.deltaLink"]
                 break
+            url = body.get("@odata.nextLink")
+            if not url:
+                raise MailboxRequestFailed("delta ended without a delta link")
+            # The round continues from the next page, rather than jumping to
+            # the delta link past mail that was never read.
+            new_cursor = url
+            if len(seen) >= MAX_MESSAGES_PER_POLL:
+                break
+        self.save_cursor(channel, cursor=new_cursor)
+
+    def _skip_existing_mail(self, channel: "AgentChatChannel", headers: dict):
+        # The first delta round lists the whole folder; it is walked without
+        # reading anything so only mail from now on counts. A big folder takes
+        # a few polls, each resuming from the page the last one reached.
+        headers = {**headers, "Prefer": f"odata.maxpagesize={OUTLOOK_SYNC_PAGE_SIZE}"}
+        url = channel.config.get("sync_link")
+        params = None
+        if not url:
+            url, params = self._folder_url(channel), {"$select": "id"}
+        for _ in range(MAX_PAGES_PER_POLL):
+            status, body = _json_request("GET", url, headers, params=params)
+            if status == 410:
+                self.save_cursor(channel, sync_link="")
+                return
+            if status != 200 or not isinstance(body, dict):
+                raise MailboxRequestFailed(f"delta answered {status}")
+            if body.get("@odata.deltaLink"):
+                self.save_cursor(channel, cursor=body["@odata.deltaLink"], sync_link="")
+                return
             url, params = body.get("@odata.nextLink"), None
             if not url:
                 raise MailboxRequestFailed("delta ended without a delta link")
-
-        for message_id in message_ids[:MAX_MESSAGES_PER_POLL]:
-            received = self._fetch_message(channel, headers, message_id)
-            if received is not None:
-                self.receive_email(channel, received)
-        self.save_cursor(channel, cursor=new_cursor)
+        self.save_cursor(channel, sync_link=url)
 
     def _fetch_message(
         self, channel: "AgentChatChannel", headers: dict, message_id: str
@@ -471,9 +524,11 @@ class OutlookAgentChatChannelType(MailboxAgentChatChannelType):
         content = body.get("content") or ""
         is_html = (body.get("contentType") or "").lower() == "html"
 
-        attachments, names = [], []
+        load_attachments = None
         if message.get("hasAttachments"):
-            attachments, names = self._fetch_attachments(headers, message_id)
+            load_attachments = lambda: self._fetch_attachments(  # noqa: E731
+                headers, message_id
+            )
         return ReceivedEmail(
             from_address=sender.get("address") or "",
             from_name=sender.get("name") or "",
@@ -486,9 +541,13 @@ class OutlookAgentChatChannelType(MailboxAgentChatChannelType):
             references=header_values.get("references", "").split(),
             thread_key=message.get("conversationId") or "",
             provider_message_id=message_id,
-            sender_verified=True,
-            attachments=attachments,
-            attachment_names=names,
+            sender_verified=sender_authenticated(
+                _first_header(
+                    message.get("internetMessageHeaders"), "authentication-results"
+                ),
+                sender.get("address") or "",
+            ),
+            load_attachments=load_attachments,
         )
 
     def _fetch_attachments(self, headers: dict, message_id: str):
@@ -544,7 +603,8 @@ def poll_mailbox_channels() -> None:
     ).select_related("application__workspace")
     for channel in channels:
         lock_key = f"agent_application:mailbox:{channel.id}:poll"
-        if not cache.add(lock_key, True, timeout=POLL_LOCK_SECONDS):
+        lock_token = secrets.token_hex(8)
+        if not cache.add(lock_key, lock_token, timeout=POLL_LOCK_SECONDS):
             continue
         try:
             channel_type = agent_chat_channel_type_registry.get(channel.type)
@@ -554,7 +614,59 @@ def poll_mailbox_channels() -> None:
         except Exception:
             logger.exception("Mailbox channel {} failed to poll", channel.id)
         finally:
-            cache.delete(lock_key)
+            # A poll that outlived the lock must not release the one another
+            # worker has taken since.
+            if cache.get(lock_key) == lock_token:
+                cache.delete(lock_key)
+
+
+_COMMENT = re.compile(r"\([^()]*\)")
+_AUTH_RESULT = re.compile(r"^\s*([a-z0-9-]+)\s*=\s*([a-z]+)(.*)$", re.I | re.S)
+_AUTH_PROPERTY = re.compile(
+    r"\b(header\.from|header\.d|header\.i|smtp\.mailfrom)\s*=\s*\"?([^\s;\"]+)", re.I
+)
+
+
+def sender_authenticated(auth_results: str, from_address: str) -> bool:
+    """
+    Whether the receiving provider's Authentication-Results header vouches
+    for the From domain: a DMARC pass for it, or an SPF or DKIM pass for an
+    aligned domain. An SPF or DKIM pass for some other domain says nothing
+    about who the mail claims to be from.
+    """
+
+    from_domain = (from_address or "").rpartition("@")[2].lower()
+    if not auth_results or not from_domain:
+        return False
+    for segment in _COMMENT.sub(" ", auth_results).split(";"):
+        match = _AUTH_RESULT.match(segment)
+        if not match or match.group(2).lower() != "pass":
+            continue
+        method = match.group(1).lower()
+        properties = {
+            key.lower(): value.rpartition("@")[2]
+            for key, value in _AUTH_PROPERTY.findall(match.group(3))
+        }
+        if method == "dmarc":
+            domain = properties.get("header.from", "")
+        elif method == "dkim":
+            domain = properties.get("header.d") or properties.get("header.i", "")
+        elif method == "spf":
+            domain = properties.get("smtp.mailfrom", "")
+        else:
+            continue
+        if domains_aligned(domain, from_domain):
+            return True
+    return False
+
+
+def _first_header(headers, name: str) -> str:
+    # The topmost one is added by the provider that received the mail; any
+    # further down came with the message and could be forged by the sender.
+    for header in headers or []:
+        if (header.get("name") or "").lower() == name:
+            return header.get("value") or ""
+    return ""
 
 
 def _b64url_decode(data: str) -> bytes:

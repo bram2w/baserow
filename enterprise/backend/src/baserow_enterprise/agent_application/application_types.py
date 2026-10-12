@@ -345,14 +345,18 @@ class AgentApplicationType(ApplicationType):
         example conversations, so a template can show what talking to the
         agent looks like. A duplicate copies configuration only, so it skips
         them. Only what a reader needs is exported: the messages, never the
-        model history, the author, approvals or token counts.
+        model history, the author, approvals or token counts. A private
+        conversation is its owner's alone and never leaves the workspace.
         """
 
         if import_export_config.is_duplicate:
             return []
         chats = (
             AgentChat.objects.filter(
-                agent=agent, pinned=True, source=AgentChat.Source.MANUAL
+                agent=agent,
+                pinned=True,
+                private=False,
+                source=AgentChat.Source.MANUAL,
             )
             .exclude(status=AgentChat.Status.IN_PROGRESS)
             .defer("message_history")

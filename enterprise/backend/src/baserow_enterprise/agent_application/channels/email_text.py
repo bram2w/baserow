@@ -57,21 +57,47 @@ def strip_quoted_reply(text: str) -> str:
     return text.strip()
 
 
+# A tag never spans a `<`; without that, every unclosed `<` would scan to the
+# end of the body, which is quadratic on hostile mail.
 _BLOCK_TAGS = re.compile(
-    r"</?(?:p|div|br|tr|li|h[1-6]|blockquote|table|ul|ol|section|article)[^>]*>",
+    r"</?(?:p|div|br|tr|li|h[1-6]|blockquote|table|ul|ol|section|article)[^<>]*>",
     re.IGNORECASE,
 )
-_HIDDEN_BLOCKS = re.compile(
-    r"<(script|style|head)[^>]*>.*?</\1>", re.IGNORECASE | re.DOTALL
-)
-_TAGS = re.compile(r"<[^>]+>")
+_HIDDEN_OPEN = re.compile(r"<(script|style|head)[^<>]*>", re.IGNORECASE)
+_HIDDEN_CLOSE = {
+    tag: re.compile(f"</{tag}>", re.IGNORECASE) for tag in ("script", "style", "head")
+}
+_TAGS = re.compile(r"<[^<>]+>")
 _BLANK_LINES = re.compile(r"\n{3,}")
+
+
+def _strip_hidden_blocks(markup: str) -> str:
+    # A lazy `<style>.*?</style>` regex rescans the rest of the body for every
+    # unclosed opening tag. A tag found without a closing one can't have one
+    # further on either, so it is only searched for once.
+    parts, position, unclosed = [], 0, set()
+    while True:
+        opening = _HIDDEN_OPEN.search(markup, position)
+        if opening is None:
+            break
+        tag = opening.group(1).lower()
+        closing = None
+        if tag not in unclosed:
+            closing = _HIDDEN_CLOSE[tag].search(markup, opening.end())
+        if closing is None:
+            unclosed.add(tag)
+            parts.append(markup[position : opening.end()])
+        else:
+            parts.append(markup[position : opening.start()])
+        position = opening.end() if closing is None else closing.end()
+    parts.append(markup[position:])
+    return "".join(parts)
 
 
 def html_to_text(markup: str) -> str:
     """A readable plain text rendering of an HTML body, for mail without one."""
 
-    text = _HIDDEN_BLOCKS.sub("", markup or "")
+    text = _strip_hidden_blocks(markup or "")
     text = _BLOCK_TAGS.sub("\n", text)
     text = _TAGS.sub("", text)
     text = html.unescape(text)

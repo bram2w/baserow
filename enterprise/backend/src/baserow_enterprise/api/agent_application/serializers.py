@@ -320,11 +320,18 @@ class AgentApplicationToolApprovalSerializer(AgentChatToolApprovalSerializer):
 
     chat_uuid = serializers.UUIDField(source="chat.uuid", read_only=True)
     chat_title = serializers.CharField(source="chat.title", read_only=True)
+    chat_user_id = serializers.IntegerField(
+        source="chat.user_id",
+        read_only=True,
+        allow_null=True,
+        help_text="Steps acting on behalf of this user are theirs to decide.",
+    )
 
     class Meta(AgentChatToolApprovalSerializer.Meta):
         fields = AgentChatToolApprovalSerializer.Meta.fields + (
             "chat_uuid",
             "chat_title",
+            "chat_user_id",
         )
         read_only_fields = fields
 
@@ -419,7 +426,7 @@ class AgentTriggerSerializer(serializers.Serializer):
         read_only=True,
         allow_null=True,
         help_text="An example of the event payload this trigger starts a "
-        "conversation with; also what 'run once' hands the agent.",
+        "conversation with.",
     )
 
     def to_representation(self, trigger):

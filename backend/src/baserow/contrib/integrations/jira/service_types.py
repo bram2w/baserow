@@ -2,6 +2,7 @@ from typing import Any, Dict, List
 from urllib.parse import quote
 
 from baserow.contrib.integrations.external_api import (
+    ExternalAPIRefusedDispatchException,
     ExternalAPIServiceType,
     array_property,
     boolean_property,
@@ -189,8 +190,8 @@ class JiraListIssuesServiceType(JiraServiceType):
                 headers=headers,
                 params=params,
             )
-        except RemoteRefusedDispatchException as e:
-            if "404" not in str(e):
+        except ExternalAPIRefusedDispatchException as e:
+            if e.status_code != 404:
                 raise
             _, body = self.request_json(
                 dispatch_context,

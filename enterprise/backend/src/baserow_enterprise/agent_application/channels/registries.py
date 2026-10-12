@@ -129,17 +129,23 @@ class AgentChatChannelType(Instance):
         if text:
             self.send_response(channel, chat, text)
 
+    # Whether `on_message_while_busy` also takes messages that arrive while
+    # a run is in progress, instead of the caller retrying them for a while.
+    queues_while_busy = False
+
     def on_message_while_busy(
         self,
         channel: "AgentChatChannel",
         chat: "AgentChat",
         text: str,
         sender_name: str = "",
+        attachments: list | None = None,
     ) -> None:
         """
         Called for a message that arrives while the chat waits for an
-        approval, which cannot start a run. Chat surfaces say so; a channel
-        may instead keep the message for the people reviewing the chat.
+        approval (or runs, with `queues_while_busy`), which cannot start a
+        run. Chat surfaces say so; a channel may instead keep the message
+        and answer it later.
         """
 
         self.send_response(channel, chat, _AWAITING_APPROVAL_TEXT)
@@ -229,10 +235,18 @@ def start_channel_chat(
 
     # Checked up front so nothing is stored or posted for a message the
     # chat cannot take yet; the run start below guards the remaining race.
-    if chat.status == AgentChat.Status.AWAITING_APPROVAL:
-        channel_type.on_message_while_busy(channel, chat, text, sender_name)
+    running = chat.status in (
+        AgentChat.Status.IN_PROGRESS,
+        AgentChat.Status.CANCELING,
+    )
+    if chat.status == AgentChat.Status.AWAITING_APPROVAL or (
+        running and channel_type.queues_while_busy
+    ):
+        channel_type.on_message_while_busy(
+            channel, chat, text, sender_name, attachments=attachments
+        )
         return None
-    if chat.status in (AgentChat.Status.IN_PROGRESS, AgentChat.Status.CANCELING):
+    if running:
         raise AgentChatAlreadyRunning(f"The chat {chat.id} is already running.")
 
     content = f"{sender_name}: {text}" if sender_name else text
@@ -245,10 +259,17 @@ def start_channel_chat(
         chat_handler.start_chat_run(chat, message)
     except AgentChatAwaitingApproval:
         message.delete()
-        channel_type.send_response(channel, chat, _AWAITING_APPROVAL_TEXT)
+        channel_type.on_message_while_busy(
+            channel, chat, text, sender_name, attachments=attachments
+        )
         return None
     except AgentChatAlreadyRunning:
         message.delete()
+        if channel_type.queues_while_busy:
+            channel_type.on_message_while_busy(
+                channel, chat, text, sender_name, attachments=attachments
+            )
+            return None
         raise
 
     return message

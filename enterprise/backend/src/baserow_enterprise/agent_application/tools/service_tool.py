@@ -150,18 +150,24 @@ def needs_user(tool: "AgentTool", deps: "AgentRunDeps", service_type) -> bool:
     """
     Whether the tool can't run in a conversation without a Baserow user. A
     tool set to act as the user never runs without one. Inheriting that from
-    the application only matters for services acting inside the workspace:
-    they would otherwise fall back to the integration's user, while an email
-    or a web request doesn't depend on who acts.
+    the application only matters for services whose effect depends on who
+    acts: workspace services would fall back to the integration's user and
+    "Run agent" would start the other agent as the system, while an email or
+    a web request doesn't depend on who acts.
     """
 
     from baserow.contrib.integrations.local_baserow.service_types import (
         LocalBaserowServiceType,
     )
+    from baserow_enterprise.integrations.core.service_types import (
+        CoreRunAgentServiceType,
+    )
 
     if not acts_as_user(tool, deps):
         return False
-    return tool.act_as_user or isinstance(service_type, LocalBaserowServiceType)
+    return tool.act_as_user or isinstance(
+        service_type, (LocalBaserowServiceType, CoreRunAgentServiceType)
+    )
 
 
 class ServiceAgentToolType(AgentToolType):

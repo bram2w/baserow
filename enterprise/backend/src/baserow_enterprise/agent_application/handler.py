@@ -355,17 +355,21 @@ class AgentChatHandler:
 
     def check_chat_can_be_continued_by(self, chat: AgentChat, user) -> None:
         """
-        A manual conversation belongs to the person who started it: the run
-        acts as that person when the agent has no identity, and the agent's
-        self-configure tools check that person's permissions. Someone else may
-        read it, but continuing it would borrow those permissions.
+        A manual conversation belongs to the person who started it: tools
+        acting on behalf of the user run with that person's permissions, and
+        the memory tool depends on them. Someone else may read it, but
+        continuing it would borrow those permissions.
 
         A channel conversation belongs to the outside party on Slack or the
         public web chat: a message typed here would be answered there and the
         visitor would read it, so it stays read-only inside Baserow.
 
+        A conversation a trigger or a "Run agent" action started may only be
+        picked up with the application's minimum role for continuing one.
+
         :raises AgentChatNotOwned: When the chat was started by another user
             or came in through a chat channel.
+        :raises PermissionDenied: When the user's role is below that minimum.
         """
 
         from .exceptions import AgentChatNotOwned
@@ -381,7 +385,12 @@ class AgentChatHandler:
             and chat.user_id != getattr(user, "id", None)
         ):
             raise AgentChatNotOwned(f"The chat {chat.id} was started by another user.")
-        if chat.source == AgentChat.Source.TRIGGER and user is not None:
+        # Conversations started by a trigger or a "Run agent" action have no
+        # owner until someone picks them up.
+        if (
+            chat.source in (AgentChat.Source.TRIGGER, AgentChat.Source.SERVICE)
+            and user is not None
+        ):
             application = chat.agent.application
             CoreHandler().check_permissions(
                 user,
@@ -490,8 +499,8 @@ class AgentChatHandler:
 
     def get_public_web_channel(self, slug: str):
         """
-        The enabled web chat channel of an active application behind a public
-        link, or None. Anything else looks like a missing link to visitors.
+        The enabled web chat channel of an application behind a public link,
+        or None. Anything else looks like a missing link to visitors.
         """
 
         from .channels.registries import agent_chat_channel_type_registry
@@ -621,6 +630,7 @@ class AgentChatHandler:
             broadcast_chat_deleted,
             broadcast_chat_updated,
             broadcast_pending_approvals_updated,
+            remember_chat_privacy,
         )
 
         values = {}
@@ -642,6 +652,8 @@ class AgentChatHandler:
         application = chat.agent.application
 
         def broadcast():
+            if privacy_changed:
+                remember_chat_privacy(chat)
             if privacy_changed and chat.private:
                 # Everybody else loses the conversation; the owner keeps it.
                 broadcast_chat_deleted(
@@ -689,10 +701,14 @@ class AgentChatHandler:
         from .tasks import execute_chat_turn_inline
 
         agent = AgentApplicationHandler().get_main_agent(application)
+        # What a private conversation delegates stays as private as the
+        # conversation itself: only its owner sees the sub agent's chat.
+        private = parent_chat is not None and parent_chat.private
         chat = AgentChat.objects.create(
             agent=agent,
             source=AgentChat.Source.SERVICE,
-            user=user,
+            user_id=parent_chat.user_id if private else getattr(user, "id", None),
+            private=private,
             parent_chat=parent_chat,
             title=prompt[: AgentChat.TITLE_MAX_LENGTH],
         )
@@ -777,10 +793,14 @@ class AgentChatHandler:
                 f"The chat {chat.id} did not fail, so there is nothing to retry."
             )
 
+        from .channels.email import QUEUED_MAIL_ARTIFACT
+
+        # Mail still waiting for its own turn is not what failed.
         prompt_message = (
             chat.messages.filter(
                 role__in=[AgentChatMessage.Role.HUMAN, AgentChatMessage.Role.SYSTEM]
             )
+            .exclude(artifacts__contains={QUEUED_MAIL_ARTIFACT: True})
             .order_by("-id")
             .first()
         )
@@ -829,6 +849,70 @@ class AgentChatHandler:
         chat.status = AgentChat.Status.CANCELING
         chat.save(update_fields=["status", "updated_on"])
         broadcast_chat_updated(chat)
+
+    def approval_acts_as_user(
+        self, chat: AgentChat, tool_name: str, tools: list
+    ) -> bool:
+        """
+        Whether the step runs on behalf of the conversation's user, resolved
+        from the configuration it will run with when resumed.
+
+        :param tools: The agent's tools, fetched once by the caller.
+        """
+
+        from .tools.catalog import to_catalog_name
+        from .tools.handler import AgentToolHandler
+        from .tools.rules import ACT_AS_USER, normalize_workspace_config
+
+        application = chat.agent.application
+        tool = AgentToolHandler().find_tool_for_tool_name(chat.agent, tool_name, tools)
+        if tool is None:
+            return False
+        if tool.type == "workspace":
+            identities = normalize_workspace_config(tool.config)["tool_identities"]
+            identity = identities.get(to_catalog_name(tool_name))
+            if identity is not None:
+                return identity == ACT_AS_USER
+            return application.act_as_user
+        if tool.type == "service":
+            if tool.identity_id is not None:
+                return False
+            return tool.act_as_user or application.act_as_user
+        return False
+
+    def check_can_decide_approvals(
+        self, user: AbstractUser, chat: AgentChat, tool_names: list[str]
+    ) -> None:
+        """
+        A step that runs on behalf of the conversation's user is that user's
+        call alone, whatever their role: approving it spends their
+        permissions. Every other step needs the role that decides approvals.
+
+        :raises PermissionDenied: When the user may not decide all of them.
+        """
+
+        from baserow.core.exceptions import PermissionDenied
+
+        from .operations import DecideAgentToolApprovalOperationType
+        from .tools.handler import AgentToolHandler
+
+        tools = list(AgentToolHandler().list_tools(chat.agent))
+        acting = [
+            name for name in tool_names if self.approval_acts_as_user(chat, name, tools)
+        ]
+        if acting and chat.user_id != getattr(user, "id", None):
+            raise PermissionDenied(
+                "Only the user of the conversation decides steps that run on "
+                "their behalf."
+            )
+        if len(acting) < len(tool_names):
+            application = chat.agent.application
+            CoreHandler().check_permissions(
+                user,
+                DecideAgentToolApprovalOperationType.type,
+                workspace=application.workspace,
+                context=application.application_ptr,
+            )
 
     def list_tool_approvals(self, chat: AgentChat) -> QuerySet:
         return chat.tool_approvals.order_by("id")

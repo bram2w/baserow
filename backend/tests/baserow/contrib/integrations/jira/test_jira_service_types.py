@@ -86,6 +86,15 @@ def test_jira_list_issues_falls_back_to_the_server_endpoint(data_fixture):
     assert send.call_args_list[1].kwargs["params"]["startAt"] == 0
     assert result.data == {"issues": [], "count": 0}
 
+    # Only the status decides, not a "404" somewhere in the refusal's message.
+    with patch(
+        SEND,
+        return_value=fake_response(400, {"errorMessages": ["No issue 404 here"]}),
+    ) as send:
+        with pytest.raises(RemoteRefusedDispatchException):
+            service.get_type().dispatch(service, FakeDispatchContext())
+    assert send.call_count == 1
+
 
 @pytest.mark.django_db
 def test_jira_create_issue(data_fixture):

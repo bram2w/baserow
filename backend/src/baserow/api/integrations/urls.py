@@ -3,6 +3,8 @@ from django.urls import re_path
 from baserow.api.integrations.oauth2.views import (
     OAuth2AuthorizeView,
     OAuth2CallbackView,
+    OAuth2CompleteView,
+    OAuth2RedirectUriView,
 )
 from baserow.api.integrations.views import (
     IntegrationsView,
@@ -37,5 +39,15 @@ urlpatterns = [
         r"integration/oauth2/callback/$",
         OAuth2CallbackView.as_view(),
         name="oauth2_callback",
+    ),
+    re_path(
+        r"integration/oauth2/complete/$",
+        OAuth2CompleteView.as_view(),
+        name="oauth2_complete",
+    ),
+    re_path(
+        r"integration/oauth2/redirect-uri/$",
+        OAuth2RedirectUriView.as_view(),
+        name="oauth2_redirect_uri",
     ),
 ]

@@ -106,6 +106,12 @@ export default {
     },
   },
   emits: ['select'],
+  data() {
+    return { isMounted: false }
+  },
+  mounted() {
+    this.isMounted = true
+  },
   computed: {
     canOpenMenu() {
       return ['update_chat', 'delete_chat'].some((operation) =>
@@ -125,8 +131,12 @@ export default {
     relativeTime() {
       return moment(this.chat.updated_on).fromNow()
     },
+    // Formatted in the browser only: the server renders in its own timezone
+    // and hydration doesn't correct attributes.
     absoluteTime() {
-      return moment(this.chat.updated_on).format('LLL')
+      return this.isMounted
+        ? moment(this.chat.updated_on).format('LLL')
+        : undefined
     },
     // Idle conversations carry no badge; only what needs attention does.
     statusModifier() {

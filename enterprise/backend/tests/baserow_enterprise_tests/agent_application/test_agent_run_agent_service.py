@@ -158,6 +158,27 @@ def test_an_agent_can_run_another_agent_as_a_tool(enterprise_data_fixture, setup
 
 
 @pytest.mark.django_db
+def test_a_private_conversation_delegates_privately(enterprise_data_fixture, setup):
+    user, workspace, target_application, target_agent, service = setup
+    parent_application, parent_agent = _create_agent(user, workspace, "Parent")
+    parent_chat = AgentChat.objects.create(agent=parent_agent, user=user, private=True)
+    identity = enterprise_data_fixture.create_user(workspace=workspace)
+
+    with (
+        patch(BROADCAST),
+        patch("baserow_enterprise.agent_application.realtime.broadcast_to_users"),
+    ):
+        # The tool may act as someone else; the owner keeps the conversation.
+        ServiceHandler().dispatch_service(
+            service, AgentDispatchContext(chat=parent_chat, actor=identity)
+        )
+
+    child = AgentChat.objects.get(agent=target_agent)
+    assert child.private is True
+    assert child.user_id == user.id
+
+
+@pytest.mark.django_db
 def test_dispatch_checks_the_actor_and_the_workspace(enterprise_data_fixture, setup):
     user, workspace, application, agent, service = setup
     stranger = enterprise_data_fixture.create_user()

@@ -115,6 +115,12 @@ EVENT_PROPERTIES = {
 }
 
 
+def _header_value(value: Optional[str]) -> str:
+    # A line break would start a new header, which `EmailMessage` refuses with
+    # a ValueError, and formulas easily produce multi-line values.
+    return " ".join((value or "").splitlines())
+
+
 class GmailSendEmailServiceType(GoogleServiceType):
     type = "gmail_send_email"
     model_class = GmailSendEmailService
@@ -137,14 +143,14 @@ class GmailSendEmailServiceType(GoogleServiceType):
             )
         headers = self.auth_headers(service)
         message = EmailMessage()
-        message["To"] = ", ".join(to_emails)
+        message["To"] = _header_value(", ".join(to_emails))
         cc_emails = split_addresses(resolved_values.get("cc_emails"))
         if cc_emails:
-            message["Cc"] = ", ".join(cc_emails)
+            message["Cc"] = _header_value(", ".join(cc_emails))
         bcc_emails = split_addresses(resolved_values.get("bcc_emails"))
         if bcc_emails:
-            message["Bcc"] = ", ".join(bcc_emails)
-        message["Subject"] = resolved_values.get("subject") or ""
+            message["Bcc"] = _header_value(", ".join(bcc_emails))
+        message["Subject"] = _header_value(resolved_values.get("subject"))
         message.set_content(resolved_values.get("body") or "")
         raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
         _, body = self.request_json(

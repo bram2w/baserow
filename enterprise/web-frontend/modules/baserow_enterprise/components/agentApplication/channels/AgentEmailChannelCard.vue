@@ -47,7 +47,7 @@
       class="margin-bottom-2"
     >
       <IntegrationDropdown
-        :model-value="channel.config.smtp_integration_id"
+        :model-value="smtpIntegrationId"
         :application="application"
         :integrations="smtpIntegrations"
         :integration-type="smtpIntegrationType"
@@ -67,7 +67,7 @@
         ></FormInput>
       </FormGroup>
       <FormGroup
-        v-if="channel.config.smtp_integration_id"
+        v-if="smtpIntegrationId"
         small-label
         required
         :label="$t('agentChannels.fromEmailLabel')"
@@ -110,7 +110,19 @@ export default {
   name: 'AgentEmailChannelCard',
   components: { AgentEmailSharedFields, IntegrationDropdown },
   mixins: [agentChannelCard],
+  data() {
+    return {
+      // An SMTP server picked before there is a sender address; the backend
+      // only takes the two together, so it's saved with the address.
+      pendingSmtpIntegrationId: null,
+    }
+  },
   computed: {
+    smtpIntegrationId() {
+      return (
+        this.pendingSmtpIntegrationId || this.channel.config.smtp_integration_id
+      )
+    },
     domain() {
       return (this.channel.config.address || '').split('@')[1] || ''
     },
@@ -123,9 +135,16 @@ export default {
       ).filter((integration) => integration.type === 'smtp')
     },
   },
+  watch: {
+    'channel.config.smtp_integration_id'(value) {
+      if (value === this.pendingSmtpIntegrationId) {
+        this.pendingSmtpIntegrationId = null
+      }
+    },
+  },
   methods: {
     draftConfigValues() {
-      return {
+      const values = {
         localpart: this.draft.localpart.trim().toLowerCase(),
         from_name: this.draft.fromName,
         from_email: this.draft.fromEmail.trim(),
@@ -134,11 +153,23 @@ export default {
           .map((domain) => domain.trim().toLowerCase())
           .filter(Boolean),
       }
+      if (this.pendingSmtpIntegrationId && values.from_email) {
+        values.smtp_integration_id = this.pendingSmtpIntegrationId
+      }
+      return values
     },
-    onSmtpIntegrationChanged(integrationId) {
-      this.updateChannel({
-        config: { smtp_integration_id: integrationId || null },
-      })
+    async onSmtpIntegrationChanged(integrationId) {
+      const fromEmail = this.draft.fromEmail.trim()
+      if (integrationId && !fromEmail) {
+        this.pendingSmtpIntegrationId = integrationId
+        return
+      }
+      this.pendingSmtpIntegrationId = null
+      const config = { smtp_integration_id: integrationId || null }
+      if (integrationId) {
+        config.from_email = fromEmail
+      }
+      await this.updateChannel({ config })
     },
     copyAddress() {
       copyToClipboard(this.channel.config.address)

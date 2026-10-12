@@ -1,5 +1,11 @@
-import { defineNuxtModule, addPlugin, createResolver } from 'nuxt/kit'
+import {
+  defineNuxtModule,
+  addPlugin,
+  createResolver,
+  extendPages,
+} from 'nuxt/kit'
 import { locales } from '../../config/locales.js'
+import { routes as oauth2Routes } from './oauth2/routes.js'
 
 export default defineNuxtModule({
   meta: {
@@ -16,6 +22,10 @@ export default defineNuxtModule({
     addPlugin({
       src: resolve('./oauth2/plugins/oauth2Result.js'),
       mode: 'client',
+    })
+
+    extendPages((pages) => {
+      pages.push(...oauth2Routes)
     })
 
     nuxt.hook('i18n:registerModule', (register) => {

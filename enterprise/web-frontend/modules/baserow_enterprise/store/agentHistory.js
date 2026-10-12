@@ -21,6 +21,8 @@ export const state = () => ({
   // Only conversations started this way are listed (see `getChatOrigin`);
   // null lists all of them.
   origin: null,
+  // The agent the list belongs to; another agent starts unfiltered.
+  applicationId: null,
 })
 
 export const mutations = {
@@ -60,6 +62,9 @@ export const mutations = {
   SET_ORIGIN(state, origin) {
     state.origin = origin
   },
+  SET_APPLICATION_ID(state, applicationId) {
+    state.applicationId = applicationId
+  },
   SET_PAGINATION(state, { fetchedCount, hasMore }) {
     state.fetchedCount = fetchedCount
     state.hasMore = hasMore
@@ -71,8 +76,13 @@ export const actions = {
     commit('SET_CHATS', [])
     commit('SET_PAGINATION', { fetchedCount: 0, hasMore: false })
     commit('SET_ORIGIN', null)
+    commit('SET_APPLICATION_ID', null)
   },
   async fetch({ commit, state }, { applicationId }) {
+    if (state.applicationId !== applicationId) {
+      commit('SET_APPLICATION_ID', applicationId)
+      commit('SET_ORIGIN', null)
+    }
     commit('SET_LOADING', true)
     const origin = state.origin
     try {
@@ -116,6 +126,7 @@ export const actions = {
   },
   async setOrigin({ commit, dispatch, state }, { applicationId, origin }) {
     const previous = state.origin
+    commit('SET_APPLICATION_ID', applicationId)
     commit('SET_ORIGIN', origin)
     try {
       return await dispatch('fetch', { applicationId })

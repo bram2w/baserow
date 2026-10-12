@@ -218,4 +218,24 @@ describe('agentHistory store pinning and deleting', () => {
     await store.dispatch('agentHistory/clear')
     expect(store.getters['agentHistory/getOrigin']).toBe(null)
   })
+
+  test('another agent starts with the filter cleared', async () => {
+    mock.onGet('agent_application/1/chats/').reply(200, {
+      count: 0,
+      next: null,
+      previous: null,
+      results: [],
+    })
+    mock.onGet('agent_application/2/chats/').replyOnce((config) => {
+      expect(config.params.origin).toBeUndefined()
+      return [200, { count: 0, next: null, previous: null, results: [] }]
+    })
+    await store.dispatch('agentHistory/fetch', { applicationId: 1 })
+    await store.dispatch('agentHistory/setOrigin', {
+      applicationId: 1,
+      origin: 'manual',
+    })
+    await store.dispatch('agentHistory/fetch', { applicationId: 2 })
+    expect(store.getters['agentHistory/getOrigin']).toBe(null)
+  })
 })

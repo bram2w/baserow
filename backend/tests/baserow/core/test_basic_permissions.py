@@ -699,6 +699,10 @@ def test_get_permissions(data_fixture):
             },
         },
         {
+            "name": "agent_chat_role",
+            "permissions": {"default": ["ADMIN"], "applications": {}},
+        },
+        {
             "name": "basic",
             "permissions": {
                 "admin_only_operations": [
@@ -855,6 +859,10 @@ def test_get_permissions(data_fixture):
             },
         },
         {
+            "name": "agent_chat_role",
+            "permissions": {"default": ["ADMIN"], "applications": {}},
+        },
+        {
             "name": "basic",
             "permissions": {
                 "admin_only_operations": [
@@ -1009,6 +1017,10 @@ def test_get_permissions(data_fixture):
                 ],
                 "workspace_template_ids": [],
             },
+        },
+        {
+            "name": "agent_chat_role",
+            "permissions": {"default": ["BUILDER"], "applications": {}},
         },
         {
             "name": "basic",

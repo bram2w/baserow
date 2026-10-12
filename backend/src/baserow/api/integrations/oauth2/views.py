@@ -24,18 +24,23 @@ from baserow.contrib.integrations.oauth2.handler import OAuth2IntegrationHandler
 from baserow.contrib.integrations.oauth2.integration_types import (
     OAuth2IntegrationTypeMixin,
 )
-from baserow.core.exceptions import PermissionException, UserNotInWorkspace
+from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.integrations.exceptions import IntegrationDoesNotExist
 from baserow.core.integrations.handler import IntegrationHandler
 
 from .errors import (
     ERROR_OAUTH2_INTEGRATION_NOT_CONFIGURED,
     ERROR_OAUTH2_INVALID_RETURN_URL,
+    ERROR_OAUTH2_INVALID_STATE,
     ERROR_OAUTH2_NOT_SUPPORTED,
+    ERROR_OAUTH2_TOKEN_REQUEST_FAILED,
 )
 from .serializers import (
     OAuth2AuthorizeRequestSerializer,
     OAuth2AuthorizeResponseSerializer,
+    OAuth2CompleteRequestSerializer,
+    OAuth2CompleteResponseSerializer,
+    OAuth2RedirectUriResponseSerializer,
 )
 
 
@@ -60,8 +65,8 @@ class OAuth2AuthorizeView(APIView):
         description=(
             "Starts connecting an OAuth2 integration (Google, Microsoft) to an "
             "account. Answers the provider's consent URL to send the browser to; "
-            "the provider later calls back to Baserow, which stores the tokens "
-            "and redirects to `return_url`."
+            "the provider later calls back to Baserow, which hands the code to "
+            "the frontend to complete the connection and return to `return_url`."
         ),
         request=OAuth2AuthorizeRequestSerializer,
         responses={
@@ -98,9 +103,17 @@ class OAuth2AuthorizeView(APIView):
         return Response({"authorization_url": authorization_url})
 
 
+# The frontend page that finishes the flow with the user's own session.
+FRONTEND_COMPLETE_PATH = "/integration/oauth2/complete"
+# Only what the frontend needs to finish or explain the outcome is forwarded.
+FORWARDED_CALLBACK_PARAMS = ("code", "state", "error", "error_description")
+
+
 class OAuth2CallbackView(APIView):
-    # The provider's redirect carries no Baserow session; the signed state
-    # names the user and integration and is what authorizes the request.
+    # The provider's redirect carries no Baserow session, so nothing is
+    # exchanged here: the browser is sent on to the frontend, which finishes
+    # the flow as the logged in user. Kept on the backend so the redirect URI
+    # registered with the provider does not change.
     permission_classes = (AllowAny,)
 
     @extend_schema(
@@ -128,51 +141,79 @@ class OAuth2CallbackView(APIView):
         operation_id="oauth2_integration_callback",
         description=(
             "Where the provider sends the browser after the consent screen. "
-            "Stores the account's tokens on the integration and redirects to "
-            "the page the flow was started from, with `oauth2_status` set to "
-            "`success` or `error` and `oauth2_error` describing a failure."
+            "Redirects to the frontend, which completes the connection with "
+            "the `oauth2_complete_integration` endpoint."
         ),
         responses={302: None},
     )
-    @transaction.atomic
     def get(self, request):
-        handler = OAuth2IntegrationHandler()
-        state = request.GET.get("state")
-        try:
-            data = handler.parse_state(state)
-        except OAuth2InvalidState:
-            # No trusted page to return to, so the frontend root explains it.
-            return HttpResponseRedirect(
-                f"{settings.PUBLIC_WEB_FRONTEND_URL.rstrip('/')}/?"
-                + urlencode(
-                    {
-                        "oauth2_status": "error",
-                        "oauth2_error": "The connection request expired or was "
-                        "tampered with. Start again from the integration.",
-                    }
-                )
-            )
-        return_url = data["return_url"]
-        status = {"oauth2_integration": data["integration_id"]}
-        provider_error = request.GET.get("error")
-        code = request.GET.get("code")
-        if provider_error or not code:
-            status.update(
-                oauth2_status="error",
-                oauth2_error=request.GET.get("error_description")
-                or provider_error
-                or "The provider did not answer with a code.",
-            )
-        else:
-            try:
-                handler.complete_authorization(code, state)
-                status["oauth2_status"] = "success"
-            except (
-                OAuth2InvalidState,
-                OAuth2TokenRequestFailed,
-                PermissionException,
-                UserNotInWorkspace,
-            ) as e:
-                status.update(oauth2_status="error", oauth2_error=str(e))
-        separator = "&" if "?" in return_url else "?"
-        return HttpResponseRedirect(f"{return_url}{separator}{urlencode(status)}")
+        params = {
+            name: request.GET[name]
+            for name in FORWARDED_CALLBACK_PARAMS
+            if request.GET.get(name)
+        }
+        return HttpResponseRedirect(
+            f"{settings.PUBLIC_WEB_FRONTEND_URL.rstrip('/')}{FRONTEND_COMPLETE_PATH}?"
+            + urlencode(params)
+        )
+
+
+class OAuth2CompleteView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        tags=["Integrations"],
+        operation_id="oauth2_complete_integration",
+        description=(
+            "Finishes connecting an OAuth2 integration: trades the provider's "
+            "code for tokens and stores them on the integration. Only the user "
+            "who started the flow can complete it, and only once."
+        ),
+        request=OAuth2CompleteRequestSerializer,
+        responses={
+            200: OAuth2CompleteResponseSerializer,
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                    "ERROR_OAUTH2_INVALID_STATE",
+                    "ERROR_OAUTH2_TOKEN_REQUEST_FAILED",
+                ]
+            ),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+            OAuth2InvalidState: ERROR_OAUTH2_INVALID_STATE,
+            OAuth2TokenRequestFailed: ERROR_OAUTH2_TOKEN_REQUEST_FAILED,
+        }
+    )
+    @validate_body(OAuth2CompleteRequestSerializer, return_validated=True)
+    def post(self, request, data):
+        state = OAuth2IntegrationHandler().complete_authorization(
+            request.user, data["code"], data["state"]
+        )
+        return Response(
+            {
+                "integration_id": state["integration_id"],
+                "return_url": state["return_url"],
+            }
+        )
+
+
+class OAuth2RedirectUriView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        tags=["Integrations"],
+        operation_id="oauth2_integration_redirect_uri",
+        description=(
+            "The redirect URI Baserow sends to OAuth2 providers, to register "
+            "with the provider's app."
+        ),
+        responses={200: OAuth2RedirectUriResponseSerializer},
+    )
+    def get(self, request):
+        return Response({"redirect_uri": OAuth2IntegrationHandler().get_redirect_uri()})

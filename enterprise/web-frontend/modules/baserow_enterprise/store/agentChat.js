@@ -339,6 +339,11 @@ export const actions = {
       )
       commit('SET_CHAT_ID', data.id)
       commit('SET_CHAT_USER_ID', data.user_id ?? null)
+      // The toggle may have flipped while this request was in flight; what
+      // the conversation was created as is what counts.
+      if (data.private !== undefined) {
+        commit('SET_PRIVATE', Boolean(data.private))
+      }
       commit('SET_RUNNING', true)
       dispatch('agentHistory/forceUpdateChat', { chat: data }, { root: true })
 
@@ -445,6 +450,11 @@ export const actions = {
     }
     if (chat.private !== undefined) {
       commit('SET_PRIVATE', chat.private)
+    }
+    // Someone picking up a triggered conversation becomes its owner, which
+    // decides who else may still write in it.
+    if (chat.user_id !== undefined) {
+      commit('SET_CHAT_USER_ID', chat.user_id)
     }
     const missedTerminal =
       ['idle', 'error'].includes(chat.status) &&

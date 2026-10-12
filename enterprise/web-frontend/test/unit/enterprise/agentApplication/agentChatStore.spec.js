@@ -805,4 +805,30 @@ describe('agentChat store privacy', () => {
     ).rejects.toBeTruthy()
     expect(store.getters['agentChat/isPrivate']).toBe(true)
   })
+
+  test('the conversation takes its privacy from the server once created', async () => {
+    store.dispatch('agentChat/newConversation')
+    const uuid = store.getters['agentChat/getCurrentChatUuid']
+    mock
+      .onPost(`agent_application/42/chats/${uuid}/messages/`)
+      .replyOnce(202, { id: 6, uuid, status: 'in_progress', private: false })
+    const sending = store.dispatch('agentChat/sendMessage', {
+      application: { id: 42 },
+      content: 'Hello',
+    })
+    // Flipped while the first message is still on its way.
+    await store.dispatch('agentChat/setPrivate', { private: true })
+    await sending
+    expect(store.getters['agentChat/isPrivate']).toBe(false)
+  })
+
+  test('a realtime update tells who now owns the open conversation', async () => {
+    store.dispatch('agentChat/newConversation')
+    store.commit('agentChat/SET_CHAT_ID', 7)
+    store.commit('agentChat/SET_APPLICATION_ID', 42)
+    await store.dispatch('agentChat/handleChatUpdated', {
+      chat: { id: 7, status: 'idle', user_id: 77, private: false },
+    })
+    expect(store.getters['agentChat/getChatUserId']).toBe(77)
+  })
 })

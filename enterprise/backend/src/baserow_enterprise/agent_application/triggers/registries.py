@@ -96,8 +96,8 @@ class AgentTriggerType(Instance):
 
     def get_sample_payload(self, trigger: AgentTrigger) -> Optional[dict]:
         """
-        What "Run once" hands the agent, and what the configuration shows as
-        the example payload.
+        What the configuration shows as the example payload, so the user knows
+        which values the trigger hands the agent.
         """
 
         return None

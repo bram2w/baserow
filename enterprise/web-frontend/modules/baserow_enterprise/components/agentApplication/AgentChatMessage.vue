@@ -84,7 +84,7 @@
 </template>
 
 <script>
-import { defineComponent, computed, ref } from 'vue'
+import { defineComponent, computed, ref, onMounted } from 'vue'
 import moment from '@baserow/modules/core/moment'
 import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
 import { renderMarkdown } from '@baserow_enterprise/utils/agentMarkdown'
@@ -137,8 +137,14 @@ export default defineComponent({
     const relativeTime = computed(() =>
       moment(props.event.created_on).fromNow()
     )
+    // Formatted in the browser only: the server renders in its own timezone
+    // and hydration doesn't correct attributes.
+    const isMounted = ref(false)
+    onMounted(() => {
+      isMounted.value = true
+    })
     const absoluteTime = computed(() =>
-      moment(props.event.created_on).format('LLL')
+      isMounted.value ? moment(props.event.created_on).format('LLL') : undefined
     )
     const copy = () => {
       copyToClipboard(props.event.content || '')

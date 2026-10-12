@@ -5,5 +5,11 @@ export default (client) => {
         return_url: returnUrl,
       })
     },
+    complete(code, state) {
+      return client.post('integration/oauth2/complete/', { code, state })
+    },
+    getRedirectUri() {
+      return client.get('integration/oauth2/redirect-uri/')
+    },
   }
 }

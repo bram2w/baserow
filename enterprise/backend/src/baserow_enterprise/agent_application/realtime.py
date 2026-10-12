@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.core.exceptions import SynchronousOnlyOperation
 
 from loguru import logger
@@ -9,6 +10,19 @@ from baserow.ws.tasks import (
 )
 
 from .models import AgentChat
+
+# A run keeps the chat it loaded at the start, so a privacy change made while
+# it runs is looked up here instead of on that stale instance.
+CHAT_PRIVACY_CACHE_KEY = "agent_chat_private:{chat_id}"
+CHAT_PRIVACY_CACHE_TIMEOUT = 60 * 60 * 6
+
+
+def remember_chat_privacy(chat: AgentChat) -> None:
+    cache.set(
+        CHAT_PRIVACY_CACHE_KEY.format(chat_id=chat.id),
+        chat.private,
+        timeout=CHAT_PRIVACY_CACHE_TIMEOUT,
+    )
 
 
 def get_agent_application_group_name(application_id: int) -> str:
@@ -116,6 +130,10 @@ def _broadcast_to_chat_viewers(
 
 
 def _private_user_id(chat: AgentChat) -> int | None:
+    private = cache.get(CHAT_PRIVACY_CACHE_KEY.format(chat_id=chat.id))
+    if private is not None:
+        # Also corrects what a stale instance would serialize.
+        chat.private = private
     return chat.user_id if chat.private else None
 
 
@@ -208,12 +226,13 @@ def broadcast_chat_updated(chat: AgentChat) -> None:
         AgentChatSerializer,
     )
 
+    private_user_id = _private_user_id(chat)
     _broadcast_to_chat_viewers(
         chat.agent.application_id,
         {
             "type": "agent_chat_updated",
             "chat": AgentChatSerializer(chat).data,
         },
-        _private_user_id(chat),
+        private_user_id,
     )
     broadcast_public_chat_status(chat)

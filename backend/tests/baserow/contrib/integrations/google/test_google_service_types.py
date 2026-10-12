@@ -55,6 +55,22 @@ def test_gmail_send_email_builds_a_raw_message(data_fixture):
 
 
 @pytest.mark.django_db
+def test_gmail_send_email_flattens_line_breaks_in_headers(data_fixture):
+    service = data_fixture.create_gmail_send_email_service(
+        integration_args=connected(),
+        to_emails="'a@example.com'",
+        subject="'Hello\r\nBcc: evil@example.com\nagain'",
+    )
+    with patch(SEND, return_value=fake_response(200, {"id": "m1"})) as send:
+        service.get_type().dispatch(service, FakeDispatchContext())
+
+    raw = send.call_args.kwargs["json"]["raw"]
+    message = message_from_bytes(base64.urlsafe_b64decode(raw))
+    assert message["Subject"] == "Hello Bcc: evil@example.com again"
+    assert message["Bcc"] is None
+
+
+@pytest.mark.django_db
 def test_gmail_send_email_needs_a_recipient_and_a_connected_account(data_fixture):
     service = data_fixture.create_gmail_send_email_service(
         integration_args=connected(), to_emails="''"
