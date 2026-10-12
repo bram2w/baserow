@@ -1,0 +1,9 @@
+{
+    "type": "bug",
+    "message": "Ensure Builder's Input text element's email validator matches the strict validation in the backend.",
+    "issue_origin": "github",
+    "issue_number": 4608,
+    "domain": "builder",
+    "bullet_points": [],
+    "created_at": "2026-10-12"
+}
