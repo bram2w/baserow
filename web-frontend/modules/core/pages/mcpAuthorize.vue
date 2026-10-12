@@ -223,8 +223,8 @@ const workspaceId = ref(null)
 const ticked = reactive({})
 const loading = ref(false)
 const error = ref({ visible: false, title: '', message: '' })
-// The backend sends fatal authorize errors (unknown client, invalid redirect
-// URI) here instead of to the client's redirect URI, which can't be trusted.
+// The backend sends authorize errors here instead of to the client's redirect
+// URI, which can't be trusted before the user has signed in and allowed it.
 // Only the code is read, so the URL can't put its own text on the page.
 const ERROR_MESSAGES = { unknown_client: 'mcpAuthorize.unknownClient' }
 const routeError = route.query.error

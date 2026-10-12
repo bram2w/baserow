@@ -7,7 +7,8 @@ def test_authorization_server_metadata(client):
     assert response.status_code == 200
     data = response.json()
     assert data["client_id_metadata_document_supported"] is True
-    assert "none" in data["token_endpoint_auth_methods_supported"]
+    # Registration only accepts public clients.
+    assert data["token_endpoint_auth_methods_supported"] == ["none"]
     assert data["registration_endpoint"].endswith("/oauth/register/")
     assert data["token_endpoint"].endswith("/oauth/token/")
     assert data["authorization_endpoint"].endswith("/oauth/authorize/")

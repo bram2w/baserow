@@ -1,6 +1,7 @@
 import re
 from datetime import timedelta
 from typing import Iterable
+from urllib.parse import urlparse
 
 from django.utils import timezone
 
@@ -14,6 +15,19 @@ ENDPOINT_SCOPE_RE = re.compile(r"^endpoint:(\d+)$")
 LOOPBACK_HOSTS = {"127.0.0.1", "::1", "localhost"}
 # How stale an application's `updated` may be before a token issue bumps it.
 LAST_USED_RESOLUTION = timedelta(hours=1)
+
+
+def is_allowed_redirect_uri(uri) -> bool:
+    """https anywhere, or http to a loopback address."""
+
+    # DOT stores the URIs space-joined and splits them on any whitespace, so a
+    # URI containing whitespace would be stored as several.
+    if not isinstance(uri, str) or uri.split() != [uri]:
+        return False
+    parsed = urlparse(uri)
+    if parsed.scheme == "https":
+        return bool(parsed.hostname)
+    return parsed.scheme == "http" and parsed.hostname in LOOPBACK_HOSTS
 
 
 def endpoint_scope(endpoint_id: int) -> str:

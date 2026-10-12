@@ -11,7 +11,6 @@ from .exceptions import (
     MCPEndpointDoesNotExist,
 )
 from .models import MCPEndpoint
-from .oauth.tokens import revoke_endpoint_tokens
 from .operations import (
     CreateMCPEndpointOperationType,
     DeleteMCPEndpointOperationType,
@@ -96,7 +95,6 @@ class MCPEndpointHandler:
         user: AbstractUser,
         workspace: Workspace,
         name: str,
-        allowed_tools: list[str] | None = None,
     ) -> MCPEndpoint:
         """
         Creates a new MCP endpoint.
@@ -107,8 +105,6 @@ class MCPEndpointHandler:
         :type workspace: Workspace
         :param name: The name of the endpoint.
         :type name: str
-        :param allowed_tools: The tool names the endpoint may use, None for all
-            enabled tools.
         :return: The created endpoint instance.
         :rtype: MCPEndpoint
         """
@@ -125,7 +121,6 @@ class MCPEndpointHandler:
             key=self.generate_unique_key(),
             user=user,
             workspace=workspace,
-            allowed_tools=allowed_tools,
         )
 
         return endpoint
@@ -137,7 +132,7 @@ class MCPEndpointHandler:
         client_id: str,
         name: str,
         allowed_tools: list[str],
-    ) -> MCPEndpoint:
+    ) -> tuple[MCPEndpoint, bool]:
         """
         Returns the grant backing an OAuth client's access to a workspace, creating
         it on first consent and replacing its allowed tools afterwards.
@@ -147,7 +142,7 @@ class MCPEndpointHandler:
         :param client_id: The OAuth client id.
         :param name: The client name, used as the grant name when creating.
         :param allowed_tools: The tool names the client may use.
-        :return: The created or updated grant.
+        :return: The created or updated grant, and whether it was created.
         """
 
         CoreHandler().check_permissions(
@@ -173,7 +168,7 @@ class MCPEndpointHandler:
             )
             endpoint.allowed_tools = allowed_tools
             endpoint.save(update_fields=["allowed_tools"])
-        return endpoint
+        return endpoint, created
 
     def update_endpoint(
         self, user: AbstractUser, endpoint: MCPEndpoint, name: str
@@ -229,8 +224,6 @@ class MCPEndpointHandler:
             context=endpoint,
         )
 
-        # Revoke first: `delete()` clears the instance's id.
-        revoke_endpoint_tokens(endpoint)
         endpoint.delete()
 
     def get_oauth_grant(self, user: AbstractUser, grant_id: int) -> MCPEndpoint:
@@ -250,21 +243,13 @@ class MCPEndpointHandler:
                 f"The MCP OAuth grant with id {grant_id} does not exist."
             )
 
-    def disconnect_oauth_grant(self, user: AbstractUser, endpoint: MCPEndpoint):
+    def disconnect_oauth_grant(self, endpoint: MCPEndpoint):
         """
-        Deletes the user's OAuth grant and revokes its tokens. Skips the MCP
-        endpoint permission checks, so losing them never keeps a client connected.
-
-        :raises MCPEndpointDoesNotBelongToUser: When the grant isn't the user's.
+        Deletes an OAuth grant from `get_oauth_grant`, which revokes its tokens.
+        Skips the MCP endpoint permission checks, so losing them never keeps a
+        client connected.
         """
 
-        if user.id != endpoint.user_id or endpoint.oauth_client_id is None:
-            raise MCPEndpointDoesNotBelongToUser(
-                "The user is not authorized to disconnect the grant."
-            )
-
-        # Revoke first: `delete()` clears the instance's id.
-        revoke_endpoint_tokens(endpoint)
         endpoint.delete()
 
     def revoke_workspace_grants(self, user_id: int, workspace_id: int) -> None:
@@ -273,9 +258,6 @@ class MCPEndpointHandler:
         a permission check, for when the user is no longer a member.
         """
 
-        grants = MCPEndpoint.objects.filter(
+        MCPEndpoint.objects.filter(
             user_id=user_id, workspace_id=workspace_id, oauth_client_id__isnull=False
-        )
-        for grant in grants:
-            revoke_endpoint_tokens(grant)
-        grants.delete()
+        ).delete()

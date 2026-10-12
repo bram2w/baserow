@@ -66,14 +66,18 @@ def without_param(query, name):
     return urlencode(params, doseq=True)
 
 
-def assert_redirects_with_error(response, error):
+def assert_consent_page_error(response, error):
+    """
+    Authorize errors are shown on the consent page and never redirected to the
+    client, whose redirect URI anyone can register.
+    """
+
     assert response.status_code == 302
-    assert response["Location"].startswith(REDIRECT_URI)
-    assert "/mcp-authorize" not in response["Location"]
-    query = parse_qs(urlparse(response["Location"]).query)
-    assert query["error"] == [error]
-    assert query["state"] == ["s1"]
-    assert query["iss"] == [ISSUER]
+    location = urlparse(response["Location"])
+    assert response["Location"].startswith(settings.PUBLIC_WEB_FRONTEND_URL)
+    assert location.path == "/mcp-authorize"
+    assert parse_qs(location.query) == {"error": [error]}
+    assert REDIRECT_URI not in response["Location"]
 
 
 @pytest.mark.django_db
@@ -82,7 +86,7 @@ def test_authorize_without_pkce_is_rejected(client):
     _, challenge = pkce_pair()
     query = without_param(authorize_query(client_id, challenge), "code_challenge")
     response = client.get(f"/oauth/authorize/?{query}")
-    assert_redirects_with_error(response, "invalid_request")
+    assert_consent_page_error(response, "invalid_request")
 
 
 @pytest.mark.django_db
@@ -91,7 +95,7 @@ def test_authorize_rejects_plain_challenge_method(client):
     _, challenge = pkce_pair()
     query = authorize_query(client_id, challenge).replace("S256", "plain")
     response = client.get(f"/oauth/authorize/?{query}")
-    assert_redirects_with_error(response, "invalid_request")
+    assert_consent_page_error(response, "invalid_request")
 
 
 @pytest.mark.django_db
@@ -100,7 +104,7 @@ def test_authorize_rejects_foreign_resource(client):
     _, challenge = pkce_pair()
     query = authorize_query(client_id, challenge) + "&resource=https%3A%2F%2Fevil.test"
     response = client.get(f"/oauth/authorize/?{query}")
-    assert_redirects_with_error(response, "invalid_target")
+    assert_consent_page_error(response, "invalid_target")
 
 
 @pytest.mark.django_db
@@ -567,3 +571,86 @@ def test_authorize_redirect_has_no_double_slash(client, settings):
     response = client.get(f"/oauth/authorize/?{query}")
     assert response.status_code == 302
     assert response["Location"].startswith("https://br.example/mcp-authorize?")
+
+
+@pytest.mark.django_db
+def test_authorize_refuses_a_cimd_client_with_a_plain_http_redirect_uri(client):
+    redirect_uri = "http://app.example/cb"
+    client_id = cimd_client(client, redirect_uri=redirect_uri)
+    _, challenge = pkce_pair()
+    query = authorize_query(client_id, challenge, redirect_uri=redirect_uri)
+    response = client.get(f"/oauth/authorize/?{query}")
+    assert_consent_page_error(response, "invalid_request")
+    assert redirect_uri not in response["Location"]
+
+
+@pytest.mark.django_db
+def test_consent_refuses_a_cimd_client_with_a_plain_http_redirect_uri(
+    client, api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    redirect_uri = "http://app.example/cb"
+    client_id = cimd_client(client, redirect_uri=redirect_uri)
+    _, challenge = pkce_pair()
+    query = authorize_query(client_id, challenge, redirect_uri=redirect_uri)
+    response = post_consent(api_client, token, allow_body(query, workspace))
+    assert response.status_code == 400
+    assert response.json()["error"] == "invalid_request"
+    assert not MCPEndpoint.objects.filter(oauth_client_id=client_id).exists()
+
+
+@pytest.mark.django_db
+def test_consent_with_fragment_response_mode_gets_a_code(
+    client, api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    _, challenge = pkce_pair()
+    query = authorize_query(cimd_client(client), challenge) + "&response_mode=fragment"
+    response = post_consent(api_client, token, allow_body(query, workspace))
+    assert response.status_code == 200, response.content
+    redirect = urlparse(response.json()["redirect_url"])
+    fragment = parse_qs(redirect.fragment)
+    assert fragment["code"]
+    assert fragment["state"] == ["s1"]
+    assert fragment["iss"] == [ISSUER]
+    assert "iss" not in parse_qs(redirect.query)
+
+
+@pytest.mark.django_db
+def test_deny_with_fragment_response_mode_puts_the_error_in_the_fragment(
+    client, api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    _, challenge = pkce_pair()
+    query = authorize_query(cimd_client(client), challenge) + "&response_mode=fragment"
+    response = post_consent(
+        api_client, token, {**allow_body(query, workspace), "allow": False}
+    )
+    assert response.status_code == 200, response.content
+    redirect = urlparse(response.json()["redirect_url"])
+    assert redirect.query == ""
+    fragment = parse_qs(redirect.fragment)
+    assert fragment["error"] == ["access_denied"]
+    assert fragment["iss"] == [ISSUER]
+
+
+@pytest.mark.django_db
+def test_deny_replaces_an_iss_the_redirect_uri_carries(
+    client, api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    redirect_uri = "https://app.example/cb?iss=https%3A%2F%2Fother.example"
+    client_id = cimd_client(client, redirect_uri=redirect_uri)
+    _, challenge = pkce_pair()
+    query = authorize_query(client_id, challenge, redirect_uri=redirect_uri)
+    response = post_consent(
+        api_client, token, {**allow_body(query, workspace), "allow": False}
+    )
+    assert response.status_code == 200, response.content
+    query = parse_qs(urlparse(response.json()["redirect_url"]).query)
+    assert query["iss"] == [ISSUER]
+    assert query["error"] == ["access_denied"]

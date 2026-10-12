@@ -10,7 +10,7 @@ from oauth2_provider.exceptions import OAuthToolkitError
 from oauth2_provider.views import OAuthProtectedResourceMetadataView
 from oauthlib.oauth2.rfc6749.errors import InvalidClientIdError
 
-from .authorize import error_redirect_url, is_redirectable, validate_query
+from .authorize import validate_query
 from .throttling import MCPOAuthAuthorizeRateThrottle, rate_limited
 from .validators import MCP_SCOPE
 
@@ -21,9 +21,9 @@ UNKNOWN_CLIENT_ERROR = "unknown_client"
 
 def _consent_error_url(request, oauthlib_error) -> str:
     """
-    The consent page URL that shows a fatal authorize error (unknown client,
-    invalid redirect URI). Only an error code is sent, which the page maps to its
-    own text, so the URL can't put arbitrary text on a Baserow page.
+    The consent page URL that shows an authorize error. Only an error code is
+    sent, which the page maps to its own text, so the URL can't put arbitrary text
+    on a Baserow page.
     """
 
     error = oauthlib_error.error
@@ -52,13 +52,12 @@ class MCPAuthorizeRedirectView(View):
         try:
             validate_query(request, request.user, request.META.get("QUERY_STRING", ""))
         except OAuthToolkitError as error:
-            # Fatal errors (unknown client, invalid redirect URI) must never redirect
-            # to the client-supplied URI, so Baserow's consent page shows them.
-            if not is_redirectable(error):
-                return HttpResponseRedirect(
-                    _consent_error_url(request, error.oauthlib_error)
-                )
-            return HttpResponseRedirect(error_redirect_url(request, error))
+            # Never redirected to the client: anyone can register any https redirect
+            # URI, and nobody has signed in or clicked anything yet, so that would
+            # be an open redirect (RFC 9700 4.11.1). Baserow's consent page shows it.
+            return HttpResponseRedirect(
+                _consent_error_url(request, error.oauthlib_error)
+            )
 
         # The consent page gets the query as unpadded base64url: the login redirect
         # passes it through encodeURI and the router, which would re-encode a plain

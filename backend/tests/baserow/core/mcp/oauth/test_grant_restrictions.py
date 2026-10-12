@@ -80,7 +80,7 @@ def test_implicit_response_type_is_refused(client):
     )
     response = client.get(f"/oauth/authorize/?{query}")
     location = response.get("Location", "")
-    assert "/mcp-authorize" not in location
+    assert location.endswith("/mcp-authorize?error=unauthorized_client")
     assert "access_token" not in location
 
 
@@ -97,10 +97,10 @@ def test_authorize_rejects_client_requested_endpoint_scope(client, extra):
     )
     response = client.get(f"/oauth/authorize/?{query}")
     assert response.status_code == 302
-    assert response["Location"].startswith(REDIRECT_URI)
-    query = parse_qs(urlparse(response["Location"]).query)
-    assert query["error"] == ["invalid_scope"]
-    assert query["iss"] == [settings.OAUTH2_PROVIDER["OIDC_ISS_ENDPOINT"]]
+    assert not response["Location"].startswith(REDIRECT_URI)
+    location = urlparse(response["Location"])
+    assert location.path == "/mcp-authorize"
+    assert parse_qs(location.query) == {"error": ["invalid_scope"]}
 
 
 @pytest.mark.django_db

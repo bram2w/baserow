@@ -875,6 +875,9 @@ BASEROW_MCP_OAUTH_ENABLED = str_to_bool(
 )
 MCP_AUTHORIZATION_SERVER_URL = PUBLIC_BACKEND_URL.rstrip("/")
 MCP_RESOURCE_URL = f"{MCP_AUTHORIZATION_SERVER_URL}/mcp"
+BASEROW_MCP_OAUTH_CIMD_ENABLED = str_to_bool(
+    os.getenv("BASEROW_MCP_OAUTH_CIMD_ENABLED") or "true"
+)
 BASEROW_MCP_OAUTH_CIMD_ALLOWED_HOSTS = [
     host.strip()
     for host in (os.getenv("BASEROW_MCP_OAUTH_CIMD_ALLOWED_HOSTS") or "*").split(",")
@@ -960,11 +963,8 @@ OAUTH2_PROVIDER = {
     "ALLOW_LOCALHOST_LOOPBACK": True,
     "ALLOWED_REDIRECT_URI_SCHEMES": ["http", "https"],
     "OIDC_ISS_ENDPOINT": MCP_AUTHORIZATION_SERVER_URL,
-    "OAUTH2_TOKEN_ENDPOINT_AUTH_METHODS_SUPPORTED": [
-        "none",
-        "client_secret_post",
-        "client_secret_basic",
-    ],
+    # Registration only accepts public clients.
+    "OAUTH2_TOKEN_ENDPOINT_AUTH_METHODS_SUPPORTED": ["none"],
     "OAUTH2_GRANT_TYPES_SUPPORTED": ["authorization_code", "refresh_token"],
     "OAUTH2_RESPONSE_TYPES_SUPPORTED": ["code"],
     "OAUTH2_PROTECTED_RESOURCE_IDENTIFIER": MCP_RESOURCE_URL,
@@ -976,7 +976,7 @@ OAUTH2_PROVIDER = {
     "DCR_REGISTRATION_PERMISSION_CLASSES": (
         "oauth2_provider.dcr.AllowAllDCRPermission",
     ),
-    "CIMD_ENABLED": True,
+    "CIMD_ENABLED": BASEROW_MCP_OAUTH_CIMD_ENABLED,
     "CIMD_REGISTRATION_PERMISSION_CLASSES": (
         "oauth2_provider.cimd.HostAllowlistCIMDPermission",
     ),

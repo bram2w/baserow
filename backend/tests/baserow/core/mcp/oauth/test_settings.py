@@ -18,3 +18,10 @@ def test_trailing_slash_in_public_backend_url_is_stripped(monkeypatch):
     assert oauth["OAUTH2_PROTECTED_RESOURCE_AUTHORIZATION_SERVERS"] == [
         "https://baserow.example"
     ]
+
+
+def test_cimd_can_be_turned_off_with_an_env_var(monkeypatch):
+    monkeypatch.setenv("BASEROW_MCP_OAUTH_CIMD_ENABLED", "false")
+    settings = runpy.run_path(str(Path(base_settings.__file__)))
+
+    assert settings["OAUTH2_PROVIDER"]["CIMD_ENABLED"] is False

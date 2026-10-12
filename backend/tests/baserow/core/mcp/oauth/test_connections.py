@@ -217,19 +217,3 @@ def test_tool_count_ignores_disabled_tools(client, api_client, data_fixture):
     response = api_client.get(reverse(LIST_URL), HTTP_AUTHORIZATION=f"JWT {token}")
 
     assert response.json()["connections"][0]["tool_count"] == 1
-
-
-@pytest.mark.django_db
-def test_disconnect_oauth_grant_rejects_other_users_and_key_endpoints(data_fixture):
-    from baserow.core.mcp.exceptions import MCPEndpointDoesNotBelongToUser
-    from baserow.core.mcp.handler import MCPEndpointHandler
-
-    user = data_fixture.create_user()
-    grant = data_fixture.create_mcp_endpoint(oauth_client_id="https://x/y.json")
-    key_endpoint = data_fixture.create_mcp_endpoint(user=user)
-
-    with pytest.raises(MCPEndpointDoesNotBelongToUser):
-        MCPEndpointHandler().disconnect_oauth_grant(user, grant)
-    with pytest.raises(MCPEndpointDoesNotBelongToUser):
-        MCPEndpointHandler().disconnect_oauth_grant(user, key_endpoint)
-    assert MCPEndpoint.objects.filter(id__in=[grant.id, key_endpoint.id]).count() == 2

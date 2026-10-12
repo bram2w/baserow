@@ -59,3 +59,20 @@ def test_cimd_other_host_is_rejected(client, settings):
     assert EVIL_REDIRECT not in location
     assert "code=" not in location
     assert not Application.objects.filter(client_id=EVIL_CLIENT).exists()
+
+
+@pytest.mark.django_db
+def test_cimd_can_be_turned_off(client, settings):
+    settings.OAUTH2_PROVIDER = {**settings.OAUTH2_PROVIDER, "CIMD_ENABLED": False}
+    _, challenge = pkce_pair()
+    with patch(
+        FETCH, return_value=(_metadata(CLAUDE_CLIENT, CLAUDE_REDIRECT), 300)
+    ) as fetch:
+        query = authorize_query(CLAUDE_CLIENT, challenge, redirect_uri=CLAUDE_REDIRECT)
+        response = client.get(f"/oauth/authorize/?{query}")
+
+    fetch.assert_not_called()
+    assert not Application.objects.filter(client_id=CLAUDE_CLIENT).exists()
+    assert "/mcp-authorize?error=" in response["Location"]
+    metadata = client.get("/.well-known/oauth-authorization-server").json()
+    assert not metadata.get("client_id_metadata_document_supported")

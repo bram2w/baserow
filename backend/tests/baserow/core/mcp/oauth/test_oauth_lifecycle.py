@@ -8,7 +8,6 @@ from asgiref.sync import async_to_sync
 from oauth2_provider.models import AccessToken, Application, RefreshToken
 
 from baserow.core.mcp.auth import resolve_bearer
-from baserow.core.mcp.handler import MCPEndpointHandler
 from baserow.core.mcp.models import MCPEndpoint
 from baserow.core.mcp.oauth.tokens import revoke_endpoint_tokens
 from tests.baserow.core.mcp.oauth.helpers import obtain_tokens
@@ -27,7 +26,8 @@ def test_deleting_endpoint_removes_its_tokens(client, api_client, data_fixture):
     )
     endpoint = MCPEndpoint.objects.get(id=endpoint_id)
     keep = MCPEndpoint.objects.get(id=kept["endpoint_id"])
-    MCPEndpointHandler().delete_endpoint(user, endpoint)
+    # The pre_delete receiver revokes the tokens however the row is deleted.
+    endpoint.delete()
     assert not AccessToken.objects.filter(
         scope__contains=f"endpoint:{endpoint_id}"
     ).exists()

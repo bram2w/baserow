@@ -48,3 +48,30 @@ def test_authorize_endpoint_is_rate_limited_per_ip(client):
     assert limited.json()["error"] == "slow_down"
     assert int(limited["Retry-After"]) > 0
     assert other_ip.status_code != 429
+
+
+@pytest.mark.django_db
+@override_settings(BASEROW_MCP_OAUTH_AUTHORIZE_RATE_LIMITS=LIMITS)
+def test_consent_api_is_rate_limited_per_user(api_client, data_fixture):
+    from django.urls import reverse
+
+    def consent(jwt, ip):
+        return api_client.get(
+            reverse("api:mcp:oauth_consent"),
+            {"query": "client_id=x"},
+            HTTP_AUTHORIZATION=f"JWT {jwt}",
+            HTTP_X_FORWARDED_FOR=ip,
+        )
+
+    with freeze_time("2026-01-01 12:00:00"):
+        # Made inside the frozen time, so the JWTs aren't issued in the future.
+        _, token = data_fixture.create_user_and_token()
+        _, other_token = data_fixture.create_user_and_token()
+        assert consent(token, "1.1.1.1").status_code != 429
+        assert consent(token, "2.2.2.2").status_code != 429
+        # Another IP doesn't help: the limit is per user.
+        limited = consent(token, "3.3.3.3")
+        other_user = consent(other_token, "1.1.1.1")
+
+    assert limited.status_code == 429
+    assert other_user.status_code != 429

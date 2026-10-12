@@ -42,6 +42,23 @@ class MCPOAuthAuthorizeRateThrottle(MCPOAuthTokenRateThrottle):
         return settings.BASEROW_MCP_OAUTH_AUTHORIZE_RATE_LIMITS
 
 
+class MCPOAuthConsentRateThrottle(RateLimitThrottle):
+    """
+    Limits the consent API per user, with the authorize limits. Like an authorize
+    request, each call can fetch a CIMD client's metadata document and store the
+    client, and the per-IP authorize limit doesn't cover it.
+    """
+
+    scope = "mcp_oauth_consent"
+
+    def get_rate_limits(self, request):
+        return settings.BASEROW_MCP_OAUTH_AUTHORIZE_RATE_LIMITS
+
+    def get_ident(self, request) -> str | None:
+        user = request.user
+        return str(user.id) if user.is_authenticated else None
+
+
 def rate_limited(throttle, request, view) -> JsonResponse | None:
     """
     The OAuth `slow_down` response when `throttle` refuses the request, else None.

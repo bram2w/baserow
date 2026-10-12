@@ -31,6 +31,7 @@ from baserow.core.mcp.oauth.authorize import (
     issue_code,
     validate_query,
 )
+from baserow.core.mcp.oauth.throttling import MCPOAuthConsentRateThrottle
 from baserow.core.mcp.oauth.validators import LOOPBACK_HOSTS
 from baserow.core.mcp.operations import CreateMCPEndpointOperationType
 from baserow.core.mcp.registries import mcp_tool_registry
@@ -105,6 +106,7 @@ def _client_info(credentials: dict) -> dict:
 
 class MCPOAuthConsentView(APIView):
     permission_classes = (IsAuthenticated,)
+    throttle_classes = (*APIView.throttle_classes, MCPOAuthConsentRateThrottle)
 
     def get(self, request):
         _require_oauth_enabled()

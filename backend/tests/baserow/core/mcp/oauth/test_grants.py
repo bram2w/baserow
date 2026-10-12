@@ -13,10 +13,11 @@ def test_grant_has_no_key(data_fixture):
     user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)
 
-    endpoint = MCPEndpointHandler().grant_oauth_client(
+    endpoint, created = MCPEndpointHandler().grant_oauth_client(
         user, workspace, CLIENT_ID, "Claude", ["list_tables"]
     )
 
+    assert created
     endpoint.refresh_from_db()
     assert endpoint.key is None
     assert endpoint.oauth_client_id == CLIENT_ID
@@ -28,14 +29,15 @@ def test_second_consent_reuses_the_grant(data_fixture):
     workspace = data_fixture.create_workspace(user=user)
     handler = MCPEndpointHandler()
 
-    first = handler.grant_oauth_client(
+    first, _ = handler.grant_oauth_client(
         user, workspace, CLIENT_ID, "Claude", ["list_tables"]
     )
-    second = handler.grant_oauth_client(
+    second, created = handler.grant_oauth_client(
         user, workspace, CLIENT_ID, "Claude", ["list_tables", "create_rows"]
     )
 
     assert first.id == second.id
+    assert not created
     assert MCPEndpoint.objects.filter(oauth_client_id=CLIENT_ID).count() == 1
     second.refresh_from_db()
     assert second.allowed_tools == ["list_tables", "create_rows"]

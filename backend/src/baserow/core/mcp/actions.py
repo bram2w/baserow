@@ -190,12 +190,7 @@ class ConnectMCPOAuthClientActionType(ActionType):
         name: str,
         allowed_tools: list[str],
     ) -> MCPEndpoint:
-        # The handler doesn't say whether it created the grant, and it runs
-        # inside the consent transaction, so checking first is consistent.
-        reconnect = MCPEndpoint.objects.filter(
-            user=user, workspace=workspace, oauth_client_id=client_id
-        ).exists()
-        endpoint = MCPEndpointHandler().grant_oauth_client(
+        endpoint, created = MCPEndpointHandler().grant_oauth_client(
             user, workspace, client_id, name, allowed_tools
         )
         params = cls.Params(
@@ -206,7 +201,7 @@ class ConnectMCPOAuthClientActionType(ActionType):
             workspace.name,
             allowed_tools,
             len(mcp_tool_registry.get_allowed_tools(endpoint)),
-            reconnect,
+            not created,
         )
         cls.register_action(user, params, cls.scope(workspace.id), workspace)
 
@@ -255,7 +250,7 @@ class DisconnectMCPOAuthClientActionType(ActionType):
             workspace.name,
         )
 
-        MCPEndpointHandler().disconnect_oauth_grant(user, endpoint)
+        MCPEndpointHandler().disconnect_oauth_grant(endpoint)
 
         cls.register_action(user, params, cls.scope(workspace.id), workspace)
 

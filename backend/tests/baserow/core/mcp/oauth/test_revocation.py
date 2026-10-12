@@ -46,3 +46,24 @@ def test_deleting_a_legacy_endpoint_skips_token_lookup(
     endpoint = data_fixture.create_mcp_endpoint()
     with django_assert_num_queries(0):
         revoke_endpoint_tokens(endpoint)
+
+
+@pytest.mark.django_db
+def test_permanently_deleting_a_workspace_revokes_its_grants(
+    client, api_client, data_fixture
+):
+    from baserow.core.trash.handler import TrashHandler
+
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    other = data_fixture.create_workspace(user=user)
+    obtain_tokens(client, api_client, token, workspace, scope="mcp offline_access")
+    kept = obtain_tokens(client, api_client, token, other, scope="mcp offline_access")
+
+    TrashHandler.permanently_delete(workspace)
+
+    assert list(MCPEndpoint.objects.filter(user=user).values_list("id", flat=True)) == [
+        kept["endpoint_id"]
+    ]
+    assert AccessToken.objects.filter(user=user).count() == 1
+    assert RefreshToken.objects.filter(user=user).count() == 1

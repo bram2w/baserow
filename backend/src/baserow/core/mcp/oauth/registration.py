@@ -1,5 +1,4 @@
 import json
-from urllib.parse import urlparse
 
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
@@ -9,23 +8,10 @@ from django.views.decorators.csrf import csrf_exempt
 from oauth2_provider.views import DynamicClientRegistrationView
 
 from .throttling import MCPOAuthRegistrationRateThrottle, rate_limited
-from .validators import ALLOWED_GRANT_TYPES, LOOPBACK_HOSTS
+from .validators import ALLOWED_GRANT_TYPES, is_allowed_redirect_uri
 
 # RFC 7592 fields; the management endpoint isn't offered.
 MANAGEMENT_FIELDS = ("registration_access_token", "registration_client_uri")
-
-
-def _is_allowed_redirect_uri(uri) -> bool:
-    """https anywhere, or http to a loopback address."""
-
-    # DOT stores the URIs space-joined and splits them on any whitespace, so a
-    # URI containing whitespace would be stored as several.
-    if not isinstance(uri, str) or uri.split() != [uri]:
-        return False
-    parsed = urlparse(uri)
-    if parsed.scheme == "https":
-        return bool(parsed.hostname)
-    return parsed.scheme == "http" and parsed.hostname in LOOPBACK_HOSTS
 
 
 def _error(error: str, description: str) -> JsonResponse:
@@ -69,7 +55,7 @@ class MCPRegistrationView(DynamicClientRegistrationView):
             )
         redirect_uris = metadata.get("redirect_uris") or []
         if not isinstance(redirect_uris, list) or not all(
-            _is_allowed_redirect_uri(uri) for uri in redirect_uris
+            is_allowed_redirect_uri(uri) for uri in redirect_uris
         ):
             return _error(
                 "invalid_redirect_uri",
