@@ -65,7 +65,7 @@ from baserow.contrib.integrations.core.service_types import (
     CoreInboundEmailTriggerServiceType,
     CoreIteratorServiceType,
     CoreManualTriggerServiceType,
-    CorePeriodicServiceType,
+    CorePeriodicTriggerServiceType,
     CoreResponseServiceType,
     CoreRouterServiceType,
     CoreSMTPEmailServiceType,
@@ -78,12 +78,12 @@ from baserow.contrib.integrations.local_baserow.service_types import (
     LocalBaserowAggregateRowsUserServiceType,
     LocalBaserowCreateRowsServiceType,
     LocalBaserowDeleteRowServiceType,
-    LocalBaserowFieldsUpdatedServiceType,
+    LocalBaserowFieldsUpdatedTriggerServiceType,
     LocalBaserowGetRowUserServiceType,
     LocalBaserowListRowsUserServiceType,
-    LocalBaserowRowsCreatedServiceType,
-    LocalBaserowRowsDeletedServiceType,
-    LocalBaserowRowsUpdatedServiceType,
+    LocalBaserowRowsCreatedTriggerServiceType,
+    LocalBaserowRowsDeletedTriggerServiceType,
+    LocalBaserowRowsUpdatedTriggerServiceType,
     LocalBaserowUpdateRowsServiceType,
     LocalBaserowUpsertRowServiceType,
 )
@@ -795,7 +795,7 @@ class LocalBaserowRowsCreatedTriggerNodeType(AutomationTriggerNodeType):
     type = "local_baserow_rows_created"
     compat_type = "rows_created"
     model_class = LocalBaserowRowsCreatedTriggerNode
-    service_type = LocalBaserowRowsCreatedServiceType.type
+    service_type = LocalBaserowRowsCreatedTriggerServiceType.type
 
 
 class LocalBaserowRowsUpdatedTriggerNodeType(AutomationTriggerNodeType):
@@ -803,7 +803,7 @@ class LocalBaserowRowsUpdatedTriggerNodeType(AutomationTriggerNodeType):
     type = "local_baserow_rows_updated"
     compat_type = "rows_updated"
     model_class = LocalBaserowRowsUpdatedTriggerNode
-    service_type = LocalBaserowRowsUpdatedServiceType.type
+    service_type = LocalBaserowRowsUpdatedTriggerServiceType.type
 
 
 class LocalBaserowRowsDeletedTriggerNodeType(AutomationTriggerNodeType):
@@ -811,13 +811,13 @@ class LocalBaserowRowsDeletedTriggerNodeType(AutomationTriggerNodeType):
     type = "local_baserow_rows_deleted"
     compat_type = "rows_deleted"
     model_class = LocalBaserowRowsDeletedTriggerNode
-    service_type = LocalBaserowRowsDeletedServiceType.type
+    service_type = LocalBaserowRowsDeletedTriggerServiceType.type
 
 
 class LocalBaserowFieldsUpdatedTriggerNodeType(AutomationTriggerNodeType):
     type = "local_baserow_fields_updated"
     model_class = LocalBaserowFieldsUpdatedTriggerNode
-    service_type = LocalBaserowFieldsUpdatedServiceType.type
+    service_type = LocalBaserowFieldsUpdatedTriggerServiceType.type
 
 
 class CorePeriodicTriggerNodeType(
@@ -826,7 +826,7 @@ class CorePeriodicTriggerNodeType(
     display_name = _("Periodic trigger")
     type = "periodic"
     model_class = CorePeriodicTriggerNode
-    service_type = CorePeriodicServiceType.type
+    service_type = CorePeriodicTriggerServiceType.type
 
 
 class CoreHTTPTriggerNodeType(AutomationTriggerNodeType):

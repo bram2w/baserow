@@ -1,7 +1,7 @@
 import pytest
 
 from baserow.contrib.integrations.local_baserow.service_types import (
-    LocalBaserowRowsCreatedServiceType,
+    LocalBaserowRowsCreatedTriggerServiceType,
 )
 
 
@@ -30,5 +30,6 @@ from baserow.contrib.integrations.local_baserow.service_types import (
 )
 def test_local_baserow_rows_signal_service_type_import_path(path, id_mapping, expected):
     assert (
-        LocalBaserowRowsCreatedServiceType().import_path(path, id_mapping) == expected
+        LocalBaserowRowsCreatedTriggerServiceType().import_path(path, id_mapping)
+        == expected
     )

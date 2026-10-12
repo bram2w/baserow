@@ -1745,7 +1745,7 @@ class CoreGotoServiceType(CoreServiceType):
         )
 
 
-class CorePeriodicServiceType(TriggerServiceTypeMixin, CoreServiceType):
+class CorePeriodicTriggerServiceType(TriggerServiceTypeMixin, CoreServiceType):
     type = "periodic"
     model_class = CorePeriodicService
 

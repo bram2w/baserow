@@ -25,7 +25,9 @@ from baserow.contrib.integrations.core.constants import (
     PERIODIC_INTERVAL_DAY,
 )
 from baserow.contrib.integrations.core.models import CorePeriodicService
-from baserow.contrib.integrations.core.service_types import CorePeriodicServiceType
+from baserow.contrib.integrations.core.service_types import (
+    CorePeriodicTriggerServiceType,
+)
 from baserow.core.formula.types import BASEROW_FORMULA_MODE_RAW, BaserowFormulaObject
 from baserow.core.handler import CoreHandler
 from baserow.core.services.exceptions import (
@@ -799,10 +801,12 @@ def test_periodic_trigger_node_on_event_only_updates_dispatched_services(data_fi
     with freeze_time("2026-03-04 12:00:00"):
         current_time = now()
         services_due = list(
-            CorePeriodicServiceType().get_periodic_services_that_are_due(current_time)
+            CorePeriodicTriggerServiceType().get_periodic_services_that_are_due(
+                current_time
+            )
         )
         service_type_registry.get(
-            CorePeriodicServiceType.type
+            CorePeriodicTriggerServiceType.type
         ).call_periodic_services_that_are_due()
         services_dispatched = CorePeriodicService.objects.filter(
             last_periodic_run=now()

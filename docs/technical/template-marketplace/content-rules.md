@@ -133,7 +133,7 @@ raw id, or `.get(id, id)`, is not allowed.
 | Integrations | `LocalBaserowViewServiceType.deserialize_property` keeps `view_id` when no view was copied | to do | WAB |
 | Integrations | Filter `field_id` in `LocalBaserowTableServiceFilterableMixin.deserialize_filters` and sort `field_id` in `LocalBaserowTableServiceSortableMixin.deserialize_sorts` | to do | WAB |
 | Integrations | `LocalBaserowAggregateRowsUserServiceType.deserialize_property` (`field_id`) | to do | WAB |
-| Integrations | `LocalBaserowFieldsUpdatedServiceType.deserialize_property` (`field_ids`) keeps raw ids when no field was copied | to do | WAB |
+| Integrations | `LocalBaserowFieldsUpdatedTriggerServiceType.deserialize_property` (`field_ids`) keeps raw ids when no field was copied | to do | WAB |
 | Premium | `LocalBaserowGroupedAggregateRowsUserServiceType.create_instance_from_serialized` keeps series, group by and sort field ids when no field was copied | to do | WAB |
 | Enterprise | `LocalBaserowUserSourceType.deserialize_property` keeps `table_id` and field ids when no table was copied | to do | WAB |
 | Dashboard | `DashboardDataSourceHandler.import_data_source` resolves the integration with `.get(id, id)` | to do | WAB |
