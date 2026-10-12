@@ -17,11 +17,16 @@
           icon="iconoir-prohibition"
         />
         <DropdownItem
+          :name="$t('agentAccess.actAsUserOption')"
+          :value="ACT_AS_USER"
+          :description="$t('agentAccess.actAsUserOptionDescription')"
+          icon="iconoir-user"
+        />
+        <DropdownItem
           v-for="identity in identities"
           :key="identity.id"
           :name="identity.name"
           :value="identity.id"
-          :description="roleName(identity)"
         >
           <span class="agent-configuration__identity-option">
             <Avatar
@@ -57,7 +62,10 @@
       />
     </FormGroup>
     <div class="agent-configuration__hint margin-bottom-3">
-      <template v-if="selectedIdentity">
+      <template v-if="agentIdentity === ACT_AS_USER">
+        {{ $t('agentAccess.actAsUserHint') }}
+      </template>
+      <template v-else-if="selectedIdentity">
         {{
           $t('agentAccess.actsAsHint', {
             role: roleName(selectedIdentity) || $t('agentAccess.member'),
@@ -97,12 +105,16 @@
         <SwitchInput
           small
           :value="builtInToolValue('workspace')"
-          :disabled="!canToggleTools"
+          :disabled="!canToggleBuiltInTools"
           @input="toggleBuiltInTool('workspace', $event)"
         ></SwitchInput>
       </div>
       <Alert
-        v-if="builtInToolValue('workspace') && !application.agent_identity_id"
+        v-if="
+          builtInToolValue('workspace') &&
+          !application.agent_identity_id &&
+          !application.act_as_user
+        "
         type="warning"
         class="margin-top-2"
       >
@@ -161,26 +173,6 @@
       </template>
     </div>
 
-    <div
-      v-for="builtIn in extraBuiltIns"
-      :key="builtIn.type"
-      class="agent-configuration__switch-row agent-configuration__switch-row--plain"
-    >
-      <i class="agent-configuration__switch-icon" :class="builtIn.icon"></i>
-      <div class="agent-configuration__switch-text">
-        <div class="agent-configuration__switch-title">{{ builtIn.label }}</div>
-        <div class="agent-configuration__switch-description">
-          {{ builtIn.description }}
-        </div>
-      </div>
-      <SwitchInput
-        small
-        :value="builtInToolValue(builtIn.type)"
-        :disabled="!canToggleTools"
-        @input="toggleBuiltInTool(builtIn.type, $event)"
-      ></SwitchInput>
-    </div>
-
     <AgentToolPermissionsModal
       v-if="workspaceTool"
       ref="permissionsModal"
@@ -196,7 +188,10 @@ import ManageAgentModal from '@baserow/modules/core/components/settings/agents/M
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import AgentConfigurationSectionRow from '@baserow_enterprise/components/agentApplication/AgentConfigurationSectionRow'
 import AgentToolPermissionsModal from '@baserow_enterprise/components/agentApplication/AgentToolPermissionsModal'
-import { listToolIdentityExceptions } from '@baserow_enterprise/utils/agentToolIdentities'
+import {
+  ACT_AS_USER,
+  listToolIdentityExceptions,
+} from '@baserow_enterprise/utils/agentToolIdentities'
 import {
   normalizeWorkspaceConfig,
   effectiveRules,
@@ -209,6 +204,7 @@ import {
   RULE_OFF,
 } from '@baserow_enterprise/utils/agentToolPermissions'
 import { AgentContextMixin } from '@baserow_enterprise/composables/useAgentContext'
+import agentBuiltInTools from '@baserow_enterprise/mixins/agentBuiltInTools'
 
 const ACCESS_ORDER = [ACCESS_EVERYTHING, ACCESS_READ_ONLY, ACCESS_CUSTOM]
 const GROUP_ICONS = {
@@ -219,7 +215,7 @@ const GROUP_ICONS = {
 
 export default {
   name: 'AgentAccessSection',
-  mixins: [AgentContextMixin],
+  mixins: [AgentContextMixin, agentBuiltInTools],
   components: {
     ManageAgentModal,
     AgentConfigurationSectionRow,
@@ -239,12 +235,9 @@ export default {
   },
   data() {
     return {
+      ACT_AS_USER,
       pendingIdentity: null,
       saving: false,
-      // Desired state per built-in tool type while its create/delete request
-      // is being synced; the switch shows this intent instead of the store
-      // state so toggling is optimistic and never blocks.
-      pendingBuiltIn: {},
     }
   },
   computed: {
@@ -288,20 +281,16 @@ export default {
       get() {
         // The core application update isn't optimistic; the chosen identity
         // is shown from the moment it is picked until the save settles.
-        return this.saving
-          ? this.pendingIdentity
+        if (this.saving) {
+          return this.pendingIdentity
+        }
+        return this.application.act_as_user
+          ? ACT_AS_USER
           : this.application.agent_identity_id || null
       },
       set(value) {
         this.saveIdentity(value)
       },
-    },
-    canCreateTool() {
-      return this.hasAgentPermission(
-        'agent_application.create_tool',
-        this.application,
-        this.application.workspace.id
-      )
     },
     canUpdateTool() {
       return this.hasAgentPermission(
@@ -309,17 +298,6 @@ export default {
         this.application,
         this.application.workspace.id
       )
-    },
-    canDeleteTool() {
-      return this.hasAgentPermission(
-        'agent_application.delete_tool',
-        this.application,
-        this.application.workspace.id
-      )
-    },
-    canToggleTools() {
-      // Toggling a built-in tool either creates or deletes its row.
-      return this.canCreateTool && this.canDeleteTool
     },
     tools() {
       return this.$store.getters[`${this.storePrefix}agentApplication/getTools`]
@@ -345,6 +323,7 @@ export default {
         ),
         catalog: this.catalog,
         identities: this.identities,
+        userIdentity: { name: this.$t('agentAccess.theUser') },
       })
     },
     exceptionsSummary() {
@@ -390,16 +369,6 @@ export default {
         ),
       }))
     },
-    extraBuiltIns() {
-      return [
-        {
-          type: 'web_search',
-          icon: 'iconoir-globe',
-          label: this.$t('agentAccess.webSearch'),
-          description: this.$t('agentAccess.webSearchDescription'),
-        },
-      ]
-    },
   },
   methods: {
     roleName(identity) {
@@ -419,60 +388,15 @@ export default {
       try {
         await this.$store.dispatch('application/update', {
           application: this.application,
-          values: { agent_identity_id: value },
+          values:
+            value === ACT_AS_USER
+              ? { act_as_user: true, agent_identity_id: null }
+              : { act_as_user: false, agent_identity_id: value },
         })
       } catch (error) {
         notifyIf(error, 'application')
       } finally {
         this.saving = false
-      }
-    },
-    hasBuiltInTool(type) {
-      return this.tools.some((tool) => tool.type === type)
-    },
-    builtInToolValue(type) {
-      return type in this.pendingBuiltIn
-        ? this.pendingBuiltIn[type]
-        : this.hasBuiltInTool(type)
-    },
-    async toggleBuiltInTool(type, enabled) {
-      const syncing = type in this.pendingBuiltIn
-      this.pendingBuiltIn[type] = enabled
-      if (syncing) {
-        // The running sync loop below picks up the latest intent.
-        return
-      }
-      try {
-        // Sync until the store matches the latest intent, so rapid toggling
-        // serializes into follow-up requests instead of racing a create
-        // against a delete.
-        while (this.pendingBuiltIn[type] !== this.hasBuiltInTool(type)) {
-          if (this.pendingBuiltIn[type]) {
-            await this.$store.dispatch(
-              `${this.storePrefix}agentApplication/createTool`,
-              {
-                applicationId: this.application.id,
-                values: { type },
-              }
-            )
-          } else {
-            const tool = this.tools.find((t) => t.type === type)
-            if (!tool) {
-              break
-            }
-            await this.$store.dispatch(
-              `${this.storePrefix}agentApplication/deleteTool`,
-              {
-                toolId: tool.id,
-              }
-            )
-          }
-        }
-      } catch (error) {
-        // Dropping the pending intent reverts the switch to the store state.
-        notifyIf(error, 'application')
-      } finally {
-        delete this.pendingBuiltIn[type]
       }
     },
     async saveWorkspaceConfig(values) {

@@ -46,8 +46,6 @@ def web_channel(data_fixture):
         .create_application(user, workspace, "agent", init_with_data=True, name="Docs")
         .specific
     )
-    application.active = True
-    application.save(update_fields=["active"])
     agent = AgentApplicationHandler().get_main_agent(application)
     AgentApplicationHandler().update_agent(
         agent, ai_generative_ai_type="agent_runner_test", ai_generative_ai_model="m"

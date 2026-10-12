@@ -473,17 +473,4 @@ describe('agentApplication store catalog and helpers', () => {
       instructions: 'Old',
     })
   })
-
-  test('runOnce starts the trigger chat and adds it to the history', async () => {
-    mock
-      .onPost('agent_application/42/run_once/')
-      .replyOnce(202, { id: 9, uuid: 'uuid-9', status: 'in_progress' })
-    const chat = await store.dispatch('agentApplication/runOnce', {
-      applicationId: 42,
-    })
-    expect(chat.id).toBe(9)
-    expect(store.getters['agentHistory/getChats'].some((c) => c.id === 9)).toBe(
-      true
-    )
-  })
 })

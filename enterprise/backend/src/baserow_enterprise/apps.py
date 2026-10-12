@@ -195,7 +195,6 @@ class BaserowEnterpriseConfig(AppConfig):
             DispatchAgentToolActionType,
             RetryAgentChatRunActionType,
             RotateAgentChatChannelLinkActionType,
-            RunAgentOnceActionType,
             UpdateAgentChatActionType,
             UpdateAgentChatChannelActionType,
             UpdateAgentDefinitionActionType,
@@ -208,6 +207,7 @@ class BaserowEnterpriseConfig(AppConfig):
         )
         from baserow_enterprise.agent_application.operations import (
             CancelAgentChatOperationType,
+            ContinueTriggeredAgentChatOperationType,
             CreateAgentToolOperationType,
             DecideAgentToolApprovalOperationType,
             DeleteAgentChatChannelOperationType,
@@ -222,6 +222,7 @@ class BaserowEnterpriseConfig(AppConfig):
             ReadAgentTriggerOperationType,
             ReadAgentUsageOperationType,
             RunAgentChatOperationType,
+            StartAgentChatOperationType,
             UpdateAgentChatChannelOperationType,
             UpdateAgentChatOperationType,
             UpdateAgentDefinitionOperationType,
@@ -377,7 +378,6 @@ class BaserowEnterpriseConfig(AppConfig):
             DecideAgentToolApprovalActionType,
             CancelAgentChatRunActionType,
             RetryAgentChatRunActionType,
-            RunAgentOnceActionType,
             DeleteAgentChatActionType,
             UpdateAgentChatActionType,
             DispatchAgentToolActionType,
@@ -401,6 +401,8 @@ class BaserowEnterpriseConfig(AppConfig):
         operation_type_registry.register(ListAgentChatsOperationType())
         operation_type_registry.register(ReadAgentChatOperationType())
         operation_type_registry.register(RunAgentChatOperationType())
+        operation_type_registry.register(StartAgentChatOperationType())
+        operation_type_registry.register(ContinueTriggeredAgentChatOperationType())
         operation_type_registry.register(CancelAgentChatOperationType())
         operation_type_registry.register(DeleteAgentChatOperationType())
         operation_type_registry.register(UpdateAgentChatOperationType())
@@ -464,10 +466,14 @@ class BaserowEnterpriseConfig(AppConfig):
 
         from baserow.core.registries import permission_manager_type_registry
 
+        from .agent_application.permission_manager import (
+            AgentChatRolePermissionManagerType,
+        )
         from .field_permissions.permission_manager import FieldPermissionManagerType
         from .role.permission_manager import RolePermissionManagerType
 
         permission_manager_type_registry.register(FieldPermissionManagerType())
+        permission_manager_type_registry.register(AgentChatRolePermissionManagerType())
         permission_manager_type_registry.register(RolePermissionManagerType())
 
         from baserow_enterprise.license_types import (

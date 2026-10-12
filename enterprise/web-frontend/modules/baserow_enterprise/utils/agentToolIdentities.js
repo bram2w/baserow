@@ -4,6 +4,10 @@
  * config and the `identity_id` of action tools.
  */
 
+// The identity value of a tool that acts on behalf of the Baserow user of
+// the conversation instead of a workspace agent.
+export const ACT_AS_USER = 'user'
+
 // Built-in role uids by the amount of access they grant, so a per-tool
 // identity can be flagged when it may do more than the agent itself.
 const ROLE_RANK = {
@@ -39,8 +43,8 @@ export function workspaceToolIdentities(config) {
   }
   return Object.fromEntries(
     Object.entries(identities)
-      .map(([name, id]) => [name, Number(id)])
-      .filter(([, id]) => Number.isInteger(id))
+      .map(([name, id]) => [name, id === ACT_AS_USER ? id : Number(id)])
+      .filter(([, id]) => id === ACT_AS_USER || Number.isInteger(id))
   )
 }
 
@@ -54,6 +58,8 @@ export function workspaceToolIdentities(config) {
  * @param {object[]} options.identities The workspace agents.
  * @param {object} [options.overrides] Unsaved `tool_identities` replacing the
  *   workspace tool's own.
+ * @param {object} [options.userIdentity] How a tool acting on behalf of the
+ *   conversation's user is listed (`{ name }`); omitted, they aren't listed.
  */
 export function listToolIdentityExceptions({
   workspaceTool,
@@ -61,8 +67,12 @@ export function listToolIdentityExceptions({
   catalog,
   identities,
   overrides = null,
+  userIdentity = null,
 }) {
   const byId = new Map(identities.map((identity) => [identity.id, identity]))
+  if (userIdentity) {
+    byId.set(ACT_AS_USER, { ...userIdentity, id: ACT_AS_USER })
+  }
   const exceptions = []
   const map = overrides ?? workspaceToolIdentities(workspaceTool?.config)
   for (const [name, id] of Object.entries(map)) {
@@ -80,7 +90,7 @@ export function listToolIdentityExceptions({
     })
   }
   for (const tool of actionTools) {
-    const identity = byId.get(tool.identity_id)
+    const identity = byId.get(tool.act_as_user ? ACT_AS_USER : tool.identity_id)
     if (!identity) {
       continue
     }

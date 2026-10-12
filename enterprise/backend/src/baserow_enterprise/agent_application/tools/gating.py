@@ -32,22 +32,34 @@ class RuleToolset(WrapperToolset):
     """
 
     config: dict = field(default_factory=lambda: normalize_workspace_config(None))
-    # Catalog tool name -> workspace agent the call runs as instead of the
-    # application's identity.
+    # Catalog tool name -> workspace agent (or user) the call runs as instead
+    # of the application's identity. None when the tool acts on behalf of
+    # the conversation's user and there is none, which blocks it.
     identities: dict = field(default_factory=dict)
+
+    def _is_blocked(self, name: str) -> bool:
+        catalog_name = to_catalog_name(name)
+        return catalog_name in self.identities and self.identities[catalog_name] is None
 
     async def get_tools(self, ctx) -> dict[str, ToolsetTool]:
         all_tools = await super().get_tools(ctx)
         return {
             name: tool
             for name, tool in all_tools.items()
-            if rule_for(self.config, name) != RULE_OFF
+            if rule_for(self.config, name) != RULE_OFF and not self._is_blocked(name)
         }
 
     async def call_tool(
         self, name: str, tool_args: dict[str, Any], ctx: Any, tool: ToolsetTool
     ) -> Any:
         rule = rule_for(self.config, name)
+        if self._is_blocked(name):
+            return {
+                "error": (
+                    "This tool acts on behalf of the Baserow user of the "
+                    "conversation and this conversation has none."
+                )
+            }
         if rule == RULE_OFF:
             return {
                 "error": (

@@ -39,6 +39,14 @@
         :files="previewFiles"
         :read-only="true"
       ></FileFieldModal>
+      <div
+        v-if="event.created_on"
+        class="agent-chat-message__actions agent-chat-message__actions--end"
+      >
+        <span class="agent-chat-message__time" :title="absoluteTime">
+          {{ relativeTime }}
+        </span>
+      </div>
     </template>
     <template v-else-if="variant === 'ai'">
       <!-- eslint-disable vue/no-v-html -->
@@ -50,7 +58,11 @@
           {{ $t('agentChat.copy') }}
           <Copied ref="copied"></Copied>
         </a>
-        <span v-if="event.created_on" class="agent-chat-message__time">
+        <span
+          v-if="event.created_on"
+          class="agent-chat-message__time"
+          :title="absoluteTime"
+        >
           {{ relativeTime }}
         </span>
       </div>
@@ -60,6 +72,13 @@
     </template>
     <template v-else>
       {{ event.content }}
+      <span
+        v-if="event.created_on"
+        class="agent-chat-message__time agent-chat-message__time--inline"
+        :title="absoluteTime"
+      >
+        {{ relativeTime }}
+      </span>
     </template>
   </div>
 </template>
@@ -118,6 +137,9 @@ export default defineComponent({
     const relativeTime = computed(() =>
       moment(props.event.created_on).fromNow()
     )
+    const absoluteTime = computed(() =>
+      moment(props.event.created_on).format('LLL')
+    )
     const copy = () => {
       copyToClipboard(props.event.content || '')
       copied.value?.show()
@@ -130,6 +152,7 @@ export default defineComponent({
       variant,
       rendered,
       relativeTime,
+      absoluteTime,
       copy,
     }
   },

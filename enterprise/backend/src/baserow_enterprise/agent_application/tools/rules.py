@@ -22,6 +22,10 @@ ACCESS_READ_ONLY = "read_only"
 ACCESS_CUSTOM = "custom"
 ACCESS_LEVELS = (ACCESS_EVERYTHING, ACCESS_READ_ONLY, ACCESS_CUSTOM)
 
+# A `tool_identities` value that runs the tool on behalf of the Baserow user
+# of the conversation instead of a workspace agent.
+ACT_AS_USER = "user"
+
 
 def normalize_workspace_config(config: dict | None) -> dict:
     """
@@ -42,11 +46,12 @@ def normalize_workspace_config(config: dict | None) -> dict:
         if rule in RULES
     }
     # Tools running as another workspace agent than the application's
-    # identity, by catalog name.
+    # identity (or as the conversation's user), by catalog name.
     tool_identities = {
-        name: int(agent_id)
+        name: agent_id if agent_id == ACT_AS_USER else int(agent_id)
         for name, agent_id in (config.get("tool_identities") or {}).items()
-        if isinstance(agent_id, int)
+        if agent_id == ACT_AS_USER
+        or isinstance(agent_id, int)
         or (isinstance(agent_id, str) and agent_id.isdigit())
     }
 

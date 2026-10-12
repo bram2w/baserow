@@ -56,7 +56,7 @@ class AgentApplicationMentionTargetType(RowCommentMentionTargetType):
         applications = CoreHandler().filter_queryset(
             user,
             ListApplicationsWorkspaceOperationType.type,
-            AgentApplication.objects.filter(workspace=workspace, active=True),
+            AgentApplication.objects.filter(workspace=workspace),
             workspace=workspace,
         )
         targets = []

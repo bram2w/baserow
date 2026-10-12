@@ -550,12 +550,8 @@
   "agentHeader": {
     "approvalsWaiting": "{count} approval waiting | {count} approvals waiting",
     "configure": "Configure",
-    "active": "Active",
-    "paused": "Paused",
-    "activeTitle": "When turned off, triggers are paused and the agent only runs when you chat with it.",
     "lastRun": "Last run: {time}",
-    "neverRan": "Never ran",
-    "runOnce": "Run once"
+    "neverRan": "Never ran"
   },
   "agentSidebar": {
     "pendingApprovals": "{count} pending approval | {count} pending approvals"
@@ -589,8 +585,6 @@
     "welcomeChatOnly": "Runs only when you chat with it.",
     "welcomeRunsOn": "Runs on {trigger}.",
     "welcomeWorksAs": "Works as {name}.",
-    "suggestionFirstRunTitle": "Do a first run on the current data",
-    "suggestionFirstRunDescription": "See how it works before any trigger fires",
     "suggestionAccessTitle": "What can you access?",
     "suggestionAccessDescription": "Its tools, identity and what needs approval",
     "suggestionAccessPrompt": "What can you access?",
@@ -616,7 +610,19 @@
     "modelMissingTitle": "No AI model configured",
     "modelMissing": "Pick the provider and model this agent runs on before starting a conversation.",
     "configureModel": "Configure model",
-    "openAttachment": "Open attachment"
+    "openAttachment": "Open attachment",
+    "private": "Private",
+    "privateDescription": "Only you can see this conversation. Click to make it visible to everyone.",
+    "minRoleEditor": "editors and up",
+    "minRoleBuilder": "builders and up",
+    "minRoleAdmin": "admins",
+    "startRestricted": "Only {roles} can start a conversation with this agent.",
+    "startDisabled": "This agent only starts conversations from its triggers and chat channels.",
+    "continueTriggeredRestricted": "Only {roles} can continue conversations that a trigger started.",
+    "continueTriggeredDisabled": "Conversations that a trigger started can't be continued.",
+    "welcomeYou": "you",
+    "public": "Visible to everyone",
+    "publicDescription": "Everyone who can see this agent can read this conversation. Click to make it private."
   },
   "agentChatTrigger": {
     "preview": "Preview",
@@ -689,7 +695,22 @@
     "pin": "Pin",
     "unpin": "Unpin",
     "rename": "Rename",
-    "delete": "Delete"
+    "delete": "Delete",
+    "failed": "Failed",
+    "private": "Private",
+    "privateDescription": "Only you can see this conversation.",
+    "allConversations": "All conversations",
+    "emptyFiltered": "No conversations started this way",
+    "newPrivateConversation": "New private conversation",
+    "makePrivate": "Make private",
+    "makePublic": "Make visible to everyone"
+  },
+  "agentChatOrigin": {
+    "mine": "Created by me",
+    "manual": "Manual",
+    "trigger": "Trigger",
+    "channel": "Chat channel",
+    "service": "Run agent action"
   },
   "agentConfiguration": {
     "title": "Configuration",
@@ -699,11 +720,10 @@
     "instructionsEmptySummary": "Tell the agent what it is for and how to behave",
     "whenItRuns": "When it runs",
     "whenItRunsEmptySummary": "Add a trigger to run it without chatting.",
-    "accessAndTools": "Access & tools",
+    "workspaceAccess": "Workspace access",
     "accessNoTools": "No workspace access yet",
     "accessToolsSummary": "{enabled} tools",
     "accessToolsSummaryAsk": "{enabled} tools, {ask} ask first",
-    "accessWebSearch": "web search",
     "actionTools": "Action tools",
     "actionToolsEmptySummary": "None yet. Reuse actions from Automations",
     "chatChannels": "Chat channels",
@@ -711,7 +731,8 @@
     "memory": "Memory",
     "memoryEmptySummary": "Nothing remembered yet",
     "agentSettings": "Agent settings",
-    "agentSettingsSummary": "Name, model, duplicate or delete"
+    "agentSettingsSummary": "Name, model, duplicate or delete",
+    "webSearch": "Web search"
   },
   "agentServiceForm": {
     "noConfiguration": "This service does not require any configuration."
@@ -728,14 +749,22 @@
     "enabledLabel": "Enabled",
     "hint": "Each event starts a new conversation with the event data as context.",
     "remove": "Delete trigger",
-    "pausedHint": "The agent is turned off, so triggers are paused. Turn it on in the header.",
     "dataItProvides": "Data it provides",
     "valuesCount": "{count} value | {count} values",
     "copyToken": "Copy for the instructions",
     "examplePayload": "Example payload",
     "examplePayloadHelper": "What “Run once” hands the agent, so you can try it without waiting for the real event.",
     "onlyWhenMentioned": "Only run when the agent is mentioned",
-    "onlyWhenMentionedHint": "People can then address the agent with {'@'} in a comment on this table. Without this option every comment starts a run."
+    "onlyWhenMentionedHint": "People can then address the agent with {'@'} in a comment on this table. Without this option every comment starts a run.",
+    "conversations": "Conversations in Baserow",
+    "startChatMinRole": "Start a new conversation",
+    "startChatMinRoleHint": "Who can start a conversation with the agent in Baserow. Triggers and chat channels always can.",
+    "continueChatMinRole": "Continue a triggered conversation",
+    "continueChatMinRoleHint": "Who can write in a conversation that a trigger started.",
+    "minRole_EDITOR": "Editors and up",
+    "minRole_BUILDER": "Builders and up",
+    "minRole_ADMIN": "Admins",
+    "minRole_NOBODY": "Nobody"
   },
   "agentChannels": {
     "empty": "No chat channels yet. Connect a chat app to talk to the agent from there.",
@@ -1318,10 +1347,12 @@
     "preset_read_only": "Read only",
     "preset_off": "Off",
     "preset_custom": "Custom",
-    "webSearch": "Web search",
-    "webSearchDescription": "Look things up on the web and read pages.",
     "exceptionsCount": "{count} exception | {count} exceptions",
-    "exceptionItem": "{tool} as {name}"
+    "exceptionItem": "{tool} as {name}",
+    "actAsUserOption": "On behalf of the user",
+    "actAsUserOptionDescription": "The Baserow user chatting with the agent",
+    "actAsUserHint": "Sees and changes only what the Baserow user who starts or continues the conversation may. Conversations started by a trigger, a chat channel or an action have no workspace access.",
+    "theUser": "The user"
   },
   "agentToolPermissions": {
     "title": "Tool permissions",
@@ -1404,7 +1435,9 @@
     "agentsIdentity": "the agent’s identity",
     "noIdentity": "No identity",
     "vectorSearchDescription": "Finds the rows whose text is closest in meaning to the query. Use it to look up records by topic or description instead of exact words.",
-    "vectorSearchQueryInput": "What to search for, in natural language"
+    "vectorSearchQueryInput": "What to search for, in natural language",
+    "webSearch": "Web search",
+    "webSearchDescription": "Look things up on the web and read pages."
   },
   "agentMemory": {
     "placeholder": "Nothing remembered yet. Try “Remember to …” in a chat, or write a note here.",

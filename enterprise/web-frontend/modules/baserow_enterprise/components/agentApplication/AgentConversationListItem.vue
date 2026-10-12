@@ -2,30 +2,62 @@
   <li
     class="agent-conversation-list__item"
     :class="{ 'agent-conversation-list__item--active': active }"
-    @click="$emit('select')"
+    @click="select"
   >
-    <span
-      class="agent-conversation-list__item-status"
-      :class="
-        loading
-          ? 'agent-conversation-list__item-status--loading'
-          : statusModifier
-      "
-      :title="statusTitle"
-    ></span>
-    <span class="agent-conversation-list__item-title">
-      <Editable
-        ref="rename"
-        :value="chat.title || $t('agentConversationList.untitled')"
-        @change="renameChat($event)"
-      ></Editable>
+    <span class="agent-conversation-list__item-origin" :title="origin.label">
+      <span
+        v-if="loading"
+        class="agent-conversation-list__item-origin-loading"
+      ></span>
+      <img
+        v-else-if="origin.image"
+        class="agent-conversation-list__item-origin-image"
+        :src="origin.image"
+        alt=""
+      />
+      <i v-else :class="origin.icon"></i>
+      <span
+        v-if="statusModifier"
+        class="agent-conversation-list__item-status"
+        :class="statusModifier"
+        :title="statusTitle"
+      ></span>
+    </span>
+    <span class="agent-conversation-list__item-text">
+      <span class="agent-conversation-list__item-heading">
+        <span class="agent-conversation-list__item-title">
+          <Editable
+            ref="rename"
+            :value="chat.title || $t('agentConversationList.untitled')"
+            @change="renameChat($event)"
+          ></Editable>
+        </span>
+        <span
+          v-if="chat.private"
+          class="agent-conversation-list__item-private"
+          :title="$t('agentConversationList.privateDescription')"
+        >
+          <i class="iconoir-lock"></i>
+          {{ $t('agentConversationList.private') }}
+        </span>
+      </span>
+      <span class="agent-conversation-list__item-meta">
+        <span class="agent-conversation-list__item-meta-origin">{{
+          origin.label
+        }}</span>
+        <span
+          class="agent-conversation-list__item-meta-time"
+          :title="absoluteTime"
+          >{{ relativeTime }}</span
+        >
+      </span>
     </span>
     <a
       v-if="canOpenMenu"
       ref="menuButton"
       class="agent-conversation-list__item-menu"
       :title="$t('agentConversationList.menu')"
-      @click.stop="$refs.context.toggle($refs.menuButton, 'bottom', 'right', 4)"
+      @click="$refs.context.toggle($refs.menuButton, 'bottom', 'right', 4)"
     >
       <i class="iconoir-more-vert"></i>
     </a>
@@ -43,6 +75,11 @@ import { notifyIf } from '@baserow/modules/core/utils/error'
 import AgentConversationContext from '@baserow_enterprise/components/agentApplication/AgentConversationContext'
 import { AgentContextMixin } from '@baserow_enterprise/composables/useAgentContext'
 import { isChatRunning } from '@baserow_enterprise/utils/agentChatStatus'
+import {
+  describeChatOrigin,
+  getChatOrigin,
+} from '@baserow_enterprise/utils/agentChatOrigin'
+import moment from '@baserow/modules/core/moment'
 
 export default {
   name: 'AgentConversationListItem',
@@ -79,14 +116,30 @@ export default {
         )
       )
     },
+    origin() {
+      return describeChatOrigin(getChatOrigin(this.chat), {
+        registry: this.$registry,
+        t: this.$t.bind(this),
+      })
+    },
+    relativeTime() {
+      return moment(this.chat.updated_on).fromNow()
+    },
+    absoluteTime() {
+      return moment(this.chat.updated_on).format('LLL')
+    },
+    // Idle conversations carry no badge; only what needs attention does.
     statusModifier() {
       if (isChatRunning(this.chat.status)) {
         return 'agent-conversation-list__item-status--running'
       }
-      return `agent-conversation-list__item-status--${this.chat.status.replace(
-        '_',
-        '-'
-      )}`
+      if (['awaiting_approval', 'error'].includes(this.chat.status)) {
+        return `agent-conversation-list__item-status--${this.chat.status.replace(
+          '_',
+          '-'
+        )}`
+      }
+      return null
     },
     statusTitle() {
       if (this.chat.status === 'awaiting_approval') {
@@ -95,10 +148,22 @@ export default {
       if (isChatRunning(this.chat.status)) {
         return this.$t('agentConversationList.running')
       }
+      if (this.chat.status === 'error') {
+        return this.$t('agentConversationList.failed')
+      }
       return null
     },
   },
   methods: {
+    // The menu button's click must keep bubbling to the document, where open
+    // context menus listen to close themselves, so the row skips it instead
+    // of the button stopping it.
+    select(event) {
+      if (this.$refs.menuButton?.contains(event.target)) {
+        return
+      }
+      this.$emit('select')
+    },
     async renameChat({ value }) {
       const title = value.trim()
       if (title === '' || title === this.chat.title) {

@@ -14,6 +14,7 @@ from ..models import AgentDefinition, AgentTool
 from ..signals import agent_tool_created, agent_tool_updated
 from ..triggers.handler import check_service_table_in_workspace
 from .registries import agent_tool_type_registry
+from .rules import ACT_AS_USER
 
 _NOT_PROVIDED = object()
 
@@ -60,9 +61,10 @@ class AgentToolHandler:
         return {
             **config,
             "tool_identities": {
-                name: int(value)
+                name: value if value == ACT_AS_USER else int(value)
                 for name, value in wanted.items()
-                if str(value).isdigit() and int(value) in existing
+                if value == ACT_AS_USER
+                or (str(value).isdigit() and int(value) in existing)
             },
         }
 
@@ -202,10 +204,13 @@ class AgentToolHandler:
         config: Optional[dict] = None,
         service_values: Optional[dict] = None,
         identity_id: Any = _NOT_PROVIDED,
+        act_as_user: Optional[bool] = None,
     ) -> AgentTool:
         """
         :param identity_id: The workspace agent the tool runs as, or None for
             the application's identity. Omitted when unchanged.
+        :param act_as_user: Whether the tool acts on behalf of the user of the
+            conversation. Omitted when unchanged.
         :raises DRFValidationError: When the identity is not in the workspace.
         """
 
@@ -230,8 +235,17 @@ class AgentToolHandler:
                 else self._get_workspace_identity(tool.agent, identity_id)
             )
             update_fields.append("identity")
+            if tool.identity is not None and act_as_user is None:
+                act_as_user = False
+        if act_as_user is not None:
+            tool.act_as_user = act_as_user
+            update_fields.append("act_as_user")
+            # A tool acts either as an identity or as the user, never both.
+            if act_as_user and tool.identity_id is not None:
+                tool.identity = None
+                update_fields.append("identity")
 
-        tool.save(update_fields=update_fields)
+        tool.save(update_fields=list(dict.fromkeys(update_fields)))
 
         if service_values is not None and tool.service_id is not None:
             service = tool.service.specific

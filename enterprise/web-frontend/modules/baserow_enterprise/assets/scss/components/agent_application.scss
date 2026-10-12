@@ -61,13 +61,6 @@
   color: $palette-yellow-800;
 }
 
-.agent-page__header-status {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-right: 16px;
-}
-
 .agent-page__header-last-run {
   align-self: center;
   margin-right: 8px;
@@ -130,13 +123,18 @@
   margin: 0 0 12px;
 }
 
+.agent-conversation-list__filter {
+  flex-shrink: 0;
+  margin-bottom: 8px;
+}
+
 .agent-conversation-list__item {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-height: 32px;
-  padding: 0 8px;
+  gap: 10px;
+  min-height: 44px;
+  padding: 6px 8px;
   cursor: pointer;
   margin-bottom: 2px;
 
@@ -155,43 +153,129 @@
   }
 }
 
+// Where the conversation came from; its status sits on the corner.
+.agent-conversation-list__item-origin {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background-color: $palette-neutral-100;
+  color: $palette-neutral-900;
+  font-size: 14px;
+
+  @include rounded($rounded-md);
+}
+
+.agent-conversation-list__item--active .agent-conversation-list__item-origin,
+.agent-conversation-list__item:hover .agent-conversation-list__item-origin {
+  background-color: $white;
+}
+
+.agent-conversation-list__item-origin-image {
+  width: 14px;
+  height: 14px;
+}
+
+.agent-conversation-list__item-origin-loading {
+  @include loading-spinner($palette-neutral-700, 12px);
+}
+
+.agent-conversation-list__item-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.agent-conversation-list__item-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
 .agent-conversation-list__item-title {
   @extend %ellipsis;
 
-  flex: 1;
   min-width: 0;
   color: $palette-neutral-1200;
   font-size: 13px;
+  line-height: 18px;
+}
+
+.agent-conversation-list__item-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: $palette-neutral-700;
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.agent-conversation-list__item-meta-origin {
+  @extend %ellipsis;
+
+  min-width: 0;
+  flex-shrink: 0;
+  max-width: 60%;
+}
+
+.agent-conversation-list__item-meta-time {
+  @extend %ellipsis;
+
+  min-width: 0;
+
+  &::before {
+    content: '·';
+    margin-right: 6px;
+  }
+}
+
+.agent-conversation-list__item-private {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 4px;
+  background-color: $palette-neutral-100;
+  color: $palette-neutral-900;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 16px;
+
+  @include rounded($rounded);
+}
+
+.agent-conversation-list__item--active .agent-conversation-list__item-private,
+.agent-conversation-list__item:hover .agent-conversation-list__item-private {
+  background-color: $white;
 }
 
 .agent-conversation-list__item-status {
-  flex-shrink: 0;
-  width: 6px;
-  height: 6px;
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  border: 1px solid $palette-neutral-400;
-  background-color: transparent;
-
-  &--loading {
-    @include loading-spinner($palette-neutral-700, 8px);
-
-    background-color: transparent;
-  }
+  border: 2px solid $white;
 
   &--running,
   &--canceling {
-    border-color: $palette-green-500;
     background-color: $palette-green-500;
     animation: agent-status-pulse 1.2s ease-in-out infinite;
   }
 
   &--awaiting-approval {
-    border-color: $palette-yellow-500;
     background-color: $palette-yellow-500;
   }
 
   &--error {
-    border-color: $palette-red-500;
     background-color: $palette-red-500;
   }
 }
@@ -240,6 +324,8 @@
 
 .agent-conversation-list__footer {
   flex-shrink: 0;
+  display: flex;
+  gap: 8px;
   padding: 12px;
   border-top: 1px solid $palette-neutral-200;
 }
@@ -402,13 +488,6 @@
   text-align: center;
 }
 
-.agent-chat-welcome__suggestion-spinner {
-  @include loading-spinner($palette-neutral-700, 14px);
-
-  display: inline-block;
-  vertical-align: middle;
-}
-
 .agent-chat-welcome__suggestion-text {
   min-width: 0;
 }
@@ -569,6 +648,13 @@
   margin-top: 10px;
   font-size: 12px;
   color: $palette-neutral-700;
+  white-space: normal;
+
+  // Under the user's own message, aligned with the right-hand bubble.
+  &--end {
+    justify-content: flex-end;
+    margin-top: 4px;
+  }
 }
 
 .agent-chat-message__action {
@@ -586,6 +672,18 @@
 
 .agent-chat-message__time {
   color: $palette-neutral-600;
+  font-size: 12px;
+  white-space: nowrap;
+
+  // Next to a system note, which is a single centered line.
+  &--inline {
+    margin-left: 6px;
+
+    &::before {
+      content: '·';
+      margin-right: 6px;
+    }
+  }
 }
 
 .agent-chat__attachment-chip {
@@ -790,6 +888,19 @@
   &--expanded {
     transform: rotate(90deg);
   }
+
+  &--after-time {
+    margin-left: 0;
+  }
+}
+
+.agent-chat-card__time {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: $palette-neutral-600;
+  font-size: 12px;
+  font-weight: 400;
+  white-space: nowrap;
 }
 
 .agent-chat-card__body {
@@ -1379,8 +1490,12 @@
   display: flex;
   align-items: center;
   gap: 20px;
+
+  // Lines up with the conversation list footer next to it: a regular button
+  // with 12px padding and the top border.
+  min-height: 61px;
   border-top: 1px solid $palette-neutral-200;
-  padding: 16px 20px;
+  padding: 12px 20px;
   background-color: $palette-neutral-25;
 }
 
@@ -1500,6 +1615,31 @@
   align-items: center;
   justify-content: space-between;
   margin-top: 4px;
+}
+
+.agent-chat__composer-private {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 auto 0 4px;
+  padding: 2px 8px;
+  color: $palette-neutral-700;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+
+  @include rounded($rounded-md);
+
+  &:hover {
+    background-color: $palette-neutral-100;
+    color: $palette-neutral-900;
+    text-decoration: none;
+  }
+
+  &--active {
+    background-color: $palette-neutral-100;
+    color: $palette-neutral-900;
+  }
 }
 
 .agent-chat__attach-button {
@@ -2258,21 +2398,6 @@
   color: $palette-neutral-900;
   font-size: 13px;
   line-height: 20px;
-}
-
-.agent-configuration__paused-hint {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  color: $palette-neutral-900;
-  font-size: 12px;
-  line-height: 18px;
-
-  i {
-    flex-shrink: 0;
-    font-size: 14px;
-    line-height: 16px;
-  }
 }
 
 .agent-sidebar {

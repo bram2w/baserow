@@ -40,25 +40,6 @@
       />
     </div>
     <div class="header__right">
-      <span
-        v-if="!template"
-        v-skeleton="loading"
-        data-allow-mismatch="class,style,attribute"
-        class="agent-page__header-status"
-      >
-        <Badge :color="activeValue ? 'green' : 'neutral'" indicator rounded>
-          {{
-            activeValue ? $t('agentHeader.active') : $t('agentHeader.paused')
-          }}
-        </Badge>
-        <SwitchInput
-          small
-          :value="activeValue"
-          :disabled="!canUpdateApplication"
-          :title="$t('agentHeader.activeTitle')"
-          @input="toggleActive"
-        ></SwitchInput>
-      </span>
       <div class="header__buttons header__buttons--with-separator">
         <span
           v-if="!template"
@@ -72,15 +53,6 @@
               : $t('agentHeader.neverRan')
           }}
         </span>
-        <Button
-          v-if="canRunOnce && !loading"
-          type="secondary"
-          icon="iconoir-play"
-          :loading="runningOnce"
-          @click="$emit('run-once')"
-        >
-          {{ $t('agentHeader.runOnce') }}
-        </Button>
         <ButtonIcon
           icon="iconoir-settings"
           :active="configurationOpen"
@@ -96,7 +68,6 @@
 import { defineComponent, computed, ref } from 'vue'
 import { useStore } from 'vuex'
 import moment from '@baserow/modules/core/moment'
-import { notifyIf } from '@baserow/modules/core/utils/error'
 import AgentPendingApprovalsContext from '@baserow_enterprise/components/agentApplication/AgentPendingApprovalsContext'
 import { useAgentContext } from '@baserow_enterprise/composables/useAgentContext'
 
@@ -118,22 +89,14 @@ export default defineComponent({
       required: false,
       default: false,
     },
-    runningOnce: {
-      type: Boolean,
-      required: false,
-      default: false,
-    },
   },
-  emits: ['toggle-configuration', 'open-conversation', 'run-once'],
+  emits: ['toggle-configuration', 'open-conversation'],
   setup(props) {
     const store = useStore()
-    const { storePrefix, template, hasPermission } = useAgentContext()
+    const { storePrefix, template } = useAgentContext()
 
     const agent = computed(
       () => store.getters[`${storePrefix}agentApplication/getAgent`]
-    )
-    const triggers = computed(
-      () => store.getters[`${storePrefix}agentApplication/getTriggers`]
     )
 
     // Driven by the application object in the core store, so the workspace
@@ -148,68 +111,14 @@ export default defineComponent({
       approvalsContext.value.toggle(approvalsButton.value, 'bottom', 'left', 4)
     }
 
-    const canRunChat = computed(() =>
-      hasPermission(
-        'agent_application.run_chat',
-        props.application,
-        props.application.workspace.id
-      )
-    )
-    const canRunOnce = computed(
-      () =>
-        canRunChat.value && triggers.value.some((trigger) => trigger.enabled)
-    )
     const lastRun = computed(() =>
       moment(props.application.last_run_on).calendar()
     )
 
-    const canUpdateApplication = computed(() =>
-      hasPermission(
-        'application.update',
-        props.application,
-        props.application.workspace.id
-      )
-    )
-
-    // The switch must flip immediately and stay interactive while the request
-    // is in flight. `pendingActive` holds the latest intent during a sync, so
-    // rapid toggling serializes into follow-up requests (latest intent wins)
-    // instead of racing them; a failure clears it, reverting the switch to the
-    // server state.
-    const pendingActive = ref(null)
-    const activeValue = computed(() =>
-      pendingActive.value === null
-        ? Boolean(props.application.active)
-        : pendingActive.value
-    )
-    const toggleActive = async (active) => {
-      const syncing = pendingActive.value !== null
-      pendingActive.value = active
-      if (syncing) {
-        return
-      }
-      try {
-        while (pendingActive.value !== Boolean(props.application.active)) {
-          await store.dispatch('application/update', {
-            application: props.application,
-            values: { active: pendingActive.value },
-          })
-        }
-      } catch (error) {
-        notifyIf(error, 'application')
-      } finally {
-        pendingActive.value = null
-      }
-    }
-
     return {
       template,
       agent,
-      canRunOnce,
       lastRun,
-      canUpdateApplication,
-      activeValue,
-      toggleActive,
       pendingApprovalsCount,
       approvalsButton,
       approvalsContext,

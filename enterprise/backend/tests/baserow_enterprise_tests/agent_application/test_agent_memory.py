@@ -22,7 +22,9 @@ def _ctx(agent):
     # A run always knows who it acts as; the memory tools audit that actor.
     # The prompt test passes an unsaved agent that has no application.
     user = agent.application.workspace.users.first() if agent.application_id else None
-    return SimpleNamespace(deps=SimpleNamespace(agent=agent, user=user))
+    return SimpleNamespace(
+        deps=SimpleNamespace(agent=agent, user=user, initiating_user=user)
+    )
 
 
 @pytest.fixture
@@ -109,7 +111,9 @@ def test_memory_is_injected_into_the_prompt():
 
 
 @pytest.mark.django_db(transaction=True)
-def test_memory_tools_available_in_triggered_runs(agent):
+def test_memory_tools_only_for_baserow_users_who_may_configure_the_agent(
+    agent, data_fixture
+):
     from baserow_enterprise.agent_application.runner import AgentRunner
 
     register_runner_test_model_type()
@@ -118,16 +122,25 @@ def test_memory_tools_available_in_triggered_runs(agent):
         ai_generative_ai_type="agent_runner_test",
         ai_generative_ai_model="test-model",
     )
-    triggered_chat = AgentChat.objects.create(
-        agent=agent, source=AgentChat.Source.TRIGGER, trigger_type="rows_created"
-    )
+    workspace = agent.application.workspace
+    owner = workspace.users.first()
+    stranger = data_fixture.create_user()
+    memory_tools = {f.__name__ for f in MEMORY_TOOL_FUNCTIONS}
 
-    names = set()
-    for toolset in AgentRunner(triggered_chat)._toolsets:
-        for tool in getattr(toolset, "tools", {}).values():
-            names.add(tool.function.__name__)
+    def has_memory_tools(**chat_values):
+        chat = AgentChat.objects.create(agent=agent, **chat_values)
+        names = set()
+        for toolset in AgentRunner(chat)._toolsets:
+            for tool in getattr(toolset, "tools", {}).values():
+                names.add(tool.function.__name__)
+        return memory_tools <= names
 
-    assert {f.__name__ for f in MEMORY_TOOL_FUNCTIONS} <= names
+    assert has_memory_tools(user=owner)
+    # A triggered conversation that the user picked up in Baserow.
+    assert has_memory_tools(user=owner, source=AgentChat.Source.TRIGGER)
+    assert not has_memory_tools(source=AgentChat.Source.TRIGGER)
+    assert not has_memory_tools(user=owner, source=AgentChat.Source.SERVICE)
+    assert not has_memory_tools(user=stranger)
 
 
 @pytest.mark.django_db

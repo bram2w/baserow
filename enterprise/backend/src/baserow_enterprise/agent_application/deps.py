@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 from pydantic_ai import Tool
 
@@ -34,6 +34,9 @@ class AgentRunDeps:
     agent: "AgentDefinition"
     chat: "AgentChat"
     tool_helpers: ToolHelpers
+    # The Baserow user who started or continued the conversation, which tools
+    # acting "on behalf of the user" run as. None for automated runs.
+    initiating_user: Optional["AbstractUser"] = None
     sources: list[str] = field(default_factory=list)
     dynamic_tools: list[Tool] = field(default_factory=list)
     # Extra notes tool types can add to the system prompt (e.g. "web search

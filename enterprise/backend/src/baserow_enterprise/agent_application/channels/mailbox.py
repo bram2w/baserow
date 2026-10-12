@@ -539,7 +539,6 @@ def poll_mailbox_channels() -> None:
     channels = AgentChatChannel.objects.filter(
         type__in=(GmailAgentChatChannelType.type, OutlookAgentChatChannelType.type),
         enabled=True,
-        application__active=True,
         application__trashed=False,
         application__workspace__trashed=False,
     ).select_related("application__workspace")

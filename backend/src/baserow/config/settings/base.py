@@ -1499,6 +1499,7 @@ PERMISSION_MANAGERS = [
     "member",
     "token",
     "write_field_values",
+    "agent_chat_role",
     "role",
     "basic",
     "automation_workflow",
@@ -1507,6 +1508,7 @@ PERMISSION_MANAGERS = [
 
 if "baserow_enterprise" not in INSTALLED_APPS:
     PERMISSION_MANAGERS.remove("write_field_values")
+    PERMISSION_MANAGERS.remove("agent_chat_role")
     PERMISSION_MANAGERS.remove("role")
 if "baserow_premium" not in INSTALLED_APPS:
     PERMISSION_MANAGERS.remove("view_ownership")

@@ -177,8 +177,8 @@ class AgentTriggerHandler:
 
     def _publish_service(self, service) -> None:
         """
-        Agent triggers are live as soon as they exist (the agent's active
-        switch and the trigger's enabled flag gate the runs), unlike
+        Agent triggers are live as soon as they exist (the trigger's
+        enabled flag gates the runs), unlike
         automation triggers that only listen once their workflow is
         published. The core webhook endpoint only resolves published HTTP
         trigger services and the inbound email address only published email

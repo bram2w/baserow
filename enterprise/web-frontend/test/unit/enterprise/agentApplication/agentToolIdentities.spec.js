@@ -43,3 +43,30 @@ describe('agentToolIdentities', () => {
     ])
   })
 })
+
+describe('agentToolIdentities acting as the user', () => {
+  test('keeps the user value in tool identities', () => {
+    expect(
+      workspaceToolIdentities({ tool_identities: { a: 'user', b: 2 } })
+    ).toEqual({ a: 'user', b: 2 })
+  })
+
+  test('lists tools acting as the user only when asked to', () => {
+    const options = {
+      workspaceTool: { config: { tool_identities: { list_rows: 'user' } } },
+      actionTools: [{ id: 7, name: 'Add row', act_as_user: true }],
+      catalog: [{ name: 'list_rows', label: 'List rows' }],
+      identities: [],
+    }
+    expect(listToolIdentityExceptions(options)).toEqual([])
+    const exceptions = listToolIdentityExceptions({
+      ...options,
+      userIdentity: { name: 'The user' },
+    })
+    expect(exceptions.map((exception) => exception.label)).toEqual([
+      'List rows',
+      'Add row',
+    ])
+    expect(exceptions[0].identity).toEqual({ id: 'user', name: 'The user' })
+  })
+})

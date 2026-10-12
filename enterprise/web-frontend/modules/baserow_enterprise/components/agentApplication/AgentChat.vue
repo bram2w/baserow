@@ -41,11 +41,9 @@
           :name="agent?.name || application.name"
           :trigger-label="firstTriggerLabel"
           :identity-name="identityName"
-          :can-run-chat="canRunChat"
-          :can-run-once="canRunOnce"
-          :running-once="runningOnce"
+          :can-run-chat="canRunChat && canStartChat"
+          :can-remember="canUpdateAgent"
           @prompt="sendPrompt"
-          @run-once="$emit('run-once')"
         />
         <template v-for="block in visibleBlocks" :key="block.key">
           <AgentChatTriggerRow
@@ -53,6 +51,7 @@
             :label="triggerLabel"
             :trigger-type="triggerType"
             :payload="eventPayload"
+            :created-on="block.event.created_on"
             :fallback="formatToolPayload(block.event.content)"
           />
           <AgentChatMessage
@@ -141,18 +140,12 @@
       </Button>
     </div>
     <div
-      v-else-if="canRunChat && !canContinueChat"
+      v-else-if="canRunChat && !canWrite"
       class="agent-chat__banner"
       data-banner-type="other-user"
     >
       <i class="iconoir-lock"></i>
-      <span class="agent-chat__banner-text">
-        {{
-          isChannelChat
-            ? $t('agentChat.channelConversation')
-            : $t('agentChat.startedByOtherUser')
-        }}
-      </span>
+      <span class="agent-chat__banner-text">{{ readOnlyReason }}</span>
     </div>
     <div v-else-if="canRunChat" class="agent-chat__composer">
       <div class="agent-chat__column">
@@ -251,6 +244,28 @@
             >
               <i class="iconoir-attachment"></i>
             </button>
+            <a
+              v-if="canChangePrivacy"
+              class="agent-chat__composer-private"
+              :class="{ 'agent-chat__composer-private--active': isPrivate }"
+              :title="
+                isPrivate
+                  ? $t('agentChat.privateDescription')
+                  : $t('agentChat.publicDescription')
+              "
+              @click.prevent="togglePrivate"
+            >
+              <i :class="isPrivate ? 'iconoir-lock' : 'iconoir-community'"></i>
+              {{ isPrivate ? $t('agentChat.private') : $t('agentChat.public') }}
+            </a>
+            <span
+              v-else-if="isPrivate"
+              class="agent-chat__composer-private agent-chat__composer-private--active"
+              :title="$t('agentConversationList.privateDescription')"
+            >
+              <i class="iconoir-lock"></i>
+              {{ $t('agentChat.private') }}
+            </span>
             <input
               ref="fileInputEl"
               type="file"
@@ -312,6 +327,7 @@ import AgentChatTriggerRow from '@baserow_enterprise/components/agentApplication
 import AgentChatToolGroup from '@baserow_enterprise/components/agentApplication/AgentChatToolGroup'
 import FileFieldModal from '@baserow/modules/database/components/field/FileFieldModal'
 import { useAgentContext } from '@baserow_enterprise/composables/useAgentContext'
+import { ACT_AS_USER } from '@baserow_enterprise/utils/agentToolIdentities'
 
 const MIN_ROWS = 1
 const MAX_ROWS = 6
@@ -334,17 +350,12 @@ export default defineComponent({
       required: false,
       default: false,
     },
-    runningOnce: {
-      type: Boolean,
-      required: false,
-      default: false,
-    },
     application: {
       type: Object,
       required: true,
     },
   },
-  emits: ['run-once', 'open-configuration'],
+  emits: ['open-configuration'],
   setup(props) {
     const store = useStore()
     const { storePrefix, hasPermission } = useAgentContext()
@@ -408,10 +419,11 @@ export default defineComponent({
     const toolLabel = computed(
       () => store.getters[`${storePrefix}agentApplication/getToolLabel`]
     )
-    const identityName = computed(
-      () =>
-        store.getters['agent/get'](props.application.agent_identity_id)?.name ||
-        ''
+    const identityName = computed(() =>
+      props.application.act_as_user
+        ? t('agentChat.welcomeYou')
+        : store.getters['agent/get'](props.application.agent_identity_id)
+            ?.name || ''
     )
 
     const triggerNodeLabel = (triggerType) => {
@@ -444,11 +456,17 @@ export default defineComponent({
       const workspaceTool = tools.find((tool) => tool.type === 'workspace')
       let identityId = workspaceTool?.config?.tool_identities?.[catalogName]
       if (identityId === undefined) {
-        identityId = tools.find(
+        const actionTool = tools.find(
           (tool) =>
             ['service', 'mcp'].includes(tool.type) &&
             slugifyToolName(tool.name || '') === toolName
-        )?.identity_id
+        )
+        identityId = actionTool?.act_as_user
+          ? ACT_AS_USER
+          : actionTool?.identity_id
+      }
+      if (identityId === ACT_AS_USER) {
+        return t('agentAccess.theUser')
       }
       return (
         identities.find((identity) => identity.id === identityId)?.name || ''
@@ -523,29 +541,78 @@ export default defineComponent({
     // may continue it: the run acts as the owner when the agent has no
     // identity, so continuing it would borrow their permissions. Triggered
     // conversations have no owner yet and can be picked up.
-    const chatOwnerId = computed(() => {
-      const chatId = store.getters[`${storePrefix}agentChat/getChatId`]
-      if (chatId === null) {
-        return null
-      }
-      const chat = store.getters[`${storePrefix}agentHistory/getChats`].find(
-        (item) => item.id === chatId
+    const chatOwnerId = computed(
+      () => store.getters[`${storePrefix}agentChat/getChatUserId`]
+    )
+    const isNewConversation = computed(
+      () => store.getters[`${storePrefix}agentChat/getChatId`] === null
+    )
+    const isPrivate = computed(
+      () => store.getters[`${storePrefix}agentChat/isPrivate`]
+    )
+    // The application narrows who may start conversations and who may pick
+    // up the ones its triggers started (minimum roles in "When it runs").
+    const canStartChat = computed(() =>
+      hasPermission(
+        'agent_application.start_chat',
+        props.application,
+        props.application.workspace.id
       )
-      return chat?.user_id ?? null
-    })
+    )
+    const canContinueTriggeredChat = computed(() =>
+      hasPermission(
+        'agent_application.continue_triggered_chat',
+        props.application,
+        props.application.workspace.id
+      )
+    )
     // Conversations that came in through a chat channel (Slack, website
     // widget, ...) belong to that channel: the backend rejects replies from
     // Baserow, so they are read-only here.
     const isChannelChat = computed(
       () => store.getters[`${storePrefix}agentChat/getSource`] === 'channel'
     )
+    const isOwnedByOther = computed(
+      () =>
+        chatOwnerId.value !== null &&
+        chatOwnerId.value !== store.getters['auth/getUserId']
+    )
     const canContinueChat = computed(
       () =>
         canRunChat.value &&
         !isChannelChat.value &&
-        (chatOwnerId.value === null ||
-          chatOwnerId.value === store.getters['auth/getUserId'])
+        !isOwnedByOther.value &&
+        (source.value !== 'trigger' || canContinueTriggeredChat.value)
     )
+    const canWrite = computed(() =>
+      isNewConversation.value
+        ? canRunChat.value && canStartChat.value
+        : canContinueChat.value
+    )
+    const minRoleLabel = (minRole) =>
+      t(
+        `agentChat.minRole${minRole.charAt(0)}${minRole.slice(1).toLowerCase()}`
+      )
+    const readOnlyReason = computed(() => {
+      if (isNewConversation.value) {
+        const minRole = props.application.start_chat_min_role
+        return minRole === 'NOBODY'
+          ? t('agentChat.startDisabled')
+          : t('agentChat.startRestricted', { roles: minRoleLabel(minRole) })
+      }
+      if (isChannelChat.value) {
+        return t('agentChat.channelConversation')
+      }
+      if (isOwnedByOther.value) {
+        return t('agentChat.startedByOtherUser')
+      }
+      const minRole = props.application.continue_chat_min_role
+      return minRole === 'NOBODY'
+        ? t('agentChat.continueTriggeredDisabled')
+        : t('agentChat.continueTriggeredRestricted', {
+            roles: minRoleLabel(minRole),
+          })
+    })
     const canUpdateTools = computed(() =>
       hasPermission(
         'agent_application.update_tool',
@@ -720,11 +787,6 @@ export default defineComponent({
       await send()
     }
 
-    const canRunOnce = computed(
-      () =>
-        canRunChat.value && triggers.value.some((trigger) => trigger.enabled)
-    )
-
     const decideApprovals = async ({ decisions, dontAskAgain }) => {
       if (decidingApprovals.value) {
         return
@@ -792,9 +854,31 @@ export default defineComponent({
 
     const formatSize = (bytes) => formatFileSize(t, locale.value, bytes)
 
-    const canAttach = computed(
-      () => canRunChat.value && !awaitingApproval.value
+    const canAttach = computed(() => canWrite.value && !awaitingApproval.value)
+
+    // Before the first message anyone starting it picks; afterwards only its
+    // starter may switch, like in the conversation's menu.
+    const canChangePrivacy = computed(
+      () =>
+        canWrite.value &&
+        (isNewConversation.value ||
+          (chatOwnerId.value !== null &&
+            chatOwnerId.value === store.getters['auth/getUserId'] &&
+            hasPermission(
+              'agent_application.update_chat',
+              props.application,
+              props.application.workspace.id
+            )))
     )
+    const togglePrivate = async () => {
+      try {
+        await store.dispatch(`${storePrefix}agentChat/setPrivate`, {
+          private: !isPrivate.value,
+        })
+      } catch (error) {
+        notifyIf(error, 'application')
+      }
+    }
 
     const dragging = computed(() => dragCount.value > 0)
 
@@ -879,6 +963,12 @@ export default defineComponent({
       canDecide,
       canUpdateAgent,
       canContinueChat,
+      canStartChat,
+      canWrite,
+      readOnlyReason,
+      isPrivate,
+      canChangePrivacy,
+      togglePrivate,
       isChannelChat,
       hasError,
       retrying,
@@ -899,7 +989,6 @@ export default defineComponent({
       runsAs,
       formatToolPayload,
       firstTriggerLabel,
-      canRunOnce,
       sendPrompt,
       running,
       canceling,

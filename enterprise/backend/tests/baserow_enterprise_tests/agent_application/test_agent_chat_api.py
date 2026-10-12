@@ -267,6 +267,7 @@ def test_message_and_delete_broadcasts_for_collaborators(agent_setup):
         "type": "human",
         "id": message.id,
         "content": "Hello there",
+        "created_on": message.created_on.isoformat(),
         "attachments": [],
     } in message_events
     assert {"type": "agent_chat_deleted", "chat_id": chat_id} in payloads

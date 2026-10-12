@@ -92,7 +92,14 @@ export const registerRealtimeEvents = (realtime) => {
 
   realtime.registerEvent(
     'agent_chat_deleted',
-    ({ store }, { chat_id: chatId }) => {
+    ({ store }, { chat_id: chatId, except_user_id: exceptUserId }) => {
+      // The owner of a conversation that was just made private keeps it.
+      if (
+        exceptUserId !== undefined &&
+        exceptUserId === store.getters['auth/getUserId']
+      ) {
+        return
+      }
       store.dispatch('agentHistory/forceDeleteChat', { chatId })
       store.dispatch('agentChat/handleChatDeleted', { chatId })
     }

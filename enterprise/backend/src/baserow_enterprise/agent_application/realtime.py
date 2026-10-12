@@ -2,7 +2,11 @@ from django.core.exceptions import SynchronousOnlyOperation
 
 from loguru import logger
 
-from baserow.ws.tasks import broadcast_to_channel_group, broadcast_to_permitted_users
+from baserow.ws.tasks import (
+    broadcast_to_channel_group,
+    broadcast_to_permitted_users,
+    broadcast_to_users,
+)
 
 from .models import AgentChat
 
@@ -95,6 +99,26 @@ def broadcast_public_chat_status(chat: AgentChat) -> None:
     )
 
 
+def _broadcast_to_chat_viewers(
+    application_id: int, payload: dict, private_user_id: int | None = None
+) -> None:
+    """
+    Everybody on the application's page sees a conversation, except a private
+    one, which only goes to its owner.
+    """
+
+    if private_user_id is not None:
+        broadcast_to_users.delay([private_user_id], payload)
+    else:
+        broadcast_to_channel_group.delay(
+            get_agent_application_group_name(application_id), payload
+        )
+
+
+def _private_user_id(chat: AgentChat) -> int | None:
+    return chat.user_id if chat.private else None
+
+
 def broadcast_chat_event(chat: AgentChat, event: dict) -> None:
     """
     Sends one streaming event of a running chat to everybody watching the
@@ -102,13 +126,14 @@ def broadcast_chat_event(chat: AgentChat, event: dict) -> None:
     chat conversations also get the public-safe subset of the event.
     """
 
-    broadcast_to_channel_group.delay(
-        get_agent_application_group_name(chat.agent.application_id),
+    _broadcast_to_chat_viewers(
+        chat.agent.application_id,
         {
             "type": "agent_chat_event",
             "chat_id": chat.id,
             "event": event,
         },
+        _private_user_id(chat),
     )
     broadcast_public_chat_event(chat, event)
 
@@ -132,14 +157,21 @@ def broadcast_agent_definition_updated(agent) -> None:
     )
 
 
-def broadcast_chat_deleted(application_id: int, chat_id: int) -> None:
-    broadcast_to_channel_group.delay(
-        get_agent_application_group_name(application_id),
-        {
-            "type": "agent_chat_deleted",
-            "chat_id": chat_id,
-        },
-    )
+def broadcast_chat_deleted(
+    application_id: int,
+    chat_id: int,
+    private_user_id: int | None = None,
+    except_user_id: int | None = None,
+) -> None:
+    """
+    :param except_user_id: A user who keeps the conversation, like the owner
+        of one that was just made private.
+    """
+
+    payload = {"type": "agent_chat_deleted", "chat_id": chat_id}
+    if except_user_id is not None:
+        payload["except_user_id"] = except_user_id
+    _broadcast_to_chat_viewers(application_id, payload, private_user_id)
 
 
 def broadcast_pending_approvals_updated(application) -> None:
@@ -176,11 +208,12 @@ def broadcast_chat_updated(chat: AgentChat) -> None:
         AgentChatSerializer,
     )
 
-    broadcast_to_channel_group.delay(
-        get_agent_application_group_name(chat.agent.application_id),
+    _broadcast_to_chat_viewers(
+        chat.agent.application_id,
         {
             "type": "agent_chat_updated",
             "chat": AgentChatSerializer(chat).data,
         },
+        _private_user_id(chat),
     )
     broadcast_public_chat_status(chat)

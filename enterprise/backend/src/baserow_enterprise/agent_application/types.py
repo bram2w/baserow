@@ -25,6 +25,8 @@ class AgentToolDict(TypedDict):
     config: dict
     service: dict | None
     order: int
+    identity_id: int | None
+    act_as_user: bool
 
 
 class AgentChatChannelDict(TypedDict):
@@ -42,6 +44,9 @@ class AgentApplicationDict(TypedDict):
     type: str
     description: str
     agent_identity_id: int | None
+    act_as_user: bool
+    start_chat_min_role: str
+    continue_chat_min_role: str
     integrations: list[dict]
     agents: list[AgentDefinitionDict]
     triggers: list[AgentTriggerDict]

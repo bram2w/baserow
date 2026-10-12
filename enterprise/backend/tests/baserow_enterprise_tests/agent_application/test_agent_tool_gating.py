@@ -156,12 +156,14 @@ def test_materialize_tool_rules_covers_the_catalog():
 
 def _make_deps(**kwargs):
     return AgentRunDeps(
-        user=None,
-        workspace=None,
-        agent=None,
-        chat=None,
-        tool_helpers=None,
-        **kwargs,
+        **{
+            "user": None,
+            "workspace": None,
+            "agent": None,
+            "chat": None,
+            "tool_helpers": None,
+            **kwargs,
+        }
     )
 
 
@@ -351,11 +353,27 @@ def test_workspace_tool_type_adds_access_note(data_fixture):
         BaserowWorkspaceAgentToolType,
     )
 
-    deps = _make_deps()
+    deps = _make_deps(user=data_fixture.create_user())
     BaserowWorkspaceAgentToolType().build_toolsets(
         AgentTool(type="workspace", config={"access": "read_only"}), deps
     )
     assert any("read only" in note for note in deps.system_notes)
+
+
+@pytest.mark.django_db
+def test_workspace_tool_type_without_actor_has_no_workspace_access(data_fixture):
+    from baserow_enterprise.agent_application.models import AgentTool
+    from baserow_enterprise.agent_application.tools.workspace import (
+        BaserowWorkspaceAgentToolType,
+    )
+
+    # An automated conversation of an agent acting on behalf of the user.
+    deps = _make_deps()
+    toolsets = BaserowWorkspaceAgentToolType().build_toolsets(
+        AgentTool(type="workspace", config={}), deps
+    )
+    assert toolsets == []
+    assert any("no access to the workspace" in note for note in deps.system_notes)
 
 
 def test_catalog_excludes_application_builder_tools():

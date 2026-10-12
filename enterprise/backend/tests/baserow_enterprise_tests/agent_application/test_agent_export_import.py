@@ -72,9 +72,6 @@ def configured_application(data_fixture):
 
     AgentChat.objects.create(agent=agent, user=user, title="Do not export me")
 
-    application.active = True
-    application.save(update_fields=["active"])
-
     return user, workspace, database, table, application, agent, identity
 
 
@@ -89,10 +86,9 @@ def _assert_children_copied(new_application, table_id):
     assert len(triggers) == 2
     service_types = {t.service.specific.get_type().type for t in triggers}
     assert service_types == {"local_baserow_rows_created", "periodic"}
-    # The per-trigger enabled states survive the import; the imported
-    # application itself must always start turned off.
-    assert all(t.enabled is True for t in triggers)
-    assert new_application.active is False
+    # A copy never starts running next to the original: its triggers are
+    # switched on deliberately.
+    assert all(t.enabled is False for t in triggers)
     rows_trigger = next(
         t
         for t in triggers
@@ -131,9 +127,7 @@ def test_duplicate_agent_application(configured_application):
     duplicated_integration = duplicated.integrations.first().specific
     assert duplicated_integration.authorized_agent_id == identity.id
 
-    # The original is untouched: still active with enabled triggers.
-    application.refresh_from_db()
-    assert application.active is True
+    # The original is untouched: its triggers stay enabled.
     assert (
         AgentTrigger.objects.filter(application=application, enabled=True).count() == 2
     )
@@ -156,7 +150,6 @@ def test_snapshot_and_restore_agent_application(configured_application):
         # The snapshot is a hidden copy within the same workspace, so it keeps
         # the identity (and brings it back on restore) but must be off.
         assert snapshotted.agent_identity_id == identity.id
-        assert snapshotted.active is False
 
         restored = (
             SnapshotHandler().perform_restore(snapshot, Progress(total=100)).specific
@@ -323,10 +316,11 @@ def test_duplicate_keeps_tool_identity_and_renews_public_links(
     from baserow_enterprise.agent_application.handler import AgentChatHandler
 
     assert AgentChatHandler().get_public_web_channel(channel.config["slug"]) == channel
-    # The copy starts inactive like every import; once turned on, its own
-    # link resolves to it and not to the original.
-    duplicate.active = True
-    duplicate.save(update_fields=["active"])
+    # The copy starts disabled like every imported channel; once turned on,
+    # its own link resolves to it and not to the original.
+    assert copy.enabled is False
+    copy.enabled = True
+    copy.save(update_fields=["enabled"])
     assert AgentChatHandler().get_public_web_channel(copy.config["slug"]) == copy
 
 

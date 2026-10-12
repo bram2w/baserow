@@ -183,7 +183,7 @@
                 size="small"
                 rounded
               />
-              <i v-else class="iconoir-prohibition"></i>
+              <i v-else :class="option.icon"></i>
               <span class="context__menu-item-title-text">{{
                 option.name
               }}</span>
@@ -236,6 +236,7 @@ import {
   workspaceToolIdentities,
   listToolIdentityExceptions,
   hasMoreAccess,
+  ACT_AS_USER,
 } from '@baserow_enterprise/utils/agentToolIdentities'
 import { AgentContextMixin } from '@baserow_enterprise/composables/useAgentContext'
 
@@ -314,6 +315,7 @@ export default {
         catalog: this.catalog,
         identities: this.workspaceIdentities,
         overrides: this.identities,
+        userIdentity: { name: this.$t('agentAccess.theUser') },
       })
     },
     identityOptions() {
@@ -322,19 +324,38 @@ export default {
       }
       const selected = this.identities[this.identityTool.name] ?? null
       const own = this.agentIdentity
+      const actsAsUser = this.application.act_as_user
       const options = [
         {
           key: 'own',
           value: null,
           identity: own,
-          name: own ? own.name : this.$t('agentToolPermissions.noIdentity'),
-          description: own
-            ? this.$t('agentToolPermissions.agentsIdentity')
-            : this.$t('agentToolPermissions.noIdentityDescription'),
+          icon: actsAsUser ? 'iconoir-user' : 'iconoir-prohibition',
+          name: own
+            ? own.name
+            : actsAsUser
+              ? this.$t('agentAccess.actAsUserOption')
+              : this.$t('agentToolPermissions.noIdentity'),
+          description:
+            own || actsAsUser
+              ? this.$t('agentToolPermissions.agentsIdentity')
+              : this.$t('agentToolPermissions.noIdentityDescription'),
           selected: selected === null,
           warning: false,
         },
       ]
+      if (!actsAsUser) {
+        options.push({
+          key: ACT_AS_USER,
+          value: ACT_AS_USER,
+          identity: null,
+          icon: 'iconoir-user',
+          name: this.$t('agentAccess.actAsUserOption'),
+          description: this.$t('agentAccess.actAsUserOptionDescription'),
+          selected: selected === ACT_AS_USER,
+          warning: false,
+        })
+      }
       for (const identity of this.workspaceIdentities) {
         if (identity.id === own?.id) {
           continue
@@ -471,7 +492,7 @@ export default {
           `${this.storePrefix}agentApplication/updateTool`,
           {
             toolId: exception.tool.id,
-            values: { identity_id: null },
+            values: { identity_id: null, act_as_user: false },
           }
         )
       } catch (error) {

@@ -298,6 +298,7 @@ from baserow.core.user_sources.operations import (
 )
 from baserow_enterprise.agent_application.operations import (
     CancelAgentChatOperationType,
+    ContinueTriggeredAgentChatOperationType,
     CreateAgentToolOperationType,
     DecideAgentToolApprovalOperationType,
     DeleteAgentChatChannelOperationType,
@@ -312,6 +313,7 @@ from baserow_enterprise.agent_application.operations import (
     ReadAgentTriggerOperationType,
     ReadAgentUsageOperationType,
     RunAgentChatOperationType,
+    StartAgentChatOperationType,
     UpdateAgentChatChannelOperationType,
     UpdateAgentChatOperationType,
     UpdateAgentDefinitionOperationType,
@@ -511,6 +513,8 @@ default_roles[EDITOR_ROLE_UID].extend(
         ReadViewDefaultValuesOperationType,
         DispatchDatabaseWorkflowActionOperationType,
         RunAgentChatOperationType,
+        StartAgentChatOperationType,
+        ContinueTriggeredAgentChatOperationType,
         CancelAgentChatOperationType,
         UpdateAgentChatOperationType,
     ]

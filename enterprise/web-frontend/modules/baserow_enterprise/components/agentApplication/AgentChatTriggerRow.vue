@@ -5,9 +5,19 @@
       <span class="agent-chat-card__title">
         {{ $t('agentChat.startedBy', { label }) }}
       </span>
+      <span
+        v-if="createdOn"
+        class="agent-chat-card__time"
+        :title="absoluteTime"
+      >
+        {{ relativeTime }}
+      </span>
       <i
         class="iconoir-nav-arrow-right agent-chat-card__chevron"
-        :class="{ 'agent-chat-card__chevron--expanded': expanded }"
+        :class="{
+          'agent-chat-card__chevron--expanded': expanded,
+          'agent-chat-card__chevron--after-time': createdOn,
+        }"
       ></i>
     </a>
     <div v-if="expanded" class="agent-chat-card__body">
@@ -91,6 +101,11 @@ export default defineComponent({
       required: false,
       default: '',
     },
+    createdOn: {
+      type: String,
+      required: false,
+      default: '',
+    },
   },
   setup(props) {
     const store = useStore()
@@ -141,8 +156,20 @@ export default defineComponent({
         : props.fallback
     )
     const initials = (name) => (name || '?').slice(0, 1).toUpperCase()
+    const relativeTime = computed(() => moment(props.createdOn).fromNow())
+    const absoluteTime = computed(() => moment(props.createdOn).format('LLL'))
 
-    return { expanded, rawShown, icon, segments, preview, raw, initials }
+    return {
+      expanded,
+      rawShown,
+      icon,
+      segments,
+      preview,
+      raw,
+      initials,
+      relativeTime,
+      absoluteTime,
+    }
   },
 })
 </script>

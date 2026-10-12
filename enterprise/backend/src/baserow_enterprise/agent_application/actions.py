@@ -247,6 +247,7 @@ class UpdateAgentToolActionType(UndoableActionType):
             # log); the handler keeps the stored ones when a config omits them.
             "config": agent_tool_type_registry.get(tool.type).get_undoable_config(tool),
             "identity_id": tool.identity_id,
+            "act_as_user": tool.act_as_user,
         }
         if with_service and tool.service_id is not None:
             values["service"] = _service_values(tool.service)
@@ -262,6 +263,7 @@ class UpdateAgentToolActionType(UndoableActionType):
             config=values.get("config"),
             service_values=values.get("service"),
             identity_id=values.get("identity_id"),
+            act_as_user=values.get("act_as_user", False),
         )
 
     @classmethod
@@ -892,21 +894,6 @@ class RetryAgentChatRunActionType(_ChatActionType):
         message = AgentChatHandler().retry_chat_run(chat)
         cls._register(user, chat)
         return message
-
-
-class RunAgentOnceActionType(_ChatActionType):
-    type = "run_agent_once"
-    description = ActionTypeDescription(
-        _("Run agent once"),
-        _('Agent run once manually, conversation "%(chat_title)s" (%(chat_id)s)'),
-        AGENT_ACTION_CONTEXT,
-    )
-
-    @classmethod
-    def do(cls, user: AbstractUser, application) -> AgentChat:
-        chat = AgentChatHandler().run_trigger_once(user, application)
-        cls._register(user, chat)
-        return chat
 
 
 class DeleteAgentChatActionType(_ChatActionType):

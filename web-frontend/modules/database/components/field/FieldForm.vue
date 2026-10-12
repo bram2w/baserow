@@ -218,15 +218,13 @@
             </p>
             <p class="control__helper-text field-context__inner-element-width">
               {{ $t('fieldForm.vectorSearchDescription') }}
+              <template
+                v-if="canHaveVectorSearch && values.vector_search_enabled"
+              >
+                {{ $t('fieldForm.vectorSearchWarning') }}
+              </template>
             </p>
           </div>
-          <Alert
-            v-if="canHaveVectorSearch && values.vector_search_enabled"
-            type="warning"
-            class="field-context__inner-element-width margin-top-0"
-          >
-            <p>{{ $t('fieldForm.vectorSearchWarning') }}</p>
-          </Alert>
         </div>
       </form>
     </div>

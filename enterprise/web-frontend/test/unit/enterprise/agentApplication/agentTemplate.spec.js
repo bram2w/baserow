@@ -111,8 +111,6 @@ describe('AgentTemplate', () => {
     // test permission helper says.
     expect(wrapper.find('.agent-chat__composer').exists()).toBe(false)
     expect(text).not.toContain('agentConversationList.newConversation')
-    expect(text).not.toContain('agentHeader.runOnce')
-    expect(wrapper.find('.agent-page__header-status').exists()).toBe(false)
     expect(wrapper.find('.agent-page__header-approvals').exists()).toBe(false)
 
     // The real configuration panel is open with its sections.

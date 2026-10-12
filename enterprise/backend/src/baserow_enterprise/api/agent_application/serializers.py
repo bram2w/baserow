@@ -120,10 +120,22 @@ class UpdateAgentChatSerializer(serializers.Serializer):
         required=False, allow_blank=True, max_length=AgentChat.TITLE_MAX_LENGTH
     )
     pinned = serializers.BooleanField(required=False)
+    private = serializers.BooleanField(
+        required=False,
+        help_text="Only the user who started the conversation may change this.",
+    )
 
 
 class SendAgentChatMessageSerializer(serializers.Serializer):
     content = serializers.CharField(max_length=65536)
+    private = serializers.BooleanField(
+        required=False,
+        default=False,
+        help_text=(
+            "Whether a new conversation is only visible to its starter. "
+            "Ignored when the conversation already exists."
+        ),
+    )
     user_files = serializers.ListField(
         child=UserFileField(),
         required=False,
@@ -177,12 +189,23 @@ class UpdateAgentToolSerializer(serializers.Serializer):
             "identity."
         ),
     )
+    act_as_user = serializers.BooleanField(
+        required=False,
+        help_text=(
+            "Whether this tool acts on behalf of the Baserow user of the "
+            "conversation instead of an identity."
+        ),
+    )
     name = serializers.CharField(required=False, allow_blank=True, max_length=160)
     config = serializers.DictField(required=False)
     service = serializers.DictField(required=False)
 
 
 class AgentChatSerializer(serializers.ModelSerializer):
+    channel_type = serializers.SerializerMethodField(
+        help_text="The type of the chat channel the conversation came in through."
+    )
+
     class Meta:
         model = AgentChat
         fields = (
@@ -192,9 +215,11 @@ class AgentChatSerializer(serializers.ModelSerializer):
             "user_id",
             "title",
             "pinned",
+            "private",
             "status",
             "source",
             "trigger_type",
+            "channel_type",
             "parent_chat_id",
             "started_on",
             "completed_on",
@@ -205,6 +230,13 @@ class AgentChatSerializer(serializers.ModelSerializer):
             "updated_on",
         )
         read_only_fields = fields
+
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_channel_type(self, instance) -> str:
+        # The conversation list annotates it to avoid a query per chat.
+        if hasattr(instance, "channel_type"):
+            return instance.channel_type or ""
+        return instance.channel.type if instance.channel_id else ""
 
 
 class AgentChatWithPayloadSerializer(AgentChatSerializer):
@@ -435,6 +467,10 @@ class AgentToolSerializer(serializers.Serializer):
         help_text="The workspace agent this tool acts as, or null for the "
         "application's identity.",
     )
+    act_as_user = serializers.BooleanField(
+        read_only=True,
+        help_text="Whether this tool acts on behalf of the conversation's user.",
+    )
     service_type = serializers.CharField(
         read_only=True,
         allow_null=True,
@@ -462,6 +498,7 @@ class AgentToolSerializer(serializers.Serializer):
             "config": agent_tool_type_registry.get(tool.type).get_public_config(tool),
             "order": tool.order,
             "identity_id": tool.identity_id,
+            "act_as_user": tool.act_as_user,
             "service_type": service_type,
             "service": service_data,
         }

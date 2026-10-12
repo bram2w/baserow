@@ -103,7 +103,8 @@ class BaserowWorkspaceAgentToolType(AgentToolType):
     type = "workspace"
 
     def can_enable(self, agent: "AgentDefinition") -> tuple[bool, Optional[str]]:
-        if agent.application.agent_identity_id is None:
+        application = agent.application
+        if application.agent_identity_id is None and not application.act_as_user:
             return (
                 False,
                 "The application has no agent identity to access the workspace with.",
@@ -137,7 +138,7 @@ class BaserowWorkspaceAgentToolType(AgentToolType):
         config["tool_rules"][to_catalog_name(tool_name)] = RULE_ALLOW
         return config
 
-    def _load_tool_identities(self, workspace, config: dict) -> dict:
+    def _load_tool_identities(self, workspace, config: dict, initiating_user) -> dict:
         """
         The workspace agents the configured tools run as, fetched once per
         run. Identities that left the workspace fall back to the agent's own.
@@ -145,15 +146,21 @@ class BaserowWorkspaceAgentToolType(AgentToolType):
 
         from baserow.core.models import Agent
 
+        from .rules import ACT_AS_USER
+
         wanted = config.get("tool_identities") or {}
         if not wanted:
             return {}
         agents = {
             agent.id: agent
             for agent in Agent.objects.filter(
-                workspace=workspace, id__in=set(wanted.values())
+                workspace=workspace,
+                id__in={value for value in wanted.values() if value != ACT_AS_USER},
             )
         }
+        # Without a user in the conversation, a tool acting on their behalf
+        # maps to None, which blocks it.
+        agents[ACT_AS_USER] = initiating_user
         return {
             name: agents[agent_id]
             for name, agent_id in wanted.items()
@@ -165,8 +172,17 @@ class BaserowWorkspaceAgentToolType(AgentToolType):
         from .rules import describe_workspace_access, normalize_workspace_config
 
         deps.workspace_tool_config = normalize_workspace_config(tool.config)
+        if deps.user is None:
+            # Without an identity the tools act on behalf of the user, so an
+            # automated conversation has nobody to act as.
+            deps.system_notes.append(
+                "The workspace tools act on behalf of the Baserow user of the "
+                "conversation. This conversation wasn't started by one, so you "
+                "have no access to the workspace in it."
+            )
+            return []
         deps.workspace_tool_identities = self._load_tool_identities(
-            deps.workspace, deps.workspace_tool_config
+            deps.workspace, deps.workspace_tool_config, deps.initiating_user
         )
         # The model must reason from the current permissions, not from what
         # it concluded earlier in the conversation when they may have differed.

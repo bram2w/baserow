@@ -111,6 +111,10 @@ export const state = () => ({
   source: 'manual',
   triggerType: '',
   eventPayload: null,
+  // Whether the conversation is only visible to the user who started it.
+  private: false,
+  // Who the conversation belongs to; null until somebody writes in it.
+  chatUserId: null,
   applicationId: null,
   // Realtime events that arrived before the chat id was known (the POST
   // response of a brand-new conversation may still be in flight).
@@ -165,6 +169,12 @@ export const mutations = {
   },
   SET_SOURCE(state, source) {
     state.source = source
+  },
+  SET_PRIVATE(state, value) {
+    state.private = value
+  },
+  SET_CHAT_USER_ID(state, value) {
+    state.chatUserId = value
   },
   SET_TRIGGER(state, { triggerType, eventPayload }) {
     state.triggerType = triggerType
@@ -264,6 +274,8 @@ export const actions = {
     commit('SET_RUNNING_MESSAGE', '')
     commit('SET_CURRENT_MESSAGE_ID', null)
     commit('SET_SOURCE', data.chat.source || 'manual')
+    commit('SET_PRIVATE', Boolean(data.chat.private))
+    commit('SET_CHAT_USER_ID', data.chat.user_id ?? null)
     commit('SET_TRIGGER', {
       triggerType: data.chat.trigger_type || '',
       eventPayload: data.chat.event_payload ?? null,
@@ -280,8 +292,10 @@ export const actions = {
       commit('CLEAR_PENDING_EVENTS')
     }
   },
-  newConversation({ commit }) {
+  newConversation({ commit }, { private: isPrivate = false } = {}) {
     commit('SET_CURRENT_CHAT_UUID', uuidv4())
+    commit('SET_PRIVATE', isPrivate)
+    commit('SET_CHAT_USER_ID', null)
     commit('SET_CHAT_ID', null)
     commit('SET_EVENTS', [])
     commit('SET_RUNNING', false)
@@ -319,9 +333,12 @@ export const actions = {
         application.id,
         state.currentChatUuid,
         content,
-        userFiles
+        userFiles,
+        // Only read when the message creates the conversation.
+        { private: state.chatId === null && state.private }
       )
       commit('SET_CHAT_ID', data.id)
+      commit('SET_CHAT_USER_ID', data.user_id ?? null)
       commit('SET_RUNNING', true)
       dispatch('agentHistory/forceUpdateChat', { chat: data }, { root: true })
 
@@ -355,6 +372,29 @@ export const actions = {
           await dispatch('handleRealtimeEvent', pendingEvent)
         }
       }
+    }
+  },
+  /**
+   * Before the first message the conversation only exists here, so the choice
+   * is kept until it is created; afterwards its starter changes it on the
+   * server.
+   */
+  async setPrivate({ commit, dispatch, state }, { private: isPrivate }) {
+    if (state.chatId === null) {
+      commit('SET_PRIVATE', isPrivate)
+      return
+    }
+    const previous = state.private
+    commit('SET_PRIVATE', isPrivate)
+    try {
+      await dispatch(
+        'agentHistory/updateChat',
+        { chatUuid: state.currentChatUuid, values: { private: isPrivate } },
+        { root: true }
+      )
+    } catch (error) {
+      commit('SET_PRIVATE', previous)
+      throw error
     }
   },
   async cancel({ commit, state }, { chatUuid }) {
@@ -399,9 +439,12 @@ export const actions = {
    * for tool approval without the approval_request event having arrived, the
    * transcript (including the approvals) is refetched once.
    */
-  async handleChatUpdated({ dispatch, state }, { chat }) {
+  async handleChatUpdated({ commit, dispatch, state }, { chat }) {
     if (chat.id !== state.chatId || state.applicationId === null) {
       return
+    }
+    if (chat.private !== undefined) {
+      commit('SET_PRIVATE', chat.private)
     }
     const missedTerminal =
       ['idle', 'error'].includes(chat.status) &&
@@ -648,6 +691,8 @@ export const getters = {
   getLoadingChatUuid: (state) => state.loadingChatUuid,
   getRunningMessage: (state) => state.runningMessage,
   getSource: (state) => state.source,
+  isPrivate: (state) => state.private,
+  getChatUserId: (state) => state.chatUserId,
   getTriggerType: (state) => state.triggerType,
   getEventPayload: (state) => state.eventPayload,
   getToolApprovals: (state) => state.toolApprovals,

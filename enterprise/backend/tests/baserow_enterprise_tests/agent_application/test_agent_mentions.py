@@ -175,12 +175,8 @@ def test_mentionable_agents_are_listed_per_table(
     assert response.status_code == 200
     assert response.json() == [target]
 
-    # A paused agent or a disabled trigger drops out of the picker.
+    # A disabled trigger drops out of the picker.
     AgentTriggerHandler().update_trigger(user, trigger, enabled=False)
-    assert RowCommentHandler.get_mentionable_targets(user, table.id) == []
-    AgentTriggerHandler().update_trigger(user, trigger, enabled=True)
-    application.active = False
-    application.save(update_fields=["active"])
     assert RowCommentHandler.get_mentionable_targets(user, table.id) == []
 
     stranger = enterprise_data_fixture.create_user()

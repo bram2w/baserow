@@ -24,8 +24,6 @@ def widget_channel(data_fixture):
         .create_application(user, workspace, "agent", init_with_data=True, name="Docs")
         .specific
     )
-    application.active = True
-    application.save(update_fields=["active"])
     agent = AgentApplicationHandler().get_main_agent(application)
     AgentApplicationHandler().update_agent(
         agent, ai_generative_ai_type="agent_runner_test", ai_generative_ai_model="m"
@@ -140,8 +138,6 @@ def test_plain_web_channel_serves_no_widget_script(api_client, data_fixture):
         .create_application(user, workspace, "agent", init_with_data=True, name="Docs")
         .specific
     )
-    application.active = True
-    application.save(update_fields=["active"])
     channel_type = WebAgentChatChannelType()
     channel = AgentChatChannel.objects.create(
         application=application,

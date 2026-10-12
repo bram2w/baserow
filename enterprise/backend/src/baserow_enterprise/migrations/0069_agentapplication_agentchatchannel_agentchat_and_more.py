@@ -40,14 +40,6 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "active",
-                    models.BooleanField(
-                        db_default=False,
-                        default=False,
-                        help_text="Master switch: while off the agent only runs manually and its triggers never fire. Off by default so a new agent can be configured safely before going live.",
-                    ),
-                ),
-                (
                     "agent_identity",
                     models.ForeignKey(
                         blank=True,

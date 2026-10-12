@@ -4,6 +4,7 @@ import {
 } from '@baserow_enterprise/jobTypes'
 import { registerRealtimeEvents } from '@baserow_enterprise/realtime'
 import {
+  AgentChatRolePermissionManagerType,
   RolePermissionManagerType,
   WriteFieldValuesPermissionManagerType,
 } from '@baserow_enterprise/permissionManagerTypes'
@@ -159,6 +160,10 @@ export default defineNuxtPlugin({
     $registry.register(
       'permissionManager',
       new WriteFieldValuesPermissionManagerType(context)
+    )
+    $registry.register(
+      'permissionManager',
+      new AgentChatRolePermissionManagerType(context)
     )
 
     $store.registerModuleNuxtSafe('authProviderAdmin', authProviderAdminStore)

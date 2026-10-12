@@ -128,6 +128,18 @@
           :disabled="loadingIdentities"
         >
           <DropdownItem
+            :name="$t('agentCreate.noAccess')"
+            value="none"
+            icon="iconoir-prohibition"
+            :description="$t('agentCreate.noAccessDescription')"
+          />
+          <DropdownItem
+            :name="$t('agentAccess.actAsUserOption')"
+            :value="ACT_AS_USER"
+            icon="iconoir-user"
+            :description="$t('agentAccess.actAsUserOptionDescription')"
+          />
+          <DropdownItem
             v-if="canCreateIdentity"
             :name="$t('agentCreate.newIdentity', { name: values.name })"
             value="new"
@@ -141,12 +153,6 @@
             :value="identity.id"
             icon="baserow-icon-agent"
             :description="$t('agentCreate.existingIdentityDescription')"
-          />
-          <DropdownItem
-            :name="$t('agentCreate.noAccess')"
-            value="none"
-            icon="iconoir-prohibition"
-            :description="$t('agentCreate.noAccessDescription')"
           />
         </Dropdown>
       </FormGroup>
@@ -208,6 +214,7 @@
 </template>
 
 <script>
+import { ACT_AS_USER } from '@baserow_enterprise/utils/agentToolIdentities'
 import { useVuelidate } from '@vuelidate/core'
 import { required } from '@vuelidate/validators'
 import form from '@baserow/modules/core/mixins/form'
@@ -253,6 +260,7 @@ export default {
       identities: [],
       loadingIdentities: false,
       identityChoice: 'none',
+      ACT_AS_USER,
       // Workspace skills picked for the new agent: `{ type, id, mode }`.
       skills: [],
       values: {
@@ -402,6 +410,8 @@ export default {
       }
       if (this.identityChoice === 'new') {
         values.create_identity = true
+      } else if (this.identityChoice === ACT_AS_USER) {
+        values.act_as_user = true
       } else if (this.identityChoice !== 'none') {
         values.agent_identity_id = this.identityChoice
       }

@@ -358,13 +358,6 @@ export const actions = {
     ).improveInstructions(agentId, { instructions })
     return data.instructions
   },
-  async runOnce({ dispatch }, { applicationId }) {
-    const { data } = await AgentApplicationService(this.$client).runOnce(
-      applicationId
-    )
-    dispatch('agentHistory/forceUpdateChat', { chat: data }, { root: true })
-    return data
-  },
 }
 
 export const getters = {

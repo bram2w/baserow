@@ -119,9 +119,6 @@ class EmailAgentChatChannelType(AgentChatChannelType):
     before it leaves.
     """
 
-    # The other side is an outsider who must not rewrite the agent's memory.
-    allows_memory_updates = False
-
     def prepare_shared_config(self, config: dict, existing_config: dict) -> dict:
         require_approval = config.get(
             "require_approval", existing_config.get("require_approval", True)
@@ -581,7 +578,7 @@ class AgentEmailInboundRouteType(InboundEmailRouteType):
         )
         if channel is None:
             return None
-        if not channel.enabled or not channel.application.active:
+        if not channel.enabled:
             return HANDLE_STATUS_DISCARDED
 
         # The receiver delivers at least once.

@@ -414,11 +414,14 @@ def test_agent_tool_dispatches_and_memory_writes_are_audited_as_the_agent(
 
     # A memory tool call of a run registers the entry on the way.
     agent.refresh_from_db()
-    deps = SimpleNamespace(user=identity, agent=agent)
+    # It is audited as the person who asked, not the identity tools run as.
+    deps = SimpleNamespace(user=identity, initiating_user=user, agent=agent)
     with patch(BROADCAST):
         result = asyncio.run(remember(SimpleNamespace(deps=deps), "Note", "t"))
     assert result == {"success": True}
-    assert AuditLogEntry.objects.filter(action_type="update_agent_memory").count() == 2
+    entries = AuditLogEntry.objects.filter(action_type="update_agent_memory")
+    assert entries.count() == 2
+    assert entries.order_by("-id").first().actor_id == user.id
 
 
 @pytest.mark.django_db

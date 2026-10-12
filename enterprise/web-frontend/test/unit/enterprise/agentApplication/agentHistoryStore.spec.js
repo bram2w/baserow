@@ -187,4 +187,35 @@ describe('agentHistory store pinning and deleting', () => {
     expect(store.getters['agentHistory/getChats'].map((c) => c.id)).toEqual([2])
     expect(store.getters['agentChat/getChatId']).toBe(null)
   })
+
+  test('setOrigin refetches filtered and realtime upserts respect it', async () => {
+    mock
+      .onGet('agent_application/42/chats/', {
+        params: { limit: 50, offset: 0, origin: 'trigger:periodic' },
+      })
+      .replyOnce(200, {
+        count: 1,
+        next: null,
+        previous: null,
+        results: [chat(1, { source: 'trigger', trigger_type: 'periodic' })],
+      })
+    await store.dispatch('agentHistory/setOrigin', {
+      applicationId: 42,
+      origin: 'trigger:periodic',
+    })
+    expect(store.getters['agentHistory/getOrigin']).toBe('trigger:periodic')
+
+    await store.dispatch('agentHistory/forceUpdateChat', {
+      chat: chat(2, { source: 'manual' }),
+    })
+    await store.dispatch('agentHistory/forceUpdateChat', {
+      chat: chat(3, { source: 'trigger', trigger_type: 'periodic' }),
+    })
+    expect(
+      store.getters['agentHistory/getChats'].map((c) => c.id).sort()
+    ).toStrictEqual([1, 3])
+
+    await store.dispatch('agentHistory/clear')
+    expect(store.getters['agentHistory/getOrigin']).toBe(null)
+  })
 })

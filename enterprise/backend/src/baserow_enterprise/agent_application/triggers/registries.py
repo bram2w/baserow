@@ -190,7 +190,6 @@ class AgentTriggerType(Instance):
             AgentTrigger.objects.filter(
                 service__in=services,
                 enabled=True,
-                application__active=True,
                 application__trashed=False,
                 application__workspace__trashed=False,
             )

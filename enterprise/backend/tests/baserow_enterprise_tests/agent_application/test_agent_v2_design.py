@@ -396,3 +396,153 @@ def test_service_tool_runs_as_its_identity_without_touching_the_database_async(
         asyncio.run(pydantic_tool.function(SimpleNamespace(deps=deps), message="Hello"))
     assert seen["actor"] == identity
     assert seen["override"] is True
+
+
+# ---------------------------------------------------------------------------
+# Acting on behalf of the conversation's user
+# ---------------------------------------------------------------------------
+
+
+def test_rule_toolset_blocks_a_tool_acting_as_a_missing_user():
+    toolset = RuleToolset(
+        _EchoActorToolset(),
+        normalize_workspace_config({"access": "everything"}),
+        identities={"list_tables": None, "list_rows": "the-user"},
+    )
+    ctx = _FakeCtx(deps=_FakeDeps(user="agent-identity"))
+
+    assert "error" in asyncio.run(toolset.call_tool("list_tables", {}, ctx, None))
+    assert asyncio.run(toolset.call_tool("list_rows", {}, ctx, None)) == "the-user"
+
+
+@pytest.mark.django_db
+def test_tool_identities_config_keeps_acting_as_user(agent_with_table):
+    user, token, workspace, application, agent, table, field = agent_with_table
+    tool = AgentToolHandler().create_tool(user, agent, "workspace", config={})
+
+    tool = AgentToolHandler().update_tool(
+        user, tool, config={"tool_identities": {"list_rows": "user"}}
+    )
+
+    assert tool.config["tool_identities"] == {"list_rows": "user"}
+
+
+@pytest.mark.django_db
+def test_application_acting_as_user_clears_the_identity(agent_with_table):
+    user, token, workspace, application, agent, table, field = agent_with_table
+    identity = AgentService().create_agent(user, workspace, name="Reader")
+    application = (
+        CoreHandler()
+        .update_application(user, application, agent_identity_id=identity.id)
+        .updated_application_instance.specific
+    )
+    assert application.agent_identity_id == identity.id
+
+    application = (
+        CoreHandler()
+        .update_application(user, application, act_as_user=True)
+        .updated_application_instance.specific
+    )
+    assert application.act_as_user is True
+    assert application.agent_identity_id is None
+
+    application = (
+        CoreHandler()
+        .update_application(user, application, agent_identity_id=identity.id)
+        .updated_application_instance.specific
+    )
+    assert application.act_as_user is False
+
+
+def _call_first_service_tool(agent, deps):
+    from baserow_enterprise.agent_application.tools.registries import (
+        agent_tool_type_registry,
+    )
+
+    seen = {}
+
+    def fake_dispatch(service, dispatch_context):
+        seen["actor"] = dispatch_context.actor
+        seen["override"] = dispatch_context.actor_overrides_integration
+        return SimpleNamespace(data={"ok": True})
+
+    toolsets = agent_tool_type_registry.build_toolsets(agent, deps)
+    if not toolsets:
+        return None
+    inner = getattr(toolsets[0], "wrapped", toolsets[0])
+    pydantic_tool = next(iter(inner.tools.values()))
+    with patch(
+        "baserow.core.services.handler.ServiceHandler.dispatch_service",
+        side_effect=fake_dispatch,
+    ):
+        asyncio.run(pydantic_tool.function(SimpleNamespace(deps=deps)))
+    return seen
+
+
+def _service_deps(user, workspace, initiating_user):
+    return SimpleNamespace(
+        user=initiating_user,
+        initiating_user=initiating_user,
+        chat=None,
+        tool_helpers=SimpleNamespace(raise_if_cancelled=lambda: None),
+        workspace=workspace,
+        system_notes=[],
+    )
+
+
+@pytest.mark.django_db
+def test_service_tool_acts_as_the_conversations_user(agent_with_table, data_fixture):
+    user, token, workspace, application, agent, table, field = agent_with_table
+    chatting = data_fixture.create_user(workspace=workspace)
+    tool = AgentToolHandler().create_tool(
+        user,
+        agent,
+        "service",
+        name="Add row",
+        service_type_str="local_baserow_upsert_row",
+    )
+    AgentToolHandler().update_tool(user, tool, act_as_user=True)
+
+    seen = _call_first_service_tool(agent, _service_deps(user, workspace, chatting))
+    # The integration names the agent's creator; the tool must not borrow
+    # their permissions.
+    assert seen == {"actor": chatting, "override": True}
+
+    deps = _service_deps(user, workspace, None)
+    assert _call_first_service_tool(agent, deps) is None
+    assert any("has none" in note for note in deps.system_notes)
+
+
+@pytest.mark.django_db
+def test_service_tools_inherit_acting_as_user_from_the_application(
+    agent_with_table, data_fixture
+):
+    user, token, workspace, application, agent, table, field = agent_with_table
+    application.act_as_user = True
+    application.save()
+    chatting = data_fixture.create_user(workspace=workspace)
+    AgentToolHandler().create_tool(
+        user,
+        agent,
+        "service",
+        name="Add row",
+        service_type_str="local_baserow_upsert_row",
+    )
+
+    seen = _call_first_service_tool(agent, _service_deps(user, workspace, chatting))
+    assert seen == {"actor": chatting, "override": True}
+    # A workspace service without a user would fall back to the integration's.
+    assert _call_first_service_tool(agent, _service_deps(user, workspace, None)) is None
+
+
+@pytest.mark.django_db
+def test_email_tool_inheriting_acting_as_user_runs_without_a_user(agent_with_table):
+    user, token, workspace, application, agent, table, field = agent_with_table
+    application.act_as_user = True
+    application.save()
+    AgentToolHandler().create_tool(
+        user, agent, "service", name="Notify", service_type_str="smtp_email"
+    )
+
+    seen = _call_first_service_tool(agent, _service_deps(user, workspace, None))
+    assert seen == {"actor": None, "override": False}

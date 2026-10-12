@@ -3,11 +3,9 @@
     <AgentHeader
       :application="application"
       :configuration-open="configurationOpen"
-      :running-once="runningOnce"
       :loading="loading"
       @toggle-configuration="configurationOpen = !configurationOpen"
       @open-conversation="openConversation"
-      @run-once="runOnce"
     />
     <div class="layout__col-2-2 agent-page__body">
       <AgentConversationList
@@ -18,9 +16,7 @@
       <AgentChat
         class="agent-page__chat"
         :application="application"
-        :running-once="runningOnce"
         :loading="loading"
-        @run-once="runOnce"
         @open-configuration="openConfiguration"
       />
       <AgentConfigurationPanel
@@ -113,27 +109,6 @@ export default defineComponent({
       configurationOpen.value = true
     }
 
-    const runningOnce = ref(false)
-    const runOnce = async () => {
-      if (runningOnce.value) {
-        return
-      }
-      runningOnce.value = true
-      try {
-        const chat = await store.dispatch(
-          `${storePrefix}agentApplication/runOnce`,
-          {
-            applicationId: props.application.id,
-          }
-        )
-        await openConversation(chat.uuid, chat.id)
-      } catch (error) {
-        notifyIf(error, 'application')
-      } finally {
-        runningOnce.value = false
-      }
-    }
-
     const openConversation = async (chatUuid, chatId = null) => {
       try {
         await store.dispatch(`${storePrefix}agentChat/openConversation`, {
@@ -150,8 +125,6 @@ export default defineComponent({
       configurationOpen,
       configurationSection,
       openConfiguration,
-      runningOnce,
-      runOnce,
       openConversation,
     }
   },

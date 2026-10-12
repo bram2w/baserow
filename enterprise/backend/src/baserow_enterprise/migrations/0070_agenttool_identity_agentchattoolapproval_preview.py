@@ -376,4 +376,73 @@ class Migration(migrations.Migration):
                 ],
             },
         ),
+        migrations.AddField(
+            model_name="agentapplication",
+            name="act_as_user",
+            field=models.BooleanField(
+                db_default=False,
+                default=False,
+                help_text=(
+                    "Acts on behalf of the Baserow user who started or continued "
+                    "the conversation instead of an agent identity. Conversations "
+                    "without such a user get no workspace access."
+                ),
+            ),
+        ),
+        migrations.AddField(
+            model_name="agentapplication",
+            name="start_chat_min_role",
+            field=models.CharField(
+                choices=[
+                    ("EDITOR", "Editors and up"),
+                    ("BUILDER", "Builders and up"),
+                    ("ADMIN", "Admins"),
+                    ("NOBODY", "Nobody"),
+                ],
+                db_default="EDITOR",
+                default="EDITOR",
+                help_text="The minimum role needed to start a conversation in Baserow.",
+                max_length=16,
+            ),
+        ),
+        migrations.AddField(
+            model_name="agentapplication",
+            name="continue_chat_min_role",
+            field=models.CharField(
+                choices=[
+                    ("EDITOR", "Editors and up"),
+                    ("BUILDER", "Builders and up"),
+                    ("ADMIN", "Admins"),
+                    ("NOBODY", "Nobody"),
+                ],
+                db_default="EDITOR",
+                default="EDITOR",
+                help_text=(
+                    "The minimum role needed to continue a conversation that a "
+                    "trigger started."
+                ),
+                max_length=16,
+            ),
+        ),
+        migrations.AddField(
+            model_name="agentchat",
+            name="private",
+            field=models.BooleanField(
+                db_default=False,
+                default=False,
+                help_text="Only the user who started a private conversation can see it.",
+            ),
+        ),
+        migrations.AddField(
+            model_name="agenttool",
+            name="act_as_user",
+            field=models.BooleanField(
+                db_default=False,
+                default=False,
+                help_text=(
+                    "Acts on behalf of the Baserow user of the conversation instead "
+                    "of the application's identity. Unavailable without such a user."
+                ),
+            ),
+        ),
     ]

@@ -2,6 +2,35 @@
   <div>
     <div class="agent-configuration__subsection">
       <div class="agent-configuration__subsection-title">
+        {{ $t('agentTrigger.conversations') }}
+      </div>
+    </div>
+    <FormGroup
+      v-for="setting in chatRoleSettings"
+      :key="setting.field"
+      small-label
+      :label="setting.label"
+      class="margin-bottom-2"
+    >
+      <Dropdown
+        :model-value="chatRoleValue(setting.field)"
+        :show-search="false"
+        :disabled="!canUpdateApplication || savingChatRoleField !== null"
+        @update:model-value="saveChatRole(setting.field, $event)"
+      >
+        <DropdownItem
+          v-for="option in chatRoleOptions"
+          :key="option.value"
+          :name="option.label"
+          :value="option.value"
+        />
+      </Dropdown>
+      <div class="agent-configuration__hint margin-top-1">
+        {{ setting.hint }}
+      </div>
+    </FormGroup>
+    <div class="agent-configuration__subsection margin-top-3">
+      <div class="agent-configuration__subsection-title">
         {{ $t('agentTrigger.triggers') }}
       </div>
       <ButtonText
@@ -27,13 +56,6 @@
       class="agent-configuration__placeholder"
     >
       {{ $t('agentTrigger.empty') }}
-    </div>
-    <div
-      v-if="!application.active && triggers.length > 0"
-      class="agent-configuration__paused-hint margin-bottom-2"
-    >
-      <i class="iconoir-pause"></i>
-      {{ $t('agentTrigger.pausedHint') }}
     </div>
     <div
       v-if="!loading && triggers.length > 0"
@@ -211,6 +233,10 @@ export default {
       loading: false,
       addLoading: false,
       deletingIds: [],
+      // The core application update isn't optimistic; the picked minimum
+      // role shows until the save settles.
+      savingChatRoleField: null,
+      pendingChatRole: null,
       // Unsaved service values per trigger id, flushed by a per-trigger
       // debounced save.
       pendingServiceValues: {},
@@ -227,6 +253,34 @@ export default {
     },
   },
   computed: {
+    // The minimum roles live on the application row.
+    canUpdateApplication() {
+      return this.hasAgentPermission(
+        'application.update',
+        this.application,
+        this.application.workspace.id
+      )
+    },
+    chatRoleSettings() {
+      return [
+        {
+          field: 'start_chat_min_role',
+          label: this.$t('agentTrigger.startChatMinRole'),
+          hint: this.$t('agentTrigger.startChatMinRoleHint'),
+        },
+        {
+          field: 'continue_chat_min_role',
+          label: this.$t('agentTrigger.continueChatMinRole'),
+          hint: this.$t('agentTrigger.continueChatMinRoleHint'),
+        },
+      ]
+    },
+    chatRoleOptions() {
+      return ['ADMIN', 'BUILDER', 'EDITOR', 'NOBODY'].map((value) => ({
+        value,
+        label: this.$t(`agentTrigger.minRole_${value}`),
+      }))
+    },
     canDeleteTrigger() {
       return this.hasAgentPermission(
         'agent_application.delete_trigger',
@@ -299,6 +353,28 @@ export default {
     Object.values(this.debouncedServiceSaves).forEach((save) => save.flush())
   },
   methods: {
+    chatRoleValue(field) {
+      return this.savingChatRoleField === field
+        ? this.pendingChatRole
+        : this.application[field] || 'EDITOR'
+    },
+    async saveChatRole(field, value) {
+      if (value === this.chatRoleValue(field)) {
+        return
+      }
+      this.savingChatRoleField = field
+      this.pendingChatRole = value
+      try {
+        await this.$store.dispatch('application/update', {
+          application: this.application,
+          values: { [field]: value },
+        })
+      } catch (error) {
+        notifyIf(error, 'application')
+      } finally {
+        this.savingChatRoleField = null
+      }
+    },
     triggerNodeType(trigger) {
       try {
         return this.$registry.get('node', trigger.service_type)

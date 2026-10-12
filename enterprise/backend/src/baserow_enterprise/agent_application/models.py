@@ -26,20 +26,18 @@ __all__ = [
 ]
 
 
+class AgentChatMinRole(models.TextChoices):
+    EDITOR = "EDITOR", "Editors and up"
+    BUILDER = "BUILDER", "Builders and up"
+    ADMIN = "ADMIN", "Admins"
+    NOBODY = "NOBODY", "Nobody"
+
+
 class AgentApplication(Application):
     description = models.TextField(
         blank=True,
         db_default="",
         help_text="What the agent should do, used to AI-configure the agent.",
-    )
-    active = models.BooleanField(
-        default=False,
-        db_default=False,
-        help_text=(
-            "Master switch: while off the agent only runs manually and its "
-            "triggers never fire. Off by default so a new agent can be "
-            "configured safely before going live."
-        ),
     )
     agent_identity = models.ForeignKey(
         Agent,
@@ -52,6 +50,31 @@ class AgentApplication(Application):
         help_text=(
             "The workspace agent subject this application acts as. Without one "
             "the agent has no access to the workspace."
+        ),
+    )
+    act_as_user = models.BooleanField(
+        default=False,
+        db_default=False,
+        help_text=(
+            "Acts on behalf of the Baserow user who started or continued the "
+            "conversation instead of an agent identity. Conversations without "
+            "such a user get no workspace access."
+        ),
+    )
+    start_chat_min_role = models.CharField(
+        max_length=16,
+        choices=AgentChatMinRole.choices,
+        default=AgentChatMinRole.EDITOR,
+        db_default=AgentChatMinRole.EDITOR,
+        help_text="The minimum role needed to start a conversation in Baserow.",
+    )
+    continue_chat_min_role = models.CharField(
+        max_length=16,
+        choices=AgentChatMinRole.choices,
+        default=AgentChatMinRole.EDITOR,
+        db_default=AgentChatMinRole.EDITOR,
+        help_text=(
+            "The minimum role needed to continue a conversation that a trigger started."
         ),
     )
 
@@ -214,6 +237,14 @@ class AgentTool(
             "identity."
         ),
     )
+    act_as_user = models.BooleanField(
+        default=False,
+        db_default=False,
+        help_text=(
+            "Acts on behalf of the Baserow user of the conversation instead of "
+            "the application's identity. Unavailable without such a user."
+        ),
+    )
     order = models.PositiveIntegerField(default=1, db_default=1)
 
     class Meta:
@@ -303,6 +334,11 @@ class AgentChat(
     )
     title = models.CharField(max_length=TITLE_MAX_LENGTH, blank=True, db_default="")
     pinned = models.BooleanField(default=False, db_default=False)
+    private = models.BooleanField(
+        default=False,
+        db_default=False,
+        help_text="Only the user who started a private conversation can see it.",
+    )
     status = models.CharField(
         max_length=20,
         choices=Status.choices,

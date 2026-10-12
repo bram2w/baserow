@@ -23,7 +23,6 @@ from .views import (
     AgentDefinitionView,
     AgentInstructionsDraftView,
     AgentInstructionsImproveView,
-    AgentRunOnceView,
     AgentToolsView,
     AgentToolView,
     AgentTriggersView,
@@ -45,11 +44,6 @@ urlpatterns = [
         "agents/<int:agent_id>/instructions/improve/",
         AgentInstructionsImproveView.as_view(),
         name="instructions_improve",
-    ),
-    path(
-        "<int:application_id>/run_once/",
-        AgentRunOnceView.as_view(),
-        name="run_once",
     ),
     path(
         "<int:application_id>/agent/",

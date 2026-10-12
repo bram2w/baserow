@@ -92,6 +92,8 @@ def build_service_tool(tool: "AgentTool", deps: "AgentRunDeps") -> Tool:
     # Resolved here, outside the async tool call, so no database access
     # happens from the event loop.
     identity = tool.identity
+    if identity is None and acts_as_user(tool, deps):
+        identity = getattr(deps, "initiating_user", None)
 
     async def run_service_tool(ctx: RunContext["AgentRunDeps"], **kwargs):
         ctx.deps.tool_helpers.raise_if_cancelled()
@@ -133,6 +135,35 @@ def build_service_tool(tool: "AgentTool", deps: "AgentRunDeps") -> Tool:
     )
 
 
+def acts_as_user(tool: "AgentTool", deps: "AgentRunDeps") -> bool:
+    """
+    Whether the tool acts on behalf of the conversation's user: by its own
+    setting, or by the application's when the tool has no identity of its own.
+    """
+
+    if tool.identity_id is not None:
+        return False
+    return tool.act_as_user or tool.agent.application.act_as_user
+
+
+def needs_user(tool: "AgentTool", deps: "AgentRunDeps", service_type) -> bool:
+    """
+    Whether the tool can't run in a conversation without a Baserow user. A
+    tool set to act as the user never runs without one. Inheriting that from
+    the application only matters for services acting inside the workspace:
+    they would otherwise fall back to the integration's user, while an email
+    or a web request doesn't depend on who acts.
+    """
+
+    from baserow.contrib.integrations.local_baserow.service_types import (
+        LocalBaserowServiceType,
+    )
+
+    if not acts_as_user(tool, deps):
+        return False
+    return tool.act_as_user or isinstance(service_type, LocalBaserowServiceType)
+
+
 class ServiceAgentToolType(AgentToolType):
     """
     Exposes a user-configured action service (send Slack message, send email,
@@ -152,6 +183,15 @@ class ServiceAgentToolType(AgentToolType):
         from .gating import wrap_approval_required
 
         if tool.service_id is None:
+            return []
+        if getattr(deps, "initiating_user", None) is None and needs_user(
+            tool, deps, tool.service.specific.get_type()
+        ):
+            deps.system_notes.append(
+                f"The tool '{get_service_tool_name(tool)}' acts on behalf of the "
+                "Baserow user of the conversation and is unavailable because "
+                "this conversation has none."
+            )
             return []
 
         toolset = FunctionToolset([build_service_tool(tool, deps)], max_retries=3)

@@ -21,9 +21,6 @@ class AgentChatChannelType(Instance):
     lifecycle are shared.
     """
 
-    # Whether people talking through this channel may change the agent's
-    # memory (`remember`). Internal channels like Slack may; public ones not.
-    allows_memory_updates = True
     # Config keys that must never leave the backend, not even into the undo
     # history. `prepare_config` keeps a stored secret when it is omitted, so
     # undoing a config change can simply leave them out.
@@ -205,12 +202,7 @@ def start_channel_chat(
     from ..models import AgentChat, AgentChatMessage
 
     application = channel.application
-    if (
-        not channel.enabled
-        or not application.active
-        or application.trashed
-        or application.workspace.trashed
-    ):
+    if not channel.enabled or application.trashed or application.workspace.trashed:
         return None
 
     agent = AgentApplicationHandler().get_main_agent(application)

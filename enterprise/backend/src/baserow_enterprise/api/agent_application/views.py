@@ -43,7 +43,6 @@ from baserow_enterprise.agent_application.actions import (
     DeleteAgentTriggerActionType,
     RetryAgentChatRunActionType,
     RotateAgentChatChannelLinkActionType,
-    RunAgentOnceActionType,
     UpdateAgentChatActionType,
     UpdateAgentChatChannelActionType,
     UpdateAgentDefinitionActionType,
@@ -206,6 +205,7 @@ def _get_agent_and_check(request, agent_id, operation_type):
 
 def _get_chat_and_check(request, chat_uuid, operation_type):
     chat = AgentChatHandler().get_chat_by_uuid(chat_uuid)
+    AgentChatHandler().check_chat_is_visible_to(chat, request.user)
     application = chat.agent.application
     CoreHandler().check_permissions(
         request.user,
@@ -323,6 +323,16 @@ class AgentChatsView(APIView):
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
             ),
+            OpenApiParameter(
+                name="origin",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    "Only conversations started this way: `manual`, `service`, "
+                    "`trigger:<trigger type>` or `channel:<channel type>`, or "
+                    "`mine` for the ones the requesting user started."
+                ),
+            ),
         ],
         tags=["Agent"],
         operation_id="list_agent_application_chats",
@@ -354,7 +364,9 @@ class AgentChatsView(APIView):
             request, application_id, ListAgentChatsOperationType
         )
         agent = AgentApplicationHandler().get_main_agent(application)
-        chats = AgentChatHandler().list_chats(agent)
+        chats = AgentChatHandler().list_chats(
+            agent, user=request.user, origin=request.GET.get("origin")
+        )
 
         paginator = LimitOffsetPagination()
         paginator.default_limit = 50
@@ -480,7 +492,9 @@ class AgentChatMessagesView(APIView):
             )
 
         handler = AgentChatHandler()
-        chat = handler.get_or_create_manual_chat(agent, request.user, chat_uuid)
+        chat = handler.get_or_create_manual_chat(
+            agent, request.user, chat_uuid, private=data["private"]
+        )
 
         if chat.is_running:
             raise AgentChatAlreadyRunning(f"The chat {chat.id} is already running.")
@@ -673,7 +687,10 @@ class AgentChatView(APIView):
         ],
         tags=["Agent"],
         operation_id="update_agent_application_chat",
-        description="Renames or pins an agent conversation.",
+        description=(
+            "Renames or pins an agent conversation, or makes it private or "
+            "public again (its starter only)."
+        ),
         request=UpdateAgentChatSerializer,
         responses={
             200: AgentChatSerializer,
@@ -681,18 +698,24 @@ class AgentChatView(APIView):
                 ["ERROR_USER_NOT_IN_GROUP", "ERROR_REQUEST_BODY_VALIDATION"]
             ),
             401: get_error_schema(["PERMISSION_DENIED"]),
+            403: get_error_schema(["ERROR_AGENT_CHAT_NOT_OWNED"]),
             404: get_error_schema(["ERROR_AGENT_CHAT_DOES_NOT_EXIST"]),
         },
     )
     @map_exceptions(
         {
             AgentChatDoesNotExist: ERROR_AGENT_CHAT_DOES_NOT_EXIST,
+            AgentChatNotOwned: ERROR_AGENT_CHAT_NOT_OWNED,
             UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         }
     )
     @validate_body(UpdateAgentChatSerializer, return_validated=True)
     def patch(self, request, chat_uuid, data: dict):
         chat = _get_chat_and_check(request, chat_uuid, UpdateAgentChatOperationType)
+        if "private" in data and chat.user_id != request.user.id:
+            raise AgentChatNotOwned(
+                f"Only the user who started the chat {chat.id} can change who sees it."
+            )
         chat = action_type_registry.get_by_type(UpdateAgentChatActionType).do(
             request.user, chat, **data
         )
@@ -813,66 +836,6 @@ class AgentInstructionsImproveView(APIView):
         return Response(
             AgentInstructionsSerializer({"instructions": instructions}).data
         )
-
-
-class AgentRunOnceView(APIView):
-    permission_classes = (IsAuthenticated,)
-
-    @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name="application_id",
-                location=OpenApiParameter.PATH,
-                type=OpenApiTypes.INT,
-            ),
-            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
-            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
-        ],
-        tags=["Agent"],
-        operation_id="run_agent_application_once",
-        description=(
-            "Starts a conversation for the application's first enabled trigger "
-            "as if it had fired now, without event data."
-        ),
-        request=None,
-        responses={
-            202: AgentChatSerializer,
-            400: get_error_schema(
-                ["ERROR_USER_NOT_IN_GROUP", "ERROR_AGENT_MODEL_NOT_CONFIGURED"]
-            ),
-            401: get_error_schema(["PERMISSION_DENIED"]),
-            404: get_error_schema(
-                [
-                    "ERROR_APPLICATION_DOES_NOT_EXIST",
-                    "ERROR_AGENT_DEFINITION_DOES_NOT_EXIST",
-                    "ERROR_AGENT_TRIGGER_DOES_NOT_EXIST",
-                ]
-            ),
-        },
-    )
-    @map_exceptions(
-        {
-            ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
-            AgentDefinitionDoesNotExist: ERROR_AGENT_DEFINITION_DOES_NOT_EXIST,
-            AgentTriggerDoesNotExist: ERROR_AGENT_TRIGGER_DOES_NOT_EXIST,
-            AgentModelNotConfigured: ERROR_AGENT_MODEL_NOT_CONFIGURED,
-            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
-        }
-    )
-    @transaction.atomic
-    def post(self, request, application_id: int):
-        application = _get_application_and_check(
-            request, application_id, RunAgentChatOperationType
-        )
-        agent = AgentApplicationHandler().get_main_agent(application)
-        if not agent.ai_generative_ai_type or not agent.ai_generative_ai_model:
-            raise AgentModelNotConfigured(
-                "The agent has no generative AI model configured."
-            )
-        chat = action_type_registry.get_by_type(RunAgentOnceActionType).do(
-            request.user, application
-        )
-        return Response(AgentChatSerializer(chat).data, status=HTTP_202_ACCEPTED)
 
 
 class AgentUsageView(APIView):
@@ -1254,11 +1217,11 @@ class AgentToolView(APIView):
                 name=data.get("name"),
                 config=data.get("config"),
                 service_values=data.get("service"),
-                **(
-                    {"identity_id": data["identity_id"]}
-                    if "identity_id" in data
-                    else {}
-                ),
+                **{
+                    key: data[key]
+                    for key in ("identity_id", "act_as_user")
+                    if key in data
+                },
             )
 
         return Response(AgentToolSerializer(tool).data)

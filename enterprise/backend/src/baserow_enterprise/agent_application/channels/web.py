@@ -51,8 +51,6 @@ def public_chat_status(status: str) -> str:
 
 class WebAgentChatChannelType(AgentChatChannelType):
     type = "web"
-    # Visitors are strangers; the agent's memory is not theirs to edit.
-    allows_memory_updates = False
     # The hash is a secret and the slug is the link itself; rotating a link
     # is deliberately not undoable.
     secret_config_keys = ("password", "slug")
@@ -134,7 +132,7 @@ class WebAgentChatChannelType(AgentChatChannelType):
         return payload.get("channel_uid") == str(channel.uid)
 
     def is_accessible(self, channel: AgentChatChannel) -> bool:
-        return channel.enabled and channel.application.active
+        return channel.enabled
 
     def get_system_notes(self, channel: AgentChatChannel) -> list[str]:
         return [

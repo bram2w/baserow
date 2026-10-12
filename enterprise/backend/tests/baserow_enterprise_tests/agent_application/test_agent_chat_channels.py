@@ -36,8 +36,6 @@ def channel_setup(data_fixture):
         .create_application(user, workspace, "agent", init_with_data=True, name="Agent")
         .specific
     )
-    application.active = True
-    application.save(update_fields=["active"])
     agent = AgentApplicationHandler().get_main_agent(application)
     AgentApplicationHandler().update_agent(
         agent,
@@ -251,17 +249,9 @@ def test_start_channel_chat_creates_chat_and_reuses_session(channel_setup):
 
 
 @pytest.mark.django_db
-def test_start_channel_chat_requires_active_application_and_enabled_channel(
-    channel_setup,
-):
+def test_start_channel_chat_requires_enabled_channel(channel_setup):
     user, application, agent, channel = channel_setup
 
-    application.active = False
-    application.save(update_fields=["active"])
-    assert start_channel_chat(channel, "D123|", "Hello") is None
-
-    application.active = True
-    application.save(update_fields=["active"])
     channel.enabled = False
     channel.save(update_fields=["enabled"])
     assert start_channel_chat(channel, "D123|", "Hello") is None

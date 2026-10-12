@@ -39,6 +39,7 @@ from .models import (
     AgentTool,
     AgentTrigger,
 )
+from .tools.rules import ACT_AS_USER
 from .triggers.handler import schedule_periodic_service
 from .types import AgentApplicationDict
 
@@ -125,8 +126,10 @@ class AgentApplicationType(ApplicationType):
     serializer_field_names = [
         "name",
         "description",
-        "active",
         "agent_identity_id",
+        "act_as_user",
+        "start_chat_min_role",
+        "continue_chat_min_role",
         "pending_approvals_count",
         "last_run_on",
     ]
@@ -134,7 +137,14 @@ class AgentApplicationType(ApplicationType):
     # the serialized data, which drops write-only fields, so they live on the
     # request serializer instead).
     request_serializer_field_names = [*serializer_field_names, *SETUP_FIELDS]
-    allowed_fields = ["description", "active", "agent_identity_id", *SETUP_FIELDS]
+    allowed_fields = [
+        "description",
+        "agent_identity_id",
+        "act_as_user",
+        "start_chat_min_role",
+        "continue_chat_min_role",
+        *SETUP_FIELDS,
+    ]
     serializer_field_overrides = {
         "agent_identity_id": serializers.IntegerField(
             required=False,
@@ -236,6 +246,13 @@ class AgentApplicationType(ApplicationType):
             for field in SETUP_FIELDS:
                 values.pop(field, None)
 
+        # The agent acts either as an identity or as the user of the
+        # conversation, never both.
+        if values.get("act_as_user"):
+            values["agent_identity_id"] = None
+        elif values.get("agent_identity_id") is not None:
+            values["act_as_user"] = False
+
         if "agent_identity_id" in values:
             agent_identity_id = values["agent_identity_id"]
 
@@ -266,10 +283,6 @@ class AgentApplicationType(ApplicationType):
     def create_application(self, user, workspace, init_with_data=False, **kwargs):
         setup = {key: kwargs.pop(key) for key in SETUP_FIELDS if key in kwargs}
         agent_identity_id = kwargs.pop("agent_identity_id", None)
-        # A newly created agent runs what its creator just set up. Copies
-        # (import, duplicate, template) do not pass through here and keep the
-        # model's inactive default, so they never run unnoticed.
-        kwargs.setdefault("active", True)
         application = super().create_application(
             user, workspace, init_with_data=init_with_data, **kwargs
         )
@@ -312,7 +325,14 @@ class AgentApplicationType(ApplicationType):
         config = dict(tool.config or {})
         if import_export_config.is_duplicate:
             return config
-        config.pop("tool_identities", None)
+        # Acting as the conversation's user isn't tied to the workspace.
+        tool_identities = {
+            name: value
+            for name, value in (config.pop("tool_identities", None) or {}).items()
+            if value == ACT_AS_USER
+        }
+        if tool_identities:
+            config["tool_identities"] = tool_identities
         if tool.type == "mcp" and config.get("headers"):
             config["headers"] = {}
         return config
@@ -434,6 +454,7 @@ class AgentApplicationType(ApplicationType):
                 # The identity is a workspace level subject, like the
                 # application's own identity below.
                 "identity_id": tool.identity_id if is_duplicate else None,
+                "act_as_user": tool.act_as_user,
                 "service": (
                     ServiceHandler().export_service(
                         tool.service.specific,
@@ -489,6 +510,9 @@ class AgentApplicationType(ApplicationType):
                 if import_export_config.is_duplicate
                 else None
             ),
+            act_as_user=agent_application.act_as_user,
+            start_chat_min_role=agent_application.start_chat_min_role,
+            continue_chat_min_role=agent_application.continue_chat_min_role,
             integrations=serialized_integrations,
             agents=serialized_agents,
             triggers=serialized_triggers,
@@ -586,6 +610,11 @@ class AgentApplicationType(ApplicationType):
         serialized_channels = serialized_values.pop("chat_channels", [])
         description = serialized_values.pop("description", "")
         agent_identity_id = serialized_values.pop("agent_identity_id", None)
+        chat_settings = {
+            key: serialized_values.pop(key)
+            for key in ("act_as_user", "start_chat_min_role", "continue_chat_min_role")
+            if key in serialized_values
+        }
 
         progress = ChildProgressBuilder.build(progress_builder, child_total=100)
         application_progress = progress.create_child_builder(represents_progress=40)
@@ -608,9 +637,11 @@ class AgentApplicationType(ApplicationType):
         )
         application = cast(AgentApplication, application.specific)
 
-        if description:
+        if description or chat_settings:
             application.description = description
-            application.save(update_fields=["description"])
+            for key, value in chat_settings.items():
+                setattr(application, key, value)
+            application.save(update_fields=["description", *chat_settings])
 
         for serialized_integration in serialized_integrations:
             IntegrationHandler().import_integration(
@@ -714,10 +745,10 @@ class AgentApplicationType(ApplicationType):
                 application=application,
                 service=trigger_service,
                 config=serialized_trigger.get("config") or {},
-                # The per-trigger state is preserved; an imported copy still
-                # never runs invisibly because `active` is not exported and
-                # defaults to off, so the user activates it deliberately.
-                enabled=serialized_trigger.get("enabled", True),
+                # A copy (import, duplicate, template) never starts running
+                # unnoticed next to the original; the user switches its
+                # triggers on deliberately.
+                enabled=False,
             )
             children_progress.increment()
 
@@ -746,6 +777,7 @@ class AgentApplicationType(ApplicationType):
                 order=serialized_tool.get("order", 1),
                 service=service,
                 identity_id=identity_id,
+                act_as_user=serialized_tool.get("act_as_user", False),
             )
             children_progress.increment()
 
@@ -763,7 +795,9 @@ class AgentApplicationType(ApplicationType):
                     config=channel_type.prepare_imported_config(
                         serialized_channel.get("config", {})
                     ),
-                    enabled=serialized_channel.get("enabled", True),
+                    # Like the triggers: a copy answering in the same Slack
+                    # workspace or mailbox would reply twice.
+                    enabled=False,
                 )
 
         if agent_identity_id is not None and same_workspace:
@@ -794,6 +828,7 @@ class AgentApplicationType(ApplicationType):
             AgentChatToolApproval.objects.filter(
                 chat__agent__application_id=OuterRef("pk"),
                 status=AgentChatToolApproval.Status.PENDING,
+                chat__private=False,
             )
             .order_by()
             .values("chat__agent__application_id")

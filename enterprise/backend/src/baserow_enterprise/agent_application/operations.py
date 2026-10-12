@@ -55,6 +55,24 @@ class RunAgentChatOperationType(AgentApplicationOperationType):
     type = "agent_application.run_chat"
 
 
+class StartAgentChatOperationType(AgentApplicationOperationType):
+    """
+    Starting a conversation in Baserow. Granted with `run_chat`, then narrowed
+    by the application's `start_chat_min_role`.
+    """
+
+    type = "agent_application.start_chat"
+
+
+class ContinueTriggeredAgentChatOperationType(AgentApplicationOperationType):
+    """
+    Writing in a conversation that a trigger started. Granted with
+    `run_chat`, then narrowed by the application's `continue_chat_min_role`.
+    """
+
+    type = "agent_application.continue_triggered_chat"
+
+
 class CancelAgentChatOperationType(AgentApplicationOperationType):
     type = "agent_application.cancel_chat"
 

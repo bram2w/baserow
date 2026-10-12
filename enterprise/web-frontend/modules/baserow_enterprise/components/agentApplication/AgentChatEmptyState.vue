@@ -21,11 +21,7 @@
         @click.prevent="suggestion.action()"
       >
         <span class="agent-chat-welcome__suggestion-icon">
-          <span
-            v-if="suggestion.loading"
-            class="agent-chat-welcome__suggestion-spinner"
-          ></span>
-          <i v-else :class="suggestion.icon"></i>
+          <i :class="suggestion.icon"></i>
         </span>
         <span class="agent-chat-welcome__suggestion-text">
           <span class="agent-chat-welcome__suggestion-title">
@@ -65,18 +61,14 @@ export default defineComponent({
       type: Boolean,
       required: true,
     },
-    canRunOnce: {
-      type: Boolean,
-      required: false,
-      default: false,
-    },
-    runningOnce: {
+    // Only those who may configure the agent get its memory tool.
+    canRemember: {
       type: Boolean,
       required: false,
       default: false,
     },
   },
-  emits: ['prompt', 'run-once'],
+  emits: ['prompt'],
   setup(props, { emit }) {
     const { t } = useI18n()
 
@@ -93,22 +85,7 @@ export default defineComponent({
     })
 
     const suggestions = computed(() => {
-      const items = []
-      if (props.canRunOnce) {
-        items.push({
-          key: 'first-run',
-          icon: 'iconoir-play',
-          title: t('agentChat.suggestionFirstRunTitle'),
-          description: t('agentChat.suggestionFirstRunDescription'),
-          loading: props.runningOnce,
-          action: () => {
-            if (!props.runningOnce) {
-              emit('run-once')
-            }
-          },
-        })
-      }
-      items.push(
+      const items = [
         {
           key: 'access',
           icon: 'iconoir-tools',
@@ -116,14 +93,16 @@ export default defineComponent({
           description: t('agentChat.suggestionAccessDescription'),
           action: () => emit('prompt', t('agentChat.suggestionAccessPrompt')),
         },
-        {
+      ]
+      if (props.canRemember) {
+        items.push({
           key: 'memory',
           icon: 'iconoir-brain',
           title: t('agentChat.suggestionMemoryTitle'),
           description: t('agentChat.suggestionMemoryDescription'),
           action: () => emit('prompt', t('agentChat.suggestionMemoryPrompt')),
-        }
-      )
+        })
+      }
       return items
     })
 

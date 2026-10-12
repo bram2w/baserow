@@ -6,9 +6,13 @@ export default (client) => {
     updateAgent(agentId, values) {
       return client.patch(`agent_application/agents/${agentId}/`, values)
     },
-    getChats(applicationId, { limit = 50, offset = 0 } = {}) {
+    getChats(applicationId, { limit = 50, offset = 0, origin = null } = {}) {
+      const params = { limit, offset }
+      if (origin) {
+        params.origin = origin
+      }
       return client.get(`agent_application/${applicationId}/chats/`, {
-        params: { limit, offset },
+        params,
       })
     },
     getChatMessages(applicationId, chatUuid) {
@@ -16,8 +20,17 @@ export default (client) => {
         `agent_application/${applicationId}/chats/${chatUuid}/messages/`
       )
     },
-    sendMessage(applicationId, chatUuid, content, userFiles = []) {
+    sendMessage(
+      applicationId,
+      chatUuid,
+      content,
+      userFiles = [],
+      { private: isPrivate = false } = {}
+    ) {
       const body = { content }
+      if (isPrivate) {
+        body.private = true
+      }
       if (userFiles.length > 0) {
         body.user_files = userFiles.map((userFile) => ({ name: userFile.name }))
       }
@@ -40,9 +53,7 @@ export default (client) => {
     updateChat(chatUuid, values) {
       return client.patch(`agent_application/chats/${chatUuid}/`, values)
     },
-    runOnce(applicationId) {
-      return client.post(`agent_application/${applicationId}/run_once/`)
-    },
+
     draftInstructions(workspaceId, values) {
       return client.post(
         `agent_application/workspace/${workspaceId}/instructions/draft/`,

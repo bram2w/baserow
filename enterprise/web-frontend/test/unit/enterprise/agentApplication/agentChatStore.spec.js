@@ -751,3 +751,58 @@ describe('agentChat store dont ask again', () => {
     mock.restore()
   })
 })
+
+describe('agentChat store privacy', () => {
+  let store = null
+  let mock = null
+
+  beforeEach(() => {
+    const { $store, $client } = useNuxtApp()
+    store = $store
+    mock = new MockAdapter($client, { onNoMatch: 'throwException' })
+  })
+
+  afterEach(() => {
+    mock.restore()
+  })
+
+  test('a new conversation keeps the choice and sends it with the first message', async () => {
+    store.dispatch('agentChat/newConversation')
+    await store.dispatch('agentChat/setPrivate', { private: true })
+    expect(store.getters['agentChat/isPrivate']).toBe(true)
+
+    const uuid = store.getters['agentChat/getCurrentChatUuid']
+    mock
+      .onPost(`agent_application/42/chats/${uuid}/messages/`)
+      .replyOnce((config) => {
+        expect(JSON.parse(config.data).private).toBe(true)
+        return [202, { id: 5, uuid, status: 'in_progress', private: true }]
+      })
+    await store.dispatch('agentChat/sendMessage', {
+      application: { id: 42 },
+      content: 'Hello',
+    })
+  })
+
+  test('an existing conversation is switched on the server and reverts on failure', async () => {
+    store.dispatch('agentChat/newConversation')
+    store.commit('agentChat/SET_CHAT_ID', 5)
+    const uuid = store.getters['agentChat/getCurrentChatUuid']
+
+    mock.onPatch(`agent_application/chats/${uuid}/`).replyOnce(200, {
+      id: 5,
+      uuid,
+      private: true,
+    })
+    await store.dispatch('agentChat/setPrivate', { private: true })
+    expect(store.getters['agentChat/isPrivate']).toBe(true)
+
+    mock.onPatch(`agent_application/chats/${uuid}/`).replyOnce(403, {
+      error: 'ERROR_AGENT_CHAT_NOT_OWNED',
+    })
+    await expect(
+      store.dispatch('agentChat/setPrivate', { private: false })
+    ).rejects.toBeTruthy()
+    expect(store.getters['agentChat/isPrivate']).toBe(true)
+  })
+})

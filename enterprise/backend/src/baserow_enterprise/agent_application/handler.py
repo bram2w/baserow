@@ -3,13 +3,14 @@ from typing import Optional
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import QuerySet, Sum
+from django.db.models import F, Q, QuerySet, Sum
 from django.utils import timezone
 
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from baserow.contrib.integrations.local_baserow.models import LocalBaserowIntegration
 from baserow.core.ai_provider.constants import AI_PROVIDER_FEATURE_AGENT_BUILDER
+from baserow.core.handler import CoreHandler
 from baserow.core.models import Agent
 from baserow.core.services.registries import service_type_registry
 from baserow.core.utils import extract_allowed
@@ -20,7 +21,6 @@ from .exceptions import (
     AgentChatDoesNotExist,
     AgentDefinitionDoesNotExist,
     AgentToolApprovalDoesNotExist,
-    AgentTriggerDoesNotExist,
 )
 from .models import (
     AgentApplication,
@@ -369,6 +369,7 @@ class AgentChatHandler:
         """
 
         from .exceptions import AgentChatNotOwned
+        from .operations import ContinueTriggeredAgentChatOperationType
 
         if chat.source == AgentChat.Source.CHANNEL:
             raise AgentChatNotOwned(
@@ -380,10 +381,33 @@ class AgentChatHandler:
             and chat.user_id != getattr(user, "id", None)
         ):
             raise AgentChatNotOwned(f"The chat {chat.id} was started by another user.")
+        if chat.source == AgentChat.Source.TRIGGER and user is not None:
+            application = chat.agent.application
+            CoreHandler().check_permissions(
+                user,
+                ContinueTriggeredAgentChatOperationType.type,
+                workspace=application.workspace,
+                context=application.application_ptr,
+            )
 
     def get_or_create_manual_chat(
-        self, agent: AgentDefinition, user: AbstractUser, chat_uuid
+        self,
+        agent: AgentDefinition,
+        user: AbstractUser,
+        chat_uuid,
+        private: bool = False,
     ) -> AgentChat:
+        """
+        The conversation the user writes in, created when the uuid is new.
+
+        :param private: Whether a new conversation is only visible to the user.
+        :raises AgentChatNotOwned: When the user may not continue the chat.
+        :raises PermissionDenied: When the user's role is below the
+            application's minimum role for starting or continuing.
+        """
+
+        from .operations import StartAgentChatOperationType
+
         chat = AgentChat.objects.filter(uuid=chat_uuid).first()
 
         if chat is not None:
@@ -391,6 +415,7 @@ class AgentChatHandler:
                 raise AgentChatDoesNotExist(
                     f"The chat with uuid {chat_uuid} does not exist for this agent."
                 )
+            self.check_chat_is_visible_to(chat, user)
             self.check_chat_can_be_continued_by(chat, user)
             if chat.user_id is None:
                 # A triggered conversation that a person picks up runs as that
@@ -400,11 +425,19 @@ class AgentChatHandler:
                 chat.save(update_fields=["user", "updated_on"])
             return chat
 
+        application = agent.application
+        CoreHandler().check_permissions(
+            user,
+            StartAgentChatOperationType.type,
+            workspace=application.workspace,
+            context=application.application_ptr,
+        )
         return AgentChat.objects.create(
             uuid=chat_uuid,
             agent=agent,
             user=user,
             source=AgentChat.Source.MANUAL,
+            private=private,
         )
 
     def create_triggered_chat(
@@ -447,6 +480,7 @@ class AgentChatHandler:
                 "type": role,
                 "id": message.id,
                 "content": content,
+                "created_on": message.created_on.isoformat(),
                 "attachments": AgentChatAttachmentSerializer(
                     message.attachments, many=True
                 ).data,
@@ -516,22 +550,87 @@ class AgentChatHandler:
         chat.save(update_fields=["channel_session_key"])
         return chat
 
-    def list_chats(self, agent: AgentDefinition) -> QuerySet:
-        return agent.chats.defer("message_history").order_by("-pinned", "-updated_on")
+    def list_chats(
+        self,
+        agent: AgentDefinition,
+        user: Optional[AbstractUser] = None,
+        origin: Optional[str] = None,
+    ) -> QuerySet:
+        """
+        The agent's conversations, pinned first, newest first.
+
+        :param user: Only private conversations of this user are included.
+        :param origin: Only conversations started this way: `manual`,
+            `service`, `trigger:<trigger type>` or `channel:<channel type>`,
+            or `mine` for the ones `user` started.
+        """
+
+        queryset = agent.chats.defer("message_history").annotate(
+            channel_type=F("channel__type")
+        )
+        private_filter = Q(private=False)
+        if user is not None:
+            private_filter |= Q(user_id=user.id)
+        queryset = queryset.filter(private_filter)
+        if origin:
+            queryset = queryset.filter(self.get_origin_filter(origin, user))
+        return queryset.order_by("-pinned", "-updated_on")
+
+    def get_origin_filter(self, origin: str, user=None) -> Q:
+        kind, _, type_name = origin.partition(":")
+        if kind == "mine":
+            return Q(user_id=user.id) if user is not None else Q(pk__in=[])
+        if kind == "manual":
+            # Setup conversations are from before the creation wizard and were
+            # started by hand too.
+            return Q(source__in=[AgentChat.Source.MANUAL, AgentChat.Source.SETUP])
+        if kind == "service":
+            return Q(source=AgentChat.Source.SERVICE)
+        if kind == "trigger":
+            return Q(source=AgentChat.Source.TRIGGER, trigger_type=type_name)
+        if kind == "channel":
+            return Q(source=AgentChat.Source.CHANNEL, channel__type=type_name)
+        return Q(pk__in=[])
+
+    def check_chat_is_visible_to(self, chat: AgentChat, user) -> None:
+        """
+        A private conversation doesn't exist for anybody but its owner.
+
+        :raises AgentChatDoesNotExist: When the chat is someone else's
+            private conversation.
+        """
+
+        if chat.private and chat.user_id != getattr(user, "id", None):
+            raise AgentChatDoesNotExist(
+                f"The chat with uuid {chat.uuid} does not exist."
+            )
 
     def update_chat(
         self,
         chat: AgentChat,
         title: Optional[str] = None,
         pinned: Optional[bool] = None,
+        private: Optional[bool] = None,
     ) -> AgentChat:
-        from .realtime import broadcast_chat_updated
+        """
+        :param private: Only the conversation's owner may change this; the
+            caller checks that.
+        """
+
+        from .realtime import (
+            broadcast_chat_deleted,
+            broadcast_chat_updated,
+            broadcast_pending_approvals_updated,
+        )
 
         values = {}
         if title is not None:
             values["title"] = title[: AgentChat.TITLE_MAX_LENGTH]
         if pinned is not None:
             values["pinned"] = pinned
+        privacy_changed = private is not None and private != chat.private
+        if privacy_changed:
+            values["private"] = private
         if not values:
             return chat
         # A queryset update skips `auto_now`, so renaming or pinning doesn't
@@ -539,48 +638,25 @@ class AgentChatHandler:
         AgentChat.objects.filter(id=chat.id).update(**values)
         for field, value in values.items():
             setattr(chat, field, value)
-        transaction.on_commit(lambda: broadcast_chat_updated(chat))
-        return chat
 
-    def run_trigger_once(self, user: AbstractUser, application) -> AgentChat:
-        """
-        Starts a conversation for the application's first enabled trigger as
-        if it had fired, without event data. Lets the user try a triggered
-        agent before the trigger fires (or while the agent is turned off).
+        application = chat.agent.application
 
-        :raises AgentTriggerDoesNotExist: When the application has no enabled
-            trigger.
-        """
+        def broadcast():
+            if privacy_changed and chat.private:
+                # Everybody else loses the conversation; the owner keeps it.
+                broadcast_chat_deleted(
+                    application.id, chat.id, except_user_id=chat.user_id
+                )
+            broadcast_chat_updated(chat)
+            if (
+                privacy_changed
+                and chat.tool_approvals.filter(
+                    status=AgentChatToolApproval.Status.PENDING
+                ).exists()
+            ):
+                broadcast_pending_approvals_updated(application)
 
-        from .triggers.registries import agent_trigger_type_registry
-
-        trigger = (
-            application.triggers.filter(enabled=True)
-            .select_related("service")
-            .order_by("id")
-            .first()
-        )
-        if trigger is None:
-            raise AgentTriggerDoesNotExist(
-                f"The application {application.id} has no enabled trigger."
-            )
-
-        trigger_type = agent_trigger_type_registry.get_by_service_type(
-            trigger.service.specific.get_type().type
-        )
-        # The example payload lets the user try the instructions (and their
-        # tokens) without waiting for the real event.
-        sample_payload = trigger_type.get_sample_payload(trigger)
-        agent = AgentApplicationHandler().get_main_agent(application)
-        chat = self.create_triggered_chat(
-            agent, trigger_type.type, event_payload=sample_payload, user=user
-        )
-        message = self.create_message(
-            chat,
-            AgentChatMessage.Role.SYSTEM,
-            trigger_type.get_opening_prompt(trigger, sample_payload),
-        )
-        self.start_chat_run(chat, message)
+        transaction.on_commit(broadcast)
         return chat
 
     def get_last_run_on(self, application):
@@ -763,10 +839,13 @@ class AgentChatHandler:
         conversation, newest first, for the approval overview.
         """
 
+        # A private conversation's steps are decided inside it by its owner;
+        # the shared overview and counter would expose them to everybody.
         return (
             AgentChatToolApproval.objects.filter(
                 chat__agent__application=application,
                 status=AgentChatToolApproval.Status.PENDING,
+                chat__private=False,
             )
             .select_related("chat")
             .order_by("-id")
@@ -776,6 +855,7 @@ class AgentChatHandler:
         return AgentChatToolApproval.objects.filter(
             chat__agent__application=application,
             status=AgentChatToolApproval.Status.PENDING,
+            chat__private=False,
         ).count()
 
     def decide_tool_approvals(
@@ -881,13 +961,14 @@ class AgentChatHandler:
 
         application = chat.agent.application
         chat_id = chat.id
+        private_user_id = chat.user_id if chat.private else None
         # Deleting a conversation that still waits for a decision changes
         # the header and sidebar counters of everyone in the workspace.
         had_pending = chat.tool_approvals.filter(
             status=AgentChatToolApproval.Status.PENDING
         ).exists()
         chat.delete()
-        broadcast_chat_deleted(application.id, chat_id)
+        broadcast_chat_deleted(application.id, chat_id, private_user_id)
         if had_pending:
             broadcast_pending_approvals_updated(application)
 

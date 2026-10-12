@@ -1,5 +1,24 @@
 <template>
   <div>
+    <div
+      class="agent-configuration__switch-row agent-configuration__switch-row--plain margin-bottom-3"
+    >
+      <i class="agent-configuration__switch-icon iconoir-globe"></i>
+      <div class="agent-configuration__switch-text">
+        <div class="agent-configuration__switch-title">
+          {{ $t('agentActionTools.webSearch') }}
+        </div>
+        <div class="agent-configuration__switch-description">
+          {{ $t('agentActionTools.webSearchDescription') }}
+        </div>
+      </div>
+      <SwitchInput
+        small
+        :value="builtInToolValue('web_search')"
+        :disabled="!canToggleBuiltInTools"
+        @input="toggleBuiltInTool('web_search', $event)"
+      ></SwitchInput>
+    </div>
     <div class="agent-configuration__subsection">
       <div class="agent-configuration__subsection-title">
         {{ $t('agentActionTools.actions') }}
@@ -214,14 +233,14 @@
               ></SegmentControl>
             </FormGroup>
             <FormGroup
-              v-if="tool.type === 'service' && identities.length > 0"
+              v-if="tool.type === 'service'"
               small-label
               horizontal
               :label="$t('agentActionTools.runsAs')"
               class="margin-bottom-2"
             >
               <Dropdown
-                :model-value="tool.identity_id || null"
+                :model-value="toolIdentityValue(tool)"
                 :show-search="false"
                 :fixed-items="true"
                 :disabled="
@@ -229,14 +248,7 @@
                 "
                 @update:model-value="onIdentityChanged(tool, $event)"
               >
-                <DropdownItem
-                  :name="
-                    agentIdentity
-                      ? agentIdentity.name
-                      : $t('agentActionTools.noIdentity')
-                  "
-                  :value="null"
-                >
+                <DropdownItem :name="ownIdentityName" :value="null">
                   <span class="agent-configuration__identity-option">
                     <Avatar
                       v-if="agentIdentity"
@@ -245,16 +257,34 @@
                       size="small"
                       rounded
                     />
-                    <i v-else class="iconoir-prohibition"></i>
+                    <i
+                      v-else
+                      :class="
+                        application.act_as_user
+                          ? 'iconoir-user'
+                          : 'iconoir-prohibition'
+                      "
+                    ></i>
                     <span class="agent-configuration__identity-name">
-                      {{
-                        agentIdentity
-                          ? agentIdentity.name
-                          : $t('agentActionTools.noIdentity')
-                      }}
+                      {{ ownIdentityName }}
                     </span>
                     <span class="agent-configuration__identity-description">
                       {{ $t('agentActionTools.agentsIdentity') }}
+                    </span>
+                  </span>
+                </DropdownItem>
+                <DropdownItem
+                  v-if="!application.act_as_user || tool.act_as_user"
+                  :name="$t('agentAccess.actAsUserOption')"
+                  :value="ACT_AS_USER"
+                >
+                  <span class="agent-configuration__identity-option">
+                    <i class="iconoir-user"></i>
+                    <span class="agent-configuration__identity-name">
+                      {{ $t('agentAccess.actAsUserOption') }}
+                    </span>
+                    <span class="agent-configuration__identity-description">
+                      {{ $t('agentAccess.actAsUserOptionDescription') }}
                     </span>
                   </span>
                 </DropdownItem>
@@ -346,6 +376,8 @@
 </template>
 
 <script>
+import agentBuiltInTools from '@baserow_enterprise/mixins/agentBuiltInTools'
+import { ACT_AS_USER } from '@baserow_enterprise/utils/agentToolIdentities'
 import agentCollapsibleCards from '@baserow_enterprise/mixins/agentCollapsibleCards'
 import debounce from 'lodash/debounce'
 import isEqual from 'lodash/isEqual'
@@ -399,7 +431,7 @@ const INPUT_TYPES = ['string', 'number', 'boolean']
 
 export default {
   name: 'AgentActionToolsSection',
-  mixins: [AgentContextMixin, agentCollapsibleCards],
+  mixins: [AgentContextMixin, agentCollapsibleCards, agentBuiltInTools],
   components: {
     AgentConfigurationCard,
     AgentGroupedAddMenu,
@@ -425,6 +457,7 @@ export default {
       ...serviceFollowState(),
       savingIdentityIds: [],
       inputTypes: INPUT_TYPES,
+      ACT_AS_USER,
     }
   },
   computed: {
@@ -467,6 +500,14 @@ export default {
       return this.$store.getters['agent/get'](
         this.application.agent_identity_id
       )
+    },
+    ownIdentityName() {
+      if (this.agentIdentity) {
+        return this.agentIdentity.name
+      }
+      return this.application.act_as_user
+        ? this.$t('agentAccess.actAsUserOption')
+        : this.$t('agentActionTools.noIdentity')
     },
     otherIdentities() {
       return this.identities.filter(
@@ -738,8 +779,11 @@ export default {
       const roles = this.workspace?._?.roles || []
       return roles.find((role) => role.uid === identity.role_uid)?.name || ''
     },
+    toolIdentityValue(tool) {
+      return tool.act_as_user ? ACT_AS_USER : tool.identity_id || null
+    },
     async onIdentityChanged(tool, identityId) {
-      if (!this.canUpdateTool || (tool.identity_id || null) === identityId) {
+      if (!this.canUpdateTool || this.toolIdentityValue(tool) === identityId) {
         return
       }
       this.savingIdentityIds = [...this.savingIdentityIds, tool.id]
@@ -748,7 +792,10 @@ export default {
           `${this.storePrefix}agentApplication/updateTool`,
           {
             toolId: tool.id,
-            values: { identity_id: identityId },
+            values:
+              identityId === ACT_AS_USER
+                ? { identity_id: null, act_as_user: true }
+                : { identity_id: identityId, act_as_user: false },
           }
         )
       } catch (error) {

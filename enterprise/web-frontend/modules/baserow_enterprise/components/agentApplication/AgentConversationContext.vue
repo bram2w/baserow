@@ -17,6 +17,19 @@
           {{ $t('agentConversationList.rename') }}
         </a>
       </li>
+      <li v-if="canChangePrivacy" class="context__menu-item">
+        <a class="context__menu-item-link" @click="togglePrivate()">
+          <i
+            class="context__menu-item-icon"
+            :class="chat.private ? 'iconoir-community' : 'iconoir-lock'"
+          ></i>
+          {{
+            chat.private
+              ? $t('agentConversationList.makePublic')
+              : $t('agentConversationList.makePrivate')
+          }}
+        </a>
+      </li>
       <li v-if="canDelete" class="context__menu-item">
         <a
           class="context__menu-item-link context__menu-item-link--delete"
@@ -62,6 +75,14 @@ export default {
         this.application.workspace.id
       )
     },
+    // Only the person who started a conversation decides who sees it.
+    canChangePrivacy() {
+      return (
+        this.canUpdate &&
+        this.chat.user_id !== null &&
+        this.chat.user_id === this.$store.getters['auth/getUserId']
+      )
+    },
     canDelete() {
       return (
         !isChatRunning(this.chat.status) &&
@@ -88,6 +109,29 @@ export default {
         notifyIf(error, 'application')
       }
     },
+    async togglePrivate() {
+      this.hide()
+      const values = { private: !this.chat.private }
+      try {
+        if (
+          this.$store.getters[`${this.storePrefix}agentChat/getChatId`] ===
+          this.chat.id
+        ) {
+          // The open conversation shows its state in the composer too.
+          await this.$store.dispatch(
+            `${this.storePrefix}agentChat/setPrivate`,
+            values
+          )
+        } else {
+          await this.$store.dispatch(
+            `${this.storePrefix}agentHistory/updateChat`,
+            { chatUuid: this.chat.uuid, values }
+          )
+        }
+      } catch (error) {
+        notifyIf(error, 'application')
+      }
+    },
     rename() {
       this.hide()
       this.$emit('rename')
@@ -104,7 +148,11 @@ export default {
             chat: this.chat,
           }
         )
-        this.hide()
+        // The deleted conversation's row, this menu included, may already be
+        // gone.
+        if (this.$refs.context) {
+          this.hide()
+        }
       } catch (error) {
         notifyIf(error, 'application')
       } finally {

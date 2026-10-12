@@ -19,7 +19,10 @@ _THOUGHT = Annotated[str, Field(description="Brief reasoning for calling this to
 def _audit(ctx: RunContext[AgentRunDeps], mode: str) -> None:
     from ..actions import UpdateAgentMemoryActionType
 
-    UpdateAgentMemoryActionType.do(ctx.deps.user, ctx.deps.agent, mode)
+    # The person who asked to remember, not the identity the tools run as.
+    UpdateAgentMemoryActionType.do(
+        ctx.deps.initiating_user or ctx.deps.user, ctx.deps.agent, mode
+    )
 
 
 def _broadcast(agent_id: int) -> None:

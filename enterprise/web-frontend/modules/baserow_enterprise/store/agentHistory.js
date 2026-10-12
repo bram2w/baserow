@@ -1,4 +1,5 @@
 import AgentApplicationService from '@baserow_enterprise/services/agentApplication'
+import { chatMatchesOrigin } from '@baserow_enterprise/utils/agentChatOrigin'
 
 const PAGE_SIZE = 50
 
@@ -17,6 +18,9 @@ export const state = () => ({
   // independently, so the fetched offset is tracked separately.
   fetchedCount: 0,
   hasMore: false,
+  // Only conversations started this way are listed (see `getChatOrigin`);
+  // null lists all of them.
+  origin: null,
 })
 
 export const mutations = {
@@ -53,6 +57,9 @@ export const mutations = {
   SET_LOADING(state, value) {
     state.loading = value
   },
+  SET_ORIGIN(state, origin) {
+    state.origin = origin
+  },
   SET_PAGINATION(state, { fetchedCount, hasMore }) {
     state.fetchedCount = fetchedCount
     state.hasMore = hasMore
@@ -62,16 +69,21 @@ export const mutations = {
 export const actions = {
   clear({ commit }) {
     commit('SET_CHATS', [])
-    commit('SET_USAGE', null)
     commit('SET_PAGINATION', { fetchedCount: 0, hasMore: false })
+    commit('SET_ORIGIN', null)
   },
-  async fetch({ commit }, { applicationId }) {
+  async fetch({ commit, state }, { applicationId }) {
     commit('SET_LOADING', true)
+    const origin = state.origin
     try {
       const { data } = await AgentApplicationService(this.$client).getChats(
         applicationId,
-        { limit: PAGE_SIZE, offset: 0 }
+        { limit: PAGE_SIZE, offset: 0, origin }
       )
+      // Another filter was picked while this page loaded.
+      if (state.origin !== origin) {
+        return state.chats
+      }
       commit('SET_CHATS', data.results)
       commit('SET_PAGINATION', {
         fetchedCount: data.results.length,
@@ -90,7 +102,7 @@ export const actions = {
     try {
       const { data } = await AgentApplicationService(this.$client).getChats(
         applicationId,
-        { limit: PAGE_SIZE, offset: state.fetchedCount }
+        { limit: PAGE_SIZE, offset: state.fetchedCount, origin: state.origin }
       )
       commit('APPEND_CHATS', data.results)
       commit('SET_PAGINATION', {
@@ -102,7 +114,25 @@ export const actions = {
       commit('SET_LOADING', false)
     }
   },
-  forceUpdateChat({ commit }, { chat }) {
+  async setOrigin({ commit, dispatch, state }, { applicationId, origin }) {
+    const previous = state.origin
+    commit('SET_ORIGIN', origin)
+    try {
+      return await dispatch('fetch', { applicationId })
+    } catch (error) {
+      commit('SET_ORIGIN', previous)
+      throw error
+    }
+  },
+  forceUpdateChat({ commit, state, rootGetters }, { chat }) {
+    // A filtered list only takes in new conversations that match it.
+    const known = state.chats.some((c) => c.id === chat.id)
+    if (
+      !known &&
+      !chatMatchesOrigin(chat, state.origin, rootGetters['auth/getUserId'])
+    ) {
+      return
+    }
     commit('UPSERT_CHAT', chat)
   },
   forceDeleteChat({ commit }, { chatId }) {
@@ -146,6 +176,7 @@ export const getters = {
   getRecentChats: (state) => state.chats.filter((chat) => !chat.pinned),
   isLoading: (state) => state.loading,
   hasMore: (state) => state.hasMore,
+  getOrigin: (state) => state.origin,
 }
 
 export default {

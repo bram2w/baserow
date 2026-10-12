@@ -217,6 +217,7 @@ class AgentRunner:
             agent=self.agent,
             chat=chat,
             tool_helpers=self._tool_helpers,
+            initiating_user=chat.user,
             skills=list(
                 self.agent.agent_skills.select_related("skill").order_by("order", "id")
             ),
@@ -229,19 +230,16 @@ class AgentRunner:
         from .tools.memory import build_memory_toolset
         from .tools.registries import agent_tool_type_registry
         from .tools.row_comment_reply import build_row_comment_reply_toolset
-        from .tools.self_configure import build_self_configure_toolset
         from .tools.skills import build_skills_toolset
         from .triggers.trigger_types import RowCommentCreatedAgentTriggerType
 
         toolsets = agent_tool_type_registry.build_toolsets(self.agent, self.deps)
 
-        # The memory is the agent's own scratchpad and is available in every
-        # run, including triggered ones, so automated runs can record what
-        # they created or learned. Channels talking to outsiders (the public
-        # web chat) opt out, so strangers can't rewrite it.
-        channel_type = self._channel_type()
-        if channel_type is None or channel_type.allows_memory_updates:
+        # The memory is part of the agent's configuration, so only someone
+        # who may configure the agent changes it, by chatting in Baserow.
+        if self._may_update_memory():
             toolsets.append(build_memory_toolset())
+        channel_type = self._channel_type()
         if any(
             agent_skill.mode == AgentSkill.Mode.ON_DEMAND
             for agent_skill in self.deps.skills
@@ -258,15 +256,36 @@ class AgentRunner:
         if self.chat.trigger_type == RowCommentCreatedAgentTriggerType.type:
             toolsets.append(build_row_comment_reply_toolset())
 
-        # A human in the conversation may reconfigure the agent by chatting;
-        # background triggered runs must not rewrite their own configuration.
-        if (
-            self.chat.source in (AgentChat.Source.MANUAL, AgentChat.Source.SETUP)
-            and self.chat.user_id is not None
-        ):
-            toolsets.append(build_self_configure_toolset())
-
         return toolsets
+
+    def _may_update_memory(self) -> bool:
+        """
+        Only a Baserow user writing in Baserow (a manual conversation or a
+        triggered one they picked up) who may update the agent's configuration.
+        Channels, "Run agent" actions and unattended trigger runs never can.
+        """
+
+        from baserow.core.exceptions import PermissionException
+        from baserow.core.handler import CoreHandler
+
+        from .operations import UpdateAgentDefinitionOperationType
+
+        if self.chat.user is None or self.chat.source not in (
+            AgentChat.Source.MANUAL,
+            AgentChat.Source.SETUP,
+            AgentChat.Source.TRIGGER,
+        ):
+            return False
+        try:
+            CoreHandler().check_permissions(
+                self.chat.user,
+                UpdateAgentDefinitionOperationType.type,
+                workspace=self.workspace,
+                context=self.application.application_ptr,
+            )
+        except PermissionException:
+            return False
+        return True
 
     def _channel_type(self):
         if self.chat.channel_id is None:

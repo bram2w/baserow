@@ -45,8 +45,6 @@ def agent_with_table(data_fixture):
         ai_generative_ai_type="agent_runner_test",
         ai_generative_ai_model="test-model",
     )
-    application.active = True
-    application.save(update_fields=["active"])
     return user, token, workspace, application, agent, table, field
 
 
@@ -361,71 +359,6 @@ def test_multiple_triggers_fire_independently(data_fixture, agent_with_table):
     assert AgentChat.objects.filter(agent=agent).count() == 2
 
 
-@pytest.mark.django_db(transaction=True)
-def test_inactive_application_does_not_fire_triggers(data_fixture, agent_with_table):
-    user, token, workspace, application, agent, table, field = agent_with_table
-    integration = application.integrations.first().specific
-
-    AgentTriggerHandler().create_trigger(
-        user,
-        application,
-        "local_baserow_rows_created",
-        service_values={"table_id": table.id, "integration_id": integration.id},
-    )
-    application.active = False
-    application.save(update_fields=["active"])
-
-    with patch(
-        "baserow_enterprise.agent_application.tasks.run_agent_chat.delay"
-    ) as delay_mock:
-        RowHandler().create_rows(
-            user=user,
-            table=table,
-            model=table.get_model(),
-            rows_values=[{f"field_{field.id}": "New row"}],
-            skip_search_update=True,
-        )
-
-    assert not AgentChat.objects.filter(agent=agent).exists()
-    delay_mock.assert_not_called()
-
-
-@pytest.mark.django_db(transaction=True)
-def test_run_once_starts_triggered_chat(api_client, data_fixture, agent_with_table):
-    user, token, workspace, application, agent, table, field = agent_with_table
-    service = data_fixture.create_core_periodic_service(interval="DAY")
-    trigger = AgentTrigger.objects.create(application=application, service=service)
-
-    url = reverse("api:agent:run_once", kwargs={"application_id": application.id})
-    with (
-        patch(
-            "baserow_enterprise.agent_application.tasks.run_agent_chat.delay"
-        ) as delay_mock,
-        patch(
-            "baserow_enterprise.agent_application.realtime.broadcast_to_channel_group"
-        ),
-    ):
-        response = api_client.post(url, HTTP_AUTHORIZATION=f"JWT {token}")
-
-    assert response.status_code == 202, response.json()
-    chat = AgentChat.objects.get(agent=agent)
-    assert response.json()["uuid"] == str(chat.uuid)
-    assert chat.source == AgentChat.Source.TRIGGER
-    assert chat.trigger_type == "periodic"
-    assert chat.user_id == user.id
-    # "Run once" hands the agent the trigger's example payload.
-    assert "triggered_at" in chat.event_payload
-    system_message = chat.messages.get(role=AgentChatMessage.Role.SYSTEM)
-    assert "scheduled periodic run" in system_message.content
-    delay_mock.assert_called_once()
-
-    trigger.enabled = False
-    trigger.save()
-    response = api_client.post(url, HTTP_AUTHORIZATION=f"JWT {token}")
-    assert response.status_code == 404
-    assert response.json()["error"] == "ERROR_AGENT_TRIGGER_DOES_NOT_EXIST"
-
-
 @pytest.mark.django_db
 def test_last_run_on_exposed_on_application(api_client, data_fixture, agent_with_table):
     user, token, workspace, application, agent, table, field = agent_with_table
@@ -500,8 +433,6 @@ def test_inbound_email_trigger_starts_agent_chat(agent_with_table):
 
     user, token, workspace, application, agent, table, field = agent_with_table
     trigger = AgentTriggerHandler().create_trigger(user, application, "email_trigger")
-    application.active = True
-    application.save()
 
     # Only published email trigger services receive mail at the bare address.
     service = trigger.service.specific
@@ -543,8 +474,6 @@ def test_inbound_email_trigger_starts_agent_chat(agent_with_table):
 def test_http_trigger_webhook_starts_agent_chat(api_client, agent_with_table):
     user, token, workspace, application, agent, table, field = agent_with_table
     trigger = AgentTriggerHandler().create_trigger(user, application, "http_trigger")
-    application.active = True
-    application.save()
 
     # Agent triggers are never "published" like automation workflows, so the
     # service must be public from the start for the webhook to resolve it.

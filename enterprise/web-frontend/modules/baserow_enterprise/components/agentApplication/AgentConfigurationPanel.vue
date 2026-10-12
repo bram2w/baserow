@@ -195,6 +195,8 @@ export default defineComponent({
           (item) => item.uid === identity.role_uid
         )
         parts.push(role ? `${identity.name} (${role.name})` : identity.name)
+      } else if (props.application.act_as_user) {
+        parts.push(t('agentAccess.actAsUserOption'))
       }
       const workspaceTool = tools.value.find(
         (tool) => tool.type === 'workspace'
@@ -207,9 +209,6 @@ export default defineComponent({
             : t('agentConfiguration.accessToolsSummary', counts)
         )
       }
-      if (tools.value.some((tool) => tool.type === 'web_search')) {
-        parts.push(t('agentConfiguration.accessWebSearch'))
-      }
       return parts.length > 0
         ? parts.join(' • ')
         : t('agentConfiguration.accessNoTools')
@@ -220,6 +219,9 @@ export default defineComponent({
         .filter((tool) => ['service', 'mcp'].includes(tool.type))
         .map((tool) => tool.name)
         .filter(Boolean)
+      if (tools.value.some((tool) => tool.type === 'web_search')) {
+        names.unshift(t('agentConfiguration.webSearch'))
+      }
       return names.length > 0
         ? names.join(', ')
         : t('agentConfiguration.actionToolsEmptySummary')
@@ -252,7 +254,7 @@ export default defineComponent({
       {
         key: 'access',
         icon: 'iconoir-shield-check',
-        title: t('agentConfiguration.accessAndTools'),
+        title: t('agentConfiguration.workspaceAccess'),
         summary: accessSummary.value,
       },
       {
