@@ -1652,7 +1652,6 @@ class CoreHandler:
         )
 
         application_type = application_type_registry.get(type_name)
-        application_type.check_feature_flag()
         allowed_values = extract_allowed(
             kwargs, self.default_create_allowed_fields + application_type.allowed_fields
         )
@@ -1705,7 +1704,6 @@ class CoreHandler:
         )
 
         application_type = application_type_registry.get_by_model(application)
-        application_type.check_feature_flag()
         allowed_values = extract_allowed(
             kwargs, self.default_update_allowed_fields + application_type.allowed_fields
         )
@@ -1772,7 +1770,6 @@ class CoreHandler:
         # export the application
         specific_application = application.specific
         application_type = application_type_registry.get_by_model(specific_application)
-        application_type.check_feature_flag()
         try:
             serialized = application_type.export_serialized(
                 specific_application, duplicate_import_export_config
@@ -1843,32 +1840,19 @@ class CoreHandler:
             workspace_id=workspace.id
         ).order_by("order")
 
-        users_applications = list(
-            CoreHandler()
-            .filter_queryset(
-                user,
-                ReadApplicationOperationType.type,
-                all_applications,
-                workspace=workspace,
-            )
-            .select_related("content_type")
+        users_applications = CoreHandler().filter_queryset(
+            user,
+            ReadApplicationOperationType.type,
+            all_applications,
+            workspace=workspace,
         )
 
-        users_application_ids = {application.id for application in users_applications}
+        users_application_ids = list(users_applications.values_list("id", flat=True))
 
         # Check that all ordered ids can be ordered by the user
         for application_id in order:
             if application_id not in users_application_ids:
                 raise ApplicationNotInWorkspace(application_id)
-
-        requested_ids = set(order)
-        original_order = []
-        for application in users_applications:
-            application_type = application.get_type()
-            if application.id in requested_ids:
-                application_type.check_feature_flag()
-            if application_type.is_enabled():
-                original_order.append(application.id)
 
         new_order = Application.order_objects(all_applications, order)
 
@@ -1876,7 +1860,7 @@ class CoreHandler:
             self, workspace=workspace, order=new_order, user=user
         )
 
-        return original_order
+        return users_application_ids
 
     def delete_application(self, user: AbstractUser, application: Application):
         """
@@ -1890,8 +1874,6 @@ class CoreHandler:
 
         if not isinstance(application, Application):
             raise ValueError("The application is not an instance of Application")
-
-        application.get_type().check_feature_flag()
 
         CoreHandler().check_permissions(
             user,
