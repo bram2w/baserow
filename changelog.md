@@ -1,5 +1,63 @@
 # Changelog
 
+## Released 2.4.1
+
+### New features
+* [Automation] Adds pagination to workflow history [#5240](https://github.com/baserow/baserow/issues/5240)
+* [Core] Z.ai can be added as an AI provider with an API key [#5753](https://github.com/baserow/baserow/issues/5753)
+* [Builder] Added markdown formatting to Application Builder labels, help text, choice options, notifications and table text cells. [#5957](https://github.com/baserow/baserow/issues/5957)
+* [Core] Add the Helm chart value global.baserow.fullnameOverride to name all Baserow resources after one prefix, and serve the API under the frontend domain's /api/ path when global.baserow.backendDomain equals global.baserow.domain [#6211](https://github.com/baserow/baserow/issues/6211)
+* [Core] Add the Helm chart values migration.resources, global.baserow.applicationBuilderDomains and ingress.catchAll.enabled. The host-less catch-all ingress rule used for Application Builder custom domains can now be disabled on shared ingress controllers, and ingress hosts may be wildcards
+* [Integration] Adds SSL/TLS support to the SMTP integration so emails can be sent over port 465
+* [Database] AI fields can format their output as rich text, like the long text field. [#6220](https://github.com/baserow/baserow/issues/6220)
+* [Builder] Application Builder is out of beta
+  * The beta label is gone from the Application Builder module
+  * Applications built during the beta keep working without changes
+  * Application Builder is now supported for production use
+* [Builder] Flags invalid visibility condition formulas in the Application Builder
+
+### Bug fixes
+* [Database] Shows the table checkboxes of an expanded database token before its workspace has been opened [#2288](https://github.com/baserow/baserow/issues/2288)
+* [Core] Fix the Helm chart failing to render when ingress.tls is set [#4404](https://github.com/baserow/baserow/issues/4404)
+* [Database] Keeps the add row button inside the view when a side panel makes it narrower [#6197](https://github.com/baserow/baserow/issues/6197)
+* [Core] Fix the Helm chart embeddings service failing to deploy: it used the Baserow version as image tag, which does not exist, its probes were rejected for having two handlers, and it ran in the wrong working directory. A component's image.tag now overrides global.baserow.image.tag [#6211](https://github.com/baserow/baserow/issues/6211)
+* [Database] Fixes an error when changing the type of a link to table field limited to a view [#6224](https://github.com/baserow/baserow/issues/6224)
+* [Builder] Fixes form actions failing when a required field is hidden from the visitor [#6252](https://github.com/baserow/baserow/issues/6252)
+* [Automation] The HTTP request node no longer stores the body of binary responses such as PDFs and flags them with `body_omitted`, and a response holding NUL characters no longer leaves an automation run hanging.
+* [Dashboard] Fix an error when deselecting the table of a dashboard data source that already has a view and field selected.
+* [Builder] Fix application builder actions failing to run when a multiple file input element on the page has no value, for example because it is hidden.
+* [Builder] Fix application builder code and XLS file reader actions failing on published applications when the feature is licensed per workspace.
+* [Database] Fix grid view crashes when a cell value is missing or still has the value of the field's previous type
+* [Core] Fix the Helm chart ingress backend service names, the postgresql existing-secret lookup, the serviceAccount annotations and the pod OTEL attributes
+* [Builder] Fix application builder actions using the current record failing with a required row ID error when the collection's data source is filtered by a formula that reads another data source.
+* [Builder] Fixes an error when creating a table element with incorrectly formatted fields
+* [Database] Fixes errors when creating an autonumber field from a view sorted or filtered by related fields
+* [Database] Fixes an error when removing every option used as the default of a multiple select field
+* [Database] Fixes lookup errors after a primary field formula switches between a list and a single value
+* [Database] Fixes snapshots, duplicates and imports failing on personal timeline views of removed users
+* [Database] Fixes the periodic refresh of now() and today() formulas getting stuck on large formulas and leaving their values outdated
+* [Builder] Kuma keeps the menu items it doesn't change, including their click actions
+* [Builder] Kuma changes table columns one by one, so the columns it doesn't name keep their settings, styles and click actions
+  * When Kuma's argument repair would drop or change a value, the call goes back to Kuma instead of running.
+* [Database] Kuma keeps existing select options, their colors and cell values when it changes a field's options
+* [Core] Kuma no longer saves text that mixes fixed words and dynamic values, like an email subject with the row name, as plain text
+* [Builder] Kuma now checks edit access and the target table before changing a form's field mappings
+* [Core] Fix the Helm chart rendering a key twice when backendConfigMap, sharedConfigMap or backendSecrets set a key the chart also generates, such as BASEROW_EMBEDDINGS_API_URL. The configured value now replaces the generated one
+* [Builder] Loads protected Builder pages faster after signing in with SSO
+* [Core] Namespace the Helm chart internal template helpers so they no longer override the identically named helpers in the Redis and MinIO subcharts
+* [Core] Prevents errors when closing formula editors in Application Builder
+* [Builder] Resolved an issue which caused the AI assistant to move builder elements incorrectly.
+* [Database] Fixes formulas that still referenced a deleted, trashed or former primary field
+* [Database] Return a 400 instead of a server error when an API update would make a primary field rich text.
+* [Builder] Sends the values of a form container's inputs again when it is submitted in the Application Builder
+* [Core] Set the namespace, labels and type on the Helm chart backend secret so it matches the other chart resources
+
+### Refactors
+* [Builder] Speeds up installing, duplicating and publishing application builder apps
+* [Core] Update Docker base images to Python 3.14.7 and Node.js 24.21.0
+* [Core] Updates pydantic-ai to version 2.55.0
+
+
 ## Released 2.4.0
 
 ### New features
