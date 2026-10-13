@@ -11,12 +11,14 @@
       :disabled="readOnly"
       :editable="!readOnly"
       :enable-rich-text-formatting="true"
-      :enable-images="true"
-      :mentionable-users="workspace ? workspace.users : null"
+      :enable-images="enableImages"
+      :mentionable-users="mentionableUsers"
       :menu-container="getMenuContainer"
       :scrollable-area-element="getScrollableAreaElement"
       :clipboard-markdown-resolver="resolveClipboardMarkdown"
-      :upload-file="readOnly || !allowImageUpload ? null : uploadUserFile"
+      :upload-file="
+        readOnly || !allowImageUpload || !enableImages ? null : uploadUserFile
+      "
       @focus="select()"
       @blur="unselect()"
       @upload-settled="saveSettledUpload()"
@@ -45,6 +47,14 @@ export default {
       required: false,
       default: true,
     },
+    enableMentions: {
+      type: Boolean,
+      default: true,
+    },
+    enableImages: {
+      type: Boolean,
+      default: true,
+    },
   },
   data() {
     return {
@@ -56,11 +66,15 @@ export default {
     workspace() {
       return this.$store.getters['workspace/get'](this.workspaceId)
     },
+    mentionableUsers() {
+      return this.enableMentions && this.workspace ? this.workspace.users : null
+    },
   },
   watch: {
     value: {
       handler(value) {
-        this.richCopy = value || ''
+        // A value of the field's previous type would be taken for JSON content.
+        this.richCopy = typeof value === 'string' ? value : ''
       },
       immediate: true,
     },

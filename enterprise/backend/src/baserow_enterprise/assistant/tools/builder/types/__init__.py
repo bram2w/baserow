@@ -26,7 +26,20 @@ from .element import (
     TableStyleOverride,
     TypographyStyleOverride,
 )
+from .menu_items import (
+    ListedMenuItem,
+    ListedTopLevelMenuItem,
+    MenuItemAdd,
+    MenuItemUpdate,
+    RemovedMenuItem,
+)
 from .page import PageCreate, PageItem, PagePathParam, PageQueryParam, PageUpdate
+from .table_columns import (
+    RemovedTableColumn,
+    TableColumnAdd,
+    TableColumnItem,
+    TableColumnUpdate,
+)
 from .workflow_action import (
     ActionCreate,
     ActionItem,
@@ -60,13 +73,22 @@ __all__ = [
     "ItemsPerRow",
     "LayoutElementCreate",
     "LinkStyleOverride",
+    "ListedMenuItem",
+    "ListedTopLevelMenuItem",
+    "MenuItemAdd",
     "MenuItemCreate",
+    "MenuItemUpdate",
     "PageCreate",
     "PageItem",
     "PagePathParam",
     "PageQueryParam",
     "PageUpdate",
     "ParameterMapping",
+    "RemovedMenuItem",
+    "RemovedTableColumn",
+    "TableColumnAdd",
+    "TableColumnItem",
+    "TableColumnUpdate",
     "TableFieldConfig",
     "TableStyleOverride",
     "TypographyStyleOverride",

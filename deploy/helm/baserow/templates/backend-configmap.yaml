@@ -8,23 +8,25 @@ metadata:
     helm.sh/hook-weight: "2"
   labels:
     {{- include "baserow.global.labels" . | nindent 4 }}
-data:
+{{- /* Values set in backendConfigMap take precedence over the generated ones. */}}
+{{- $data := dict }}
 {{- if .Values.postgresql.enabled }}
-  DATABASE_USER: {{ include "baserow.global.postgresql.username" . | quote }}
+{{- $_ := set $data "DATABASE_USER" (include "baserow.global.postgresql.username" .) }}
 {{- end }}
 {{- if .Values.minio.enabled }}
-  AWS_S3_VERIFY: "false"
-  AWS_ENDPOINT_URL: {{ printf "http://%s:%.f" (include "common.names.fullname" .Subcharts.minio) .Values.minio.service.ports.api }}
-  AWS_STORAGE_BUCKET_NAME: {{ (index .Values.minio.provisioning.buckets 0).name }}
-  AWS_S3_CUSTOM_DOMAIN: {{ .Values.global.baserow.objectsDomain }}/{{ (index .Values.minio.provisioning.buckets 0).name }}
-  AWS_S3_REGION_NAME: "us-east-1"
+{{- $_ := set $data "AWS_S3_VERIFY" "false" }}
+{{- $_ := set $data "AWS_ENDPOINT_URL" (printf "http://%s:%.f" (include "common.names.fullname" .Subcharts.minio) .Values.minio.service.ports.api) }}
+{{- $_ := set $data "AWS_STORAGE_BUCKET_NAME" (index .Values.minio.provisioning.buckets 0).name }}
+{{- $_ := set $data "AWS_S3_CUSTOM_DOMAIN" (printf "%s/%s" .Values.global.baserow.objectsDomain (index .Values.minio.provisioning.buckets 0).name) }}
+{{- $_ := set $data "AWS_S3_REGION_NAME" "us-east-1" }}
 {{- end }}
 {{- if (index .Values "baserow-embeddings").enabled }}
-  BASEROW_EMBEDDINGS_API_URL: http://{{ include "baserow.fullname" (index .Subcharts "baserow-embeddings") }}
+{{- $_ := set $data "BASEROW_EMBEDDINGS_API_URL" (printf "http://%s" (include "baserow.fullname" (index .Subcharts "baserow-embeddings"))) }}
 {{- end }}
 {{- if (index .Values "baserow-email-receiver").enabled }}
-  BASEROW_INBOUND_EMAIL_RECEIVER_URL: http://{{ include "baserow.fullname" (index .Subcharts "baserow-email-receiver") }}:{{ index .Values "baserow-email-receiver" "service" "port" }}
+{{- $_ := set $data "BASEROW_INBOUND_EMAIL_RECEIVER_URL" (printf "http://%s:%v" (include "baserow.fullname" (index .Subcharts "baserow-email-receiver")) (index .Values "baserow-email-receiver" "service" "port")) }}
 {{- end }}
-{{- range $key, $val := .Values.backendConfigMap }}
+data:
+{{- range $key, $val := mergeOverwrite $data (.Values.backendConfigMap | default dict) }}
   {{ $key }}: {{ $val | quote }}
 {{- end }}

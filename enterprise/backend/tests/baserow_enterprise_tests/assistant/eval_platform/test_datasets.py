@@ -9,6 +9,7 @@ import json
 
 import pytest
 
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow_enterprise.assistant.deps import AgentMode
 from baserow_enterprise.assistant.evals.datasets.core import (
     _check_creates_automation,
@@ -53,12 +54,54 @@ def test_create_automation_check_ignores_previous_runs(data_fixture):
         assert all(check.passed for check in case.checks(case, scenario, output))
 
 
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "change,failing_checks",
+    [
+        ("keep", set()),
+        ("recolor", {"existing options preserved"}),
+        ("recreate", {"existing options preserved", "row keeps its option"}),
+    ],
+)
+def test_updates_select_options_check_catches_lost_ids_colors_and_cells(
+    change, failing_checks
+):
+    (case,) = [c for c in all_cases() if c.id == "database/updates-select-options"]
+    output = EvalRunOutput(
+        answer="Added it",
+        messages=[],
+        tool_calls=["update_fields"],
+        tool_error_count=0,
+        tool_error_hint="",
+        sources=[],
+        request_count=1,
+        duration_s=0,
+    )
+    scenario = get_scenario(case.scenario)(make_fixtures())
+    existing = []
+    for option_id, value, color in scenario.refs["existing_options"]:
+        option = {"value": value, "color": "red" if change == "recolor" else color}
+        if change != "recreate":
+            option["id"] = option_id
+        existing.append(option)
+    FieldHandler().update_field(
+        scenario.user,
+        scenario.refs["status_field"],
+        select_options=[*existing, {"value": "In Progress", "color": "blue"}],
+    )
+
+    checks = case.checks(case, scenario, output)
+
+    assert {check.name for check in checks if not check.passed} == failing_checks
+
+
 _OUR_DATASETS = {
     "kuma-core",
     "kuma-database",
     "kuma-docs",
     "kuma-builder",
     "kuma-automation",
+    "kuma-prod-replay",
 }
 
 EXPECTED_CASE_IDS = {
@@ -157,8 +200,13 @@ EXPECTED_CASE_IDS = {
         "docs/webhooks-availability",
     ],
     "kuma-builder": [
+        "builder/adds-edit-button-column",
+        "builder/asks-once-when-goal-unclear",
         "builder/asks-when-implied-table-missing",
+        "builder/asks-when-named-table-missing",
         "builder/back-button-on-page-not-header",
+        "builder/builds-demo-page-without-asking",
+        "builder/builds-example-app-without-asking",
         "builder/changes-theme",
         "builder/creates-app-when-table-exists",
         "builder/creates-app-with-theme",
@@ -168,8 +216,19 @@ EXPECTED_CASE_IDS = {
         "builder/creates-landing-page",
         "builder/creates-new-page-not-modifies-existing",
         "builder/creates-table-with-edit-button",
+        "builder/edits-table-columns",
         "builder/filtered-data-source-via-view",
+        "builder/keeps-link-column-settings",
         "builder/lists-pages",
+        "builder/menu-adds-link-keeps-button",
+        "builder/menu-adds-pages-one-by-one",
+        "builder/menu-button-opens-page",
+        "builder/menu-removes-dropdown",
+        "builder/menu-removes-sub-link",
+        "builder/menu-renames-button",
+        "builder/menu-reorders-items",
+        "builder/moves-element-out-of-column",
+        "builder/moves-table-column",
         "builder/page-specific-nav-on-page",
         "builder/setup-user-source-existing-table",
         "builder/setup-user-source-new-table",
@@ -183,6 +242,15 @@ EXPECTED_CASE_IDS = {
         "automation/creates-workflow",
         "automation/lists-workflows",
     ],
+    "kuma-prod-replay": [
+        "prod-replay/fake-rows-into-typed-fields",
+        "prod-replay/form-for-table-with-formula-field",
+        "prod-replay/impossible-formula-request",
+        "prod-replay/iso-week-number-formula",
+        "prod-replay/page-inspection-existing-elements",
+        "prod-replay/project-tracker-onboarding",
+        "prod-replay/signed-amount-formula",
+    ],
 }
 
 # builder/creates-app-with-theme bypassed mode derivation in the legacy test
@@ -190,6 +258,8 @@ EXPECTED_CASE_IDS = {
 # AssistantDeps default of DATABASE; every other builder case derived
 # APPLICATION from its application-slot UIContext. All automation cases never
 # set deps.mode, so they ran (and still run) in DATABASE mode too.
+# Prod-replay derived mode from the UI context: builder page inspection ran in
+# APPLICATION, every other replay in DATABASE.
 EXPECTED_MODES = {
     **{
         case_id: AgentMode.APPLICATION
@@ -198,6 +268,10 @@ EXPECTED_MODES = {
     },
     "builder/creates-app-with-theme": AgentMode.DATABASE,
     **{case_id: AgentMode.DATABASE for case_id in EXPECTED_CASE_IDS["kuma-automation"]},
+    **{
+        case_id: AgentMode.DATABASE for case_id in EXPECTED_CASE_IDS["kuma-prod-replay"]
+    },
+    "prod-replay/page-inspection-existing-elements": AgentMode.APPLICATION,
 }
 
 
@@ -212,8 +286,9 @@ class TestDatasetCounts:
         assert len(grouped["kuma-core"]) == 3
         assert len(grouped["kuma-database"]) == 21
         assert len(grouped["kuma-docs"]) == 64
-        assert len(grouped["kuma-builder"]) == 16
+        assert len(grouped["kuma-builder"]) == 32
         assert len(grouped["kuma-automation"]) == 7
+        assert len(grouped["kuma-prod-replay"]) == 7
 
     def test_case_ids_match_inventory(self):
         grouped = cases_by_dataset()
@@ -246,12 +321,16 @@ class TestDocsCasesFlagKnowledgeBase:
             )
 
 
-class TestBuilderAutomationModes:
+class TestAgentModes:
     """Mode is scenario configuration, not derived — pin it per case id."""
 
     @pytest.mark.parametrize(
         "case",
-        [c for c in _our_cases() if c.dataset in ("kuma-builder", "kuma-automation")],
+        [
+            c
+            for c in _our_cases()
+            if c.dataset in ("kuma-builder", "kuma-automation", "kuma-prod-replay")
+        ],
         ids=lambda c: c.id,
     )
     def test_mode_matches_inventory(self, case):

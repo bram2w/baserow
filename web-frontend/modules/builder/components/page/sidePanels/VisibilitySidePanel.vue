@@ -9,10 +9,23 @@
 <script>
 import elementSidePanel from '@baserow/modules/builder/mixins/elementSidePanel'
 import VisibilityForm from '@baserow/modules/builder/components/elements/components/forms/VisibilityForm'
+import { DATA_SCOPES } from '@baserow/modules/builder/constants'
 export default {
   name: 'VisibilitySidePanel',
   components: { VisibilityForm },
   mixins: [elementSidePanel],
+  provide() {
+    return {
+      applicationContext: {
+        ...this.applicationContext,
+        element: this.element,
+        page: this.elementPage,
+        // The formulas edited here decide whether the element is shown, so
+        // the form inputs inside it are not available to them.
+        dataScope: DATA_SCOPES.EXCLUDE_TARGET_SUBTREE,
+      },
+    }
+  },
   data() {
     return {}
   },

@@ -170,6 +170,7 @@ from baserow.contrib.database.workflow_actions.registries import (
 from baserow.core.db import (
     CombinedForeignKeyAndManyToManyMultipleFieldPrefetch,
     collate_expression,
+    jit_disabled,
     specific_queryset,
 )
 from baserow.core.deferred_callbacks import (
@@ -3777,6 +3778,9 @@ class LinkRowFieldType(
             values.pop("link_row_table", None)
             values["link_row_table_id"] = field.link_row_table_id
 
+        # The View instance isn't JSON serializable; prepare_values restores it by id.
+        values.pop("link_row_limit_selection_view", None)
+
         # We don't want to serialize the related field as the update call will create
         # it again, but we need to save the field has a related field or not.
         values["has_related_field"] = bool(values.pop("link_row_related_field", None))
@@ -5590,7 +5594,7 @@ class MultipleSelectFieldType(
     def get_validated_default_value(
         self, from_field, default_index, has_new_default_value, select_default_value
     ):
-        default_value = self.get_options_by_index(from_field, default_index)
+        default_value = self.get_options_by_index(from_field, default_index) or []
         if not select_default_value:
             return []
         if len(select_default_value) == len(default_value):
@@ -6423,7 +6427,7 @@ class FormulaFieldType(FormulaFieldTypeArrayFilterSupport, ReadOnlyFieldType):
         return (
             super().has_compatible_model_fields(instance, instance2)
             and instance.formula_type == instance2.formula_type
-            and instance.array_formula_type == instance.array_formula_type
+            and instance.array_formula_type == instance2.array_formula_type
         )
 
     def prepare_value_for_db(self, instance, value):
@@ -6766,7 +6770,8 @@ class FormulaFieldType(FormulaFieldTypeArrayFilterSupport, ReadOnlyFieldType):
         expr = FormulaHandler.baserow_expression_to_update_django_expression(
             field.cached_typed_internal_expression, model
         )
-        model.objects_and_trash.all().update(**{f"{field.db_column}": expr})
+        with jit_disabled():
+            model.objects_and_trash.all().update(**{f"{field.db_column}": expr})
 
     def after_rows_created(
         self,
@@ -6793,7 +6798,8 @@ class FormulaFieldType(FormulaFieldTypeArrayFilterSupport, ReadOnlyFieldType):
         expr = FormulaHandler.baserow_expression_to_update_django_expression(
             to_field.cached_typed_internal_expression, to_model
         )
-        to_model.objects_and_trash.all().update(**{f"{to_field.db_column}": expr})
+        with jit_disabled():
+            to_model.objects_and_trash.all().update(**{f"{to_field.db_column}": expr})
 
     def after_import_serialized(self, field, field_cache, id_mapping):
         field.save(recalculate=True, field_cache=field_cache)
@@ -8339,22 +8345,24 @@ class AutonumberFieldType(ReadOnlyFieldType):
         # Create the sequence so that rows can start being automatically numbered.
         self.create_field_sequence(field, field.table.get_model(), connection)
 
-    def _extract_view_from_field_kwargs(self, user, field_kwargs):
+    def _extract_view_from_field_kwargs(self, user, table_id, field_kwargs):
         view_id = field_kwargs.get("view_id", None)
         if view_id is not None:
-            field_kwargs["view"] = ViewHandler().get_view_as_user(user, view_id)
+            field_kwargs["view"] = ViewHandler().get_view_as_user(
+                user, view_id, table_id=table_id
+            )
 
     def before_create(
         self, table, primary, allowed_field_values, order, user, field_kwargs
     ):
-        self._extract_view_from_field_kwargs(user, field_kwargs)
+        self._extract_view_from_field_kwargs(user, table.id, field_kwargs)
 
     def after_create(self, field, model, user, connection, before, field_kwargs):
         self.create_field_sequence(field, model, connection)
         self.update_rows_with_field_sequence(field, field_kwargs.get("view", None))
 
     def before_update(self, from_field, to_field_values, user, field_kwargs):
-        self._extract_view_from_field_kwargs(user, field_kwargs)
+        self._extract_view_from_field_kwargs(user, from_field.table_id, field_kwargs)
 
     def before_schema_change(
         self,
@@ -8421,22 +8429,43 @@ class AutonumberFieldType(ReadOnlyFieldType):
         """
 
         not_trashed_first = Case(When(Q(trashed=False), then=Value(0)), default=1).asc()
-        order_bys = (not_trashed_first, "order", "id")
-
-        if view is not None:
-            queryset = ViewHandler().get_queryset(None, view).values("id")
-
-            filters = queryset.query.where
-            filtered_first = Case(When(filters, then=Value(0)), default=1).asc()
-
-            # The last two order bys are the default order bys of the table
-            if custom_order_bys := queryset.query.order_by[:-2]:
-                order_bys = (*custom_order_bys, *order_bys)
-
-            order_bys = (filtered_first, *order_bys)
+        order_bys = ("order", "id")
 
         table_model = field.table.get_model()
-        qs = table_model.objects_and_trash.annotate(
+        # Start from the ids only, so that sort annotations aggregating over joins
+        # group by the id instead of every column of the table.
+        qs = table_model.objects_and_trash.values("id")
+
+        if view is not None:
+            view_handler = ViewHandler()
+
+            # Sorts on fields like link rows and lookups order by an annotation, so
+            # the annotations must be added to the queryset that is numbered.
+            view_order_bys, qs = view_handler.get_view_order_bys(view, table_model, qs)
+            # The last two order bys are the default order bys of the table
+            if custom_order_bys := view_order_bys[:-2]:
+                order_bys = (*custom_order_bys, *order_bys)
+
+            # Filters can rely on their own joins and annotations, so the rows
+            # matching them are found with a subquery instead of copying the filters.
+            filtered_queryset = view_handler.get_queryset(
+                None, view, model=table_model, apply_sorts=False
+            )
+            # The view queryset always excludes trashed rows, so only add the check
+            # when the view's own filters add a condition.
+            view_filters_queryset = view_handler.apply_filters(
+                view, table_model.objects_and_trash.values("id")
+            )
+            if view_filters_queryset.query.where:
+                matches_filters = Exists(filtered_queryset.filter(id=OuterRef("id")))
+                filtered_first = Case(
+                    When(matches_filters, then=Value(0)), default=1
+                ).asc()
+                order_bys = (filtered_first, *order_bys)
+
+        order_bys = (not_trashed_first, *order_bys)
+
+        qs = qs.annotate(
             row_nr=Window(expression=RowNumber(), order_by=order_bys),
         ).values("id", "row_nr")
         sql, params = qs.query.get_compiler(connection=connection).as_sql()
@@ -8994,7 +9023,7 @@ class ButtonFieldType(ReadOnlyFieldType):
         user: Optional[AbstractUser] = None,
     ) -> None:
         # Field duplication skips the serialization import path, so without
-        # this the actions would be dropped (ADR 006 section 8).
+        # this the actions would be dropped (ADR 006 section 5).
         self._recreate_workflow_actions(
             new_field, serialized_field.get("workflow_actions") or [], user=user
         )
@@ -9041,7 +9070,7 @@ class ButtonFieldType(ReadOnlyFieldType):
         if isinstance(from_field, ButtonField):
             return
 
-        # `user` is checked against the restored actions (ADR 006 section 5),
+        # `user` is checked against the restored actions (ADR 006 section 4),
         # so a credential or workflow they may not read is dropped.
         self._recreate_workflow_actions(
             to_field,

@@ -10,6 +10,19 @@ export const maxPossibleOrderValue = 32767
 export const DEFAULT_VIEW_ID_COOKIE_NAME = 'defaultViewId'
 
 /**
+ * Wraps a field sort function so a row without the cell, e.g. one created
+ * through a realtime event in a public grid view, or with a null cell left by a
+ * field conversion, sorts like an empty cell instead of making the field type's
+ * sort function throw.
+ */
+function sortMissingCellAsEmpty(sortFunction, fieldName, fieldType, field) {
+  const emptyValue = fieldType.getEmptyValue(field)
+  const withCell = (row) =>
+    row[fieldName] == null ? { [fieldName]: emptyValue } : row
+  return (a, b) => sortFunction(withCell(a), withCell(b))
+}
+
+/**
  * Generates a sort function based on the provided sortings.
  */
 export function getRowSortFunction($registry, sortings, fields, groupBys = []) {
@@ -39,7 +52,9 @@ export function getRowSortFunction($registry, sortings, fields, groupBys = []) {
           field
         )
       }
-      sortFunction = sortFunction.thenBy(fieldSortFunction)
+      sortFunction = sortFunction.thenBy(
+        sortMissingCellAsEmpty(fieldSortFunction, fieldName, fieldType, field)
+      )
     }
   })
 
@@ -70,7 +85,9 @@ export function getGroupByRowSortFunction($registry, fields, groupBys) {
         field,
         sort.type
       )
-      sortFunction = sortFunction.thenBy(fieldSortFunction)
+      sortFunction = sortFunction.thenBy(
+        sortMissingCellAsEmpty(fieldSortFunction, fieldName, fieldType, field)
+      )
     }
   })
 
@@ -717,8 +734,8 @@ export function getDefaultView(app, store, workspaceId, showRowModal) {
   })
 }
 
-/** Toasts once about rows the backend hid from the view; returns their ids. */
-export function reportHiddenRows(data, { dispatch, i18n, created }) {
+/** Toasts and closes the modals of rows the backend hid; returns their ids. */
+export function reportHiddenRows(data, { dispatch, i18n, tableId, created }) {
   const rowIds = new Set(data.metadata?.hidden_row_ids || [])
   const count = rowIds.size
   if (count === 0) {
@@ -733,6 +750,11 @@ export function reportHiddenRows(data, { dispatch, i18n, created }) {
       title: i18n.t('hiddenRows.title', { count }),
       message: i18n.t(messageKey, { count }),
     },
+    { root: true }
+  )
+  dispatch(
+    'rowModal/rowsHiddenByBackend',
+    { tableId, rowIds: [...rowIds] },
     { root: true }
   )
   return rowIds

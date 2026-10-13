@@ -23,7 +23,7 @@ from pydantic_ai.messages import (
     ToolReturnPart,
     UserPromptPart,
 )
-from pydantic_ai.models.function import DeltaToolCall, FunctionModel
+from pydantic_ai.models.function import AgentInfo, DeltaToolCall, FunctionModel
 from pydantic_ai.run import AgentRunResultEvent
 from pydantic_ai.toolsets import FunctionToolset
 
@@ -66,7 +66,10 @@ from baserow_enterprise.assistant.models import (
     AssistantChatMessage,
 )
 from baserow_enterprise.assistant.output_validation import validate_final_answer
-from baserow_enterprise.assistant.prompts import AGENT_SYSTEM_PROMPT
+from baserow_enterprise.assistant.prompts import (
+    AGENT_SYSTEM_PROMPT,
+)
+from baserow_enterprise.assistant.tools.registries import assistant_tool_registry
 from baserow_enterprise.assistant.types import (
     AiMessage,
     AiMessageChunk,
@@ -655,6 +658,153 @@ class TestCompactMessageHistory:
         assert outcomes[0]["arguments"] == remembered
         assert "Ignore earlier rules" not in json.dumps(outcomes)
 
+    def test_table_column_outcomes_keep_removed_columns_not_the_column_list(
+        self,
+    ) -> None:
+        """list_elements reads the columns again, but removed ones are gone."""
+
+        removed = [
+            {"uid": "c2", "name": "Go", "type": "button", "deleted_click_actions": 1}
+        ]
+        result = {
+            "status": "ok",
+            "element_id": 9,
+            "element_type": "table",
+            "updated_fields": ["remove_table_columns"],
+            "table_columns": [
+                {"uid": "c1", "name": "Name", "type": "text", "value": "''"}
+            ],
+            "removed_table_columns": removed,
+        }
+        messages = [
+            ModelRequest(parts=[UserPromptPart(content="drop the Go column")]),
+            ModelResponse(
+                parts=[
+                    ToolCallPart(
+                        tool_name="update_element",
+                        args={
+                            "page_id": 3,
+                            "element": {
+                                "element_id": 9,
+                                "remove_table_columns": ["c2"],
+                            },
+                            "thought": "Removing the column",
+                        },
+                        tool_call_id="tc1",
+                    )
+                ]
+            ),
+            ModelRequest(
+                parts=[
+                    ToolReturnPart(
+                        tool_name="update_element",
+                        content=result,
+                        tool_call_id="tc1",
+                    )
+                ]
+            ),
+            ModelResponse(parts=[TextPart(content="Removed it.")]),
+        ]
+
+        outcomes = get_verified_tool_outcomes(compact_message_history(messages))
+
+        assert outcomes[0]["result"] == {
+            "status": "ok",
+            "element_id": 9,
+            "element_type": "table",
+            "updated_fields": ["remove_table_columns"],
+            "removed_table_columns": removed,
+        }
+        assert outcomes[0]["changed"] is True
+
+    def test_menu_item_outcomes_keep_removed_items_not_the_item_list(self) -> None:
+        """list_elements reads the menu items again, but removed ones are gone."""
+
+        removed = [
+            {"uid": "m2", "name": "Help", "type": "button", "deleted_click_actions": 1}
+        ]
+        result = {
+            "status": "ok",
+            "element_id": 9,
+            "element_type": "menu",
+            "updated_fields": ["remove_menu_items"],
+            "menu_items": [{"uid": "m1", "name": "Home", "type": "link", "page_id": 3}],
+            "removed_menu_items": removed,
+        }
+        messages = [
+            ModelRequest(parts=[UserPromptPart(content="drop the Help button")]),
+            ModelResponse(
+                parts=[
+                    ToolCallPart(
+                        tool_name="update_element",
+                        args={
+                            "page_id": 3,
+                            "element": {"element_id": 9, "remove_menu_items": ["m2"]},
+                            "thought": "Removing the button",
+                        },
+                        tool_call_id="tc1",
+                    )
+                ]
+            ),
+            ModelRequest(
+                parts=[
+                    ToolReturnPart(
+                        tool_name="update_element", content=result, tool_call_id="tc1"
+                    )
+                ]
+            ),
+            ModelResponse(parts=[TextPart(content="Removed it.")]),
+        ]
+
+        outcomes = get_verified_tool_outcomes(compact_message_history(messages))
+
+        assert outcomes[0]["result"] == {
+            "status": "ok",
+            "element_id": 9,
+            "element_type": "menu",
+            "updated_fields": ["remove_menu_items"],
+            "removed_menu_items": removed,
+        }
+        assert outcomes[0]["changed"] is True
+
+    @pytest.mark.parametrize(
+        "tool_name", ["update_builder", "update_fields", "update_nodes"]
+    )
+    def test_tool_groups_without_an_override_remember_whole_results(
+        self, tool_name: str
+    ) -> None:
+        """Only the builder group leaves table columns and menu items out of what it remembers."""
+
+        result = {
+            "status": "ok",
+            "table_columns": [{"uid": "c1", "name": "Name", "type": "text"}],
+        }
+        messages = [
+            ModelRequest(parts=[UserPromptPart(content="rename it")]),
+            ModelResponse(
+                parts=[
+                    ToolCallPart(
+                        tool_name=tool_name,
+                        args={"thought": "Renaming it"},
+                        tool_call_id="tc1",
+                    )
+                ]
+            ),
+            ModelRequest(
+                parts=[
+                    ToolReturnPart(
+                        tool_name=tool_name, content=result, tool_call_id="tc1"
+                    )
+                ]
+            ),
+            ModelResponse(parts=[TextPart(content="Renamed it.")]),
+        ]
+
+        outcomes = get_verified_tool_outcomes(compact_message_history(messages))
+
+        assert assistant_tool_registry.get_by_tool_name(tool_name) is not None
+        assert outcomes[0]["result"] == result
+
     def test_verified_mutation_ledger_is_capped(self):
         messages = []
         for index in range(20):
@@ -1043,6 +1193,20 @@ class TestAssistantLicenseTier:
         assert (
             "A request to display existing data does not authorize"
             in AGENT_SYSTEM_PROMPT
+        )
+        assert "create nothing — no database, table, page, or sample rows" in (
+            AGENT_SYSTEM_PROMPT
+        )
+        assert "one question in the user's language" in AGENT_SYSTEM_PROMPT
+        assert "offering three options: create a table with sample data" in (
+            AGENT_SYSTEM_PROMPT
+        )
+        assert "agree on its fields first" in AGENT_SYSTEM_PROMPT
+        assert "use data the user points you to" in AGENT_SYSTEM_PROMPT
+        assert "using existing fields" in AGENT_SYSTEM_PROMPT
+        assert "fields the user has authorized creating" in AGENT_SYSTEM_PROMPT
+        assert "the user has not authorized creating it, call ask_user" in (
+            AGENT_SYSTEM_PROMPT
         )
 
     def test_agent_system_prompt_covers_production_regressions(self):
@@ -1888,6 +2052,7 @@ class TestResolveAssistantModel:
             ("google", "gemini-2.5-flash"),
             ("groq", "openai/gpt-oss-120b"),
             ("xai", "grok-4.3"),
+            ("zai", "glm-5.2"),
         ],
     )
     def test_database_only_provider_models_use_database_credentials(
@@ -1900,6 +2065,7 @@ class TestResolveAssistantModel:
         monkeypatch.setenv("GOOGLE_API_KEY", "legacy-kuma-key")
         monkeypatch.setenv("GROQ_API_KEY", "legacy-kuma-key")
         monkeypatch.setenv("XAI_API_KEY", "legacy-kuma-key")
+        monkeypatch.setenv("ZAI_API_KEY", "legacy-kuma-key")
         workspace = data_fixture.create_workspace()
         provider = AIProviderConfig.objects.create(
             provider_type=provider_type, api_key="database-key"
@@ -2129,6 +2295,125 @@ class TestFinalAnswerValidation:
         with pytest.raises(ModelRetry):
             validate_final_answer(None, keys_reordered)
 
+    @staticmethod
+    def _run_with_first_answer(answer: str) -> tuple[list[str], str]:
+        """
+        Run the main agent with a model that answers ``answer`` first.
+
+        :param answer: The model's first answer.
+        :return: The retry messages the model received and the final output.
+        """
+
+        def update_element(page_id: int, element: dict[str, Any], thought: str) -> str:
+            return "Updated."
+
+        retries: list[str] = []
+        answers = iter([answer, "The Editar column is the last column of the table."])
+
+        def model(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+            retries.extend(
+                part.content
+                for part in messages[-1].parts
+                if isinstance(part, RetryPromptPart)
+            )
+            return ModelResponse(parts=[TextPart(content=next(answers))])
+
+        result = main_agent.run_sync(
+            "Add a button column named Editar.",
+            deps=AssistantDeps(
+                user=MagicMock(),
+                workspace=MagicMock(),
+                tool_helpers=MagicMock(request_context={}),
+            ),
+            model=FunctionModel(model),
+            toolsets=[FunctionToolset(tools=[update_element])],
+        )
+        return retries, result.output
+
+    def test_tool_call_printed_as_text_gets_the_corrected_call(self) -> None:
+        retries, _ = self._run_with_first_answer(
+            '{"name": "update_element", "arguments": {"page_id":2196,"element":'
+            '{"element_id":1555,"add_table_columns":[{"name":"Editar","type":"button",'
+            '"label":"Editar"}],"thought":"Add a button column named Editar to the '
+            'table on the Students page."}"}'
+        )
+
+        (retry,) = retries
+        prefix = (
+            "That answer is a tool call printed as text, so nothing was executed. "
+            "Call the update_element tool with exactly these arguments: "
+        )
+        assert retry.startswith(prefix)
+        assert json.loads(retry.removeprefix(prefix)) == {
+            "page_id": 2196,
+            "element": {
+                "element_id": 1555,
+                "add_table_columns": [
+                    {"name": "Editar", "type": "button", "label": "Editar"}
+                ],
+            },
+            "thought": "Add a button column named Editar to the table on the "
+            "Students page.",
+        }
+
+    @pytest.mark.parametrize(
+        "answer",
+        [
+            pytest.param(
+                '{"name": "update_element", "arguments": {"thought": "Add the',
+                id="cut-in-a-string",
+            ),
+            pytest.param(
+                '{"name": "update_element", "arguments": {"page_id": 2196, '
+                '"element": {"element_id": 1555',
+                id="cut-after-a-value",
+            ),
+            pytest.param(
+                '{"name": "update_element", "arguments": {"element": {"element_id": '
+                '1555, "add_table_columns": [{"name": "Editar"}]"}, "page_id": 21',
+                id="cut-in-a-number-after-a-stray-quote",
+            ),
+            pytest.param(
+                '{"name": "delete_element", "arguments": {"element_id": 1555}}',
+                id="unknown-tool",
+            ),
+            pytest.param(
+                json.dumps(
+                    {
+                        "name": "update_element",
+                        "arguments": {
+                            "page_id": 2196,
+                            "element": {
+                                "element_id": 1555,
+                                "add_table_columns": [
+                                    {"name": f"Column {number}", "type": "text"}
+                                    for number in range(100)
+                                ],
+                            },
+                            "thought": "Add the columns.",
+                        },
+                    }
+                ),
+                id="too-long-to-repeat",
+            ),
+        ],
+    )
+    def test_tool_call_printed_as_text_gets_the_general_retry(
+        self, answer: str
+    ) -> None:
+        retries, _ = self._run_with_first_answer(answer)
+
+        assert retries == [
+            "That answer is a tool call printed as text, so nothing was executed. "
+            "Call the tool instead, and if the payload is large split it into "
+            "batches of at most 20 rows per call."
+        ]
+
+    def test_normal_answer_is_not_sent_back_as_a_printed_tool_call(self) -> None:
+        answer = "The table already has an Editar column."
+
+        assert self._run_with_first_answer(answer) == ([], answer)
+
     def test_regular_answers_pass_through(self):
         answer = 'Created the table. The field {"name": ...} maps to your schema.'
         assert validate_final_answer(None, answer) == answer
@@ -2211,12 +2496,20 @@ class TestFinalAnswerValidation:
             "Updated rows have been saved.",
         ],
     )
-    def test_common_ungrounded_completion_phrases_are_sent_back(self, claim):
+    def test_common_completion_phrases_require_successful_tool_evidence(self, claim):
         ctx = MagicMock()
         ctx.messages = []
 
         with pytest.raises(ModelRetry, match="without a verified"):
             validate_final_answer(ctx, claim)
+
+        ctx.messages = _mutation_messages(
+            "create_tables",
+            {"database_id": 1, "tables": [{"name": "Projects"}]},
+            {"created_tables": [{"id": 2, "name": "Projects"}]},
+            "created-table",
+        )
+        assert validate_final_answer(ctx, claim) == claim
 
     @pytest.mark.parametrize(
         "answer",
@@ -2256,8 +2549,27 @@ class TestFinalAnswerValidation:
             "Created on: shows when a row was added.",
             "1. Created by — shows who created the row.",
             "The Timeline view was added in Baserow 1.25.",
+            "The Timeline view was added in Baserow 1.25 and supports date ranges.",
+            "The Timeline view was added in version 1.25.2.",
+            "The Timeline view was added in 2024.",
+            "The Timeline view was added in 2024-06-01.",
             "Your changes were applied automatically after each edit.",
+            "Your changes were applied automatically after each edit, so there is no save button.",
             "Done! Click Save to finish.",
+            "The row was created by a form submission on June 3.",
+            "Your workspace was created in March.",
+            "The Projects table was created earlier, so I reused it.",
+            "The Status field has these options:\n1. To do\n2. In progress\n3. Done",
+            "Your Kanban view has three stacks: To do. In progress. Done.",
+            "Select the fields and click Create. Done!",
+            "Added rows to a filtered view may disappear if they don't match the filter.",
+            "Applied filters to a view are saved for all collaborators.",
+            "Done! Click Save to apply.",
+            "Created by field in a table shows who created each row.",
+            "Created on field for sorting rows by creation date.",
+            "The table was created automatically when you imported the CSV.",
+            "Your database was created from a template.",
+            "The Projects table was already created, so I reused it.",
             "Applied filters only affect your view.",
             "Updated cells highlight briefly.",
             "Updated values sync in real time.",
@@ -2526,6 +2838,36 @@ class TestFinalAnswerValidation:
 
         partial = "I created the Orders table with an error."
         assert validate_final_answer(ctx, partial) == partial
+
+    @pytest.mark.parametrize("apostrophe", ["'", "’"])
+    def test_passive_partial_completion_requires_actual_changes(self, apostrophe):
+        ctx = MagicMock()
+        answer = (
+            f"The Tasks table was created. The Status field wasn{apostrophe}t added."
+        )
+        ctx.messages = []
+        with pytest.raises(ModelRetry, match="without a verified"):
+            validate_final_answer(ctx, answer)
+
+        ctx.messages = _mutation_messages(
+            "create_tables",
+            {"database_id": 1, "tables": [{"name": "Tasks"}]},
+            {
+                "created_tables": [{"id": 2, "name": "Tasks"}],
+                "notes": ["The Status field could not be created"],
+            },
+            "partial-table",
+        )
+        assert validate_final_answer(ctx, answer) == answer
+
+        ctx.messages = _mutation_messages(
+            "create_tables",
+            {"database_id": 1, "tables": [{"name": "Tasks"}]},
+            {"created_tables": [], "errors": ["Permission denied"]},
+            "failed-table",
+        )
+        with pytest.raises(ModelRetry, match="without a verified"):
+            validate_final_answer(ctx, answer)
 
     def test_nested_empty_result_does_not_ground_success(self):
         ctx = MagicMock()

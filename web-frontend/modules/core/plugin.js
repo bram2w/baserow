@@ -32,6 +32,7 @@ import {
   GoogleModelType,
   GroqModelType,
   XaiModelType,
+  ZaiModelType,
 } from '@baserow/modules/core/generativeAIModelTypes'
 import {
   UploadFileUserFileUploadType,
@@ -81,6 +82,10 @@ import {
   AgentSubjectType,
   UserSubjectType,
 } from '@baserow/modules/core/subjectTypes'
+import {
+  EmailInvitationRouteType,
+  LinkInvitationRouteType,
+} from '@baserow/modules/core/invitationRouteTypes'
 
 import {
   RuntimeAdd,
@@ -186,11 +191,15 @@ export default defineNuxtPlugin({
     registry.registerNamespace('errorPage')
     registry.registerNamespace('twoFactorAuth')
     registry.registerNamespace('captchaProvider')
+    registry.registerNamespace('invitationRoute')
 
     const context = { app: nuxtApp }
 
     registry.register('subject', new UserSubjectType(context))
     registry.register('subject', new AgentSubjectType(context))
+
+    registry.register('invitationRoute', new EmailInvitationRouteType(context))
+    registry.register('invitationRoute', new LinkInvitationRouteType(context))
 
     registry.register('agentSettings', new GeneralAgentSettingsType(context))
     registry.register('agentSettings', new McpServerAgentSettingsType(context))
@@ -214,6 +223,7 @@ export default defineNuxtPlugin({
     registry.register('generativeAIModel', new GoogleModelType(context))
     registry.register('generativeAIModel', new GroqModelType(context))
     registry.register('generativeAIModel', new XaiModelType(context))
+    registry.register('generativeAIModel', new ZaiModelType(context))
     registry.register('generativeAIModel', new MistralModelType(context))
     registry.register('generativeAIModel', new OllamaModelType(context))
     registry.register('generativeAIModel', new OpenRouterModelType(context))
