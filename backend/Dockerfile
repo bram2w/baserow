@@ -62,8 +62,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 # =============================================================================
 FROM golang:1.27-trixie AS mox-builder
 ARG MOX_VERSION=v0.0.17
-# mox v0.0.17 pins x/crypto v0.55.0 (CVE-2026-56855, CVE-2026-78662); drop once a mox release bumps it.
-ARG MOX_X_CRYPTO_VERSION=v0.56.0
+# mox v0.0.17 pins vulnerable x/crypto v0.55.0 and x/net v0.58.0; drop once a mox release bumps them.
+ARG MOX_X_CRYPTO_VERSION=v0.57.0
+ARG MOX_X_NET_VERSION=v0.60.0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -72,7 +73,7 @@ WORKDIR /src/mox
 RUN go mod download "github.com/mjl-/mox@${MOX_VERSION}" && \
     cp -r "$(go env GOMODCACHE)/github.com/mjl-/mox@${MOX_VERSION}/." . && \
     chmod -R u+w . && \
-    go get "golang.org/x/crypto@${MOX_X_CRYPTO_VERSION}" && \
+    go get "golang.org/x/crypto@${MOX_X_CRYPTO_VERSION}" "golang.org/x/net@${MOX_X_NET_VERSION}" && \
     CGO_ENABLED=0 go build -trimpath -o /usr/local/bin/mox . && \
     chmod 0755 /usr/local/bin/mox
 
@@ -348,7 +349,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
     build-essential \
-    python3-dev \
     ca-certificates \
     postgresql-client-15 \
     gettext \

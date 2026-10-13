@@ -2,8 +2,6 @@ import io
 import os
 import subprocess
 import sys
-from pathlib import Path
-from shutil import which
 
 from django.test import override_settings
 
@@ -26,12 +24,8 @@ wasmtime_executable = os.environ.get(
     "BASEROW_ENTERPRISE_CODE_RUNNER_WASMTIME_EXECUTABLE"
 )
 quickjs_wasm_path = os.environ.get("BASEROW_ENTERPRISE_CODE_RUNNER_QUICKJS_WASM_PATH")
-runtime_variables_are_configured = (
-    wasmtime_executable
-    and (Path(wasmtime_executable).is_file() or which(wasmtime_executable))
-    and quickjs_wasm_path
-    and Path(quickjs_wasm_path).is_file()
-)
+# Paths aren't checked, so a configured but missing runtime fails instead of skipping.
+runtime_variables_are_configured = bool(wasmtime_executable and quickjs_wasm_path)
 
 
 @override_settings(
