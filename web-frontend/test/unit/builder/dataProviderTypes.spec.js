@@ -112,4 +112,87 @@ describe('Builder data provider types', () => {
       },
     })
   })
+
+  const formContainerPage = () => {
+    const formContainer = {
+      id: 2,
+      type: 'form_container',
+      page_id: 1,
+      _: { elementNamespacePath: [] },
+    }
+    const nameInput = {
+      id: 3,
+      type: 'input_text',
+      page_id: 1,
+      _: { elementNamespacePath: [] },
+      label: { formula: "'Name'" },
+      default_value: { formula: '' },
+      placeholder: { formula: '' },
+    }
+    const emailInput = {
+      id: 4,
+      type: 'input_text',
+      page_id: 1,
+      _: { elementNamespacePath: [] },
+      label: { formula: "'Email'" },
+      default_value: { formula: '' },
+      placeholder: { formula: '' },
+    }
+    const page = {
+      id: 1,
+      elementMap: { 2: formContainer, 3: nameInput, 4: emailInput },
+      orderedElements: [formContainer, nameInput, emailInput],
+      graph: {
+        0: 2,
+        2: { children: { '': [3] } },
+        3: { next: { '': [4] } },
+        4: {},
+      },
+      formData: {
+        3: { value: 'Ada', isValid: true, touched: true },
+        4: { value: 'ada@example.com', isValid: true, touched: true },
+      },
+    }
+    return {
+      builder: { id: 1 },
+      workspace: {},
+      page,
+      element: formContainer,
+    }
+  }
+
+  test('form data provider dispatches the inputs of a submitted form', () => {
+    const dataProvider = testApp
+      .getRegistry()
+      .get('builderDataProvider', 'form_data')
+    const applicationContext = formContainerPage()
+
+    expect(dataProvider.getDataContent(applicationContext)).toEqual({
+      3: 'Ada',
+      4: 'ada@example.com',
+    })
+    expect(dataProvider.getActionDispatchContext(applicationContext)).toEqual([
+      { 3: 'Ada', 4: 'ada@example.com' },
+      {},
+    ])
+  })
+
+  test('form data provider hides inputs from visibility conditions', () => {
+    const dataProvider = testApp
+      .getRegistry()
+      .get('builderDataProvider', 'form_data')
+    const applicationContext = formContainerPage()
+    const visibilityContext = {
+      ...applicationContext,
+      visibilityCondition: true,
+    }
+
+    expect(dataProvider.isValid(['3'])).toBe(true)
+    expect(dataProvider.isValid(['3'], applicationContext)).toBe(true)
+    expect(dataProvider.isValid(['3'], visibilityContext)).toBe(false)
+    expect(
+      Object.keys(dataProvider.getDataSchema(applicationContext).properties)
+    ).toEqual(['3', '4'])
+    expect(dataProvider.getDataSchema(visibilityContext).properties).toEqual({})
+  })
 })

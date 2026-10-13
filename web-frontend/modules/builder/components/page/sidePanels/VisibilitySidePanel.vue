@@ -19,6 +19,9 @@ export default {
         ...this.applicationContext,
         element: this.element,
         page: this.elementPage,
+        // The formulas edited here decide whether the element is shown, so
+        // the form inputs inside it are not available to them.
+        visibilityCondition: true,
       },
     }
   },
