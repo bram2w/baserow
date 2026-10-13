@@ -1,0 +1,9 @@
+{
+    "type": "feature",
+    "message": "Add the Helm chart values migration.resources, global.baserow.applicationBuilderDomains and ingress.catchAll.enabled. The host-less catch-all ingress rule used for Application Builder custom domains can now be disabled on shared ingress controllers, and ingress hosts may be wildcards",
+    "issue_origin": "github",
+    "issue_number": null,
+    "domain": "core",
+    "bullet_points": [],
+    "created_at": "2026-08-07"
+}

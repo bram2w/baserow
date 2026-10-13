@@ -279,12 +279,14 @@ caddy:
 | `global.baserow.backendConfigMap`                                  | Configure a name for the backend configmap.                                             | `backend-config`        |
 | `global.baserow.backendSecret`                                     | Configure a name for the backend secret.                                                | `backend-secret`        |
 | `global.baserow.frontendConfigMap`                                 | Configure a name for the frontend configmap.                                            | `frontend-config`       |
+| `global.baserow.fullnameOverride`                                  | Name prefix for the Baserow resources, e.g. "baserow" names the components "baserow-backend-wsgi", "baserow-frontend", etc. Defaults to "<release name>-baserow". | `""`                    |
 | `global.baserow.sharedConfigMap`                                   | Configure a name for the shared configmap.                                              | `shared-config`         |
 | `global.baserow.envFrom`                                           | Configure secrets or configMaps to be used as environment variables for all components. | `[]`                    |
 | `global.baserow.domain`                                            | Configure the domain for the frontend application.                                      | `cluster.local`         |
-| `global.baserow.backendDomain`                                     | Configure the domain for the backend application.                                       | `api.cluster.local`     |
+| `global.baserow.backendDomain`                                     | Configure the domain for the backend application. Set it to the same value as global.baserow.domain to serve the API under that domain's /api/ path instead. | `api.cluster.local`     |
 | `global.baserow.objectsDomain`                                     | Configure the domain for the external facing minio api.                                 | `objects.cluster.local` |
 | `global.baserow.assistantLLMModel`                                 | Deprecated. Select the Kuma model under Admin tools > AI providers > AI features. Retained as an environment fallback; explicit disables prevent fallback. | `""`                    |
+| `global.baserow.applicationBuilderDomains`                         | Extra domains routed to the frontend, for Application Builder apps served on their own domain. Wildcards such as "*.apps.mydomain.com" are supported. Only needed when ingress.catchAll.enabled is false. | `[]`                    |
 | `global.baserow.containerSecurityContext.enabled`                  | Enabled containers' Security Context                                                    | `false`                 |
 | `global.baserow.containerSecurityContext.seLinuxOptions`           | Set SELinux options in container                                                        | `{}`                    |
 | `global.baserow.containerSecurityContext.runAsUser`                | Set containers' Security Context runAsUser                                              | `""`                    |
@@ -365,6 +367,7 @@ caddy:
 | `migration.containerSecurityContext.capabilities.drop`        | List of capabilities to be dropped                        | `[]`      |
 | `migration.containerSecurityContext.capabilities.add`         | List of capabilities to be added                          | `[]`      |
 | `migration.containerSecurityContext.seccompProfile.type`      | Set container's Security Context seccomp profile          | `""`      |
+| `migration.resources`                                         | Set container requests and limits for different resources like CPU or memory (essential for production workloads) | `{}` |
 
 ### Baserow Inbound Email Receiver Configuration
 
@@ -516,6 +519,8 @@ caddy:
 | --------------------------------------------------------------- | --------------------------------------------------------------- | -------------------------- |
 | `baserow-embeddings.enabled`                                    | Set to true to enable the Baserow Embeddings service.           | `false`                    |
 | `baserow-embeddings.image.repository`                           | Docker image repository for the Embeddings service.             | `embeddings`               |
+| `baserow-embeddings.image.tag`                                  | Docker image tag for the Embeddings service, which is versioned separately from Baserow. | `1.0.0`                    |
+| `baserow-embeddings.workingDir`                                 | Working directory for the container, empty to use the image's own.                       | `""`                       |
 | `baserow-embeddings.resources`                                  | Resource requests and limits for the Embeddings service.        |                            |
 | `baserow-embeddings.autoscaling.enabled`                        | Enable autoscaling for the Embeddings service.                  | `false`                    |
 | `baserow-embeddings.autoscaling.minReplicas`                    | Minimum number of replicas for autoscaling.                     | `1`                        |
@@ -534,11 +539,13 @@ caddy:
 
 ### Ingress Configuration
 
-| Name                                              | Description                                | Value                                     |
-| ------------------------------------------------- | ------------------------------------------ | ----------------------------------------- |
-| `ingress.enabled`                                 | Enable the Ingress resource                | `true`                                    |
-| `ingress.annotations.kubernetes.io/ingress.class` | Ingress class annotation                   | `{"kubernetes.io/ingress.class":"caddy"}` |
-| `ingress.tls`                                     | TLS configuration for the Ingress resource | `[]`                                      |
+| Name                                              | Description                                                                    | Value                                     |
+| ------------------------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------- |
+| `ingress.enabled`                                 | Enable the Ingress resource                                                    | `true`                                    |
+| `ingress.className`                               | IngressClass to handle the Ingress resource, omitted from the manifest when empty | `""`                                   |
+| `ingress.annotations.kubernetes.io/ingress.class` | Ingress class annotation                                                       | `{"kubernetes.io/ingress.class":"caddy"}` |
+| `ingress.catchAll.enabled`                        | Route requests for any host not matched by another rule to the frontend. Required for Application Builder custom domains with Caddy on-demand TLS; disable on a shared ingress controller and list the domains in global.baserow.applicationBuilderDomains instead. | `true`                                    |
+| `ingress.tls`                                     | TLS configuration for the Ingress resource                                     | `[]`                                      |
 
 ### Redis Configuration
 

@@ -9,51 +9,78 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  ingressClassName: {{ .Values.ingress.className }}
+  {{- with .Values.ingress.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  {{- $asgi := include "baserow.fullname" (index .Subcharts "baserow-backend-asgi") }}
+  {{- $wsgi := include "baserow.fullname" (index .Subcharts "baserow-backend-wsgi") }}
+  {{- $frontend := include "baserow.fullname" (index .Subcharts "baserow-frontend") }}
+  {{- $backendDomain := include "baserow.global.backendDomain" . }}
+  {{- $sharedDomain := eq $backendDomain .Values.global.baserow.domain }}
   rules:
-    - host: {{ .Values.global.baserow.backendDomain | default (printf "api.%s" .Values.global.baserow.domain) }}
+    {{- if not $sharedDomain }}
+    - host: {{ $backendDomain | quote }}
       http:
         paths:
-          - path: /ws/
+          {{- range list "/ws/" "/mcp/" "/assistant/" }}
+          - path: {{ . }}
             pathType: Prefix
             backend:
               service:
-                name: {{ include "baserow.global.fullname" . }}-baserow-backend-asgi
+                name: {{ $asgi }}
                 port:
                   number: 80
-          - path: /mcp/
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ include "baserow.global.fullname" . }}-baserow-backend-asgi
-                port:
-                  number: 80
-          - path: /assistant/
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ include "baserow.global.fullname" . }}-baserow-backend-asgi
-                port:
-                  number: 80
+          {{- end }}
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: {{ include "baserow.global.fullname" . }}-baserow-backend-wsgi
+                name: {{ $wsgi }}
                 port:
                   number: 80
-    - host: {{ .Values.global.baserow.domain }}
+    {{- end }}
+    - host: {{ .Values.global.baserow.domain | quote }}
+      http:
+        paths:
+          {{- if $sharedDomain }}
+          {{- range list "/ws/" "/mcp/" "/assistant/" }}
+          - path: {{ . }}
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $asgi }}
+                port:
+                  number: 80
+          {{- end }}
+          - path: /api/
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $wsgi }}
+                port:
+                  number: 80
+          {{- end }}
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $frontend }}
+                port:
+                  number: 80
+    {{- range .Values.global.baserow.applicationBuilderDomains }}
+    - host: {{ . | quote }}
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: {{ include "baserow.global.fullname" . }}-baserow-frontend
+                name: {{ $frontend }}
                 port:
                   number: 80
+    {{- end }}
     {{- if .Values.minio.enabled }}
-    - host: {{ .Values.global.baserow.objectsDomain }}
+    - host: {{ .Values.global.baserow.objectsDomain | quote }}
       http:
         paths:
           - path: /
@@ -64,17 +91,19 @@ spec:
                 port:
                   number: 9000
     {{- end }}
+    {{- if .Values.ingress.catchAll.enabled }}
     - http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: {{ include "baserow.global.fullname" . }}-baserow-frontend
+                name: {{ $frontend }}
                 port:
                   number: 80
-  {{- if .Values.ingress.tls }}
+    {{- end }}
+  {{- with .Values.ingress.tls }}
   tls:
-    {{ tpl (toYaml .Values.ingress.tls | indent 4) . }}
-  {{- end -}}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 {{ end }}
