@@ -200,4 +200,59 @@ describe('Builder data provider types', () => {
       dataProvider.getDataSchema(excludingTargetSubtreeContext).properties
     ).toEqual({})
   })
+
+  test('current record provider applies target element data scopes', () => {
+    const dataProvider = testApp
+      .getRegistry()
+      .get('builderDataProvider', 'current_record')
+    const table = {
+      id: 2,
+      type: 'table',
+      page_id: 1,
+      data_source_id: 1,
+      schema_property: 'rows',
+    }
+    const page = {
+      id: 1,
+      dataSources: [
+        {
+          id: 1,
+          type: 'csv_file_reader',
+          schema: {
+            type: 'array',
+            items: {
+              properties: {
+                rows: {
+                  type: 'array',
+                  items: { properties: { name: { type: 'string' } } },
+                },
+              },
+            },
+          },
+        },
+      ],
+      elementMap: { 2: table },
+      orderedElements: [table],
+      graph: { 0: 2, 2: {} },
+    }
+    const applicationContext = {
+      builder: { id: 1, pages: [page, { id: 2, shared: true }] },
+      page,
+      element: table,
+    }
+
+    expect(dataProvider.getDataSchema(applicationContext)).toBeNull()
+    expect(
+      dataProvider.getDataSchema({
+        ...applicationContext,
+        dataScope: DATA_SCOPES.INCLUDE_TARGET_ELEMENT,
+      }).properties
+    ).toHaveProperty('name')
+    expect(
+      dataProvider.getDataSchema({
+        ...applicationContext,
+        dataScope: DATA_SCOPES.INCLUDE_TARGET_DATA_SOURCE,
+      }).properties
+    ).toHaveProperty('rows')
+  })
 })

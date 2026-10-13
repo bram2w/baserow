@@ -513,7 +513,6 @@ export class ElementType extends Registerable {
     return this.getCollectionAncestry({
       page,
       element,
-      allowSameElement: false,
     }).map(({ id }) => id)
   }
 
@@ -862,12 +861,7 @@ export class ElementType extends Registerable {
    *
    */
   uniqueElementId({ element, applicationContext }) {
-    const {
-      recordIndexPath,
-      builder,
-      page,
-      allowSameElement = false,
-    } = applicationContext
+    const { recordIndexPath, builder, page, dataScope } = applicationContext
 
     const elementPage =
       element.page_id === page.id
@@ -877,7 +871,7 @@ export class ElementType extends Registerable {
     const collectionAncestorLength = this.getCollectionAncestry({
       page: elementPage,
       element,
-      allowSameElement,
+      dataScope,
     }).length
 
     // We might be asking the uniqueID for an outside element so we don't
@@ -915,22 +909,22 @@ export class ElementType extends Registerable {
   }
 
   /**
-   * Returns all collection ancestors of the given element. If allowSameElement is true,
-   * also return the element itself if it's a collection element.
+   * Returns all collection ancestors of the given element. A data scope can include
+   * the element itself when it is a collection element.
    * We get the right most chain of collection element starting from the first one
    * that has a data source.
    */
-  getCollectionAncestry({ page, element, allowSameElement }) {
+  getCollectionAncestry({ page, element, dataScope }) {
     const allCollectionAncestry = this.app.$store.getters[
       'element/getAncestors'
     ](page, element, {
       predicate: (ancestor) =>
         this.app.$registry.get('element', ancestor.type).isCollectionElement,
-      includeSelf: allowSameElement,
+      includeSelf: dataScope?.includeTargetElement ?? false,
     })
 
     // Choose the right-most index of the ancestry which points
-    // to a data source. If `allowSameElement` is `true`, this could
+    // to a data source. If the data scope includes the target element, this could
     // result in `element`'s `data_source_id`, rather than its parent
     // element's `data_source_id`.
     const lastIndex = _.findLastIndex(
@@ -952,7 +946,7 @@ export class ElementType extends Registerable {
       builder,
       page,
       element,
-      allowSameElement = true,
+      dataScope = DATA_SCOPES.INCLUDE_TARGET_ELEMENT,
       // The default value is used when we try to resolve the name in element menu for
       // instance.
       recordIndexPath = [0],
@@ -966,7 +960,7 @@ export class ElementType extends Registerable {
     const collectionAncestry = this.getCollectionAncestry({
       element,
       page: elementPage,
-      allowSameElement,
+      dataScope,
     })
 
     const mainElement = collectionAncestry[0] // The element with the data source
@@ -1345,7 +1339,9 @@ export class TableElementType extends CollectionElementTypeMixin(ElementType) {
             app: this.app,
             namePrefix: uid,
             labelSuffix: `- ${name}`,
-            applicationContextAdditions: { allowSameElement: true },
+            applicationContextAdditions: {
+              dataScope: DATA_SCOPES.INCLUDE_TARGET_ELEMENT,
+            },
           })
         })
       })
@@ -2787,7 +2783,9 @@ export class MenuElementType extends ElementType {
               app: this.app,
               namePrefix: uid,
               labelSuffix: `- ${name}`,
-              applicationContextAdditions: { allowSameElement: true },
+              applicationContextAdditions: {
+                dataScope: DATA_SCOPES.INCLUDE_TARGET_ELEMENT,
+              },
             }),
           ]
         }

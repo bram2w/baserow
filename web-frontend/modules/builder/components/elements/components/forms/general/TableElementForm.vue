@@ -169,7 +169,7 @@
                 :default-values="field"
                 :base-theme="collectionFieldBaseTheme"
                 :application-context-additions="{
-                  allowSameElement: true,
+                  dataScope: DATA_SCOPES.INCLUDE_TARGET_ELEMENT,
                 }"
                 @values-changed="updateField(field, $event)"
               />
@@ -251,6 +251,7 @@
 </template>
 
 <script>
+import { DATA_SCOPES } from '@baserow/modules/builder/constants'
 import { useVuelidate } from '@vuelidate/core'
 import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput'
 import {
@@ -293,6 +294,7 @@ export default {
   },
   data() {
     return {
+      DATA_SCOPES,
       allowedValues: [
         'data_source_id',
         'schema_property',

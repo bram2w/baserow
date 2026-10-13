@@ -492,13 +492,7 @@ export class CurrentRecordDataProviderType extends DataProviderType {
       : schema.properties
   }
 
-  getDataSourceAndSchemaPath(
-    builder,
-    page,
-    element,
-    allowSameElement,
-    followSameElementSchemaProperties
-  ) {
+  getDataSourceAndSchemaPath(builder, page, element, dataScope) {
     const pages = [page, this.app.$store.getters['page/getSharedPage'](builder)]
 
     const elementType = this.app.$registry.get('element', element.type)
@@ -508,7 +502,7 @@ export class CurrentRecordDataProviderType extends DataProviderType {
     const collectionAncestors = elementType.getCollectionAncestry({
       page,
       element,
-      allowSameElement,
+      dataScope,
     })
 
     if (collectionAncestors.length === 0) {
@@ -527,7 +521,8 @@ export class CurrentRecordDataProviderType extends DataProviderType {
       .filter(
         (ancestor) =>
           ancestor.schema_property &&
-          (followSameElementSchemaProperties || ancestor.id !== element.id)
+          (dataScope?.includeTargetSchemaProperties !== false ||
+            ancestor.id !== element.id)
       )
       .map(({ schema_property: schemaProperty }) => schemaProperty)
 
@@ -535,26 +530,13 @@ export class CurrentRecordDataProviderType extends DataProviderType {
   }
 
   getDataSchema(applicationContext) {
-    // `allowSameElement` is set if we want to consider the current element in the
-    // collection ancestry list. If so it will be used to get the data source id if
-    // it's the first collection element.
-    // `followSameElementSchemaProperties` can be passed in the `applicationContext`
-    // to control whether we wish to fetch schema property for the current element
-    // or not.
-    const {
-      builder,
-      page,
-      element,
-      allowSameElement = false,
-      followSameElementSchemaProperties = true,
-    } = applicationContext
+    const { builder, page, element, dataScope } = applicationContext
 
     const [dataSource, schemaProperties] = this.getDataSourceAndSchemaPath(
       builder,
       page,
       element,
-      allowSameElement,
-      followSameElementSchemaProperties
+      dataScope
     )
 
     if (dataSource === null) {
@@ -586,20 +568,13 @@ export class CurrentRecordDataProviderType extends DataProviderType {
 
   getPathTitle(applicationContext, pathParts) {
     if (pathParts.length === 1) {
-      const {
-        builder,
-        page,
-        element,
-        allowSameElement = false,
-        followSameElementSchemaProperties = true,
-      } = applicationContext
+      const { builder, page, element, dataScope } = applicationContext
 
       const [dataSource, schemaProperties] = this.getDataSourceAndSchemaPath(
         builder,
         page,
         element,
-        allowSameElement,
-        followSameElementSchemaProperties
+        dataScope
       )
 
       // We have no data source. Let's just return the part.

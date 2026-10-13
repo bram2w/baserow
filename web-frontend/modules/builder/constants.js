@@ -13,11 +13,19 @@ export const DEFAULT_USER_ROLE_PREFIX = '__user_source_'
  * Describes the data available to a formula relative to its target element.
  *
  * This is intentionally a compound object so data providers can interpret the
- * options that apply to their data. It will replace `allowSameElement` as the
- * shared way to control current-element access in a follow-up.
+ * options that apply to their data, including whether they can read the target
+ * element, its descendants, or its schema properties.
  */
 export const DATA_SCOPES = {
   EXCLUDE_TARGET_SUBTREE: {
+    includeTargetElement: false,
     includeTargetDescendants: false,
+  },
+  INCLUDE_TARGET_ELEMENT: {
+    includeTargetElement: true,
+  },
+  INCLUDE_TARGET_DATA_SOURCE: {
+    includeTargetElement: true,
+    includeTargetSchemaProperties: false,
   },
 }

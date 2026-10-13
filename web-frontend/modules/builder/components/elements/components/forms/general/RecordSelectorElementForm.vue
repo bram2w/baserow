@@ -40,7 +40,7 @@
     <!--
     We use a key here otherwise Vuejs reuse the components of the following
     expression input with the old application context when the v-if becomes true.
-    Therefore the "allowSameElement" value is wrong showing invalid expression when they
+    Therefore the data scope is wrong, showing invalid expressions when they
     are valid. We could also solve this by using a v-show instead of a v-if.
     -->
     <FormGroup
@@ -58,7 +58,7 @@
           $t('recordSelectorElementForm.optionNameSuffixPlaceholder')
         "
         :application-context-additions="{
-          allowSameElement: true,
+          dataScope: DATA_SCOPES.INCLUDE_TARGET_ELEMENT,
         }"
       />
     </FormGroup>
@@ -132,6 +132,7 @@
 </template>
 
 <script>
+import { DATA_SCOPES } from '@baserow/modules/builder/constants'
 import { useVuelidate } from '@vuelidate/core'
 import collectionElementForm from '@baserow/modules/builder/mixins/collectionElementForm'
 import InjectedFormulaInput from '@baserow/modules/core/components/formula/InjectedFormulaInput.vue'
@@ -163,6 +164,7 @@ export default {
   },
   data() {
     return {
+      DATA_SCOPES,
       allowedValues: [
         'required',
         'data_source_id',

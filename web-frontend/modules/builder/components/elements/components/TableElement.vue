@@ -41,7 +41,7 @@
                   row,
                   rowIndex,
                   field,
-                  allowSameElement: true,
+                  dataScope: DATA_SCOPES.INCLUDE_TARGET_ELEMENT,
                 })
               "
               v-bind="value"
@@ -71,6 +71,7 @@ import BaserowTable from '@baserow/modules/builder/components/elements/component
 import { ensureString } from '@baserow/modules/core/utils/validator'
 import CollectionElementHeader from '@baserow/modules/builder/components/elements/components/CollectionElementHeader'
 import { useCollectionElement } from '@baserow/modules/builder/composables/useCollectionElement'
+import { DATA_SCOPES } from '@baserow/modules/builder/constants'
 
 export default {
   name: 'TableElement',
@@ -116,6 +117,7 @@ export default {
     } = useCollectionElement(refProps)
 
     return {
+      DATA_SCOPES,
       builder,
       elementContent,
       contentLoading,
@@ -207,7 +209,7 @@ export default {
               ...this.applicationContext.recordIndexPath,
               index,
             ],
-            allowSameElement: true,
+            dataScope: DATA_SCOPES.INCLUDE_TARGET_ELEMENT,
           }
         ),
         {

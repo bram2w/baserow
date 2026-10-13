@@ -14,6 +14,7 @@ import {
   ROLE_TYPE_DISALLOW_EXCEPT,
   VISIBILITY_ALL,
   ROLE_TYPE_ALLOW_ALL,
+  DATA_SCOPES,
 } from '@baserow/modules/builder/constants'
 import {
   CHOICE_OPTION_TYPES,
@@ -82,6 +83,32 @@ describe('elementTypes tests', () => {
       expect(tableElementType.hasCollectionAncestor(page, tableElement)).toBe(
         true
       )
+    })
+
+    test('uses the data scope to include a repeat in its record index path', () => {
+      const page = { id: 123 }
+      const repeat = { id: 111, type: 'repeat', page_id: page.id }
+      page.graph = { 0: 111, 111: {} }
+      page.elementMap = { 111: repeat }
+      const elementType = testApp.$registry.get('element', repeat.type)
+      const applicationContext = {
+        builder: { id: 1 },
+        page,
+        recordIndexPath: [3],
+      }
+
+      expect(
+        elementType.uniqueElementId({ element: repeat, applicationContext })
+      ).toBe('111')
+      expect(
+        elementType.uniqueElementId({
+          element: repeat,
+          applicationContext: {
+            ...applicationContext,
+            dataScope: DATA_SCOPES.INCLUDE_TARGET_ELEMENT,
+          },
+        })
+      ).toBe('111.3')
     })
 
     test('hasSourceOfData', () => {
