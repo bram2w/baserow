@@ -1,5 +1,6 @@
 import { Registerable } from '@baserow/modules/core/registry'
 import { RuntimeFunctionCollection } from '@baserow/modules/core/functionCollection'
+import { DATA_SCOPES } from '@baserow/modules/builder/constants'
 import TextElement from '@baserow/modules/builder/components/elements/components/TextElement'
 import HeadingElement from '@baserow/modules/builder/components/elements/components/HeadingElement'
 import LinkElement from '@baserow/modules/builder/components/elements/components/LinkElement'
@@ -398,7 +399,7 @@ export class ElementType extends Registerable {
         applicationContext: {
           ...applicationContext,
           element,
-          visibilityCondition: true,
+          dataScope: DATA_SCOPES.EXCLUDE_TARGET_SUBTREE,
         },
       }).valid
     ) {

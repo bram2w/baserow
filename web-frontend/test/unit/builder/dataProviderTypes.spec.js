@@ -1,4 +1,5 @@
 import { TestApp } from '@baserow/test/helpers/testApp'
+import { DATA_SCOPES } from '@baserow/modules/builder/constants'
 
 describe('Builder data provider types', () => {
   let testApp = null
@@ -177,22 +178,26 @@ describe('Builder data provider types', () => {
     ])
   })
 
-  test('form data provider hides inputs from visibility conditions', () => {
+  test('form data provider applies its requested data scope', () => {
     const dataProvider = testApp
       .getRegistry()
       .get('builderDataProvider', 'form_data')
     const applicationContext = formContainerPage()
-    const visibilityContext = {
+    const excludingTargetSubtreeContext = {
       ...applicationContext,
-      visibilityCondition: true,
+      dataScope: DATA_SCOPES.EXCLUDE_TARGET_SUBTREE,
     }
 
     expect(dataProvider.isValid(['3'])).toBe(true)
     expect(dataProvider.isValid(['3'], applicationContext)).toBe(true)
-    expect(dataProvider.isValid(['3'], visibilityContext)).toBe(false)
+    expect(dataProvider.isValid(['3'], excludingTargetSubtreeContext)).toBe(
+      false
+    )
     expect(
       Object.keys(dataProvider.getDataSchema(applicationContext).properties)
     ).toEqual(['3', '4'])
-    expect(dataProvider.getDataSchema(visibilityContext).properties).toEqual({})
+    expect(
+      dataProvider.getDataSchema(excludingTargetSubtreeContext).properties
+    ).toEqual({})
   })
 })

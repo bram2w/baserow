@@ -8,3 +8,16 @@ export const ROLE_TYPE_ALLOW_ALL = 'allow_all'
 export const ROLE_TYPE_ALLOW_EXCEPT = 'allow_all_except'
 export const ROLE_TYPE_DISALLOW_EXCEPT = 'disallow_all_except'
 export const DEFAULT_USER_ROLE_PREFIX = '__user_source_'
+
+/**
+ * Describes the data available to a formula relative to its target element.
+ *
+ * This is intentionally a compound object so data providers can interpret the
+ * options that apply to their data. It will replace `allowSameElement` as the
+ * shared way to control current-element access in a follow-up.
+ */
+export const DATA_SCOPES = {
+  EXCLUDE_TARGET_SUBTREE: {
+    includeTargetDescendants: false,
+  },
+}

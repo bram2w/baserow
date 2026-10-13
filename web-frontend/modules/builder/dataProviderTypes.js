@@ -652,8 +652,8 @@ export class CurrentRecordDataProviderType extends DataProviderType {
 export class FormDataProviderType extends DataProviderType {
   /**
    * Validates that a form input is available to the formula's element: it must
-   * be in the element's namespace path and, for a visibility condition, outside
-   * the element itself (see `formElementsInNamespacePath`).
+   * be in the element's namespace path and comply with its data scope (see
+   * `formElementsInNamespacePath`).
    */
   isValid(pathParts, applicationContext) {
     if (!applicationContext?.element) {
@@ -735,9 +735,8 @@ export class FormDataProviderType extends DataProviderType {
    *            * Can access `InputRoot`
    *            * Can access `InputContainer`
    *
-   * @param {Object} applicationContext - The application context object. With
-   *   `visibilityCondition` set, the target element and its descendants are
-   *   left out.
+   * @param {Object} applicationContext - The application context object. Its
+   *   `dataScope` controls whether the target subtree is available.
    * @param {Object} targetElement - The target element object.
    * @returns {Array} The filtered array of form elements in the same namespace as the target.
    */
@@ -750,12 +749,12 @@ export class FormDataProviderType extends DataProviderType {
       ).join('.')
 
     const elements = this.app.$store.getters['element/getElementsOrdered'](page)
-    // A visibility condition decides whether `targetElement` is shown, so the
-    // form inputs inside it cannot be read until then. Every other formula of
-    // the element, its events and labels included, can read them: the submit
-    // event of a form container dispatches the values of its own inputs.
+    // A scope that excludes the target subtree is used when evaluating a
+    // dependency that must exist before the target element is rendered. Normal
+    // formulas, including a form container's submit event, retain access to the
+    // target's inputs.
     const unavailableElementIds = new Set(
-      applicationContext.visibilityCondition
+      applicationContext.dataScope?.includeTargetDescendants === false
         ? [
             targetElement.id,
             ...this.app.$store.getters['element/getDescendants'](
