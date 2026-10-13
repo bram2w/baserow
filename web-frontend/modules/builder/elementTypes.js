@@ -1,6 +1,5 @@
 import { Registerable } from '@baserow/modules/core/registry'
 import { RuntimeFunctionCollection } from '@baserow/modules/core/functionCollection'
-import { DATA_SCOPES } from '@baserow/modules/builder/constants'
 import TextElement from '@baserow/modules/builder/components/elements/components/TextElement'
 import HeadingElement from '@baserow/modules/builder/components/elements/components/HeadingElement'
 import LinkElement from '@baserow/modules/builder/components/elements/components/LinkElement'
@@ -71,6 +70,7 @@ import { isValidEmail } from '@baserow/modules/core/utils/string'
 import { getBuilderBreakpoints } from '@baserow/modules/builder/utils/breakpoints'
 
 import {
+  DATA_SCOPES,
   VISIBILITY_NOT_LOGGED,
   VISIBILITY_LOGGED_IN,
   ROLE_TYPE_ALLOW_EXCEPT,
