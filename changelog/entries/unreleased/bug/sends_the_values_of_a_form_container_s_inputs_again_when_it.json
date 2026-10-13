@@ -1,0 +1,9 @@
+{
+    "type": "bug",
+    "message": "Sends the values of a form container's inputs again when it is submitted in the Application Builder",
+    "issue_origin": "github",
+    "issue_number": null,
+    "domain": "builder",
+    "bullet_points": [],
+    "created_at": "2026-10-13"
+}

@@ -651,9 +651,9 @@ export class CurrentRecordDataProviderType extends DataProviderType {
 
 export class FormDataProviderType extends DataProviderType {
   /**
-   * Validates that a form input is available to the formula's element.
-   * Fields inside the element whose formula is being evaluated are unavailable
-   * until that element is visible.
+   * Validates that a form input is available to the formula's element: it must
+   * be in the element's namespace path and comply with its data scope (see
+   * `formElementsInNamespacePath`).
    */
   isValid(pathParts, applicationContext) {
     if (!applicationContext?.element) {
@@ -735,7 +735,8 @@ export class FormDataProviderType extends DataProviderType {
    *            * Can access `InputRoot`
    *            * Can access `InputContainer`
    *
-   * @param {Object} applicationContext - The application context object.
+   * @param {Object} applicationContext - The application context object. Its
+   *   `dataScope` controls whether the target subtree is available.
    * @param {Object} targetElement - The target element object.
    * @returns {Array} The filtered array of form elements in the same namespace as the target.
    */
@@ -748,13 +749,21 @@ export class FormDataProviderType extends DataProviderType {
       ).join('.')
 
     const elements = this.app.$store.getters['element/getElementsOrdered'](page)
-    const unavailableElementIds = new Set([
-      targetElement.id,
-      ...this.app.$store.getters['element/getDescendants'](
-        page,
-        targetElement
-      ).map(({ id }) => id),
-    ])
+    // A scope that excludes the target subtree is used when evaluating a
+    // dependency that must exist before the target element is rendered. Normal
+    // formulas, including a form container's submit event, retain access to the
+    // target's inputs.
+    const unavailableElementIds = new Set(
+      applicationContext.dataScope?.includeTargetDescendants === false
+        ? [
+            targetElement.id,
+            ...this.app.$store.getters['element/getDescendants'](
+              page,
+              targetElement
+            ).map(({ id }) => id),
+          ]
+        : []
+    )
     return elements.filter((element) => {
       const elementType = this.app.$registry.get('element', element.type)
       if (!elementType.isFormElement) {

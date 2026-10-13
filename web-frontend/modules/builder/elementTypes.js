@@ -70,6 +70,7 @@ import { isValidEmail } from '@baserow/modules/core/utils/string'
 import { getBuilderBreakpoints } from '@baserow/modules/builder/utils/breakpoints'
 
 import {
+  DATA_SCOPES,
   VISIBILITY_NOT_LOGGED,
   VISIBILITY_LOGGED_IN,
   ROLE_TYPE_ALLOW_EXCEPT,
@@ -395,7 +396,11 @@ export class ElementType extends Registerable {
       visibilityCondition?.mode !== 'raw' &&
       !isFormulaValid(visibilityCondition?.formula || '', functions, false, {
         dataProviderRegistry,
-        applicationContext,
+        applicationContext: {
+          ...applicationContext,
+          element,
+          dataScope: DATA_SCOPES.EXCLUDE_TARGET_SUBTREE,
+        },
       }).valid
     ) {
       return this.app.$i18n.t('elementType.errorInvalidVisibilityCondition')
