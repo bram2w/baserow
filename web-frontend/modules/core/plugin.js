@@ -138,6 +138,7 @@ import {
   RuntimeStrip,
   RuntimeEncodeUri,
   RuntimeEncodeUriComponent,
+  RuntimeMarkdownToHtml,
   RuntimeSum,
   RuntimeAvg,
   RuntimeAt,
@@ -351,6 +352,10 @@ export default defineNuxtPlugin({
     registry.register(
       'runtimeFormulaFunction',
       new RuntimeEncodeUriComponent(context)
+    )
+    registry.register(
+      'runtimeFormulaFunction',
+      new RuntimeMarkdownToHtml(context)
     )
     registry.register('runtimeFormulaFunction', new RuntimeSum(context))
     registry.register('runtimeFormulaFunction', new RuntimeAvg(context))
