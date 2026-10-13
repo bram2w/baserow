@@ -2,7 +2,7 @@ import { defineComponent } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { describe, expect, it, vi } from 'vitest'
 
-import TemplateModalSwitch from '@baserow/modules/core/components/template/legacy/TemplateModalSwitch'
+import TemplateModalSwitch from '@baserow/modules/core/components/template/TemplateModalSwitch'
 
 describe('TemplateModalSwitch', () => {
   const show = vi.fn()

@@ -47,18 +47,4 @@ describe('template page', () => {
     expect(wrapper.find('.LegacyTemplatePage').exists()).toBe(true)
     expect(wrapper.find('.TemplatePage').exists()).toBe(false)
   })
-
-  it('loads the workspaces to install into when user_templates is enabled', async () => {
-    // The test environment enables all feature flags.
-    testApp.authenticate({ id: 1, preferences: {}, completed_onboarding: true })
-    testApp.mock.onGet('/workspaces/').reply(200, [])
-    testApp.mock.onGet('/applications/').reply(200, [])
-
-    await mountSuspended(TemplatePagePage, {
-      route: '/template/some-template',
-      global: { stubs },
-    })
-
-    expect(testApp.mock.history.get.map((r) => r.url)).toContain('/workspaces/')
-  })
 })

@@ -1,5 +1,5 @@
 <template>
-  <div ref="root" class="template-list">
+  <div class="template-list">
     <div class="template-list__head">
       <div class="template-list__title">
         {{ $t('templateCategories.title') }}
@@ -103,7 +103,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useNuxtApp } from '#app'
 
 import { escapeRegExp } from '@baserow/modules/core/utils/string'
@@ -113,13 +113,19 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  // Whether the list is shown. A hidden list must not claim the search shortcut,
+  // because only the listener with the highest priority receives it.
+  active: {
+    type: Boolean,
+    required: false,
+    default: true,
+  },
 })
 
 const emit = defineEmits(['selected'])
 
 const { $priorityBus } = useNuxtApp()
 
-const root = ref(null)
 const searchInput = ref(null)
 const search = ref('')
 const selectedCategoryId = ref(null)
@@ -167,17 +173,19 @@ function toggleCollapsed(categoryId) {
 }
 
 function searchStarted({ event }) {
-  // The list stays mounted, but hidden, while a template is previewed.
-  if (root.value?.offsetParent === null) {
-    return
-  }
   event.preventDefault()
   searchInput.value.focus()
 }
 
-onMounted(() => {
-  $priorityBus.$on('start-search', $priorityBus.level.HIGH, searchStarted)
-})
+function listenToSearch(active) {
+  $priorityBus.$off('start-search', searchStarted)
+  if (active) {
+    $priorityBus.$on('start-search', $priorityBus.level.HIGH, searchStarted)
+  }
+}
+
+onMounted(() => listenToSearch(props.active))
+watch(() => props.active, listenToSearch)
 
 onBeforeUnmount(() => {
   $priorityBus.$off('start-search', searchStarted)

@@ -1,9 +1,11 @@
+$templates-width: 1180px;
+
 .templates-modal .modal__box--full-screen {
   top: 16px;
   bottom: 16px;
 
-  // At least 1180px, as in the design, but grows with wide screens.
-  max-width: min(max(1180px, 85vw), 2000px);
+  // The width of the design, which fits three template cards per row.
+  max-width: $templates-width;
   margin: 0 auto;
   overflow: hidden;
 
@@ -17,6 +19,15 @@
   .templates__body .header {
     padding-right: 40px;
   }
+}
+
+.templates-page {
+  @include absolute(0);
+
+  max-width: $templates-width;
+  margin: 0 auto;
+  border-left: solid 1px $palette-neutral-200;
+  border-right: solid 1px $palette-neutral-200;
 }
 
 .templates__body {

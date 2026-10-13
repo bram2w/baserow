@@ -20,9 +20,14 @@ const categories = [
 const ModalStub = defineComponent({
   name: 'Modal',
   props: ['keepContent', 'fullScreen', 'closeButton'],
+  emits: ['show', 'hidden'],
   methods: {
-    show() {},
-    hide() {},
+    show() {
+      this.$emit('show')
+    },
+    hide() {
+      this.$emit('hidden')
+    },
   },
   template: '<div><slot /></div>',
 })
@@ -79,7 +84,7 @@ describe('TemplateModal navigation', () => {
     }),
     TemplateList: defineComponent({
       name: 'TemplateList',
-      props: ['categories'],
+      props: ['categories', 'active'],
       emits: ['selected'],
       template: `<div class="list">
         <a class="list__recipe-book" @click="$emit('selected', categories[1].templates[0])" />
@@ -130,5 +135,23 @@ describe('TemplateModal navigation', () => {
 
     expect(wrapper.find('.details').exists()).toBe(false)
     expect(wrapper.find('.list').isVisible()).toBe(true)
+  })
+
+  it('lets the list claim the search shortcut only while it is shown', async () => {
+    const wrapper = await mountAndShow()
+    const list = () => wrapper.findComponent({ name: 'TemplateList' })
+
+    expect(list().props('active')).toBe(true)
+
+    await wrapper.find('.list__recipe-book').trigger('click')
+    expect(list().props('active')).toBe(false)
+
+    await wrapper.find('.details__back').trigger('click')
+    expect(list().props('active')).toBe(true)
+
+    // The list stays mounted while the modal is closed.
+    await wrapper.vm.hide()
+    expect(list().exists()).toBe(true)
+    expect(list().props('active')).toBe(false)
   })
 })

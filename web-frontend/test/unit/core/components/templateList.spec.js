@@ -1,4 +1,6 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
+import { enableAutoUnmount } from '@vue/test-utils'
+import { useNuxtApp } from '#app'
 
 import TemplateList from '@baserow/modules/core/components/template/TemplateList'
 
@@ -26,9 +28,13 @@ const categories = [
   },
 ]
 
-async function mountComponent() {
+// Mounted lists keep listening to the search shortcut.
+enableAutoUnmount(afterEach)
+
+async function mountComponent(props = {}) {
   return await mountSuspended(TemplateList, {
-    props: { categories },
+    attachTo: document.body,
+    props: { categories, ...props },
     global: {
       mocks: {
         $t: (key) => key,
@@ -122,5 +128,48 @@ describe('TemplateList', () => {
       .trigger('keydown', { key: 'Enter' })
 
     expect(sectionTitles(wrapper)).toStrictEqual(['Personal'])
+  })
+
+  describe('search shortcut', () => {
+    let otherListener = null
+
+    beforeEach(() => {
+      const { $priorityBus } = useNuxtApp()
+      otherListener = vi.fn()
+      $priorityBus.$on('start-search', $priorityBus.level.LOW, otherListener)
+    })
+
+    afterEach(() => {
+      useNuxtApp().$priorityBus.$off('start-search', otherListener)
+    })
+
+    const startSearch = () =>
+      useNuxtApp().$priorityBus.$emit('start-search', {
+        event: { preventDefault: vi.fn() },
+      })
+
+    test('focuses the search input', async () => {
+      const wrapper = await mountComponent()
+
+      startSearch()
+
+      expect(otherListener).not.toHaveBeenCalled()
+      expect(document.activeElement).toBe(wrapper.find('input').element)
+    })
+
+    test('leaves the shortcut to others while inactive', async () => {
+      const wrapper = await mountComponent({ active: false })
+
+      startSearch()
+      expect(otherListener).toHaveBeenCalledTimes(1)
+
+      await wrapper.setProps({ active: true })
+      startSearch()
+      expect(otherListener).toHaveBeenCalledTimes(1)
+
+      await wrapper.setProps({ active: false })
+      startSearch()
+      expect(otherListener).toHaveBeenCalledTimes(2)
+    })
   })
 })

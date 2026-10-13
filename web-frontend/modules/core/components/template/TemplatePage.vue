@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="templates-page">
     <TemplateDetails
       v-if="selectedTemplate"
       :key="selectedTemplate.id"
@@ -7,26 +7,31 @@
       :categories="selectedTemplateCategories"
       show-back
       class="templates__body"
-      @back="selectedTemplate = null"
+      @back="showList = true"
     />
     <TemplateList
       v-show="!selectedTemplate"
       :categories="data.categories"
+      :active="!selectedTemplate"
       class="templates__body"
-      @selected="selectedTemplate = $event"
+      @selected="selectTemplate"
     />
   </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import TemplateDetails from '@baserow/modules/core/components/template/TemplateDetails'
 import TemplateList from '@baserow/modules/core/components/template/TemplateList'
 import TemplateService from '@baserow/modules/core/services/template'
+import { fetchWorkspacesAndApplications } from '@baserow/modules/core/utils/workspace'
+import { keyboardShortcutsToPriorityEventBus } from '@baserow/modules/core/utils/events'
 
 const route = useRoute()
-const { $client } = useNuxtApp()
+const router = useRouter()
+const nuxtApp = useNuxtApp()
+const { $client, $store, $priorityBus } = nuxtApp
 
 const slug = route.params.slug
 
@@ -38,6 +43,12 @@ const { data, error } = await useAsyncData(`template-${slug}`, async () => {
       TemplateService($client)
         .fetchAll()
         .catch(() => ({ data: [] })),
+      // The workspaces of a logged in user, so that they can choose where to
+      // install the template. Not left to the `workspacesAndApplications`
+      // middleware, because it sends a user without workspaces to the onboarding.
+      $store.getters['auth/isAuthenticated']
+        ? fetchWorkspacesAndApplications(nuxtApp, null)
+        : null,
     ])
     return { template, categories }
   } catch (e) {
@@ -57,12 +68,61 @@ if (error.value) {
   throw error.value
 }
 
-// The linked template is shown first. Going back opens the list of all templates.
-const selectedTemplate = ref(data.value?.template ?? null)
+// The template in the URL is shown, so that a reload, the browser history or a
+// copied link show the same template. Going back opens the list of all templates
+// and keeps the URL. The page stays mounted when the slug changes, see the `key`
+// of the template page.
+const showList = ref(false)
+const currentSlug = ref(slug)
+
+const selectedTemplate = computed(() => {
+  if (showList.value) {
+    return null
+  }
+  // The linked template is not in the list if the list couldn't be loaded.
+  if (currentSlug.value === data.value.template.slug) {
+    return data.value.template
+  }
+  return (
+    data.value.categories
+      .flatMap((category) => category.templates)
+      .find((t) => t.slug === currentSlug.value) ?? null
+  )
+})
+
+watch(
+  () => route.params.slug,
+  (newSlug) => {
+    // Ignores leaving the page, which would show the list until it's unmounted.
+    if (route.name === 'template') {
+      currentSlug.value = newSlug
+      showList.value = false
+    }
+  }
+)
+
+function selectTemplate(template) {
+  showList.value = false
+  router.push({ name: 'template', params: { slug: template.slug } })
+}
 
 const selectedTemplateCategories = computed(() =>
   data.value.categories.filter((category) =>
     category.templates.some((t) => t.id === selectedTemplate.value.id)
   )
 )
+
+// The page doesn't use the app layout, which turns keyboard shortcuts like the
+// search one into priority bus events.
+function keyDown(event) {
+  keyboardShortcutsToPriorityEventBus(event, $priorityBus)
+}
+
+onMounted(() => {
+  document.body.addEventListener('keydown', keyDown)
+})
+
+onBeforeUnmount(() => {
+  document.body.removeEventListener('keydown', keyDown)
+})
 </script>

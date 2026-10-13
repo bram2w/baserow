@@ -98,7 +98,7 @@
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import CreateApplicationModal from '@baserow/modules/core/components/application/CreateApplicationModal'
-import TemplateModal from '@baserow/modules/core/components/template/legacy/TemplateModalSwitch'
+import TemplateModal from '@baserow/modules/core/components/template/TemplateModalSwitch'
 import ImportWorkspaceModal from '@baserow/modules/core/components/import/ImportWorkspaceModal.vue'
 import context from '@baserow/modules/core/mixins/context'
 import DevelopmentBadge from '@baserow/modules/core/components/DevelopmentBadge'

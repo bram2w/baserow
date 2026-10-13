@@ -1,6 +1,7 @@
 import { defineComponent, h, onErrorCaptured } from 'vue'
-import { afterEach, beforeEach, describe, expect, test } from 'vitest'
-import { clearNuxtData } from '#app'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { flushPromises } from '@vue/test-utils'
+import { clearNuxtData, useNuxtApp, useRouter } from '#app'
 
 import { TestApp } from '@baserow/test/helpers/testApp'
 import TemplatePage from '@baserow/modules/core/components/template/TemplatePage'
@@ -41,7 +42,7 @@ describe('TemplatePage', () => {
     }),
     TemplateList: defineComponent({
       name: 'TemplateList',
-      props: ['categories'],
+      props: ['categories', 'active'],
       emits: ['selected'],
       template: `<div class="list">
         <a class="list__recipe-book" @click="$emit('selected', categories[1].templates[0])" />
@@ -75,8 +76,80 @@ describe('TemplatePage', () => {
 
     await wrapper.find('.list__recipe-book').trigger('click')
 
+    // The URL follows the opened template.
+    const router = useRouter()
+    await vi.waitFor(() =>
+      expect(router.currentRoute.value.params.slug).toBe('recipe-book')
+    )
+    await flushPromises()
+
     expect(wrapper.find('.details').text()).toBe('Recipe Book: Personal')
     expect(wrapper.find('.list').isVisible()).toBe(false)
+  })
+
+  test('shows the template of the URL when it changes', async () => {
+    const wrapper = await mountPage('project-tracker')
+    const router = useRouter()
+
+    await wrapper.find('.details__back').trigger('click')
+    await router.push('/template/recipe-book')
+    await flushPromises()
+
+    expect(wrapper.find('.details').text()).toBe('Recipe Book: Personal')
+    expect(wrapper.find('.list').isVisible()).toBe(false)
+
+    await router.push('/template/project-tracker')
+    await flushPromises()
+
+    expect(wrapper.find('.details').text()).toBe('Project Tracker: Business')
+  })
+
+  test('lets the list claim the search shortcut only while it is shown', async () => {
+    const wrapper = await mountPage('project-tracker')
+    const list = () => wrapper.findComponent({ name: 'TemplateList' })
+
+    expect(list().props('active')).toBe(false)
+
+    await wrapper.find('.details__back').trigger('click')
+
+    expect(list().props('active')).toBe(true)
+  })
+
+  test('turns the search shortcut into a priority bus event', async () => {
+    await mountPage('project-tracker')
+    const { $priorityBus } = useNuxtApp()
+    const listener = vi.fn()
+    $priorityBus.$on('start-search', $priorityBus.level.HIGHEST, listener)
+
+    document.body.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'S',
+        ctrlKey: true,
+        metaKey: true,
+        shiftKey: true,
+      })
+    )
+
+    $priorityBus.$off('start-search', listener)
+    expect(listener).toHaveBeenCalledTimes(1)
+  })
+
+  test('loads the workspaces to install into for a logged in user', async () => {
+    // A user without workspaces who hasn't finished the onboarding still sees
+    // the template instead of being sent to the onboarding.
+    testApp.authenticate({
+      id: 1,
+      preferences: {},
+      completed_onboarding: false,
+    })
+    testApp.mock.onGet('/workspaces/').reply(200, [])
+    testApp.mock.onGet('/applications/').reply(200, [])
+
+    const wrapper = await mountPage('project-tracker')
+
+    expect(testApp.mock.history.get.map((r) => r.url)).toContain('/workspaces/')
+    expect(useRouter().currentRoute.value.name).toBe('template')
+    expect(wrapper.find('.details').text()).toBe('Project Tracker: Business')
   })
 
   test('still opens the linked template when the list fails', async () => {

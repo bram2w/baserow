@@ -5,6 +5,8 @@
     :full-screen="true"
     :close-button="false"
     keep-content
+    @show="open = true"
+    @hidden="open = false"
   >
     <div v-if="loading" class="loading-absolute-center"></div>
     <template v-else>
@@ -22,6 +24,7 @@
       <TemplateList
         v-show="selectedTemplate === null"
         :categories="categories"
+        :active="open && selectedTemplate === null"
         class="templates__body"
         @selected="selectTemplate"
       ></TemplateList>
@@ -57,6 +60,8 @@ export default {
   },
   data() {
     return {
+      // The content stays mounted while the modal is closed.
+      open: false,
       loading: true,
       categories: [],
       selectedTemplate: null,

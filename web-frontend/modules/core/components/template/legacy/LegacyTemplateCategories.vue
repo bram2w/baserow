@@ -58,7 +58,7 @@
 </template>
 
 <script>
-import legacyTemplateCategories from '@baserow/modules/core/components/template/legacy/legacyTemplateCategories'
+import legacyTemplateCategories from '@baserow/modules/core/components/template/legacy/legacyTemplateCategoriesMixin'
 
 export default {
   name: 'LegacyTemplateCategories',
