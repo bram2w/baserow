@@ -16,10 +16,14 @@ Expand the namespace of the chart.
 Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
+With global.baserow.fullnameOverride set, the component is named after it, with
+the alias minus its "baserow-" prefix as suffix, e.g. "<override>-backend-wsgi".
 */}}
 {{- define "baserow.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- else if .Values.global.baserow.fullnameOverride }}
+{{- printf "%s-%s" .Values.global.baserow.fullnameOverride (trimPrefix "baserow-" .Chart.Name) | trunc 63 | trimSuffix "-" }}
 {{- else }}
 {{- $name := default .Chart.Name .Values.nameOverride }}
 {{- if contains $name .Release.Name }}

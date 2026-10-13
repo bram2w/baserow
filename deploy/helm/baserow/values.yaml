@@ -17,10 +17,11 @@
 ## @param global.baserow.backendConfigMap Configure a name for the backend configmap.
 ## @param global.baserow.backendSecret Configure a name for the backend secret.
 ## @param global.baserow.frontendConfigMap Configure a name for the frontend configmap.
+## @param global.baserow.fullnameOverride Name prefix for the Baserow resources, e.g. "baserow" names the components "baserow-backend-wsgi", "baserow-frontend", etc. Defaults to "<release name>-baserow".
 ## @param global.baserow.sharedConfigMap Configure a name for the shared configmap.
 ## @param global.baserow.envFrom Configure secrets or configMaps to be used as environment variables for all components.
 ## @param global.baserow.domain Configure the domain for the frontend application.
-## @param global.baserow.backendDomain Configure the domain for the backend application.
+## @param global.baserow.backendDomain Configure the domain for the backend application. Set it to the same value as global.baserow.domain to serve the API under that domain's /api/ path instead.
 ## @param global.baserow.objectsDomain Configure the domain for the external facing minio api.
 ## @param global.baserow.assistantLLMModel Deprecated. Select the Kuma model under Admin tools > AI providers > AI features. Retained as an environment fallback; explicit disables prevent fallback.
 ## @param global.baserow.applicationBuilderDomains Extra domains routed to the frontend, for Application Builder apps served on their own domain. Wildcards such as "*.apps.mydomain.com" are supported. Only needed when ingress.catchAll.enabled is false.
@@ -53,6 +54,7 @@ global:
       name: baserow
       annotations: {}
       automountServiceAccountToken: false
+    fullnameOverride: ""
     sharedConfigMap: shared-config
     backendConfigMap: backend-config
     backendSecret: backend-secret

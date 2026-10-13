@@ -13,6 +13,8 @@ If release name contains chart name it will be used as a full name.
 {{- define "baserow.global.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- else if .Values.global.baserow.fullnameOverride }}
+{{- .Values.global.baserow.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
 {{- $name := default .Chart.Name .Values.nameOverride }}
 {{- if contains $name .Release.Name }}
@@ -21,6 +23,14 @@ If release name contains chart name it will be used as a full name.
 {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 {{- end }}
+{{- end }}
+
+{{/*
+The domain the backend API is served on, "api.<domain>" when not set. When it
+equals the frontend domain the API is served under that domain's /api/ path.
+*/}}
+{{- define "baserow.global.backendDomain" -}}
+{{- .Values.global.baserow.backendDomain | default (printf "api.%s" .Values.global.baserow.domain) }}
 {{- end }}
 
 {{/*

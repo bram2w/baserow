@@ -12,46 +12,59 @@ spec:
   {{- with .Values.ingress.className }}
   ingressClassName: {{ . }}
   {{- end }}
+  {{- $asgi := include "baserow.fullname" (index .Subcharts "baserow-backend-asgi") }}
+  {{- $wsgi := include "baserow.fullname" (index .Subcharts "baserow-backend-wsgi") }}
+  {{- $frontend := include "baserow.fullname" (index .Subcharts "baserow-frontend") }}
+  {{- $backendDomain := include "baserow.global.backendDomain" . }}
+  {{- $sharedDomain := eq $backendDomain .Values.global.baserow.domain }}
   rules:
-    - host: {{ .Values.global.baserow.backendDomain | default (printf "api.%s" .Values.global.baserow.domain) | quote }}
+    {{- if not $sharedDomain }}
+    - host: {{ $backendDomain | quote }}
       http:
         paths:
-          - path: /ws/
+          {{- range list "/ws/" "/mcp/" "/assistant/" }}
+          - path: {{ . }}
             pathType: Prefix
             backend:
               service:
-                name: {{ include "baserow.fullname" (index .Subcharts "baserow-backend-asgi") }}
+                name: {{ $asgi }}
                 port:
                   number: 80
-          - path: /mcp/
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ include "baserow.fullname" (index .Subcharts "baserow-backend-asgi") }}
-                port:
-                  number: 80
-          - path: /assistant/
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ include "baserow.fullname" (index .Subcharts "baserow-backend-asgi") }}
-                port:
-                  number: 80
+          {{- end }}
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: {{ include "baserow.fullname" (index .Subcharts "baserow-backend-wsgi") }}
+                name: {{ $wsgi }}
                 port:
                   number: 80
+    {{- end }}
     - host: {{ .Values.global.baserow.domain | quote }}
       http:
         paths:
+          {{- if $sharedDomain }}
+          {{- range list "/ws/" "/mcp/" "/assistant/" }}
+          - path: {{ . }}
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $asgi }}
+                port:
+                  number: 80
+          {{- end }}
+          - path: /api/
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $wsgi }}
+                port:
+                  number: 80
+          {{- end }}
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: {{ include "baserow.fullname" (index .Subcharts "baserow-frontend") }}
+                name: {{ $frontend }}
                 port:
                   number: 80
     {{- range .Values.global.baserow.applicationBuilderDomains }}
@@ -62,7 +75,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ include "baserow.fullname" (index $.Subcharts "baserow-frontend") }}
+                name: {{ $frontend }}
                 port:
                   number: 80
     {{- end }}
@@ -85,7 +98,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ include "baserow.fullname" (index .Subcharts "baserow-frontend") }}
+                name: {{ $frontend }}
                 port:
                   number: 80
     {{- end }}
