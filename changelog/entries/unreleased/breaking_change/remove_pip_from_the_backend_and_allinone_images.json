@@ -1,0 +1,12 @@
+{
+    "type": "breaking_change",
+    "message": "Remove pip from the backend and all-in-one images",
+    "issue_origin": "github",
+    "issue_number": null,
+    "domain": "core",
+    "bullet_points": [
+        "RUN pip install fails in custom images",
+        "Run /baserow/venv/bin/python -m ensurepip first"
+    ],
+    "created_at": "2026-10-14"
+}
