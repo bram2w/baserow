@@ -166,16 +166,16 @@ class AgentTriggerType(Instance):
         trigger repeatedly). Runs beyond the per-minute limit are dropped.
         """
 
+        return self._is_rate_limited_key(f"agent_application:trigger:{trigger.id}")
+
+    def _is_rate_limited_key(self, key: str) -> bool:
         limit = settings.AGENT_APPLICATION_TRIGGER_RATE_LIMIT_PER_MINUTE
-        cache_key = f"agent_application:trigger:{trigger.id}:rate"
         # `add` only sets the key (and its 60s window) when absent, so the
         # window is aligned to the first run within it.
-        count = _count_in_window(cache_key)
+        count = _count_in_window(f"{key}:rate")
         if count > limit:
             logger.warning(
-                "Agent trigger {} exceeded the rate limit of {} runs per minute",
-                trigger.id,
-                limit,
+                "{} exceeded the rate limit of {} runs per minute", key, limit
             )
             return True
         return False
@@ -224,6 +224,43 @@ class AgentTriggerType(Instance):
                 self.get_opening_prompt(trigger, service_payload),
             )
             chat_handler.start_chat_run(chat, message)
+
+        self._start_follow_up_checks(services, service_map, event_payload)
+
+    def _start_follow_up_checks(self, services, service_map, event_payload) -> None:
+        """
+        Follow-ups own their schedule or row event, so the same event starts
+        their checks next to (not through) the agent's triggers.
+        """
+
+        from ..follow_ups import AgentFollowUpHandler
+        from ..models import AgentFollowUp
+
+        follow_ups = (
+            AgentFollowUp.objects.filter(
+                service__in=services,
+                status=AgentFollowUp.Status.ACTIVE,
+                application__trashed=False,
+                application__workspace__trashed=False,
+            )
+            .using(router.db_for_write(AgentFollowUp))
+            .select_related("application__workspace", "created_by")
+        )
+        handler = AgentFollowUpHandler()
+        for follow_up in follow_ups:
+            service_payload = (
+                event_payload(service_map[follow_up.service_id])
+                if callable(event_payload)
+                else event_payload
+            )
+            service_payload = handler.filter_event_payload(follow_up, service_payload)
+            if service_payload is None:
+                continue
+            if self._is_rate_limited_key(f"agent_application:follow_up:{follow_up.id}"):
+                continue
+            handler.start_check(
+                follow_up, self.type, cap_event_payload(service_payload)
+            )
 
 
 class AgentTriggerTypeRegistry(Registry[AgentTriggerType]):

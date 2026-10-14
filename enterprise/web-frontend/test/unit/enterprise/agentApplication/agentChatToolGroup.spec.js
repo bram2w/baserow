@@ -51,4 +51,28 @@ describe('AgentChatToolGroup', () => {
       wrapper.findAll('.agent-chat-tool-group__step-status--error')
     ).toHaveLength(1)
   })
+
+  test('a search shows what it searches for, other steps their thought', async () => {
+    const search = {
+      kind: 'tool',
+      key: 'tool-3',
+      event: {
+        id: 3,
+        type: 'tool_call',
+        tool_name: 'search_in_issues',
+        args: { query: 'Is item 1 still active?' },
+        result: { status: 'ok', content: {} },
+      },
+    }
+    const wrapper = await mount(
+      [step(1, { status: 'ok', content: { tables: [] } }), search],
+      false
+    )
+    await wrapper.find('.agent-chat-tool-group__header').trigger('click')
+    expect(
+      wrapper
+        .findAll('.agent-chat-tool-group__step-summary')
+        .map((summary) => summary.text())
+    ).toEqual(['Enable row creation', 'Is item 1 still active?'])
+  })
 })

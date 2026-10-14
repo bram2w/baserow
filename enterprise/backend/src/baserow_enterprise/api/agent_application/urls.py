@@ -21,6 +21,9 @@ from .views import (
     AgentChatsView,
     AgentChatView,
     AgentDefinitionView,
+    AgentFollowUpCheckView,
+    AgentFollowUpsView,
+    AgentFollowUpView,
     AgentInstructionsDraftView,
     AgentInstructionsImproveView,
     AgentToolsView,
@@ -99,6 +102,21 @@ urlpatterns = [
         "<int:application_id>/usage/",
         AgentUsageView.as_view(),
         name="usage",
+    ),
+    path(
+        "<int:application_id>/follow_ups/",
+        AgentFollowUpsView.as_view(),
+        name="follow_ups",
+    ),
+    path(
+        "follow_ups/<int:follow_up_id>/",
+        AgentFollowUpView.as_view(),
+        name="follow_up_item",
+    ),
+    path(
+        "follow_ups/<int:follow_up_id>/check/",
+        AgentFollowUpCheckView.as_view(),
+        name="follow_up_check",
     ),
     path(
         "<int:application_id>/triggers/",

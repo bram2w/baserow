@@ -11,7 +11,7 @@
             v-if="field.kind === 'member'"
             :initials="String(field.value).slice(0, 1).toUpperCase()"
             color="blue"
-            size="x-small"
+            size="small"
             rounded
           />
           <i v-else :class="CHIP_ICONS[field.kind]"></i>

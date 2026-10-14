@@ -130,6 +130,7 @@ class AgentApplicationType(ApplicationType):
         "act_as_user",
         "start_chat_min_role",
         "continue_chat_min_role",
+        "follow_up_min_role",
         "pending_approvals_count",
         "last_run_on",
     ]
@@ -143,6 +144,7 @@ class AgentApplicationType(ApplicationType):
         "act_as_user",
         "start_chat_min_role",
         "continue_chat_min_role",
+        "follow_up_min_role",
         *SETUP_FIELDS,
     ]
     serializer_field_overrides = {
@@ -517,6 +519,7 @@ class AgentApplicationType(ApplicationType):
             act_as_user=agent_application.act_as_user,
             start_chat_min_role=agent_application.start_chat_min_role,
             continue_chat_min_role=agent_application.continue_chat_min_role,
+            follow_up_min_role=agent_application.follow_up_min_role,
             integrations=serialized_integrations,
             agents=serialized_agents,
             triggers=serialized_triggers,
@@ -616,7 +619,12 @@ class AgentApplicationType(ApplicationType):
         agent_identity_id = serialized_values.pop("agent_identity_id", None)
         chat_settings = {
             key: serialized_values.pop(key)
-            for key in ("act_as_user", "start_chat_min_role", "continue_chat_min_role")
+            for key in (
+                "act_as_user",
+                "start_chat_min_role",
+                "continue_chat_min_role",
+                "follow_up_min_role",
+            )
             if key in serialized_values
         }
 

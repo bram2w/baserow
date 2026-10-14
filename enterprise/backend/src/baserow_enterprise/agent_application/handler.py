@@ -344,6 +344,7 @@ class AgentChatHandler:
                 queryset.select_related(
                     "agent__application__workspace",
                     "agent__application__agent_identity",
+                    "follow_up",
                 )
                 .defer("message_history")
                 .get(uuid=chat_uuid)
@@ -574,8 +575,10 @@ class AgentChatHandler:
             or `mine` for the ones `user` started.
         """
 
-        queryset = agent.chats.defer("message_history").annotate(
-            channel_type=F("channel__type")
+        queryset = (
+            agent.chats.defer("message_history")
+            .select_related("follow_up")
+            .annotate(channel_type=F("channel__type"))
         )
         private_filter = Q(private=False)
         if user is not None:
@@ -595,6 +598,8 @@ class AgentChatHandler:
             return Q(source__in=[AgentChat.Source.MANUAL, AgentChat.Source.SETUP])
         if kind == "service":
             return Q(source=AgentChat.Source.SERVICE)
+        if kind == "follow_up":
+            return Q(source=AgentChat.Source.FOLLOW_UP)
         if kind == "trigger":
             return Q(source=AgentChat.Source.TRIGGER, trigger_type=type_name)
         if kind == "channel":
@@ -861,8 +866,13 @@ class AgentChatHandler:
         """
 
         from .tools.catalog import to_catalog_name
+        from .tools.follow_ups import PROPOSE_FOLLOW_UP_TOOL_NAME
         from .tools.handler import AgentToolHandler
         from .tools.rules import ACT_AS_USER, normalize_workspace_config
+
+        # A follow-up notifies the user and runs its checks as them.
+        if tool_name == PROPOSE_FOLLOW_UP_TOOL_NAME:
+            return True
 
         application = chat.agent.application
         tool = AgentToolHandler().find_tool_for_tool_name(chat.agent, tool_name, tools)

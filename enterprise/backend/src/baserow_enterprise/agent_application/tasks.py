@@ -95,6 +95,35 @@ def _execute_agent_chat_turn(
         chat.save(update_fields=["status", "completed_on", "error", "updated_on"])
         broadcast_chat_updated(chat)
         _notify_chat_channel(chat)
+        if chat.follow_up_id is not None:
+            _finish_follow_up_check(chat, runner)
+
+
+def _finish_follow_up_check(chat, runner) -> None:
+    """
+    Books the check once the agent is done with it. Paused checks are booked
+    when they resume, and a conversation the user continued is theirs, not a
+    check anymore.
+    """
+
+    from .follow_ups import AgentFollowUpHandler
+    from .models import AgentChat, AgentChatMessage
+
+    if chat.status == AgentChat.Status.AWAITING_APPROVAL:
+        return
+    if chat.messages.filter(role=AgentChatMessage.Role.HUMAN).exists():
+        return
+    events = runner.deps.follow_up_events if runner is not None else set()
+    try:
+        AgentFollowUpHandler().finish_check(
+            chat,
+            notified="notified" in events or chat.tool_approvals.exists(),
+            ended="ended" in events,
+        )
+    except Exception:
+        logger.exception(
+            "Failed to finish the check of follow-up {}", chat.follow_up_id
+        )
 
 
 def _notify_chat_channel(chat):
@@ -237,15 +266,19 @@ def clean_up_old_agent_chats(self):
     limits, and recovers chats whose run died without finalizing (e.g. a
     killed worker), which would otherwise stay "running" forever and block
     new messages. Manual conversations are only deleted by users. The email
-    index of channels ages out with the conversations it belongs to.
+    index of channels ages out with the conversations it belongs to, and
+    follow-ups that expired or lost their creator are ended.
     """
 
     from django.db.models import Exists, OuterRef
 
     from .channels.registries import agent_chat_channel_type_registry
+    from .follow_ups import AgentFollowUpHandler
     from .handler import AgentChatHandler
     from .models import AgentChat, AgentEmailMessage
     from .realtime import broadcast_chat_updated
+
+    AgentFollowUpHandler().end_stale_follow_ups()
 
     stuck_cutoff = timezone.now() - timedelta(
         minutes=settings.AGENT_APPLICATION_CHAT_STUCK_TIMEOUT_MINUTES

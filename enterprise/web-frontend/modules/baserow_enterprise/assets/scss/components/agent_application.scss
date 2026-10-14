@@ -3007,3 +3007,46 @@
   line-height: 18px;
   font-variant-numeric: tabular-nums;
 }
+
+.agent-approval-preview__title {
+  color: $palette-neutral-1200;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.agent-follow-up__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-bottom: 8px;
+  color: $palette-neutral-700;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.agent-follow-up__outcome {
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  background-color: $palette-neutral-50;
+  color: $palette-neutral-1200;
+  font-size: 12px;
+  line-height: 18px;
+
+  &--completed {
+    background-color: $palette-green-50;
+    color: $palette-green-900;
+  }
+
+  &--failed {
+    background-color: $palette-red-50;
+    color: $palette-red-900;
+  }
+}
+
+.agent-follow-up__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

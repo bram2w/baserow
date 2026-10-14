@@ -84,6 +84,34 @@ export const registerRealtimeEvents = (realtime) => {
   })
 
   realtime.registerEvent(
+    'agent_follow_up_updated',
+    ({ store, app }, { follow_up: followUp, except_user_id: exceptUserId }) => {
+      const userId = store.getters['auth/getUserId']
+      // The creator of a private follow-up gets its details separately.
+      if (exceptUserId !== undefined && exceptUserId === userId) {
+        return
+      }
+      const agent = store.getters['agentApplication/getAgent']
+      const application = store.getters['application/get'](
+        agent?.application_id
+      )
+      // Who doesn't manage follow-ups only sees their own.
+      if (
+        followUp.created_by?.id !== userId &&
+        (!application ||
+          !app.$hasPermission(
+            'agent_application.list_follow_ups',
+            application,
+            application.workspace.id
+          ))
+      ) {
+        return
+      }
+      store.dispatch('agentApplication/forceUpdateFollowUp', { followUp })
+    }
+  )
+
+  realtime.registerEvent(
     'agent_usage_updated',
     ({ store }, { application_id: applicationId }) => {
       if (

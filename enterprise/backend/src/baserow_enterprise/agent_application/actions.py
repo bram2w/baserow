@@ -20,6 +20,7 @@ from .models import (
     AgentChat,
     AgentChatChannel,
     AgentDefinition,
+    AgentFollowUp,
     AgentTool,
     AgentTrigger,
 )
@@ -543,6 +544,61 @@ class DeleteAgentTriggerActionType(UndoableActionType):
             id=params.trigger_id
         )
         AgentTriggerHandler().trash_trigger(user, trigger)
+
+
+class StopAgentFollowUpActionType(UndoableActionType):
+    """
+    Stopping a follow-up from the list. Undo resumes it, as long as it would
+    still be valid; see `AgentFollowUpHandler.resume_follow_up`.
+    """
+
+    type = "stop_agent_follow_up"
+    description = ActionTypeDescription(
+        _("Stop agent follow-up"),
+        _('Follow-up "%(follow_up_title)s" (%(follow_up_id)s) stopped'),
+        AGENT_ACTION_CONTEXT,
+    )
+
+    @dataclass
+    class Params:
+        application_id: int
+        application_name: str
+        follow_up_id: int
+        follow_up_title: str
+
+    @classmethod
+    def do(cls, user: AbstractUser, follow_up: AgentFollowUp) -> AgentFollowUp:
+        from .follow_ups import AgentFollowUpHandler
+
+        application = follow_up.application
+        follow_up = AgentFollowUpHandler().cancel_follow_up(user, follow_up)
+        cls.register_action(
+            user=user,
+            params=cls.Params(
+                application.id, application.name, follow_up.id, follow_up.title
+            ),
+            scope=cls.scope(application.id),
+            workspace=application.workspace,
+        )
+        return follow_up
+
+    @classmethod
+    def scope(cls, application_id):
+        return ApplicationActionScopeType.value(application_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_to_undo: Action):
+        from .follow_ups import AgentFollowUpHandler
+
+        handler = AgentFollowUpHandler()
+        handler.resume_follow_up(user, handler.get_follow_up(params.follow_up_id))
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
+        from .follow_ups import AgentFollowUpHandler
+
+        handler = AgentFollowUpHandler()
+        handler.cancel_follow_up(user, handler.get_follow_up(params.follow_up_id))
 
 
 # ---------------------------------------------------------------------------

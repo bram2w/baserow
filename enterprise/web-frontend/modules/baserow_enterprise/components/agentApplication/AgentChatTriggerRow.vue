@@ -34,7 +34,7 @@
               <Avatar
                 :initials="initials(preview.quote.author)"
                 color="purple"
-                size="x-small"
+                size="small"
                 rounded
               />
               <span class="agent-chat-quote__author">{{
@@ -90,6 +90,12 @@ export default defineComponent({
       required: false,
       default: '',
     },
+    // Replaces the trigger's own icon, e.g. for a follow-up check.
+    iconClass: {
+      type: String,
+      required: false,
+      default: '',
+    },
     // The event payload; the opening message text when there is none.
     payload: {
       type: [Object, Array, String, Number, Boolean],
@@ -116,7 +122,9 @@ export default defineComponent({
     const type = computed(() =>
       String(props.triggerType || '').replace(/^local_baserow_/, '')
     )
-    const icon = computed(() => TRIGGER_ICONS[type.value] || 'iconoir-db')
+    const icon = computed(
+      () => props.iconClass || TRIGGER_ICONS[type.value] || 'iconoir-db'
+    )
     const segments = computed(() => [
       { label: t('agentChatTrigger.preview') },
       { label: t('agentChatTrigger.rawData') },

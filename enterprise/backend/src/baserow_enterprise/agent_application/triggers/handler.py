@@ -156,9 +156,32 @@ class AgentTriggerHandler:
         enabled: bool = True,
         config: Optional[dict] = None,
     ) -> AgentTrigger:
-        service_type = self._validate_service_type(service_type_str)
+        self._validate_service_type(service_type_str)
         trigger_type = agent_trigger_type_registry.get_by_service_type(service_type_str)
         config = trigger_type.prepare_config(config or {})
+        service = self.create_trigger_service(
+            user, application, service_type_str, service_values
+        )
+
+        trigger = AgentTrigger.objects.create(
+            application=application, service=service, enabled=enabled, config=config
+        )
+        agent_trigger_created.send(self, trigger=trigger, user=user)
+        return trigger
+
+    def create_trigger_service(
+        self,
+        user: AbstractUser,
+        application: AgentApplication,
+        service_type_str: str,
+        service_values: Optional[dict] = None,
+    ):
+        """
+        Creates a live trigger service, validated like the automation editor
+        does. Agent triggers and follow-ups each own one.
+        """
+
+        service_type = self._validate_service_type(service_type_str)
         service_values = dict(service_values or {})
         service_values = self._validate_integration(application, service_values)
         service_values = validate_service_values(service_type, None, service_values)
@@ -168,12 +191,7 @@ class AgentTriggerHandler:
         service = ServiceHandler().create_service(service_type, **prepared_values)
         self._publish_service(service)
         schedule_periodic_service(service)
-
-        trigger = AgentTrigger.objects.create(
-            application=application, service=service, enabled=enabled, config=config
-        )
-        agent_trigger_created.send(self, trigger=trigger, user=user)
-        return trigger
+        return service
 
     def _publish_service(self, service) -> None:
         """

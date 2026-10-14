@@ -45,6 +45,7 @@ from baserow_enterprise.agent_application.actions import (
     DeleteAgentTriggerActionType,
     RetryAgentChatRunActionType,
     RotateAgentChatChannelLinkActionType,
+    StopAgentFollowUpActionType,
     UpdateAgentChatActionType,
     UpdateAgentChatChannelActionType,
     UpdateAgentDefinitionActionType,
@@ -65,10 +66,16 @@ from baserow_enterprise.agent_application.exceptions import (
     AgentChatNotOwned,
     AgentChatNotRetryable,
     AgentDefinitionDoesNotExist,
+    AgentFollowUpDoesNotExist,
+    AgentFollowUpNotActive,
     AgentModelNotConfigured,
     AgentToolApprovalDoesNotExist,
     AgentToolDoesNotExist,
     AgentTriggerDoesNotExist,
+)
+from baserow_enterprise.agent_application.follow_ups import (
+    AgentFollowUpHandler,
+    follow_up_is_visible_to,
 )
 from baserow_enterprise.agent_application.handler import (
     AgentApplicationHandler,
@@ -127,6 +134,8 @@ from .errors import (
     ERROR_AGENT_CHAT_NOT_OWNED,
     ERROR_AGENT_CHAT_NOT_RETRYABLE,
     ERROR_AGENT_DEFINITION_DOES_NOT_EXIST,
+    ERROR_AGENT_FOLLOW_UP_DOES_NOT_EXIST,
+    ERROR_AGENT_FOLLOW_UP_NOT_ACTIVE,
     ERROR_AGENT_MODEL_NOT_CONFIGURED,
     ERROR_AGENT_TOOL_APPROVAL_DOES_NOT_EXIST,
     ERROR_AGENT_TOOL_DOES_NOT_EXIST,
@@ -140,6 +149,7 @@ from .serializers import (
     AgentChatToolApprovalSerializer,
     AgentChatTranscriptSerializer,
     AgentDefinitionSerializer,
+    AgentFollowUpSerializer,
     AgentInstructionsSerializer,
     AgentToolSerializer,
     AgentTriggerSerializer,
@@ -1772,3 +1782,154 @@ class AgentChatChannelRotateSlugView(APIView):
             RotateAgentChatChannelLinkActionType
         ).do(request.user, channel)
         return Response(AgentChatChannelSerializer(channel).data)
+
+
+def _serialize_follow_ups(user, follow_ups) -> list:
+    return [
+        AgentFollowUpSerializer(
+            follow_up, context={"redact": not follow_up_is_visible_to(follow_up, user)}
+        ).data
+        for follow_up in follow_ups
+    ]
+
+
+class AgentFollowUpsView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="application_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+            ),
+            OpenApiParameter(
+                name="status",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description="`active`, `ended`, or leave it out for all of them.",
+            ),
+        ],
+        tags=["Agent"],
+        operation_id="list_agent_application_follow_ups",
+        description=(
+            "Lists the follow-ups of the agent: everyone's for those who manage "
+            "follow-ups, otherwise only the user's own. Private follow-ups of "
+            "others only show that they exist."
+        ),
+        responses={
+            200: AgentFollowUpSerializer(many=True),
+            400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
+            401: get_error_schema(["PERMISSION_DENIED"]),
+            404: get_error_schema(["ERROR_APPLICATION_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+        }
+    )
+    def get(self, request, application_id: int):
+        application = _get_application_and_check(
+            request, application_id, ListAgentChatsOperationType
+        )
+        follow_ups = AgentFollowUpHandler().list_follow_ups(
+            request.user, application, request.GET.get("status")
+        )
+        return Response(_serialize_follow_ups(request.user, follow_ups))
+
+
+class AgentFollowUpView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="follow_up_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+            ),
+        ],
+        tags=["Agent"],
+        operation_id="cancel_agent_application_follow_up",
+        description=(
+            "Cancels the follow-up: no more checks run. Everybody may cancel "
+            "their own; those who manage follow-ups may cancel anyone's. The "
+            "follow-up is kept as a record."
+        ),
+        responses={
+            200: AgentFollowUpSerializer,
+            400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
+            401: get_error_schema(["PERMISSION_DENIED"]),
+            404: get_error_schema(["ERROR_AGENT_FOLLOW_UP_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            AgentFollowUpDoesNotExist: ERROR_AGENT_FOLLOW_UP_DOES_NOT_EXIST,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+        }
+    )
+    def delete(self, request, follow_up_id: int):
+        handler = AgentFollowUpHandler()
+        follow_up = handler.get_follow_up(follow_up_id)
+        application = follow_up.application
+        CoreHandler().check_permissions(
+            request.user,
+            ListAgentChatsOperationType.type,
+            workspace=application.workspace,
+            context=application.application_ptr,
+        )
+        follow_up = action_type_registry.get_by_type(StopAgentFollowUpActionType).do(
+            request.user, follow_up
+        )
+        return Response(_serialize_follow_ups(request.user, [follow_up])[0])
+
+
+class AgentFollowUpCheckView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="follow_up_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+            ),
+        ],
+        tags=["Agent"],
+        operation_id="check_agent_application_follow_up",
+        description=(
+            "Checks the follow-up right away instead of waiting for its "
+            "schedule or row event. Returns the conversation of the check, "
+            "which is kept also when nothing changed."
+        ),
+        responses={
+            200: AgentChatSerializer,
+            400: get_error_schema(
+                ["ERROR_USER_NOT_IN_GROUP", "ERROR_AGENT_FOLLOW_UP_NOT_ACTIVE"]
+            ),
+            401: get_error_schema(["PERMISSION_DENIED"]),
+            404: get_error_schema(["ERROR_AGENT_FOLLOW_UP_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            AgentFollowUpDoesNotExist: ERROR_AGENT_FOLLOW_UP_DOES_NOT_EXIST,
+            AgentFollowUpNotActive: ERROR_AGENT_FOLLOW_UP_NOT_ACTIVE,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+        }
+    )
+    def post(self, request, follow_up_id: int):
+        handler = AgentFollowUpHandler()
+        follow_up = handler.get_follow_up(follow_up_id)
+        application = follow_up.application
+        CoreHandler().check_permissions(
+            request.user,
+            ListAgentChatsOperationType.type,
+            workspace=application.workspace,
+            context=application.application_ptr,
+        )
+        chat = handler.check_now(request.user, follow_up)
+        return Response(AgentChatSerializer(chat).data)

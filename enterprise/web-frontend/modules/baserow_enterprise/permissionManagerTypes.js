@@ -133,6 +133,7 @@ export class WriteFieldValuesPermissionManagerType extends PermissionManagerType
 const AGENT_CHAT_MIN_ROLE_FIELDS = {
   'agent_application.start_chat': 'start_chat_min_role',
   'agent_application.continue_triggered_chat': 'continue_chat_min_role',
+  'agent_application.create_follow_up': 'follow_up_min_role',
 }
 const AGENT_CHAT_ROLES_BY_MIN_ROLE = {
   EDITOR: ['EDITOR', 'BUILDER', 'ADMIN'],

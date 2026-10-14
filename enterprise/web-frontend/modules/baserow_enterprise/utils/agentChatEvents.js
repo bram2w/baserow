@@ -110,7 +110,9 @@ export function groupChatEvents(events, { running = false, chatSource } = {}) {
     }
     closeGroup()
     if (event.type === 'system') {
-      if (chatSource === 'trigger' && index === 0) {
+      // A follow-up check opens with its instructions; like a trigger
+      // event it's shown as what started the conversation.
+      if (['trigger', 'follow_up'].includes(chatSource) && index === 0) {
         blocks.push({
           type: 'trigger',
           key: eventKey(event, index, 'trigger'),

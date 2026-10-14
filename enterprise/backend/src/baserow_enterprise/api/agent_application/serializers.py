@@ -23,6 +23,7 @@ from baserow_enterprise.agent_application.models import (
     AgentChatMessage,
     AgentChatToolApproval,
     AgentDefinition,
+    AgentFollowUp,
     AgentSkill,
 )
 from baserow_enterprise.agent_application.tools.registries import (
@@ -206,6 +207,10 @@ class AgentChatSerializer(serializers.ModelSerializer):
         help_text="The type of the chat channel the conversation came in through."
     )
 
+    follow_up = serializers.SerializerMethodField(
+        help_text="The follow-up this conversation is a check of."
+    )
+
     class Meta:
         model = AgentChat
         fields = (
@@ -221,6 +226,7 @@ class AgentChatSerializer(serializers.ModelSerializer):
             "trigger_type",
             "channel_type",
             "parent_chat_id",
+            "follow_up",
             "started_on",
             "completed_on",
             "error",
@@ -232,6 +238,17 @@ class AgentChatSerializer(serializers.ModelSerializer):
             "updated_on",
         )
         read_only_fields = fields
+
+    @extend_schema_field(OpenApiTypes.OBJECT)
+    def get_follow_up(self, instance):
+        if instance.follow_up_id is None:
+            return None
+        follow_up = instance.follow_up
+        return {
+            "id": follow_up.id,
+            "title": follow_up.title,
+            "status": follow_up.status,
+        }
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_channel_type(self, instance) -> str:
@@ -573,3 +590,75 @@ class AgentWorkspaceToolSerializer(serializers.Serializer):
     label = serializers.CharField()
     description = serializers.CharField(allow_blank=True)
     is_write = serializers.BooleanField(help_text="Whether the tool changes data.")
+
+
+class AgentFollowUpSerializer(serializers.ModelSerializer):
+    """
+    With `redact` in the context, a private follow-up only shows that it
+    exists, who created it and how it's doing, never what it's about.
+    """
+
+    created_by = serializers.SerializerMethodField()
+    source_chat_uuid = serializers.SerializerMethodField()
+    total_cost = serializers.DecimalField(
+        max_digits=20, decimal_places=10, read_only=True
+    )
+
+    class Meta:
+        model = AgentFollowUp
+        fields = (
+            "id",
+            "application_id",
+            "title",
+            "goal",
+            "check_instructions",
+            "done_when",
+            "watch",
+            "state",
+            "status",
+            "outcome",
+            "private",
+            "created_by",
+            "source_chat_uuid",
+            "created_on",
+            "expires_on",
+            "ended_on",
+            "last_checked_on",
+            "checks_count",
+            "notifications_count",
+            "total_input_tokens",
+            "total_output_tokens",
+            "total_cost",
+            "unpriced_turns",
+        )
+        read_only_fields = fields
+
+    REDACTED_FIELDS = (
+        "title",
+        "goal",
+        "check_instructions",
+        "done_when",
+        "state",
+        "outcome",
+    )
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if self.context.get("redact"):
+            for key in self.REDACTED_FIELDS:
+                data[key] = ""
+            data["source_chat_uuid"] = None
+            data["watch"] = {"type": (instance.watch or {}).get("type")}
+        return data
+
+    @extend_schema_field(OpenApiTypes.OBJECT)
+    def get_created_by(self, instance):
+        user = instance.created_by
+        if user is None:
+            return None
+        return {"id": user.id, "name": user.first_name}
+
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_source_chat_uuid(self, instance):
+        chat = instance.source_chat
+        return str(chat.uuid) if chat is not None else None

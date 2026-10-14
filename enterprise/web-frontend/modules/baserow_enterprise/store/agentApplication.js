@@ -28,6 +28,9 @@ export const state = () => ({
   workspaceToolCatalogLoaded: false,
   // Token usage and cost of today, this week, this month and the lifetime.
   usage: null,
+  // Everyone's follow-ups for those who manage them, otherwise the user's own.
+  followUps: [],
+  followUpsLoading: false,
 })
 
 // Finished turns can come in bursts when many conversations run; the usage
@@ -39,6 +42,20 @@ let usageFetchedAt = 0
 export const mutations = {
   SET_USAGE(state, usage) {
     state.usage = usage
+  },
+  SET_FOLLOW_UPS(state, followUps) {
+    state.followUps = followUps
+  },
+  SET_FOLLOW_UPS_LOADING(state, value) {
+    state.followUpsLoading = value
+  },
+  UPSERT_FOLLOW_UP(state, followUp) {
+    const index = state.followUps.findIndex((item) => item.id === followUp.id)
+    if (index === -1) {
+      state.followUps.unshift(followUp)
+    } else {
+      state.followUps.splice(index, 1, followUp)
+    }
   },
   SET_AGENT(state, agent) {
     state.agent = agent
@@ -364,6 +381,37 @@ export const actions = {
     commit('SET_WORKSPACE_TOOL_CATALOG', data)
     return data
   },
+  async fetchFollowUps({ commit }, { applicationId }) {
+    commit('SET_FOLLOW_UPS_LOADING', true)
+    try {
+      const { data } = await AgentApplicationService(this.$client).getFollowUps(
+        applicationId
+      )
+      commit('SET_FOLLOW_UPS', data)
+      return data
+    } finally {
+      commit('SET_FOLLOW_UPS_LOADING', false)
+    }
+  },
+  async checkFollowUp(context, { followUpId }) {
+    const { data } = await AgentApplicationService(this.$client).checkFollowUp(
+      followUpId
+    )
+    return data
+  },
+  async cancelFollowUp({ commit }, { followUpId }) {
+    const { data } = await AgentApplicationService(this.$client).cancelFollowUp(
+      followUpId
+    )
+    commit('UPSERT_FOLLOW_UP', data)
+    return data
+  },
+  forceUpdateFollowUp({ commit, state }, { followUp }) {
+    if (state.agent?.application_id !== followUp.application_id) {
+      return
+    }
+    commit('UPSERT_FOLLOW_UP', followUp)
+  },
   async fetchUsage({ commit }, { applicationId }) {
     usageFetchedAt = Date.now()
     const { data } = await AgentApplicationService(this.$client).getUsage(
@@ -415,6 +463,8 @@ export const getters = {
   isChannelsLoading: (state) => state.channelsLoading,
   getWorkspaceToolCatalog: (state) => state.workspaceToolCatalog,
   getUsage: (state) => state.usage,
+  getFollowUps: (state) => state.followUps,
+  isFollowUpsLoading: (state) => state.followUpsLoading,
   getWorkspaceTool: (state) =>
     state.tools.find((tool) => tool.type === 'workspace') || null,
   /**

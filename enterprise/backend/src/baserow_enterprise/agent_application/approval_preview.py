@@ -10,6 +10,7 @@ from typing import Any, Optional
 from loguru import logger
 
 from .agent_dispatch_context import AgentDispatchContext
+from .tools.follow_ups import PROPOSE_FOLLOW_UP_TOOL_NAME
 
 _ROW_TOOL_RE = re.compile(r"^(create|update|delete)_rows_in_table_(\d+)$")
 _EMAIL_SERVICE_TYPES = {"smtp_email"}
@@ -65,6 +66,8 @@ def build_approval_preview(
             return _service_preview(chat, tool, args)
         if tool_name == EMAIL_REPLY_TOOL_NAME:
             return _email_reply_preview(chat, args)
+        if tool_name == PROPOSE_FOLLOW_UP_TOOL_NAME:
+            return _follow_up_preview(chat, args)
         match = _ROW_TOOL_RE.match(tool_name)
         if match and match.group(1) in ("create", "update"):
             return _rows_preview(args.get("rows"))
@@ -74,6 +77,41 @@ def build_approval_preview(
         logger.exception("Failed to build the approval preview for {}", tool_name)
         fields = _fields_from(args)
         return {"kind": "fields", "fields": fields} if fields else None
+
+
+def _follow_up_preview(chat, args: dict) -> Optional[dict]:
+    """
+    Everything the user agrees to: what it's for, when it checks, what it
+    looks at, when it's done, who's notified and until when.
+    """
+
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from .follow_ups import SCHEDULES, AgentFollowUpHandler
+
+    prepared = AgentFollowUpHandler().prepare_proposal(chat.user, chat, args)
+    watch = prepared["watch"]
+    checks_per_day = (
+        SCHEDULES[watch["every"]][1] if watch["type"] == "schedule" else None
+    )
+    return {
+        "kind": "follow_up",
+        "title": prepared["title"],
+        "goal": prepared["goal"],
+        "check_instructions": prepared["check_instructions"],
+        "done_when": prepared["done_when"],
+        "state": prepared["state"],
+        "watch": watch,
+        "checks_per_day": checks_per_day,
+        "notify": chat.user.first_name,
+        "expires_on": (
+            (timezone.now() + timedelta(days=prepared["expires_in_days"])).isoformat()
+            if prepared["expires_in_days"] is not None
+            else None
+        ),
+    }
 
 
 def _email_reply_preview(chat, args: dict) -> Optional[dict]:

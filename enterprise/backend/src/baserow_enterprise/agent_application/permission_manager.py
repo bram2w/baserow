@@ -16,6 +16,7 @@ from baserow_enterprise.role.constants import (
 from .models import AgentApplication, AgentChatMinRole
 from .operations import (
     ContinueTriggeredAgentChatOperationType,
+    CreateAgentFollowUpOperationType,
     ListAgentChatsOperationType,
     ListAgentToolsOperationType,
     ReadAgentChatChannelOperationType,
@@ -30,6 +31,7 @@ from .operations import (
 MIN_ROLE_FIELD_BY_OPERATION = {
     StartAgentChatOperationType.type: "start_chat_min_role",
     ContinueTriggeredAgentChatOperationType.type: "continue_chat_min_role",
+    CreateAgentFollowUpOperationType.type: "follow_up_min_role",
 }
 ROLE_UIDS_BY_MIN_ROLE = {
     AgentChatMinRole.EDITOR: {EDITOR_ROLE_UID, BUILDER_ROLE_UID, ADMIN_ROLE_UID},

@@ -257,12 +257,58 @@ class AgentRunner:
             )
             toolsets.extend(channel_type.get_toolsets(self.chat.channel, self.chat))
 
+        toolsets.extend(self._build_follow_up_toolsets())
+
         # A conversation started by a row comment can be answered where it
         # was asked; other runs have no row to reply on.
         if self.chat.trigger_type == RowCommentCreatedAgentTriggerType.type:
             toolsets.append(build_row_comment_reply_toolset())
 
         return toolsets
+
+    def _build_follow_up_toolsets(self) -> list:
+        """
+        A check of a follow-up can notify and complete it. A Baserow user who
+        may create follow-ups can have the agent propose one, and sees which
+        ones they already have so the agent doesn't propose them twice.
+        """
+
+        from .follow_ups import AgentFollowUpHandler
+        from .models import AgentFollowUp
+        from .tools.follow_ups import (
+            build_follow_up_check_toolset,
+            build_follow_up_proposal_toolset,
+        )
+
+        if self.chat.source == AgentChat.Source.FOLLOW_UP and not (
+            self.chat.messages.filter(role=AgentChatMessage.Role.HUMAN).exists()
+        ):
+            follow_up = self.chat.follow_up
+            if follow_up is not None and follow_up.is_active:
+                return [build_follow_up_check_toolset()]
+            return []
+        # Once the user writes in a check, it's their conversation like any
+        # other, so they can ask for a new follow-up there too.
+        if self.chat.user is None or self.chat.source not in (
+            AgentChat.Source.MANUAL,
+            AgentChat.Source.SETUP,
+            AgentChat.Source.TRIGGER,
+            AgentChat.Source.FOLLOW_UP,
+        ):
+            return []
+        if not AgentFollowUpHandler().can_create(self.chat.user, self.application):
+            return []
+        active = AgentFollowUp.objects.filter(
+            application=self.application,
+            created_by=self.chat.user,
+            status=AgentFollowUp.Status.ACTIVE,
+        ).order_by("id")
+        lines = [f"- #{follow_up.id}: {follow_up.title}" for follow_up in active]
+        if lines:
+            self.deps.system_notes.append(
+                "The user's active follow-ups with you:\n" + "\n".join(lines)
+            )
+        return [build_follow_up_proposal_toolset()]
 
     def _may_update_memory(self) -> bool:
         """
@@ -905,12 +951,25 @@ class AgentRunner:
                 "updated_on",
             ]
         )
-        await sync_to_async(AgentUsageHandler().record)(
-            self.application.id,
-            usage.input_tokens or 0,
-            usage.output_tokens or 0,
-            cost,
-        )
+
+        def record():
+            AgentUsageHandler().record(
+                self.application.id,
+                usage.input_tokens or 0,
+                usage.output_tokens or 0,
+                cost,
+            )
+            if self.chat.follow_up_id is not None:
+                from .follow_ups import AgentFollowUpHandler
+
+                AgentFollowUpHandler().add_usage(
+                    self.chat.follow_up_id,
+                    usage.input_tokens or 0,
+                    usage.output_tokens or 0,
+                    cost,
+                )
+
+        await sync_to_async(record)()
         # Sent before the answer completes, so both show at the same time.
         self._broadcast_usage()
         broadcast_usage_updated(self.application.id)

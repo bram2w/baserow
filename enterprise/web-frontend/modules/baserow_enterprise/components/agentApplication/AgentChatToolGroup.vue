@@ -252,11 +252,13 @@ export default defineComponent({
           (step.kind === 'reasoning' && step.live)
       )
     )
-    // The model's `thought` argument explains the step in plain words; a
-    // web search is described by its query.
+    // A search (web, semantic, a search action) is described by what it
+    // searches for; other steps by the model's `thought`, which explains them
+    // in plain words.
     const summary = (event) => {
-      if (isWebSearch(event) && typeof event.args?.query === 'string') {
-        return event.args.query
+      const query = event.args?.query
+      if (typeof query === 'string' && query.trim() !== '') {
+        return query.trim()
       }
       return typeof event.args?.thought === 'string'
         ? event.args.thought.trim()

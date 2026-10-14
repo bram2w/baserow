@@ -1,7 +1,7 @@
 /**
  * How a conversation was started, as the key the conversation list filters
  * on (the backend's `origin` query parameter): `manual`, `service`,
- * `trigger:<trigger type>` or `channel:<channel type>`.
+ * `follow_up`, `trigger:<trigger type>` or `channel:<channel type>`.
  */
 export function getChatOrigin(chat) {
   if (chat.source === 'trigger') {
@@ -12,6 +12,9 @@ export function getChatOrigin(chat) {
   }
   if (chat.source === 'service') {
     return 'service'
+  }
+  if (chat.source === 'follow_up') {
+    return 'follow_up'
   }
   // Conversations from the old setup assistant were started by hand too.
   return 'manual'
@@ -87,6 +90,13 @@ export function describeChatOrigin(origin, { registry, t }) {
       label: channelType?.name || t('agentChatOrigin.channel'),
       icon: channelType?.icon || 'iconoir-chat-bubble',
       image: channelType?.image || '',
+    }
+  }
+  if (kind === 'follow_up') {
+    return {
+      label: t('agentChatOrigin.followUp'),
+      icon: 'iconoir-bell',
+      image: '',
     }
   }
   if (kind === 'service') {

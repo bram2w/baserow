@@ -195,6 +195,7 @@ class BaserowEnterpriseConfig(AppConfig):
             DispatchAgentToolActionType,
             RetryAgentChatRunActionType,
             RotateAgentChatChannelLinkActionType,
+            StopAgentFollowUpActionType,
             UpdateAgentChatActionType,
             UpdateAgentChatChannelActionType,
             UpdateAgentDefinitionActionType,
@@ -208,13 +209,16 @@ class BaserowEnterpriseConfig(AppConfig):
         from baserow_enterprise.agent_application.operations import (
             CancelAgentChatOperationType,
             ContinueTriggeredAgentChatOperationType,
+            CreateAgentFollowUpOperationType,
             CreateAgentToolOperationType,
             DecideAgentToolApprovalOperationType,
             DeleteAgentChatChannelOperationType,
             DeleteAgentChatOperationType,
+            DeleteAgentFollowUpOperationType,
             DeleteAgentToolOperationType,
             DeleteAgentTriggerOperationType,
             ListAgentChatsOperationType,
+            ListAgentFollowUpsOperationType,
             ListAgentToolsOperationType,
             ReadAgentChatChannelOperationType,
             ReadAgentChatOperationType,
@@ -371,6 +375,7 @@ class BaserowEnterpriseConfig(AppConfig):
             CreateAgentTriggerActionType,
             UpdateAgentTriggerActionType,
             DeleteAgentTriggerActionType,
+            StopAgentFollowUpActionType,
             CreateAgentChatChannelActionType,
             UpdateAgentChatChannelActionType,
             DeleteAgentChatChannelActionType,
@@ -408,6 +413,9 @@ class BaserowEnterpriseConfig(AppConfig):
         operation_type_registry.register(UpdateAgentChatOperationType())
         operation_type_registry.register(ReadAgentUsageOperationType())
         operation_type_registry.register(DecideAgentToolApprovalOperationType())
+        operation_type_registry.register(CreateAgentFollowUpOperationType())
+        operation_type_registry.register(ListAgentFollowUpsOperationType())
+        operation_type_registry.register(DeleteAgentFollowUpOperationType())
         operation_type_registry.register(ReadAgentChatChannelOperationType())
         operation_type_registry.register(UpdateAgentChatChannelOperationType())
 
@@ -654,6 +662,12 @@ class BaserowEnterpriseConfig(AppConfig):
         notification_type_registry.register(TwoWaySyncDeactivatedNotificationType())
         notification_type_registry.register(DataScanNewResultsNotificationType())
         notification_type_registry.register(ApplicationUserLimitNotificationType())
+
+        from baserow_enterprise.agent_application.notification_types import (
+            AgentFollowUpNotificationType,
+        )
+
+        notification_type_registry.register(AgentFollowUpNotificationType())
 
         from baserow_enterprise.views.operations import (
             ListenToAllRestrictedViewEventsOperationType,

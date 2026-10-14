@@ -129,6 +129,8 @@ export const state = () => ({
   // list and the chat pane can show that a different one is opening.
   loadingChatUuid: null,
   canceling: false,
+  // The follow-up the open conversation is a check of: `{id, title, status}`.
+  followUp: null,
   // Tokens and cost of the open conversation, its title included; null for
   // a conversation that hasn't been saved yet.
   usage: null,
@@ -194,6 +196,9 @@ export const mutations = {
   },
   SET_USAGE(state, value) {
     state.usage = value
+  },
+  SET_FOLLOW_UP(state, value) {
+    state.followUp = value
   },
   SET_TRIGGER(state, { triggerType, eventPayload }) {
     state.triggerType = triggerType
@@ -296,6 +301,7 @@ export const actions = {
     commit('SET_PRIVATE', Boolean(data.chat.private))
     commit('SET_CHAT_USER_ID', data.chat.user_id ?? null)
     commit('SET_USAGE', pickUsage(data.chat))
+    commit('SET_FOLLOW_UP', data.chat.follow_up ?? null)
     commit('SET_TRIGGER', {
       triggerType: data.chat.trigger_type || '',
       eventPayload: data.chat.event_payload ?? null,
@@ -317,6 +323,7 @@ export const actions = {
     commit('SET_PRIVATE', isPrivate)
     commit('SET_CHAT_USER_ID', null)
     commit('SET_USAGE', null)
+    commit('SET_FOLLOW_UP', null)
     commit('SET_CHAT_ID', null)
     commit('SET_EVENTS', [])
     commit('SET_RUNNING', false)
@@ -480,6 +487,9 @@ export const actions = {
     const usage = pickUsage(chat)
     if (usage) {
       commit('SET_USAGE', usage)
+    }
+    if (chat.follow_up !== undefined) {
+      commit('SET_FOLLOW_UP', chat.follow_up)
     }
     const missedTerminal =
       ['idle', 'error'].includes(chat.status) &&
@@ -732,6 +742,7 @@ export const getters = {
   isPrivate: (state) => state.private,
   getChatUserId: (state) => state.chatUserId,
   getUsage: (state) => state.usage,
+  getFollowUp: (state) => state.followUp,
   getTriggerType: (state) => state.triggerType,
   getEventPayload: (state) => state.eventPayload,
   getToolApprovals: (state) => state.toolApprovals,

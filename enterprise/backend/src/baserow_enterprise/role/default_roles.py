@@ -299,13 +299,16 @@ from baserow.core.user_sources.operations import (
 from baserow_enterprise.agent_application.operations import (
     CancelAgentChatOperationType,
     ContinueTriggeredAgentChatOperationType,
+    CreateAgentFollowUpOperationType,
     CreateAgentToolOperationType,
     DecideAgentToolApprovalOperationType,
     DeleteAgentChatChannelOperationType,
     DeleteAgentChatOperationType,
+    DeleteAgentFollowUpOperationType,
     DeleteAgentToolOperationType,
     DeleteAgentTriggerOperationType,
     ListAgentChatsOperationType,
+    ListAgentFollowUpsOperationType,
     ListAgentToolsOperationType,
     ReadAgentChatChannelOperationType,
     ReadAgentChatOperationType,
@@ -517,6 +520,7 @@ default_roles[EDITOR_ROLE_UID].extend(
         ContinueTriggeredAgentChatOperationType,
         CancelAgentChatOperationType,
         UpdateAgentChatOperationType,
+        CreateAgentFollowUpOperationType,
     ]
 )
 default_roles[BUILDER_ROLE_UID].extend(
@@ -526,6 +530,8 @@ default_roles[BUILDER_ROLE_UID].extend(
         # Approving a step lets the agent act with its identity's rights, so
         # it is a builder decision, not an editor's.
         DecideAgentToolApprovalOperationType,
+        ListAgentFollowUpsOperationType,
+        DeleteAgentFollowUpOperationType,
         CreateWorkspaceSkillOperationType,
         UpdateWorkspaceSkillOperationType,
         DeleteWorkspaceSkillOperationType,

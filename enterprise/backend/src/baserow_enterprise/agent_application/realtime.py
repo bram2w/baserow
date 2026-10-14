@@ -249,3 +249,43 @@ def broadcast_chat_updated(chat: AgentChat) -> None:
         private_user_id,
     )
     broadcast_public_chat_status(chat)
+
+
+def broadcast_follow_up_updated(follow_up) -> None:
+    """
+    Keeps the follow-up lists live. Those managing the agent see that a
+    private follow-up exists, but only its creator gets its details.
+    """
+
+    from baserow_enterprise.api.agent_application.serializers import (
+        AgentFollowUpSerializer,
+    )
+
+    group = get_agent_application_group_name(follow_up.application_id)
+    if not follow_up.private:
+        broadcast_to_channel_group.delay(
+            group,
+            {
+                "type": "agent_follow_up_updated",
+                "follow_up": AgentFollowUpSerializer(follow_up).data,
+            },
+        )
+        return
+    broadcast_to_channel_group.delay(
+        group,
+        {
+            "type": "agent_follow_up_updated",
+            "follow_up": AgentFollowUpSerializer(
+                follow_up, context={"redact": True}
+            ).data,
+            "except_user_id": follow_up.created_by_id,
+        },
+    )
+    if follow_up.created_by_id is not None:
+        broadcast_to_users.delay(
+            [follow_up.created_by_id],
+            {
+                "type": "agent_follow_up_updated",
+                "follow_up": AgentFollowUpSerializer(follow_up).data,
+            },
+        )

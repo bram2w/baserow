@@ -26,6 +26,7 @@
         :application="application"
         :loading="loading"
         @close="configurationOpen = false"
+        @open-conversation="openConversation"
       />
     </div>
   </div>

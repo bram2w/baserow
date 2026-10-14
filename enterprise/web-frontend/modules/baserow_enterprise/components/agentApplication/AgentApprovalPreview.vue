@@ -14,7 +14,7 @@
                 v-if="field.identity"
                 :initials="field.identity.slice(0, 1).toUpperCase()"
                 color="green"
-                size="x-small"
+                size="small"
                 rounded
               />
               {{ field.value }}
@@ -28,6 +28,20 @@
       <div v-if="footnote" class="agent-approval-preview__footnote">
         <i class="iconoir-mail"></i>
         {{ footnote }}
+      </div>
+    </template>
+    <template v-else-if="preview.kind === 'follow_up'">
+      <div class="agent-approval-preview__title">{{ preview.title }}</div>
+      <AgentKeyValueList :fields="followUpFields" />
+      <div class="agent-approval-preview__footnote">
+        <i class="iconoir-bell"></i>
+        {{
+          preview.checks_per_day
+            ? $t('agentFollowUps.approvalFootnoteChecks', {
+                count: preview.checks_per_day,
+              })
+            : $t('agentFollowUps.approvalFootnote')
+        }}
       </div>
     </template>
     <AgentPreviewTable v-else-if="preview.kind === 'table'" :table="preview" />
@@ -48,6 +62,7 @@
 <script>
 import AgentKeyValueList from '@baserow_enterprise/components/agentApplication/AgentKeyValueList'
 import AgentPreviewTable from '@baserow_enterprise/components/agentApplication/AgentPreviewTable'
+import { followUpFields } from '@baserow_enterprise/utils/agentFollowUp'
 
 const EMAIL_FIELDS = ['from', 'to', 'cc', 'bcc', 'subject']
 
@@ -71,6 +86,12 @@ export default {
     },
   },
   computed: {
+    // What the user agrees to before the follow-up exists.
+    followUpFields() {
+      return followUpFields(this.preview, this.$t, {
+        notify: this.preview.notify,
+      })
+    },
     emailFields() {
       return EMAIL_FIELDS.filter((key) => this.preview[key]).map((key) => {
         const value = String(this.preview[key])

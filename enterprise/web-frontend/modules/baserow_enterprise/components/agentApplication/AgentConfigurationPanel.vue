@@ -38,6 +38,11 @@
         :application="application"
         :read-only="!canUpdateTrigger"
       />
+      <AgentFollowUpsSection
+        v-else-if="activeSection === 'follow_ups'"
+        :application="application"
+        @open-conversation="$emit('open-conversation', $event)"
+      />
       <AgentAccessSection
         v-else-if="activeSection === 'access'"
         :application="application"
@@ -78,6 +83,7 @@ import AgentConfigurationSectionRow from '@baserow_enterprise/components/agentAp
 import AgentInstructionsSection from '@baserow_enterprise/components/agentApplication/AgentInstructionsSection'
 import AgentTriggerSection from '@baserow_enterprise/components/agentApplication/AgentTriggerSection'
 import AgentAccessSection from '@baserow_enterprise/components/agentApplication/AgentAccessSection'
+import AgentFollowUpsSection from '@baserow_enterprise/components/agentApplication/AgentFollowUpsSection'
 import AgentActionToolsSection from '@baserow_enterprise/components/agentApplication/AgentActionToolsSection'
 import AgentChatChannelsSection from '@baserow_enterprise/components/agentApplication/AgentChatChannelsSection'
 import AgentMemorySection from '@baserow_enterprise/components/agentApplication/AgentMemorySection'
@@ -100,6 +106,7 @@ export default defineComponent({
     AgentInstructionsSection,
     AgentTriggerSection,
     AgentAccessSection,
+    AgentFollowUpsSection,
     AgentActionToolsSection,
     AgentChatChannelsSection,
     AgentMemorySection,
@@ -125,10 +132,10 @@ export default defineComponent({
       default: null,
     },
   },
-  emits: ['close', 'update:section'],
+  emits: ['close', 'update:section', 'open-conversation'],
   setup(props) {
     const store = useStore()
-    const { storePrefix, hasPermission } = useAgentContext()
+    const { storePrefix, template, hasPermission } = useAgentContext()
     const { $registry, $config } = useNuxtApp()
     const { t } = useI18n()
 
@@ -227,6 +234,18 @@ export default defineComponent({
         : t('agentConfiguration.actionToolsEmptySummary')
     })
 
+    const followUps = computed(
+      () => store.getters[`${storePrefix}agentApplication/getFollowUps`]
+    )
+    const followUpsSummary = computed(() => {
+      const active = followUps.value.filter(
+        (followUp) => followUp.status === 'active'
+      ).length
+      return active > 0
+        ? t('agentConfiguration.followUpsSummary', { count: active })
+        : t('agentConfiguration.followUpsEmptySummary')
+    })
+
     const channelsSummary = computed(() => {
       const names = channels.value.map(
         (channel) => channel.name || t('agentChannels.slack')
@@ -251,6 +270,17 @@ export default defineComponent({
         title: t('agentConfiguration.whenItRuns'),
         summary: triggersSummary.value,
       },
+      // Follow-ups are personal, so a template has none.
+      ...(template
+        ? []
+        : [
+            {
+              key: 'follow_ups',
+              icon: 'iconoir-bell',
+              title: t('agentConfiguration.followUps'),
+              summary: followUpsSummary.value,
+            },
+          ]),
       {
         key: 'access',
         icon: 'iconoir-shield-check',

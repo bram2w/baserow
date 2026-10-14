@@ -273,6 +273,11 @@ export default {
           label: this.$t('agentTrigger.continueChatMinRole'),
           hint: this.$t('agentTrigger.continueChatMinRoleHint'),
         },
+        {
+          field: 'follow_up_min_role',
+          label: this.$t('agentTrigger.followUpMinRole'),
+          hint: this.$t('agentTrigger.followUpMinRoleHint'),
+        },
       ]
     },
     chatRoleOptions() {

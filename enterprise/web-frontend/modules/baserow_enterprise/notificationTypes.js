@@ -4,6 +4,7 @@ import BaserowIcon from '@baserow/modules/core/static/img/logoOnly.svg?url'
 
 import ApplicationUserLimitNotification from '@baserow_enterprise/components/notifications/ApplicationUserLimitNotification'
 import DataScanNewResultsNotification from '@baserow_enterprise/components/notifications/DataScanNewResultsNotification'
+import AgentFollowUpNotification from '@baserow_enterprise/components/notifications/AgentFollowUpNotification'
 import PeriodicDataSyncDeactivatedNotification from '@baserow_enterprise/components/notifications/PeriodicDataSyncDeactivatedNotification'
 import TwoWaySyncUpdateFailedNotification from '@baserow_enterprise/components/notifications/TwoWaySyncUpdateFailedNotification'
 import TwoWaySyncDeactivatedNotification from '@baserow_enterprise/components/notifications/TwoWaySyncDeactivatedNotification'
@@ -110,6 +111,32 @@ export class DataScanNewResultsNotificationType extends NotificationType {
         scan_name: notificationData.scan_name,
       },
     }
+  }
+}
+
+export class AgentFollowUpNotificationType extends NotificationType {
+  static getType() {
+    return 'agent_follow_up'
+  }
+
+  getIconComponent() {
+    return null
+  }
+
+  getContentComponent() {
+    return AgentFollowUpNotification
+  }
+
+  // Opens the check that found it, or the agent when it simply stopped.
+  getRoute(notificationData) {
+    const route = {
+      name: 'agent-application',
+      params: { agentApplicationId: notificationData.application_id },
+    }
+    if (notificationData.chat_uuid) {
+      route.query = { chat: notificationData.chat_uuid }
+    }
+    return route
   }
 }
 

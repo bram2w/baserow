@@ -89,6 +89,27 @@ class ReadAgentUsageOperationType(AgentApplicationOperationType):
     type = "agent_application.read_usage"
 
 
+class CreateAgentFollowUpOperationType(AgentApplicationOperationType):
+    """
+    Having the agent create a follow-up from a conversation. Granted to
+    editors, then narrowed by the application's `follow_up_min_role`.
+    """
+
+    type = "agent_application.create_follow_up"
+
+
+class ListAgentFollowUpsOperationType(AgentApplicationOperationType):
+    """Seeing everyone's follow-ups; everybody always sees their own."""
+
+    type = "agent_application.list_follow_ups"
+
+
+class DeleteAgentFollowUpOperationType(AgentApplicationOperationType):
+    """Cancelling anyone's follow-up; everybody may cancel their own."""
+
+    type = "agent_application.delete_follow_up"
+
+
 class DecideAgentToolApprovalOperationType(AgentApplicationOperationType):
     type = "agent_application.decide_tool_approval"
 

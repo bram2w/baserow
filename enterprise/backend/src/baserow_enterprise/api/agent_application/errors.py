@@ -85,3 +85,15 @@ ERROR_AGENT_CHAT_NOT_OWNED = (
     HTTP_403_FORBIDDEN,
     "Only the user who started this conversation can continue it.",
 )
+
+ERROR_AGENT_FOLLOW_UP_DOES_NOT_EXIST = (
+    "ERROR_AGENT_FOLLOW_UP_DOES_NOT_EXIST",
+    HTTP_404_NOT_FOUND,
+    "The requested follow-up does not exist.",
+)
+
+ERROR_AGENT_FOLLOW_UP_NOT_ACTIVE = (
+    "ERROR_AGENT_FOLLOW_UP_NOT_ACTIVE",
+    HTTP_400_BAD_REQUEST,
+    "{e}",
+)

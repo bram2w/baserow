@@ -58,3 +58,15 @@ class PublicChatAuthorizationRequired(Exception):
 
 class PublicChatMessageLimitReached(Exception):
     """A public web chat conversation holds as many messages as allowed."""
+
+
+class AgentFollowUpDoesNotExist(Exception):
+    """Raised when the follow-up doesn't exist."""
+
+
+class AgentFollowUpInvalid(Exception):
+    """Raised when a proposed follow-up can't be created, with the reason."""
+
+
+class AgentFollowUpNotActive(Exception):
+    """Raised when a follow-up can't be checked: it ended or is being checked."""

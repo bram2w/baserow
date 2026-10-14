@@ -17,8 +17,14 @@ const DYNAMIC_ROW_TOOL = /^(create|update|delete)_rows_in_table_\d+$/
  * which makes deciding it that user's call alone. Mirrors the backend's
  * `approval_acts_as_user`.
  */
+export const PROPOSE_FOLLOW_UP_TOOL_NAME = 'propose_follow_up'
+
 export function approvalActsAsUser(toolName, { tools, catalog, application }) {
   const name = String(toolName)
+  // A follow-up notifies the user and runs its checks as them.
+  if (name === PROPOSE_FOLLOW_UP_TOOL_NAME) {
+    return true
+  }
   const catalogName = name.replace(DYNAMIC_ROW_TOOL, '$1_rows')
   const workspaceTool = tools.find((tool) => tool.type === 'workspace')
   if (workspaceTool && catalog.some((tool) => tool.name === catalogName)) {

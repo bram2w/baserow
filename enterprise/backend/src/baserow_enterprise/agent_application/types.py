@@ -47,6 +47,7 @@ class AgentApplicationDict(TypedDict):
     act_as_user: bool
     start_chat_min_role: str
     continue_chat_min_role: str
+    follow_up_min_role: str
     integrations: list[dict]
     agents: list[AgentDefinitionDict]
     triggers: list[AgentTriggerDict]

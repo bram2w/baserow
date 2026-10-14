@@ -1,6 +1,8 @@
 import django.db.models.deletion
+from django.conf import settings
 from django.db import migrations, models
 
+import baserow.core.fields
 import baserow.core.formula.field
 
 
@@ -65,6 +67,7 @@ def backfill_agent_usage(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         (
             "baserow_enterprise",
             "0069_agentapplication_agentchatchannel_agentchat_and_more",
@@ -579,4 +582,212 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.RunPython(backfill_agent_usage, migrations.RunPython.noop),
+        migrations.AddField(
+            model_name="agentapplication",
+            name="follow_up_min_role",
+            field=models.CharField(
+                choices=[
+                    ("EDITOR", "Editors and up"),
+                    ("BUILDER", "Builders and up"),
+                    ("ADMIN", "Admins"),
+                    ("NOBODY", "Nobody"),
+                ],
+                db_default="BUILDER",
+                default="BUILDER",
+                help_text="The minimum role needed to have the agent create a follow-up.",
+                max_length=16,
+            ),
+        ),
+        migrations.AlterField(
+            model_name="agentchat",
+            name="source",
+            field=models.CharField(
+                choices=[
+                    ("manual", "Manual"),
+                    ("trigger", "Trigger"),
+                    ("setup", "Setup"),
+                    ("channel", "Channel"),
+                    ("service", "Service"),
+                    ("follow_up", "Follow-up"),
+                ],
+                db_default="manual",
+                default="manual",
+                max_length=20,
+            ),
+        ),
+        migrations.CreateModel(
+            name="AgentFollowUp",
+            fields=[
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_on", models.DateTimeField(auto_now_add=True)),
+                ("updated_on", baserow.core.fields.SyncedDateTimeField(auto_now=True)),
+                (
+                    "private",
+                    models.BooleanField(
+                        db_default=False,
+                        default=False,
+                        help_text="Created in a private conversation, so its checks are private.",
+                    ),
+                ),
+                ("title", models.CharField(max_length=255)),
+                ("goal", models.TextField(help_text="Why the user wants this.")),
+                (
+                    "check_instructions",
+                    models.TextField(help_text="What every check looks at."),
+                ),
+                (
+                    "done_when",
+                    models.TextField(help_text="When the follow-up is complete."),
+                ),
+                (
+                    "watch",
+                    models.JSONField(
+                        default=dict,
+                        help_text="When the checks run, kept for display after the trigger is gone: `{type: schedule, every}` or `{type: rows_*, table_id, row_ids}`.",
+                    ),
+                ),
+                (
+                    "state",
+                    models.TextField(
+                        blank=True,
+                        db_default="",
+                        help_text="What the checks remember between runs, e.g. the last status.",
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("active", "Active"),
+                            ("completed", "Completed"),
+                            ("cancelled", "Cancelled"),
+                            ("expired", "Expired"),
+                            ("failed", "Failed"),
+                        ],
+                        db_default="active",
+                        default="active",
+                        max_length=16,
+                    ),
+                ),
+                ("outcome", models.TextField(blank=True, db_default="")),
+                (
+                    "expires_on",
+                    models.DateTimeField(
+                        blank=True,
+                        help_text="Null when it has no end date.",
+                        null=True,
+                    ),
+                ),
+                (
+                    "ended_on",
+                    models.DateTimeField(blank=True, db_default=None, null=True),
+                ),
+                (
+                    "last_checked_on",
+                    models.DateTimeField(blank=True, db_default=None, null=True),
+                ),
+                ("checks_count", models.PositiveIntegerField(db_default=0, default=0)),
+                (
+                    "failed_checks_in_a_row",
+                    models.PositiveIntegerField(db_default=0, default=0),
+                ),
+                (
+                    "notifications_count",
+                    models.PositiveIntegerField(db_default=0, default=0),
+                ),
+                ("total_input_tokens", models.BigIntegerField(db_default=0, default=0)),
+                (
+                    "total_output_tokens",
+                    models.BigIntegerField(db_default=0, default=0),
+                ),
+                (
+                    "total_cost",
+                    models.DecimalField(
+                        db_default=0, decimal_places=10, default=0, max_digits=20
+                    ),
+                ),
+                (
+                    "unpriced_turns",
+                    models.PositiveIntegerField(db_default=0, default=0),
+                ),
+                (
+                    "application",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="follow_ups",
+                        to="baserow_enterprise.agentapplication",
+                    ),
+                ),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        help_text="Who asked for it, and who gets notified.",
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="+",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "source_chat",
+                    models.ForeignKey(
+                        blank=True,
+                        db_default=None,
+                        default=None,
+                        help_text="The conversation it was created in.",
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="created_follow_ups",
+                        to="baserow_enterprise.agentchat",
+                    ),
+                ),
+                (
+                    "service",
+                    models.OneToOneField(
+                        blank=True,
+                        db_default=None,
+                        default=None,
+                        help_text=(
+                            "The schedule or row event starting its checks, apart "
+                            "from the agent's own triggers; removed once it ends."
+                        ),
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="agent_follow_up",
+                        to="core.service",
+                    ),
+                ),
+            ],
+            options={
+                "ordering": ("-id",),
+            },
+        ),
+        migrations.AddField(
+            model_name="agentchat",
+            name="follow_up",
+            field=models.ForeignKey(
+                blank=True,
+                db_default=None,
+                default=None,
+                help_text="The follow-up this conversation is a check of.",
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="chats",
+                to="baserow_enterprise.agentfollowup",
+            ),
+        ),
+        migrations.AddIndex(
+            model_name="agentfollowup",
+            index=models.Index(
+                fields=["application", "status"], name="baserow_ent_applica_84c7f0_idx"
+            ),
+        ),
     ]

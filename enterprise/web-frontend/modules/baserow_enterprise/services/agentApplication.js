@@ -6,6 +6,15 @@ export default (client) => {
     updateAgent(agentId, values) {
       return client.patch(`agent_application/agents/${agentId}/`, values)
     },
+    getFollowUps(applicationId) {
+      return client.get(`agent_application/${applicationId}/follow_ups/`)
+    },
+    checkFollowUp(followUpId) {
+      return client.post(`agent_application/follow_ups/${followUpId}/check/`)
+    },
+    cancelFollowUp(followUpId) {
+      return client.delete(`agent_application/follow_ups/${followUpId}/`)
+    },
     getUsage(applicationId, timezone) {
       return client.get(`agent_application/${applicationId}/usage/`, {
         params: { timezone },

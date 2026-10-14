@@ -49,6 +49,7 @@
           <AgentChatTriggerRow
             v-if="block.type === 'trigger'"
             :label="triggerLabel"
+            :icon-class="followUp ? 'iconoir-bell' : ''"
             :trigger-type="triggerType"
             :payload="eventPayload"
             :created-on="block.event.created_on"
@@ -487,12 +488,23 @@ export default defineComponent({
       }
       return ''
     }
-    const triggerLabel = computed(
-      () =>
-        triggerNodeLabel(
-          store.getters[`${storePrefix}agentChat/getTriggerType`]
-        ) || t('agentChat.startedByTrigger')
+    const followUp = computed(
+      () => store.getters[`${storePrefix}agentChat/getFollowUp`]
     )
+    const triggerLabel = computed(() => {
+      const triggerType =
+        store.getters[`${storePrefix}agentChat/getTriggerType`]
+      const label =
+        triggerType === 'check_now'
+          ? t('agentChat.checkedByHand')
+          : triggerNodeLabel(triggerType) || t('agentChat.startedByTrigger')
+      return followUp.value
+        ? t('agentChat.startedByFollowUp', {
+            title: followUp.value.title,
+            trigger: label,
+          })
+        : label
+    })
     // The identity name a tool runs as when it differs from the agent's own,
     // shown under email previews so the sender is clear.
     const runsAs = (toolName) => {
@@ -1042,6 +1054,7 @@ export default defineComponent({
     })
 
     return {
+      followUp,
       usageLine,
       usageBreakdown,
       canDecide,

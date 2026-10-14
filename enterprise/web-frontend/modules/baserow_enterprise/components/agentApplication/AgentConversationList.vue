@@ -190,6 +190,11 @@ export default defineComponent({
         values.push(`channel:${channel.type}`)
       }
       values.push('service')
+      if (
+        store.getters[`${storePrefix}agentApplication/getFollowUps`].length > 0
+      ) {
+        values.push('follow_up')
+      }
       if (origin.value !== null) {
         values.push(origin.value)
       }

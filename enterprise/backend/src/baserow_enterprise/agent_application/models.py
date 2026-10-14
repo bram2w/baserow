@@ -24,6 +24,7 @@ __all__ = [
     "AgentChatMessage",
     "AgentChatToolApproval",
     "AgentUsage",
+    "AgentFollowUp",
 ]
 
 
@@ -77,6 +78,13 @@ class AgentApplication(Application):
         help_text=(
             "The minimum role needed to continue a conversation that a trigger started."
         ),
+    )
+    follow_up_min_role = models.CharField(
+        max_length=16,
+        choices=AgentChatMinRole.choices,
+        default=AgentChatMinRole.BUILDER,
+        db_default=AgentChatMinRole.BUILDER,
+        help_text="The minimum role needed to have the agent create a follow-up.",
     )
 
     def get_parent(self):
@@ -317,6 +325,8 @@ class AgentChat(
         # Started by a "Run agent" service: a button, an automation, an
         # application builder action or another agent's tool call.
         SERVICE = "service", "Service"
+        # A check of a follow-up, owned by the user who asked for it.
+        FOLLOW_UP = "follow_up", "Follow-up"
 
     uuid = models.UUIDField(default=uuid.uuid4, unique=True)
     agent = models.ForeignKey(
@@ -376,6 +386,16 @@ class AgentChat(
         on_delete=models.SET_NULL,
         related_name="chats",
         help_text="The external chat channel this conversation belongs to.",
+    )
+    follow_up = models.ForeignKey(
+        "AgentFollowUp",
+        null=True,
+        blank=True,
+        default=None,
+        db_default=None,
+        on_delete=models.SET_NULL,
+        related_name="chats",
+        help_text="The follow-up this conversation is a check of.",
     )
     channel_session_key = models.CharField(
         max_length=255,
@@ -649,3 +669,108 @@ class AgentUsage(models.Model):
                 fields=["application", "hour"], name="agent_usage_unique_hour"
             )
         ]
+
+
+class AgentFollowUp(CreatedAndUpdatedOnMixin, models.Model):
+    """
+    Something a user asked the agent to keep an eye on, like "tell me when the
+    status of this issue changes". It owns its own schedule or row event,
+    apart from the agent's triggers, which starts a check with the agent's
+    configuration; the check notifies the user and completes the follow-up
+    once its criteria are met.
+    """
+
+    class Status(models.TextChoices):
+        ACTIVE = "active", "Active"
+        COMPLETED = "completed", "Completed"
+        CANCELLED = "cancelled", "Cancelled"
+        EXPIRED = "expired", "Expired"
+        # Stopped after too many checks in a row failed.
+        FAILED = "failed", "Failed"
+
+    application = models.ForeignKey(
+        AgentApplication, on_delete=models.CASCADE, related_name="follow_ups"
+    )
+    created_by = models.ForeignKey(
+        User,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        help_text="Who asked for it, and who gets notified.",
+    )
+    source_chat = models.ForeignKey(
+        AgentChat,
+        null=True,
+        blank=True,
+        default=None,
+        db_default=None,
+        on_delete=models.SET_NULL,
+        related_name="created_follow_ups",
+        help_text="The conversation it was created in.",
+    )
+    service = models.OneToOneField(
+        Service,
+        null=True,
+        blank=True,
+        default=None,
+        db_default=None,
+        on_delete=models.SET_NULL,
+        related_name="agent_follow_up",
+        help_text=(
+            "The schedule or row event starting its checks, apart from the "
+            "agent's own triggers; removed once it ends."
+        ),
+    )
+    private = models.BooleanField(
+        default=False,
+        db_default=False,
+        help_text="Created in a private conversation, so its checks are private.",
+    )
+    title = models.CharField(max_length=255)
+    goal = models.TextField(help_text="Why the user wants this.")
+    check_instructions = models.TextField(help_text="What every check looks at.")
+    done_when = models.TextField(help_text="When the follow-up is complete.")
+    watch = models.JSONField(
+        default=dict,
+        help_text=(
+            "When the checks run, kept for display after the trigger is gone: "
+            "`{type: schedule, every}` or `{type: rows_*, table_id, row_ids}`."
+        ),
+    )
+    state = models.TextField(
+        blank=True,
+        db_default="",
+        help_text="What the checks remember between runs, e.g. the last status.",
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.ACTIVE,
+        db_default=Status.ACTIVE,
+    )
+    outcome = models.TextField(blank=True, db_default="")
+    expires_on = models.DateTimeField(
+        null=True, blank=True, help_text="Null when it has no end date."
+    )
+    ended_on = models.DateTimeField(null=True, blank=True, db_default=None)
+    last_checked_on = models.DateTimeField(null=True, blank=True, db_default=None)
+    checks_count = models.PositiveIntegerField(default=0, db_default=0)
+    failed_checks_in_a_row = models.PositiveIntegerField(default=0, db_default=0)
+    notifications_count = models.PositiveIntegerField(default=0, db_default=0)
+    total_input_tokens = models.BigIntegerField(default=0, db_default=0)
+    total_output_tokens = models.BigIntegerField(default=0, db_default=0)
+    total_cost = models.DecimalField(
+        max_digits=20, decimal_places=10, default=0, db_default=0
+    )
+    unpriced_turns = models.PositiveIntegerField(default=0, db_default=0)
+
+    class Meta:
+        ordering = ("-id",)
+        indexes = [models.Index(fields=["application", "status"])]
+
+    def get_parent(self):
+        return self.application
+
+    @property
+    def is_active(self) -> bool:
+        return self.status == self.Status.ACTIVE
