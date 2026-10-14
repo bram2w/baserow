@@ -28,7 +28,10 @@ from baserow.contrib.automation.history.models import (
     AutomationWorkflowHistory,
 )
 from baserow.contrib.automation.models import AutomationWorkflow
-from baserow.contrib.automation.nodes.constants import AutomationNodeOnFailure
+from baserow.contrib.automation.nodes.constants import (
+    AUTOMATION_NODE_RETRY_COUNTDOWNS,
+    AutomationNodeOnFailure,
+)
 from baserow.contrib.automation.nodes.exceptions import (
     AutomationNodeDoesNotExist,
     AutomationNodeMaxDispatchesExceeded,
@@ -468,11 +471,13 @@ class AutomationNodeHandler:
 
     def _retry_countdown(self, attempt: int) -> int:
         """
-        Seconds to wait before the attempt following `attempt`. Same backoff as
-        the table webhook task: 1, 2, 4, 8, 16 s.
+        Seconds to wait before the attempt following `attempt`: 1, 1, 2, 3, 6 s.
+        `_can_retry` bounds `attempt` by the node's `max_retries`, the last
+        countdown is repeated should that bound ever grow.
         """
 
-        return 2 ** (attempt - 1)
+        countdowns = AUTOMATION_NODE_RETRY_COUNTDOWNS
+        return countdowns[min(attempt, len(countdowns)) - 1]
 
     @staticmethod
     def _retries_phrase(count: int) -> str:

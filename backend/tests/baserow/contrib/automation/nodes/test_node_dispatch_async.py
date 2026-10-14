@@ -16,6 +16,10 @@ from baserow.contrib.automation.history.models import (
     AutomationNodeResult,
     AutomationWorkflowHistory,
 )
+from baserow.contrib.automation.nodes.constants import (
+    AUTOMATION_NODE_MAX_RETRIES,
+    AUTOMATION_NODE_RETRY_COUNTDOWNS,
+)
 from baserow.contrib.automation.nodes.handler import AutomationNodeHandler
 from baserow.contrib.automation.nodes.tasks import (
     dispatch_node_celery_task,
@@ -2233,8 +2237,24 @@ def create_retrying_workflow(data_fixture, simulate=False, is_test_run=False, **
     return data
 
 
+def test_retry_countdown_runs_the_last_retry_about_thirteen_seconds_later():
+    handler = AutomationNodeHandler()
+
+    countdowns = [
+        handler._retry_countdown(attempt)
+        for attempt in range(1, AUTOMATION_NODE_MAX_RETRIES + 1)
+    ]
+
+    assert countdowns == [1, 1, 2, 3, 6]
+    assert sum(countdowns) == 13
+    # One countdown per allowed retry; the last one is repeated should the
+    # limit ever grow.
+    assert len(AUTOMATION_NODE_RETRY_COUNTDOWNS) == AUTOMATION_NODE_MAX_RETRIES
+    assert handler._retry_countdown(AUTOMATION_NODE_MAX_RETRIES + 1) == 6
+
+
 @pytest.mark.django_db
-@pytest.mark.parametrize("attempt,countdown", [(1, 1), (2, 2)])
+@pytest.mark.parametrize("attempt,countdown", [(1, 1), (2, 1)])
 @patch(f"{HTTP_NODE_TYPE_PATH}.dispatch")
 @patch(f"{NODE_HANDLER_PATH}.logger")
 def test_dispatch_node_retries_a_runtime_failure(
@@ -2750,7 +2770,7 @@ def test_dispatch_node_continues_with_the_next_node_after_a_successful_retry(
         )
         clear_local()
         assert isinstance(result, NodeDispatchRetry)
-        assert (result.attempt, result.countdown) == (attempt, 2 ** (attempt - 1))
+        assert (result.attempt, result.countdown) == (attempt, 1)
 
     result = handler.dispatch_node(
         http_node.id, history_id=workflow_history.id, attempt=3
@@ -2879,7 +2899,7 @@ def test_dispatch_node_celery_task_retries_until_the_node_succeeds(
     assert result is None
     assert scheduled == [
         {"countdown": 1, "kwargs": {"attempt": 2}},
-        {"countdown": 2, "kwargs": {"attempt": 3}},
+        {"countdown": 1, "kwargs": {"attempt": 3}},
     ]
     assert mock_dispatch.call_count == 3
 

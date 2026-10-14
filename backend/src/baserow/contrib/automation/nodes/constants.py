@@ -16,6 +16,8 @@ class AutomationNodeOnFailure(models.TextChoices):
 AUTOMATION_NODE_MIN_RETRIES = 1
 AUTOMATION_NODE_MAX_RETRIES = 5
 AUTOMATION_NODE_DEFAULT_RETRIES = 2
+# Seconds to wait before retry 1, 2, ... `AUTOMATION_NODE_MAX_RETRIES`.
+AUTOMATION_NODE_RETRY_COUNTDOWNS = (1, 1, 2, 3, 6)
 
 # The node fields that make up its error policy. Only action node types accept
 # them; triggers never fail during a run, so they keep the defaults.
