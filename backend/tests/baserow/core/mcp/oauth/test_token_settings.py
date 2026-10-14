@@ -1,4 +1,5 @@
 from datetime import timedelta
+from unittest.mock import patch
 
 from django.conf import settings
 from django.utils import timezone
@@ -6,6 +7,7 @@ from django.utils import timezone
 import pytest
 from freezegun import freeze_time
 from oauth2_provider.models import AccessToken, RefreshToken
+from oauth2_provider.oauth2_validators import OAuth2Validator
 
 from tests.baserow.core.mcp.oauth.helpers import (
     obtain_tokens,
@@ -126,3 +128,28 @@ def test_offline_access_issues_a_working_refresh_token(
 
 def test_cimd_allowlist_defaults_to_any_host():
     assert settings.OAUTH2_PROVIDER["CIMD_ALLOWED_HOSTS"] == ["*"]
+
+
+@pytest.mark.django_db
+def test_refresh_that_lost_a_race_gets_an_oauth_error(client, api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    tokens = obtain_tokens(client, api_client, token, workspace)
+    # Validated by both requests before either rotated it.
+    refresh_token = RefreshToken.objects.select_related("access_token").get(user=user)
+
+    assert _refresh(client, tokens).status_code == 200
+
+    def validated_before_the_rotation(self, token, client, request, *args, **kwargs):
+        request.user = refresh_token.user
+        request.refresh_token = token
+        request.refresh_token_instance = refresh_token
+        return True
+
+    with patch.object(
+        OAuth2Validator, "validate_refresh_token", validated_before_the_rotation
+    ):
+        response = _refresh(client, tokens)
+
+    assert response.status_code == 400
+    assert response.json()["error"] == "invalid_grant"

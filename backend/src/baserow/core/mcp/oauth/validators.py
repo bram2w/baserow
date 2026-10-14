@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from oauth2_provider.models import get_application_model
 from oauth2_provider.oauth2_validators import OAuth2Validator
+from oauthlib.oauth2.rfc6749.errors import InvalidGrantError
 from oauthlib.oauth2.rfc6749.utils import scope_to_list
 
 MCP_SCOPE = "mcp"
@@ -49,6 +50,23 @@ ALLOWED_RESPONSE_TYPES = {"code"}
 
 # Set as a credential by the consent view when it issues the code, see `issue_code`.
 CONSENT_CREDENTIAL = "mcp_endpoint_consent"
+
+
+class RefreshTokenAlreadyUsed(InvalidGrantError):
+    """
+    Raised while saving tokens, after oauthlib has set the response headers, so
+    it brings the headers of a token endpoint error response itself.
+    """
+
+    description = "The refresh token was already used."
+
+    @property
+    def headers(self):
+        return {
+            "Content-Type": "application/json",
+            "Cache-Control": "no-store",
+            "Pragma": "no-cache",
+        }
 
 
 class MCPOAuth2Validator(OAuth2Validator):
@@ -112,6 +130,11 @@ class MCPOAuth2Validator(OAuth2Validator):
 
     def _save_bearer_token(self, token, request, *args, **kwargs):
         result = super()._save_bearer_token(token, request, *args, **kwargs)
+        # A refresh that lost a race with another one using the same token gets
+        # the tokens that one issued, but only their hashes are stored, so the
+        # library hands back a blank token.
+        if not token.get("access_token"):
+            raise RefreshTokenAlreadyUsed(request=request)
         # Marks the client as used, so the unused client cleanup keeps it. Only
         # bumped once an hour, so busy clients don't write on every refresh. Done
         # after saving the tokens so this, like the cleanup, locks tokens before
