@@ -1,24 +1,17 @@
 <template>
-  <TemplatePreview v-if="template" :template="template" />
-  <div v-else>error</div>
+  <TemplatePage v-if="$featureFlagIsEnabled(FF_USER_TEMPLATES)" />
+  <LegacyTemplatePage v-else :key="route.params.slug" />
 </template>
 
-<script>
-import TemplatePreview from '@baserow/modules/core/components/template/TemplatePreview'
-import TemplateService from '@baserow/modules/core/services/template'
+<script setup>
+// TODO: render only `TemplatePage` once the `user_templates` feature flag is removed.
+import { FF_USER_TEMPLATES } from '@baserow/modules/core/plugins/featureFlags'
+import TemplatePage from '@baserow/modules/core/components/template/TemplatePage'
+import LegacyTemplatePage from '@baserow/modules/core/components/template/legacy/LegacyTemplatePage'
 
-export default {
-  name: 'Template',
-  components: { TemplatePreview },
-  async asyncData({ store, params, error, $client, ...rest }) {
-    const slug = params.slug
-    try {
-      const { data } = await TemplateService($client).fetch(slug)
+const route = useRoute()
 
-      return { template: data }
-    } catch (error) {
-      return { template: null }
-    }
-  },
-}
+// Keeps the page mounted when another template is opened from its list, so that
+// the list keeps its search and category. The legacy page is keyed by the slug.
+definePageMeta({ key: 'template' })
 </script>
