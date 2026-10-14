@@ -32,6 +32,16 @@ def revoke_endpoint_tokens(endpoint: MCPEndpoint) -> None:
     AccessToken.objects.filter(id__in=access_ids).delete()
 
 
+def revoke_user_tokens(user: AbstractUser) -> None:
+    """
+    Deletes every OAuth access and refresh token of the user. The grants stay, so
+    the apps are listed as signed out until the user signs in from them again.
+    """
+
+    RefreshToken.objects.filter(user=user).delete()
+    AccessToken.objects.filter(user=user).delete()
+
+
 def endpoint_ids_with_live_refresh_token(user: AbstractUser) -> set[int]:
     """
     The ids of the user's grants that still have a usable refresh token. A grant

@@ -2,6 +2,7 @@ from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 
 from baserow.core.signals import workspace_user_deleted
+from baserow.core.user.signals import user_password_changed
 
 
 @receiver(workspace_user_deleted)
@@ -24,3 +25,15 @@ def revoke_tokens_of_deleted_mcp_endpoint(sender, instance, **kwargs):
     from baserow.core.mcp.oauth.tokens import revoke_endpoint_tokens
 
     revoke_endpoint_tokens(instance)
+
+
+@receiver(user_password_changed)
+def revoke_oauth_tokens_on_password_change(sender, user, **kwargs):
+    """
+    A password change or reset ends the user's browser sessions, so it signs the
+    OAuth apps out too. Endpoint keys are left alone.
+    """
+
+    from baserow.core.mcp.oauth.tokens import revoke_user_tokens
+
+    revoke_user_tokens(user)

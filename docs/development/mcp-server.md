@@ -58,7 +58,7 @@ Set `BASEROW_MCP_OAUTH_ENABLED=true` to turn it on. It is off by default.
 
 All clients share one URL, `<PUBLIC_BACKEND_URL>/mcp`. The user picks a workspace and the allowed tools on the consent screen.
 
-Each grant is stored as an `MCPEndpoint` row with `oauth_client_id` set. Its tokens carry the scope `mcp endpoint:<id>`, which ties them to that row. Deleting the row revokes the tokens. Grants are also revoked when the user leaves the workspace.
+Each grant is stored as an `MCPEndpoint` row with `oauth_client_id` set. Its tokens carry the scope `mcp endpoint:<id>`, which ties them to that row. Deleting the row revokes the tokens. Grants are also revoked when the user leaves the workspace. A password change or reset deletes the user's tokens but keeps the grants, so the apps have to sign in again.
 
 ### Client registration
 
