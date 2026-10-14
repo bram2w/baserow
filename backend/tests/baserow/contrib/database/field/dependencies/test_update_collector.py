@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Set, Tuple, Type
+from typing import Any, Dict, List, Set, Tuple
 from unittest.mock import patch
 
 from django.db import connection
@@ -16,7 +16,7 @@ from baserow.contrib.database.fields.dependencies.update_collector import (
 )
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.models import LinkRowField
+from baserow.contrib.database.fields.models import Field, LinkRowField
 from baserow.contrib.database.table.models import GeneratedTableModel, Table
 from baserow.contrib.database.ws.views.rows.handler import ViewRealtimeRowsHandler
 from baserow.test_utils.fixtures import Fixtures
@@ -811,778 +811,287 @@ def test_self_link_update_statements_also_update_rows_linking_to_starting_rows(
     assert updates[0].row_ids == [row_b.id]
 
 
-def _setup_table_with_checked_view(data_fixture):
-    table_a, table_b, link_field = data_fixture.create_two_linked_tables()
-    filtered_field = data_fixture.create_text_field(name="filtered", table=table_a)
-    other_field = data_fixture.create_text_field(name="other", table=table_a)
-    checked_view = data_fixture.create_grid_view(table=table_a, public=True)
-    data_fixture.create_view_filter(
-        view=checked_view, field=filtered_field, type="equal", value="match"
-    )
-    return table_a, table_b, link_field, filtered_field, other_field, checked_view
+class _CascadeIntoFilteredView:
+    """Rows linked to a starting row, in a table whose public view filters them."""
+
+    def __init__(self, data_fixture: Fixtures, filtered_values: List[str]) -> None:
+        self.table, starting_table, self.link_field = (
+            data_fixture.create_two_linked_tables()
+        )
+        self.filtered_field = data_fixture.create_text_field(table=self.table)
+        self.other_field = data_fixture.create_text_field(table=self.table)
+        self.view = data_fixture.create_grid_view(table=self.table, public=True)
+        data_fixture.create_view_filter(
+            view=self.view, field=self.filtered_field, type="equal", value="match"
+        )
+        self.starting_row_id = starting_table.get_model().objects.create().id
+        self.collector = FieldUpdateCollector(
+            starting_table, starting_row_ids=[self.starting_row_id]
+        )
+        self.model = self.table.get_model()
+        self.rows = [self.create_row(value) for value in filtered_values]
+        for row in self.rows:
+            self.link(row)
+
+    def create_row(self, value: str) -> GeneratedTableModel:
+        return self.model.objects.create(**{self.filtered_field.db_column: value})
+
+    def link(self, row: GeneratedTableModel) -> None:
+        getattr(row, self.link_field.db_column).add(self.starting_row_id)
+
+    def apply(self, field: Field, value: str) -> List[str]:
+        self.collector.add_field_with_pending_update_statement(
+            field, Value(value), via_path_to_starting_table=[self.link_field]
+        )
+        with CaptureQueriesContext(connection) as captured:
+            self.collector.apply_updates_and_get_updated_fields(FieldCache())
+        return [query["sql"] for query in captured.captured_queries]
+
+    def get_snapshot_reads(self, sqls: List[str]) -> List[str]:
+        table_sql = f'FROM "{self.table.get_database_table_name()}" WHERE '
+        # The visibility query of the checked views reads the table too.
+        return [
+            sql
+            for sql in sqls
+            if sql.startswith("SELECT") and table_sql in sql and "visible_v" not in sql
+        ]
 
 
 @pytest.mark.django_db
-def test_get_dependant_rows_updates_records_before_visibility_in_checked_views(
+@override_settings(DEPENDANT_ROWS_REALTIME_UPDATE_LIMIT=4)
+def test_snapshot_never_captures_a_row_twice_nor_after_the_cascade_changed_it(
     data_fixture,
 ):
-    (
-        table_a,
-        table_b,
-        link_field,
-        filtered_field,
-        other_field,
-        checked_view,
-    ) = _setup_table_with_checked_view(data_fixture)
-    # Not checked: no filters, or not shared publicly.
-    data_fixture.create_grid_view(table=table_a, public=True)
-    link_filtered_view = data_fixture.create_grid_view(table=table_a, public=True)
-    data_fixture.create_view_filter(
-        view=link_filtered_view, field=link_field, type="not_empty", value=""
-    )
-    private_view = data_fixture.create_grid_view(table=table_a)
-    data_fixture.create_view_filter(
-        view=private_view, field=filtered_field, type="equal", value="match"
-    )
-
-    table_a_model = table_a.get_model()
-    table_b_model = table_b.get_model(attribute_names=True)
-    row_b = table_b_model.objects.create(primary="b")
-    visible_row = table_a_model.objects.create(**{filtered_field.db_column: "match"})
-    hidden_row = table_a_model.objects.create(**{filtered_field.db_column: "nope"})
-    getattr(visible_row, link_field.db_column).add(row_b.id)
-    getattr(hidden_row, link_field.db_column).add(row_b.id)
-
-    field_cache = FieldCache()
-    update_collector = FieldUpdateCollector(table_b, starting_row_ids=[row_b.id])
-    update_collector.add_field_with_pending_update_statement(
-        filtered_field, Value("match"), via_path_to_starting_table=[link_field]
-    )
-    update_collector.apply_updates_and_get_updated_fields(field_cache)
-
-    updates = update_collector.get_dependant_rows_updates()
-    assert len(updates) == 1
-    # Recorded before the update statement made the hidden row match too.
-    assert updates[0].before_visible_view_ids == {
-        visible_row.id: {checked_view.id, link_filtered_view.id},
-        hidden_row.id: {link_filtered_view.id},
-    }
-    assert updates[0].before_checked_view_ids == {
-        checked_view.id,
-        link_filtered_view.id,
-    }
-
-
-@pytest.mark.django_db
-def test_get_dependant_rows_updates_keeps_the_earliest_before_visibility(
-    data_fixture,
-):
-    (
-        table_a,
-        table_b,
-        link_field,
-        filtered_field,
-        other_field,
-        checked_view,
-    ) = _setup_table_with_checked_view(data_fixture)
-
-    table_a_model = table_a.get_model()
-    table_b_model = table_b.get_model(attribute_names=True)
-    row_b = table_b_model.objects.create(primary="b")
-    row_a = table_a_model.objects.create(**{filtered_field.db_column: "nope"})
-    getattr(row_a, link_field.db_column).add(row_b.id)
-
-    field_cache = FieldCache()
-    update_collector = FieldUpdateCollector(table_b, starting_row_ids=[row_b.id])
-    update_collector.add_field_with_pending_update_statement(
-        filtered_field, Value("match"), via_path_to_starting_table=[link_field]
-    )
-    update_collector.apply_updates_and_get_updated_fields(field_cache)
-    update_collector.add_field_with_pending_update_statement(
-        other_field, Value("changed"), via_path_to_starting_table=[link_field]
-    )
-    update_collector.apply_updates_and_get_updated_fields(field_cache)
-
-    update = update_collector.get_dependant_rows_updates()[0]
-    # The second snapshot would see the row matching, but the first one wins.
-    assert update.before_rows[row_a.id][filtered_field.db_column] == "nope"
-    assert update.before_visible_view_ids == {row_a.id: set()}
-    assert update.before_checked_view_ids == {checked_view.id}
-
-
-@pytest.mark.django_db
-def test_get_dependant_rows_updates_has_no_before_row_of_rows_updated_without_snapshot(
-    data_fixture,
-):
-    table_a, table_b, link_field = data_fixture.create_two_linked_tables()
-    first_field = data_fixture.create_text_field(name="first", table=table_a)
-    second_field = data_fixture.create_text_field(name="second", table=table_a)
-    table_a_model = table_a.get_model()
-    table_b_model = table_b.get_model(attribute_names=True)
-    row_b = table_b_model.objects.create(primary="b")
-    row_a = table_a_model.objects.create()
-
+    cascade = _CascadeIntoFilteredView(data_fixture, ["nope", "nope"])
+    first, second = cascade.rows
+    late, later = cascade.create_row("match"), cascade.create_row("match")
     execute_update_statements = (
         PathBasedUpdateStatementCollector._execute_pending_update_statements
     )
 
-    def link_row_a_before_updating(collector, *args, **kwargs):
-        if collector.table.id == table_a.id:
-            getattr(row_a, link_field.db_column).add(row_b.id)
+    def link_late_row_before_updating(
+        collector: PathBasedUpdateStatementCollector, *args: Any, **kwargs: Any
+    ) -> List[int]:
+        if collector.table.id == cascade.table.id:
+            cascade.link(late)
         return execute_update_statements(collector, *args, **kwargs)
 
-    field_cache = FieldCache()
-    update_collector = FieldUpdateCollector(table_b, starting_row_ids=[row_b.id])
-    update_collector.add_field_with_pending_update_statement(
-        first_field, Value("changed"), via_path_to_starting_table=[link_field]
-    )
     # As if another transaction committed the link between the snapshot and UPDATE.
     with patch.object(
         PathBasedUpdateStatementCollector,
         "_execute_pending_update_statements",
         autospec=True,
-        side_effect=link_row_a_before_updating,
+        side_effect=link_late_row_before_updating,
     ):
-        update_collector.apply_updates_and_get_updated_fields(field_cache)
-    update_collector.add_field_with_pending_update_statement(
-        second_field, Value("changed"), via_path_to_starting_table=[link_field]
-    )
-    update_collector.apply_updates_and_get_updated_fields(field_cache)
+        cascade.apply(cascade.filtered_field, "match")
+    cascade.link(later)
+    cascade.apply(cascade.other_field, "changed")
 
-    update = update_collector.get_dependant_rows_updates()[0]
-    assert update.row_ids == [row_a.id]
-    # A later snapshot would show the first update's change as the row's before.
-    assert update.before_rows == {}
-
-
-@pytest.mark.django_db
-def test_get_dependant_rows_updates_drops_before_visibility_over_the_limit(
-    data_fixture,
-):
-    (
-        table_a,
-        table_b,
-        link_field,
-        filtered_field,
-        other_field,
-        checked_view,
-    ) = _setup_table_with_checked_view(data_fixture)
-
-    table_a_model = table_a.get_model()
-    table_b_model = table_b.get_model(attribute_names=True)
-    row_b = table_b_model.objects.create(primary="b")
-    for _ in range(3):
-        row_a = table_a_model.objects.create(**{filtered_field.db_column: "match"})
-        getattr(row_a, link_field.db_column).add(row_b.id)
-
-    field_cache = FieldCache()
-    update_collector = FieldUpdateCollector(table_b, starting_row_ids=[row_b.id])
-    update_collector.add_field_with_pending_update_statement(
-        other_field, Value("changed"), via_path_to_starting_table=[link_field]
-    )
-    with override_settings(DEPENDANT_ROWS_REALTIME_UPDATE_LIMIT=2):
-        update_collector.apply_updates_and_get_updated_fields(field_cache)
-        updates = update_collector.get_dependant_rows_updates()
-
-    assert updates[0].requires_refresh is True
-    assert updates[0].before_rows == {}
-    assert updates[0].before_visible_view_ids == {}
-    assert updates[0].before_checked_view_ids == set()
+    [update] = cascade.collector.get_dependant_rows_updates()
+    assert update.row_ids == [first.id, second.id, late.id, later.id]
+    # later fits the limit only because the rows not to snapshot are skipped first.
+    assert update.before_rows.keys() == {first.id, second.id, later.id}
+    assert update.before_rows[first.id][cascade.filtered_field.db_column] == "nope"
+    visible = update.before_visible_view_ids
+    assert visible == {first.id: set(), second.id: set(), later.id: {cascade.view.id}}
+    assert update.before_checked_view_ids == {cascade.view.id}
 
 
-@pytest.mark.django_db
-def test_merge_dependant_rows_updates_keeps_visibility_of_the_earliest_snapshot(
-    data_fixture,
-):
-    table = data_fixture.create_database_table()
+def _create_rows_linked_through_each_path_shape(
+    data_fixture: Fixtures,
+) -> Tuple[Dict[str, List[LinkRowField]], Dict[str, GeneratedTableModel]]:
+    """Creates named rows linked to a starting table by a self link, one or two hops."""
 
-    merged = merge_dependant_rows_updates(
-        [
-            DependantRowsUpdate(
-                table=table,
-                row_ids=[1],
-                field_ids=[10],
-                requires_refresh=False,
-                before_rows={1: {"id": 1, "field_10": "first"}},
-                before_visible_view_ids={1: {100}},
-                before_checked_view_ids={100},
-            )
-        ],
-        [
-            DependantRowsUpdate(
-                table=table,
-                row_ids=[1, 2],
-                field_ids=[10],
-                requires_refresh=False,
-                before_rows={
-                    1: {"id": 1, "field_10": "second"},
-                    2: {"id": 2, "field_10": "second"},
-                },
-                before_visible_view_ids={1: set(), 2: {100}},
-                before_checked_view_ids={100},
-            )
-        ],
-        [
-            DependantRowsUpdate(
-                table=table, row_ids=[3], field_ids=[10], requires_refresh=False
-            )
-        ],
-    )
-
-    assert len(merged) == 1
-    assert merged[0].row_ids == [1, 2, 3]
-    assert merged[0].before_rows[1]["field_10"] == "first"
-    assert merged[0].before_visible_view_ids == {1: {100}, 2: {100}}
-    assert merged[0].before_checked_view_ids == {100}
+    user = data_fixture.create_user()
+    middle, start, middle_link = data_fixture.create_two_linked_tables(user=user)
+    end, _, end_link = data_fixture.create_two_linked_tables(user=user, table_b=middle)
+    self_link = data_fixture.create_link_row_field(table=start, link_row_table=start)
+    paths = {"self": [self_link], "middle": [middle_link]}
+    paths["end"] = [end_link, middle_link]
+    paths["middle_and_back"] = [middle_link, middle_link.link_row_related_field]
+    models = {table.id: table.get_model() for table in (start, middle, end)}
+    rows: Dict[str, GeneratedTableModel] = {}
+    for name, path_name, linked_row_names in [
+        ("linked_by_start", "self", []),
+        ("start", "self", ["linked_by_start"]),
+        ("other_start", "self", []),
+        ("linking_to_start", "self", ["start"]),
+        ("linked", "middle", ["start"]),
+        ("linked_to_both", "middle", ["start", "other_start"]),
+        ("trashed", "middle", ["start"]),
+        ("unlinked", "middle", []),
+        ("deleted", "middle", ["other_start"]),
+        ("linked_twice", "end", ["linked", "linked_to_both"]),
+        ("via_trashed", "end", ["trashed"]),
+        ("via_unlinked", "end", ["unlinked"]),
+        ("via_deleted", "end", ["deleted"]),
+    ]:
+        link = paths[path_name][0]
+        rows[name] = models[link.table_id].objects.create(trashed=name == "trashed")
+        getattr(rows[name], link.db_column).add(*[rows[n].id for n in linked_row_names])
+    # Like a batch permanent deletion, which leaves the row's relations behind.
+    deleted_rows = models[middle.id].objects.filter(id=rows["deleted"].id)
+    deleted_rows._raw_delete(connection.alias)
+    return paths, rows
 
 
 @pytest.mark.django_db
-def test_merge_dependant_rows_updates_keeps_rows_first_merged_without_a_snapshot(
+@pytest.mark.parametrize(
+    "path_name,starting_row_names,removes_link,expected_row_names",
+    [
+        ("middle", ["start"], False, ["linked", "linked_to_both"]),
+        ("end", ["start"], False, ["linked_twice", "via_trashed"]),
+        ("self", ["start"], False, ["linking_to_start"]),
+        ("middle", ["start"], True, ["linked", "linked_to_both", "unlinked"]),
+        ("end", ["start"], True, ["linked_twice", "via_trashed", "via_unlinked"]),
+        ("middle", ["start", "other_start"], False, ["linked", "linked_to_both"]),
+        ("end", ["other_start"], False, ["linked_twice"]),
+        ("middle_and_back", ["linked"], False, ["linked", "linked_to_both"]),
+    ],
+    ids=[
+        "one_hop",
+        "two_hops",
+        "self_link",
+        "removed_link_on_one_hop",
+        "removed_link_on_two_hops",
+        "row_linked_to_several_starting_rows",
+        "orphaned_relation_of_a_permanently_deleted_middle_row",
+        "link_and_back_through_the_lazily_built_reverse_relation",
+    ],
+)
+def test_snapshot_statement_selects_the_cascade_filter_rows(
     data_fixture,
+    path_name: str,
+    starting_row_names: List[str],
+    removes_link: bool,
+    expected_row_names: List[str],
 ):
-    table = data_fixture.create_database_table()
-
-    merged = merge_dependant_rows_updates(
-        [
-            DependantRowsUpdate(
-                table=table, row_ids=[1], field_ids=[10], requires_refresh=False
-            )
-        ],
-        [
-            DependantRowsUpdate(
-                table=table,
-                row_ids=[1, 2],
-                field_ids=[10],
-                requires_refresh=False,
-                before_rows={1: {"id": 1}, 2: {"id": 2}},
-                before_visible_view_ids={1: {100}, 2: {100}},
-                before_checked_view_ids={100},
-            )
-        ],
-    )
-
-    # Row 1's later snapshot would show it after the first update changed it.
-    assert merged[0].row_ids == [1, 2]
-    assert merged[0].before_rows == {2: {"id": 2}}
-    assert merged[0].before_visible_view_ids == {2: {100}}
-
-
-@pytest.mark.django_db
-def test_merge_dependant_rows_updates_drops_before_visibility_over_the_limit(
-    data_fixture,
-):
-    table = data_fixture.create_database_table()
-
-    with override_settings(DEPENDANT_ROWS_REALTIME_UPDATE_LIMIT=1):
-        merged = merge_dependant_rows_updates(
-            [
-                DependantRowsUpdate(
-                    table=table,
-                    row_ids=[1],
-                    field_ids=[10],
-                    requires_refresh=False,
-                    before_rows={1: {"id": 1}},
-                    before_visible_view_ids={1: {100}},
-                    before_checked_view_ids={100},
-                )
-            ],
-            [
-                DependantRowsUpdate(
-                    table=table,
-                    row_ids=[2],
-                    field_ids=[10],
-                    requires_refresh=False,
-                    before_rows={2: {"id": 2}},
-                    before_visible_view_ids={2: {100}},
-                    before_checked_view_ids={100},
-                )
-            ],
-        )
-
-    assert merged[0].requires_refresh is True
-    assert merged[0].before_rows == {}
-    assert merged[0].before_visible_view_ids == {}
-    assert merged[0].before_checked_view_ids == set()
-
-
-@pytest.mark.django_db
-def test_merge_dependant_rows_updates_keeps_the_first_checked_views_row_checker(
-    data_fixture,
-):
-    table = data_fixture.create_database_table()
-    first_checker, second_checker = object(), object()
-
-    merged = merge_dependant_rows_updates(
-        [
-            DependantRowsUpdate(
-                table=table, row_ids=[1], field_ids=[10], requires_refresh=False
-            )
-        ],
-        *[
-            [
-                DependantRowsUpdate(
-                    table=table,
-                    row_ids=[row_id],
-                    field_ids=[10],
-                    requires_refresh=False,
-                    before_rows={row_id: {"id": row_id}},
-                    before_visible_view_ids={row_id: {100}},
-                    before_checked_view_ids={100},
-                    checked_views_row_checker=checker,
-                )
-            ]
-            for row_id, checker in ((2, first_checker), (3, second_checker))
-        ],
-    )
-
-    assert merged[0].checked_views_row_checker is first_checker
-
-
-def _select_rows_to_snapshot_per_cascade_filter(
-    model: Type[GeneratedTableModel],
-    path: List[LinkRowField],
-    starting_row_ids: List[int],
-    deleted_m2m_rels_per_link_field: Optional[Dict[int, Set[int]]] = None,
-) -> List[List[int]]:
+    paths, rows = _create_rows_linked_through_each_path_shape(data_fixture)
+    path = paths[path_name]
+    model = path[0].table.get_model()
+    starting_row_ids = [rows[name].id for name in starting_row_names]
+    removed_link_row_ids = {rows["unlinked"].id} if removes_link else set()
+    deleted_rels = {path[-1].link_row_related_field_id: removed_link_row_ids}
     collector = PathBasedUpdateStatementCollector(
         model.baserow_table, connection_here=path[0], connection_is_broken=False
     )
-    cascade_filters = collector._filters_for_rows_connected_to_starting_rows(
-        path,
-        starting_row_ids,
-        deleted_m2m_rels_per_link_field,
-        include_starting_rows=False,
-    )
-    snapshot_filters = collector._filters_for_rows_to_snapshot(
-        model, path, starting_row_ids, deleted_m2m_rels_per_link_field
-    )
-    assert len(snapshot_filters) == len(cascade_filters)
+    snapshot = BeforeRowsSnapshot(needs_view_checks=True)
 
-    selected_row_ids_per_filter = []
-    for cascade_filter, snapshot_filter in zip(cascade_filters, snapshot_filters):
-        selected_row_ids = [
+    selected_row_ids = [
+        [
             row.id
             for row in collector._read_rows_to_snapshot(
-                model,
-                snapshot_filter,
-                excluded_row_ids=set(),
-                limit=100,
-                snapshot=BeforeRowsSnapshot(needs_view_checks=True),
-                dependant_field_ids=None,
+                model, row_filter, set(), 100, snapshot, None
             )
         ]
-        cascade_row_ids = model.objects.filter(cascade_filter).values_list(
-            "id", flat=True
+        for row_filter in collector._filters_for_rows_to_snapshot(
+            model, path, starting_row_ids, deleted_rels
         )
-        # Ordered by id and listed once, while the cascade filter's joins repeat rows.
-        assert selected_row_ids == sorted(set(cascade_row_ids))
-        selected_row_ids_per_filter.append(selected_row_ids)
-    return selected_row_ids_per_filter
-
-
-@pytest.mark.django_db
-def test_snapshot_statement_selects_the_cascade_filter_rows_on_one_hop(data_fixture):
-    table_a, table_b, link_field = data_fixture.create_two_linked_tables()
-    table_a_model = table_a.get_model()
-    table_b_model = table_b.get_model()
-    starting_row, other_row = (
-        table_b_model.objects.create(),
-        table_b_model.objects.create(),
-    )
-    linked_rows = [table_a_model.objects.create() for _ in range(2)]
-    row_linked_to_other_row = table_a_model.objects.create()
-    trashed_row = table_a_model.objects.create(trashed=True)
-    for row in linked_rows + [trashed_row]:
-        getattr(row, link_field.db_column).add(starting_row.id)
-    getattr(row_linked_to_other_row, link_field.db_column).add(other_row.id)
-
-    assert _select_rows_to_snapshot_per_cascade_filter(
-        table_a_model, [link_field], [starting_row.id]
-    ) == [[row.id for row in linked_rows]]
-
-
-def _create_three_linked_tables(
-    data_fixture: Fixtures,
-) -> Tuple[Table, Table, Table, LinkRowField, LinkRowField]:
-    user = data_fixture.create_user()
-    table_b, table_a, b_link = data_fixture.create_two_linked_tables(user=user)
-    table_c, _, c_link = data_fixture.create_two_linked_tables(
-        user=user, table_b=table_b
-    )
-    return table_a, table_b, table_c, b_link, c_link
-
-
-@pytest.mark.django_db
-def test_snapshot_statement_selects_the_cascade_filter_rows_on_two_hops(data_fixture):
-    table_a, table_b, table_c, b_link, c_link = _create_three_linked_tables(
-        data_fixture
-    )
-    table_a_model = table_a.get_model()
-    table_b_model = table_b.get_model()
-    table_c_model = table_c.get_model()
-    starting_row, other_row = (
-        table_a_model.objects.create(),
-        table_a_model.objects.create(),
-    )
-    b_rows = [table_b_model.objects.create() for _ in range(3)]
-    trashed_b_row = table_b_model.objects.create(trashed=True)
-    for row in b_rows[:2] + [trashed_b_row]:
-        getattr(row, b_link.db_column).add(starting_row.id)
-    getattr(b_rows[2], b_link.db_column).add(other_row.id)
-    c_linked_twice, c_linked_to_other_row, c_linked_to_trashed_b_row, trashed_c_row = [
-        table_c_model.objects.create(trashed=trashed)
-        for trashed in (False, False, False, True)
     ]
-    getattr(c_linked_twice, c_link.db_column).add(b_rows[0].id, b_rows[1].id)
-    getattr(c_linked_to_other_row, c_link.db_column).add(b_rows[2].id)
-    getattr(c_linked_to_trashed_b_row, c_link.db_column).add(trashed_b_row.id)
-    getattr(trashed_c_row, c_link.db_column).add(b_rows[0].id)
-
-    # The cascade filter's joins don't skip the trashed rows between the hops either.
-    assert _select_rows_to_snapshot_per_cascade_filter(
-        table_c_model, [c_link, b_link], [starting_row.id]
-    ) == [[c_linked_twice.id, c_linked_to_trashed_b_row.id]]
-
-
-@pytest.mark.django_db
-def test_snapshot_statement_skips_the_relations_left_by_a_permanently_deleted_row(
-    data_fixture,
-):
-    table_a, table_b, table_c, b_link, c_link = _create_three_linked_tables(
-        data_fixture
-    )
-    table_a_model = table_a.get_model()
-    table_b_model = table_b.get_model()
-    table_c_model = table_c.get_model()
-    starting_row = table_a_model.objects.create()
-    b_deleted_row, b_kept_row = [table_b_model.objects.create() for _ in range(2)]
-    c_rows = [table_c_model.objects.create() for _ in range(2)]
-    for b_row, c_row in zip([b_deleted_row, b_kept_row], c_rows):
-        getattr(b_row, b_link.db_column).add(starting_row.id)
-        getattr(c_row, c_link.db_column).add(b_row.id)
-    # Like a batch permanent deletion, which leaves the row's relations behind.
-    table_b_model.objects_and_trash.filter(id=b_deleted_row.id)._raw_delete(
-        using=connection.alias
-    )
-
-    assert _select_rows_to_snapshot_per_cascade_filter(
-        table_c_model, [c_link, b_link], [starting_row.id]
-    ) == [[c_rows[1].id]]
-
-
-@pytest.mark.django_db
-def test_snapshot_statement_selects_the_cascade_filter_rows_of_a_self_link(
-    data_fixture,
-):
-    user = data_fixture.create_user()
-    table = data_fixture.create_database_table(user=user)
-    data_fixture.create_text_field(name="primary", primary=True, table=table)
-    self_link = FieldHandler().create_field(
-        user=user,
-        table=table,
-        type_name="link_row",
-        link_row_table=table,
-        name="self link",
-    )
-    model = table.get_model()
-    starting_row, linking_row, linked_row, linking_to_linking_row = [
-        model.objects.create() for _ in range(4)
-    ]
-    trashed_row = model.objects.create(trashed=True)
-    getattr(starting_row, self_link.db_column).add(linked_row.id)
-    getattr(linking_row, self_link.db_column).add(starting_row.id)
-    getattr(trashed_row, self_link.db_column).add(starting_row.id)
-    getattr(linking_to_linking_row, self_link.db_column).add(linking_row.id)
-
-    # Rows linking to the starting row, not the ones it links to.
-    assert _select_rows_to_snapshot_per_cascade_filter(
-        model, [self_link], [starting_row.id]
-    ) == [[linking_row.id]]
-    assert _select_rows_to_snapshot_per_cascade_filter(
-        model, [self_link, self_link], [starting_row.id]
-    ) == [[linking_to_linking_row.id]]
-
-
-@pytest.mark.django_db
-def test_snapshot_statement_selects_the_cascade_filter_rows_across_a_link_and_back(
-    data_fixture,
-):
-    table_a, table_b, link_field = data_fixture.create_two_linked_tables()
-    table_a_model = table_a.get_model()
-    table_b_model = table_b.get_model()
-    starting_row, row_sharing_the_link, row_linked_elsewhere = [
-        table_a_model.objects.create() for _ in range(3)
-    ]
-    b_row, other_b_row = table_b_model.objects.create(), table_b_model.objects.create()
-    for row in (starting_row, row_sharing_the_link):
-        getattr(row, link_field.db_column).add(b_row.id)
-    getattr(row_linked_elsewhere, link_field.db_column).add(other_b_row.id)
-
-    # The way back is built lazily, so it resolves to the reverse of the link.
-    assert _select_rows_to_snapshot_per_cascade_filter(
-        table_a_model,
-        [link_field, link_field.link_row_related_field],
-        [starting_row.id],
-    ) == [[starting_row.id, row_sharing_the_link.id]]
-
-
-@pytest.mark.django_db
-def test_snapshot_statement_selects_the_cascade_filter_rows_of_a_removed_link(
-    data_fixture,
-):
-    table_a, table_b, link_field = data_fixture.create_two_linked_tables()
-    table_a_model = table_a.get_model()
-    table_b_model = table_b.get_model()
-    starting_row = table_b_model.objects.create()
-    linked_row, unlinked_row = (
-        table_a_model.objects.create(),
-        table_a_model.objects.create(),
-    )
-    trashed_unlinked_row = table_a_model.objects.create(trashed=True)
-    getattr(linked_row, link_field.db_column).add(starting_row.id)
-
-    assert _select_rows_to_snapshot_per_cascade_filter(
-        table_a_model,
-        [link_field],
-        [starting_row.id],
-        {
-            link_field.link_row_related_field_id: {
-                unlinked_row.id,
-                trashed_unlinked_row.id,
-            }
-        },
-    ) == [[linked_row.id], [unlinked_row.id]]
-
-
-@pytest.mark.django_db
-def test_snapshot_statement_selects_the_cascade_filter_rows_of_a_removed_link_on_two_hops(
-    data_fixture,
-):
-    table_a, table_b, table_c, b_link, c_link = _create_three_linked_tables(
-        data_fixture
-    )
-    table_a_model = table_a.get_model()
-    table_b_model = table_b.get_model()
-    table_c_model = table_c.get_model()
-    starting_row = table_a_model.objects.create()
-    b_linked_row, b_unlinked_row, b_other_row = [
-        table_b_model.objects.create() for _ in range(3)
-    ]
-    getattr(b_linked_row, b_link.db_column).add(starting_row.id)
-    c_rows = [table_c_model.objects.create() for _ in range(3)]
-    for c_row, b_row in zip(c_rows, [b_linked_row, b_unlinked_row, b_other_row]):
-        getattr(c_row, c_link.db_column).add(b_row.id)
-
-    assert _select_rows_to_snapshot_per_cascade_filter(
-        table_c_model,
-        [c_link, b_link],
-        [starting_row.id],
-        {b_link.link_row_related_field_id: {b_unlinked_row.id}},
-    ) == [[c_rows[0].id], [c_rows[1].id]]
-
-
-@pytest.mark.django_db
-def test_snapshot_statement_lists_once_a_row_linked_to_several_starting_rows(
-    data_fixture,
-):
-    table_a, table_b, link_field = data_fixture.create_two_linked_tables()
-    table_a_model = table_a.get_model()
-    table_b_model = table_b.get_model()
-    starting_rows = [table_b_model.objects.create() for _ in range(2)]
-    starting_row_ids = [row.id for row in starting_rows]
-    linked_to_both, linked_to_one = (
-        table_a_model.objects.create(),
-        table_a_model.objects.create(),
-    )
-    getattr(linked_to_both, link_field.db_column).add(*starting_row_ids)
-    getattr(linked_to_one, link_field.db_column).add(starting_row_ids[1])
-
-    [cascade_filter] = PathBasedUpdateStatementCollector(
-        table_a, connection_here=link_field, connection_is_broken=False
-    )._filters_for_rows_connected_to_starting_rows(
-        [link_field], starting_row_ids, None, include_starting_rows=False
-    )
-    assert table_a_model.objects.filter(cascade_filter).count() == 3
-    assert _select_rows_to_snapshot_per_cascade_filter(
-        table_a_model, [link_field], starting_row_ids
-    ) == [[linked_to_both.id, linked_to_one.id]]
-
-
-@pytest.mark.django_db
-def test_snapshot_reads_each_row_filter_in_one_statement_over_the_link_tables(
-    data_fixture,
-):
-    table_a, table_b, table_c, b_link, c_link = _create_three_linked_tables(
-        data_fixture
-    )
-    c_field = data_fixture.create_text_field(name="other", table=table_c)
-    checked_view = data_fixture.create_grid_view(table=table_c, public=True)
-    data_fixture.create_view_filter(
-        view=checked_view, field=c_field, type="equal", value="changed"
-    )
-    table_a_model = table_a.get_model()
-    table_b_model = table_b.get_model()
-    table_c_model = table_c.get_model()
-    starting_row = table_a_model.objects.create()
-    b_linked_row, b_unlinked_row = (
-        table_b_model.objects.create(),
-        table_b_model.objects.create(),
-    )
-    getattr(b_linked_row, b_link.db_column).add(starting_row.id)
-    c_rows = [table_c_model.objects.create() for _ in range(2)]
-    for c_row, b_row in zip(c_rows, [b_linked_row, b_unlinked_row]):
-        getattr(c_row, c_link.db_column).add(b_row.id)
-
-    field_cache = FieldCache()
-    update_collector = FieldUpdateCollector(
-        table_a,
-        starting_row_ids=[starting_row.id],
-        deleted_m2m_rels_per_link_field={
-            b_link.link_row_related_field_id: {b_unlinked_row.id}
-        },
-    )
-    update_collector.add_field_with_pending_update_statement(
-        c_field, Value("changed"), via_path_to_starting_table=[b_link, c_link]
-    )
-    with CaptureQueriesContext(connection) as captured:
-        update_collector.apply_updates_and_get_updated_fields(field_cache)
-
-    table_c_reads = [
-        query["sql"]
-        for query in captured.captured_queries
-        if query["sql"].startswith("SELECT")
-        and f'FROM "{table_c.get_database_table_name()}"' in query["sql"]
-        and "visible_v" not in query["sql"]
-    ]
-    # One unlocked read, then one locking read per row filter.
-    assert len(table_c_reads) == 3
-    assert "FOR UPDATE" not in table_c_reads[0]
-    for sql in table_c_reads[1:]:
-        assert f'FOR UPDATE OF "{table_c.get_database_table_name()}"' in sql
-    for sql in table_c_reads:
-        assert "= ANY(ARRAY(" in sql
-        assert "IN (SELECT" not in sql
-        assert f'FROM "{table_c.get_database_table_name()}" WHERE ' in sql
-    [update] = update_collector.get_dependant_rows_updates()
-    assert sorted(update.before_rows) == [c_row.id for c_row in c_rows]
-
-
-@pytest.mark.django_db
-def test_snapshot_of_a_table_over_the_limit_runs_no_view_checks(data_fixture):
-    (
-        table_a,
-        table_b,
-        link_field,
-        filtered_field,
-        other_field,
-        checked_view,
-    ) = _setup_table_with_checked_view(data_fixture)
-    table_a_model = table_a.get_model()
-    table_b_model = table_b.get_model(attribute_names=True)
-    row_b = table_b_model.objects.create(primary="b")
-    for _ in range(3):
-        row_a = table_a_model.objects.create()
-        getattr(row_a, link_field.db_column).add(row_b.id)
-
-    field_cache = FieldCache()
-    update_collector = FieldUpdateCollector(table_b, starting_row_ids=[row_b.id])
-    update_collector.add_field_with_pending_update_statement(
-        filtered_field, Value("match"), via_path_to_starting_table=[link_field]
-    )
-    with (
-        override_settings(DEPENDANT_ROWS_REALTIME_UPDATE_LIMIT=2),
-        patch.object(
-            ViewRealtimeRowsHandler,
-            "get_checked_views_row_checker",
-            autospec=True,
-            side_effect=ViewRealtimeRowsHandler.get_checked_views_row_checker,
-        ) as row_checker_spy,
-        CaptureQueriesContext(connection) as captured,
-    ):
-        update_collector.apply_updates_and_get_updated_fields(field_cache)
-        update_collector.add_field_with_pending_update_statement(
-            other_field, Value("changed"), via_path_to_starting_table=[link_field]
+    # Ordered by id and listed once, while the cascade filter's joins repeat rows.
+    assert selected_row_ids == [
+        sorted(set(model.objects.filter(row_filter).values_list("id", flat=True)))
+        for row_filter in collector._filters_for_rows_connected_to_starting_rows(
+            path, starting_row_ids, deleted_rels, include_starting_rows=False
         )
-        update_collector.apply_updates_and_get_updated_fields(field_cache)
-        [update] = update_collector.get_dependant_rows_updates()
+    ]
+    assert sorted(sum(selected_row_ids, [])) == sorted(
+        rows[name].id for name in expected_row_names
+    )
 
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("a_view_needs_checks", [True, False])
+def test_snapshot_reads_the_link_tables_and_locks_only_when_a_view_needs_checks(
+    data_fixture, a_view_needs_checks: bool
+):
+    cascade = _CascadeIntoFilteredView(data_fixture, ["nope"])
+    field = cascade.filtered_field if a_view_needs_checks else cascade.other_field
+    cascade.collector.set_dependant_fields([field])
+    sqls = cascade.apply(field, "match")
+
+    reads = cascade.get_snapshot_reads(sqls)
+    assert all("= ANY(ARRAY(" in sql and "IN (SELECT" not in sql for sql in reads)
+    # The first read tells whether a view needs checks, only then rows are locked.
+    lock = f'FOR UPDATE OF "{cascade.table.get_database_table_name()}"'
+    expected_locks = [False, True] if a_view_needs_checks else [False]
+    assert [lock in sql for sql in reads] == expected_locks
+    assert sum("FOR UPDATE" in sql for sql in sqls) == expected_locks.count(True)
+
+
+@pytest.mark.django_db
+@override_settings(DEPENDANT_ROWS_REALTIME_UPDATE_LIMIT=2)
+def test_snapshot_work_stops_once_the_table_overflows(data_fixture):
+    cascade = _CascadeIntoFilteredView(data_fixture, ["nope"] * 3)
+    with patch.object(
+        ViewRealtimeRowsHandler, "get_checked_views_row_checker"
+    ) as get_row_checker:
+        sqls = cascade.apply(cascade.filtered_field, "match")
+        sqls += cascade.apply(cascade.other_field, "changed")
+
+    [update] = cascade.collector.get_dependant_rows_updates()
     assert update.requires_refresh is True
-    assert row_checker_spy.call_count == 0
-    sqls = [query["sql"] for query in captured.captured_queries]
-    assert not any("FOR UPDATE" in sql for sql in sqls)
-    assert not any("visible_v" in sql for sql in sqls)
-    table_a_reads = [
-        sql
-        for sql in sqls
-        if sql.startswith("SELECT")
-        and f'FROM "{table_a.get_database_table_name()}"' in sql
-    ]
+    assert get_row_checker.call_count == 0
+    assert not any("FOR UPDATE" in sql or "visible_v" in sql for sql in sqls)
     # The second depth level skips the snapshot of the overflowed table.
-    assert len(table_a_reads) == 1
-    snapshot = update_collector._before_snapshots_per_table[table_a.id]
-    assert snapshot.rows == {}
-    assert snapshot.row_ids_updated_without_snapshot == set()
+    assert len(cascade.get_snapshot_reads(sqls)) == 1
+    snapshot = cascade.collector._before_snapshots_per_table[cascade.table.id]
+    assert snapshot.rows == {} and snapshot.row_ids_updated_without_snapshot == set()
 
 
 @pytest.mark.django_db
-def test_get_dependant_rows_updates_lists_the_fields_with_unknown_before_values(
+def test_snapshot_records_the_fields_with_unknown_before_values_of_each_level(
     data_fixture,
 ):
-    table_a, table_b, link_field = data_fixture.create_two_linked_tables()
-    first_field = data_fixture.create_text_field(name="first", table=table_a)
-    marked_field = data_fixture.create_text_field(name="marked", table=table_a)
-    table_a_model = table_a.get_model()
-    table_b_model = table_b.get_model(attribute_names=True)
-    row_b = table_b_model.objects.create(primary="b")
-    row_a = table_a_model.objects.create()
-    getattr(row_a, link_field.db_column).add(row_b.id)
+    cascade = _CascadeIntoFilteredView(data_fixture, ["nope"])
+    path = [cascade.link_field]
+    cascade.collector.add_field_which_has_changed(cascade.link_field, path)
+    cascade.apply(cascade.filtered_field, "match")
+    cascade.collector.add_field_which_has_changed(cascade.other_field, path)
+    cascade.collector.apply_updates_and_get_updated_fields(FieldCache())
 
-    field_cache = FieldCache()
-    update_collector = FieldUpdateCollector(table_b, starting_row_ids=[row_b.id])
-    update_collector.add_field_which_has_changed(
-        link_field, via_path_to_starting_table=[link_field]
+    [update] = cascade.collector.get_dependant_rows_updates()
+    unknown_field_ids = {cascade.link_field.id, cascade.other_field.id}
+    assert update.field_ids_with_unknown_before_values == unknown_field_ids
+
+
+def _dependant_rows_updates(
+    field_id: int, row_ids: List[int], visible_view_ids: Dict[int, Set[int]]
+) -> List[DependantRowsUpdate]:
+    """An update of a field with unknown before values, snapshotting the given rows."""
+
+    return [
+        DependantRowsUpdate(
+            table=Table(id=1),
+            row_ids=row_ids,
+            field_ids=[field_id],
+            requires_refresh=False,
+            field_ids_with_unknown_before_values={field_id},
+            before_rows={row_id: {"field_id": field_id} for row_id in visible_view_ids},
+            before_visible_view_ids=visible_view_ids,
+            before_checked_view_ids={100},
+        )
+    ]
+
+
+def test_merge_dependant_rows_updates_keeps_the_earliest_snapshot_until_the_limit():
+    [merged] = merge_dependant_rows_updates(
+        _dependant_rows_updates(10, [1], {}),
+        _dependant_rows_updates(11, [1, 2], {1: {100}, 2: {100}}),
+        _dependant_rows_updates(12, [2], {2: set()}),
     )
-    update_collector.add_field_with_pending_update_statement(
-        first_field, Value("changed"), via_path_to_starting_table=[link_field]
-    )
-    update_collector.apply_updates_and_get_updated_fields(field_cache)
-    update_collector.add_field_which_has_changed(
-        marked_field, via_path_to_starting_table=[link_field]
-    )
-    update_collector.apply_updates_and_get_updated_fields(field_cache)
+    assert merged.row_ids == [1, 2]
+    # Row 1's later snapshot would show it after the first update changed it.
+    assert merged.before_rows == {2: {"field_id": 11}}
+    assert merged.before_visible_view_ids == {2: {100}}
+    assert merged.field_ids_with_unknown_before_values == {10, 11, 12}
 
-    [update] = update_collector.get_dependant_rows_updates()
-    assert update.field_ids_with_unknown_before_values == {
-        link_field.id,
-        marked_field.id,
-    }
-
-
-@pytest.mark.django_db
-def test_merge_dependant_rows_updates_unions_the_fields_with_unknown_before_values(
-    data_fixture,
-):
-    table = data_fixture.create_database_table()
-
-    merged = merge_dependant_rows_updates(
-        *[
-            [
-                DependantRowsUpdate(
-                    table=table,
-                    row_ids=row_ids,
-                    field_ids=[field_id],
-                    requires_refresh=requires_refresh,
-                    field_ids_with_unknown_before_values={field_id},
-                )
-            ]
-            for row_ids, field_id, requires_refresh in (
-                ([1], 10, False),
-                ([], 11, True),
-                ([2], 12, False),
-            )
-        ]
-    )
-
-    assert len(merged) == 1
-    assert merged[0].requires_refresh is True
-    assert merged[0].field_ids_with_unknown_before_values == {10, 11, 12}
+    with override_settings(DEPENDANT_ROWS_REALTIME_UPDATE_LIMIT=1):
+        [overflowed] = merge_dependant_rows_updates(
+            _dependant_rows_updates(10, [1], {1: {100}}),
+            _dependant_rows_updates(11, [2], {2: {100}}),
+        )
+    assert overflowed.requires_refresh is True
+    assert overflowed.before_rows == {} and overflowed.before_visible_view_ids == {}
+    assert overflowed.before_checked_view_ids == set()
+    assert overflowed.field_ids_with_unknown_before_values == {10, 11}

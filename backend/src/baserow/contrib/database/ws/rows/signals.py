@@ -130,17 +130,14 @@ def rows_updated(
 
 class DependantRowsBroadcast:
     """
-    The dependency cascades into a table during a transaction, broadcast as one
-    update once it commits, so a row's before state is the one before the
-    transaction and never one in between that no client received. The rows
-    leaving or entering a view are decided after every cascade, while the
-    cascades still lock them.
+    A transaction's cascades into a table, broadcast as one update on commit so
+    clients never get an in-between before state.
     """
 
     def __init__(self, sender: Any, table: Table) -> None:
         """
-        :param sender: The sender of the first dependant rows updated signal.
-        :param table: The table the cascades changed rows of.
+        :param sender: The sender of the first signal.
+        :param table: The table the cascades changed.
         """
 
         self.sender = sender
@@ -152,9 +149,8 @@ class DependantRowsBroadcast:
 
     def is_joinable(self) -> bool:
         """
-        :return: Whether a cascade at this point of the transaction can join it:
-            not once it's closed, nor in a savepoint opened after it, which could
-            roll back the cascade but not the broadcast.
+        :return: False once closed or inside a newer savepoint, which could roll
+            back the cascade but not the broadcast.
         """
 
         return not self.closed and (
@@ -163,11 +159,10 @@ class DependantRowsBroadcast:
 
     def add(self, update: DependantRowsUpdate) -> None:
         """
-        Adds a cascade update of the table and decides again which rows left or
-        entered a view since the first cascade.
+        Decides the view changes now, while the cascades still lock the rows.
 
-        :param update: The cascade update of the table.
-        :return: None, the outcome is recorded in `visibility_changes`.
+        :param update: A cascade update of the table.
+        :return: None, sets `visibility_changes`.
         """
 
         self.updates.append(update)
@@ -187,10 +182,7 @@ class DependantRowsBroadcast:
 
     def get_transaction_field_ids_with_unknown_before_values(self) -> Set[int]:
         """
-        :return: The ids of the table's fields whose before values any cascade
-            of the transaction so far left unknown, the closed broadcasts
-            included. A rolled back savepoint drops its broadcasts, so its
-            cascades are left out.
+        :return: The field ids of every broadcast so far, closed ones included.
         """
 
         return {
@@ -202,8 +194,7 @@ class DependantRowsBroadcast:
 
     def get_merged_update(self) -> Optional[DependantRowsUpdate]:
         """
-        :return: The cascade updates of the table merged into one, or None when
-            they changed no row.
+        :return: The merged update, None if no row changed.
         """
 
         merged_updates = merge_dependant_rows_updates(self.updates)
@@ -212,7 +203,7 @@ class DependantRowsBroadcast:
     def lists_any_row(self, row_ids: Iterable[int]) -> bool:
         """
         :param row_ids: The ids of rows of the table.
-        :return: Whether a cascade update listed any of the rows.
+        :return: Whether any update lists one of them.
         """
 
         row_ids = set(row_ids)
@@ -220,9 +211,7 @@ class DependantRowsBroadcast:
 
     def __call__(self) -> None:
         """
-        Broadcasts the merged update once the transaction committed, or refreshes
-        the whole table when it changed too many rows. The rows entering or
-        leaving a view are broadcast first, because the task broadcasting the new
+        View enter and leave events go first, since the task sending the new
         values can run after later commits.
 
         :return: None.
@@ -251,8 +240,7 @@ class DependantRowsBroadcast:
 def _get_dependant_rows_broadcasts(table_id: int) -> List[DependantRowsBroadcast]:
     """
     :param table_id: The id of the table.
-    :return: The broadcasts of the cascades into the table registered in the
-        current transaction, in order.
+    :return: The table's broadcasts pending on commit, in order.
     """
 
     return [
@@ -268,8 +256,7 @@ def _get_latest_dependant_rows_broadcast(
 ) -> Optional[DependantRowsBroadcast]:
     """
     :param table_id: The id of the table.
-    :return: The latest broadcast of the cascades into the table in the current
-        transaction, if any.
+    :return: The table's latest pending broadcast, if any.
     """
 
     broadcasts = _get_dependant_rows_broadcasts(table_id)
@@ -278,12 +265,10 @@ def _get_latest_dependant_rows_broadcast(
 
 def close_dependant_rows_broadcast(table_id: int, row_ids: Iterable[int]) -> None:
     """
-    Makes the next cascades into the table start a new broadcast when the
-    current one listed any of the rows, because the row signals just told the
-    views that those rows left or entered them: merging a later cascade across
-    that change would tell them again.
+    Later cascades start a new broadcast if the current one lists any of the rows:
+    the views were just told about them, and merging would tell them twice.
 
-    :param table_id: The id of the table the rows belong to.
+    :param table_id: The id of the table of the rows.
     :param row_ids: The ids of the rows that left or entered a view.
     :return: None.
     """

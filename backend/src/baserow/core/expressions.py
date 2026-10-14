@@ -92,10 +92,8 @@ class IsDistinctFrom(Lookup):
 
 class EqualsAny(Lookup):
     """
-    `lhs = ANY(rhs)`, where rhs is an array such as an `ArraySubquery`. Postgres
-    computes an uncorrelated array once, before the scan, so an index on lhs
-    fetches just the matching rows. With `lhs IN (subquery)` the planner may
-    instead walk that index in order to satisfy an `ORDER BY` with a `LIMIT`.
+    `lhs = ANY(array)`: Postgres computes the array once and looks the matches up
+    by index, where `lhs IN (subquery)` may walk the index for an `ORDER BY LIMIT`.
     """
 
     def as_sql(

@@ -148,8 +148,7 @@ class FilteredViewRowChecker:
         self, rows: List[GeneratedTableModel]
     ) -> List[FilteredViewRows]:
         """
-        Checks in which views the provided rows are visible, see
-        `get_filtered_views_where_row_ids_are_visible`.
+        See `get_filtered_views_where_row_ids_are_visible`.
 
         :param rows: List of rows that must be checked in all the views of the provided
             `_views_queryset` views.
@@ -174,12 +173,10 @@ class FilteredViewRowChecker:
         Both positive and negative results are cached in that case to avoid future
         reads.
 
-        :param row_ids: The ids of the rows that must be checked in all the views of
-            the provided `_views_queryset` views.
-        :param include_views_without_visible_rows: If True, the views where none of
-            the rows is visible are returned too, with an empty set of row ids.
-        :param excluded_filter_field_ids: The views filtering on any of these
-            fields are left out.
+        :param row_ids: The ids of the rows to check in every view.
+        :param include_views_without_visible_rows: Also return the views showing
+            none of the rows, with an empty set.
+        :param excluded_filter_field_ids: Skip the views filtering on these fields.
         :return: Per view, the ids of the provided rows visible in it.
         """
 

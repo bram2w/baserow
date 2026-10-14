@@ -1,9 +1,12 @@
 import threading
 import time
 import uuid
-from typing import List
-from unittest.mock import patch
+from dataclasses import dataclass
+from functools import partial
+from typing import Any, Dict, Iterable, List, Optional, Tuple
+from unittest.mock import ANY, patch
 
+from django.contrib.auth.models import AbstractUser
 from django.db import connection, transaction
 from django.test import override_settings
 from django.test.utils import CaptureQueriesContext
@@ -17,16 +20,15 @@ from baserow.contrib.database.api.rows.serializers import (
     RowSerializer,
     get_row_serializer_class,
 )
-from baserow.contrib.database.fields.dependencies.update_collector import (
-    DependantRowsUpdate,
-)
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.rows.actions import UpdateRowsActionType
 from baserow.contrib.database.rows.handler import RowHandler
-from baserow.contrib.database.ws.rows.signals import DependantRowsBroadcast
-from baserow.contrib.database.ws.rows.tasks import broadcast_dependant_rows_updated
+from baserow.contrib.database.table.models import GeneratedTableModel, Table
+from baserow.contrib.database.views.models import GridView
 from baserow.contrib.database.ws.views.rows.handler import ViewRealtimeRowsHandler
 from baserow.core.action.handler import ActionHandler
+from baserow.test_utils.fixtures import Fixtures
 
 
 def _payloads_for_view(mock_broadcast_to_channel_group, slug):
@@ -106,259 +108,7 @@ def test_dependant_row_still_matching_filter_receives_rows_updated_in_public_vie
 
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
-def test_dependant_row_leaving_filter_receives_rows_deleted_in_public_view(
-    mock_broadcast_to_channel_group, data_fixture
-):
-    user = data_fixture.create_user()
-    (
-        table_a,
-        table_b,
-        link_a_b,
-        primary_b,
-        lookup_a,
-        public_view,
-    ) = _setup_linked_tables_with_public_view(data_fixture, user, filter_value="old")
-
-    row_b1 = (
-        RowHandler()
-        .create_rows(user, table_b, [{primary_b.db_column: "old"}])
-        .created_rows[0]
-    )
-    row_a1 = (
-        RowHandler()
-        .create_rows(user, table_a, [{link_a_b.db_column: [row_b1.id]}])
-        .created_rows[0]
-    )
-
-    mock_broadcast_to_channel_group.reset_mock()
-    with transaction.atomic():
-        RowHandler().update_rows(
-            user, table_b, [{"id": row_b1.id, primary_b.db_column: "new"}]
-        )
-
-    payloads = _payloads_for_view(mock_broadcast_to_channel_group, public_view.slug)
-    assert len(payloads) == 1
-    payload = payloads[0]
-    assert payload["type"] == "rows_deleted"
-    assert payload["table_id"] == PUBLIC_PLACEHOLDER_ENTITY_ID
-    assert payload["row_ids"] == [row_a1.id]
-    # The pre-cascade values the view showed, restricted to its visible fields.
-    assert payload["rows"][0][f"field_{lookup_a.id}"] == "old"
-    assert set(payload["rows"][0].keys()) == {"id", "order", f"field_{lookup_a.id}"}
-
-
-@pytest.mark.django_db(transaction=True)
-@patch("baserow.ws.registries.broadcast_to_channel_group")
-def test_dependant_row_entering_filter_receives_rows_created_in_public_view(
-    mock_broadcast_to_channel_group, data_fixture
-):
-    user = data_fixture.create_user()
-    (
-        table_a,
-        table_b,
-        link_a_b,
-        primary_b,
-        lookup_a,
-        public_view,
-    ) = _setup_linked_tables_with_public_view(data_fixture, user, filter_value="new")
-
-    row_b1 = (
-        RowHandler()
-        .create_rows(user, table_b, [{primary_b.db_column: "old"}])
-        .created_rows[0]
-    )
-    row_a1 = (
-        RowHandler()
-        .create_rows(user, table_a, [{link_a_b.db_column: [row_b1.id]}])
-        .created_rows[0]
-    )
-
-    mock_broadcast_to_channel_group.reset_mock()
-    with transaction.atomic():
-        RowHandler().update_rows(
-            user, table_b, [{"id": row_b1.id, primary_b.db_column: "new"}]
-        )
-
-    payloads = _payloads_for_view(mock_broadcast_to_channel_group, public_view.slug)
-    # The update comes from the broadcast task, which runs after the commit.
-    assert [payload["type"] for payload in payloads] == ["rows_created", "rows_updated"]
-    payload = payloads[0]
-    assert payload["before_row_id"] is None
-    assert [row["id"] for row in payload["rows"]] == [row_a1.id]
-    assert payload["rows"][0][f"field_{lookup_a.id}"] == "new"
-    assert set(payload["rows"][0].keys()) == {"id", "order", f"field_{lookup_a.id}"}
-
-
-@pytest.mark.django_db(transaction=True)
-@patch("baserow.ws.registries.broadcast_to_channel_group")
-def test_dependant_row_staying_hidden_gets_no_realtime_event_in_public_view(
-    mock_broadcast_to_channel_group, data_fixture
-):
-    user = data_fixture.create_user()
-    (
-        table_a,
-        table_b,
-        link_a_b,
-        primary_b,
-        lookup_a,
-        public_view,
-    ) = _setup_linked_tables_with_public_view(data_fixture, user, filter_value="keep")
-
-    row_b1 = (
-        RowHandler()
-        .create_rows(user, table_b, [{primary_b.db_column: "hidden"}])
-        .created_rows[0]
-    )
-    RowHandler().create_rows(user, table_a, [{link_a_b.db_column: [row_b1.id]}])
-
-    mock_broadcast_to_channel_group.reset_mock()
-    with transaction.atomic():
-        RowHandler().update_rows(
-            user, table_b, [{"id": row_b1.id, primary_b.db_column: "still hidden"}]
-        )
-
-    assert _payloads_for_view(mock_broadcast_to_channel_group, public_view.slug) == []
-
-
-def _setup_linked_tables_with_link_filtered_public_view(data_fixture, user):
-    table_a, table_b, link_a_b = data_fixture.create_two_linked_tables(user=user)
-    primary_b = table_b.field_set.get(primary=True).specific
-    lookup_a = data_fixture.create_formula_field(
-        table=table_a, formula="join(lookup('link', 'primary'), '')"
-    )
-
-    public_view = data_fixture.create_grid_view(
-        user, table=table_a, public=True, create_options=False
-    )
-    data_fixture.create_grid_view_field_option(public_view, lookup_a, hidden=False)
-    data_fixture.create_view_filter(
-        view=public_view, field=link_a_b, type="link_row_contains", value="keep"
-    )
-
-    return table_a, table_b, link_a_b, primary_b, lookup_a, public_view
-
-
-@pytest.mark.django_db(transaction=True)
-@patch("baserow.ws.registries.broadcast_to_channel_group")
-def test_dependant_row_leaving_link_row_filter_gets_no_rows_deleted_in_public_view(
-    mock_broadcast_to_channel_group, data_fixture
-):
-    # Link row values already changed at snapshot time, so the view isn't checked.
-    user = data_fixture.create_user()
-    (
-        table_a,
-        table_b,
-        link_a_b,
-        primary_b,
-        lookup_a,
-        public_view,
-    ) = _setup_linked_tables_with_link_filtered_public_view(data_fixture, user)
-
-    row_b1 = (
-        RowHandler()
-        .create_rows(user, table_b, [{primary_b.db_column: "keep"}])
-        .created_rows[0]
-    )
-    RowHandler().create_rows(user, table_a, [{link_a_b.db_column: [row_b1.id]}])
-
-    mock_broadcast_to_channel_group.reset_mock()
-    with transaction.atomic():
-        RowHandler().update_rows(
-            user, table_b, [{"id": row_b1.id, primary_b.db_column: "gone"}]
-        )
-
-    assert _payloads_for_view(mock_broadcast_to_channel_group, public_view.slug) == []
-
-
-@pytest.mark.django_db(transaction=True)
-@patch("baserow.ws.registries.broadcast_to_channel_group")
-def test_dependant_row_entering_link_row_filter_gets_only_rows_updated_in_public_view(
-    mock_broadcast_to_channel_group, data_fixture
-):
-    user = data_fixture.create_user()
-    (
-        table_a,
-        table_b,
-        link_a_b,
-        primary_b,
-        lookup_a,
-        public_view,
-    ) = _setup_linked_tables_with_link_filtered_public_view(data_fixture, user)
-
-    row_b1 = (
-        RowHandler()
-        .create_rows(user, table_b, [{primary_b.db_column: "gone"}])
-        .created_rows[0]
-    )
-    row_a1 = (
-        RowHandler()
-        .create_rows(user, table_a, [{link_a_b.db_column: [row_b1.id]}])
-        .created_rows[0]
-    )
-
-    mock_broadcast_to_channel_group.reset_mock()
-    with transaction.atomic():
-        RowHandler().update_rows(
-            user, table_b, [{"id": row_b1.id, primary_b.db_column: "keep"}]
-        )
-
-    payloads = _payloads_for_view(mock_broadcast_to_channel_group, public_view.slug)
-    assert [payload["type"] for payload in payloads] == ["rows_updated"]
-    assert payloads[0]["rows_before_update"] == [{"id": row_a1.id}]
-    assert payloads[0]["rows"][0][f"field_{lookup_a.id}"] == "keep"
-
-
-@pytest.mark.django_db(transaction=True)
-@patch("baserow.ws.registries.broadcast_to_channel_group")
-def test_never_visible_row_paid_off_through_a_link_filter_sends_nothing_to_public_view(
-    mock_broadcast_to_channel_group, data_fixture
-):
-    # At snapshot time the link exists but remaining > 0: a check would leak it.
-    user = data_fixture.create_user()
-    orders, payments, orders_payments = data_fixture.create_two_linked_tables(user=user)
-    total = FieldHandler().create_field(user, orders, "number", name="total")
-    amount = FieldHandler().create_field(user, payments, "number", name="amount")
-    remaining = FieldHandler().create_field(
-        user,
-        orders,
-        "formula",
-        name="remaining",
-        formula="field('total') - sum(lookup('link', 'amount'))",
-    )
-    payments_orders = orders_payments.link_row_related_field
-
-    public_view = data_fixture.create_grid_view(
-        user, table=orders, public=True, create_options=False
-    )
-    data_fixture.create_grid_view_field_option(public_view, total, hidden=False)
-    data_fixture.create_grid_view_field_option(public_view, remaining, hidden=False)
-    data_fixture.create_view_filter(
-        view=public_view, field=orders_payments, type="not_empty", value=""
-    )
-    data_fixture.create_view_filter(
-        view=public_view, field=remaining, type="higher_than", value="0"
-    )
-
-    order = (
-        RowHandler().create_rows(user, orders, [{total.db_column: 100}]).created_rows[0]
-    )
-
-    mock_broadcast_to_channel_group.reset_mock()
-    with transaction.atomic():
-        RowHandler().create_rows(
-            user,
-            payments,
-            [{amount.db_column: 100, payments_orders.db_column: [order.id]}],
-        )
-
-    order.refresh_from_db()
-    assert getattr(order, remaining.db_column) == 0
-    assert _payloads_for_view(mock_broadcast_to_channel_group, public_view.slug) == []
-
-
-@pytest.mark.django_db(transaction=True)
-@patch("baserow.ws.registries.broadcast_to_channel_group")
-def test_dependant_rows_leaving_and_staying_in_public_view_are_reconciled(
+def test_dependant_rows_leaving_or_entering_public_view_are_deleted_or_created(
     mock_broadcast_to_channel_group, data_fixture
 ):
     user = data_fixture.create_user()
@@ -376,11 +126,7 @@ def test_dependant_rows_leaving_and_staying_in_public_view_are_reconciled(
         .create_rows(
             user,
             table_b,
-            [
-                {primary_b.db_column: "keep"},
-                {primary_b.db_column: "keep"},
-                {primary_b.db_column: "hidden"},
-            ],
+            [{primary_b.db_column: value} for value in ("keep", "keep", "hidden")],
         )
         .created_rows
     )
@@ -389,11 +135,7 @@ def test_dependant_rows_leaving_and_staying_in_public_view_are_reconciled(
         .create_rows(
             user,
             table_a,
-            [
-                {link_a_b.db_column: [row_b1.id]},
-                {link_a_b.db_column: [row_b2.id]},
-                {link_a_b.db_column: [row_b3.id]},
-            ],
+            [{link_a_b.db_column: [row.id]} for row in (row_b1, row_b2, row_b3)],
         )
         .created_rows
     )
@@ -406,375 +148,25 @@ def test_dependant_rows_leaving_and_staying_in_public_view_are_reconciled(
             [
                 {"id": row_b1.id, primary_b.db_column: "keep still"},
                 {"id": row_b2.id, primary_b.db_column: "dropped"},
-                {"id": row_b3.id, primary_b.db_column: "still hidden"},
+                {"id": row_b3.id, primary_b.db_column: "keep now"},
             ],
         )
 
     payloads = _payloads_for_view(mock_broadcast_to_channel_group, public_view.slug)
-    assert [payload["type"] for payload in payloads] == ["rows_deleted", "rows_updated"]
-    deleted, updated = payloads
+    assert [payload["type"] for payload in payloads] == [
+        "rows_deleted",
+        "rows_created",
+        "rows_updated",
+    ]
+    deleted, created, updated = payloads
+    assert deleted["table_id"] == PUBLIC_PLACEHOLDER_ENTITY_ID
     assert deleted["row_ids"] == [row_a2.id]
-    assert deleted["rows"][0][f"field_{lookup_a.id}"] == "keep"
-    assert [row["id"] for row in updated["rows"]] == [row_a1.id]
-    assert updated["rows"][0][f"field_{lookup_a.id}"] == "keep still"
-    # row_a3 was never visible, so none of its values reach the view.
-    sent_row_ids = {
-        row["id"]
-        for payload in payloads
-        for key in ("rows", "rows_before_update")
-        for row in payload.get(key, [])
-    }
-    assert row_a3.id not in sent_row_ids
-
-
-@pytest.mark.django_db(transaction=True)
-@patch("baserow.ws.registries.broadcast_to_channel_group")
-def test_row_paid_off_leaves_public_view_without_the_new_payment_in_its_link(
-    mock_broadcast_to_channel_group, data_fixture
-):
-    user = data_fixture.create_user()
-    orders, payments, orders_payments = data_fixture.create_two_linked_tables(user=user)
-    payments_primary = payments.field_set.get(primary=True).specific
-    total = FieldHandler().create_field(user, orders, "number", name="total")
-    amount = FieldHandler().create_field(user, payments, "number", name="amount")
-    remaining = FieldHandler().create_field(
-        user,
-        orders,
-        "formula",
-        name="remaining",
-        formula="field('total') - sum(lookup('link', 'amount'))",
-    )
-    payments_orders = orders_payments.link_row_related_field
-
-    public_view = data_fixture.create_grid_view(
-        user, table=orders, public=True, create_options=False
-    )
-    for field in (total, remaining, orders_payments):
-        data_fixture.create_grid_view_field_option(public_view, field, hidden=False)
-    data_fixture.create_view_filter(
-        view=public_view, field=remaining, type="higher_than", value="0"
-    )
-
-    order = (
-        RowHandler().create_rows(user, orders, [{total.db_column: 100}]).created_rows[0]
-    )
-    RowHandler().create_rows(
-        user,
-        payments,
-        [
-            {
-                payments_primary.db_column: "first payment",
-                amount.db_column: 40,
-                payments_orders.db_column: [order.id],
-            }
-        ],
-    )
-
-    mock_broadcast_to_channel_group.reset_mock()
-    with transaction.atomic():
-        RowHandler().create_rows(
-            user,
-            payments,
-            [
-                {
-                    payments_primary.db_column: "SECRET PAYMENT",
-                    amount.db_column: 60,
-                    payments_orders.db_column: [order.id],
-                }
-            ],
-        )
-
-    payloads = _payloads_for_view(mock_broadcast_to_channel_group, public_view.slug)
-    assert [payload["type"] for payload in payloads] == ["rows_deleted"]
-    assert payloads[0]["row_ids"] == [order.id]
-    deleted_row = payloads[0]["rows"][0]
-    assert deleted_row[remaining.db_column] == "60"
-    # Already holds the new payment at snapshot time, so its real before is unknown.
-    assert orders_payments.db_column not in deleted_row
-    assert "SECRET PAYMENT" not in str(payloads)
-
-
-def _setup_never_visible_row_in_public_view(data_fixture, user):
-    (
-        table_a,
-        table_b,
-        link_a_b,
-        primary_b,
-        lookup_a,
-        public_view,
-    ) = _setup_linked_tables_with_public_view(data_fixture, user, filter_value="keep")
-    secret_a = data_fixture.create_text_field(table=table_a, name="secret")
-    data_fixture.create_grid_view_field_option(public_view, secret_a, hidden=False)
-
-    with transaction.atomic():
-        row_b1 = (
-            RowHandler()
-            .create_rows(user, table_b, [{primary_b.db_column: "hidden"}])
-            .created_rows[0]
-        )
-    with transaction.atomic():
-        row_a1 = (
-            RowHandler()
-            .create_rows(
-                user,
-                table_a,
-                [{link_a_b.db_column: [row_b1.id], secret_a.db_column: "top secret"}],
-            )
-            .created_rows[0]
-        )
-    return table_b, primary_b, row_b1, row_a1, public_view
-
-
-@pytest.mark.django_db(transaction=True)
-@patch("baserow.ws.registries.broadcast_to_channel_group")
-def test_never_visible_row_shown_only_mid_transaction_sends_nothing_to_public_view(
-    mock_broadcast_to_channel_group, data_fixture
-):
-    user = data_fixture.create_user()
-    table_b, primary_b, row_b1, row_a1, public_view = (
-        _setup_never_visible_row_in_public_view(data_fixture, user)
-    )
-
-    mock_broadcast_to_channel_group.reset_mock()
-    with transaction.atomic():
-        RowHandler().update_rows(
-            user, table_b, [{"id": row_b1.id, primary_b.db_column: "keep"}]
-        )
-        RowHandler().update_rows(
-            user, table_b, [{"id": row_b1.id, primary_b.db_column: "hidden again"}]
-        )
-
-    assert _payloads_for_view(mock_broadcast_to_channel_group, public_view.slug) == []
-
-
-@pytest.mark.django_db(transaction=True)
-@patch("baserow.ws.registries.broadcast_to_channel_group")
-def test_undoing_an_action_group_never_sends_a_never_visible_row_to_public_view(
-    mock_broadcast_to_channel_group, data_fixture
-):
-    session_id = "session-id"
-    user = data_fixture.create_user(session_id=session_id)
-    table_b, primary_b, row_b1, row_a1, public_view = (
-        _setup_never_visible_row_in_public_view(data_fixture, user)
-    )
-
-    set_client_undo_redo_action_group_id(user, str(uuid.uuid4()))
-    for value in ("keep", "hidden again"):
-        with transaction.atomic():
-            UpdateRowsActionType.do(
-                user, table_b, [{"id": row_b1.id, primary_b.db_column: value}]
-            )
-    set_client_undo_redo_action_group_id(user, None)
-
-    mock_broadcast_to_channel_group.reset_mock()
-    with transaction.atomic():
-        ActionHandler.undo(user, [TableActionScopeType.value(table_b.id)], session_id)
-
-    row_b1.refresh_from_db()
-    assert getattr(row_b1, primary_b.db_column) == "hidden"
-    assert _payloads_for_view(mock_broadcast_to_channel_group, public_view.slug) == []
-
-
-@pytest.mark.django_db(transaction=True)
-@override_settings(DEPENDANT_ROWS_REALTIME_UPDATE_LIMIT=200)
-@patch("baserow.ws.registries.broadcast_to_channel_group")
-def test_never_visible_row_changed_before_its_snapshot_sends_nothing_to_public_view(
-    mock_broadcast_to_channel_group, data_fixture
-):
-    user = data_fixture.create_user()
-    database = data_fixture.create_database_application(user=user)
-    table_b = data_fixture.create_database_table(database=database)
-    x_b = data_fixture.create_text_field(table=table_b, name="x", primary=True)
-    table_a = data_fixture.create_database_table(database=database)
-    data_fixture.create_text_field(table=table_a, name="primary", primary=True)
-    secret_a = data_fixture.create_text_field(table=table_a, name="secret")
-    link1, link2, link3 = [
-        FieldHandler().create_field(
-            user, table_a, "link_row", name=f"link{n}", link_row_table=table_b
-        )
-        for n in (1, 2, 3)
-    ]
-    lookup1, lookup2, lookup3 = [
-        data_fixture.create_formula_field(
-            table=table_a,
-            name=f"lookup{n}",
-            formula=f"join(lookup('link{n}', 'x'), '')",
-        )
-        for n in (1, 2, 3)
-    ]
-    public_view = data_fixture.create_grid_view(
-        user, table=table_a, public=True, create_options=False
-    )
-    for field in (secret_a, lookup1, lookup2, lookup3):
-        data_fixture.create_grid_view_field_option(public_view, field, hidden=False)
-    data_fixture.create_view_filter(
-        view=public_view, field=lookup2, type="contains", value="x2"
-    )
-    data_fixture.create_view_filter(
-        view=public_view, field=lookup3, type="contains", value="x1"
-    )
-
-    row_b1 = (
-        RowHandler().create_rows(user, table_b, [{x_b.db_column: "x1"}]).created_rows[0]
-    )
-    RowHandler().create_rows(
-        user,
-        table_a,
-        [
-            {link1.db_column: [row_b1.id], link2.db_column: [row_b1.id]}
-            for _ in range(150)
-        ],
-    )
-    # Highest id: link2's snapshot reaches it only after the 150 rows link1's took.
-    RowHandler().create_rows(
-        user,
-        table_a,
-        [
-            {
-                link2.db_column: [row_b1.id],
-                link3.db_column: [row_b1.id],
-                secret_a.db_column: "NEVER VISIBLE",
-            }
-        ],
-    )
-
-    mock_broadcast_to_channel_group.reset_mock()
-    with transaction.atomic():
-        RowHandler().update_rows(
-            user, table_b, [{"id": row_b1.id, x_b.db_column: "x2"}]
-        )
-
-    assert _payloads_for_view(mock_broadcast_to_channel_group, public_view.slug) == []
-
-
-@pytest.mark.django_db(transaction=True)
-@patch("baserow.ws.registries.broadcast_to_channel_group")
-def test_row_leaving_and_reentering_in_one_transaction_is_only_updated(
-    mock_broadcast_to_channel_group, data_fixture
-):
-    user = data_fixture.create_user()
-    (
-        table_a,
-        table_b,
-        link_a_b,
-        primary_b,
-        lookup_a,
-        public_view,
-    ) = _setup_linked_tables_with_public_view(data_fixture, user, filter_value="keep")
-
-    row_b1 = (
-        RowHandler()
-        .create_rows(user, table_b, [{primary_b.db_column: "keep"}])
-        .created_rows[0]
-    )
-    row_a1 = (
-        RowHandler()
-        .create_rows(user, table_a, [{link_a_b.db_column: [row_b1.id]}])
-        .created_rows[0]
-    )
-
-    mock_broadcast_to_channel_group.reset_mock()
-    with transaction.atomic():
-        RowHandler().update_rows(
-            user, table_b, [{"id": row_b1.id, primary_b.db_column: "gone"}]
-        )
-        RowHandler().update_rows(
-            user, table_b, [{"id": row_b1.id, primary_b.db_column: "keep again"}]
-        )
-
-    payloads = _payloads_for_view(mock_broadcast_to_channel_group, public_view.slug)
-    assert [payload["type"] for payload in payloads] == ["rows_updated"]
-    assert payloads[0]["rows_before_update"] == [{"id": row_a1.id}]
-    assert payloads[0]["rows"][0][f"field_{lookup_a.id}"] == "keep again"
-
-
-def _types_and_lookup_values(payloads, lookup_field):
-    return [
-        (payload["type"], [row[lookup_field.db_column] for row in payload["rows"]])
-        for payload in payloads
-    ]
-
-
-@pytest.mark.parametrize(
-    "values,first_commit_payloads,second_commit_payloads,lagging_task_payloads",
-    [
-        (
-            ["keep", "gone", "keep again"],
-            [("rows_deleted", ["keep"])],
-            [("rows_created", ["keep again"])],
-            [("rows_updated", ["keep again"])],
-        ),
-        (
-            ["hidden", "keep", "hidden again"],
-            [("rows_created", ["keep"])],
-            [("rows_deleted", ["keep"])],
-            [],
-        ),
-        (
-            ["keep", "keep too", "gone"],
-            [],
-            [("rows_deleted", ["keep too"])],
-            [],
-        ),
-    ],
-    ids=["left_then_reentered", "entered_then_left", "stayed_then_left"],
-)
-@pytest.mark.django_db(transaction=True)
-@patch("baserow.ws.registries.broadcast_to_channel_group")
-def test_rows_entering_or_leaving_a_public_view_are_decided_per_transaction(
-    mock_broadcast_to_channel_group,
-    data_fixture,
-    values,
-    first_commit_payloads,
-    second_commit_payloads,
-    lagging_task_payloads,
-):
-    user = data_fixture.create_user()
-    (
-        table_a,
-        table_b,
-        link_a_b,
-        primary_b,
-        lookup_a,
-        public_view,
-    ) = _setup_linked_tables_with_public_view(data_fixture, user, filter_value="keep")
-    initial_value, first_value, second_value = values
-
-    row_b1 = (
-        RowHandler()
-        .create_rows(user, table_b, [{primary_b.db_column: initial_value}])
-        .created_rows[0]
-    )
-    row_a1 = (
-        RowHandler()
-        .create_rows(user, table_a, [{link_a_b.db_column: [row_b1.id]}])
-        .created_rows[0]
-    )
-
-    def commit(value):
-        mock_broadcast_to_channel_group.reset_mock()
-        with transaction.atomic():
-            RowHandler().update_rows(
-                user, table_b, [{"id": row_b1.id, primary_b.db_column: value}]
-            )
-        return _payloads_for_view(mock_broadcast_to_channel_group, public_view.slug)
-
-    with patch(
-        "baserow.contrib.database.ws.rows.signals.broadcast_dependant_rows_updated"
-    ) as mock_task:
-        first_commit = commit(first_value)
-        second_commit = commit(second_value)
-
-    # The worker only gets to the first commit's task after the second commit.
-    mock_broadcast_to_channel_group.reset_mock()
-    broadcast_dependant_rows_updated(**mock_task.delay.call_args_list[0].kwargs)
-    lagging_task = _payloads_for_view(mock_broadcast_to_channel_group, public_view.slug)
-
-    assert _types_and_lookup_values(first_commit, lookup_a) == first_commit_payloads
-    assert _types_and_lookup_values(second_commit, lookup_a) == second_commit_payloads
-    assert _types_and_lookup_values(lagging_task, lookup_a) == lagging_task_payloads
-    for payload in lagging_task:
-        assert payload["rows_before_update"] == [{"id": row_a1.id}]
+    # The before values the view showed, restricted to its visible fields.
+    lookup = f"field_{lookup_a.id}"
+    assert deleted["rows"] == [{"id": row_a2.id, "order": ANY, lookup: "keep"}]
+    assert created["before_row_id"] is None
+    assert created["rows"] == [{"id": row_a3.id, "order": ANY, lookup: "keep now"}]
+    assert [row["id"] for row in updated["rows"]] == [row_a1.id, row_a3.id]
 
 
 @pytest.mark.django_db(transaction=True)
@@ -864,357 +256,394 @@ def test_broadcast_to_views_is_one_query_without_views_and_flat_across_views(
     assert one_view == three_views
 
 
-def _count_cascade_update_queries(data_fixture, user, n_public_views):
-    table_a, table_b, link_a_b = data_fixture.create_two_linked_tables(user=user)
-    primary_b = table_b.field_set.get(primary=True).specific
-    lookup_a = data_fixture.create_formula_field(
-        table=table_a, formula="join(lookup('link', 'primary'), '')"
-    )
-    for _ in range(n_public_views):
-        view = data_fixture.create_grid_view(
-            user, table=table_a, public=True, create_options=False
+@dataclass
+class LinkedTables:
+    """Table A linking table B, with a lookup of B's names and a status field."""
+
+    data_fixture: Fixtures
+    user: AbstractUser
+    table_a: Table
+    table_b: Table
+    link: Field
+    name_b: Field
+    lookup: Field
+    status: Field
+
+    def create_rows(
+        self, names_b: List[str], values_a: Optional[Dict[str, Any]] = None
+    ) -> Tuple[List[GeneratedTableModel], List[GeneratedTableModel]]:
+        """Creates a row in B per name, each linked from a new row of A."""
+
+        rows_b = RowHandler().create_rows(
+            self.user, self.table_b, [{self.name_b.db_column: n} for n in names_b]
         )
-        data_fixture.create_view_filter(
-            view=view, field=lookup_a, type="contains", value="keep"
+        rows_a = RowHandler().create_rows(
+            self.user,
+            self.table_a,
+            [
+                {self.link.db_column: [row.id], **(values_a or {})}
+                for row in rows_b.created_rows
+            ],
+        )
+        return rows_b.created_rows, rows_a.created_rows
+
+    def rename(self, row_b: GeneratedTableModel, name: str) -> None:
+        RowHandler().update_rows(
+            self.user, self.table_b, [{"id": row_b.id, self.name_b.db_column: name}]
         )
 
-    row_b1 = (
-        RowHandler()
-        .create_rows(user, table_b, [{primary_b.db_column: "keep"}])
-        .created_rows[0]
-    )
-    RowHandler().create_rows(user, table_a, [{link_a_b.db_column: [row_b1.id]}])
-
-    with CaptureQueriesContext(connection) as captured:
-        RowHandler().force_update_rows(
-            user, table_b, [{"id": row_b1.id, primary_b.db_column: "keep it"}]
+    def create_public_view(
+        self,
+        filters: Iterable[Tuple[Field, str, str]],
+        shown_fields: Iterable[Field] = (),
+    ) -> GridView:
+        return _create_public_view(
+            self.data_fixture, self.user, self.table_a, filters, shown_fields
         )
-    return len(captured.captured_queries)
 
 
-@pytest.mark.django_db
-def test_cascade_before_visibility_queries_are_flat_across_checked_views(
-    data_fixture,
-):
-    user = data_fixture.create_user()
-
-    # One views lookup per table and one visibility query, whatever the views.
-    one_view = _count_cascade_update_queries(data_fixture, user, 1)
-    three_views = _count_cascade_update_queries(data_fixture, user, 3)
-    assert one_view == three_views
-
-
-@pytest.mark.django_db
-def test_visibility_changes_skip_a_view_whose_before_visibility_is_unknown(
-    data_fixture,
-):
-    user = data_fixture.create_user()
-    (
-        table_a,
-        table_b,
-        link_a_b,
-        primary_b,
-        lookup_a,
-        checked_view,
-    ) = _setup_linked_tables_with_public_view(data_fixture, user, filter_value="keep")
-    snapshot_row_checker = ViewRealtimeRowsHandler().get_checked_views_row_checker(
-        table_a, table_a.get_model()
-    )
-    view_added_after_the_snapshot = data_fixture.create_grid_view(
-        user, table=table_a, public=True, create_options=False
-    )
-    data_fixture.create_view_filter(
-        view=view_added_after_the_snapshot,
-        field=lookup_a,
-        type="contains",
-        value="keep",
-    )
-    row_b1 = (
-        RowHandler()
-        .create_rows(user, table_b, [{primary_b.db_column: "keep"}])
-        .created_rows[0]
-    )
-    row_a1 = (
-        RowHandler()
-        .create_rows(user, table_a, [{link_a_b.db_column: [row_b1.id]}])
-        .created_rows[0]
-    )
-
-    visibility_changes = (
-        ViewRealtimeRowsHandler().get_dependant_rows_visibility_changes(
-            DependantRowsUpdate(
-                table=table_a,
-                row_ids=[row_a1.id],
-                field_ids=[lookup_a.id],
-                requires_refresh=False,
-                before_rows={row_a1.id: {"id": row_a1.id, lookup_a.db_column: "x"}},
-                before_visible_view_ids={row_a1.id: set()},
-                before_checked_view_ids={checked_view.id},
-                checked_views_row_checker=snapshot_row_checker,
-            )
-        )
-    )
-
-    assert [(view.id, payload["type"]) for view, payload in visibility_changes] == [
-        (checked_view.id, "rows_created")
-    ]
-
-
-def _count_visibility_changes_queries(data_fixture, user, n_entering_rows, n_views):
-    table_a, table_b, link_a_b = data_fixture.create_two_linked_tables(user=user)
-    primary_b = table_b.field_set.get(primary=True).specific
-    lookup_a = data_fixture.create_formula_field(
-        table=table_a, formula="join(lookup('link', 'primary'), '')"
-    )
-    views = []
-    for _ in range(n_views):
-        view = data_fixture.create_grid_view(
-            user, table=table_a, public=True, create_options=False
-        )
-        data_fixture.create_grid_view_field_option(view, lookup_a, hidden=False)
-        data_fixture.create_view_filter(
-            view=view, field=lookup_a, type="contains", value="keep"
-        )
-        views.append(view)
-
-    row_b_keep, row_b_gone = (
-        RowHandler()
-        .create_rows(
-            user,
-            table_b,
-            [{primary_b.db_column: "keep"}, {primary_b.db_column: "gone"}],
-        )
-        .created_rows
-    )
-    leaving_row, *entering_rows = (
-        RowHandler()
-        .create_rows(
-            user,
-            table_a,
-            [{link_a_b.db_column: [row_b_gone.id]}]
-            + [{link_a_b.db_column: [row_b_keep.id]} for _ in range(n_entering_rows)],
-        )
-        .created_rows
-    )
-    view_ids = {view.id for view in views}
-    rows = [leaving_row, *entering_rows]
-    update = DependantRowsUpdate(
-        table=table_a,
-        row_ids=[row.id for row in rows],
-        field_ids=[lookup_a.id],
-        requires_refresh=False,
-        before_rows={
-            row.id: {"id": row.id, "order": "1", lookup_a.db_column: "before"}
-            for row in rows
-        },
-        before_visible_view_ids={
-            leaving_row.id: view_ids,
-            **{row.id: set() for row in entering_rows},
-        },
-        before_checked_view_ids=view_ids,
-        checked_views_row_checker=ViewRealtimeRowsHandler().get_checked_views_row_checker(
-            table_a, table_a.get_model()
+def _create_linked_tables(data_fixture: Fixtures, user: AbstractUser) -> LinkedTables:
+    table_a, table_b, link = data_fixture.create_two_linked_tables(user=user)
+    return LinkedTables(
+        data_fixture=data_fixture,
+        user=user,
+        table_a=table_a,
+        table_b=table_b,
+        link=link,
+        name_b=table_b.field_set.get(primary=True).specific,
+        lookup=data_fixture.create_formula_field(
+            table=table_a, name="lookup", formula="join(lookup('link', 'primary'), '')"
         ),
+        status=data_fixture.create_text_field(table=table_a, name="status"),
     )
 
-    with CaptureQueriesContext(connection) as captured:
-        visibility_changes = (
-            ViewRealtimeRowsHandler().get_dependant_rows_visibility_changes(update)
+
+def _create_public_view(
+    data_fixture: Fixtures,
+    user: AbstractUser,
+    table: Table,
+    filters: Iterable[Tuple[Field, str, str]],
+    shown_fields: Iterable[Field] = (),
+) -> GridView:
+    view = data_fixture.create_grid_view(
+        user, table=table, public=True, create_options=False
+    )
+    for field in shown_fields:
+        data_fixture.create_grid_view_field_option(view, field, hidden=False)
+    for field, filter_type, value in filters:
+        data_fixture.create_view_filter(
+            view=view, field=field, type=filter_type, value=value
         )
-    assert [
-        payload["type"]
-        for view, payload in visibility_changes
-        if view.id == views[0].id
-    ] == ["rows_deleted", "rows_created"]
-    return len(captured.captured_queries)
+    return view
 
 
-@pytest.mark.django_db
-def test_visibility_changes_queries_are_flat_across_rows_and_views(
-    data_fixture,
-):
-    user = data_fixture.create_user()
-    table = data_fixture.create_database_table(user=user)
-    handler = ViewRealtimeRowsHandler()
-
-    with CaptureQueriesContext(connection) as captured:
-        handler.get_dependant_rows_visibility_changes(
-            DependantRowsUpdate(
-                table=table,
-                row_ids=[1],
-                field_ids=[1],
-                requires_refresh=False,
-                before_rows={1: {"id": 1}},
-                before_visible_view_ids={1: set()},
-            )
-        )
-        handler.get_dependant_rows_visibility_changes(
-            DependantRowsUpdate(
-                table=table,
-                row_ids=[1],
-                field_ids=[1],
-                requires_refresh=False,
-                before_checked_view_ids={1},
-            )
-        )
-    assert len(captured.captured_queries) == 0
-
-    # Warms up the process-wide caches, like the content types one.
-    _count_visibility_changes_queries(data_fixture, user, 1, 1)
-    one_row_one_view = _count_visibility_changes_queries(data_fixture, user, 1, 1)
-    assert _count_visibility_changes_queries(data_fixture, user, 3, 1) == (
-        one_row_one_view
+def _create_third_table_linked_from(
+    data_fixture: Fixtures, user: AbstractUser, table_a: Table
+) -> Tuple[Table, Field, Field]:
+    table_c = data_fixture.create_database_table(database=table_a.database)
+    name_c = data_fixture.create_text_field(table=table_c, name="primary", primary=True)
+    link_c = FieldHandler().create_field(
+        user, table_a, "link_row", name="link_c", link_row_table=table_c
     )
-    assert _count_visibility_changes_queries(data_fixture, user, 1, 3) == (
-        one_row_one_view
-    )
+    return table_c, name_c, link_c
 
 
-def _setup_row_in_public_view_filtered_on_lookup_and_status(data_fixture, user):
-    (
-        table_a,
-        table_b,
-        link_a_b,
-        primary_b,
-        lookup_a,
-        public_view,
-    ) = _setup_linked_tables_with_public_view(data_fixture, user, filter_value="keep")
-    status_a = data_fixture.create_text_field(table=table_a, name="status")
-    data_fixture.create_view_filter(
-        view=public_view, field=status_a, type="equal", value="on"
-    )
-    row_b1 = (
-        RowHandler()
-        .create_rows(user, table_b, [{primary_b.db_column: "keep"}])
-        .created_rows[0]
-    )
-    row_a1 = (
-        RowHandler()
-        .create_rows(
-            user,
-            table_a,
-            [{link_a_b.db_column: [row_b1.id], status_a.db_column: "on"}],
-        )
-        .created_rows[0]
-    )
-    return table_a, table_b, primary_b, status_a, row_b1, row_a1, public_view
-
-
-def _types_entering_or_leaving(payloads):
+def _types_entering_or_leaving(payloads: List[Dict[str, Any]]) -> List[str]:
     return [
-        payload["type"]
-        for payload in payloads
-        if payload["type"] in ("rows_created", "rows_deleted")
+        p["type"] for p in payloads if p["type"] in ("rows_created", "rows_deleted")
     ]
 
 
-@pytest.mark.parametrize(
-    "operations,expected_types",
-    [
-        ([("cascade", "keep too"), ("direct", "off")], ["rows_deleted"]),
-        ([("direct", "off"), ("cascade", "keep too")], ["rows_deleted"]),
-        (
-            [("cascade", "keep too"), ("direct", "off"), ("cascade", "keep again")],
-            ["rows_deleted"],
-        ),
-        (
-            [("cascade", "gone"), ("direct", "off"), ("cascade", "keep")],
-            ["rows_deleted"],
-        ),
-        (
-            [
-                ("cascade", "gone"),
-                ("direct", "off"),
-                ("direct", "on"),
-                ("cascade", "keep"),
-            ],
-            [],
-        ),
-        (
-            [
-                ("cascade", "keep too"),
-                ("direct", "off"),
-                ("direct", "on"),
-                ("cascade", "gone"),
-            ],
-            ["rows_deleted", "rows_created", "rows_deleted"],
-        ),
-    ],
-    ids=[
-        "cascade_then_direct",
-        "direct_then_cascade",
-        "cascade_direct_cascade",
-        "left_by_cascade_then_direct_and_cascade",
-        "direct_updates_sending_nothing_keep_the_cascades_merged",
-        "left_reentered_and_left_again_across_direct_updates",
-    ],
-)
 @pytest.mark.django_db(transaction=True)
+@override_settings(DEPENDANT_ROWS_REALTIME_UPDATE_LIMIT=200)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
-def test_cascades_and_direct_updates_of_a_row_in_one_transaction_send_each_change_once(
-    mock_broadcast_to_channel_group, data_fixture, operations, expected_types
+def test_never_visible_row_changed_before_its_snapshot_sends_nothing_to_public_view(
+    mock_broadcast_to_channel_group, data_fixture
 ):
     user = data_fixture.create_user()
-    table_a, table_b, primary_b, status_a, row_b1, row_a1, public_view = (
-        _setup_row_in_public_view_filtered_on_lookup_and_status(data_fixture, user)
+    database = data_fixture.create_database_application(user=user)
+    table_b = data_fixture.create_database_table(database=database)
+    x_b = data_fixture.create_text_field(table=table_b, name="x", primary=True)
+    table_a = data_fixture.create_database_table(database=database)
+    data_fixture.create_text_field(table=table_a, name="primary", primary=True)
+    secret_a = data_fixture.create_text_field(table=table_a, name="secret")
+    link1, link2, link3 = [
+        FieldHandler().create_field(
+            user, table_a, "link_row", name=f"link{n}", link_row_table=table_b
+        )
+        for n in (1, 2, 3)
+    ]
+    lookup1, lookup2, lookup3 = [
+        data_fixture.create_formula_field(
+            table=table_a,
+            name=f"lookup{n}",
+            formula=f"join(lookup('link{n}', 'x'), '')",
+        )
+        for n in (1, 2, 3)
+    ]
+    filters = [(lookup2, "contains", "x2"), (lookup3, "contains", "x1")]
+    shown_fields = [secret_a, lookup1, lookup2, lookup3]
+    public_view = _create_public_view(
+        data_fixture, user, table_a, filters, shown_fields
+    )
+    row_b1 = (
+        RowHandler().create_rows(user, table_b, [{x_b.db_column: "x1"}]).created_rows[0]
+    )
+    b1 = [row_b1.id]
+    secret_row = {link2.db_column: b1, link3.db_column: b1}
+    secret_row[secret_a.db_column] = "NEVER VISIBLE"
+    # Highest id: link2's snapshot reaches it only after the 150 rows link1's took.
+    RowHandler().create_rows(
+        user, table_a, [{link1.db_column: b1, link2.db_column: b1}] * 150 + [secret_row]
     )
 
     mock_broadcast_to_channel_group.reset_mock()
     with transaction.atomic():
-        for kind, value in operations:
+        RowHandler().update_rows(
+            user, table_b, [{"id": row_b1.id, x_b.db_column: "x2"}]
+        )
+
+    assert _payloads_for_view(mock_broadcast_to_channel_group, public_view.slug) == []
+
+
+@pytest.mark.parametrize(
+    "actions,operations,expected_types",
+    [
+        ([], ["cascade:hidden too"], []),
+        ([], ["cascade:keep", "cascade:hidden again"], []),
+        ([], ["cascade:keep", "direct:on", "cascade:hidden again"], []),
+        (["keep", "hidden again"], ["undo"], []),
+        (
+            ["keep"],
+            ["cascade:keep too", "direct:off", "cascade:keep"],
+            ["rows_deleted"],
+        ),
+    ],
+    ids=[
+        "never_visible_single_cascade",
+        "never_visible_two_cascades",
+        "never_visible_cascade_direct_cascade",
+        "never_visible_undone_action_group",
+        "direct_update_leaving_closes_the_cascade_broadcast",
+    ],
+)
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.ws.registries.broadcast_to_channel_group")
+def test_a_transaction_sends_each_row_entering_or_leaving_the_view_once(
+    mock_broadcast_to_channel_group, data_fixture, actions, operations, expected_types
+):
+    user = data_fixture.create_user(session_id="session-id")
+    tables = _create_linked_tables(data_fixture, user)
+    public_view = tables.create_public_view(
+        [(tables.lookup, "contains", "keep"), (tables.status, "equal", "on")],
+        shown_fields=[tables.lookup],
+    )
+    [row_b], [row_a] = tables.create_rows(["hidden"], {tables.status.db_column: "on"})
+    set_client_undo_redo_action_group_id(user, str(uuid.uuid4()))
+    for name in actions:
+        with transaction.atomic():
+            UpdateRowsActionType.do(
+                user, tables.table_b, [{"id": row_b.id, tables.name_b.db_column: name}]
+            )
+    set_client_undo_redo_action_group_id(user, None)
+
+    mock_broadcast_to_channel_group.reset_mock()
+    with transaction.atomic():
+        for kind, _, value in (operation.partition(":") for operation in operations):
             if kind == "cascade":
+                tables.rename(row_b, value)
+            elif kind == "direct":
                 RowHandler().update_rows(
-                    user, table_b, [{"id": row_b1.id, primary_b.db_column: value}]
+                    user,
+                    tables.table_a,
+                    [{"id": row_a.id, tables.status.db_column: value}],
                 )
             else:
-                RowHandler().update_rows(
-                    user, table_a, [{"id": row_a1.id, status_a.db_column: value}]
-                )
+                scopes = [TableActionScopeType.value(tables.table_b.id)]
+                ActionHandler.undo(user, scopes, "session-id")
 
     payloads = _payloads_for_view(mock_broadcast_to_channel_group, public_view.slug)
     assert _types_entering_or_leaving(payloads) == expected_types
 
 
+@pytest.mark.parametrize(
+    "filtered_link,expected_types",
+    [("unchanged_link", ["rows_deleted"]), ("changed_link", [])],
+)
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
-def test_undoing_a_direct_and_a_cascading_action_sends_one_rows_deleted(
-    mock_broadcast_to_channel_group, data_fixture
+def test_a_view_filtering_on_a_link_is_decided_unless_the_cascade_changed_it(
+    mock_broadcast_to_channel_group, data_fixture, filtered_link, expected_types
 ):
-    session_id = "session-id"
-    user = data_fixture.create_user(session_id=session_id)
-    table_a, table_b, primary_b, status_a, row_b1, row_a1, public_view = (
-        _setup_row_in_public_view_filtered_on_lookup_and_status(data_fixture, user)
+    user = data_fixture.create_user()
+    tables = _create_linked_tables(data_fixture, user)
+    table_c, name_c, link_c = _create_third_table_linked_from(
+        data_fixture, user, tables.table_a
     )
-    with transaction.atomic():
-        RowHandler().update_rows(
-            user, table_a, [{"id": row_a1.id, status_a.db_column: "off"}]
-        )
-
-    set_client_undo_redo_action_group_id(user, str(uuid.uuid4()))
-    with transaction.atomic():
-        UpdateRowsActionType.do(
-            user, table_a, [{"id": row_a1.id, status_a.db_column: "on"}]
-        )
-    with transaction.atomic():
-        UpdateRowsActionType.do(
-            user, table_b, [{"id": row_b1.id, primary_b.db_column: "keep too"}]
-        )
-    set_client_undo_redo_action_group_id(user, None)
+    filtered = link_c if filtered_link == "unchanged_link" else tables.link
+    public_view = tables.create_public_view(
+        [(tables.lookup, "contains", "keep"), (filtered, "not_empty", "")],
+        shown_fields=[tables.lookup, tables.link, link_c],
+    )
+    [row_c] = (
+        RowHandler()
+        .create_rows(user, table_c, [{name_c.db_column: "shown"}])
+        .created_rows
+    )
+    [row_b], [row_a] = tables.create_rows(["keep"], {link_c.db_column: [row_c.id]})
 
     mock_broadcast_to_channel_group.reset_mock()
     with transaction.atomic():
-        ActionHandler.undo(
-            user,
-            [
-                TableActionScopeType.value(table_a.id),
-                TableActionScopeType.value(table_b.id),
-            ],
-            session_id,
+        tables.rename(row_b, "gone")
+
+    payloads = _payloads_for_view(mock_broadcast_to_channel_group, public_view.slug)
+    assert _types_entering_or_leaving(payloads) == expected_types
+    assert "gone" not in str(payloads)
+    if expected_types:
+        assert payloads[0]["row_ids"] == [row_a.id]
+        [deleted_row] = payloads[0]["rows"]
+        assert [linked["value"] for linked in deleted_row[link_c.db_column]] == [
+            "shown"
+        ]
+        # Already shows the rename at snapshot time, so its before value is unknown.
+        assert tables.link.db_column not in deleted_row
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.ws.registries.broadcast_to_channel_group")
+def test_a_link_changed_by_an_earlier_closed_cascade_keeps_its_view_undecided(
+    mock_broadcast_to_channel_group, data_fixture
+):
+    user = data_fixture.create_user()
+    tables = _create_linked_tables(data_fixture, user)
+    x_b = data_fixture.create_text_field(table=tables.table_b, name="x")
+    [row_b], [row_a3] = tables.create_rows(["old"], {tables.status.db_column: "on"})
+    with transaction.atomic():
+        RowHandler().update_rows(
+            user, tables.table_b, [{"id": row_b.id, x_b.db_column: "on"}]
+        )
+    lookup_x = data_fixture.create_formula_field(
+        table=tables.table_a, formula="join(lookup('link', 'x'), '')"
+    )
+    view_v = tables.create_public_view(
+        [(tables.link, "link_row_contains", "new"), (lookup_x, "contains", "on")],
+    )
+    view_w = tables.create_public_view([(tables.status, "equal", "on")])
+
+    mock_broadcast_to_channel_group.reset_mock()
+    with transaction.atomic():
+        tables.rename(row_b, "new")
+        RowHandler().update_rows(
+            user, tables.table_a, [{"id": row_a3.id, tables.status.db_column: "off"}]
+        )
+        RowHandler().update_rows(
+            user, tables.table_b, [{"id": row_b.id, x_b.db_column: "off"}]
+        )
+
+    w_payloads = _payloads_for_view(mock_broadcast_to_channel_group, view_w.slug)
+    assert _types_entering_or_leaving(w_payloads) == ["rows_deleted"]
+    v_payloads = _payloads_for_view(mock_broadcast_to_channel_group, view_v.slug)
+    assert _types_entering_or_leaving(v_payloads) == []
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.ws.registries.broadcast_to_channel_group")
+def test_a_cascade_two_levels_deep_removes_a_paid_off_order_from_the_public_view(
+    mock_broadcast_to_channel_group, data_fixture
+):
+    user = data_fixture.create_user()
+    orders, payments, orders_payments = data_fixture.create_two_linked_tables(user=user)
+    amount = FieldHandler().create_field(user, payments, "number", name="amount")
+    FieldHandler().create_field(
+        user, orders, "formula", name="paid", formula="sum(lookup('link', 'amount'))"
+    )
+    remaining = FieldHandler().create_field(
+        user, orders, "formula", name="remaining", formula="100 - field('paid')"
+    )
+    public_view = _create_public_view(
+        data_fixture, user, orders, [(remaining, "higher_than", "0")], [remaining]
+    )
+    [order] = RowHandler().create_rows(user, orders, [{}]).created_rows
+    payment_values = {orders_payments.link_row_related_field.db_column: [order.id]}
+    [payment] = (
+        RowHandler()
+        .create_rows(user, payments, [{amount.db_column: 40, **payment_values}])
+        .created_rows
+    )
+
+    mock_broadcast_to_channel_group.reset_mock()
+    with transaction.atomic():
+        RowHandler().update_rows(
+            user, payments, [{"id": payment.id, amount.db_column: 100}]
         )
 
     payloads = _payloads_for_view(mock_broadcast_to_channel_group, public_view.slug)
-    assert _types_entering_or_leaving(payloads) == ["rows_deleted"]
-    assert payloads[0]["row_ids"] == [row_a1.id]
+    assert [payload["type"] for payload in payloads] == ["rows_deleted"]
+    assert payloads[0]["row_ids"] == [order.id]
+    assert payloads[0]["rows"][0][remaining.db_column] == "60"
+
+
+def _count_cascade_queries(
+    data_fixture: Fixtures,
+    user: AbstractUser,
+    view_filter: Optional[str],
+    n_views: int = 1,
+    n_entering_rows: int = 1,
+) -> Tuple[int, bool]:
+    """The query count of a cascade into A's lookup, and whether it locked A's rows."""
+
+    tables = _create_linked_tables(data_fixture, user)
+    _create_third_table_linked_from(data_fixture, user, tables.table_a)
+    lookup_c = data_fixture.create_formula_field(
+        table=tables.table_a, formula="join(lookup('link_c', 'primary'), '')"
+    )
+    filters = {
+        "status": (tables.status, "equal", "on"),
+        "lookup_not_updated": (lookup_c, "contains", "keep"),
+        "lookup_updated": (tables.lookup, "contains", "keep"),
+    }
+    for _ in range(n_views if view_filter else 0):
+        tables.create_public_view([filters[view_filter]], [tables.lookup])
+    rows_b, _ = tables.create_rows(["keep"] + [""] * n_entering_rows)
+
+    with CaptureQueriesContext(connection) as captured:
+        RowHandler().force_update_rows(
+            user,
+            tables.table_b,
+            [
+                {"id": row.id, tables.name_b.db_column: "keep" if index else "gone"}
+                for index, row in enumerate(rows_b)
+            ],
+        )
+    lock = f'FOR UPDATE OF "{tables.table_a.get_database_table_name()}"'
+    sqls = [query["sql"] for query in captured.captured_queries]
+    return len(sqls), any(lock in sql for sql in sqls)
+
+
+@pytest.mark.parametrize("view_filter", [None, "status", "lookup_not_updated"])
+@pytest.mark.django_db
+def test_a_cascade_no_view_filter_can_follow_takes_no_lock_and_no_extra_query(
+    data_fixture, view_filter
+):
+    count = partial(_count_cascade_queries, data_fixture, data_fixture.create_user())
+    # The first cascade fills process-wide caches, like the content types one.
+    count(None)
+
+    without_view = count(None)
+    assert without_view == (ANY, False)
+    assert count(view_filter) == without_view
+
+
+@pytest.mark.django_db
+def test_cascade_queries_are_flat_across_rows_and_checked_views(data_fixture):
+    count = partial(_count_cascade_queries, data_fixture, data_fixture.create_user())
+    # The first cascade fills process-wide caches, like the content types one.
+    count("lookup_updated")
+
+    checked = count("lookup_updated")
+    assert checked == (ANY, True)
+    assert count("lookup_updated", n_views=3) == checked
+    assert count("lookup_updated", n_entering_rows=3) == checked
 
 
 def _wait_until_another_connection_waits_for_a_lock() -> None:
@@ -1237,42 +666,29 @@ def test_concurrent_cascades_into_a_row_send_one_rows_deleted(
     mock_broadcast_to_channel_group, mock_broadcast_task, data_fixture
 ):
     user = data_fixture.create_user()
-    table_a, table_b, link_a_b = data_fixture.create_two_linked_tables(user=user)
-    primary_b = table_b.field_set.get(primary=True).specific
-    lookup_a = data_fixture.create_formula_field(
-        table=table_a, formula="join(lookup('link', 'primary'), ',')"
-    )
-    public_view = data_fixture.create_grid_view(
-        user, table=table_a, public=True, create_options=False
-    )
-    data_fixture.create_grid_view_field_option(public_view, lookup_a, hidden=False)
-    data_fixture.create_view_filter(
-        view=public_view, field=lookup_a, type="contains_not", value="gone"
+    tables = _create_linked_tables(data_fixture, user)
+    public_view = tables.create_public_view(
+        [(tables.lookup, "contains_not", "gone")], [tables.lookup]
     )
     row_b1, row_b2 = (
         RowHandler()
+        .create_rows(user, tables.table_b, [{tables.name_b.db_column: "keep"}] * 2)
+        .created_rows
+    )
+    [row_a] = (
+        RowHandler()
         .create_rows(
-            user,
-            table_b,
-            [{primary_b.db_column: "keep"}, {primary_b.db_column: "keep"}],
+            user, tables.table_a, [{tables.link.db_column: [row_b1.id, row_b2.id]}]
         )
         .created_rows
     )
-    row_a1 = (
-        RowHandler()
-        .create_rows(user, table_a, [{link_a_b.db_column: [row_b1.id, row_b2.id]}])
-        .created_rows[0]
-    )
-
     first_cascaded = threading.Event()
     errors = []
 
-    def first_transaction():
+    def first_transaction() -> None:
         try:
             with transaction.atomic():
-                RowHandler().update_rows(
-                    user, table_b, [{"id": row_b1.id, primary_b.db_column: "gone"}]
-                )
+                tables.rename(row_b1, "gone")
                 first_cascaded.set()
                 # Commits only once the second cascade waits for the row lock.
                 _wait_until_another_connection_waits_for_a_lock()
@@ -1286,442 +702,54 @@ def test_concurrent_cascades_into_a_row_send_one_rows_deleted(
     thread.start()
     assert first_cascaded.wait(10)
     with transaction.atomic():
-        RowHandler().update_rows(
-            user, table_b, [{"id": row_b2.id, primary_b.db_column: "gone too"}]
-        )
+        tables.rename(row_b2, "gone too")
     thread.join(10)
 
     assert errors == []
     payloads = _payloads_for_view(mock_broadcast_to_channel_group, public_view.slug)
     assert _types_entering_or_leaving(payloads) == ["rows_deleted"]
-    assert payloads[0]["row_ids"] == [row_a1.id]
-    assert payloads[0]["rows"][0][lookup_a.db_column] == "keep,keep"
-
-
-@pytest.mark.django_db(transaction=True)
-@patch("baserow.contrib.database.ws.rows.signals.broadcast_dependant_rows_updated")
-@patch("baserow.ws.registries.broadcast_to_channel_group")
-def test_a_late_cascade_broadcast_sends_the_changes_of_its_own_transaction(
-    mock_broadcast_to_channel_group, mock_broadcast_task, data_fixture
-):
-    user = data_fixture.create_user()
-    (
-        table_a,
-        table_b,
-        link_a_b,
-        primary_b,
-        lookup_a,
-        public_view,
-    ) = _setup_linked_tables_with_public_view(data_fixture, user, filter_value="keep")
-    row_b1 = (
-        RowHandler()
-        .create_rows(user, table_b, [{primary_b.db_column: "keep"}])
-        .created_rows[0]
-    )
-    RowHandler().create_rows(user, table_a, [{link_a_b.db_column: [row_b1.id]}])
-
-    late_broadcasts = []
-    mock_broadcast_to_channel_group.reset_mock()
-    with patch.object(
-        DependantRowsBroadcast, "__call__", lambda self: late_broadcasts.append(self)
-    ):
-        with transaction.atomic():
-            RowHandler().update_rows(
-                user, table_b, [{"id": row_b1.id, primary_b.db_column: "keep too"}]
-            )
-    with transaction.atomic():
-        RowHandler().update_rows(
-            user, table_b, [{"id": row_b1.id, primary_b.db_column: "gone"}]
-        )
-    late_broadcasts[0]()
-
-    payloads = _payloads_for_view(mock_broadcast_to_channel_group, public_view.slug)
-    assert _types_entering_or_leaving(payloads) == ["rows_deleted"]
-    assert payloads[0]["rows"][0][lookup_a.db_column] == "keep too"
-
-
-@pytest.mark.django_db(transaction=True)
-@patch("baserow.contrib.database.ws.rows.signals.broadcast_dependant_rows_updated")
-@patch("baserow.ws.registries.broadcast_to_channel_group")
-def test_a_late_rows_created_never_carries_values_of_a_later_commit(
-    mock_broadcast_to_channel_group, mock_broadcast_task, data_fixture
-):
-    user = data_fixture.create_user()
-    table_a, table_b, primary_b, status_a, row_b1, row_a1, public_view = (
-        _setup_row_in_public_view_filtered_on_lookup_and_status(data_fixture, user)
-    )
-    secret_a = data_fixture.create_text_field(table=table_a, name="secret")
-    data_fixture.create_grid_view_field_option(public_view, secret_a, hidden=False)
-    with transaction.atomic():
-        RowHandler().update_rows(
-            user, table_b, [{"id": row_b1.id, primary_b.db_column: "gone"}]
-        )
-
-    late_broadcasts = []
-    mock_broadcast_to_channel_group.reset_mock()
-    with patch.object(
-        DependantRowsBroadcast, "__call__", lambda self: late_broadcasts.append(self)
-    ):
-        with transaction.atomic():
-            RowHandler().update_rows(
-                user, table_b, [{"id": row_b1.id, primary_b.db_column: "keep"}]
-            )
-    with transaction.atomic():
-        RowHandler().update_rows(
-            user,
-            table_a,
-            [
-                {
-                    "id": row_a1.id,
-                    status_a.db_column: "off",
-                    secret_a.db_column: "SECRET",
-                }
-            ],
-        )
-    late_broadcasts[0]()
-
-    payloads = _payloads_for_view(mock_broadcast_to_channel_group, public_view.slug)
-    assert _types_entering_or_leaving(payloads) == ["rows_deleted", "rows_created"]
-    assert payloads[1]["rows"][0][secret_a.db_column] is None
-    assert "SECRET" not in str(payloads)
-
-
-@pytest.mark.django_db(transaction=True)
-@patch("baserow.contrib.database.ws.rows.signals.broadcast_dependant_rows_updated")
-@patch("baserow.ws.registries.broadcast_to_channel_group")
-def test_a_cascade_evaluates_the_checked_views_with_one_row_checker(
-    mock_broadcast_to_channel_group, mock_broadcast_task, data_fixture
-):
-    user = data_fixture.create_user()
-    (
-        table_a,
-        table_b,
-        link_a_b,
-        primary_b,
-        lookup_a,
-        public_view,
-    ) = _setup_linked_tables_with_public_view(data_fixture, user, filter_value="keep")
-    row_b1 = (
-        RowHandler()
-        .create_rows(user, table_b, [{primary_b.db_column: "keep"}])
-        .created_rows[0]
-    )
-    RowHandler().create_rows(user, table_a, [{link_a_b.db_column: [row_b1.id]}])
-
-    mock_broadcast_to_channel_group.reset_mock()
-    with patch.object(
-        ViewRealtimeRowsHandler,
-        "get_checked_views_row_checker",
-        autospec=True,
-        side_effect=ViewRealtimeRowsHandler.get_checked_views_row_checker,
-    ) as spy:
-        with transaction.atomic():
-            RowHandler().update_rows(
-                user, table_b, [{"id": row_b1.id, primary_b.db_column: "gone"}]
-            )
-
-    assert spy.call_count == 1
-    payloads = _payloads_for_view(mock_broadcast_to_channel_group, public_view.slug)
-    assert _types_entering_or_leaving(payloads) == ["rows_deleted"]
-
-
-def _locks_rows_of(table, sqls: List[str]) -> bool:
-    return any(
-        f'FOR UPDATE OF "{table.get_database_table_name()}"' in sql for sql in sqls
-    )
-
-
-def _capture_cascade_queries(data_fixture, user, status_filtered: bool) -> List[str]:
-    table_a, table_b, link_a_b = data_fixture.create_two_linked_tables(user=user)
-    primary_b = table_b.field_set.get(primary=True).specific
-    data_fixture.create_formula_field(
-        table=table_a, formula="join(lookup('link', 'primary'), '')"
-    )
-    status_a = data_fixture.create_text_field(table=table_a, name="status")
-    if status_filtered:
-        view = data_fixture.create_grid_view(
-            user, table=table_a, public=True, create_options=False
-        )
-        data_fixture.create_view_filter(
-            view=view, field=status_a, type="equal", value="on"
-        )
-    row_b1 = (
-        RowHandler()
-        .create_rows(user, table_b, [{primary_b.db_column: "keep"}])
-        .created_rows[0]
-    )
-    RowHandler().create_rows(
-        user, table_a, [{link_a_b.db_column: [row_b1.id], status_a.db_column: "on"}]
-    )
-
-    with CaptureQueriesContext(connection) as captured:
-        RowHandler().force_update_rows(
-            user, table_b, [{"id": row_b1.id, primary_b.db_column: "renamed"}]
-        )
-    sqls = [query["sql"] for query in captured.captured_queries]
-    assert not _locks_rows_of(table_a, sqls)
-    return sqls
-
-
-@pytest.mark.django_db
-def test_a_view_filtering_only_fields_a_cascade_cant_change_costs_nothing(
-    data_fixture,
-):
-    user = data_fixture.create_user()
-    _capture_cascade_queries(data_fixture, user, status_filtered=False)
-
-    without_view = _capture_cascade_queries(data_fixture, user, status_filtered=False)
-    with_status_view = _capture_cascade_queries(
-        data_fixture, user, status_filtered=True
-    )
-
-    assert len(with_status_view) == len(without_view)
-
-
-@pytest.mark.django_db(transaction=True)
-@patch("baserow.ws.registries.broadcast_to_channel_group")
-def test_a_cascade_two_levels_deep_removes_a_paid_off_order_from_the_public_view(
-    mock_broadcast_to_channel_group, data_fixture
-):
-    user = data_fixture.create_user()
-    orders, payments, orders_payments = data_fixture.create_two_linked_tables(user=user)
-    total = FieldHandler().create_field(user, orders, "number", name="total")
-    amount = FieldHandler().create_field(user, payments, "number", name="amount")
-    FieldHandler().create_field(
-        user, orders, "formula", name="paid", formula="sum(lookup('link', 'amount'))"
-    )
-    remaining = FieldHandler().create_field(
-        user,
-        orders,
-        "formula",
-        name="remaining",
-        formula="field('total') - field('paid')",
-    )
-    payments_orders = orders_payments.link_row_related_field
-
-    public_view = data_fixture.create_grid_view(
-        user, table=orders, public=True, create_options=False
-    )
-    for field in (total, remaining):
-        data_fixture.create_grid_view_field_option(public_view, field, hidden=False)
-    data_fixture.create_view_filter(
-        view=public_view, field=remaining, type="higher_than", value="0"
-    )
-    order = (
-        RowHandler().create_rows(user, orders, [{total.db_column: 100}]).created_rows[0]
-    )
-    payment = (
-        RowHandler()
-        .create_rows(
-            user,
-            payments,
-            [{amount.db_column: 40, payments_orders.db_column: [order.id]}],
-        )
-        .created_rows[0]
-    )
-
-    mock_broadcast_to_channel_group.reset_mock()
-    with transaction.atomic():
-        RowHandler().update_rows(
-            user, payments, [{"id": payment.id, amount.db_column: 100}]
-        )
-
-    payloads = _payloads_for_view(mock_broadcast_to_channel_group, public_view.slug)
-    assert _types_entering_or_leaving(payloads) == ["rows_deleted"]
-    [deleted] = [payload for payload in payloads if payload["type"] == "rows_deleted"]
-    assert deleted["row_ids"] == [order.id]
-    assert deleted["rows"][0][remaining.db_column] == "60"
-
-
-def _create_third_table_linked_from(data_fixture, user, table_a):
-    table_c = data_fixture.create_database_table(
-        database=table_a.database, name="table_c"
-    )
-    primary_c = data_fixture.create_text_field(
-        table=table_c, name="primary", primary=True
-    )
-    link_a_c = FieldHandler().create_field(
-        user, table_a, "link_row", name="link_c", link_row_table=table_c
-    )
-    return table_c, primary_c, link_a_c
-
-
-@pytest.mark.django_db
-def test_a_cascade_into_a_lookup_no_view_filters_on_takes_no_lock(data_fixture):
-    user = data_fixture.create_user()
-    (
-        table_a,
-        table_b,
-        link_a_b,
-        primary_b,
-        lookup_a,
-        public_view,
-    ) = _setup_linked_tables_with_public_view(data_fixture, user, filter_value="keep")
-    table_c, primary_c, link_a_c = _create_third_table_linked_from(
-        data_fixture, user, table_a
-    )
-    data_fixture.create_formula_field(
-        table=table_a, formula="join(lookup('link_c', 'primary'), '')"
-    )
-    row_b1 = (
-        RowHandler()
-        .create_rows(user, table_b, [{primary_b.db_column: "keep"}])
-        .created_rows[0]
-    )
-    row_c1 = (
-        RowHandler()
-        .create_rows(user, table_c, [{primary_c.db_column: "c"}])
-        .created_rows[0]
-    )
-    RowHandler().create_rows(
-        user,
-        table_a,
-        [{link_a_b.db_column: [row_b1.id], link_a_c.db_column: [row_c1.id]}],
-    )
-
-    with (
-        patch.object(
-            ViewRealtimeRowsHandler,
-            "get_checked_views_row_checker",
-            autospec=True,
-            side_effect=ViewRealtimeRowsHandler.get_checked_views_row_checker,
-        ) as row_checker_spy,
-        CaptureQueriesContext(connection) as captured,
-    ):
-        RowHandler().force_update_rows(
-            user, table_c, [{"id": row_c1.id, primary_c.db_column: "c renamed"}]
-        )
-
-    assert row_checker_spy.call_count == 0
-    sqls = [query["sql"] for query in captured.captured_queries]
-    assert not _locks_rows_of(table_a, sqls)
+    assert payloads[0]["row_ids"] == [row_a.id]
+    assert payloads[0]["rows"][0][tables.lookup.db_column] == "keepkeep"
 
 
 @pytest.mark.parametrize(
-    "filtered_link,expected_types",
-    [("unchanged_link", ["rows_deleted"]), ("changed_link", [])],
+    "cascades", [[[0, 1]], [[0], [1]]], ids=["one_cascade", "two_cascades"]
 )
 @pytest.mark.django_db(transaction=True)
+@patch("baserow.contrib.database.ws.table.signals.broadcast_to_permitted_users")
 @patch("baserow.ws.registries.broadcast_to_channel_group")
-def test_a_view_filtering_on_a_link_is_decided_unless_the_cascade_changed_it(
-    mock_broadcast_to_channel_group, data_fixture, filtered_link, expected_types
+def test_cascades_over_the_limit_refresh_the_table_and_its_public_views(
+    mock_broadcast_to_channel_group,
+    mock_broadcast_to_permitted_users,
+    data_fixture,
+    cascades,
 ):
     user = data_fixture.create_user()
-    (
-        table_a,
-        table_b,
-        link_a_b,
-        primary_b,
-        lookup_a,
-        public_view,
-    ) = _setup_linked_tables_with_public_view(data_fixture, user, filter_value="keep")
-    table_c, primary_c, link_a_c = _create_third_table_linked_from(
-        data_fixture, user, table_a
-    )
-    for field in (link_a_b, link_a_c):
-        data_fixture.create_grid_view_field_option(public_view, field, hidden=False)
-    data_fixture.create_view_filter(
-        view=public_view,
-        field=link_a_c if filtered_link == "unchanged_link" else link_a_b,
-        type="not_empty",
-        value="",
-    )
-    row_b1 = (
-        RowHandler()
-        .create_rows(user, table_b, [{primary_b.db_column: "keep"}])
-        .created_rows[0]
-    )
-    row_c1 = (
-        RowHandler()
-        .create_rows(user, table_c, [{primary_c.db_column: "shown"}])
-        .created_rows[0]
-    )
-    row_a1 = (
-        RowHandler()
-        .create_rows(
-            user,
-            table_a,
-            [{link_a_b.db_column: [row_b1.id], link_a_c.db_column: [row_c1.id]}],
-        )
-        .created_rows[0]
-    )
+    tables = _create_linked_tables(data_fixture, user)
+    views = [
+        tables.create_public_view(filters)
+        for filters in ([(tables.lookup, "contains", "b")], [])
+    ]
+    rows_b, _ = tables.create_rows(["b", "b"])
 
     mock_broadcast_to_channel_group.reset_mock()
-    with transaction.atomic():
-        RowHandler().update_rows(
-            user, table_b, [{"id": row_b1.id, primary_b.db_column: "gone"}]
-        )
+    with override_settings(DEPENDANT_ROWS_REALTIME_UPDATE_LIMIT=1):
+        with transaction.atomic():
+            for indexes in cascades:
+                RowHandler().update_rows(
+                    user,
+                    tables.table_b,
+                    [
+                        {"id": rows_b[i].id, tables.name_b.db_column: "c"}
+                        for i in indexes
+                    ],
+                )
 
-    payloads = _payloads_for_view(mock_broadcast_to_channel_group, public_view.slug)
-    assert _types_entering_or_leaving(payloads) == expected_types
-    assert "gone" not in str(payloads)
-    if expected_types:
-        [deleted] = [p for p in payloads if p["type"] == "rows_deleted"]
-        assert deleted["row_ids"] == [row_a1.id]
-        [deleted_row] = deleted["rows"]
-        assert [linked["value"] for linked in deleted_row[link_a_c.db_column]] == [
-            "shown"
+    for view in views:
+        assert _payloads_for_view(mock_broadcast_to_channel_group, view.slug) == [
+            {"type": "force_view_rows_refresh", "view_id": view.slug}
         ]
-        # Already shows the rename at snapshot time, so its before value is unknown.
-        assert link_a_b.db_column not in deleted_row
-
-
-@pytest.mark.django_db(transaction=True)
-@patch("baserow.ws.registries.broadcast_to_channel_group")
-def test_a_link_changed_by_an_earlier_closed_cascade_keeps_its_view_undecided(
-    mock_broadcast_to_channel_group, data_fixture
-):
-    user = data_fixture.create_user()
-    table_a, table_b, link_a_b = data_fixture.create_two_linked_tables(user=user)
-    primary_b = table_b.field_set.get(primary=True).specific
-    x_b = data_fixture.create_text_field(table=table_b, name="x")
-    lookup_x = data_fixture.create_formula_field(
-        table=table_a, formula="join(lookup('link', 'x'), '')"
-    )
-    status_a = data_fixture.create_text_field(table=table_a, name="status")
-    view_v = data_fixture.create_grid_view(
-        user, table=table_a, public=True, create_options=False
-    )
-    data_fixture.create_view_filter(
-        view=view_v, field=link_a_b, type="link_row_contains", value="new"
-    )
-    data_fixture.create_view_filter(
-        view=view_v, field=lookup_x, type="contains", value="on"
-    )
-    view_w = data_fixture.create_grid_view(
-        user, table=table_a, public=True, create_options=False
-    )
-    data_fixture.create_view_filter(
-        view=view_w, field=status_a, type="equal", value="on"
-    )
-    row_b1 = (
-        RowHandler()
-        .create_rows(user, table_b, [{primary_b.db_column: "old", x_b.db_column: "on"}])
-        .created_rows[0]
-    )
-    row_a3 = (
-        RowHandler()
-        .create_rows(
-            user,
-            table_a,
-            [{link_a_b.db_column: [row_b1.id], status_a.db_column: "on"}],
-        )
-        .created_rows[0]
-    )
-
-    mock_broadcast_to_channel_group.reset_mock()
-    with transaction.atomic():
-        RowHandler().update_rows(
-            user, table_b, [{"id": row_b1.id, primary_b.db_column: "new"}]
-        )
-        RowHandler().update_rows(
-            user, table_a, [{"id": row_a3.id, status_a.db_column: "off"}]
-        )
-        RowHandler().update_rows(
-            user, table_b, [{"id": row_b1.id, x_b.db_column: "off"}]
-        )
-
-    w_payloads = _payloads_for_view(mock_broadcast_to_channel_group, view_w.slug)
-    assert _types_entering_or_leaving(w_payloads) == ["rows_deleted"]
-    v_payloads = _payloads_for_view(mock_broadcast_to_channel_group, view_v.slug)
-    assert _types_entering_or_leaving(v_payloads) == []
+    mock_broadcast_to_permitted_users.delay.assert_called_once()
+    table_payload = mock_broadcast_to_permitted_users.delay.call_args[0][4]
+    assert table_payload["table_id"] == tables.table_a.id
+    assert table_payload["force_table_refresh"] is True

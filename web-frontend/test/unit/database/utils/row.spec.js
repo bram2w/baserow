@@ -781,124 +781,38 @@ describe('Row utilities', () => {
   describe('canTellIfDeletedRowWasCounted', () => {
     const fields = [
       { id: 1, type: 'text' },
-      { id: 2, type: 'link_row' },
-      { id: 3, type: 'text' },
+      { id: 2, type: 'text' },
     ]
-    const fieldOptions = {
-      1: { hidden: false },
-      2: { hidden: false },
-      3: { hidden: true },
-    }
-    const viewFilteringOn = (fieldId, extra = {}) => ({
-      filters_disabled: false,
-      filters: [{ id: 1, field: fieldId, type: 'empty', value: '' }],
-      ...extra,
-    })
-    const viewSortingOn = (fieldId) => ({
-      filters: [],
-      sortings: [{ id: 1, field: fieldId, order: 'ASC', type: 'default' }],
-    })
-    const viewGroupingOn = (fieldId) => ({
-      filters: [],
-      group_bys: [{ id: 1, field: fieldId, order: 'ASC', type: 'default' }],
-    })
-    const canTell = (row, view, checkSortAndGroupBy = false) =>
-      canTellIfDeletedRowWasCounted({
-        row,
-        view,
-        fields,
-        fieldOptions,
-        checkSortAndGroupBy,
-      })
+    const fieldOptions = { 1: { hidden: false }, 2: { hidden: true } }
+    const on = (key, field) => ({ [key]: [{ field }] })
 
-    test('can tell when there are no filters, sortings or group-bys', () => {
-      expect(canTell({ id: 9 }, { filters: [] })).toBe(true)
-      expect(canTell({ id: 9 }, { filters: [] }, true)).toBe(true)
-    })
-
-    test('cannot tell when the payload lacks the value of a visible filtered field', () => {
-      expect(canTell({ id: 9, field_1: 'a' }, viewFilteringOn(2))).toBe(false)
-    })
-
-    test('can tell when the payload holds the value of every filtered field, even an empty one', () => {
-      expect(canTell({ id: 9, field_2: [] }, viewFilteringOn(2))).toBe(true)
-      expect(canTell({ id: 9, field_2: null }, viewFilteringOn(2))).toBe(true)
-    })
-
-    test('can tell when the payload lacks a value no filter uses', () => {
-      expect(canTell({ id: 9, field_1: 'a' }, viewFilteringOn(1))).toBe(true)
-    })
-
-    test('cannot tell when any of several filters lacks its value', () => {
-      const view = {
-        filters_disabled: false,
-        filters: [
-          { id: 1, field: 1, type: 'empty', value: '' },
-          { id: 2, field: 2, type: 'empty', value: '', group: 5 },
-        ],
-      }
-      expect(canTell({ id: 9, field_1: 'a' }, view)).toBe(false)
-    })
-
-    test('can tell when the filtered field is hidden in the view', () => {
-      expect(canTell({ id: 9, field_1: 'a' }, viewFilteringOn(3))).toBe(true)
-    })
-
-    test('can tell when the filtered field no longer exists', () => {
-      expect(canTell({ id: 9, field_1: 'a' }, viewFilteringOn(99))).toBe(true)
-    })
-
-    test('can tell when the filters are disabled', () => {
-      const view = viewFilteringOn(2, { filters_disabled: true })
-      expect(canTell({ id: 9, field_1: 'a' }, view)).toBe(true)
-    })
-
-    test('cannot tell when the payload lacks the value of a visible sorted field', () => {
-      expect(canTell({ id: 9, field_1: 'a' }, viewSortingOn(2), true)).toBe(
-        false
-      )
-    })
-
-    test('cannot tell when the payload lacks the value of a visible grouped field', () => {
-      expect(canTell({ id: 9, field_1: 'a' }, viewGroupingOn(2), true)).toBe(
-        false
-      )
-    })
-
-    test('can tell when the payload holds the value of every sorted and grouped field, even an empty one', () => {
-      expect(canTell({ id: 9, field_2: [] }, viewSortingOn(2), true)).toBe(true)
-      expect(canTell({ id: 9, field_2: null }, viewGroupingOn(2), true)).toBe(
-        true
-      )
-    })
-
-    test('ignores sortings and group-bys unless asked to check them', () => {
-      expect(canTell({ id: 9, field_1: 'a' }, viewSortingOn(2))).toBe(true)
-      expect(canTell({ id: 9, field_1: 'a' }, viewGroupingOn(2))).toBe(true)
-    })
-
-    test('can tell when the sorted or grouped field is hidden in the view', () => {
-      expect(canTell({ id: 9, field_1: 'a' }, viewSortingOn(3), true)).toBe(
-        true
-      )
-      expect(canTell({ id: 9, field_1: 'a' }, viewGroupingOn(3), true)).toBe(
-        true
-      )
-    })
-
-    test('can tell when the sorted or grouped field no longer exists', () => {
-      expect(canTell({ id: 9, field_1: 'a' }, viewSortingOn(99), true)).toBe(
-        true
-      )
-      expect(canTell({ id: 9, field_1: 'a' }, viewGroupingOn(99), true)).toBe(
-        true
-      )
-    })
-
-    test('still checks the filters when asked to check sortings and group-bys', () => {
-      expect(canTell({ id: 9, field_1: 'a' }, viewFilteringOn(2), true)).toBe(
-        false
-      )
+    test.each([
+      ['nothing decides the position', {}, {}, true, true],
+      ['filtered field missing', on('filters', 1), {}, false, false],
+      ['filtered field null', on('filters', 1), { field_1: null }, false, true],
+      ['filtered field hidden', on('filters', 2), {}, false, true],
+      ['filtered field deleted', on('filters', 9), {}, false, true],
+      [
+        'filters disabled',
+        { ...on('filters', 1), filters_disabled: true },
+        {},
+        false,
+        true,
+      ],
+      ['sorted field missing', on('sortings', 1), {}, true, false],
+      ['grouped field missing', on('group_bys', 1), {}, true, false],
+      ['filter checked with sortings', on('filters', 1), {}, true, false],
+      ['sorted field not checked', on('sortings', 1), {}, false, true],
+    ])('%s', (_, view, row, checkSortAndGroupBy, expected) => {
+      expect(
+        canTellIfDeletedRowWasCounted({
+          row: { id: 9, ...row },
+          view,
+          fields,
+          fieldOptions,
+          checkSortAndGroupBy,
+        })
+      ).toBe(expected)
     })
   })
 

@@ -45,14 +45,12 @@ def split_views_rows_changes(
     new_views_rows: List[FilteredViewRows],
 ) -> ViewsRowsChanges:
     """
-    Compares the rows visible per view before and after an update, because a
-    client only knows the rows its view showed: a row that left the view must be
-    deleted, one that entered it created and only the others updated.
+    A client only holds the rows its view showed, so a row that left must be
+    deleted, one that entered created, and only the rest updated.
 
     :param old_views_rows: Per view, the ids of the rows visible before.
     :param new_views_rows: Per view, the ids of the rows visible after.
-    :return: Per view, the ids of the deleted, created and updated rows. Views
-        without any of them are left out.
+    :return: Per view, the deleted, created and updated row ids, if any.
     """
 
     changes = ViewsRowsChanges(deleted=[], created=[], updated=[])
@@ -99,8 +97,7 @@ class ViewRealtimeRowsHandler:
 
     def _get_views_filter(self) -> Q:
         """
-        :return: The filter matching the views a registered view realtime rows
-            type broadcasts to.
+        :return: The views any realtime rows type broadcasts to.
         """
 
         combined_q = Q()
@@ -110,11 +107,9 @@ class ViewRealtimeRowsHandler:
 
     def _get_views_annotated_with_types(self, table: Table) -> QuerySet:
         """
-        Returns the views of the table that a registered view realtime rows type
-        broadcasts to, annotated with the types they match, which is what
-        `broadcast_to_types` dispatches on.
+        Annotated with the types they match, which `broadcast_to_types` reads.
 
-        :param table: The table the views belong to.
+        :param table: The table of the views.
         :return: The views queryset.
         """
 
@@ -131,11 +126,9 @@ class ViewRealtimeRowsHandler:
 
     def _get_views_queryset(self, table: Table) -> QuerySet:
         """
-        Returns the views of the table that a registered view realtime rows type
-        broadcasts to, annotated with the types they match and ready to check
-        rows against their filters.
+        Prefetched to check rows against the views' filters.
 
-        :param table: The table the views belong to.
+        :param table: The table of the views.
         :return: The views queryset.
         """
 
@@ -182,15 +175,12 @@ class ViewRealtimeRowsHandler:
         self, table: Table, model: Type[GeneratedTableModel]
     ) -> FilteredViewRowChecker:
         """
-        Returns a row checker for the checked views of the table: the publicly
-        shared and restricted views wanting realtime events whose row visibility
-        can be evaluated right before a dependency cascade updates the rows. Those
-        are the views with filters. Views without filters need no check, all rows
-        are visible.
+        Checked views are the filtered public and restricted views wanting
+        realtime events; an unfiltered view shows every row, so needs no check.
 
-        :param table: The table the views belong to.
-        :param model: The model of the table including all fields.
-        :return: The row checker of the checked views.
+        :param table: The table of the views.
+        :param model: The table model with all fields.
+        :return: The row checker.
         """
 
         views_queryset = self._get_views_queryset(table).filter(
@@ -207,17 +197,15 @@ class ViewRealtimeRowsHandler:
         field_ids_with_unknown_before_values: Set[int],
     ) -> Expression:
         """
-        Returns an expression telling whether a checked view of the table can
-        show a dependency cascade's change and be told about it: one with a
-        filter on a field the cascade updates, and none on a field whose before
-        values are unknown. It doesn't depend on the row, so Postgres evaluates
-        it once per statement.
+        True when a checked view filters on a field the cascade updates, and on
+        none with unknown before values. It doesn't depend on the row, so Postgres
+        evaluates it once per statement.
 
-        :param table: The table the views belong to.
-        :param dependant_field_ids: The ids of the table's fields the cascade
-            updates, None when unknown, to count every filtered view.
-        :param field_ids_with_unknown_before_values: The ids of the table's
-            fields the cascade changed without an update statement.
+        :param table: The table of the views.
+        :param dependant_field_ids: The field ids the cascade updates; None
+            counts every filtered view.
+        :param field_ids_with_unknown_before_values: The field ids changed
+            without an update statement.
         :return: The boolean expression.
         """
 
@@ -262,12 +250,9 @@ class ViewRealtimeRowsHandler:
 
     def broadcast_force_rows_refresh_to_views(self, table: Table) -> None:
         """
-        Makes the clients of the views of the table that want realtime events
-        refetch their rows, because the table refresh only reaches workspace
-        members. The views are listed with one query, whatever their number and
-        types.
+        Needed because the table refresh only reaches workspace members.
 
-        :param table: The table whose rows changed too much to broadcast them.
+        :param table: The table with too many changed rows.
         :return: None.
         """
 
@@ -295,9 +280,8 @@ class ViewRealtimeRowsHandler:
 
         The before row is an id-only skeleton, so the client resolves the before
         state from its buffered copy (the mechanism from #5642). Rows entering or
-        leaving a view are decided in the cascade's transaction by
-        `get_dependant_rows_visibility_changes`, and a client ignores the update
-        of a row it doesn't hold.
+        leaving a view are sent by `get_dependant_rows_visibility_changes`; a
+        client ignores updates of rows it doesn't hold.
 
         :param table: The table the cascade-affected rows belong to.
         :param model: The model of the table including all fields.
@@ -338,20 +322,12 @@ class ViewRealtimeRowsHandler:
         self, update: DependantRowsUpdate
     ) -> List[Tuple[View, Dict[str, Any]]]:
         """
-        Returns the payloads telling the checked views of the table which rows of
-        a dependency cascade update left or entered them: a `rows_deleted` with
-        the pre-cascade values the view showed, or a `rows_created` with the
-        current values, restricted to the view's visible fields. It must run in
-        the cascade's transaction, while the cascade still locks the rows, so the
-        payloads reflect that transaction only.
+        A `rows_deleted` for the rows that left a checked view, a `rows_created`
+        for those that entered. Must run while the cascade still locks the rows,
+        so the payloads show only its changes.
 
-        The views filtering on a field whose before values are unknown are left
-        out, and those values are left out of the `rows_deleted` rows.
-
-        :param update: The update of a table by the cascades of the transaction
-            so far, with the fields whose before values any cascade of the
-            transaction left unknown.
-        :return: The payload to broadcast per view, in broadcasting order.
+        :param update: The transaction's merged update of the table.
+        :return: Per view, the payload to broadcast, in order.
         """
 
         known_row_ids = sorted(

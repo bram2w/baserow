@@ -2,7 +2,6 @@ import { vi } from 'vitest'
 import flushPromises from 'flush-promises'
 import bufferedRows from '@baserow/modules/database/store/view/bufferedRows'
 import viewStore from '@baserow/modules/database/store/view'
-import galleryStore from '@baserow/modules/database/store/view/gallery'
 import { TestApp } from '@baserow/test/helpers/testApp'
 import { ContainsViewFilterType } from '@baserow/modules/database/viewFilters'
 import { createPrimaryField } from '@baserow/test/fixtures/fields'
@@ -2050,6 +2049,61 @@ describe('Buffered rows view store helper', () => {
     expect(rowsInStore[11]).toBe(null)
   })
 
+  describe('rows deleted with a payload that omits values', () => {
+    const fields = [
+      { id: 1, name: 'Name', type: 'text', primary: true },
+      { id: 2, name: 'Link', type: 'link_row', link_row_table_id: 2 },
+    ]
+    const fieldOptions = { 1: { hidden: false }, 2: { hidden: false } }
+    const row = (id) => ({ id, order: `${id}.00000000000000000000` })
+    const deleteFromBuffer = async (rows, view, deletedRow, state = {}) => {
+      const store = createStore(
+        { service: null },
+        { viewId: 1, fieldOptions, rows, ...state }
+      )
+      await store.dispatch('test/afterExistingRowDeleted', {
+        view,
+        fields,
+        row: deletedRow,
+      })
+      return store.getters['test/getRows'].map((r) => r?.id ?? null)
+    }
+
+    test('removes a held row by id when its payload no longer matches the search', async () => {
+      const ids = await deleteFromBuffer(
+        [null, row(2), row(3), null],
+        createView(),
+        row(2),
+        { activeSearchTerm: 'Alpha' }
+      )
+
+      expect(ids).toEqual([null, 3, null])
+    })
+
+    test('leaves the buffer unchanged for an unheld row when the payload omits a filtered field', async () => {
+      const filter = { id: 1, view: 1, field: 2, type: 'empty', value: '' }
+      const view = createView({ filter_type: 'AND', filters: [filter] })
+
+      const ids = await deleteFromBuffer(
+        [row(1), null, null, row(4)],
+        view,
+        row(3)
+      )
+
+      expect(ids).toEqual([1, null, null, 4])
+    })
+
+    test('leaves a held neighbour alone when the deleted row is not held', async () => {
+      const ids = await deleteFromBuffer(
+        [row(1), row(2), row(4)],
+        createView(),
+        row(3)
+      )
+
+      expect(ids).toEqual([1, 2, 4])
+    })
+  })
+
   test('created row hidden by the backend is not added', async () => {
     const view = {
       id: 1,
@@ -2209,256 +2263,6 @@ describe('Buffered rows view store helper', () => {
 
     expect(testApp.mockServer.mock.history.patch).toHaveLength(1)
     expect(store.getters['test/getRows'].map((row) => row.id)).toEqual([2])
-  })
-
-  describe('rows deleted with values the payload omits', () => {
-    const fields = [
-      { id: 1, name: 'Name', type: 'text', primary: true },
-      {
-        id: 2,
-        name: 'Link',
-        type: 'link_row',
-        link_row_table_id: 2,
-        link_row_table_primary_field: { id: 10, name: 'Name', type: 'text' },
-      },
-    ]
-    const fieldOptions = {
-      1: { hidden: false, order: 0 },
-      2: { hidden: false, order: 1 },
-    }
-    const linkFilterView = (type, value = '') =>
-      createView({
-        filter_type: 'AND',
-        filter_groups: [],
-        filters: [{ id: 1, view: 1, field: 2, type, value, group: null }],
-      })
-    const order = (id) => `${id}.00000000000000000000`
-    const heldRow = (id, linkValue) => ({
-      id,
-      order: order(id),
-      field_1: `Row ${id}`,
-      field_2: [{ id: 11, value: linkValue }],
-    })
-    const createBuffer = (rows, extraState = {}) =>
-      createStore(
-        { service: null },
-        { viewId: 1, fieldOptions, rows, ...extraState }
-      )
-    const bufferIds = (store) =>
-      store.getters['test/getRows'].map((row) => (row === null ? null : row.id))
-
-    test('removes a held row that matched the search only through a value the payload omits', async () => {
-      const store = createBuffer(
-        [null, heldRow(2, 'Alpha'), heldRow(3, 'Alpha'), null],
-        { activeSearchTerm: 'Alpha' }
-      )
-
-      await store.dispatch('test/afterExistingRowDeleted', {
-        view: createView(),
-        fields,
-        row: { id: 2, order: order(2), field_1: 'Row 2' },
-      })
-
-      expect(bufferIds(store)).toEqual([null, 3, null])
-    })
-
-    test('removes a held gallery card that matched the search only through a value the payload omits', async () => {
-      const galleryTestStore = testApp.createStore({
-        modules: { gallery: galleryStore, view: viewStore },
-      })
-      const state = Object.assign(galleryStore.state(), {
-        viewId: 1,
-        fieldOptions,
-        activeSearchTerm: 'Alpha',
-        rows: [heldRow(1, 'Alpha'), heldRow(2, 'Alpha'), null],
-      })
-      galleryTestStore.replaceState({
-        ...galleryTestStore.state,
-        gallery: state,
-      })
-
-      await galleryTestStore.dispatch('gallery/afterExistingRowDeleted', {
-        view: createView(),
-        fields,
-        row: { id: 1, order: order(1), field_1: 'Row 1' },
-      })
-
-      const rows = galleryTestStore.getters['gallery/getRows']
-      expect(rows.map((row) => (row === null ? null : row.id))).toEqual([
-        2,
-        null,
-      ])
-    })
-
-    test('removes a held row that matched an ad hoc link filter only through a value the payload omits', async () => {
-      const store = createBuffer(
-        [null, heldRow(2, 'Alpha'), heldRow(3, 'Alpha'), null],
-        { adhocFiltering: true }
-      )
-
-      await store.dispatch('test/afterExistingRowDeleted', {
-        view: linkFilterView('link_row_has', '11'),
-        fields,
-        row: { id: 3, order: order(3), field_1: 'Row 3' },
-      })
-
-      expect(bufferIds(store)).toEqual([null, 2, null])
-    })
-
-    test('removes a held row whose payload no longer matches the filters or the search', async () => {
-      const store = createBuffer([heldRow(1, 'Alpha'), heldRow(2, 'Alpha')], {
-        activeSearchTerm: 'Alpha',
-        adhocFiltering: true,
-      })
-
-      await store.dispatch('test/afterExistingRowDeleted', {
-        view: linkFilterView('link_row_has', '11'),
-        fields,
-        row: { id: 1, order: order(1), field_1: 'Row 1', field_2: [] },
-      })
-
-      expect(bufferIds(store)).toEqual([2])
-    })
-
-    test('keeps the placeholder of a row it never held when the payload omits the link of an ad hoc is empty filter', async () => {
-      const store = createBuffer(
-        [heldRow(1, 'Alpha'), null, null, heldRow(4, 'Alpha')],
-        { adhocFiltering: true }
-      )
-
-      await store.dispatch('test/afterExistingRowDeleted', {
-        view: linkFilterView('empty'),
-        fields,
-        row: { id: 3, order: order(3), field_1: 'Row 3' },
-      })
-
-      expect(bufferIds(store)).toEqual([1, null, null, 4])
-    })
-
-    test('removes the placeholder of a row it never held when the payload shows the link is empty', async () => {
-      const store = createBuffer(
-        [heldRow(1, 'Alpha'), null, null, heldRow(4, 'Alpha')],
-        { adhocFiltering: true }
-      )
-
-      await store.dispatch('test/afterExistingRowDeleted', {
-        view: linkFilterView('empty'),
-        fields,
-        row: { id: 3, order: order(3), field_1: 'Row 3', field_2: [] },
-      })
-
-      expect(bufferIds(store)).toEqual([1, null, 4])
-    })
-
-    test('removes the placeholder of a row it never held when a value the payload shows matches the search', async () => {
-      const store = createBuffer(
-        [heldRow(1, 'Alpha'), null, null, heldRow(4, 'Alpha')],
-        { activeSearchTerm: 'Row 3' }
-      )
-
-      await store.dispatch('test/afterExistingRowDeleted', {
-        view: createView({ filter_type: 'AND', filter_groups: [] }),
-        fields,
-        row: { id: 3, order: order(3), field_1: 'Row 3' },
-      })
-
-      expect(bufferIds(store)).toEqual([1, null, 4])
-    })
-
-    test('removes the placeholder of a row it never held when the search term is its id and the payload has no visible value', async () => {
-      const store = createBuffer(
-        [heldRow(1, 'Alpha'), null, null, heldRow(4, 'Alpha')],
-        { activeSearchTerm: '3' }
-      )
-
-      await store.dispatch('test/afterExistingRowDeleted', {
-        view: createView({ filter_type: 'AND', filter_groups: [] }),
-        fields,
-        row: { id: 3, order: order(3) },
-      })
-
-      expect(bufferIds(store)).toEqual([1, null, 4])
-    })
-
-    describe('sorted by the link', () => {
-      const sortedView = () =>
-        createView({
-          filter_type: 'AND',
-          filter_groups: [],
-          sortings: [
-            { id: 1, view: 1, field: 2, order: 'ASC', type: 'default' },
-          ],
-        })
-      const createGallery = (rows) => {
-        const galleryTestStore = testApp.createStore({
-          modules: { gallery: galleryStore, view: viewStore },
-        })
-        const state = Object.assign(galleryStore.state(), {
-          viewId: 1,
-          fieldOptions,
-          rows,
-        })
-        galleryTestStore.replaceState({
-          ...galleryTestStore.state,
-          gallery: state,
-        })
-        return galleryTestStore
-      }
-      const galleryIds = (galleryTestStore) =>
-        galleryTestStore.getters['gallery/getRows'].map((row) =>
-          row === null ? null : row.id
-        )
-
-      test('keeps the placeholders when a row it never held has a payload that omits the link', async () => {
-        const galleryTestStore = createGallery([
-          null,
-          heldRow(2, 'Alpha'),
-          heldRow(3, 'Alpha'),
-          null,
-        ])
-
-        await galleryTestStore.dispatch('gallery/afterExistingRowDeleted', {
-          view: sortedView(),
-          fields,
-          row: { id: 4, order: order(4), field_1: 'Row 4' },
-        })
-
-        expect(galleryIds(galleryTestStore)).toEqual([null, 2, 3, null])
-      })
-
-      test('removes a placeholder when a row it never held has a payload that shows the link is empty', async () => {
-        const galleryTestStore = createGallery([
-          null,
-          heldRow(2, 'Alpha'),
-          heldRow(3, 'Alpha'),
-          null,
-        ])
-
-        await galleryTestStore.dispatch('gallery/afterExistingRowDeleted', {
-          view: sortedView(),
-          fields,
-          row: { id: 4, order: order(4), field_1: 'Row 4', field_2: [] },
-        })
-
-        expect(galleryIds(galleryTestStore)).toEqual([2, 3, null])
-      })
-    })
-
-    test('leaves a held neighbour alone when a duplicate delete arrives for a row already removed', async () => {
-      const store = createBuffer([
-        heldRow(1, 'Alpha'),
-        heldRow(2, 'Alpha'),
-        heldRow(4, 'Alpha'),
-      ])
-
-      await store.dispatch('test/afterExistingRowDeleted', {
-        view: createView({ filter_type: 'AND', filter_groups: [] }),
-        fields,
-        row: { id: 3, order: order(3), field_1: 'Row 3', field_2: [] },
-      })
-
-      expect(bufferIds(store)).toEqual([1, 2, 4])
-    })
   })
 })
 

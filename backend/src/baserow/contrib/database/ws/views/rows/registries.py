@@ -50,12 +50,10 @@ class ViewRealtimeRowsType(Instance):
 
     def broadcast_force_rows_refresh(self, view: View) -> None:
         """
-        Called when the clients of the view must refetch its rows, because too many
-        rows changed to broadcast them one by one. It sends the
-        `force_view_rows_refresh` event to the page of the view, so the shape of
-        that event is defined once per type.
+        Makes the view's clients refetch its rows, e.g. when too many changed to
+        send them one by one.
 
-        :param view: The view whose clients must refetch its rows.
+        :param view: The view to refresh.
         """
 
         raise NotImplementedError(

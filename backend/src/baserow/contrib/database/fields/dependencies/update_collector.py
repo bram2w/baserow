@@ -66,19 +66,17 @@ class DependantRowsUpdate:
     field_ids: List[int]
     # True when the rows are unknown or over the limit: refresh the whole table.
     requires_refresh: bool
-    # The fields whose pre-cascade values the before rows can't show.
     field_ids_with_unknown_before_values: Set[int] = dataclasses.field(
         default_factory=set
     )
     # Serialized pre-cascade state for realtime updates. Empty if requires_refresh=True.
     before_rows: Dict[int, Dict[str, Any]] = dataclasses.field(default_factory=dict)
-    # Per row id in before_rows, the checked views it was visible in pre-cascade.
+    # Per row id, the checked views showing it pre-cascade.
     before_visible_view_ids: Dict[int, Set[int]] = dataclasses.field(
         default_factory=dict
     )
-    # The checked views of the table whose pre-cascade visibility was evaluated.
     before_checked_view_ids: Set[int] = dataclasses.field(default_factory=set)
-    # Evaluated the checked views, reused to evaluate them again after the cascade.
+    # Reused to check the views again after the cascade.
     checked_views_row_checker: Optional["FilteredViewRowChecker"] = dataclasses.field(
         default=None, repr=False, compare=False
     )
@@ -87,36 +85,30 @@ class DependantRowsUpdate:
 @dataclasses.dataclass
 class BeforeRowsSnapshot:
     """
-    The pre-cascade state of a table's rows, captured right before the update
-    statements change them. The earliest snapshot of a row wins, and a row an
-    update statement changed before any snapshot of it never gets one.
+    The pre-cascade state of a table's rows; the earliest snapshot of a row wins.
     """
 
-    # Serialized pre-cascade row per row id.
+    # Serialized row per row id.
     rows: Dict[int, Dict[str, Any]] = dataclasses.field(default_factory=dict)
-    # Rows an update statement changed while they had no snapshot.
     row_ids_updated_without_snapshot: Set[int] = dataclasses.field(default_factory=set)
-    # Per row id in rows, the checked views it was visible in.
+    # Per row id, the checked views showing it.
     visible_view_ids: Dict[int, Set[int]] = dataclasses.field(default_factory=dict)
-    # The checked views of the table whose visibility was evaluated.
     checked_view_ids: Set[int] = dataclasses.field(default_factory=set)
-    # Evaluates the checked views, built once per table.
     row_checker: Optional["FilteredViewRowChecker"] = dataclasses.field(
         default=None, repr=False
     )
-    # Fields changed without an update statement: the rows may already show it.
+    # Changed without an update statement, so a snapshot may show the new value.
     field_ids_with_unknown_before_values: Set[int] = dataclasses.field(
         default_factory=set
     )
-    # Whether a checked view can show the cascade's change, None until a read tells.
+    # None until the first read of the table tells.
     needs_view_checks: Optional[bool] = None
-    # Past the limit the table is refreshed, so nothing more is captured.
+    # Past the limit the table is refreshed instead.
     overflowed: bool = False
 
     def mark_overflowed(self) -> None:
         """
-        Drops everything captured of the rows, because the table is refreshed
-        instead, keeping only the fields whose before values are unknown.
+        Drops the captured rows, since the table is refreshed instead.
         """
 
         self.overflowed = True
@@ -128,9 +120,7 @@ class BeforeRowsSnapshot:
 
     def get_row_ids_not_to_snapshot(self) -> Set[int]:
         """
-        :return: The ids of the rows no later snapshot may capture: the ones
-            already snapshotted, and the ones updated without a snapshot, whose
-            values already show the cascade's change.
+        :return: The ids already snapshotted or already changed by the cascade.
         """
 
         return self.rows.keys() | self.row_ids_updated_without_snapshot
@@ -143,14 +133,12 @@ class BeforeRowsSnapshot:
         requires_refresh: bool,
     ) -> DependantRowsUpdate:
         """
-        Returns the dependant rows update of the table, carrying the pre-cascade
-        state of the provided rows only.
+        Keeps the pre-cascade state of the given rows only.
 
-        :param table: The table the rows belong to.
-        :param row_ids: The ids of the rows whose values changed.
-        :param field_ids: The ids of the fields whose values changed.
-        :param requires_refresh: Whether the whole table must be refreshed, in
-            which case no pre-cascade state is carried.
+        :param table: The table of the rows.
+        :param row_ids: The changed row ids.
+        :param field_ids: The changed field ids.
+        :param requires_refresh: Whether the whole table is refreshed instead.
         :return: The dependant rows update.
         """
 
@@ -190,14 +178,12 @@ def merge_dependant_rows_updates(
 ) -> List[DependantRowsUpdate]:
     """
     Merges lists of DependantRowsUpdate into one entry per table, unioning
-    row/field ids and the fields with unknown before values, respecting the
-    limit and dropping empty entries. A row's
-    pre-cascade state comes from the first update listing it, so a row first
-    listed without a snapshot keeps none: a later one would show the changes
-    of the earlier updates.
+    row/field ids, respecting the limit and dropping empty entries. A row keeps
+    the snapshot of the first update listing it, or none: later ones would show
+    the earlier changes.
 
-    :param updates_lists: The lists of dependant rows updates to merge, in the
-        order they happened.
+    :param updates_lists: The lists of dependant rows updates to merge, oldest
+        first.
     :return: One update per table with sorted, deduplicated row and field ids.
     """
 
@@ -401,11 +387,9 @@ class PathBasedUpdateStatementCollector:
         :param collect_dependant_rows: Set to False when no realtime events will be
             sent for this update, to skip the extra queries needed to find the rows
             changed by fields marked as changed without an update statement.
-        :param before_snapshots: If provided, the pre-cascade state of the rows
-            about to be updated is added to it per table id, with the rows
-            updated without a snapshot.
-        :param dependant_field_ids_per_table: The ids of the fields the cascade
-            will update per table id, None when unknown.
+        :param before_snapshots: Output pre-cascade state per table id.
+        :param dependant_field_ids_per_table: The field ids the cascade will
+            update per table id, None when unknown.
         :return: A dictionary containing a set of updated row ids per table id.
         """
 
@@ -478,14 +462,12 @@ class PathBasedUpdateStatementCollector:
         self, before_snapshots: Dict[int, BeforeRowsSnapshot]
     ) -> None:
         """
-        Records the fields marked as changed without an update statement in
-        this collector's table and in the ones of its sub paths. Their values
-        are read from other tables when the row is fetched, so a snapshot may
+        Records the changed-only fields of this path and its sub paths. Their
+        values are read from other tables at fetch time, so a snapshot may
         already show the change.
 
-        :param before_snapshots: The pre-cascade state per table id, to record
-            the fields in.
-        :return: None, the outcome is recorded in `before_snapshots`.
+        :param before_snapshots: The snapshots per table id.
+        :return: None, records into `before_snapshots`.
         """
 
         if self.changed_only_fields:
@@ -501,11 +483,9 @@ class PathBasedUpdateStatementCollector:
         overflowed_table_ids: Set[int],
     ) -> Optional[BeforeRowsSnapshot]:
         """
-        :param before_snapshots: The pre-cascade state per table id.
-        :param overflowed_table_ids: The ids of the tables known to have
-            overflowed in this cascade.
-        :return: The snapshot of the table, or None once the table overflowed,
-            its snapshot then dropped.
+        :param before_snapshots: The snapshots per table id.
+        :param overflowed_table_ids: The ids of the tables that overflowed.
+        :return: The table's snapshot, None once the table overflowed.
         """
 
         snapshot = before_snapshots[self.table.id]
@@ -517,12 +497,10 @@ class PathBasedUpdateStatementCollector:
         self, snapshot: BeforeRowsSnapshot, overflowed_table_ids: Set[int]
     ) -> None:
         """
-        Records that the table has more changed rows than the realtime update
-        limit, so it's refreshed and snapshotted no more in this cascade.
+        Marks the table to be refreshed instead of snapshotted.
 
-        :param snapshot: The snapshot of the table, to drop.
-        :param overflowed_table_ids: The ids of the tables to refresh, to add the
-            table to.
+        :param snapshot: The table's snapshot, to drop.
+        :param overflowed_table_ids: The ids of the tables to refresh.
         """
 
         snapshot.mark_overflowed()
@@ -541,13 +519,8 @@ class PathBasedUpdateStatementCollector:
         """
         Serializes the pre-update state of the rows this collector is about to
         update, so realtime listeners get a truthful `rows_before_update`. When
-        a checked view of the table can show the cascade's change, the rows are
-        locked as they are read, like the update statements would lock them, so
-        a concurrent cascade into them can't change that state before this
-        transaction ends, and their visibility in the checked views is recorded
-        at that same moment. The rows already snapshotted or updated by the
-        cascade are skipped before the limit applies, and a table past the
-        limit is refreshed instead, so nothing more of it is captured.
+        a checked view can show the change, the rows are locked as read, so no
+        concurrent cascade changes them before this transaction ends.
 
         Only rows updated via a SQL statement are captured; a link row field
         display resolves at serialization time and its upstream value has already
@@ -561,12 +534,11 @@ class PathBasedUpdateStatementCollector:
         :param deleted_m2m_rels_per_link_field: A dictionary per link field of
             rows in the table it links to which have had their connections
             removed.
-        :param before_snapshots: Output dict of the pre-cascade state per table
-            id, added to with the earliest snapshot winning.
-        :param overflowed_table_ids: The ids of the tables known to have
-            overflowed in this cascade, added to when this one does.
-        :param dependant_field_ids: The ids of the table's fields the cascade
-            will update, None when unknown.
+        :param before_snapshots: Output snapshots per table id.
+        :param overflowed_table_ids: The ids of the tables that overflowed,
+            added to.
+        :param dependant_field_ids: The table's field ids the cascade will
+            update, None when unknown.
         :return: None, the outcome is recorded in `before_snapshots`.
         """
 
@@ -630,27 +602,21 @@ class PathBasedUpdateStatementCollector:
         dependant_field_ids: Optional[Set[int]],
     ) -> List[GeneratedTableModel]:
         """
-        Reads the rows matching the filter in a single statement. The first read
-        of the table in a cascade takes no lock, and tells in the same statement
-        whether a checked view can show the cascade's change. Only then the view
-        checker is built and the rows are read again, locked in id order, so
-        concurrent cascades into the same rows wait for each other instead of
-        deadlocking. Later reads lock directly.
+        The first read of a table, unlocked, also tells whether locks are needed.
+        Rows are locked in id order, so concurrent cascades wait instead of
+        deadlocking.
 
-        :param model: The model of the table including all fields.
-        :param row_filter: One of the filters of `_filters_for_rows_to_snapshot`.
-        :param excluded_row_ids: The ids of the rows to leave out before the
-            limit applies.
-        :param limit: The maximum number of rows to read. Reading that many
-            means the table overflows, so no view checker is built for it.
-        :param snapshot: The snapshot of the table, recording whether it needs
-            view checks and the checker of its checked views.
-        :param dependant_field_ids: The ids of the table's fields the cascade
-            will update, None when unknown.
-        :return: The rows ordered by id, locked when the table needs view checks.
+        :param model: The table model with all fields.
+        :param row_filter: The rows to read.
+        :param excluded_row_ids: The ids to skip before the limit applies.
+        :param limit: The maximum number of rows; reaching it means overflow.
+        :param snapshot: The table's snapshot, updated with the view checks state.
+        :param dependant_field_ids: The table's field ids the cascade will
+            update, None when unknown.
+        :return: The rows ordered by id, locked if view checks are needed.
         """
 
-        # The views and rows handlers import this module.
+        # Avoids a circular import.
         from baserow.contrib.database.ws.views.rows.handler import (
             ViewRealtimeRowsHandler,
         )
@@ -678,7 +644,7 @@ class PathBasedUpdateStatementCollector:
             snapshot.needs_view_checks = getattr(rows[0], NEEDS_VIEW_CHECKS_ANNOTATION)
             if not snapshot.needs_view_checks or len(rows) >= limit:
                 return rows
-            # Built before taking the row locks, to hold them for less time.
+            # Built before locking, to hold the locks shorter.
             snapshot.row_checker = handler.get_checked_views_row_checker(
                 self.table, model
             )
@@ -694,22 +660,17 @@ class PathBasedUpdateStatementCollector:
         deleted_m2m_rels_per_link_field: Optional[Dict[int, Set[int]]],
     ) -> List[Q]:
         """
-        Returns the filters matching the rows of
-        `_filters_for_rows_connected_to_starting_rows` without the starting rows,
-        one per statement. They never join the table itself, because that join
-        lets Postgres walk its whole primary key to satisfy an `ORDER BY id
-        LIMIT`, and repeats the rows linked more than once, which a locking
-        statement can't remove with a DISTINCT.
+        Matches the rows of `_filters_for_rows_connected_to_starting_rows` minus
+        the starting rows, without joins: a join makes `ORDER BY id LIMIT` walk
+        the whole primary key, and repeats rows a locking read can't deduplicate.
 
-        :param model: The model of the table including all fields.
-        :param path_to_starting_table: A non-empty list of link row fields which
-            lead from self.table to the table containing the starting row ids.
-        :param starting_row_ids: The ids of the rows in the starting table the
-            update originated from.
-        :param deleted_m2m_rels_per_link_field: A dictionary per link field of
-            rows in the table it links to which have had their connections
-            removed, so rows which lost a connection still match.
-        :return: A list of Q filters, each one to be used in its own statement.
+        :param model: The table model with all fields.
+        :param path_to_starting_table: The non-empty link row fields from
+            self.table to the starting table.
+        :param starting_row_ids: The ids of the rows the update started from.
+        :param deleted_m2m_rels_per_link_field: Per link field, the linked rows
+            that lost their connection, so they still match.
+        :return: The filters, one per statement.
         """
 
         filters = [
@@ -717,12 +678,12 @@ class PathBasedUpdateStatementCollector:
                 model, path_to_starting_table, starting_row_ids
             )
         ]
-        # Keyed by the starting table's link field, whose relations were removed.
+        # Keyed by the starting table's side of the link.
         deleted_row_ids = (deleted_m2m_rels_per_link_field or {}).get(
             path_to_starting_table[-1].link_row_related_field_id
         )
         if deleted_row_ids:
-            # They are rows of the last link field's table, so that hop is left out.
+            # They are rows of the last hop's table, so that hop is skipped.
             filters.append(
                 self._filter_for_rows_linked_through_path(
                     model, path_to_starting_table[:-1], deleted_row_ids
@@ -737,27 +698,19 @@ class PathBasedUpdateStatementCollector:
         linked_row_ids: Iterable[int],
     ) -> Q:
         """
-        Returns a filter matching the rows of `model` linked through the path to
-        the given rows, exactly as the joins of a `<path>__id__in` filter do,
-        without joining any table. Each hop reads the through table Django
-        joins for its link, also when a lazily built related model resolves the
-        link to the reverse relation of its related field, and is computed once
-        as an array, so a row linked several times matches once. A table in the
-        middle of the path is read by primary key, trashed rows included, so
-        the relations a permanently deleted row left behind are dropped as the
-        joins drop them. The table at the end is not read, since Django trims
-        that join.
+        Matches what a `<path>__id__in` filter matches, without joins. Each hop is
+        an array, so a row linked twice matches once, and middle tables include
+        trashed rows, as the joins do.
 
-        :param model: The model of the table the path starts from.
-        :param path: The link row fields leading from that table to the table
-            of the linked rows.
+        :param model: The model the path starts from.
+        :param path: The link row fields to the linked rows' table.
         :param linked_row_ids: The ids of the rows at the end of the path.
-        :return: The filter, matching the given ids themselves when the path is
-            empty.
+        :return: The filter; the ids themselves for an empty path.
         """
 
         if not path:
             return Q(id__in=linked_row_ids)
+        # Not remote_field.through: lazy related models can resolve the reverse.
         into_through, out_of_through = model._meta.get_field(
             path[0].db_column
         ).path_infos
@@ -789,14 +742,12 @@ class PathBasedUpdateStatementCollector:
         snapshot: BeforeRowsSnapshot,
     ) -> None:
         """
-        Records in which checked views of the table the just snapshotted rows are
-        visible, so the realtime broadcast can tell the rows that left or entered
-        a filtered view apart from the ones that stayed.
+        Records the checked views showing each row, to later tell which rows left
+        or entered a view.
 
-        :param rows: The rows just snapshotted under lock, with their pre-cascade
-            values.
-        :param snapshot: The snapshot of the table, to record the visibility in.
-        :return: None, the outcome is recorded in `snapshot`.
+        :param rows: The rows just snapshotted.
+        :param snapshot: The table's snapshot.
+        :return: None, records into `snapshot`.
         """
 
         if not rows or snapshot.row_checker is None:
@@ -826,19 +777,15 @@ class PathBasedUpdateStatementCollector:
         overflowed_table_ids: Set[int],
     ) -> None:
         """
-        Records the rows the update statements just changed without a snapshot,
-        like a row linked by a transaction committed after the snapshot read, so
-        no later snapshot passes the cascade's changes off as their pre-cascade
-        state. Nothing is recorded once the table overflowed.
+        Such rows, like one linked after the snapshot read, already show the
+        change, so no later snapshot may capture them.
 
-        :param starting_row_ids: The ids of the rows in the starting table the
-            update originated from.
-        :param updated_row_ids: The ids of the rows the update statements changed.
-        :param before_snapshots: The pre-cascade state per table id, to record
-            the rows in.
-        :param overflowed_table_ids: The ids of the tables known to have
-            overflowed in this cascade, added to when this one does.
-        :return: None, the outcome is recorded in `before_snapshots`.
+        :param starting_row_ids: The ids of the rows the update started from.
+        :param updated_row_ids: The ids of the rows just updated.
+        :param before_snapshots: The snapshots per table id.
+        :param overflowed_table_ids: The ids of the tables that overflowed,
+            added to.
+        :return: None, records into `before_snapshots`.
         """
 
         limit = settings.DEPENDANT_ROWS_REALTIME_UPDATE_LIMIT
@@ -1240,11 +1187,10 @@ class FieldUpdateCollector:
 
     def set_dependant_fields(self, fields: Iterable[Field]) -> None:
         """
-        Tells which fields the cascade will update, before its first depth level
-        is applied, so a table none of whose checked views filters on them is
-        snapshotted without a lock nor view checks.
+        Call before the first `apply_updates`, so tables whose checked views don't
+        filter on these fields skip the locks and view checks.
 
-        :param fields: Every dependant field of every depth level.
+        :param fields: Every dependant field, at every depth.
         """
 
         dependant_field_ids_per_table: Dict[int, Set[int]] = defaultdict(set)
