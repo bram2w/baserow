@@ -87,6 +87,14 @@
               })
             }}</Badge
           >
+          <Badge
+            v-if="connection.expired"
+            v-tooltip="$t('mcpOAuthConnections.expiredTooltip')"
+            color="yellow"
+            size="small"
+            data-test="mcp-oauth-expired"
+            >{{ $t('mcpOAuthConnections.expired') }}</Badge
+          >
         </div>
         <div class="mcp-oauth-connections__meta">
           {{ connection.workspace_name }} ·

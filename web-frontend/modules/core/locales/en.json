@@ -1408,6 +1408,8 @@
     "connectedApps": "Connected apps",
     "noConnections": "No apps connected yet.",
     "publishedBy": "{host}",
+    "expired": "Signed out",
+    "expiredTooltip": "This app's sign-in has ended. Sign in again from the app to use it.",
     "tools": "{count} tool | {count} tools",
     "connectedOn": "Connected {date}",
     "disconnect": "Disconnect",

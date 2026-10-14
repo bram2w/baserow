@@ -1,10 +1,12 @@
+from datetime import timedelta
 from unittest.mock import patch
 
 from django.shortcuts import reverse
+from django.utils import timezone
 
 import pytest
 from asgiref.sync import async_to_sync
-from oauth2_provider.models import AccessToken
+from oauth2_provider.models import AccessToken, RefreshToken
 
 from baserow.core.mcp.auth import resolve_bearer
 from baserow.core.mcp.models import MCPEndpoint
@@ -217,3 +219,36 @@ def test_tool_count_ignores_disabled_tools(client, api_client, data_fixture):
     response = api_client.get(reverse(LIST_URL), HTTP_AUTHORIZATION=f"JWT {token}")
 
     assert response.json()["connections"][0]["tool_count"] == 1
+
+
+@pytest.mark.django_db
+def test_list_connections_marks_grants_without_a_live_refresh_token_expired(
+    client, api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    live = obtain_tokens(
+        client, api_client, token, data_fixture.create_workspace(user=user)
+    )
+    old = obtain_tokens(
+        client, api_client, token, data_fixture.create_workspace(user=user)
+    )
+    # Refreshed tokens are linked through the newest access token.
+    client.post(
+        "/oauth/token/",
+        {
+            "grant_type": "refresh_token",
+            "refresh_token": live["refresh_token"],
+            "client_id": live["client_id"],
+        },
+    )
+    old_access = AccessToken.objects.filter(
+        scope__contains=f"endpoint:{old['endpoint_id']}"
+    )
+    RefreshToken.objects.filter(access_token__in=old_access).update(
+        created=timezone.now() - timedelta(days=31)
+    )
+
+    response = api_client.get(reverse(LIST_URL), HTTP_AUTHORIZATION=f"JWT {token}")
+
+    expired = {c["id"]: c["expired"] for c in response.json()["connections"]}
+    assert expired == {live["endpoint_id"]: False, old["endpoint_id"]: True}

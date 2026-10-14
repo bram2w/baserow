@@ -95,6 +95,21 @@ describe('McpOAuthConnections', () => {
     expect(wrapper.find('[data-test="mcp-oauth-empty"]').exists()).toBe(false)
   })
 
+  test('marks a connection whose sign-in expired', async () => {
+    const wrapper = await mount({
+      oauth_enabled: true,
+      mcp_url: mcpUrl,
+      connections: [{ ...connections[0], expired: true }, connections[1]],
+    })
+    const expired = (id) =>
+      wrapper.find(
+        `[data-test="mcp-oauth-connection-${id}"] [data-test="mcp-oauth-expired"]`
+      )
+    expect(expired(11).text()).toBe('mcpOAuthConnections.expired')
+    expect(expired(11).classes()).toContain('badge--yellow')
+    expect(expired(12).exists()).toBe(false)
+  })
+
   test('disconnect asks once, then deletes and removes the row', async () => {
     const wrapper = await mount({
       oauth_enabled: true,

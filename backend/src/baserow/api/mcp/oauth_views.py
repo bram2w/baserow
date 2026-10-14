@@ -31,6 +31,7 @@ from baserow.core.mcp.oauth.authorize import (
     validate_query,
 )
 from baserow.core.mcp.oauth.throttling import MCPOAuthConsentRateThrottle
+from baserow.core.mcp.oauth.tokens import endpoint_ids_with_live_refresh_token
 from baserow.core.mcp.oauth.validators import LOOPBACK_HOSTS
 from baserow.core.mcp.operations import CreateMCPEndpointOperationType
 from baserow.core.mcp.registries import mcp_tool_registry
@@ -245,6 +246,7 @@ class MCPOAuthConnectionsView(APIView):
             {endpoint.oauth_client_id for endpoint in endpoints},
             field_name="client_id",
         )
+        live = endpoint_ids_with_live_refresh_token(request.user)
         connections = []
         for endpoint in endpoints:
             application = applications.get(endpoint.oauth_client_id)
@@ -258,6 +260,8 @@ class MCPOAuthConnectionsView(APIView):
                     "allowed_tools": endpoint.allowed_tools,
                     "tool_count": len(mcp_tool_registry.get_allowed_tools(endpoint)),
                     "created": endpoint.created,
+                    # The app has to sign in again before it can use the grant.
+                    "expired": endpoint.id not in live,
                 }
             )
         return Response(
