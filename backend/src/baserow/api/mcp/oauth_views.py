@@ -14,7 +14,6 @@ from rest_framework.views import APIView
 
 from baserow.api.decorators import map_exceptions, validate_body
 from baserow.api.errors import ERROR_GROUP_DOES_NOT_EXIST, ERROR_USER_NOT_IN_GROUP
-from baserow.contrib.database.models import Database
 from baserow.core.exceptions import UserNotInWorkspace, WorkspaceDoesNotExist
 from baserow.core.handler import CoreHandler
 from baserow.core.mcp.actions import (
@@ -36,6 +35,7 @@ from baserow.core.mcp.oauth.validators import LOOPBACK_HOSTS
 from baserow.core.mcp.operations import CreateMCPEndpointOperationType
 from baserow.core.mcp.registries import mcp_tool_registry
 from baserow.core.models import WorkspaceUser
+from baserow.core.registries import application_type_registry
 
 from .errors import ERROR_MCP_ENDPOINT_DOES_NOT_EXIST
 from .oauth_serializers import ConsentSerializer
@@ -141,8 +141,9 @@ class MCPOAuthConsentView(APIView):
                 workspace_id__in=[wu.workspace_id for wu in workspace_users],
             )
         }
+        database_model = application_type_registry.get("database").model_class
         database_counts = dict(
-            Database.objects.filter(
+            database_model.objects.filter(
                 workspace_id__in=[wu.workspace_id for wu in workspace_users]
             )
             .values_list("workspace_id")
