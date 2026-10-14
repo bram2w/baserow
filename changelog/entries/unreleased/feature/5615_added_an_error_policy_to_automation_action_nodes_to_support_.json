@@ -1,6 +1,6 @@
 {
     "type": "feature",
-    "message": "Added an Error policy to Automation action nodes to support retries.",
+    "message": "Allow retrying an Automation node execution on failure.",
     "issue_origin": "github",
     "issue_number": 5615,
     "domain": "automation",
