@@ -653,15 +653,16 @@ class AgentEmailMessage(models.Model):
 
 class AgentUsage(models.Model):
     """
-    The token usage and cost of an agent application per hour. It's kept apart
-    from the conversations so the totals survive their deletion, and hours let
+    The token usage and cost of an agent application per 15 minutes. It's kept
+    apart from the conversations so the totals survive their deletion, and
+    quarters of an hour (every timezone's offset is a multiple of them) let
     the periods follow the viewer's timezone.
     """
 
     application = models.ForeignKey(
         AgentApplication, on_delete=models.CASCADE, related_name="usage"
     )
-    hour = models.DateTimeField(help_text="The start of the hour, in UTC.")
+    start = models.DateTimeField(help_text="The start of the 15 minutes, in UTC.")
     input_tokens = models.BigIntegerField(default=0, db_default=0)
     cached_input_tokens = models.BigIntegerField(
         default=0,
@@ -682,7 +683,7 @@ class AgentUsage(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["application", "hour"], name="agent_usage_unique_hour"
+                fields=["application", "start"], name="agent_usage_unique_start"
             )
         ]
 

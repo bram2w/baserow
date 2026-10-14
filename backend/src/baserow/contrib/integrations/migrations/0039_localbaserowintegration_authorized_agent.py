@@ -362,4 +362,14 @@ class Migration(migrations.Migration):
             },
             bases=('core.service',),
         ),
+        migrations.AddField(
+            model_name='localbaserowvectorsearch',
+            name='include_all_fields',
+            field=models.BooleanField(db_default=True, default=True, help_text='Returns every field of the matching rows.'),
+        ),
+        migrations.AddField(
+            model_name='localbaserowvectorsearch',
+            name='search_all_fields',
+            field=models.BooleanField(db_default=True, default=True, help_text='Searches every field with vector search enabled.'),
+        ),
     ]

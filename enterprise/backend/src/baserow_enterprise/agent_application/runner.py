@@ -2,6 +2,7 @@ import asyncio
 import json
 import re
 import time
+from functools import cached_property
 from typing import Any
 
 from django.core.cache import cache
@@ -266,6 +267,19 @@ class AgentRunner:
 
         return toolsets
 
+    @cached_property
+    def _is_follow_up_check(self) -> bool:
+        """
+        A check of a follow-up, until the user writes in it: from then on
+        it's their conversation like any other.
+        """
+
+        return (
+            self.chat.source == AgentChat.Source.FOLLOW_UP
+            and self.chat.follow_up_id is not None
+            and not self.chat.messages.filter(role=AgentChatMessage.Role.HUMAN).exists()
+        )
+
     def _build_follow_up_toolsets(self) -> list:
         """
         A check of a follow-up can notify and complete it. A Baserow user who
@@ -280,9 +294,7 @@ class AgentRunner:
             build_follow_up_proposal_toolset,
         )
 
-        if self.chat.source == AgentChat.Source.FOLLOW_UP and not (
-            self.chat.messages.filter(role=AgentChatMessage.Role.HUMAN).exists()
-        ):
+        if self._is_follow_up_check:
             follow_up = self.chat.follow_up
             if follow_up is not None and follow_up.is_active:
                 return [build_follow_up_check_toolset()]
@@ -303,6 +315,10 @@ class AgentRunner:
             created_by=self.chat.user,
             status=AgentFollowUp.Status.ACTIVE,
         ).order_by("id")
+        # Others can read a conversation that isn't private, and the agent
+        # may repeat what it's told.
+        if not self.chat.private:
+            active = active.filter(private=False)
         lines = [f"- #{follow_up.id}: {follow_up.title}" for follow_up in active]
         if lines:
             self.deps.system_notes.append(
@@ -942,7 +958,9 @@ class AgentRunner:
             ai_message.output_tokens = (ai_message.output_tokens or 0) + (
                 usage.output_tokens or 0
             )
-            ai_message.cost = cost
+            # Added like the tokens; unknown stays unknown.
+            if cost is not None:
+                ai_message.cost = (ai_message.cost or 0) + cost
         self.chat.total_input_tokens += usage.input_tokens or 0
         self.chat.total_cached_input_tokens += cached
         self.chat.total_output_tokens += usage.output_tokens or 0
@@ -969,7 +987,9 @@ class AgentRunner:
                 cost,
                 cached_input_tokens=cached,
             )
-            if self.chat.follow_up_id is not None:
+            # A check the user took over is their conversation, not the
+            # follow-up's cost.
+            if self._is_follow_up_check:
                 from .follow_ups import AgentFollowUpHandler
 
                 AgentFollowUpHandler().add_usage(

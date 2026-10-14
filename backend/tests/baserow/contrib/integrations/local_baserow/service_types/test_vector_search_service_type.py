@@ -301,3 +301,77 @@ def test_vector_search_service_searches_every_field_when_none_are_chosen(setup):
     matched = {row["Name"]: row["matched_field"] for row in result.data["results"]}
     # "A fruit" in Notes and "Fruit delivery" in Title both match.
     assert matched == {"Apple": "Notes", "Truck": "Title"}
+
+
+@pytest.mark.django_db
+def test_vector_search_service_never_widens_when_its_chosen_fields_are_gone(
+    setup, data_fixture
+):
+    from baserow.core.trash.handler import TrashHandler
+
+    user, table, name, notes, rows, integration, service_type = setup
+    with override_settings(BASEROW_EMBEDDINGS_API_URL="http://embeddings.test"):
+        secret = FieldHandler().create_field(
+            user, table, "long_text", name="Secret", vector_search_enabled=True
+        )
+    service = _create_service(setup)
+    assert service.search_all_fields is False
+
+    FieldHandler().delete_field(user, notes)
+    TrashHandler.permanently_delete(notes)
+    FieldHandler().delete_field(user, name)
+    TrashHandler.permanently_delete(name)
+    service = service_type.model_class.objects.get(id=service.id)
+
+    # The builder left `Secret` out: it's never searched or returned instead.
+    assert service.search_field_ids == []
+    with pytest.raises(ServiceImproperlyConfiguredDispatchException):
+        service_type.get_fields_to_search(service)
+    with pytest.raises(ServiceImproperlyConfiguredDispatchException):
+        service_type.get_fields_to_return(service)
+    assert secret.id not in [
+        field.id
+        for field in service_type.model_class.objects.get(
+            id=service.id
+        ).search_fields.all()
+    ]
+
+    # Clearing the selection is the way to search everything again.
+    values = service_type.prepare_values(
+        {"search_field_ids": [], "included_field_ids": []}, user, instance=service
+    )
+    assert values["search_all_fields"] is True
+    assert values["include_all_fields"] is True
+
+
+@pytest.mark.django_db
+def test_vector_search_service_edits_drop_stale_chosen_fields(setup, data_fixture):
+    user, table, name, notes, rows, integration, service_type = setup
+    with override_settings(BASEROW_EMBEDDINGS_API_URL="http://embeddings.test"):
+        title = FieldHandler().create_field(
+            user, table, "text", name="Title", vector_search_enabled=True
+        )
+        summary = FieldHandler().create_field(
+            user, table, "text", name="Summary", vector_search_enabled=True
+        )
+    values = service_type.prepare_values(
+        {
+            "table_id": table.id,
+            "integration_id": integration.id,
+            "search_field_ids": [notes.id, title.id],
+        },
+        user,
+    )
+    service = ServiceHandler().create_service(service_type, **values)
+    FieldHandler().delete_field(user, notes)
+    FieldHandler().update_field(user, title, vector_search_enabled=False)
+
+    # The form still sends the stale ids along with the new choice.
+    values = service_type.prepare_values(
+        {"search_field_ids": [notes.id, title.id, summary.id]},
+        user,
+        instance=service,
+    )
+
+    assert values["search_field_ids"] == [summary.id]
+    assert values["search_all_fields"] is False

@@ -253,33 +253,34 @@ def broadcast_chat_updated(chat: AgentChat) -> None:
 
 def broadcast_follow_up_updated(follow_up) -> None:
     """
-    Keeps the follow-up lists live. Those managing the agent see that a
-    private follow-up exists, but only its creator gets its details.
+    Keeps the follow-up lists live, for the same people the list endpoint
+    shows it to: those managing follow-ups and its creator. Those managing
+    see that a private follow-up exists, but only its creator gets its
+    details.
     """
 
     from baserow_enterprise.api.agent_application.serializers import (
         AgentFollowUpSerializer,
     )
 
-    group = get_agent_application_group_name(follow_up.application_id)
-    if not follow_up.private:
-        broadcast_to_channel_group.delay(
-            group,
-            {
-                "type": "agent_follow_up_updated",
-                "follow_up": AgentFollowUpSerializer(follow_up).data,
-            },
-        )
-        return
-    broadcast_to_channel_group.delay(
-        group,
-        {
-            "type": "agent_follow_up_updated",
-            "follow_up": AgentFollowUpSerializer(
-                follow_up, context={"redact": True}
-            ).data,
-            "except_user_id": follow_up.created_by_id,
-        },
+    from .operations import ListAgentFollowUpsOperationType
+
+    application = follow_up.application
+    payload = {
+        "type": "agent_follow_up_updated",
+        "follow_up": AgentFollowUpSerializer(
+            follow_up, context={"redact": follow_up.private}
+        ).data,
+    }
+    if follow_up.private:
+        # The creator gets the full one below; this copy must not replace it.
+        payload["except_user_id"] = follow_up.created_by_id
+    broadcast_to_permitted_users.delay(
+        application.workspace_id,
+        ListAgentFollowUpsOperationType.type,
+        "application",
+        application.id,
+        payload,
     )
     if follow_up.created_by_id is not None:
         broadcast_to_users.delay(

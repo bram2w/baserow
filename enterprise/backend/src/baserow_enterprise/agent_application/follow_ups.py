@@ -14,6 +14,11 @@ from django.db import transaction
 from django.db.models import Exists, F, OuterRef, Q, QuerySet
 from django.utils import timezone
 
+from rest_framework.exceptions import ValidationError as DRFValidationError
+
+from baserow.contrib.automation.nodes.exceptions import (
+    AutomationNodeMisconfiguredService,
+)
 from baserow.contrib.integrations.core.constants import (
     PERIODIC_INTERVAL_DAY,
     PERIODIC_INTERVAL_HOUR,
@@ -50,6 +55,12 @@ ROW_WATCH_SERVICE_TYPES = {
     "rows_deleted": "local_baserow_rows_deleted",
 }
 WATCH_TYPES = ("schedule", *ROW_WATCH_SERVICE_TYPES)
+# What creating the follow-up's service can reject it with.
+SERVICE_REJECTIONS = (
+    PermissionException,
+    DRFValidationError,
+    AutomationNodeMisconfiguredService,
+)
 
 
 def follow_up_is_visible_to(follow_up: AgentFollowUp, user) -> bool:
@@ -79,6 +90,21 @@ class AgentFollowUpHandler:
         except PermissionException:
             return False
         return True
+
+    def get_allowed_schedules(self) -> list[str]:
+        """
+        The schedules this instance allows; an instance can raise the minimum
+        interval of periodic checks.
+        """
+
+        from django.conf import settings
+
+        return [
+            every
+            for every, (schedule, _) in SCHEDULES.items()
+            if schedule["interval"] != PERIODIC_INTERVAL_MINUTE
+            or schedule["minute"] >= settings.INTEGRATIONS_PERIODIC_MINUTE_MIN
+        ]
 
     def prepare_proposal(self, user, chat: AgentChat, values: dict) -> dict:
         """
@@ -126,9 +152,10 @@ class AgentFollowUpHandler:
             raise AgentFollowUpInvalid(f"`watch` must be one of {list(WATCH_TYPES)}.")
         if watch_type == "schedule":
             every = values.get("every")
-            if every not in SCHEDULES:
+            allowed = self.get_allowed_schedules()
+            if every not in allowed:
                 raise AgentFollowUpInvalid(
-                    f"`every` must be one of {list(SCHEDULES)} for a schedule."
+                    f"`every` must be one of {allowed} for a schedule."
                 )
             watch = {"type": "schedule", "every": every}
         else:
@@ -204,7 +231,14 @@ class AgentFollowUpHandler:
         expires_in_days = prepared["expires_in_days"]
 
         with transaction.atomic():
-            service = self._create_service(user, application, watch)
+            try:
+                service = self._create_service(user, application, watch)
+            except SERVICE_REJECTIONS as exc:
+                # Anything the service itself rejects is something the agent
+                # can explain or adjust, not a failed turn.
+                raise AgentFollowUpInvalid(
+                    f"What it should watch can't be used: {exc}"
+                ) from exc
             follow_up = AgentFollowUp.objects.create(
                 application=application,
                 created_by=user,
@@ -259,9 +293,9 @@ class AgentFollowUpHandler:
     def get_follow_up(
         self, follow_up_id: int, application: Optional[AgentApplication] = None
     ) -> AgentFollowUp:
-        queryset = AgentFollowUp.objects.select_related(
-            "application__workspace", "created_by", "source_chat"
-        )
+        queryset = AgentFollowUp.objects.filter(
+            application__trashed=False, application__workspace__trashed=False
+        ).select_related("application__workspace", "created_by", "source_chat")
         if application is not None:
             queryset = queryset.filter(application=application)
         try:
@@ -352,19 +386,19 @@ class AgentFollowUpHandler:
             raise AgentFollowUpNotActive("Only a stopped follow-up can be resumed.")
         if follow_up.expires_on is not None and follow_up.expires_on <= timezone.now():
             raise AgentFollowUpNotActive("The follow-up expired in the meantime.")
-        if (
-            creator is None
-            or not creator.is_active
-            or not WorkspaceUser.objects.filter(
-                workspace_id=follow_up.application.workspace_id, user=creator
-            ).exists()
-        ):
-            raise AgentFollowUpNotActive("Its creator is no longer in the workspace.")
+        lost_access = self.get_lost_access_reason(follow_up)
+        if lost_access is not None:
+            raise AgentFollowUpNotActive(lost_access)
 
         with transaction.atomic():
-            follow_up.service = self._create_service(
-                creator, follow_up.application, follow_up.watch
-            )
+            try:
+                follow_up.service = self._create_service(
+                    creator, follow_up.application, follow_up.watch
+                )
+            except SERVICE_REJECTIONS as exc:
+                raise AgentFollowUpNotActive(
+                    "What it watched can't be used anymore."
+                ) from exc
             follow_up.status = AgentFollowUp.Status.ACTIVE
             follow_up.outcome = ""
             follow_up.ended_on = None
@@ -375,11 +409,19 @@ class AgentFollowUpHandler:
         return follow_up
 
     def end_follow_up(
-        self, follow_up: AgentFollowUp, status: str, outcome: str = ""
+        self,
+        follow_up: AgentFollowUp,
+        status: str,
+        outcome: str = "",
+        notify: bool = False,
     ) -> AgentFollowUp:
         """
         Ends an active follow-up: its schedule or row event is removed, the
         follow-up itself is kept as a record of what happened.
+
+        :param notify: Tells the creator it stopped, only when this call is
+            the one that ended it, so a follow-up that already ended another
+            way isn't announced again.
         """
 
         from baserow.core.services.handler import ServiceHandler
@@ -413,6 +455,8 @@ class AgentFollowUpHandler:
         for field in ("status", "outcome", "ended_on", "service_id", "updated_on"):
             setattr(follow_up, field, getattr(locked, field))
         transaction.on_commit(lambda: broadcast_follow_up_updated(follow_up))
+        if notify:
+            self.notify_ended(follow_up)
         return follow_up
 
     # ------------------------------------------------------------------
@@ -442,14 +486,21 @@ class AgentFollowUpHandler:
 
     def is_checking(self, follow_up: AgentFollowUp) -> bool:
         # A slow check must not be overtaken by the next one, which would
-        # notify twice about the same change.
-        return follow_up.chats.filter(
-            status__in=[
-                AgentChat.Status.IN_PROGRESS,
-                AgentChat.Status.CANCELING,
-                AgentChat.Status.AWAITING_APPROVAL,
-            ]
-        ).exists()
+        # notify twice about the same change. A check the user wrote in is
+        # their conversation and doesn't hold the next check back.
+        from .models import AgentChatMessage
+
+        return (
+            follow_up.chats.filter(
+                status__in=[
+                    AgentChat.Status.IN_PROGRESS,
+                    AgentChat.Status.CANCELING,
+                    AgentChat.Status.AWAITING_APPROVAL,
+                ]
+            )
+            .exclude(messages__role=AgentChatMessage.Role.HUMAN)
+            .exists()
+        )
 
     def check_now(self, user, follow_up: AgentFollowUp) -> AgentChat:
         """
@@ -486,31 +537,118 @@ class AgentFollowUpHandler:
                 follow_up,
                 AgentFollowUp.Status.EXPIRED,
                 "Stopped checking because it expired.",
+                notify=True,
             )
-            self.notify_ended(follow_up)
             return None
-        if follow_up.created_by is None or self.is_checking(follow_up):
+        # What the creator could see when they asked may have changed since;
+        # a check never runs with access they no longer have.
+        lost_access = self.get_lost_access_reason(follow_up)
+        if lost_access is not None:
+            self.end_follow_up(
+                follow_up, AgentFollowUp.Status.CANCELLED, lost_access, notify=True
+            )
+            return None
+        if self.is_watched_table_trashed(follow_up):
             return None
 
         chat_handler = AgentChatHandler()
-        main_agent = follow_up.application.agents.first()
-        chat = AgentChat.objects.create(
-            agent=main_agent,
-            source=AgentChat.Source.FOLLOW_UP,
-            trigger_type=trigger_type,
-            event_payload=event_payload,
-            user=follow_up.created_by,
-            private=follow_up.private,
-            follow_up=follow_up,
-            title=f"Follow-up: {follow_up.title}"[: AgentChat.TITLE_MAX_LENGTH],
-        )
-        message = chat_handler.create_message(
-            chat,
-            AgentChatMessage.Role.SYSTEM,
-            self.get_check_prompt(follow_up, event_payload),
-        )
-        chat_handler.start_chat_run(chat, message)
+        with transaction.atomic():
+            # Locked, so two events arriving together start one check.
+            AgentFollowUp.objects.select_for_update(of=("self",)).filter(
+                id=follow_up.id
+            ).first()
+            if self.is_checking(follow_up):
+                return None
+            main_agent = follow_up.application.agents.first()
+            chat = AgentChat.objects.create(
+                agent=main_agent,
+                source=AgentChat.Source.FOLLOW_UP,
+                trigger_type=trigger_type,
+                event_payload=event_payload,
+                user=follow_up.created_by,
+                private=follow_up.private,
+                follow_up=follow_up,
+                title=f"Follow-up: {follow_up.title}"[: AgentChat.TITLE_MAX_LENGTH],
+            )
+            message = chat_handler.create_message(
+                chat,
+                AgentChatMessage.Role.SYSTEM,
+                self.get_check_prompt(follow_up, event_payload),
+            )
+            chat_handler.start_chat_run(chat, message)
         return chat
+
+    def _watched_table(self, follow_up: AgentFollowUp):
+        from baserow.contrib.database.table.models import Table
+
+        table_id = (follow_up.watch or {}).get("table_id")
+        if table_id is None:
+            return None
+        return (
+            Table.objects_and_trash.filter(id=table_id)
+            .select_related("database__workspace")
+            .first()
+        )
+
+    def is_watched_table_trashed(self, follow_up: AgentFollowUp) -> bool:
+        # A table in the trash can still come back, so its follow-up waits
+        # instead of ending.
+        table = self._watched_table(follow_up)
+        return table is not None and (table.trashed or table.database.trashed)
+
+    def get_lost_access_reason(self, follow_up: AgentFollowUp) -> Optional[str]:
+        """
+        Why a follow-up can't run anymore with its creator's access, or None
+        when it still can: the creator left the workspace, can no longer see
+        the agent, or can no longer read the table it watches (or that table
+        was deleted).
+        """
+
+        from baserow.contrib.database.table.operations import (
+            ReadDatabaseTableOperationType,
+        )
+
+        from .operations import ListAgentChatsOperationType
+
+        creator = follow_up.created_by
+        application = follow_up.application
+        if (
+            creator is None
+            or not creator.is_active
+            or not WorkspaceUser.objects.filter(
+                workspace_id=application.workspace_id, user=creator
+            ).exists()
+        ):
+            return "Cancelled because its creator is no longer in the workspace."
+        try:
+            CoreHandler().check_permissions(
+                creator,
+                ListAgentChatsOperationType.type,
+                workspace=application.workspace,
+                context=application.application_ptr,
+            )
+        except PermissionException:
+            return "Cancelled because its creator no longer has access to the agent."
+        if (follow_up.watch or {}).get("type") == "schedule":
+            return None
+        table = self._watched_table(follow_up)
+        if table is None:
+            return "Cancelled because the table it watched was deleted."
+        if table.trashed or table.database.trashed:
+            return None
+        try:
+            CoreHandler().check_permissions(
+                creator,
+                ReadDatabaseTableOperationType.type,
+                workspace=table.database.workspace,
+                context=table,
+            )
+        except PermissionException:
+            return (
+                "Cancelled because its creator no longer has access to the table "
+                "it watched."
+            )
+        return None
 
     def get_check_prompt(self, follow_up: AgentFollowUp, event_payload) -> str:
         from .triggers.registries import _EVENT_PAYLOAD_PROMPT_LIMIT
@@ -554,15 +692,21 @@ class AgentFollowUpHandler:
 
     def notify_user(
         self, follow_up: AgentFollowUp, chat: AgentChat, message: str
-    ) -> None:
+    ) -> bool:
+        """
+        :return: Whether the creator was notified; a follow-up that ended
+            while the check ran notifies nobody anymore.
+        """
+
         from .notification_types import AgentFollowUpNotificationType
 
-        if follow_up.created_by is None:
-            return
+        if follow_up.created_by is None or not follow_up.is_active:
+            return False
         AgentFollowUpNotificationType.notify(follow_up, chat, message)
         AgentFollowUp.objects.filter(id=follow_up.id).update(
             notifications_count=F("notifications_count") + 1
         )
+        return True
 
     def notify_ended(self, follow_up: AgentFollowUp) -> None:
         """Lets the user know a follow-up stopped without completing."""
@@ -592,6 +736,13 @@ class AgentFollowUpHandler:
         if follow_up is None:
             return None
         failed = chat.status == AgentChat.Status.ERROR
+        # Stopped while this check ran: it no longer counts, but a quiet
+        # conversation still goes.
+        if not follow_up.is_active and not ended:
+            if not (failed or notified) and chat.status == AgentChat.Status.IDLE:
+                if chat.trigger_type != CHECK_NOW_TRIGGER_TYPE:
+                    AgentChatHandler().delete_chat(chat)
+            return follow_up
         AgentFollowUp.objects.filter(id=follow_up.id).update(
             checks_count=F("checks_count") + 1,
             last_checked_on=timezone.now(),
@@ -605,8 +756,8 @@ class AgentFollowUpHandler:
                 AgentFollowUp.Status.FAILED,
                 f"Stopped after {follow_up.failed_checks_in_a_row} checks in a "
                 "row failed.",
+                notify=True,
             )
-            self.notify_ended(follow_up)
         elif (
             not (failed or notified or ended)
             and chat.status == AgentChat.Status.IDLE
@@ -647,17 +798,20 @@ class AgentFollowUpHandler:
         """
 
         now = timezone.now()
+        # A trashed agent's follow-ups wait for a restore.
         active = AgentFollowUp.objects.filter(
-            status=AgentFollowUp.Status.ACTIVE
-        ).select_related("created_by", "application")
+            status=AgentFollowUp.Status.ACTIVE,
+            application__trashed=False,
+            application__workspace__trashed=False,
+        ).select_related("created_by", "application__workspace")
         expired = list(active.filter(expires_on__lte=now))
         for follow_up in expired:
             self.end_follow_up(
                 follow_up,
                 AgentFollowUp.Status.EXPIRED,
                 "Stopped checking because it expired.",
+                notify=True,
             )
-            self.notify_ended(follow_up)
 
         is_member = Exists(
             WorkspaceUser.objects.filter(
@@ -676,7 +830,19 @@ class AgentFollowUpHandler:
                 AgentFollowUp.Status.CANCELLED,
                 "Cancelled because its creator is no longer in the workspace.",
             )
-        return len(expired) + len(orphaned)
+
+        # Access that was lost or a watched table that was deleted, also for
+        # follow-ups that are never triggered anymore.
+        ended = {follow_up.id for follow_up in [*expired, *orphaned]}
+        lost = 0
+        for follow_up in active.exclude(id__in=ended):
+            reason = self.get_lost_access_reason(follow_up)
+            if reason is not None:
+                self.end_follow_up(
+                    follow_up, AgentFollowUp.Status.CANCELLED, reason, notify=True
+                )
+                lost += 1
+        return len(expired) + len(orphaned) + lost
 
 
 def check_can_see(user, follow_up: AgentFollowUp) -> None:

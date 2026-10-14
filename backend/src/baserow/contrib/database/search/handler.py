@@ -1231,8 +1231,9 @@ class SearchHandler:
             return []
 
         search_model = cls.get_workspace_search_table_model(workspace_id)
-        # Every field gets its share of candidates, so a row matching in one
-        # field isn't pushed out by the cells of another.
+        # One top list by distance over all searched fields: a row can come up
+        # once per field, so there's room for that many duplicates before
+        # they're collapsed to the row's best match.
         candidates = max(limit * 4, 20) * len(field_ids)
 
         embedder = embedder or get_embedder()

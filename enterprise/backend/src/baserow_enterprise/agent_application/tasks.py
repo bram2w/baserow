@@ -297,6 +297,9 @@ def clean_up_old_agent_chats(self):
         chat.completed_on = timezone.now()
         chat.save(update_fields=["status", "error", "completed_on", "updated_on"])
         broadcast_chat_updated(chat)
+        # A check that never finished counts as failed.
+        if chat.follow_up_id is not None:
+            _finish_follow_up_check(chat, None)
         # A run that never finished never replayed what waited for it.
         if chat.channel_id is not None:
             channel_type = agent_chat_channel_type_registry.get(chat.channel.type)

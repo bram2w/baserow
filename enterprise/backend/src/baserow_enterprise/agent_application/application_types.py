@@ -222,14 +222,24 @@ class AgentApplicationType(ApplicationType):
 
     def pre_delete(self, application: Application) -> None:
         """
-        Deletes the trigger and tool services through their handlers before
-        the application cascade runs, so every service type's `before_delete`
-        hook fires (periodic schedules, public webhook uids, inbound email
-        addresses) and no orphaned service rows are left behind.
+        Deletes the trigger, tool and follow-up services through their
+        handlers before the application cascade runs, so every service
+        type's `before_delete` hook fires (periodic schedules, public webhook
+        uids, inbound email addresses) and no orphaned service rows are left
+        behind; the cascade doesn't reach a follow-up's service.
         """
 
+        from baserow.core.services.handler import ServiceHandler
+
+        from .models import AgentFollowUp
         from .tools.handler import AgentToolHandler
         from .triggers.handler import AgentTriggerHandler
+
+        for follow_up in AgentFollowUp.objects.filter(
+            application_id=application.id, service__isnull=False
+        ).select_related("service"):
+            service = follow_up.service.specific
+            ServiceHandler().delete_service(service.get_type(), service)
 
         for trigger in AgentTrigger.objects_and_trash.filter(
             application_id=application.id

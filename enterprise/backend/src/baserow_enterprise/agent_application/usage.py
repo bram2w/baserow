@@ -23,7 +23,7 @@ class AgentUsageHandler:
         cached_input_tokens: int = 0,
     ) -> None:
         """
-        Adds one turn to the hour it happened in. A single upsert that adds to
+        Adds one turn to the 15 minutes it happened in. A single upsert that adds to
         the stored values, so concurrent runs of the same agent never
         overwrite each other.
 
@@ -31,17 +31,19 @@ class AgentUsageHandler:
             price, which counts the turn as unpriced.
         """
 
-        hour = (at or timezone.now()).astimezone(dt_timezone.utc)
-        hour = hour.replace(minute=0, second=0, microsecond=0)
+        start = (at or timezone.now()).astimezone(dt_timezone.utc)
+        start = start.replace(
+            minute=start.minute - start.minute % 15, second=0, microsecond=0
+        )
         table = AgentUsage._meta.db_table
         with connection.cursor() as cursor:
             cursor.execute(
                 f"""
                 INSERT INTO {table}
-                    (application_id, hour, input_tokens, cached_input_tokens,
+                    (application_id, start, input_tokens, cached_input_tokens,
                      output_tokens, cost, turns, unpriced_turns)
                 VALUES (%s, %s, %s, %s, %s, %s, 1, %s)
-                ON CONFLICT (application_id, hour) DO UPDATE SET
+                ON CONFLICT (application_id, start) DO UPDATE SET
                     input_tokens = {table}.input_tokens + EXCLUDED.input_tokens,
                     cached_input_tokens = {table}.cached_input_tokens
                         + EXCLUDED.cached_input_tokens,
@@ -53,7 +55,7 @@ class AgentUsageHandler:
                 """,  # noqa: S608
                 [
                     application_id,
-                    hour,
+                    start,
                     input_tokens or 0,
                     cached_input_tokens or 0,
                     output_tokens or 0,
@@ -79,13 +81,13 @@ class AgentUsageHandler:
     def get_usage(self, application, viewer_timezone: tzinfo) -> dict:
         """
         The usage of today, this week, this month and the lifetime of the
-        agent, in a single query over its hourly rows.
+        agent, in a single query over its rows per 15 minutes.
         """
 
         starts = self.get_period_starts(timezone.now(), viewer_timezone)
         aggregates = {}
         for period in PERIODS:
-            period_filter = Q(hour__gte=starts[period]) if period in starts else Q()
+            period_filter = Q(start__gte=starts[period]) if period in starts else Q()
             aggregates.update(
                 {
                     f"{period}_input_tokens": Sum(

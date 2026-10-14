@@ -6,8 +6,10 @@ export function formatTokens(count) {
   if (value < 1000) {
     return String(value)
   }
-  if (value < 1000000) {
-    return `${trimDecimal(value / 1000)}k`
+  // Decided on the rounded value, so 999,950 reads 1M and not 1000k.
+  const thousands = trimDecimal(value / 1000)
+  if (Number(thousands) < 1000) {
+    return `${thousands}k`
   }
   return `${trimDecimal(value / 1000000)}M`
 }

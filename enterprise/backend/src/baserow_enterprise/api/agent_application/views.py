@@ -908,7 +908,8 @@ class AgentUsageView(APIView):
         )
         try:
             viewer_timezone = ZoneInfo(request.GET.get("timezone") or "UTC")
-        except (ZoneInfoNotFoundError, ValueError):
+        # An unusable name, including one too long to be a file name.
+        except (ZoneInfoNotFoundError, ValueError, OSError):
             viewer_timezone = ZoneInfo("UTC")
         return Response(
             AgentUsageSerializer(
@@ -1903,7 +1904,8 @@ class AgentFollowUpCheckView(APIView):
         description=(
             "Checks the follow-up right away instead of waiting for its "
             "schedule or row event. Returns the conversation of the check, "
-            "which is kept also when nothing changed."
+            "which is kept also when nothing changed. For someone else's "
+            "private follow-up only its `id`, `uuid` and `status` are returned."
         ),
         responses={
             200: AgentChatSerializer,
@@ -1932,4 +1934,10 @@ class AgentFollowUpCheckView(APIView):
             context=application.application_ptr,
         )
         chat = handler.check_now(request.user, follow_up)
+        if not follow_up_is_visible_to(follow_up, request.user):
+            # A private follow-up's check is the creator's conversation;
+            # others only learn that it started.
+            return Response(
+                {"id": chat.id, "uuid": str(chat.uuid), "status": chat.status}
+            )
         return Response(AgentChatSerializer(chat).data)

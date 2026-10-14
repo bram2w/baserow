@@ -33,6 +33,9 @@
       >
         {{ $t('localBaserowVectorSearchForm.noVectorFields') }}
       </p>
+      <p v-else-if="searchFieldsGone" class="control__messages--error">
+        {{ $t('localBaserowVectorSearchForm.searchFieldsGone') }}
+      </p>
     </FormGroup>
     <SetupGuide
       :title="$t('localBaserowVectorSearchForm.setupHeading')"
@@ -65,6 +68,9 @@
           :value="field.id"
         ></DropdownItem>
       </Dropdown>
+      <p v-if="includedFieldsGone" class="control__messages--error">
+        {{ $t('localBaserowVectorSearchForm.includedFieldsGone') }}
+      </p>
     </FormGroup>
     <FormGroup
       small-label
@@ -127,6 +133,26 @@ export default {
     // Only fields that keep embeddings can be searched.
     vectorFields() {
       return this.tableFields.filter((field) => field.vector_search_enabled)
+    },
+    // Fields were chosen but none of them is left: the search fails instead
+    // of quietly searching or returning every field.
+    searchFieldsGone() {
+      return (
+        !this.fieldsLoading &&
+        this.defaultValues.search_all_fields === false &&
+        !this.values.search_field_ids.some((id) =>
+          this.vectorFields.some((field) => field.id === id)
+        )
+      )
+    },
+    includedFieldsGone() {
+      return (
+        !this.fieldsLoading &&
+        this.defaultValues.include_all_fields === false &&
+        !this.values.included_field_ids.some((id) =>
+          this.tableFields.some((field) => field.id === id)
+        )
+      )
     },
   },
 }

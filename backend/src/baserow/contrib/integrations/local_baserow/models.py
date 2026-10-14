@@ -214,23 +214,36 @@ class LocalBaserowVectorSearch(LocalBaserowTableService):
         "of them when empty.",
         related_name="+",
     )
+    # Kept apart from an empty `search_fields`: when every chosen field is
+    # deleted the search must not widen to the fields that were left out.
+    search_all_fields = models.BooleanField(
+        default=True,
+        db_default=True,
+        help_text="Searches every field with vector search enabled.",
+    )
     included_fields = models.ManyToManyField(
         "database.Field",
         help_text="The fields returned for every matching row. All fields when empty.",
         related_name="+",
+    )
+    include_all_fields = models.BooleanField(
+        default=True,
+        db_default=True,
+        help_text="Returns every field of the matching rows.",
     )
     max_results = models.PositiveIntegerField(
         default=5, db_default=5, help_text="The maximum number of rows returned."
     )
     search_query = FormulaField(default="", help_text="The text to search for.")
 
+    # Through `all()` so the prefetch of `enhance_queryset` is used.
     @property
     def search_field_ids(self) -> list[int]:
-        return list(self.search_fields.values_list("id", flat=True))
+        return sorted(field.id for field in self.search_fields.all())
 
     @property
     def included_field_ids(self) -> list[int]:
-        return list(self.included_fields.values_list("id", flat=True))
+        return sorted(field.id for field in self.included_fields.all())
 
 
 class LocalBaserowFieldsUpdated(LocalBaserowTableService):

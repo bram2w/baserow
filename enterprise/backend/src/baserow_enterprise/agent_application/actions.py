@@ -575,7 +575,12 @@ class StopAgentFollowUpActionType(UndoableActionType):
         cls.register_action(
             user=user,
             params=cls.Params(
-                application.id, application.name, follow_up.id, follow_up.title
+                application.id,
+                application.name,
+                follow_up.id,
+                # Admins read the audit log; a private follow-up's title is
+                # only for its creator.
+                "(private)" if follow_up.private else follow_up.title,
             ),
             scope=cls.scope(application.id),
             workspace=application.workspace,

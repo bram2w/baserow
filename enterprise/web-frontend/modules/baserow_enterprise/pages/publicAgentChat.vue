@@ -245,7 +245,8 @@ const resize = () => {
   const el = input.value
   if (!el) return
   el.style.height = 'auto'
-  el.style.height = `${Math.min(el.scrollHeight, 160)}px`
+  // A shared style used to cap it at this height.
+  el.style.height = `${Math.min(el.scrollHeight, 120)}px`
 }
 
 const scrollToBottom = async () => {

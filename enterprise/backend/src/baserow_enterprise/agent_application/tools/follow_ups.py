@@ -200,9 +200,10 @@ async def notify_user(
 
     def notify():
         follow_up = _check_follow_up(ctx)
-        AgentFollowUpHandler().notify_user(follow_up, ctx.deps.chat, message)
+        return AgentFollowUpHandler().notify_user(follow_up, ctx.deps.chat, message)
 
-    await sync_to_async(notify)()
+    if not await sync_to_async(notify)():
+        return {"error": "This follow-up has ended; don't notify about it."}
     ctx.deps.follow_up_events.add("notified")
     return {"notified": True}
 

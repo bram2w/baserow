@@ -614,3 +614,364 @@ def test_writing_in_a_check_allows_asking_for_a_new_follow_up(follow_up_setup):
 
     assert chat.status == AgentChat.Status.AWAITING_APPROVAL
     assert chat.tool_approvals.get().preview["title"] == "Active again"
+
+
+def _role(uid):
+    from baserow_enterprise.role.models import Role
+
+    return Role.objects.get(uid=uid)
+
+
+def _builder_and_editor(workspace, application, data_fixture):
+    from baserow_enterprise.role.handler import RoleAssignmentHandler
+
+    builder, builder_token = data_fixture.create_user_and_token()
+    editor, editor_token = data_fixture.create_user_and_token()
+    for member, uid in ((builder, "BUILDER"), (editor, "EDITOR")):
+        CoreHandler().add_user_to_workspace(workspace, member)
+        RoleAssignmentHandler().assign_role(member, workspace, role=_role(uid))
+    application.follow_up_min_role = "EDITOR"
+    application.save()
+    return builder, builder_token, editor, editor_token
+
+
+@pytest.mark.django_db(transaction=True)
+def test_checking_someone_elses_private_follow_up_reveals_nothing(
+    enable_enterprise, synced_roles, follow_up_setup, api_client, data_fixture
+):
+    user, token, workspace, application, agent, table, status, rows = follow_up_setup
+    builder, builder_token, editor, editor_token = _builder_and_editor(
+        workspace, application, data_fixture
+    )
+    private_chat = AgentChat.objects.create(agent=agent, user=editor, private=True)
+    follow_up = _create_follow_up(editor, private_chat, title="Editor secret")
+
+    with patch(BROADCAST), patch(BROADCAST_TO_USERS):
+        response = api_client.post(
+            reverse("api:agent:follow_up_check", kwargs={"follow_up_id": follow_up.id}),
+            HTTP_AUTHORIZATION=f"JWT {builder_token}",
+        )
+
+    assert response.status_code == HTTP_200_OK
+    assert set(response.json()) == {"id", "uuid", "status"}
+    assert "Editor secret" not in json.dumps(response.json())
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_check_never_runs_with_access_its_creator_lost(
+    enable_enterprise, synced_roles, follow_up_setup, data_fixture
+):
+    from baserow_enterprise.role.handler import RoleAssignmentHandler
+
+    user, token, workspace, application, agent, table, status, rows = follow_up_setup
+    builder, builder_token, editor, editor_token = _builder_and_editor(
+        workspace, application, data_fixture
+    )
+    follow_up = _create_follow_up(
+        editor,
+        AgentChat.objects.create(agent=agent, user=editor),
+        watch="rows_updated",
+        table_id=table.id,
+        row_ids=[rows[0].id],
+    )
+    RoleAssignmentHandler().assign_role(
+        editor, workspace, role=_role("NO_ACCESS"), scope=table
+    )
+
+    with patch(BROADCAST), patch(BROADCAST_TO_USERS):
+        _update_rows(user, table, [{"id": rows[0].id, f"field_{status.id}": "secret"}])
+
+    follow_up.refresh_from_db()
+    assert follow_up.status == AgentFollowUp.Status.CANCELLED
+    assert "no longer has access to the table" in follow_up.outcome
+    assert not AgentChat.objects.filter(follow_up=follow_up).exists()
+    notification = Notification.objects.get(type="agent_follow_up")
+    assert "secret" not in json.dumps(notification.data)
+
+
+@pytest.mark.django_db
+def test_lost_access_to_the_agent_ends_follow_ups_in_the_clean_up(
+    enable_enterprise, synced_roles, follow_up_setup, data_fixture
+):
+    from baserow_enterprise.role.handler import RoleAssignmentHandler
+
+    user, token, workspace, application, agent, table, status, rows = follow_up_setup
+    builder, builder_token, editor, editor_token = _builder_and_editor(
+        workspace, application, data_fixture
+    )
+    follow_up = _create_follow_up(
+        editor, AgentChat.objects.create(agent=agent, user=editor)
+    )
+    RoleAssignmentHandler().assign_role(
+        editor, workspace, role=_role("NO_ACCESS"), scope=application.application_ptr
+    )
+
+    with patch(BROADCAST), patch(BROADCAST_TO_USERS):
+        clean_up_old_agent_chats()
+
+    follow_up.refresh_from_db()
+    assert follow_up.status == AgentFollowUp.Status.CANCELLED
+    assert "no longer has access to the agent" in follow_up.outcome
+
+
+@pytest.mark.django_db
+def test_a_deleted_watched_table_ends_the_follow_up(follow_up_setup):
+    from baserow.core.trash.handler import TrashHandler
+
+    user, token, workspace, application, agent, table, status, rows = follow_up_setup
+    follow_up = _create_follow_up(
+        user,
+        AgentChat.objects.create(agent=agent, user=user),
+        watch="rows_updated",
+        table_id=table.id,
+        row_ids=[rows[0].id],
+        expires_in_days=None,
+    )
+
+    with patch(BROADCAST), patch(BROADCAST_TO_USERS):
+        TrashHandler.trash(user, workspace, table.database, table)
+        clean_up_old_agent_chats()
+        follow_up.refresh_from_db()
+        # In the trash it can still come back, so the follow-up waits.
+        assert follow_up.status == AgentFollowUp.Status.ACTIVE
+
+        TrashHandler.permanently_delete(table)
+        clean_up_old_agent_chats()
+
+    follow_up.refresh_from_db()
+    assert follow_up.status == AgentFollowUp.Status.CANCELLED
+    assert "was deleted" in follow_up.outcome
+
+
+@pytest.mark.django_db
+def test_permanently_deleting_the_agent_leaves_no_follow_up_services(
+    follow_up_setup,
+):
+    from baserow.core.trash.handler import TrashHandler
+
+    user, token, workspace, application, agent, table, status, rows = follow_up_setup
+    chat = AgentChat.objects.create(agent=agent, user=user)
+    scheduled = _create_follow_up(user, chat)
+    watching = _create_follow_up(
+        user, chat, watch="rows_updated", table_id=table.id, row_ids=[rows[0].id]
+    )
+    service_ids = [scheduled.service_id, watching.service_id]
+
+    with patch(BROADCAST), patch(BROADCAST_TO_USERS):
+        TrashHandler.trash(user, workspace, application, application)
+        TrashHandler.permanently_delete(application)
+
+    assert not Service.objects.filter(id__in=service_ids).exists()
+
+
+@pytest.mark.django_db
+def test_schedules_below_the_instance_minimum_are_never_proposed(follow_up_setup):
+    from django.test import override_settings
+
+    user, token, workspace, application, agent, table, status, rows = follow_up_setup
+    chat = AgentChat.objects.create(agent=agent, user=user)
+    handler = AgentFollowUpHandler()
+
+    with override_settings(INTEGRATIONS_PERIODIC_MINUTE_MIN=30):
+        assert handler.get_allowed_schedules() == ["30_minutes", "hour", "day", "week"]
+        with pytest.raises(AgentFollowUpInvalid):
+            handler.prepare_proposal(user, chat, _proposal(every="15_minutes"))
+        assert handler.prepare_proposal(user, chat, _proposal(every="30_minutes"))
+
+
+@pytest.mark.django_db
+def test_follow_ups_of_a_trashed_agent_wait(follow_up_setup, api_client):
+    from baserow.core.trash.handler import TrashHandler
+
+    user, token, workspace, application, agent, table, status, rows = follow_up_setup
+    follow_up = _create_follow_up(
+        user, AgentChat.objects.create(agent=agent, user=user), expires_in_days=1
+    )
+
+    with patch(BROADCAST), patch(BROADCAST_TO_USERS):
+        TrashHandler.trash(user, workspace, application, application)
+        response = api_client.post(
+            reverse("api:agent:follow_up_check", kwargs={"follow_up_id": follow_up.id}),
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+        assert response.status_code == 404
+        with freeze_time(timezone.now() + timedelta(days=2)):
+            clean_up_old_agent_chats()
+
+    follow_up.refresh_from_db()
+    assert follow_up.status == AgentFollowUp.Status.ACTIVE
+    assert not Notification.objects.exists()
+
+
+@pytest.mark.django_db
+def test_a_follow_up_that_already_ended_is_not_announced_again(follow_up_setup):
+    user, token, workspace, application, agent, table, status, rows = follow_up_setup
+    follow_up = _create_follow_up(
+        user, AgentChat.objects.create(agent=agent, user=user)
+    )
+    handler = AgentFollowUpHandler()
+
+    with patch(BROADCAST), patch(BROADCAST_TO_USERS):
+        for _ in range(2):
+            handler.finish_check(
+                AgentChat.objects.create(
+                    agent=agent,
+                    user=user,
+                    source=AgentChat.Source.FOLLOW_UP,
+                    follow_up=follow_up,
+                    status=AgentChat.Status.ERROR,
+                ),
+                notified=False,
+                ended=False,
+            )
+        # Stopped while the third failing check ran.
+        handler.cancel_follow_up(user, follow_up)
+        handler.finish_check(
+            AgentChat.objects.create(
+                agent=agent,
+                user=user,
+                source=AgentChat.Source.FOLLOW_UP,
+                follow_up=follow_up,
+                status=AgentChat.Status.ERROR,
+            ),
+            notified=False,
+            ended=False,
+        )
+        assert handler.notify_user(follow_up, None, "Too late.") is False
+
+    follow_up.refresh_from_db()
+    assert follow_up.status == AgentFollowUp.Status.CANCELLED
+    assert follow_up.checks_count == 2
+    assert not Notification.objects.exists()
+
+
+@pytest.mark.django_db
+def test_a_check_the_user_took_over_doesnt_hold_back_the_next(follow_up_setup):
+    user, token, workspace, application, agent, table, status, rows = follow_up_setup
+    follow_up = _create_follow_up(
+        user, AgentChat.objects.create(agent=agent, user=user)
+    )
+    taken_over = AgentChat.objects.create(
+        agent=agent,
+        user=user,
+        source=AgentChat.Source.FOLLOW_UP,
+        follow_up=follow_up,
+        status=AgentChat.Status.AWAITING_APPROVAL,
+    )
+    AgentChatMessage.objects.create(
+        chat=taken_over, role=AgentChatMessage.Role.HUMAN, content="And also…"
+    )
+
+    assert not AgentFollowUpHandler().is_checking(follow_up)
+
+
+@pytest.mark.django_db
+def test_a_stuck_check_counts_as_failed(follow_up_setup):
+    user, token, workspace, application, agent, table, status, rows = follow_up_setup
+    follow_up = _create_follow_up(
+        user, AgentChat.objects.create(agent=agent, user=user)
+    )
+    with freeze_time(timezone.now() - timedelta(days=1)):
+        AgentChat.objects.create(
+            agent=agent,
+            user=user,
+            source=AgentChat.Source.FOLLOW_UP,
+            follow_up=follow_up,
+            status=AgentChat.Status.IN_PROGRESS,
+        )
+
+    with patch(BROADCAST), patch(BROADCAST_TO_USERS):
+        clean_up_old_agent_chats()
+
+    follow_up.refresh_from_db()
+    assert follow_up.checks_count == 1
+    assert follow_up.failed_checks_in_a_row == 1
+
+
+@pytest.mark.django_db
+def test_undoing_a_stop_after_losing_access_keeps_it_stopped(
+    enable_enterprise, synced_roles, follow_up_setup, data_fixture
+):
+    from baserow_enterprise.agent_application.exceptions import (
+        AgentFollowUpNotActive,
+    )
+    from baserow_enterprise.role.handler import RoleAssignmentHandler
+
+    user, token, workspace, application, agent, table, status, rows = follow_up_setup
+    builder, builder_token, editor, editor_token = _builder_and_editor(
+        workspace, application, data_fixture
+    )
+    follow_up = _create_follow_up(
+        editor,
+        AgentChat.objects.create(agent=agent, user=editor),
+        watch="rows_updated",
+        table_id=table.id,
+        row_ids=[rows[0].id],
+    )
+    handler = AgentFollowUpHandler()
+    with patch(BROADCAST), patch(BROADCAST_TO_USERS):
+        handler.cancel_follow_up(editor, follow_up)
+    RoleAssignmentHandler().assign_role(
+        editor, workspace, role=_role("NO_ACCESS"), scope=table
+    )
+
+    with pytest.raises(AgentFollowUpNotActive):
+        handler.resume_follow_up(editor, follow_up)
+    follow_up.refresh_from_db()
+    assert follow_up.status == AgentFollowUp.Status.CANCELLED
+
+
+@pytest.mark.django_db
+def test_private_follow_ups_stay_out_of_shared_places(follow_up_setup):
+    import uuid
+
+    from baserow.core.action.models import Action
+    from baserow.core.action.registries import action_type_registry
+    from baserow_enterprise.agent_application.actions import (
+        StopAgentFollowUpActionType,
+    )
+    from baserow_enterprise.agent_application.runner import AgentRunner
+
+    user, token, workspace, application, agent, table, status, rows = follow_up_setup
+    user.untrusted_client_session_id = str(uuid.uuid4())
+    private = _create_follow_up(
+        user,
+        AgentChat.objects.create(agent=agent, user=user, private=True),
+        title="Private plans",
+    )
+    _create_follow_up(
+        user, AgentChat.objects.create(agent=agent, user=user), title="Shared plans"
+    )
+
+    shared_runner = AgentRunner(AgentChat.objects.create(agent=agent, user=user))
+    notes = "\n".join(shared_runner.deps.system_notes)
+    assert "Shared plans" in notes
+    assert "Private plans" not in notes
+
+    with patch(BROADCAST), patch(BROADCAST_TO_USERS):
+        action_type_registry.get_by_type(StopAgentFollowUpActionType).do(user, private)
+    assert "Private plans" not in json.dumps(Action.objects.get().params)
+
+
+@pytest.mark.django_db
+def test_follow_up_updates_only_reach_whom_the_list_shows_them(
+    follow_up_setup, django_capture_on_commit_callbacks
+):
+    user, token, workspace, application, agent, table, status, rows = follow_up_setup
+    with (
+        patch(BROADCAST) as to_group,
+        patch(
+            "baserow_enterprise.agent_application.realtime.broadcast_to_permitted_users"
+        ) as to_permitted,
+        patch(BROADCAST_TO_USERS) as to_users,
+        django_capture_on_commit_callbacks(execute=True),
+    ):
+        _create_follow_up(user, AgentChat.objects.create(agent=agent, user=user))
+
+    assert not to_group.delay.called
+    workspace_id, operation, scope, scope_id, payload = (
+        to_permitted.delay.call_args.args
+    )
+    assert operation == "agent_application.list_follow_ups"
+    assert scope_id == application.id
+    assert to_users.delay.call_args.args[0] == [user.id]

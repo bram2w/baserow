@@ -283,8 +283,8 @@ def test_periods_follow_the_viewers_timezone(usage_setup, api_client, data_fixtu
     assert in_utc["lifetime"]["input_tokens"] == 1111
     assert in_utc["lifetime"]["cost"] == 7
     assert in_utc["lifetime"]["turns"] == 4
-    # Two turns in the same hour share a row.
-    handler.record(application.id, 1, 0, None, at=at("2026-10-15T08:30"))
+    # Two turns in the same 15 minutes share a row.
+    handler.record(application.id, 1, 0, None, at=at("2026-10-15T08:10"))
     assert AgentUsage.objects.filter(application=application).count() == 4
 
 
@@ -345,3 +345,40 @@ def test_old_email_index_rows_age_out_with_their_conversation(
     remaining = set(AgentEmailMessage.objects.values_list("id", flat=True))
     assert remaining == {still_active.id, recent.id}
     assert gone.id not in remaining
+
+
+@pytest.mark.django_db
+def test_today_starts_exactly_in_a_half_hour_timezone(
+    usage_setup, api_client, data_fixture
+):
+    user, token, workspace, application, agent = usage_setup
+    handler = AgentUsageHandler()
+    # India is UTC+5:30, so its 15 October starts at 18:30 UTC the day before.
+    handler.record(
+        application.id,
+        7,
+        0,
+        None,
+        at=datetime(2026, 10, 14, 18, 20, tzinfo=timezone.utc),
+    )
+    handler.record(
+        application.id,
+        70,
+        0,
+        None,
+        at=datetime(2026, 10, 14, 18, 40, tzinfo=timezone.utc),
+    )
+
+    with freeze_time("2026-10-15T06:00:00Z"):
+        token = data_fixture.generate_token(user)
+        today = _get_usage(api_client, token, application, "Asia/Kolkata")["today"]
+
+    assert today["input_tokens"] == 70
+
+
+@pytest.mark.django_db
+def test_an_unusable_timezone_falls_back_to_utc(usage_setup, api_client):
+    user, token, workspace, application, agent = usage_setup
+
+    for name in ("Not/AZone", "a" * 300):
+        assert "today" in _get_usage(api_client, token, application, name)

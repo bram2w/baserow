@@ -51,6 +51,9 @@ describe('agent usage', () => {
     expect(formatTokens(12345)).toBe('12k')
     expect(formatTokens(1250)).toBe('1.3k')
     expect(formatTokens(2000000)).toBe('2M')
+    // Rounds before choosing the unit.
+    expect(formatTokens(999950)).toBe('1M')
+    expect(formatTokens(999400)).toBe('999k')
     expect(formatCost(3.4)).toBe('$3.40')
     expect(formatCost(0.004)).toBe('<$0.01')
     expect(formatCost(0)).toBe('$0.00')
