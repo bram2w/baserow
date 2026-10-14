@@ -77,6 +77,7 @@ import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
 import InfiniteScroll from '@baserow/modules/core/components/helpers/InfiniteScroll.vue'
 import DataSourceService from '@baserow/modules/builder/services/dataSource'
 import { handleDispatchError } from '@baserow/modules/builder/utils/error'
+import { DATA_SCOPES } from '@baserow/modules/builder/constants'
 
 export default {
   name: 'RecordSelectorElement',
@@ -159,11 +160,11 @@ export default {
                 this.$registry.getAll('builderDataProvider'),
                 {
                   ...this.applicationContext,
+                  dataScope: DATA_SCOPES.INCLUDE_TARGET_ELEMENT,
                   // We don't want the full recordIndex path here as we always want a
                   // data source as source for this component and we don't want nested
                   // data selection.
                   recordIndexPath: [recordIndex],
-                  allowSameElement: true,
                 }
               ),
               {
