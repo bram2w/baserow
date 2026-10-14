@@ -4,7 +4,7 @@ from django.db.models import QuerySet
 from baserow.core.handler import CoreHandler
 from baserow.core.utils import random_string
 
-from ..models import Workspace
+from ..models import Workspace, WorkspaceUser
 from .exceptions import (
     MaximumUniqueEndpointTriesError,
     MCPEndpointDoesNotBelongToUser,
@@ -145,6 +145,12 @@ class MCPEndpointHandler:
         :return: The created or updated grant, and whether it was created.
         """
 
+        # Removing the member deletes this row and then the member's grants. With
+        # the row locked, a removal running at the same time either waits and then
+        # deletes this grant too, or commits first and the check below fails.
+        WorkspaceUser.objects.select_for_update().filter(
+            user=user, workspace=workspace
+        ).first()
         CoreHandler().check_permissions(
             user,
             CreateMCPEndpointOperationType.type,
