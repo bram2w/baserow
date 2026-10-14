@@ -41,7 +41,7 @@ The service uses a multi-stage Docker build:
 ### Run locally
 
 ```
-docker run -p 8080:80 baserow/embeddings:1.0.1
+docker run -p 8080:80 baserow/embeddings:1.1.0
 ```
 
 ### Build for publish
@@ -49,10 +49,16 @@ docker run -p 8080:80 baserow/embeddings:1.0.1
 ```
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  -t baserow/embeddings:1.0.1 \
+  -t baserow/embeddings:1.1.0 \
   -t baserow/embeddings:latest \
   --push .
 ```
+
+### Configuration
+
+| Environment variable     | Description                                                                                        | Default                     |
+| ------------------------ | -------------------------------------------------------------------------------------------------- | --------------------------- |
+| `EMBEDDINGS_NUM_THREADS` | Number of CPU threads used for inference. Requests are processed one at a time, using all threads. | The container's CPU limit. |
 
 ## API
 
@@ -176,7 +182,7 @@ The embeddings enable the assistant to understand the semantic meaning of user q
 
 -   Python 3.14
 -   onnxruntime 1.26.0
--   transformers 5.19.0
+-   tokenizers 0.23.3
 -   starlette 1.8.0
 -   uvicorn 0.54.0
 

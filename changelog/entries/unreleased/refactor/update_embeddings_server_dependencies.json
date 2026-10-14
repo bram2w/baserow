@@ -1,6 +1,6 @@
 {
     "type": "refactor",
-    "message": "Update the embeddings server dependencies and release baserow/embeddings:1.0.1",
+    "message": "Update and speed up the embeddings server in baserow/embeddings:1.1.0",
     "issue_origin": "github",
     "issue_number": null,
     "domain": "core",

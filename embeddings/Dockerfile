@@ -18,7 +18,7 @@ COPY --from=builder /model /model
 
 RUN pip install --no-cache-dir \
     onnxruntime==1.26.0 \
-    transformers==5.19.0 \
+    tokenizers==0.23.3 \
     starlette==1.8.0 \
     uvicorn==0.54.0 && \
     pip uninstall -y pip && \
