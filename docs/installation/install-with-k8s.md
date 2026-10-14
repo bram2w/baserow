@@ -82,7 +82,7 @@ spec:
                   number: 80
           # The MCP server is only served by the ASGI service.
           - pathType: Prefix
-            path: "/mcp/"
+            path: "/mcp"
             backend:
               service:
                 name: backend-asgi
