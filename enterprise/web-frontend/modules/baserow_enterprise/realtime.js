@@ -84,6 +84,18 @@ export const registerRealtimeEvents = (realtime) => {
   })
 
   realtime.registerEvent(
+    'agent_usage_updated',
+    ({ store }, { application_id: applicationId }) => {
+      if (
+        store.getters['agentApplication/getAgent']?.application_id ===
+        applicationId
+      ) {
+        store.dispatch('agentApplication/refreshUsageSoon', { applicationId })
+      }
+    }
+  )
+
+  realtime.registerEvent(
     'agent_chat_event',
     ({ store }, { chat_id: chatId, event }) => {
       store.dispatch('agentChat/handleRealtimeEvent', { chatId, event })

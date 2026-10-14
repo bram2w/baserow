@@ -1,3 +1,5 @@
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
 from django.db import transaction
 
 from drf_spectacular.types import OpenApiTypes
@@ -105,6 +107,7 @@ from baserow_enterprise.agent_application.operations import (
 )
 from baserow_enterprise.agent_application.tools.handler import AgentToolHandler
 from baserow_enterprise.agent_application.triggers.handler import AgentTriggerHandler
+from baserow_enterprise.agent_application.usage import AgentUsageHandler
 from baserow_enterprise.api.assistant.errors import (
     ERROR_ASSISTANT_CONFIGURED_MODEL_NOT_AVAILABLE,
     ERROR_ASSISTANT_MODEL_DISABLED,
@@ -856,10 +859,20 @@ class AgentUsageView(APIView):
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
             ),
+            OpenApiParameter(
+                name="timezone",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description="The timezone where today, this week and this month "
+                "start, e.g. `Europe/Amsterdam`. Defaults to UTC.",
+            ),
         ],
         tags=["Agent"],
         operation_id="get_agent_application_usage",
-        description="Returns the aggregated token usage of the agent.",
+        description=(
+            "Returns the token usage and cost of the agent today, this week, "
+            "this month and over its lifetime, including deleted conversations."
+        ),
         responses={
             200: AgentUsageSerializer,
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
@@ -883,9 +896,14 @@ class AgentUsageView(APIView):
         application = _get_application_and_check(
             request, application_id, ReadAgentUsageOperationType
         )
-        agent = AgentApplicationHandler().get_main_agent(application)
+        try:
+            viewer_timezone = ZoneInfo(request.GET.get("timezone") or "UTC")
+        except (ZoneInfoNotFoundError, ValueError):
+            viewer_timezone = ZoneInfo("UTC")
         return Response(
-            AgentUsageSerializer(AgentChatHandler().get_agent_usage(agent)).data
+            AgentUsageSerializer(
+                AgentUsageHandler().get_usage(application, viewer_timezone)
+            ).data
         )
 
 

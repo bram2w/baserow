@@ -31,7 +31,17 @@
             }}</span>
           </a>
         </li>
+        <li v-if="usage" class="header__filter-item">
+          <a
+            ref="usageButton"
+            class="header__filter-link agent-page__header-usage-link"
+            @click="toggleUsageContext"
+          >
+            <span class="header__filter-name">{{ usageLabel }}</span>
+          </a>
+        </li>
       </ul>
+      <AgentUsageContext v-if="usage" ref="usageContext" :usage="usage" />
       <AgentPendingApprovalsContext
         v-if="!template"
         ref="approvalsContext"
@@ -67,13 +77,21 @@
 <script>
 import { defineComponent, computed, ref } from 'vue'
 import { useStore } from 'vuex'
+import { useI18n } from '#imports'
 import moment from '@baserow/modules/core/moment'
 import AgentPendingApprovalsContext from '@baserow_enterprise/components/agentApplication/AgentPendingApprovalsContext'
+import AgentUsageContext from '@baserow_enterprise/components/agentApplication/AgentUsageContext'
 import { useAgentContext } from '@baserow_enterprise/composables/useAgentContext'
+import {
+  formatCost,
+  formatTokens,
+  hasCost,
+  totalTokens,
+} from '@baserow_enterprise/utils/agentUsage'
 
 export default defineComponent({
   name: 'AgentHeader',
-  components: { AgentPendingApprovalsContext },
+  components: { AgentPendingApprovalsContext, AgentUsageContext },
   props: {
     loading: {
       type: Boolean,
@@ -93,6 +111,7 @@ export default defineComponent({
   emits: ['toggle-configuration', 'open-conversation'],
   setup(props) {
     const store = useStore()
+    const i18n = useI18n()
     const { storePrefix, template } = useAgentContext()
 
     const agent = computed(
@@ -111,6 +130,33 @@ export default defineComponent({
       approvalsContext.value.toggle(approvalsButton.value, 'bottom', 'left', 4)
     }
 
+    // Only shown once the agent has used something; templates have no usage.
+    const usage = computed(() => {
+      const value = store.getters[`${storePrefix}agentApplication/getUsage`]
+      if (
+        template ||
+        value?.applicationId !== props.application.id ||
+        value.lifetime.turns === 0
+      ) {
+        return null
+      }
+      return value
+    })
+    // Models without a public price only show their tokens.
+    const usageLabel = computed(() => {
+      const month = usage.value.month
+      return hasCost(usage.value.lifetime)
+        ? i18n.t('agentHeader.costThisMonth', { cost: formatCost(month.cost) })
+        : i18n.t('agentHeader.tokensThisMonth', {
+            tokens: formatTokens(totalTokens(month)),
+          })
+    })
+    const usageButton = ref(null)
+    const usageContext = ref(null)
+    const toggleUsageContext = () => {
+      usageContext.value.toggle(usageButton.value, 'bottom', 'left', 4)
+    }
+
     const lastRun = computed(() =>
       moment(props.application.last_run_on).calendar()
     )
@@ -123,6 +169,11 @@ export default defineComponent({
       approvalsButton,
       approvalsContext,
       toggleApprovalsContext,
+      usage,
+      usageLabel,
+      usageButton,
+      usageContext,
+      toggleUsageContext,
     }
   },
 })

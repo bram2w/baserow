@@ -40,6 +40,22 @@
           {{ $t('agentConversationList.delete') }}
         </a>
       </li>
+      <li
+        v-if="usageLine"
+        class="context__menu-item context__menu-item--with-separator"
+      >
+        <div
+          class="agent-conversation-context__usage"
+          :title="
+            $t('agentUsage.conversationBreakdown', {
+              input: (chat.total_input_tokens || 0).toLocaleString(),
+              output: (chat.total_output_tokens || 0).toLocaleString(),
+            })
+          "
+        >
+          {{ usageLine }}
+        </div>
+      </li>
     </ul>
   </Context>
 </template>
@@ -49,6 +65,12 @@ import context from '@baserow/modules/core/mixins/context'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import { AgentContextMixin } from '@baserow_enterprise/composables/useAgentContext'
 import { isChatRunning } from '@baserow_enterprise/utils/agentChatStatus'
+import {
+  formatCost,
+  formatTokens,
+  hasCost,
+  totalTokens,
+} from '@baserow_enterprise/utils/agentUsage'
 
 export default {
   name: 'AgentConversationContext',
@@ -68,6 +90,20 @@ export default {
     return { deleting: false }
   },
   computed: {
+    usageLine() {
+      const tokens = totalTokens(this.chat)
+      if (tokens === 0) {
+        return ''
+      }
+      return hasCost(this.chat)
+        ? this.$t('agentUsage.conversation', {
+            tokens: formatTokens(tokens),
+            cost: formatCost(this.chat.total_cost),
+          })
+        : this.$t('agentUsage.conversationTokens', {
+            tokens: formatTokens(tokens),
+          })
+    },
     canUpdate() {
       return this.hasAgentPermission(
         'agent_application.update_chat',

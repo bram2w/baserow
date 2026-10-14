@@ -27,7 +27,7 @@ from pydantic_ai.messages import (
     ThinkingPartDelta,
 )
 from pydantic_ai.run import AgentRunResultEvent
-from pydantic_ai.usage import UsageLimits
+from pydantic_ai.usage import RunUsage, UsageLimits
 
 from baserow_enterprise.assistant.agents import title_agent
 from baserow_enterprise.assistant.assistant import _strip_think_tags
@@ -43,6 +43,7 @@ from .chat_types import (
     AiReasoningChunk,
     AiStartedMessage,
     AiThinkingMessage,
+    AiUsageMessage,
     ApprovalRequestMessage,
     ChatTitleMessage,
     ToolCallMessage,
@@ -51,7 +52,11 @@ from .chat_types import (
 from .deps import AgentRunDeps, EventBus, QueueEvent, QueueEventKind, ToolHelpers
 from .exceptions import AgentChatRunCancelled
 from .models import AgentChat, AgentChatMessage
-from .realtime import broadcast_chat_event, broadcast_chat_updated
+from .realtime import (
+    broadcast_chat_event,
+    broadcast_chat_updated,
+    broadcast_usage_updated,
+)
 
 _CANCELLATION_KEY_TTL = 300  # seconds
 _TOOL_RESULT_CONTENT_LIMIT = 4000
@@ -224,6 +229,7 @@ class AgentRunner:
         )
         self._toolsets = self._build_toolsets()
         self._native_tools = self._build_native_tools()
+        self._turn_usage = RunUsage()
 
     def _build_toolsets(self) -> list:
         from .models import AgentSkill
@@ -407,6 +413,7 @@ class AgentRunner:
             # it with a DeferredToolRequests output.
             output_type=[str, DeferredToolRequests],
             usage_limits=UsageLimits(request_limit=_REQUEST_LIMIT),
+            usage=self._turn_usage,
             toolsets=self._toolsets,
             model_settings=self.model_settings or None,
         ) as events:
@@ -690,6 +697,9 @@ class AgentRunner:
             chat=self.chat, role=AgentChatMessage.Role.AI, content=""
         )
         self._broadcast(AiStartedMessage(message_id=str(ai_message.id)))
+        # The run adds to this object as it goes, so a failed or cancelled
+        # turn still knows what it consumed.
+        self._turn_usage = RunUsage()
 
         message_history = await self._load_message_history(
             compact=deferred_tool_results is None
@@ -716,6 +726,7 @@ class AgentRunner:
         dirty = False
         last_broadcast = 0.0
         last_flush = 0.0
+        broadcast_tokens = (0, 0)
 
         try:
             while True:
@@ -737,6 +748,13 @@ class AgentRunner:
                 if now - last_broadcast >= _BROADCAST_INTERVAL:
                     last_broadcast = now
                     self._broadcast_pending_reasoning()
+                    tokens = (
+                        self._turn_usage.input_tokens,
+                        self._turn_usage.output_tokens,
+                    )
+                    if tokens != broadcast_tokens:
+                        broadcast_tokens = tokens
+                        self._broadcast_usage(self._turn_usage)
                 if dirty and now - last_flush >= _FLUSH_INTERVAL:
                     last_flush = now
                     await self._flush(ai_message, events_log)
@@ -833,21 +851,69 @@ class AgentRunner:
         ai_message.artifacts = {"events": events_log}
         await ai_message.asave(update_fields=["artifacts", "updated_on"])
 
-    async def _record_usage(self, ai_message, run_result):
-        if run_result is None:
+    def _broadcast_usage(self, running: RunUsage | None = None):
+        """
+        Sends the conversation's totals, plus what a turn that is still
+        working used so far.
+        """
+
+        usage = running or RunUsage()
+        self._broadcast(
+            AiUsageMessage(
+                total_input_tokens=self.chat.total_input_tokens
+                + (usage.input_tokens or 0),
+                total_output_tokens=self.chat.total_output_tokens
+                + (usage.output_tokens or 0),
+                total_cost=str(self.chat.total_cost + (usage.cost or 0)),
+                unpriced_turns=self.chat.unpriced_turns
+                + (1 if running is not None and usage.cost is None else 0),
+            )
+        )
+
+    async def _record_usage(self, usage: RunUsage, ai_message=None):
+        """
+        Adds what a turn (or the title generation) consumed to the answer, the
+        conversation and the agent's hourly usage. The cost is None when the
+        model has no known price.
+        """
+
+        from .usage import AgentUsageHandler
+
+        if not usage.requests and not usage.input_tokens and not usage.output_tokens:
             return
-        usage = run_result.usage
-        ai_message.input_tokens = usage.input_tokens
-        ai_message.output_tokens = usage.output_tokens
+        cost = usage.cost
+        if ai_message is not None:
+            ai_message.input_tokens = (ai_message.input_tokens or 0) + (
+                usage.input_tokens or 0
+            )
+            ai_message.output_tokens = (ai_message.output_tokens or 0) + (
+                usage.output_tokens or 0
+            )
+            ai_message.cost = cost
         self.chat.total_input_tokens += usage.input_tokens or 0
         self.chat.total_output_tokens += usage.output_tokens or 0
+        if cost is not None:
+            self.chat.total_cost += cost
+        else:
+            self.chat.unpriced_turns += 1
         await self.chat.asave(
             update_fields=[
                 "total_input_tokens",
                 "total_output_tokens",
+                "total_cost",
+                "unpriced_turns",
                 "updated_on",
             ]
         )
+        await sync_to_async(AgentUsageHandler().record)(
+            self.application.id,
+            usage.input_tokens or 0,
+            usage.output_tokens or 0,
+            cost,
+        )
+        # Sent before the answer completes, so both show at the same time.
+        self._broadcast_usage()
+        broadcast_usage_updated(self.application.id)
 
     async def _finalize_success(
         self, ai_message, events_log, answer, run_result, messages_json
@@ -855,10 +921,16 @@ class AgentRunner:
         ai_message.content = answer or ""
         ai_message.artifacts = {"events": events_log}
 
-        await self._record_usage(ai_message, run_result)
+        await self._record_usage(self._turn_usage, ai_message)
 
         await ai_message.asave(
-            update_fields=["content", "artifacts", "input_tokens", "output_tokens"]
+            update_fields=[
+                "content",
+                "artifacts",
+                "input_tokens",
+                "output_tokens",
+                "cost",
+            ]
         )
 
         if messages_json:
@@ -939,9 +1011,15 @@ class AgentRunner:
         ]
 
         ai_message.artifacts = {"events": events_log, "approvals": serialized}
-        await self._record_usage(ai_message, run_result)
+        await self._record_usage(self._turn_usage, ai_message)
         await ai_message.asave(
-            update_fields=["artifacts", "input_tokens", "output_tokens", "updated_on"]
+            update_fields=[
+                "artifacts",
+                "input_tokens",
+                "output_tokens",
+                "cost",
+                "updated_on",
+            ]
         )
 
         # The history contains the pending tool calls; the resume run matches
@@ -958,12 +1036,31 @@ class AgentRunner:
 
     async def _finalize_error(self, ai_message, events_log, error: Exception):
         ai_message.artifacts = {"events": events_log}
-        await ai_message.asave(update_fields=["artifacts", "updated_on"])
+        # A failed turn still consumed whatever the model answered before.
+        await self._record_usage(self._turn_usage, ai_message)
+        await ai_message.asave(
+            update_fields=[
+                "artifacts",
+                "input_tokens",
+                "output_tokens",
+                "cost",
+                "updated_on",
+            ]
+        )
         self._broadcast(AiErrorMessage(content=str(error)))
 
     async def _finalize_cancelled(self, ai_message, events_log):
         ai_message.artifacts = {"events": events_log, "cancelled": True}
-        await ai_message.asave(update_fields=["artifacts", "updated_on"])
+        await self._record_usage(self._turn_usage, ai_message)
+        await ai_message.asave(
+            update_fields=[
+                "artifacts",
+                "input_tokens",
+                "output_tokens",
+                "cost",
+                "updated_on",
+            ]
+        )
         self._broadcast(AiCancelledMessage(message_id=str(ai_message.id)))
 
     async def _maybe_generate_title(self, prompt_message: AgentChatMessage):
@@ -974,12 +1071,18 @@ class AgentRunner:
             # Deterministic titles for automated runs; no extra LLM call.
             title = f"{self.chat.get_source_display()}: {self.chat.trigger_type}"
         else:
+            title_usage = RunUsage()
             try:
-                result = await title_agent.run(prompt_message.content, model=self.model)
+                result = await title_agent.run(
+                    prompt_message.content, model=self.model, usage=title_usage
+                )
                 title = result.output
             except Exception:
                 logger.exception("Failed to generate agent chat title")
                 return
+            finally:
+                # The title costs tokens too; it has no answer of its own.
+                await self._record_usage(title_usage)
 
         self.chat.title = title[: AgentChat.TITLE_MAX_LENGTH]
         await self.chat.asave(update_fields=["title", "updated_on"])

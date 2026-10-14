@@ -551,7 +551,26 @@
     "approvalsWaiting": "{count} approval waiting | {count} approvals waiting",
     "configure": "Configure",
     "lastRun": "Last run: {time}",
-    "neverRan": "Never triggered"
+    "neverRan": "Never triggered",
+    "costThisMonth": "{cost} this month",
+    "tokensThisMonth": "{tokens} tokens this month"
+  },
+  "agentUsage": {
+    "title": "Usage",
+    "tokens": "Tokens",
+    "cost": "Cost",
+    "today": "Today",
+    "week": "This week",
+    "month": "This month",
+    "lifetime": "Lifetime",
+    "tokensBreakdown": "{input} input, {output} output",
+    "partlyUnpriced": "Not included: {count} turn without a known price | Not included: {count} turns without a known price",
+    "unpriced": "The model has no known price",
+    "footnote": "Estimated from the public list prices of the models, in USD. Your provider's invoice is leading.",
+    "conversation": "{tokens} tokens · {cost}",
+    "conversationTokens": "{tokens} tokens",
+    "counting": "Counting tokens…",
+    "conversationBreakdown": "{input} input and {output} output tokens"
   },
   "agentSidebar": {
     "pendingApprovals": "{count} pending approval | {count} pending approvals"

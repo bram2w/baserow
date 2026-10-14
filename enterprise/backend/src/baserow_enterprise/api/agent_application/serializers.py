@@ -226,6 +226,8 @@ class AgentChatSerializer(serializers.ModelSerializer):
             "error",
             "total_input_tokens",
             "total_output_tokens",
+            "total_cost",
+            "unpriced_turns",
             "created_on",
             "updated_on",
         )
@@ -357,10 +359,26 @@ class AgentChatRunStartedSerializer(AgentChatSerializer):
         return self.context["prompt_message"].id
 
 
+class AgentUsagePeriodSerializer(serializers.Serializer):
+    input_tokens = serializers.IntegerField()
+    output_tokens = serializers.IntegerField()
+    cost = serializers.DecimalField(
+        max_digits=20,
+        decimal_places=10,
+        coerce_to_string=False,
+        help_text="The cost in USD of the turns with a known model price.",
+    )
+    turns = serializers.IntegerField()
+    unpriced_turns = serializers.IntegerField(
+        help_text="Turns whose model has no known price, so their cost is missing."
+    )
+
+
 class AgentUsageSerializer(serializers.Serializer):
-    total_input_tokens = serializers.IntegerField()
-    total_output_tokens = serializers.IntegerField()
-    chat_count = serializers.IntegerField()
+    today = AgentUsagePeriodSerializer()
+    week = AgentUsagePeriodSerializer(help_text="Since Monday.")
+    month = AgentUsagePeriodSerializer()
+    lifetime = AgentUsagePeriodSerializer()
 
 
 class AgentToolApprovalDecisionSerializer(serializers.Serializer):

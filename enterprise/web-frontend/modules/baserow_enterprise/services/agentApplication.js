@@ -6,6 +6,11 @@ export default (client) => {
     updateAgent(agentId, values) {
       return client.patch(`agent_application/agents/${agentId}/`, values)
     },
+    getUsage(applicationId, timezone) {
+      return client.get(`agent_application/${applicationId}/usage/`, {
+        params: { timezone },
+      })
+    },
     getChats(applicationId, { limit = 50, offset = 0, origin = null } = {}) {
       const params = { limit, offset }
       if (origin) {

@@ -156,6 +156,19 @@ def broadcast_chat_event(chat: AgentChat, event: dict) -> None:
     broadcast_public_chat_event(chat, event)
 
 
+def broadcast_usage_updated(application_id: int) -> None:
+    """
+    Tells everybody on the agent's page that its usage changed, also when the
+    turn belonged to a private conversation they can't see. The periods depend
+    on each viewer's timezone, so they fetch the numbers themselves.
+    """
+
+    broadcast_to_channel_group.delay(
+        get_agent_application_group_name(application_id),
+        {"type": "agent_usage_updated", "application_id": application_id},
+    )
+
+
 def broadcast_agent_definition_updated(agent) -> None:
     """
     Lets open configuration panels live-update when the agent reconfigures

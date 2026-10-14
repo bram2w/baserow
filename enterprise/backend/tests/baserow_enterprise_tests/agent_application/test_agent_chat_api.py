@@ -162,25 +162,6 @@ def test_cancel_and_delete_chat(api_client, agent_setup):
 
 
 @pytest.mark.django_db
-def test_agent_usage_endpoint(api_client, agent_setup):
-    user, token, application, agent = agent_setup
-    AgentChat.objects.create(
-        agent=agent, user=user, total_input_tokens=100, total_output_tokens=20
-    )
-    AgentChat.objects.create(agent=agent, total_input_tokens=50, total_output_tokens=5)
-
-    url = reverse("api:agent:usage", kwargs={"application_id": application.id})
-    response = api_client.get(url, HTTP_AUTHORIZATION=f"JWT {token}")
-
-    assert response.status_code == HTTP_200_OK
-    assert response.json() == {
-        "total_input_tokens": 150,
-        "total_output_tokens": 25,
-        "chat_count": 2,
-    }
-
-
-@pytest.mark.django_db
 def test_clean_up_old_agent_chats(agent_setup):
     from datetime import timedelta
 

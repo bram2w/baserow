@@ -12,6 +12,7 @@ export const EVENT_TYPE = {
   STARTED: 'ai/started',
   CANCELLED: 'ai/cancelled',
   CHAT_TITLE: 'chat/title',
+  USAGE: 'ai/usage',
   TOOL_CALL: 'tool_call',
   TOOL: 'tool',
   ANSWER_CHUNK: 'ai/answer_chunk',
@@ -128,7 +129,22 @@ export const state = () => ({
   // list and the chat pane can show that a different one is opening.
   loadingChatUuid: null,
   canceling: false,
+  // Tokens and cost of the open conversation, its title included; null for
+  // a conversation that hasn't been saved yet.
+  usage: null,
 })
+
+function pickUsage(chat) {
+  if (chat?.total_input_tokens === undefined) {
+    return null
+  }
+  return {
+    total_input_tokens: chat.total_input_tokens,
+    total_output_tokens: chat.total_output_tokens,
+    total_cost: chat.total_cost,
+    unpriced_turns: chat.unpriced_turns,
+  }
+}
 
 export const mutations = {
   SET_CURRENT_CHAT_UUID(state, uuid) {
@@ -175,6 +191,9 @@ export const mutations = {
   },
   SET_CHAT_USER_ID(state, value) {
     state.chatUserId = value
+  },
+  SET_USAGE(state, value) {
+    state.usage = value
   },
   SET_TRIGGER(state, { triggerType, eventPayload }) {
     state.triggerType = triggerType
@@ -276,6 +295,7 @@ export const actions = {
     commit('SET_SOURCE', data.chat.source || 'manual')
     commit('SET_PRIVATE', Boolean(data.chat.private))
     commit('SET_CHAT_USER_ID', data.chat.user_id ?? null)
+    commit('SET_USAGE', pickUsage(data.chat))
     commit('SET_TRIGGER', {
       triggerType: data.chat.trigger_type || '',
       eventPayload: data.chat.event_payload ?? null,
@@ -296,6 +316,7 @@ export const actions = {
     commit('SET_CURRENT_CHAT_UUID', uuidv4())
     commit('SET_PRIVATE', isPrivate)
     commit('SET_CHAT_USER_ID', null)
+    commit('SET_USAGE', null)
     commit('SET_CHAT_ID', null)
     commit('SET_EVENTS', [])
     commit('SET_RUNNING', false)
@@ -456,6 +477,10 @@ export const actions = {
     if (chat.user_id !== undefined) {
       commit('SET_CHAT_USER_ID', chat.user_id)
     }
+    const usage = pickUsage(chat)
+    if (usage) {
+      commit('SET_USAGE', usage)
+    }
     const missedTerminal =
       ['idle', 'error'].includes(chat.status) &&
       (state.running || state.awaitingApproval)
@@ -615,6 +640,9 @@ export const actions = {
         commit('SET_RUNNING_MESSAGE', '')
         commit('SET_CURRENT_MESSAGE_ID', null)
         break
+      case EVENT_TYPE.USAGE:
+        commit('SET_USAGE', pickUsage(event))
+        break
       case EVENT_TYPE.CHAT_TITLE: {
         const existingChat = rootGetters['agentHistory/getChats'].find(
           (chat) => chat.id === chatId
@@ -703,6 +731,7 @@ export const getters = {
   getSource: (state) => state.source,
   isPrivate: (state) => state.private,
   getChatUserId: (state) => state.chatUserId,
+  getUsage: (state) => state.usage,
   getTriggerType: (state) => state.triggerType,
   getEventPayload: (state) => state.eventPayload,
   getToolApprovals: (state) => state.toolApprovals,

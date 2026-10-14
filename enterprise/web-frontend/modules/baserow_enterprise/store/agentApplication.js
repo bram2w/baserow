@@ -3,6 +3,7 @@ import {
   humanizeToolName,
   slugifyToolName,
 } from '@baserow_enterprise/utils/agentChatEvents'
+import { viewerTimezone } from '@baserow_enterprise/utils/agentUsage'
 
 // The current values of the keys about to be overwritten, to restore them
 // when an optimistic update fails.
@@ -25,9 +26,20 @@ export const state = () => ({
   // permissions UI and the humanized tool names in conversations.
   workspaceToolCatalog: [],
   workspaceToolCatalogLoaded: false,
+  // Token usage and cost of today, this week, this month and the lifetime.
+  usage: null,
 })
 
+// Finished turns can come in bursts when many conversations run; the usage
+// is fetched at most once per interval per page.
+const USAGE_REFRESH_INTERVAL = 2000
+let usageRefreshTimeout = null
+let usageFetchedAt = 0
+
 export const mutations = {
+  SET_USAGE(state, usage) {
+    state.usage = usage
+  },
   SET_AGENT(state, agent) {
     state.agent = agent
   },
@@ -352,6 +364,38 @@ export const actions = {
     commit('SET_WORKSPACE_TOOL_CATALOG', data)
     return data
   },
+  async fetchUsage({ commit }, { applicationId }) {
+    usageFetchedAt = Date.now()
+    const { data } = await AgentApplicationService(this.$client).getUsage(
+      applicationId,
+      viewerTimezone()
+    )
+    commit('SET_USAGE', { applicationId, ...data })
+    return data
+  },
+  /**
+   * Refreshes the usage right away, unless it was fetched recently: then once
+   * the interval has passed, covering every change in between.
+   */
+  refreshUsageSoon({ dispatch, state }, { applicationId }) {
+    if (usageRefreshTimeout !== null) {
+      return
+    }
+    usageRefreshTimeout = setTimeout(
+      async () => {
+        usageRefreshTimeout = null
+        if (state.usage?.applicationId !== applicationId) {
+          return
+        }
+        try {
+          await dispatch('fetchUsage', { applicationId })
+        } catch {
+          // The header keeps the previous numbers; the next turn tries again.
+        }
+      },
+      Math.max(0, usageFetchedAt + USAGE_REFRESH_INTERVAL - Date.now())
+    )
+  },
   async improveInstructions(context, { agentId, instructions }) {
     const { data } = await AgentApplicationService(
       this.$client
@@ -370,6 +414,7 @@ export const getters = {
   getChannels: (state) => state.channels,
   isChannelsLoading: (state) => state.channelsLoading,
   getWorkspaceToolCatalog: (state) => state.workspaceToolCatalog,
+  getUsage: (state) => state.usage,
   getWorkspaceTool: (state) =>
     state.tools.find((tool) => tool.type === 'workspace') || null,
   /**

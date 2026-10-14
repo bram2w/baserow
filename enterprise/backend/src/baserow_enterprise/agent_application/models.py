@@ -23,6 +23,7 @@ __all__ = [
     "AgentChat",
     "AgentChatMessage",
     "AgentChatToolApproval",
+    "AgentUsage",
 ]
 
 
@@ -398,6 +399,18 @@ class AgentChat(
     )
     total_input_tokens = models.BigIntegerField(default=0, db_default=0)
     total_output_tokens = models.BigIntegerField(default=0, db_default=0)
+    total_cost = models.DecimalField(
+        max_digits=20,
+        decimal_places=10,
+        default=0,
+        db_default=0,
+        help_text="The cost in USD of the turns with a known model price.",
+    )
+    unpriced_turns = models.PositiveIntegerField(
+        default=0,
+        db_default=0,
+        help_text="Turns whose model has no known price, so their cost is missing.",
+    )
 
     class Meta:
         indexes = [
@@ -466,6 +479,14 @@ class AgentChatMessage(
     )
     input_tokens = models.IntegerField(null=True, blank=True, db_default=None)
     output_tokens = models.IntegerField(null=True, blank=True, db_default=None)
+    cost = models.DecimalField(
+        max_digits=20,
+        decimal_places=10,
+        null=True,
+        blank=True,
+        db_default=None,
+        help_text="The cost in USD, or null when the model has no known price.",
+    )
 
     class Meta:
         ordering = ("id",)
@@ -596,4 +617,35 @@ class AgentEmailMessage(models.Model):
             models.Index(fields=["channel", "message_id"]),
             models.Index(fields=["channel", "thread_key"]),
             models.Index(fields=["channel", "from_address", "subject_normalized"]),
+        ]
+
+
+class AgentUsage(models.Model):
+    """
+    The token usage and cost of an agent application per hour. It's kept apart
+    from the conversations so the totals survive their deletion, and hours let
+    the periods follow the viewer's timezone.
+    """
+
+    application = models.ForeignKey(
+        AgentApplication, on_delete=models.CASCADE, related_name="usage"
+    )
+    hour = models.DateTimeField(help_text="The start of the hour, in UTC.")
+    input_tokens = models.BigIntegerField(default=0, db_default=0)
+    output_tokens = models.BigIntegerField(default=0, db_default=0)
+    cost = models.DecimalField(
+        max_digits=20,
+        decimal_places=10,
+        default=0,
+        db_default=0,
+        help_text="The cost in USD of the turns with a known model price.",
+    )
+    turns = models.PositiveIntegerField(default=0, db_default=0)
+    unpriced_turns = models.PositiveIntegerField(default=0, db_default=0)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["application", "hour"], name="agent_usage_unique_hour"
+            )
         ]

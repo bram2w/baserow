@@ -236,12 +236,15 @@ def clean_up_old_agent_chats(self):
     Deletes automatically started (trigger/setup) chats past the retention
     limits, and recovers chats whose run died without finalizing (e.g. a
     killed worker), which would otherwise stay "running" forever and block
-    new messages. Manual conversations are only deleted by users.
+    new messages. Manual conversations are only deleted by users. The email
+    index of channels ages out with the conversations it belongs to.
     """
+
+    from django.db.models import Exists, OuterRef
 
     from .channels.registries import agent_chat_channel_type_registry
     from .handler import AgentChatHandler
-    from .models import AgentChat
+    from .models import AgentChat, AgentEmailMessage
     from .realtime import broadcast_chat_updated
 
     stuck_cutoff = timezone.now() - timedelta(
@@ -284,6 +287,19 @@ def clean_up_old_agent_chats(self):
             AgentChatHandler().delete_chat(chat)
 
     delete_chats(automated_chats.filter(updated_on__lt=cutoff))
+
+    # The email index only exists to match replies to their conversation, so
+    # it ages out with them. A thread that is still active keeps all of its
+    # mail, because a late reply may answer its first message.
+    AgentEmailMessage.objects.filter(created_on__lt=cutoff).exclude(
+        Exists(
+            AgentChat.objects.filter(
+                channel_id=OuterRef("channel_id"),
+                channel_session_key=OuterRef("session_key"),
+                updated_on__gte=cutoff,
+            )
+        )
+    ).delete()
 
     max_entries = settings.AGENT_APPLICATION_CHAT_HISTORY_MAX_ENTRIES
     agent_ids = automated_chats.values_list("agent_id", flat=True).order_by().distinct()

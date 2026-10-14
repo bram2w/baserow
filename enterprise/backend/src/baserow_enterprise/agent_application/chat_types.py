@@ -42,6 +42,19 @@ class AiAnswerChunk(BaseModel):
     content: str
 
 
+class AiUsageMessage(BaseModel):
+    """
+    The conversation's running totals while a turn is still working, so the
+    usage counts up live. The totals are only persisted when the turn ends.
+    """
+
+    type: Literal["ai/usage"] = "ai/usage"
+    total_input_tokens: int
+    total_output_tokens: int
+    total_cost: str = Field(description="In USD, as a decimal string.")
+    unpriced_turns: int
+
+
 class ApprovalRequestMessage(BaseModel):
     """
     Emitted when a run pauses because tool calls await approval. The items
@@ -64,6 +77,7 @@ AgentChatEventUnion = (
     | AiThinkingMessage
     | AiReasoningChunk
     | AiAnswerChunk
+    | AiUsageMessage
     | AiMessageChunk
     | AiMessage
     | AiErrorMessage

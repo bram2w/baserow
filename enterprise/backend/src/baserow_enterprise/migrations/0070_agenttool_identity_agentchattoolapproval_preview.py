@@ -14,6 +14,55 @@ def remove_workspace_search_tools(apps, schema_editor):
     AgentTool.objects.filter(type="workspace_search").delete()
 
 
+def backfill_agent_usage(apps, schema_editor):
+    """
+    Turns the token counts already stored on the answers into hourly usage.
+    Which model answered isn't stored, so their cost stays unknown.
+    """
+
+    AgentUsage = apps.get_model("baserow_enterprise", "AgentUsage")
+    AgentChatMessage = apps.get_model("baserow_enterprise", "AgentChatMessage")
+    AgentChat = apps.get_model("baserow_enterprise", "AgentChat")
+    AgentDefinition = apps.get_model("baserow_enterprise", "AgentDefinition")
+    with schema_editor.connection.cursor() as cursor:
+        cursor.execute(
+            f"""
+            INSERT INTO {AgentUsage._meta.db_table}
+                (application_id, hour, input_tokens, output_tokens, cost, turns,
+                 unpriced_turns)
+            SELECT definition.application_id,
+                   date_trunc('hour', message.created_on AT TIME ZONE 'UTC')
+                       AT TIME ZONE 'UTC',
+                   SUM(COALESCE(message.input_tokens, 0)),
+                   SUM(COALESCE(message.output_tokens, 0)),
+                   0,
+                   COUNT(*),
+                   COUNT(*)
+            FROM {AgentChatMessage._meta.db_table} message
+            JOIN {AgentChat._meta.db_table} chat ON chat.id = message.chat_id
+            JOIN {AgentDefinition._meta.db_table} definition
+                ON definition.id = chat.agent_id
+            WHERE message.input_tokens IS NOT NULL
+               OR message.output_tokens IS NOT NULL
+            GROUP BY 1, 2
+            ON CONFLICT (application_id, hour) DO NOTHING
+            """  # noqa: S608
+        )
+        cursor.execute(
+            f"""
+            UPDATE {AgentChat._meta.db_table} chat
+            SET unpriced_turns = counted.turns
+            FROM (
+                SELECT chat_id, COUNT(*) AS turns
+                FROM {AgentChatMessage._meta.db_table}
+                WHERE input_tokens IS NOT NULL OR output_tokens IS NOT NULL
+                GROUP BY chat_id
+            ) counted
+            WHERE counted.chat_id = chat.id
+            """  # noqa: S608
+        )
+
+
 class Migration(migrations.Migration):
     dependencies = [
         (
@@ -445,4 +494,89 @@ class Migration(migrations.Migration):
                 ),
             ),
         ),
+        migrations.AddField(
+            model_name="agentchat",
+            name="total_cost",
+            field=models.DecimalField(
+                db_default=0,
+                decimal_places=10,
+                default=0,
+                help_text="The cost in USD of the turns with a known model price.",
+                max_digits=20,
+            ),
+        ),
+        migrations.AddField(
+            model_name="agentchat",
+            name="unpriced_turns",
+            field=models.PositiveIntegerField(
+                db_default=0,
+                default=0,
+                help_text="Turns whose model has no known price, so their cost is "
+                "missing.",
+            ),
+        ),
+        migrations.AddField(
+            model_name="agentchatmessage",
+            name="cost",
+            field=models.DecimalField(
+                blank=True,
+                db_default=None,
+                decimal_places=10,
+                help_text="The cost in USD, or null when the model has no known price.",
+                max_digits=20,
+                null=True,
+            ),
+        ),
+        migrations.CreateModel(
+            name="AgentUsage",
+            fields=[
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "hour",
+                    models.DateTimeField(help_text="The start of the hour, in UTC."),
+                ),
+                ("input_tokens", models.BigIntegerField(db_default=0, default=0)),
+                ("output_tokens", models.BigIntegerField(db_default=0, default=0)),
+                (
+                    "cost",
+                    models.DecimalField(
+                        db_default=0,
+                        decimal_places=10,
+                        default=0,
+                        help_text="The cost in USD of the turns with a known model "
+                        "price.",
+                        max_digits=20,
+                    ),
+                ),
+                ("turns", models.PositiveIntegerField(db_default=0, default=0)),
+                (
+                    "unpriced_turns",
+                    models.PositiveIntegerField(db_default=0, default=0),
+                ),
+                (
+                    "application",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="usage",
+                        to="baserow_enterprise.agentapplication",
+                    ),
+                ),
+            ],
+            options={
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=("application", "hour"), name="agent_usage_unique_hour"
+                    )
+                ],
+            },
+        ),
+        migrations.RunPython(backfill_agent_usage, migrations.RunPython.noop),
     ]

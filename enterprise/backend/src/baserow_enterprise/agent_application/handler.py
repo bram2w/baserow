@@ -3,7 +3,7 @@ from typing import Optional
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import F, Q, QuerySet, Sum
+from django.db.models import F, Q, QuerySet
 from django.utils import timezone
 
 from rest_framework.exceptions import ValidationError as DRFValidationError
@@ -1055,17 +1055,3 @@ class AgentChatHandler:
         broadcast_chat_deleted(application.id, chat_id, private_user_id)
         if had_pending:
             broadcast_pending_approvals_updated(application)
-
-    def get_agent_usage(self, agent: AgentDefinition) -> dict:
-        from django.db.models import Count
-
-        totals = agent.chats.aggregate(
-            total_input_tokens=Sum("total_input_tokens"),
-            total_output_tokens=Sum("total_output_tokens"),
-            chat_count=Count("id"),
-        )
-        return {
-            "total_input_tokens": totals["total_input_tokens"] or 0,
-            "total_output_tokens": totals["total_output_tokens"] or 0,
-            "chat_count": totals["chat_count"],
-        }

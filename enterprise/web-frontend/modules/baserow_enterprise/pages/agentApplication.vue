@@ -75,6 +75,12 @@ const { data, loading } = await usePageAsyncData(
         store.dispatch('agentApplication/fetchTriggers', {
           applicationId: application.id,
         }),
+        // Usage is informative; the page must work without it.
+        store
+          .dispatch('agentApplication/fetchUsage', {
+            applicationId: application.id,
+          })
+          .catch(() => {}),
         store.dispatch('agentApplication/fetchTools', {
           applicationId: application.id,
         }),

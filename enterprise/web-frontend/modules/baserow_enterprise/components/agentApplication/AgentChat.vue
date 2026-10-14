@@ -118,6 +118,19 @@
             {{ $t('agentChat.retry') }}
           </Button>
         </div>
+        <div
+          v-if="usageLine && !loadingConversation"
+          class="agent-chat__usage"
+          :title="usageBreakdown"
+        >
+          {{ usageLine }}
+        </div>
+        <div
+          v-else-if="running && !loadingConversation"
+          class="agent-chat__usage"
+        >
+          {{ $t('agentUsage.counting') }}
+        </div>
       </div>
     </div>
     <div
@@ -331,6 +344,12 @@ import {
   ACT_AS_USER,
   approvalActsAsUser,
 } from '@baserow_enterprise/utils/agentToolIdentities'
+import {
+  formatCost,
+  formatTokens,
+  hasCost,
+  totalTokens,
+} from '@baserow_enterprise/utils/agentUsage'
 
 const MIN_ROWS = 1
 const MAX_ROWS = 4
@@ -361,7 +380,7 @@ export default defineComponent({
   emits: ['open-configuration'],
   setup(props) {
     const store = useStore()
-    const { storePrefix, hasPermission } = useAgentContext()
+    const { storePrefix, template, hasPermission } = useAgentContext()
     const { $client, $registry } = useNuxtApp()
     const { t, locale } = useI18n()
 
@@ -389,6 +408,35 @@ export default defineComponent({
     )
     const hasError = computed(
       () => store.getters[`${storePrefix}agentChat/hasError`]
+    )
+    const conversationUsage = computed(() =>
+      template ? null : store.getters[`${storePrefix}agentChat/getUsage`]
+    )
+    // Turns of a model without a known price only add tokens.
+    const usageLine = computed(() => {
+      const usage = conversationUsage.value
+      const tokens = totalTokens(usage)
+      if (!usage || tokens === 0) {
+        return ''
+      }
+      if (!hasCost(usage)) {
+        return t('agentUsage.conversationTokens', {
+          tokens: formatTokens(tokens),
+        })
+      }
+      return t('agentUsage.conversation', {
+        tokens: formatTokens(tokens),
+        cost: formatCost(usage.total_cost),
+      })
+    })
+    const usageBreakdown = computed(() =>
+      usageLine.value
+        ? t('agentUsage.conversationBreakdown', {
+            input: conversationUsage.value.total_input_tokens.toLocaleString(),
+            output:
+              conversationUsage.value.total_output_tokens.toLocaleString(),
+          })
+        : ''
     )
     const retrying = ref(false)
     const retry = async () => {
@@ -994,6 +1042,8 @@ export default defineComponent({
     })
 
     return {
+      usageLine,
+      usageBreakdown,
       canDecide,
       canDecideApprovals,
       canUpdateAgent,

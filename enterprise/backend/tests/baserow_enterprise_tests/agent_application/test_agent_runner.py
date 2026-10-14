@@ -128,8 +128,9 @@ def test_run_agent_chat_persists_response_and_usage(agent_chat_setup):
     assert ai_message.content == TEST_ANSWER
     assert ai_message.input_tokens is not None
     assert ai_message.output_tokens is not None
-    assert chat.total_input_tokens == ai_message.input_tokens
-    assert chat.total_output_tokens == ai_message.output_tokens
+    # The generated title is counted on top of the answer.
+    assert chat.total_input_tokens > ai_message.input_tokens
+    assert chat.total_output_tokens > ai_message.output_tokens
 
     # A manual chat gets a generated title.
     assert chat.title

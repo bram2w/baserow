@@ -61,6 +61,10 @@
   color: $palette-yellow-800;
 }
 
+.agent-page__header-usage-link {
+  white-space: nowrap;
+}
+
 .agent-page__header-last-run {
   align-self: center;
   margin-right: 8px;
@@ -2941,3 +2945,65 @@
 }
 
 // Read-only preview of an agent inside the template modal.
+
+.agent-usage {
+  width: 320px;
+  max-width: calc(100vw - 24px);
+  padding: 12px 16px;
+}
+
+.agent-usage__title {
+  margin-bottom: 8px;
+  color: $palette-neutral-1200;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.agent-usage__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.agent-usage__heading {
+  color: $palette-neutral-700;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+}
+
+.agent-usage__cell {
+  padding: 2px 0;
+  color: $palette-neutral-1200;
+}
+
+.agent-usage__number {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.agent-usage__footnote {
+  margin-top: 10px;
+  color: $palette-neutral-700;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.agent-chat__usage {
+  margin-top: 8px;
+  text-align: center;
+  color: $palette-neutral-600;
+  font-size: 12px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.agent-conversation-context__usage {
+  padding: 6px 8px;
+  color: $palette-neutral-700;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+}
