@@ -1,4 +1,10 @@
+from typing import TYPE_CHECKING, Any, List, Tuple
+
 from django.db.models import DateTimeField, Expression, Field, Func, Lookup, Value
+
+if TYPE_CHECKING:
+    from django.db.backends.base.base import BaseDatabaseWrapper
+    from django.db.models.sql.compiler import SQLCompiler
 
 
 class Timezone(Expression):
@@ -82,3 +88,19 @@ class IsDistinctFrom(Lookup):
         rhs, rhs_params = self.process_rhs(compiler, connection)
         params = lhs_params + rhs_params
         return "%s IS DISTINCT FROM %s" % (lhs, rhs), params
+
+
+class EqualsAny(Lookup):
+    """
+    `lhs = ANY(rhs)`, where rhs is an array such as an `ArraySubquery`. Postgres
+    computes an uncorrelated array once, before the scan, so an index on lhs
+    fetches just the matching rows. With `lhs IN (subquery)` the planner may
+    instead walk that index in order to satisfy an `ORDER BY` with a `LIMIT`.
+    """
+
+    def as_sql(
+        self, compiler: "SQLCompiler", connection: "BaseDatabaseWrapper"
+    ) -> Tuple[str, List[Any]]:
+        lhs, lhs_params = self.process_lhs(compiler, connection)
+        rhs, rhs_params = compiler.compile(self.rhs)
+        return f"{lhs} = ANY({rhs})", [*lhs_params, *rhs_params]

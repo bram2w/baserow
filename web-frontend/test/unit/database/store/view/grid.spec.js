@@ -2920,6 +2920,24 @@ describe('Grid view store', () => {
       ).toEqual([])
       expect(store.state.grid.groupBy.rowLocations[10]).toBeUndefined()
     })
+
+    test('deletedExistingRow removes a loaded row from its group when the payload omits the values the search matched', async () => {
+      store.commit('grid/SET_SEARCH', {
+        activeSearchTerm: 'Alice',
+        hideRowsNotMatchingSearch: true,
+      })
+
+      await store.dispatch('grid/deletedExistingRow', {
+        view: baseView,
+        fields,
+        row: { id: 10, order: '1.00' },
+      })
+
+      expect(leafCount('A', 'Open')).toBe(0)
+      expect(topCount('A')).toBe(0)
+      expect(store.getters['grid/getCount']).toBe(1)
+      expect(store.state.grid.groupBy.rowLocations[10]).toBeUndefined()
+    })
   })
 
   test('updatedExistingRow keeps a selected group-by change in place with a warning', async () => {
@@ -11049,6 +11067,301 @@ describe('Grid view store', () => {
     expect(store.getters['grid/getBufferLimit']).toBe(5)
     expect(store.getters['grid/getCount']).toBe(97)
   })
+
+  describe('deletedExistingRow with values the payload omits', () => {
+    const fields = [
+      { id: 1, name: 'Name', type: 'text', primary: true },
+      {
+        id: 2,
+        name: 'Link',
+        type: 'link_row',
+        link_row_table_id: 2,
+        link_row_table_primary_field: { id: 10, name: 'Name', type: 'text' },
+      },
+    ]
+    const fieldOptions = {
+      1: { hidden: false, order: 0 },
+      2: { hidden: false, order: 1 },
+    }
+    const baseView = {
+      id: 1,
+      filters: [],
+      filter_groups: [],
+      filter_type: 'AND',
+      filters_disabled: false,
+      sortings: [],
+      group_bys: [],
+    }
+    const linkFilterView = (type, value = '') => ({
+      ...baseView,
+      filters: [{ id: 1, view: 1, field: 2, type, value, group: null }],
+    })
+    const linkTo = (value) => [{ id: 11, value }]
+    const heldRow = (id) => ({
+      id,
+      order: `${id}.00`,
+      field_1: `Row ${id}`,
+      field_2: linkTo('Alpha'),
+      _: {
+        selected: false,
+        selectedFieldId: -1,
+        selectedBy: [],
+        loading: false,
+        matchFilters: true,
+        matchSortings: true,
+        matchSearch: true,
+        fieldSearchMatches: [],
+        persistentId: `r${id}`,
+      },
+    })
+    const setUpBuffer = (heldCount, extraState = {}, target = store) => {
+      const rows = Array.from({ length: heldCount }, (_, i) => heldRow(i + 1))
+      const state = Object.assign(gridStore.state(), {
+        lastGridId: 1,
+        fieldOptions,
+        bufferStartIndex: 0,
+        bufferLimit: heldCount,
+        count: heldCount,
+        rows,
+        ...extraState,
+      })
+      target.replaceState({ ...target.state, grid: state })
+    }
+    const rowIds = () => store.getters['grid/getAllRows'].map((row) => row.id)
+
+    test('removes a held row that matched the search only through a value the payload omits', async () => {
+      setUpBuffer(3, { activeSearchTerm: 'Alpha' })
+
+      await store.dispatch('grid/deletedExistingRow', {
+        view: baseView,
+        fields,
+        row: { id: 1, order: '1.00', field_1: 'Row 1' },
+      })
+
+      expect(rowIds()).toEqual([2, 3])
+      expect(store.getters['grid/getCount']).toBe(2)
+      expect(store.getters['grid/getBufferLimit']).toBe(2)
+    })
+
+    test('removes a held row that matched an ad hoc link filter only through a value the payload omits', async () => {
+      setUpBuffer(3, { adhocFiltering: true })
+
+      await store.dispatch('grid/deletedExistingRow', {
+        view: linkFilterView('link_row_has', '11'),
+        fields,
+        row: { id: 2, order: '2.00', field_1: 'Row 2' },
+      })
+
+      expect(rowIds()).toEqual([1, 3])
+      expect(store.getters['grid/getCount']).toBe(2)
+      expect(store.getters['grid/getBufferLimit']).toBe(2)
+    })
+
+    test('removes a held row whose payload no longer matches the filters or the search', async () => {
+      setUpBuffer(2, { activeSearchTerm: 'Alpha', adhocFiltering: true })
+
+      await store.dispatch('grid/deletedExistingRow', {
+        view: linkFilterView('link_row_has', '11'),
+        fields,
+        row: { id: 1, order: '1.00', field_1: 'Row 1', field_2: [] },
+      })
+
+      expect(rowIds()).toEqual([2])
+      expect(store.getters['grid/getCount']).toBe(1)
+    })
+
+    test('leaves the count unchanged for a row it never held when the payload omits the link of an ad hoc is empty filter', async () => {
+      setUpBuffer(2, { adhocFiltering: true, count: 5 })
+
+      await store.dispatch('grid/deletedExistingRow', {
+        view: linkFilterView('empty'),
+        fields,
+        row: { id: 9, order: '9.00', field_1: 'Row 9' },
+      })
+
+      expect(rowIds()).toEqual([1, 2])
+      expect(store.getters['grid/getCount']).toBe(5)
+      expect(store.getters['grid/getBufferStartIndex']).toBe(0)
+    })
+
+    test('counts a row it never held when the payload shows the link is empty', async () => {
+      setUpBuffer(2, { adhocFiltering: true, count: 5 })
+
+      await store.dispatch('grid/deletedExistingRow', {
+        view: linkFilterView('empty'),
+        fields,
+        row: { id: 9, order: '9.00', field_1: 'Row 9', field_2: [] },
+      })
+
+      expect(store.getters['grid/getCount']).toBe(4)
+    })
+
+    test('does not count a row it never held when the payload shows the link is filled', async () => {
+      setUpBuffer(2, { adhocFiltering: true, count: 5 })
+
+      await store.dispatch('grid/deletedExistingRow', {
+        view: linkFilterView('empty'),
+        fields,
+        row: { id: 9, order: '9.00', field_1: 'Row 9', field_2: linkTo('x') },
+      })
+
+      expect(store.getters['grid/getCount']).toBe(5)
+    })
+
+    test('counts a row it never held when its payload matches the search', async () => {
+      setUpBuffer(2, { activeSearchTerm: 'Alpha', count: 5 })
+
+      await store.dispatch('grid/deletedExistingRow', {
+        view: baseView,
+        fields,
+        row: { id: 9, order: '9.00', field_1: 'Alpha 9' },
+      })
+
+      expect(store.getters['grid/getCount']).toBe(4)
+    })
+
+    test('counts a row it never held when the search term is its id and the payload has no visible value', async () => {
+      setUpBuffer(2, { activeSearchTerm: '9', count: 5 })
+
+      await store.dispatch('grid/deletedExistingRow', {
+        view: baseView,
+        fields,
+        row: { id: 9, order: '9.00' },
+      })
+
+      expect(store.getters['grid/getCount']).toBe(4)
+    })
+
+    test('leaves the count and the buffer unchanged for a row it never held when the payload omits the link the view sorts by', async () => {
+      setUpBuffer(3, { bufferStartIndex: 2, count: 6 })
+      const view = {
+        ...baseView,
+        sortings: [{ id: 1, view: 1, field: 2, order: 'ASC', type: 'default' }],
+      }
+
+      await store.dispatch('grid/deletedExistingRow', {
+        view,
+        fields,
+        row: { id: 9, order: '9.00', field_1: 'Row 9' },
+      })
+
+      expect(rowIds()).toEqual([1, 2, 3])
+      expect(store.getters['grid/getCount']).toBe(6)
+      expect(store.getters['grid/getBufferStartIndex']).toBe(2)
+    })
+
+    test('counts a row it never held when the payload shows the link the view sorts by is empty', async () => {
+      setUpBuffer(3, { bufferStartIndex: 2, count: 6 })
+      const view = {
+        ...baseView,
+        sortings: [{ id: 1, view: 1, field: 2, order: 'ASC', type: 'default' }],
+      }
+
+      await store.dispatch('grid/deletedExistingRow', {
+        view,
+        fields,
+        row: { id: 9, order: '9.00', field_1: 'Row 9', field_2: [] },
+      })
+
+      expect(store.getters['grid/getCount']).toBe(5)
+      expect(store.getters['grid/getBufferStartIndex']).toBe(1)
+    })
+
+    describe('grouped by the link', () => {
+      const groupBys = [{ field: 2, order: 'ASC', type: 'default' }]
+      const groupedView = { ...baseView, group_bys: groupBys }
+      const groupNode = (path, rowCount, siblingIndex, rowOffset) => ({
+        path,
+        depth: 0,
+        row_count: rowCount,
+        sibling_index: siblingIndex,
+        row_offset: rowOffset,
+      })
+
+      beforeEach(() => {
+        const treeNodes = [
+          groupNode({ field_2: [11] }, 3, 0, 0),
+          groupNode({ field_2: [] }, 2, 1, 3),
+        ]
+        const state = Object.assign(gridStore.state(), {
+          lastGridId: 1,
+          fieldOptions,
+          activeGroupBys: groupBys,
+          count: 5,
+          groupBy: {
+            ...gridStore.state().groupBy,
+            treeNodes,
+            pages: {
+              '': {
+                parentPath: {},
+                totalSiblingCount: 2,
+                nodes: { 0: treeNodes[0], 1: treeNodes[1] },
+              },
+            },
+          },
+        })
+        store.replaceState({ ...store.state, grid: state })
+      })
+
+      const groupRowCount = (value) =>
+        store.state.grid.groupBy.treeNodes.find(
+          (node) => node.path.field_2.join() === value.join()
+        ).row_count
+
+      test('leaves the group and total counts unchanged for a row it never held when the payload omits the link', async () => {
+        await store.dispatch('grid/deletedExistingRow', {
+          view: groupedView,
+          fields,
+          row: { id: 9, order: '9.00', field_1: 'Row 9' },
+        })
+
+        expect(groupRowCount([11])).toBe(3)
+        expect(groupRowCount([])).toBe(2)
+        expect(store.getters['grid/getCount']).toBe(5)
+      })
+
+      test('lowers the group of the link the payload shows for a row it never held', async () => {
+        await store.dispatch('grid/deletedExistingRow', {
+          view: groupedView,
+          fields,
+          row: { id: 9, order: '9.00', field_1: 'Row 9', field_2: linkTo('x') },
+        })
+
+        expect(groupRowCount([11])).toBe(2)
+        expect(groupRowCount([])).toBe(2)
+        expect(store.getters['grid/getCount']).toBe(4)
+      })
+    })
+
+    test('keeps a user delete working while a search is active', async () => {
+      const userStore = testApp.createStore({
+        modules: {
+          grid: {
+            ...gridStore,
+            actions: {
+              ...gridStore.actions,
+              fetchByScrollTopDelayed: vi.fn(),
+            },
+          },
+        },
+      })
+      setUpBuffer(3, { activeSearchTerm: 'Alpha' }, userStore)
+      mockServer.mock.onDelete('/database/rows/table/1/2/').reply(200, {})
+
+      await userStore.dispatch('grid/deleteExistingRow', {
+        table: { id: 1 },
+        view: baseView,
+        row: userStore.getters['grid/getRow'](2),
+        fields,
+        getScrollTop: () => 0,
+      })
+
+      const remainingIds = userStore.getters['grid/getAllRows'].map((r) => r.id)
+      expect(remainingIds).toEqual([1, 3])
+      expect(userStore.getters['grid/getCount']).toBe(2)
+    })
+  })
+
   test('row metadata stored when provided on row create or update', async () => {
     const state = Object.assign(gridStore.state(), {
       bufferStartIndex: 0,

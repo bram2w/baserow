@@ -210,6 +210,120 @@ describe('Kanban view store', () => {
     expect(store.state.kanban.stacks['1'].results[0].id).toBe(11)
   })
 
+  describe('deletedExistingRow with values the payload omits', () => {
+    const fields = [
+      { id: 1, name: 'Stack', type: 'single_select', select_options: [] },
+      { id: 2, name: 'Link', type: 'link_row', link_row_table_id: 2 },
+    ]
+    const fieldOptions = {
+      1: { hidden: false, order: 0 },
+      2: { hidden: false, order: 1 },
+    }
+    const linkFilterView = (type, value = '') => ({
+      ...view,
+      filter_type: 'AND',
+      filter_groups: [],
+      filters: [{ id: 1, view: 1, field: 2, type, value, group: null }],
+    })
+    const card = (id) => ({
+      id,
+      order: `${id}.00`,
+      field_1: { id: 1 },
+      field_2: [{ id: 5, value: 'Alpha' }],
+      _: {},
+    })
+    const setUpStack = () => {
+      const state = Object.assign(kanbanStore.state(), {
+        singleSelectFieldId: 1,
+        fieldOptions,
+        adhocFiltering: true,
+        stacks: { 1: { count: 100, results: [card(10), card(11)] } },
+      })
+      store.replaceState({ ...store.state, kanban: state })
+    }
+    const cardIds = () =>
+      store.state.kanban.stacks['1'].results.map((r) => r.id)
+
+    test('removes a held card that matched a link filter only through a value the payload omits', async () => {
+      setUpStack()
+
+      await store.dispatch('kanban/deletedExistingRow', {
+        view: linkFilterView('link_row_has', '5'),
+        row: { id: 10, order: '10.00', field_1: { id: 1 } },
+        fields,
+      })
+
+      expect(cardIds()).toEqual([11])
+      expect(store.state.kanban.stacks['1'].count).toBe(99)
+    })
+
+    test('removes a held card from the stack it occupies when the payload omits the stack', async () => {
+      setUpStack()
+
+      await store.dispatch('kanban/deletedExistingRow', {
+        view: linkFilterView('link_row_has', '5'),
+        row: { id: 11, order: '11.00' },
+        fields,
+      })
+
+      expect(cardIds()).toEqual([10])
+      expect(store.state.kanban.stacks['1'].count).toBe(99)
+    })
+
+    test('removes a held card whose payload no longer matches the filters', async () => {
+      setUpStack()
+
+      await store.dispatch('kanban/deletedExistingRow', {
+        view: linkFilterView('link_row_has', '5'),
+        row: { id: 10, order: '10.00', field_1: { id: 1 }, field_2: [] },
+        fields,
+      })
+
+      expect(cardIds()).toEqual([11])
+      expect(store.state.kanban.stacks['1'].count).toBe(99)
+    })
+
+    test('leaves the stack count unchanged for a card it never held when the payload omits the link of an ad hoc is empty filter', async () => {
+      setUpStack()
+
+      await store.dispatch('kanban/deletedExistingRow', {
+        view: linkFilterView('empty'),
+        row: { id: 50, order: '50.00', field_1: { id: 1 } },
+        fields,
+      })
+
+      expect(cardIds()).toEqual([10, 11])
+      expect(store.state.kanban.stacks['1'].count).toBe(100)
+    })
+
+    test('counts a card it never held when the payload shows the link is empty', async () => {
+      setUpStack()
+
+      await store.dispatch('kanban/deletedExistingRow', {
+        view: linkFilterView('empty'),
+        row: { id: 50, order: '50.00', field_1: { id: 1 }, field_2: [] },
+        fields,
+      })
+
+      expect(store.state.kanban.stacks['1'].count).toBe(99)
+    })
+
+    test('keeps a user delete working', async () => {
+      setUpStack()
+      testApp.mock.onDelete('/database/rows/table/1/10/').reply(200, {})
+
+      await store.dispatch('kanban/deleteExistingRow', {
+        table: { id: 1 },
+        view: linkFilterView('link_row_has', '5'),
+        row: store.state.kanban.stacks['1'].results[0],
+        fields,
+      })
+
+      expect(cardIds()).toEqual([11])
+      expect(store.state.kanban.stacks['1'].count).toBe(99)
+    })
+  })
+
   test('updateRowValue removes the row hidden by the backend and closes its row modal', async () => {
     const stacks = {}
     stacks['1'] = {

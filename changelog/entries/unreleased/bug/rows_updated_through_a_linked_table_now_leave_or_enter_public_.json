@@ -1,0 +1,9 @@
+{
+    "type": "bug",
+    "message": "Rows that a change in a linked table moves out of or into a public or restricted view now leave or appear there right away, and creating a linked row from a restricted view's link cell no longer fails.",
+    "issue_origin": "github",
+    "issue_number": 6339,
+    "domain": "database",
+    "bullet_points": [],
+    "created_at": "2026-10-14"
+}

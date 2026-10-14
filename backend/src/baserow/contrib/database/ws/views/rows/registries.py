@@ -1,5 +1,6 @@
 from django.db.models import Q
 
+from baserow.contrib.database.views.models import View
 from baserow.core.registries import Instance, Registry
 
 
@@ -45,6 +46,21 @@ class ViewRealtimeRowsType(Instance):
 
         raise NotImplementedError(
             "Must implement the `broadcast` for each `ViewRealtimeRowsType` instance."
+        )
+
+    def broadcast_force_rows_refresh(self, view: View) -> None:
+        """
+        Called when the clients of the view must refetch its rows, because too many
+        rows changed to broadcast them one by one. It sends the
+        `force_view_rows_refresh` event to the page of the view, so the shape of
+        that event is defined once per type.
+
+        :param view: The view whose clients must refetch its rows.
+        """
+
+        raise NotImplementedError(
+            "Must implement the `broadcast_force_rows_refresh` for each "
+            "`ViewRealtimeRowsType` instance."
         )
 
 

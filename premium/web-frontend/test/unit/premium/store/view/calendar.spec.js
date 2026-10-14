@@ -1641,6 +1641,125 @@ describe('Calendar view store', () => {
         expect(resultStack2nd.count).toBe(4)
       })
     })
+
+    describe('deletedExistingRow with values the payload omits', () => {
+      const fieldsWithLink = [
+        ...fields,
+        { id: 6, name: 'Link', type: 'link_row', link_row_table_id: 2 },
+      ]
+      const fieldOptions = {
+        1: { hidden: false, order: 0 },
+        2: { hidden: false, order: 1 },
+        6: { hidden: false, order: 2 },
+      }
+      const linkFilterView = (type, value = '') => ({
+        filters_disabled: false,
+        filter_type: 'AND',
+        filter_groups: [],
+        filters: [{ id: 1, view: 1, field: 6, type, value, group: null }],
+      })
+      const heldRow = (id) => ({
+        id,
+        order: `${id}.00`,
+        field_2: '2023-01-01',
+        field_6: [{ id: 5, value: 'Alpha' }],
+        _: {},
+      })
+      const setUpStacks = (extraState = {}) => {
+        const state = Object.assign(calendarStore.state(), {
+          dateFieldId: 2,
+          fieldOptions,
+          adhocFiltering: true,
+          dateStacks: {
+            '2023-01-01': { count: 100, results: [heldRow(10), heldRow(11)] },
+            '2023-01-02': { count: 5, results: [] },
+          },
+          ...extraState,
+        })
+        store.replaceState({ ...store.state, calendar: state })
+      }
+      const firstStack = () => store.state.calendar.dateStacks['2023-01-01']
+      const secondStack = () => store.state.calendar.dateStacks['2023-01-02']
+
+      test('removes a held row that matched the search only through a value the payload omits', async () => {
+        setUpStacks({ activeSearchTerm: 'Alpha' })
+
+        await store.dispatch('calendar/deletedExistingRow', {
+          view,
+          row: { id: 10, order: '10.00', field_2: '2023-01-01' },
+          fields: fieldsWithLink,
+        })
+
+        expect(firstStack().results.map((row) => row.id)).toEqual([11])
+        expect(firstStack().count).toBe(99)
+      })
+
+      test('removes a held row that matched an ad hoc link filter only through a value the payload omits', async () => {
+        setUpStacks()
+
+        await store.dispatch('calendar/deletedExistingRow', {
+          view: linkFilterView('link_row_has', '5'),
+          row: { id: 10, order: '10.00', field_2: '2023-01-01' },
+          fields: fieldsWithLink,
+        })
+
+        expect(firstStack().results.map((row) => row.id)).toEqual([11])
+        expect(firstStack().count).toBe(99)
+      })
+
+      test('removes a held row from the stack it occupies when the payload omits the date', async () => {
+        setUpStacks()
+
+        await store.dispatch('calendar/deletedExistingRow', {
+          view: linkFilterView('link_row_has', '5'),
+          row: { id: 11, order: '11.00' },
+          fields: fieldsWithLink,
+        })
+
+        expect(firstStack().results.map((row) => row.id)).toEqual([10])
+        expect(firstStack().count).toBe(99)
+        expect(secondStack().count).toBe(5)
+      })
+
+      test('leaves the stack count unchanged for a row it never held when the payload omits the link of an ad hoc is empty filter', async () => {
+        setUpStacks()
+
+        await store.dispatch('calendar/deletedExistingRow', {
+          view: linkFilterView('empty'),
+          row: { id: 13, order: '13.00', field_2: '2023-01-02' },
+          fields: fieldsWithLink,
+        })
+
+        expect(secondStack().count).toBe(5)
+      })
+
+      test('counts a row it never held when the payload shows the link is empty', async () => {
+        setUpStacks()
+
+        await store.dispatch('calendar/deletedExistingRow', {
+          view: linkFilterView('empty'),
+          row: { id: 13, order: '13.00', field_2: '2023-01-02', field_6: [] },
+          fields: fieldsWithLink,
+        })
+
+        expect(secondStack().count).toBe(4)
+      })
+
+      test('keeps a user delete working', async () => {
+        setUpStacks()
+        testApp.mock.onDelete('/database/rows/table/1/10/').reply(200, {})
+
+        await store.dispatch('calendar/deleteRow', {
+          table: { id: 1 },
+          view: linkFilterView('link_row_has', '5'),
+          row: firstStack().results[0],
+          fields: fieldsWithLink,
+        })
+
+        expect(firstStack().results.map((row) => row.id)).toEqual([11])
+        expect(firstStack().count).toBe(99)
+      })
+    })
   })
 
   test('updatedExistingRow with a skeleton before row', async () => {

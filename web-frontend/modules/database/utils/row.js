@@ -1,5 +1,6 @@
 import { clone } from '@baserow/modules/core/utils/object'
 import {
+  filterVisibleFieldsFunction,
   getRowSortFunction,
   matchSearchFilters,
 } from '@baserow/modules/database/utils/view'
@@ -32,6 +33,28 @@ export function resolveBeforeRow(row, getBufferedRow) {
   return bufferedRow !== undefined
     ? Object.assign(clone(bufferedRow), clone(row))
     : clone(row)
+}
+
+/** False when the payload omits a visible value that decides where the row was counted. */
+export function canTellIfDeletedRowWasCounted({
+  row,
+  view,
+  fields,
+  fieldOptions,
+  checkSortAndGroupBy = false,
+}) {
+  const filters = view.filters_disabled ? [] : (view.filters ?? [])
+  const decidingItems = checkSortAndGroupBy
+    ? [...filters, ...(view.sortings ?? []), ...(view.group_bys ?? [])]
+    : filters
+  const isVisible = filterVisibleFieldsFunction(fieldOptions)
+  return decidingItems.every(({ field: fieldId }) => {
+    if (row[`field_${fieldId}`] !== undefined) {
+      return true
+    }
+    const field = fields.find((f) => f.id === fieldId)
+    return field === undefined || !isVisible(field)
+  })
 }
 
 /**

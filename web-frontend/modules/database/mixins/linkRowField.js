@@ -140,13 +140,26 @@ export default {
     },
     /**
      * Adds a new relation to the value. This typically happens via the modal.
+     * A row created with the link back is skipped: the backend already holds it.
      */
-    addValue(value, { row, primary }) {
+    addValue(value, { row, primary, created = false }) {
       // Check if the relation already exists.
       for (let i = 0; i < value.length; i++) {
         if (value[i].id === row.id) {
           return
         }
+      }
+
+      const relatedValue =
+        row[`field_${this.field.link_row_related_field_id}`] || []
+      if (
+        // A listed row's values may predate an unlink made in this modal.
+        created &&
+        // Realtime only brings the new link to rows of the open table.
+        this.field.table_id === this.$store.getters['table/getSelectedId'] &&
+        relatedValue.some(({ id }) => id === this.row.id)
+      ) {
+        return
       }
 
       // Prepare the new value with all the relations and emit that value to the
