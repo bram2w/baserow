@@ -108,8 +108,7 @@ watch(
 
 async function use() {
   if (!isAuthenticated.value) {
-    // The template page can show another template than the one in its URL, so
-    // the user is sent back to this template's own page after logging in.
+    // Sends the user back to this template's page after logging in.
     const original = templateRoute().fullPath
     await router.push({ name: 'login', query: { original } })
     return

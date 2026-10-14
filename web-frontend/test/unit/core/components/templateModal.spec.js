@@ -1,6 +1,6 @@
 import { defineComponent } from 'vue'
 import { flushPromises, shallowMount } from '@vue/test-utils'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { TestApp } from '@baserow/test/helpers/testApp'
 import TemplateModal from '@baserow/modules/core/components/template/TemplateModal'
@@ -153,5 +153,39 @@ describe('TemplateModal navigation', () => {
     await wrapper.vm.hide()
     expect(list().exists()).toBe(true)
     expect(list().props('active')).toBe(false)
+  })
+
+  it('closes the template however the modal is hidden', async () => {
+    const wrapper = await mountAndShow('project-tracker')
+
+    // Like escape or a click outside, which the modal handles itself.
+    wrapper.findComponent({ name: 'Modal' }).vm.$emit('hidden')
+    await flushPromises()
+
+    expect(wrapper.find('.details').exists()).toBe(false)
+  })
+
+  it('keeps the search shortcut from the page behind it while open', async () => {
+    const wrapper = await mountAndShow()
+    const { $priorityBus } = wrapper.vm
+    const pageSearch = vi.fn()
+    $priorityBus.$on('start-search', $priorityBus.level.LOW, pageSearch)
+    const startSearch = () => {
+      const event = { preventDefault: vi.fn() }
+      $priorityBus.$emit('start-search', { event })
+      return event
+    }
+
+    try {
+      await wrapper.find('.list__recipe-book').trigger('click')
+      expect(startSearch().preventDefault).toHaveBeenCalled()
+      expect(pageSearch).not.toHaveBeenCalled()
+
+      await wrapper.vm.hide()
+      startSearch()
+      expect(pageSearch).toHaveBeenCalledTimes(1)
+    } finally {
+      $priorityBus.$off('start-search', pageSearch)
+    }
   })
 })

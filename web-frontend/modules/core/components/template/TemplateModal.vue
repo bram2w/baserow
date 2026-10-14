@@ -6,7 +6,7 @@
     :close-button="false"
     keep-content
     @show="open = true"
-    @hidden="open = false"
+    @hidden="hidden"
   >
     <div v-if="loading" class="loading-absolute-center"></div>
     <template v-else>
@@ -74,6 +74,24 @@ export default {
       )
     },
   },
+  watch: {
+    open(open) {
+      // The search of the page behind the modal closes all modals, so the modal keeps
+      // the shortcut while it's open. The list and nested modals listen with a higher
+      // priority.
+      this.$priorityBus.$off('start-search', this.searchStarted)
+      if (open) {
+        this.$priorityBus.$on(
+          'start-search',
+          this.$priorityBus.level.MEDIUM,
+          this.searchStarted
+        )
+      }
+    },
+  },
+  beforeUnmount() {
+    this.$priorityBus.$off('start-search', this.searchStarted)
+  },
   methods: {
     /**
      * When the modal is opened we want to fetch all the templates and their
@@ -109,9 +127,17 @@ export default {
     selectTemplate(template) {
       this.selectedTemplate = template
     },
-    async hide(...args) {
-      modal.methods.hide.call(this, ...args)
+    /**
+     * Called however the modal is closed, also with escape or a click outside. The
+     * content stays mounted, so the template is cleared to unmount its preview,
+     * whose search would otherwise keep answering the shortcut.
+     */
+    hidden() {
+      this.open = false
       this.selectedTemplate = null
+    },
+    searchStarted({ event }) {
+      event.preventDefault()
     },
   },
 }
