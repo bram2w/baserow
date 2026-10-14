@@ -2,31 +2,40 @@
   <div>
     <template v-if="page === 'list'">
       <h2 class="box__title">{{ $t('mcpEndpointSettings.title') }}</h2>
-      <McpOAuthConnections @loaded="oauthEnabled = $event" />
-      <div class="mcp-endpoint-settings__keys-head">
-        <h3 v-if="oauthEnabled" class="mcp-endpoint-settings__keys-title">
-          {{ $t('mcpEndpointSettings.endpointKeys') }}
-        </h3>
-        <a
-          class="button button--primary mcp-endpoint-settings__create"
-          @click.prevent="page = 'create'"
-        >
-          {{ $t('mcpEndpointSettings.createEndpoint') }}
-          <i class="iconoir-plus"></i>
-        </a>
-      </div>
-      <Error :error="error"></Error>
-      <div v-if="listLoading" class="loading"></div>
-      <div v-else>
-        <p v-if="endpoints.length === 0" class="margin-top-3">
-          {{ $t('mcpEndpointSettings.noEndpointsMessage') }}
-        </p>
-        <McpEndpoint
-          v-for="endpoint in endpoints"
-          :key="endpoint.id"
-          :endpoint="endpoint"
-          @deleted="deleteEndpoint(endpoint.id)"
-        ></McpEndpoint>
+      <Tabs
+        v-if="oauthEnabled"
+        class="mcp-endpoint-settings__tabs"
+        header-no-padding
+        :tab-items="[
+          { title: $t('mcpEndpointSettings.oauthTab') },
+          { title: $t('mcpEndpointSettings.endpointTab') },
+        ]"
+        :selected-index="selectedTabIndex"
+        @update:selected-index="selectedTabIndex = $event"
+      ></Tabs>
+      <!-- v-show keeps the connections loaded while the other tab is open. -->
+      <McpOAuthConnections v-show="showOAuth" @loaded="oauthLoaded" />
+      <div v-if="!oauthStatusLoaded" class="loading"></div>
+      <div v-show="showEndpoints" data-test="mcp-endpoint-list">
+        <div class="align-right">
+          <a class="button button--primary" @click.prevent="page = 'create'">
+            {{ $t('mcpEndpointSettings.createEndpoint') }}
+            <i class="iconoir-plus"></i>
+          </a>
+        </div>
+        <Error :error="error"></Error>
+        <div v-if="listLoading" class="loading"></div>
+        <div v-else>
+          <p v-if="endpoints.length === 0" class="margin-top-3">
+            {{ $t('mcpEndpointSettings.noEndpointsMessage') }}
+          </p>
+          <McpEndpoint
+            v-for="endpoint in endpoints"
+            :key="endpoint.id"
+            :endpoint="endpoint"
+            @deleted="deleteEndpoint(endpoint.id)"
+          ></McpEndpoint>
+        </div>
       </div>
     </template>
     <template v-else-if="page === 'create'">
@@ -71,10 +80,23 @@ export default {
     return {
       page: 'list',
       oauthEnabled: false,
+      oauthStatusLoaded: false,
+      selectedTabIndex: 0,
       endpoints: [],
       listLoading: true,
       createLoading: false,
     }
+  },
+  computed: {
+    showOAuth() {
+      return this.oauthEnabled && this.selectedTabIndex === 0
+    },
+    showEndpoints() {
+      return (
+        this.oauthStatusLoaded &&
+        (!this.oauthEnabled || this.selectedTabIndex === 1)
+      )
+    },
   },
   /**
    * When the component is mounted we immediately want to fetch all the endpoints, so
@@ -91,6 +113,10 @@ export default {
     }
   },
   methods: {
+    oauthLoaded(enabled) {
+      this.oauthEnabled = enabled
+      this.oauthStatusLoaded = true
+    },
     /**
      * When the create endpoint form is submitted the create method is called. It will
      * make a request to the backend asking to create a new endpoint. The newly created

@@ -1391,7 +1391,8 @@
     "createNewTitle": "Create MCP server endpoint",
     "backToOverview": "Back",
     "noEndpointsMessage": "No MCP (Model Context Protocol) server endpoints have been added. These can be used to directly integrate with an LLM like Claude, and let the LLM perform actions directly in Baserow. Create a server endpoint to get started.",
-    "endpointKeys": "Endpoint keys"
+    "oauthTab": "OAuth",
+    "endpointTab": "Endpoint"
   },
   "mcpOAuthConnections": {
     "title": "Connect an AI tool",
