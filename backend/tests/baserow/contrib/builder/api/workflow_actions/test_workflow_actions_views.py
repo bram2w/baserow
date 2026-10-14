@@ -1552,7 +1552,9 @@ def test_dispatch_local_baserow_upsert_row_workflow_action_with_current_record(
             "external": {workflow_action.service.id: [index.db_column]},
         }
         payload = {
-            "metadata": json.dumps({"current_record": {"index": 123, "record_id": 123}})
+            "metadata": json.dumps(
+                {"current_record": {"index_path": [123], "record_id": 123}}
+            )
         }
         response = api_client.post(
             url,
@@ -1661,7 +1663,7 @@ def test_dispatch_local_baserow_upsert_row_workflow_action_with_unmatching_index
         payload = {
             "metadata": json.dumps(
                 {
-                    "current_record": {"index": 0, "record_id": rows[2].id},
+                    "current_record": {"index_path": [0], "record_id": rows[2].id},
                     "data_source": {"element": table_element.id},
                 }
             )
@@ -1682,7 +1684,7 @@ def test_dispatch_local_baserow_upsert_row_workflow_action_with_unmatching_index
         payload = {
             "metadata": json.dumps(
                 {
-                    "current_record": {"index": 0, "record_id": rows[3].id},
+                    "current_record": {"index_path": [0], "record_id": rows[3].id},
                     "data_source": {"element": table_element.id},
                 }
             )
@@ -2357,7 +2359,10 @@ def test_dispatch_current_record_action_when_data_source_is_filtered_by_other_da
         url,
         {
             "metadata": {
-                "current_record": {"index": 2, "record_id": clicked_row.id},
+                "current_record": {
+                    "index_path": [2],
+                    "record_id": clicked_row.id,
+                },
                 "data_source": {"element": table_element.id},
             }
         },

@@ -442,9 +442,10 @@ class CurrentRecordDataProviderType(BuilderDataProviderType):
 
         try:
             current_record_data = dispatch_context.request_data["current_record"]
-            current_record = current_record_data["index"]
-            current_record_id = current_record_data["record_id"]
+            index_path = current_record_data["index_path"]
         except KeyError:
+            return None
+        if not index_path:
             return None
 
         # If we want the current record index, and nothing else, then
@@ -452,13 +453,47 @@ class CurrentRecordDataProviderType(BuilderDataProviderType):
         # index isn't a value that can be returned by the data source
         # provider's `get_data_chunk`.
         if len(path) == 1 and path[0] == "__idx__":
-            return current_record
+            return index_path[-1]
 
-        first_collection_element_ancestor = ElementHandler().get_first_ancestor_of_type(
-            dispatch_context.workflow_action.element,
-            CollectionElementTypeMixin,
+        current_record_id = current_record_data.get("record_id")
+        if current_record_id is None or dispatch_context.workflow_action is None:
+            return None
+
+        element = dispatch_context.workflow_action.element
+        ancestors = ElementHandler().get_ancestors(element, element.page)
+        collections = [element, *ancestors]
+        collections = [
+            ancestor.specific
+            for ancestor in collections
+            if isinstance(ancestor.get_type(), CollectionElementTypeMixin)
+        ]
+        source_index = next(
+            (i for i, ancestor in enumerate(collections) if ancestor.data_source_id),
+            None,
         )
-        data_source_id = first_collection_element_ancestor.specific.data_source_id
+        if source_index is None:
+            return None
+
+        # The closest collection can use a property of an ancestor's data source
+        # instead of owning a data source. Preserve that property/index path when
+        # resolving the clicked row on the backend.
+        collections = list(reversed(collections[: source_index + 1]))
+        if len(index_path) < len(collections):
+            return None
+        index_path = index_path[-len(collections) :]
+        nested_path = []
+        for collection, index in zip(collections[1:], index_path[1:]):
+            if not collection.schema_property:
+                return None
+            nested_path.extend([collection.schema_property, str(index)])
+
+        data_source_id = collections[0].data_source_id
+        data_source = DataSourceHandler().get_data_source_with_cache(
+            dispatch_context.page, data_source_id
+        )
+        source_path = (
+            ["0"] if data_source.service.specific.get_type().returns_list else []
+        )
 
         # Narrow down our range to just our record index.
         dispatch_context = dispatch_context.clone(
@@ -468,7 +503,7 @@ class CurrentRecordDataProviderType(BuilderDataProviderType):
         )
 
         return DataSourceDataProviderType().get_data_chunk(
-            dispatch_context, [data_source_id, "0", *path]
+            dispatch_context, [data_source_id, *source_path, *nested_path, *path]
         )
 
     def import_path(self, path, id_mapping, data_source_id=None, **kwargs):

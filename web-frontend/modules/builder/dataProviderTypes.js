@@ -458,7 +458,7 @@ export class CurrentRecordDataProviderType extends DataProviderType {
   getActionDispatchContext(applicationContext) {
     return {
       record_id: applicationContext.recordId,
-      index: applicationContext.recordIndexPath.at(-1),
+      index_path: applicationContext.recordIndexPath,
     }
   }
 

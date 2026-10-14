@@ -203,6 +203,19 @@ describe('Builder data provider types', () => {
     ).toEqual({})
   })
 
+  test('current record dispatch preserves nested row indexes', () => {
+    const dataProvider = testApp
+      .getRegistry()
+      .get('builderDataProvider', 'current_record')
+
+    expect(
+      dataProvider.getActionDispatchContext({
+        recordId: 42,
+        recordIndexPath: [0, 1],
+      })
+    ).toEqual({ record_id: 42, index_path: [0, 1] })
+  })
+
   test('current record provider applies target element data scopes', () => {
     const dataProvider = testApp
       .getRegistry()
