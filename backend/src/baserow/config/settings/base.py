@@ -981,6 +981,7 @@ OAUTH2_PROVIDER = {
         "oauth2_provider.cimd.HostAllowlistCIMDPermission",
     ),
     "CIMD_ALLOWED_HOSTS": BASEROW_MCP_OAUTH_CIMD_ALLOWED_HOSTS,
+    "CIMD_METADATA_FETCHER": "baserow.core.mcp.oauth.cimd.MCPMetadataFetcher",
 }
 
 BASEROW_EMBEDDED_SHARE_URL = os.getenv("BASEROW_EMBEDDED_SHARE_URL")
