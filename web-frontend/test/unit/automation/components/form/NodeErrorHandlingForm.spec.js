@@ -25,8 +25,6 @@ const stopNode = {
   type: 'http_request',
   on_failure: 'stop',
   max_retries: 2,
-  retry_on_failure: true,
-  retry_on_condition: false,
   retry_condition: { formula: '', mode: 'simple', version: '0.1' },
 }
 
@@ -39,7 +37,6 @@ const mountForm = (node, { readOnly = false } = {}) =>
   })
 
 const segments = (wrapper) => wrapper.findAll('.segment-control__button')
-const checkboxes = (wrapper) => wrapper.findAll('input.checkbox__native')
 const retriesInput = (wrapper) => wrapper.find('input[type="number"]')
 const conditionInput = (wrapper) => wrapper.findComponent(FormulaInputStub)
 
@@ -54,35 +51,22 @@ describe('NodeErrorHandlingForm', () => {
     expect(segments(wrapper)[0].classes()).toContain(
       'segment-control__button--active'
     )
-    expect(checkboxes(wrapper)).toHaveLength(0)
     expect(retriesInput(wrapper).exists()).toBe(false)
     expect(conditionInput(wrapper).exists()).toBe(false)
   })
 
-  test('retry shows the reasons and the retries count', async () => {
+  test('retry shows the retries count and the condition', async () => {
     const wrapper = await mountForm(retryNode)
 
     expect(segments(wrapper)[1].classes()).toContain(
       'segment-control__button--active'
     )
-    expect(checkboxes(wrapper).map((el) => el.element.checked)).toStrictEqual([
-      true,
-      false,
-    ])
     expect(retriesInput(wrapper).element.value).toBe('2')
     expect(retriesInput(wrapper).element.disabled).toBe(false)
-    // The condition input only takes room once its reason is ticked.
-    expect(conditionInput(wrapper).exists()).toBe(false)
-  })
-
-  test('the retries count is disabled without a reason to retry', async () => {
-    const wrapper = await mountForm({
-      ...retryNode,
-      retry_on_failure: false,
-      retry_on_condition: false,
-    })
-
-    expect(retriesInput(wrapper).element.disabled).toBe(true)
+    // A transient failure always retries under Retry; a condition is an
+    // optional extra reason, so its input is always offered.
+    expect(conditionInput(wrapper).exists()).toBe(true)
+    expect(conditionInput(wrapper).props('disabled')).toBe(false)
   })
 
   test('a change emits only the changed key', async () => {
@@ -93,18 +77,8 @@ describe('NodeErrorHandlingForm', () => {
       [{ on_failure: 'retry' }],
     ])
 
-    await checkboxes(wrapper)[1].setValue(true)
-    expect(wrapper.emitted('values-changed')[1]).toEqual([
-      { retry_on_condition: true },
-    ])
-
-    await checkboxes(wrapper)[0].setValue(false)
-    expect(wrapper.emitted('values-changed')[2]).toEqual([
-      { retry_on_failure: false },
-    ])
-
     await retriesInput(wrapper).setValue('3')
-    expect(wrapper.emitted('values-changed')[3]).toEqual([{ max_retries: 3 }])
+    expect(wrapper.emitted('values-changed')[1]).toEqual([{ max_retries: 3 }])
   })
 
   test('an out of range retries count is shown as an error and not emitted', async () => {
@@ -133,7 +107,6 @@ describe('NodeErrorHandlingForm', () => {
     // have stored the condition in simple mode: both open in advanced mode.
     const wrapper = await mountForm({
       ...retryNode,
-      retry_on_condition: true,
       retry_condition: {
         formula: "get('current_node.status_code') = 503",
         mode: 'simple',
@@ -161,7 +134,7 @@ describe('NodeErrorHandlingForm', () => {
   })
 
   test('an empty condition opens in advanced mode too', async () => {
-    const wrapper = await mountForm({ ...retryNode, retry_on_condition: true })
+    const wrapper = await mountForm(retryNode)
 
     expect(conditionInput(wrapper).props('modelValue')).toEqual({
       formula: '',
@@ -171,7 +144,7 @@ describe('NodeErrorHandlingForm', () => {
   })
 
   test('an edit of the condition is emitted as is', async () => {
-    const wrapper = await mountForm({ ...retryNode, retry_on_condition: true })
+    const wrapper = await mountForm(retryNode)
     const condition = {
       formula: "get('current_node.status_code') = 429",
       mode: 'advanced',
@@ -189,27 +162,26 @@ describe('NodeErrorHandlingForm', () => {
     const wrapper = await mountForm(retryNode, { readOnly: true })
 
     await segments(wrapper)[0].trigger('click')
-    await checkboxes(wrapper)[1].setValue(true)
     await retriesInput(wrapper).setValue('3')
 
     expect(wrapper.emitted('values-changed')).toBeUndefined()
     expect(segments(wrapper)[1].classes()).toContain(
       'segment-control__button--active'
     )
-    expect(checkboxes(wrapper)[1].element.disabled).toBe(true)
+    expect(conditionInput(wrapper).props('disabled')).toBe(true)
     expect(retriesInput(wrapper).element.disabled).toBe(true)
   })
 
   test('follows the node when another one is selected', async () => {
     const wrapper = await mountForm(retryNode)
-    expect(checkboxes(wrapper)).toHaveLength(2)
+    expect(conditionInput(wrapper).exists()).toBe(true)
 
     await wrapper.setProps({ node: { ...stopNode, id: 2 } })
 
     expect(segments(wrapper)[0].classes()).toContain(
       'segment-control__button--active'
     )
-    expect(checkboxes(wrapper)).toHaveLength(0)
+    expect(conditionInput(wrapper).exists()).toBe(false)
     expect(wrapper.emitted('values-changed')).toBeUndefined()
   })
 })

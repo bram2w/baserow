@@ -58,6 +58,4 @@ class AutomationNodeDict(TypedDict):
     workflow_id: int
     on_failure: str
     max_retries: int
-    retry_on_failure: bool
-    retry_on_condition: bool
     retry_condition: dict

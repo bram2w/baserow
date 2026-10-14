@@ -107,24 +107,13 @@ class AutomationNode(
         help_text="How many times the node is retried after its first attempt. "
         "Only used when on_failure is retry.",
     )
-    retry_on_failure = models.BooleanField(
-        default=True,
-        db_default=True,
-        help_text="Retry when the dispatch raises a transient error, e.g. the "
-        "remote server could not be reached.",
-    )
-    retry_on_condition = models.BooleanField(
-        default=False,
-        db_default=False,
-        help_text="Retry when retry_condition evaluates to true against the "
-        "node's own result.",
-    )
     retry_condition = FormulaField(
         default="",
         blank=True,
         db_default="",
         help_text="Formula evaluated against the node's result (the `current_node` "
-        "data provider). When true the attempt counts as failed.",
+        "data provider). When true the attempt counts as failed; empty means no "
+        "condition.",
     )
 
     objects = AutomationNodeTrashManager()

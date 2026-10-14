@@ -25,17 +25,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='automationnode',
             name='retry_condition',
-            field=baserow.core.formula.field.FormulaField(blank=True, db_default='', default='', help_text="Formula evaluated against the node's result (the `current_node` data provider). When true the attempt counts as failed.", null=True),
-        ),
-        migrations.AddField(
-            model_name='automationnode',
-            name='retry_on_condition',
-            field=models.BooleanField(db_default=False, default=False, help_text="Retry when retry_condition evaluates to true against the node's own result."),
-        ),
-        migrations.AddField(
-            model_name='automationnode',
-            name='retry_on_failure',
-            field=models.BooleanField(db_default=True, default=True, help_text='Retry when the dispatch raises a transient error, e.g. the remote server could not be reached.'),
+            field=baserow.core.formula.field.FormulaField(blank=True, db_default='', default='', help_text="Formula evaluated against the node's result (the `current_node` data provider). When true the attempt counts as failed; empty means no condition.", null=True),
         ),
         migrations.AddField(
             model_name='automationnodehistory',

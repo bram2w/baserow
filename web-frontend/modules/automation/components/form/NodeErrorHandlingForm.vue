@@ -5,7 +5,6 @@
     </div>
     <FormGroup
       :label="$t('nodeErrorHandlingForm.onFailureLabel')"
-      :help-icon-tooltip="$t('nodeErrorHandlingForm.onFailureHelp')"
       small-label
       horizontal-narrow
       required
@@ -20,48 +19,7 @@
     </FormGroup>
     <template v-if="retryEnabled">
       <FormGroup
-        :label="$t('nodeErrorHandlingForm.retryOnLabel')"
-        small-label
-        horizontal-narrow
-        required
-        class="margin-bottom-2"
-      >
-        <div class="node-error-handling-form__reasons">
-          <Checkbox
-            :model-value="values.retry_on_failure"
-            :disabled="readOnly"
-            @update:model-value="update({ retry_on_failure: $event })"
-          >
-            {{ $t('nodeErrorHandlingForm.retryOnFailure') }}
-          </Checkbox>
-          <Checkbox
-            :model-value="values.retry_on_condition"
-            :disabled="readOnly"
-            @update:model-value="update({ retry_on_condition: $event })"
-          >
-            {{ $t('nodeErrorHandlingForm.retryOnCondition') }}
-          </Checkbox>
-        </div>
-      </FormGroup>
-      <FormGroup
-        v-if="values.retry_on_condition"
-        :label="$t('nodeErrorHandlingForm.conditionLabel')"
-        :help-icon-tooltip="$t('nodeErrorHandlingForm.conditionHelp')"
-        small-label
-        required
-        class="margin-bottom-2"
-      >
-        <InjectedFormulaInput
-          :model-value="retryConditionValue"
-          :enabled-modes="RETRY_CONDITION_FORMULA_MODES"
-          :placeholder="$t('nodeErrorHandlingForm.conditionPlaceholder')"
-          :disabled="readOnly"
-          @update:model-value="update({ retry_condition: $event })"
-        />
-      </FormGroup>
-      <FormGroup
         :label="$t('nodeErrorHandlingForm.retriesLabel')"
-        :help-icon-tooltip="$t('nodeErrorHandlingForm.retriesHelp')"
         :error="v$.max_retries.$error"
         :error-message="v$.max_retries.$errors[0]?.$message"
         small-label
@@ -71,13 +29,27 @@
       >
         <FormInput
           :model-value="values.max_retries"
-          :disabled="readOnly || !anyRetryReason"
+          :disabled="readOnly"
           :error="v$.max_retries.$error"
           :to-value="toRetriesValue"
           :min="NODE_RETRIES.MIN"
           :max="NODE_RETRIES.MAX"
           type="number"
           @update:model-value="update({ max_retries: $event })"
+        />
+      </FormGroup>
+      <FormGroup
+        :label="$t('nodeErrorHandlingForm.conditionLabel')"
+        :helper-text="$t('nodeErrorHandlingForm.conditionHelp')"
+        small-label
+        class="margin-bottom-2"
+      >
+        <InjectedFormulaInput
+          :model-value="retryConditionValue"
+          :enabled-modes="RETRY_CONDITION_FORMULA_MODES"
+          :placeholder="$t('nodeErrorHandlingForm.conditionPlaceholder')"
+          :disabled="readOnly"
+          @update:model-value="update({ retry_condition: $event })"
         />
       </FormGroup>
     </template>
@@ -130,12 +102,11 @@ const { $i18n } = useNuxtApp()
 provide('dataProvidersAllowed', DATA_PROVIDERS_ALLOWED_RETRY_CONDITION)
 
 // The node always carries the policy fields: the API serializer returns them
-// for every node and the store keeps the API payload as is.
+// for every node and the store keeps the API payload as is. Under Retry a
+// transient failure always retries; a non-empty condition is an extra reason.
 const policyValues = () => ({
   on_failure: props.node.on_failure,
   max_retries: props.node.max_retries,
-  retry_on_failure: props.node.retry_on_failure,
-  retry_on_condition: props.node.retry_on_condition,
   retry_condition: props.node.retry_condition,
 })
 
@@ -170,10 +141,6 @@ watch(
 )
 
 const retryEnabled = computed(() => values.on_failure === NODE_ON_FAILURE.RETRY)
-
-const anyRetryReason = computed(
-  () => values.retry_on_failure || values.retry_on_condition
-)
 
 // Simple mode turns typed text into a string literal, and any non-empty string
 // counts as true, so a simple-mode condition would retry every attempt. The

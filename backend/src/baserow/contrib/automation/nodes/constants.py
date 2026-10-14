@@ -24,7 +24,5 @@ AUTOMATION_NODE_RETRY_COUNTDOWNS = (1, 1, 2, 3, 6)
 ERROR_POLICY_FIELDS = [
     "on_failure",
     "max_retries",
-    "retry_on_failure",
-    "retry_on_condition",
     "retry_condition",
 ]

@@ -38,8 +38,6 @@ class AutomationNodeSerializer(serializers.ModelSerializer):
             "label",
             "on_failure",
             "max_retries",
-            "retry_on_failure",
-            "retry_on_condition",
             "retry_condition",
             "service",
             "workflow",
@@ -105,8 +103,6 @@ class UpdateAutomationNodeSerializer(serializers.ModelSerializer):
             "label",
             "on_failure",
             "max_retries",
-            "retry_on_failure",
-            "retry_on_condition",
             "retry_condition",
             "service",
         )

@@ -114,8 +114,6 @@ def test_automation_export_serialized(data_fixture):
                         "workflow_id": trigger.workflow_id,
                         "on_failure": "stop",
                         "max_retries": 2,
-                        "retry_on_failure": True,
-                        "retry_on_condition": False,
                         "retry_condition": {
                             "formula": "",
                             "mode": "simple",
@@ -136,8 +134,6 @@ def test_automation_export_serialized(data_fixture):
                         "workflow_id": first_action.workflow_id,
                         "on_failure": "stop",
                         "max_retries": 2,
-                        "retry_on_failure": True,
-                        "retry_on_condition": False,
                         "retry_condition": {
                             "formula": "",
                             "mode": "simple",

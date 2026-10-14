@@ -542,18 +542,14 @@ class AutomationNodeHandler:
         """
         Applies the node's error policy to a failed attempt. Only a `retryable`
         failure (a transient `RuntimeDispatchException`) can be retried, and
-        only when the node opted into retrying unexpected failures; everything
-        else ends the run as before.
+        only when the node opted into retries at all; everything else ends the
+        run as before.
 
         :return: A NodeDispatchRetry for the Celery task to schedule, or None
             when the run was marked as errored.
         """
 
-        if (
-            retryable
-            and node.retry_on_failure
-            and self._can_retry(node, workflow_history, attempt)
-        ):
+        if retryable and self._can_retry(node, workflow_history, attempt):
             self._handle_node_retry(
                 node_history,
                 iteration_path,
@@ -581,14 +577,14 @@ class AutomationNodeHandler:
     ) -> bool:
         """
         Whether a successful attempt must still be checked against the node's
-        retry condition. Simulations never evaluate it; test runs do, like live
-        runs.
+        retry condition. An empty condition means there is none. Simulations
+        never evaluate it; test runs do, like live runs.
         """
 
+        formula = (node.retry_condition or {}).get("formula") or ""
         return (
             node.on_failure == AutomationNodeOnFailure.RETRY
-            and node.retry_on_condition
-            and bool((node.retry_condition or {}).get("formula"))
+            and bool(formula.strip())
             and workflow_history.simulate_until_node_id is None
         )
 

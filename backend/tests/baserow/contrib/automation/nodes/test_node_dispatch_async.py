@@ -2363,11 +2363,6 @@ def test_dispatch_node_fails_the_run_when_the_retries_are_exhausted(
             RuntimeDispatchException("Connection reset"),
             "Error while running workflow {workflow_id}. Error: Connection reset",
         ),
-        (
-            {"retry_on_failure": False},
-            RuntimeDispatchException("Connection reset"),
-            "Error while running workflow {workflow_id}. Error: Connection reset",
-        ),
     ],
 )
 @patch(f"{HTTP_NODE_TYPE_PATH}.dispatch")
@@ -2473,7 +2468,6 @@ def test_dispatch_node_retries_when_the_retry_condition_matches(
     mock_dispatch.return_value = http_response(429)
     data = create_retrying_workflow(
         data_fixture,
-        retry_on_condition=True,
         retry_condition=RETRY_CONDITION_ON_429,
     )
     http_node = data["http_node"]
@@ -2516,7 +2510,6 @@ def test_dispatch_node_succeeds_when_the_retry_condition_does_not_match(
     mock_dispatch.return_value = http_response(200)
     data = create_retrying_workflow(
         data_fixture,
-        retry_on_condition=True,
         retry_condition=RETRY_CONDITION_ON_429,
     )
     http_node = data["http_node"]
@@ -2546,7 +2539,6 @@ def test_dispatch_node_fails_the_run_when_the_retry_condition_still_matches(
     mock_dispatch.return_value = http_response(429)
     data = create_retrying_workflow(
         data_fixture,
-        retry_on_condition=True,
         retry_condition=RETRY_CONDITION_ON_429,
     )
     http_node = data["http_node"]
@@ -2578,8 +2570,8 @@ def test_dispatch_node_fails_the_run_when_the_retry_condition_still_matches(
     "policy",
     [
         {"on_failure": "stop"},
-        {"retry_on_condition": False},
         {"retry_condition": ""},
+        {"retry_condition": "   "},
     ],
 )
 @patch(f"{HTTP_NODE_TYPE_PATH}.dispatch")
@@ -2590,7 +2582,6 @@ def test_dispatch_node_only_checks_the_retry_condition_when_retrying(
     data = create_retrying_workflow(
         data_fixture,
         **{
-            "retry_on_condition": True,
             "retry_condition": RETRY_CONDITION_ON_429,
             **policy,
         },
@@ -2617,7 +2608,6 @@ def test_dispatch_node_fails_the_run_when_the_retry_condition_is_invalid(
     mock_dispatch.return_value = http_response(429)
     data = create_retrying_workflow(
         data_fixture,
-        retry_on_condition=True,
         # The closing parenthesis of `get()` is missing.
         retry_condition="get('current_node.status_code' = 429",
     )
@@ -2662,7 +2652,6 @@ def test_dispatch_node_fails_the_run_when_the_retry_condition_cannot_be_evaluate
     mock_dispatch.return_value = http_response(429)
     data = create_retrying_workflow(
         data_fixture,
-        retry_on_condition=True,
         retry_condition=RETRY_CONDITION_ON_429,
     )
     http_node = data["http_node"]
@@ -2699,7 +2688,6 @@ def test_dispatch_node_ignores_the_retry_condition_while_simulating(
     data = create_retrying_workflow(
         data_fixture,
         simulate=True,
-        retry_on_condition=True,
         retry_condition=RETRY_CONDITION_ON_429,
     )
     http_node = data["http_node"]
@@ -2730,7 +2718,6 @@ def test_dispatch_node_evaluates_the_retry_condition_in_a_test_run(
     data = create_retrying_workflow(
         data_fixture,
         is_test_run=True,
-        retry_on_condition=True,
         retry_condition=RETRY_CONDITION_ON_429,
     )
     http_node = data["http_node"]

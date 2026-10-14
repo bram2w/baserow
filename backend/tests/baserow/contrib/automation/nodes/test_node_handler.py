@@ -101,8 +101,6 @@ def test_export_prepared_values(data_fixture):
         "label": "My node",
         "on_failure": "stop",
         "max_retries": 2,
-        "retry_on_failure": True,
-        "retry_on_condition": False,
         "retry_condition": {"formula": "", "mode": "simple", "version": "0.1"},
         "service": AnyDict(),
         "workflow": node.workflow_id,
@@ -134,8 +132,6 @@ def test_export_node(data_fixture):
         "label": node.label,
         "on_failure": "stop",
         "max_retries": 2,
-        "retry_on_failure": True,
-        "retry_on_condition": False,
         "retry_condition": {"formula": "", "mode": "simple", "version": "0.1"},
         "service": AnyDict(),
         "type": "local_baserow_create_row",
@@ -244,8 +240,6 @@ def test_update_node_error_policy(data_fixture):
         node,
         on_failure="retry",
         max_retries=5,
-        retry_on_failure=False,
-        retry_on_condition=True,
         retry_condition="get('current_node.status_code') = 429",
     )
 
@@ -253,8 +247,6 @@ def test_update_node_error_policy(data_fixture):
     node.refresh_from_db()
     assert node.on_failure == "retry"
     assert node.max_retries == 5
-    assert node.retry_on_failure is False
-    assert node.retry_on_condition is True
     assert node.retry_condition["formula"] == "get('current_node.status_code') = 429"
 
 
@@ -291,16 +283,12 @@ def test_import_node_keeps_the_error_policy(data_fixture):
         workflow=workflow,
         on_failure="retry",
         max_retries=4,
-        retry_on_failure=False,
-        retry_on_condition=True,
         retry_condition=retry_condition,
     )
 
     exported_node = AutomationNodeHandler().export_node(node)
     assert exported_node["on_failure"] == "retry"
     assert exported_node["max_retries"] == 4
-    assert exported_node["retry_on_failure"] is False
-    assert exported_node["retry_on_condition"] is True
     assert exported_node["retry_condition"] == retry_condition
 
     id_mapping = {
@@ -315,8 +303,6 @@ def test_import_node_keeps_the_error_policy(data_fixture):
     imported_node.refresh_from_db()
     assert imported_node.on_failure == "retry"
     assert imported_node.max_retries == 4
-    assert imported_node.retry_on_failure is False
-    assert imported_node.retry_on_condition is True
     assert imported_node.retry_condition == retry_condition
 
 
@@ -332,7 +318,6 @@ def test_import_node_remaps_the_retry_condition(data_fixture):
     node = data_fixture.create_automation_node(
         workflow=workflow,
         on_failure="retry",
-        retry_on_condition=True,
         retry_condition="get('current_node.field_1') = 'done'",
     )
 
@@ -363,7 +348,6 @@ def test_duplicate_node_keeps_the_error_policy(data_fixture):
         label="test",
         on_failure="retry",
         max_retries=3,
-        retry_on_condition=True,
         retry_condition="get('current_node.id') = 1",
     )
 
@@ -372,6 +356,4 @@ def test_duplicate_node_keeps_the_error_policy(data_fixture):
     assert duplicated_node.id != action.id
     assert duplicated_node.on_failure == "retry"
     assert duplicated_node.max_retries == 3
-    assert duplicated_node.retry_on_failure is True
-    assert duplicated_node.retry_on_condition is True
     assert "current_node.id" in duplicated_node.retry_condition["formula"]

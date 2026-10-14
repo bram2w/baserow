@@ -37,8 +37,6 @@ API_URL_REDO = "api:user:redo"
 DEFAULT_ERROR_POLICY = {
     "on_failure": "stop",
     "max_retries": 2,
-    "retry_on_failure": True,
-    "retry_on_condition": False,
     "retry_condition": {"formula": "", "mode": "simple", "version": "0.1"},
 }
 
@@ -1270,8 +1268,6 @@ def test_update_node_error_policy(api_client, data_fixture):
         {
             "on_failure": "retry",
             "max_retries": 4,
-            "retry_on_failure": False,
-            "retry_on_condition": True,
             "retry_condition": retry_condition,
         },
         **get_api_kwargs(token),
@@ -1283,8 +1279,6 @@ def test_update_node_error_policy(api_client, data_fixture):
         "label": "",
         "on_failure": "retry",
         "max_retries": 4,
-        "retry_on_failure": False,
-        "retry_on_condition": True,
         "retry_condition": retry_condition,
         "service": AnyDict(),
         "type": node.get_type().type,
@@ -1294,8 +1288,6 @@ def test_update_node_error_policy(api_client, data_fixture):
     node.refresh_from_db()
     assert node.on_failure == "retry"
     assert node.max_retries == 4
-    assert node.retry_on_failure is False
-    assert node.retry_on_condition is True
     assert node.retry_condition == retry_condition
 
 
@@ -1394,7 +1386,6 @@ def test_update_node_error_policy_undo_redo(api_client, data_fixture):
         {
             "on_failure": "retry",
             "max_retries": 4,
-            "retry_on_condition": True,
             "retry_condition": retry_condition,
         },
         **api_kwargs,
@@ -1415,7 +1406,6 @@ def test_update_node_error_policy_undo_redo(api_client, data_fixture):
     node.refresh_from_db()
     assert node.on_failure == "stop"
     assert node.max_retries == 2
-    assert node.retry_on_condition is False
     assert node.retry_condition["formula"] == ""
 
     response = api_client.patch(reverse(API_URL_REDO), payload, **api_kwargs)
@@ -1424,5 +1414,4 @@ def test_update_node_error_policy_undo_redo(api_client, data_fixture):
     node.refresh_from_db()
     assert node.on_failure == "retry"
     assert node.max_retries == 4
-    assert node.retry_on_condition is True
     assert node.retry_condition == retry_condition

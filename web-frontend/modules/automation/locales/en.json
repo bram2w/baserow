@@ -103,17 +103,12 @@
   "nodeErrorHandlingForm": {
     "title": "Error handling",
     "onFailureLabel": "On failure",
-    "onFailureHelp": "Stop ends the run at the first failed attempt. Retry runs the node again, up to the number of retries, before the run fails.",
     "stop": "Stop",
     "retry": "Retry",
-    "retryOnLabel": "Retry on",
-    "retryOnFailure": "Unexpected failure",
-    "retryOnCondition": "Condition matches",
     "conditionLabel": "Condition",
-    "conditionHelp": "Checked against the result of this node after each attempt. When it is true, the attempt counts as failed and the node is retried.",
+    "conditionHelp": "Checked against the result of this node after each attempt. When it is true, the attempt counts as failed and the node is retried, for example when an HTTP request returns a certain status code.",
     "conditionPlaceholder": "get('current_node.status_code') = 429",
-    "retriesLabel": "Retries",
-    "retriesHelp": "Between 1 and 5. The node waits 1, 1, 2, 3 and 6 seconds between attempts."
+    "retriesLabel": "Retries"
   },
   "historySidePanel": {
     "title": "History",
