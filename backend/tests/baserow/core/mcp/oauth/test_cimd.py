@@ -11,7 +11,7 @@ CLAUDE_CLIENT = "https://claude.ai/oauth/mcp-oauth-client-metadata"
 CLAUDE_REDIRECT = "https://claude.ai/api/mcp/auth_callback"
 EVIL_CLIENT = "https://evil.example/client.json"
 EVIL_REDIRECT = "https://evil.example/cb"
-FETCH = "oauth2_provider.cimd.SafeMetadataFetcher.fetch"
+FETCH = "baserow.core.mcp.oauth.cimd.MCPMetadataFetcher.download"
 
 
 def _metadata(client_id, redirect_uri):

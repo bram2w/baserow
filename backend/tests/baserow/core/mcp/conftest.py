@@ -16,5 +16,7 @@ def load_urlconf_with_oauth_routes():
 
 @pytest.fixture(autouse=True)
 def cimd_fetch():
-    with patch("oauth2_provider.cimd.SafeMetadataFetcher.fetch", fake_cimd_fetch):
+    with patch(
+        "baserow.core.mcp.oauth.cimd.MCPMetadataFetcher.download", fake_cimd_fetch
+    ):
         yield
