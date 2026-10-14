@@ -873,7 +873,27 @@ else:
 BASEROW_MCP_OAUTH_ENABLED = str_to_bool(
     os.getenv("BASEROW_MCP_OAUTH_ENABLED") or "false"
 )
-MCP_AUTHORIZATION_SERVER_URL = PUBLIC_BACKEND_URL.rstrip("/")
+
+
+def _canonical_url(url: str) -> str:
+    """
+    Lowercases the scheme and host and drops a default port, like a browser URL.
+    MCP SDK clients send the resource normalized this way, and it's compared as a
+    string.
+    """
+
+    parsed = urlparse(url.rstrip("/"))
+    scheme = parsed.scheme.lower()
+    host = (parsed.hostname or "").lower()
+    if ":" in host:
+        host = f"[{host}]"
+    port = parsed.port
+    if port is not None and (scheme, port) not in (("https", 443), ("http", 80)):
+        host = f"{host}:{port}"
+    return parsed._replace(scheme=scheme, netloc=host).geturl()
+
+
+MCP_AUTHORIZATION_SERVER_URL = _canonical_url(PUBLIC_BACKEND_URL)
 MCP_RESOURCE_URL = f"{MCP_AUTHORIZATION_SERVER_URL}/mcp"
 BASEROW_MCP_OAUTH_CIMD_ENABLED = str_to_bool(
     os.getenv("BASEROW_MCP_OAUTH_CIMD_ENABLED") or "true"
@@ -1790,7 +1810,16 @@ if SENTRY_DSN:
         if "pydantic_ai" not in entry
     ]
 
-    SENTRY_DENYLIST = DEFAULT_DENYLIST + ["username", "email", "name"]
+    SENTRY_DENYLIST = DEFAULT_DENYLIST + [
+        "username",
+        "email",
+        "name",
+        # OAuth token endpoint form fields; the denylist only matches exact keys.
+        "code",
+        "code_verifier",
+        "refresh_token",
+        "access_token",
+    ]
     sentry_transport = None
 
     if SENTRY_DSN == "fake":
