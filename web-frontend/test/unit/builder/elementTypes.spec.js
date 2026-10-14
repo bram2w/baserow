@@ -651,6 +651,20 @@ describe('elementTypes tests', () => {
         ).toBe(true)
       }
     )
+    // Django accepts these, but the database email field a form usually writes
+    // into does not, so the element rejects them inline instead of on submit.
+    test.each(["o'brien@example.com", '100%@example.com'])(
+      'InputTextElementType | required | email | email-field value %s.',
+      (value) => {
+        const elementType = new InputTextElementType()
+        expect(
+          elementType.isValid(
+            { required: true, validation_type: 'email' },
+            value
+          )
+        ).toBe(false)
+      }
+    )
     test('InputTextElementType with any value.', () => {
       const elementType = new InputTextElementType()
       expect(elementType.isValid({ validation_type: 'any' }, 42)).toBe(true)

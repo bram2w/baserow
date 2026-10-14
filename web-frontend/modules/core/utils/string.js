@@ -203,6 +203,11 @@ const strictEmailDomainRegex = new RegExp(
  * literal domains and quoted-string local parts are deliberately not supported,
  * so every value this accepts is accepted by the backend, but not the other way
  * round.
+ *
+ * The two rules are not nested: Django accepts `'` and `%` in the local part,
+ * which the database email field rejects. The builder input text element
+ * therefore checks both helpers, because its value usually ends up in an email
+ * field.
  */
 export const isValidStrictEmail = (str) => {
   if (typeof str !== 'string' || str.length > STRICT_EMAIL_MAX_LENGTH) {

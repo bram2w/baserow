@@ -528,6 +528,13 @@ STRICT_EMAILS_ACCEPTED_BY_BACKEND_ONLY = [
     "wierd@[1.1.1.1]",
     '"john..doe"@example.com',
 ]
+# Accepted by Django's `validate_email` but rejected by the database email field
+# regex (`EmailFieldType.regex`). The frontend element rejects them inline because
+# the value usually ends up in an email field; see `elementTypes.spec.js`.
+STRICT_EMAILS_REJECTED_BY_EMAIL_FIELD_ONLY = [
+    "o'brien@example.com",
+    "100%@example.com",
+]
 
 
 @pytest.mark.django_db
@@ -550,6 +557,7 @@ STRICT_EMAILS_ACCEPTED_BY_BACKEND_ONLY = [
             (True, "email", email, email)
             for email in STRICT_EMAILS_ACCEPTED_BY_BOTH_SIDES
             + STRICT_EMAILS_ACCEPTED_BY_BACKEND_ONLY
+            + STRICT_EMAILS_REJECTED_BY_EMAIL_FIELD_ONLY
         ],
         *[
             (True, "email", email, ValueError)

@@ -232,6 +232,13 @@ describe('test string utils', () => {
     'wierd@[1.1.1.1]',
     '"john..doe"@example.com',
   ]
+  // Accepted by Django and the helper, which mirrors it, but rejected by the
+  // database email field regex behind `isValidEmail`. The builder input text
+  // element checks both, see `elementTypes.spec.js`.
+  const strictEmailsRejectedByEmailFieldOnly = [
+    "o'brien@example.com",
+    '100%@example.com',
+  ]
 
   test.each(strictEmailsAcceptedByBothSides)(
     'isValidStrictEmail accepts %s',
@@ -246,6 +253,14 @@ describe('test string utils', () => {
   ])('isValidStrictEmail rejects %s', (email) => {
     expect(isValidStrictEmail(email)).toBe(false)
   })
+
+  test.each(strictEmailsRejectedByEmailFieldOnly)(
+    'isValidStrictEmail accepts %s, which isValidEmail rejects',
+    (email) => {
+      expect(isValidStrictEmail(email)).toBe(true)
+      expect(isValidEmail(email)).toBe(false)
+    }
+  )
 
   test('isSecureURL', () => {
     expect(isSecureURL('test')).toBe(false)
