@@ -15,6 +15,22 @@ export class SubjectType extends Registerable {
     return subject.id
   }
 
+  /**
+   * Tells subjects of different types apart, for instance in the role modals
+   * where users, agents and teams are listed together.
+   */
+  getKey(subject) {
+    return `${this.getType()}:${this.getId(subject)}`
+  }
+
+  /**
+   * The uid of the role the subject holds on the workspace itself, or `null`
+   * when the type doesn't carry one on its records, like teams.
+   */
+  getWorkspaceRoleUid(subject) {
+    return null
+  }
+
   getTypeDisplayName() {
     return this.type
   }
@@ -172,6 +188,10 @@ export class UserSubjectType extends SubjectType {
   isUser() {
     return true
   }
+
+  getWorkspaceRoleUid(subject) {
+    return subject.permissions ?? null
+  }
 }
 
 export class AnonymousUserSubjectType extends SubjectType {
@@ -230,5 +250,9 @@ export class AgentSubjectType extends SubjectType {
     }
     const { data } = await AgentService(this.app.$client).list(workspace.id)
     return data.results
+  }
+
+  getWorkspaceRoleUid(subject) {
+    return subject.role_uid ?? null
   }
 }

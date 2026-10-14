@@ -394,7 +394,7 @@
   },
   "membersRoleField": {
     "noAccessHelpText": "This user requires explicit access to resources.",
-    "adminHelpText": "Admins can restrict other admins roles."
+    "adminFullAccessHelpText": "Admins have full access to everything in this workspace. Their role on a database, table or view can't be lowered. To restrict an admin, lower their workspace role first."
   },
   "membersPagePlugin": {
     "roleHelpText": "Can be overriden with roles on databases and tables."

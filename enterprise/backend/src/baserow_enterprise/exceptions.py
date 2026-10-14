@@ -36,3 +36,7 @@ class RoleNotExist(Exception):
 
 class ScopedInvitationDoesNotExist(Exception):
     """Raised when the requested scoped invitation does not exist."""
+
+
+class CannotAssignRoleToSelf(Exception):
+    """Raised when a user assigns a role to themselves."""
