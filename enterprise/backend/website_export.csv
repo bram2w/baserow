@@ -27075,7 +27075,13 @@ Unlike [table-level permissions][1] that control access to entire tables, field-
 | **Admins only** | Workspace/database/table admins | 
 | **Builders and higher** | Builders + Admins | 
 | **Editors and higher** | Editors + Builders + Admins | 
+| **Specific users or teams** | Selected users or team members with an Editor, Builder, or Admin role |
 | **Nobody (Read-only)** | No one can edit | 
+
+Specific users or teams gives you more granular control when you want only certain people or teams to edit a field.
+
+> **Note:** Selecting users or teams does not grant them access to the table. They must already have an Editor, Builder, or Admin role for the table.
+> 
 
 ### Interaction with table roles
 
@@ -27090,16 +27096,16 @@ Field-level permissions are a way to refine the access a user already has at the
 | **Commenter** | Editors and higher | ✗ Can view, cannot edit (Commenter can't edit data) |
 | **Admin** | Admins only | ✓ Can edit field |
 
-## Set field-level permissions 
+## Set field-level permissions
 
-1. Navigate to your table to access field permission settings
-2. Locate the field you want to protect
-3. Click the **dropdown arrow** next to the field name in the header
-4. Select **Field options**
-5. Click the **Permissions** tab to configure the permission level and choose the appropriate restriction:
-6. Click **Save** to apply the permission
-7. Icon appears next to the field name, indicating restricted editing
-8. Test with different role accounts to verify behavior
+To configure who can edit a field:
+
+1. Open the field's menu by clicking the dropdown arrow next to the field name.
+2. Select Edit field permissions.
+3. Choose who can edit the field.
+4. If you select Specific users or teams, search for and select the users or teams who should be able to edit the field.
+5. If needed, enable Allow this field to be set in rows created through forms to allow the field to be set when a new row is created through a form.
+6. Click Save.
 
 > Users see a lock icon or visual indicator on fields they cannot edit, making permissions transparent.
 
@@ -27108,17 +27114,11 @@ Field-level permissions are a way to refine the access a user already has at the
 
 ## Field permissions in forms
 
-When using Baserow forms, field-level permissions affect which fields can be set during form submission:
+You can choose whether a field can be set when a new row is created through a form.
 
-- Fields with **Editors and higher**: ✓ Can be included in forms
-- Fields with **Builders and higher**: ✗ Cannot be set via form submission
-- Fields with **Admins only**: ✗ Cannot be set via form submission
-- Fields with **Read-only**: ✗ Cannot be set via form submission
+To allow a field to be set through forms, enable **Allow this field to be set in rows created through forms** when configuring its field permissions.
 
-**To configure form submission restrictions:**
-1. Set field permission level in table settings
-2. The field automatically becomes unavailable in the form designer for restricted permissions
-3. Form submitters can only fill fields they have permission to edit
+This setting is available when configuring field permissions and controls whether the field can be set in rows created through forms.
 
 Learn more about [creating forms](/user-docs/guide-to-creating-forms-in-baserow).
 
@@ -27232,7 +27232,7 @@ GDPR/HIPAA compliance for personal data. Customer relationship management, Compl
 
 It is possibly because the field permission is too restrictive for the user's role, the user's table role doesn't allow editing (Viewer, Commenter), or workspace/database role overrides are causing confusion
 
-Check field permission setting (Field Options → Permissions), verify user's role at the table level (must be Editor or higher to edit any field), and confirm user's effective role considering workspace → database → table hierarchy
+Check field permission setting (Field Options → Edit field permissions), verify user's role at the table level (must be Editor or higher to edit any field), and confirm user's effective role considering workspace → database → table hierarchy
 
 ### ""Field permission changes not applying""
 
@@ -27307,7 +27307,7 @@ Still need help? If you're looking for something else, please feel free to make 
 - [Contact support](/contact) for questions about Baserow or help with your account
 
 
-  [1]: https://baserow.io/user-docs/assign-roles-at-table-level",,baserow_user_docs,https://baserow.io/user-docs/field-level-permissions
+  [1]: https://baserow.io/user-docs/assign-roles-at-table-level",roles and permissions,baserow_user_docs,https://baserow.io/user-docs/field-level-permissions
 392,Field indexes,field-indexes,Field indexes in Baserow,"# Field indexes in Baserow
 
 Field indexes in Baserow transform slow queries into lightning-fast operations; reducing filter and search times by up to 80% on large tables by creating optimized data structures that accelerate lookups without changing your table structure.
@@ -28923,7 +28923,7 @@ curl -X POST [YOUR_WEBHOOK_URL] \
   -d '{""customer_name"": ""John Doe"", ""amount"": 99.99}'
 ```
 
-### Testing email triggers**
+### Testing email triggers
 
 Use ‘Test node’ to test the Email Trigger.
 
@@ -34201,7 +34201,9 @@ The ‘Send email’ action lets you send an email directly from a button.
 To send emails, select or create an email integration and configure the email settings.
 
 You can configure:
-
+- **Integration** — Select the email integration that will be used to send the message.
+- **From email** — Enter the email address that the message will be sent from.
+- **From name** — Optional. Enter the name that recipients will see as the sender.
 - **To emails:** Enter one or more recipient addresses. You can also use a value from the clicked row, such as a customer's email address.
 - **CC emails:** Optionally add CC recipients.
 - **BCC emails:** Optionally add BCC recipients.
@@ -34218,7 +34220,12 @@ You can use dynamic values from the clicked row in the email. For example:
 
 The exact fields available depend on the table and row where the button is clicked.
 
-> **Note:** The Send email action sends emails through your Baserow instance's SMTP server. On self-hosted instances without SMTP configured, or when `BASEROW_INTEGRATION_ALLOW_SMTP_SERVICE_TO_USE_INSTANCE_SETTINGS` is disabled, the action appears greyed out in the action list with a message explaining why.
+> **Note:** If a button is configured to use the instance SMTP server while instance SMTP is unavailable, the action is marked as needing reconfiguration. An action also needs reconfiguration if its selected SMTP integration is unavailable, has been deleted, has no host, or has no From address.
+> 
+
+
+> **Note**: SMTP integrations with a private host cannot be used by the
+button unless BASEROW_INTEGRATIONS_ALLOW_PRIVATE_ADDRESS is enabled.
 > 
 
 ### Send a Slack message
@@ -34560,6 +34567,382 @@ Still need help? If you’re looking for something else, please feel free to mak
   [4]: https://baserow.io/user-docs/ai-assistant
   [5]: https://community.baserow.io/
   [6]: https://baserow.io/contact",account management,baserow_user_docs,https://baserow.io/user-docs/manage-ai-providers-and-models
+925,Services,services,Baserow Services,"# Baserow Services
+
+Baserow services are reusable operations that let you work with data, connect to external services, and perform actions across Baserow.
+
+Services can be used in different parts of Baserow, including **Button fields**, **Application Builder workflows**, and **Automation workflows**. The same service performs the same operation regardless of where it is used.
+
+For example, the **Create row** service creates a new row in a Baserow table whether it is triggered by a button click in a table, an event in an Application Builder app, or an automation workflow.
+
+## Available services
+
+| Service                 | What it does                                                     | Button field | Application Builder | Automation Builder|
+| ----------------------- | ---------------------------------------------------------------- | :----------: | :-----------------: | :--------: |
+| **Create row**          | Creates a new row in a table.                                    |       ✓      |          ✓          |      ✓     |
+| **Batch create rows**   | Creates multiple rows from an array of row objects.              |       —      |          ✓          |      ✓     |
+| **Update row**          | Updates an existing row.                                         |       ✓      |          ✓          |      ✓     |
+| **Batch update rows**   | Updates multiple rows from an array of row objects.              |       —      |          ✓          |      ✓     |
+| **Delete row**          | Deletes one or more rows.                                        |       ✓      |          ✓          |      ✓     |
+| **Get single row**      | Retrieves a specific row.                                        |       —      |          —          |      ✓     |
+| **List multiple rows**  | Retrieves multiple rows based on specified criteria.             |       —      |          —          |      ✓     |
+| **Summarize field**     | Calculates an aggregate value from a field.                      |       —      |          —          |      ✓     |
+| **Start workflow**      | Starts a published automation workflow.                          |       ✓      |          ✓          |      ✓     |
+| **Send HTTP request**   | Sends a request to an external API or service.                   |       ✓      |          ✓          |      ✓     |
+| **Send email**          | Sends an email using an email integration.                       |       ✓      |          ✓          |      ✓     |
+| **Send Slack message**  | Sends a message to Slack.                                        |       ✓      |          ✓          |      ✓     |
+| **AI Prompt**           | Sends data to an AI provider for analysis or generation.         |       —      |          ✓          |      ✓     |
+| **Execute code**        | Runs JavaScript to transform or process data.                    |       —      |          ✓          |      ✓     |
+| **Read a CSV file**     | Reads data from a CSV file.                                      |       —      |          ✓          |      ✓     |
+| **Read an XLS file**    | Reads data from an XLS or XLSX file.                             |       —      |          ✓          |      ✓     |
+| **Open page**           | Navigates to another page or URL.                                |       —      |          ✓          |      —     |
+| **Show notification**   | Displays a notification to the user.                             |       —      |          ✓          |      —     |
+| **Refresh data source** | Reloads a data source.                                           |       —      |          ✓          |      —     |
+| **Logout**              | Logs the current user out of the application.                    |       —      |          ✓          |      —     |
+| **Open URL**            | Opens a URL when a button is clicked.                            |       ✓      |          —          |      —     |
+| **Router**              | Creates conditional branches in an automation.                   |       —      |          —          |      ✓     |
+| **Iterator**            | Processes items in a list one at a time.                         |       —      |          —          |      ✓     |
+| **Go to node**          | Jumps to another point in an automation when a condition is met. |       —      |          —          |      ✓     |
+| **Response**            | Returns an HTTP response from an automation workflow.            |       —      |          —          |      ✓     |
+
+
+{.table}
+
+-----------
+
+## How services work
+
+Services use data from the context in which they run.
+
+- **Button fields:** Services can use values from the row where the button was clicked.
+- **Application Builder:** Services can use data from the event that triggered the workflow, such as form inputs, page parameters, data sources, or previous actions.
+- **Automation:** Services can use data from the trigger and previously tested actions in the workflow.
+
+Actions run sequentially, so the output of one action can be used as input for a later action.
+
+For example:
+
+    Get single row → AI Prompt → Send email
+
+The **Get single row** action retrieves a record, the **AI Prompt** uses data from that record, and **Send email** can use the AI-generated result.
+
+------
+
+## Where can you use services?
+
+### Button fields
+
+Button fields let users trigger services directly from a row.
+
+To add a service:
+
+1. Add a **Button** field to your table.
+2. Open the Button field configuration.
+3. Under **Actions**, click **Add action**.
+4. Select the action you want to use.
+5. Configure the action.
+6. Add additional actions if needed and drag them to change their execution order.
+
+Button fields can use values from the row where the button was clicked.
+
+For example, a button in an Orders table can use **Update row** to change the order status or **Send email** to notify a customer.
+
+[👉 Learn more about Button fields](https://baserow.io/user-docs/button-field).
+
+### Application Builder
+
+Application Builder services are triggered by events on interactive elements such as buttons and forms.
+
+To add a service:
+
+1. Select the interactive element on your canvas.
+2. Open the **Events** tab in the properties panel.
+3. Choose a trigger, such as **On Click** or **On Submit**.
+4. Click **+ Add action**.
+5. Select the service you want to use.
+6. Configure the action.
+7. Optionally, drag actions to change their execution order.
+
+Application Builder actions can use data from the element that triggered the event, such as form inputs, as well as data from previous actions.
+
+[👉 Learn more about element events](https://baserow.io/user-docs/element-events).
+
+### Automation Builder
+ 
+Automation services are added as **actions or nodes** in a workflow.
+
+To add an action:
+
+1. Open your automation workflow.
+2. Click **+** where you want to add the action.
+3. Select an action from the node picker.
+4. Configure the action using the options in the sidebar.
+5. Test the action using **Test this event**.
+6. Review the test result and sample data.
+7. Publish the workflow when you are ready.
+
+Actions can use data from the workflow trigger and previously tested actions. You need to test previous actions before their data can be used to configure later actions.
+
+[👉 Learn more about workflow actions](https://baserow.io/user-docs/automation-actions).
+
+-----
+
+## Service reference
+
+### Data services
+
+Data services let you create, retrieve, update, and delete records in your Baserow tables.
+
+**1. Create row**
+
+The Create row service adds a new row to a selected Baserow table.
+
+You can provide values for the fields in the new row using static values or data available in the current context.
+
+**Example:**
+A button in an `Orders` table can create a new row in an `Activity log` table containing the order name, customer, and status.
+
+**2. Batch create rows**
+
+The Batch create rows service creates multiple rows in a table in a single operation.
+
+You provide an array of row objects containing the values for the new records.
+
+**Example:**
+An automation can receive a list of tasks from an external source and create all of them in a Baserow table at once.
+
+**3. Update row**
+
+The Update row service modifies an existing row in a selected table.
+
+You provide the Row ID of the row to update and specify the fields and values to change.
+
+**Example:**
+A `Mark as shipped` button can update an order's status from `Processing` to `Shipped`.
+
+**4. Batch update rows**
+
+The Batch update rows service updates multiple existing rows in a table in a single operation.
+
+Each row must include an ID identifying the record to update.
+
+**Example:**
+An automation can update the status of a group of tasks after an external process has completed.
+
+**5. Delete row**
+
+The Delete row service removes one or more rows from a table.
+
+You provide the Row ID or IDs of the rows to delete.
+
+**Example:**
+An automation can remove temporary records after they have been processed, or a button can let an editor delete a selected record.
+
+Deleted rows are moved to the workspace trash and can be restored within the available recovery period.
+
+**6. Get single row**
+
+The Get single row service retrieves a specific row or the first row matching the specified criteria.
+
+You can use a Row ID, or use refinements such as filters, search, and sorting to find the row you need.
+
+**Example:**
+An automation can retrieve a customer's record before sending a personalized email using their current information.
+
+**7. List multiple rows**
+
+The List multiple rows service retrieves multiple rows from a table.
+
+You can use filters, sorting, search, and result limits to control which rows are returned. The results can also be passed to an Iterator to process each row individually.
+
+**Example:**
+An automation can find all overdue tasks and then process each task individually.
+
+**8. Summarize field**
+
+The Summarize field service calculates an aggregate value across multiple rows.
+
+You can use it to calculate values such as totals, averages, or counts.
+
+**Example:**
+An automation can calculate the total revenue from orders created during a specific period.
+
+### Integration services
+
+Integration services let you communicate with external services or use external systems from Baserow.
+
+**1. Send HTTP request**
+
+The Send HTTP request service sends a request to an external API or web service.
+
+You can configure the HTTP method, endpoint URL, query parameters, headers, body, and timeout.
+
+**Example:**
+A Button field can send an HTTP request to an external service when a user clicks the button. The response can then be used by a later action.
+
+**2. Send email**
+
+The Send email service sends an email using a configured SMTP or email integration.
+
+You can configure recipients, sender information, subject, body, and other email settings.
+
+**Example:**
+A button in an `Orders` table can send an email to a customer using their email address and order information from the current row.
+
+**3. Send Slack message**
+
+The Send Slack message service sends a message to a Slack channel using a configured Slack integration. You can use dynamic data in the message.
+
+**Example:**
+An automation can send a message to a `#sales` channel when a new high-value deal is added to a table.
+
+**4. AI Prompt**
+
+The AI Prompt service sends a prompt and dynamic data to a configured AI provider.
+
+It can be used to analyze, summarize, translate, classify, or generate content based on your Baserow data.
+
+**Example:**
+An automation can use AI Prompt to summarize customer feedback stored in a table and pass the generated summary to a later action.
+
+### Code and file services
+**1. Execute code**
+
+The Execute code service lets you run JavaScript to transform data, perform calculations, generate custom outputs, or prepare information for a later action.
+
+The service uses explicitly provided data injections and returns an object that can be used by subsequent actions.
+
+**Example:**
+A workflow can retrieve a list of tasks, use Execute code to generate an HTML report, and then send the report by email.
+
+**2. Read a CSV file**
+
+The Read a CSV file service reads structured data from a CSV file and makes the rows available to subsequent actions.
+
+**Example:**
+A workflow can read a CSV file uploaded through an application form, process its rows, and create records in a Baserow table.
+
+**3. Read an XLS file**
+
+The Read an XLS file service reads rows from .xls and .xlsx files. You can optionally select which worksheet to read.
+
+**Example:**
+A workflow can read an Excel file containing project tasks and create the corresponding tasks in a Baserow table.
+
+### Application services
+
+Application services control what happens in an Application Builder app when a user interacts with it.
+
+**1. Open page**
+
+The Open page service navigates the user to another page or an external URL.
+
+**Example:**
+After a user submits a form, you can open a Thank you page.
+
+**2. Show notification**
+
+The Show notification service displays a temporary notification to the user.
+
+**Example:**
+After successfully updating a record, you can display a Profile updated notification.
+
+**3. Refresh data source**
+
+The Refresh data source service reloads the contents of a data source.
+
+**Example:**
+After creating a new record, you can refresh a list so the new record appears immediately.
+
+**4. Logout**
+
+The Logout service ends the current user's session.
+
+**Example:**
+Add a Sign out button to an application's navigation menu.
+
+**5. Open URL**
+
+The Open URL service opens a specified URL in the same or a new browser tab.
+
+**Example:**
+Add a button that opens a customer portal, external website, or document related to the current record.
+
+### Workflow services
+**1. Start workflow**
+
+The Start workflow service starts a published workflow with a supported trigger.
+
+You can use it to reuse the same workflow from multiple applications or workflows instead of duplicating the same logic.
+
+**Example:**
+A Generate daily report button can start a workflow that calculates order totals, adds a record to an activity log, and sends an email.
+
+**2. Response**
+
+The Response service returns a response from a workflow when the workflow trigger supports waiting for a response.
+
+You can use it to return an HTTP status code to the service or request that started the workflow.
+
+**Example:**
+An incoming request can start a workflow, the workflow can process the request, and the Response service can return a `200 – OK` response when processing is complete.
+
+------
+
+## FAQ
+
+### What are Baserow services?
+
+Baserow services are actions that let you work with data, trigger workflows, or connect to external services. You can use them in Button fields, Application Builder, and Automation workflows.
+
+### Where can I use Baserow services?
+
+Services are available across Button fields, Application Builder, and Automation Builder. The available services vary depending on where you use them.
+
+### Are all services available everywhere?
+
+No. Some services are only available in specific contexts. Check the [Available services][1] table above to see where each service can be used.
+
+### Can I use the result of one service in another service?
+
+Yes. Actions run sequentially, so a later action can use data returned by an earlier action.
+
+For example, you can use **Get single row** to retrieve a record, pass its data to **AI Prompt**, and then use the result in **Send email**.
+
+### Can I run multiple services in sequence?
+
+Yes. You can add multiple actions and control their execution order.
+
+**For example:** Create row → Send email → Show notification
+
+### What's the difference between a service and an action?
+
+A service describes the operation being performed, such as **Create row** or **Send email**. Depending on where you use it, the service may appear as an action in Button fields or Application Builder, or as an action/node in Automation.
+
+### Where can I find configuration details for a service?
+
+The configuration depends on where you use the service. See the documentation for [Button fields](https://baserow.io/user-docs/button-field), [element events](https://baserow.io/user-docs/element-events), or [workflow actions](https://baserow.io/user-docs/automation-actions) for feature-specific configuration details.
+
+-----
+
+## Related documentation
+
+* [Button field](https://baserow.io/user-docs/button-field)
+* [Element events](https://baserow.io/user-docs/element-events)
+* [Workflow actions](https://baserow.io/user-docs/automation-actions)
+* [Automation triggers](https://baserow.io/user-docs/automation-triggers)
+
+---
+
+Still need help? If you’re looking for something else, please feel free to make recommendations or ask us questions; we’re ready to assist you.
+
+* [Ask the Baserow community][2]
+* [Contact support][3] for questions about Baserow or help with your account.
+
+
+  [1]: https://baserow.io/user-docs/services#available-services
+  [2]: https://community.baserow.io/
+  [3]: https://baserow.io/contact",integrations,baserow_user_docs,https://baserow.io/user-docs/services
 1,What is Baserow?,faq,What is Baserow?,"What is Baserow?
 
 Baserow is an open-source no-code database. Our database platform enables both non-technical and technical teams to capture, organize and build logical relationships between data to trigger decisions and automate processes. We focus on openness, scalability, performance, and data security.",faq,faq,https://baserow.io/faq

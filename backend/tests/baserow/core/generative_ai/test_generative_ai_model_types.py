@@ -691,7 +691,7 @@ def test_zai_constructs_zai_model_with_request_shape_fixes() -> None:
     assert model.profile["supports_thinking"] is True
     assert model.profile["supports_json_object_output"] is True
     assert model.profile["openai_chat_thinking_field"] == "reasoning_content"
-    assert model.profile["openai_supports_tool_choice_required"] is False
+    assert model.profile["supports_forced_tool_choice"] is False
     assert model.profile["openai_chat_supports_max_completion_tokens"] is False
     assert model.profile["openai_supports_strict_tool_definition"] is False
     assert model.profile["openai_chat_supports_document_input"] is False

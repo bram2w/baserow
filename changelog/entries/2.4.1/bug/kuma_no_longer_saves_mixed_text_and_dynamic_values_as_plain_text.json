@@ -1,0 +1,9 @@
+{
+    "type": "bug",
+    "message": "Kuma no longer saves text that mixes fixed words and dynamic values, like an email subject with the row name, as plain text",
+    "issue_origin": "github",
+    "issue_number": null,
+    "domain": "core",
+    "bullet_points": [],
+    "created_at": "2026-10-12"
+}

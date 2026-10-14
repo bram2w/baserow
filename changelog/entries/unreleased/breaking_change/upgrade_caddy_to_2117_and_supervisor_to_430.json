@@ -1,0 +1,14 @@
+{
+    "type": "breaking_change",
+    "message": "Upgrade Caddy to 2.11.7 and supervisor to 4.3.0",
+    "issue_origin": "github",
+    "issue_number": null,
+    "domain": "core",
+    "bullet_points": [
+        "Request headers are capped at 128 KiB",
+        "Header names containing dots are dropped",
+        "Stalled uploads and downloads abort after 1 min",
+        "supervisord moved to /usr/local/bin"
+    ],
+    "created_at": "2026-10-13"
+}

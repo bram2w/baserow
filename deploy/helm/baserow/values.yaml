@@ -17,12 +17,14 @@
 ## @param global.baserow.backendConfigMap Configure a name for the backend configmap.
 ## @param global.baserow.backendSecret Configure a name for the backend secret.
 ## @param global.baserow.frontendConfigMap Configure a name for the frontend configmap.
+## @param global.baserow.fullnameOverride Name prefix for the Baserow resources, e.g. "baserow" names the components "baserow-backend-wsgi", "baserow-frontend", etc. Defaults to "<release name>-baserow".
 ## @param global.baserow.sharedConfigMap Configure a name for the shared configmap.
 ## @param global.baserow.envFrom Configure secrets or configMaps to be used as environment variables for all components.
 ## @param global.baserow.domain Configure the domain for the frontend application.
-## @param global.baserow.backendDomain Configure the domain for the backend application.
+## @param global.baserow.backendDomain Configure the domain for the backend application. Set it to the same value as global.baserow.domain to serve the API under that domain's /api/ path instead.
 ## @param global.baserow.objectsDomain Configure the domain for the external facing minio api.
 ## @param global.baserow.assistantLLMModel Deprecated. Select the Kuma model under Admin tools > AI providers > AI features. Retained as an environment fallback; explicit disables prevent fallback.
+## @param global.baserow.applicationBuilderDomains Extra domains routed to the frontend, for Application Builder apps served on their own domain. Wildcards such as "*.apps.mydomain.com" are supported. Only needed when ingress.catchAll.enabled is false.
 ## @param global.baserow.containerSecurityContext.enabled Enabled containers' Security Context
 ## @param global.baserow.containerSecurityContext.seLinuxOptions [object,nullable] Set SELinux options in container
 ## @param global.baserow.containerSecurityContext.runAsUser Set containers' Security Context runAsUser
@@ -44,7 +46,7 @@ global:
   baserow:
     imageRegistry: baserow
     image:
-      tag: 2.4.0
+      tag: 2.4.1
     imagePullSecrets: []
     serviceAccount:
       shared: true
@@ -52,6 +54,7 @@ global:
       name: baserow
       annotations: {}
       automountServiceAccountToken: false
+    fullnameOverride: ""
     sharedConfigMap: shared-config
     backendConfigMap: backend-config
     backendSecret: backend-secret
@@ -60,6 +63,12 @@ global:
     domain: cluster.local
     backendDomain: api.cluster.local
     objectsDomain: objects.cluster.local
+    ## Example:
+    ## applicationBuilderDomains:
+    ##   - app.mydomain.com
+    ##   - "*.apps.mydomain.com"
+    ##
+    applicationBuilderDomains: []
     assistantLLMModel: ""
 
     securityContext:
@@ -168,6 +177,16 @@ backendConfigMap:
 ## @param migration.containerSecurityContext.capabilities.drop List of capabilities to be dropped
 ## @param migration.containerSecurityContext.capabilities.add List of capabilities to be added
 ## @param migration.containerSecurityContext.seccompProfile.type Set container's Security Context seccomp profile
+## @param migration.resources Set container requests and limits for different resources like CPU or memory (essential for production workloads)
+## Example:
+## resources:
+##   requests:
+##     cpu: 2
+##     memory: 512Mi
+##   limits:
+##     cpu: 3
+##     memory: 1024Mi
+##
 
 migration:
   enabled: true
@@ -201,6 +220,7 @@ migration:
       drop: []
     seccompProfile:
       type: ""
+  resources: {}
 
 ## @section Baserow inbound email receiver configuration
 ## The email receiver runs mox and forwards messages to the backend for the
@@ -647,6 +667,8 @@ baserow-celery-flower:
 ## Configuration for the Baserow Embeddings service
 ## @param baserow-embeddings.enabled Set to true to enable the Baserow Embeddings service.
 ## @param baserow-embeddings.image.repository Docker image repository for the Embeddings service.
+## @param baserow-embeddings.image.tag Docker image tag for the Embeddings service, which is versioned separately from Baserow.
+## @param baserow-embeddings.workingDir Working directory for the container, empty to use the image's own.
 ## @param baserow-embeddings.resources Resource requests and limits for the Embeddings service.
 ## @param baserow-embeddings.autoscaling.enabled Enable autoscaling for the Embeddings service.
 ## @param baserow-embeddings.autoscaling.minReplicas Minimum number of replicas for autoscaling.
@@ -664,6 +686,8 @@ baserow-embeddings:
   enabled: false
   image:
     repository: embeddings
+    tag: "1.0.0"
+  workingDir: ""
   resources:
     requests:
       cpu: 800m
@@ -673,6 +697,7 @@ baserow-embeddings:
       memory: 1536Mi
   readinessProbe:
     enabled: true
+    exec: null # drop the subchart default exec probe, a probe takes one handler
     httpGet:
       path: /health
       port: 80
@@ -683,6 +708,7 @@ baserow-embeddings:
     failureThreshold: 3
   livenessProbe:
     enabled: true
+    exec: null # drop the subchart default exec probe, a probe takes one handler
     httpGet:
       path: /health
       port: 80
@@ -704,12 +730,23 @@ baserow-embeddings:
 ## @section Ingress Configuration
 ## Configuration for the Ingress resource
 ## @param ingress.enabled Enable the Ingress resource
+## @param ingress.className IngressClass to handle the Ingress resource, omitted from the manifest when empty
 ## @param ingress.annotations.kubernetes.io/ingress.class Ingress class annotation
+## @param ingress.catchAll.enabled Route requests for any host not matched by another rule to the frontend. Required for Application Builder custom domains with Caddy on-demand TLS; disable on a shared ingress controller and list the domains in global.baserow.applicationBuilderDomains instead.
 ## @param ingress.tls TLS configuration for the Ingress resource
+## Example:
+## tls:
+##   - hosts:
+##       - baserow.mydomain.com
+##     secretName: baserow-tls
+##
 ingress:
   enabled: true
+  className: ""
   annotations:
     kubernetes.io/ingress.class: caddy
+  catchAll:
+    enabled: true
   tls: []
 
 ## @section Redis Configuration

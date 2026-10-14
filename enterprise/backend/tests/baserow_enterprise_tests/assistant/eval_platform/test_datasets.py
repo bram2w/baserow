@@ -200,6 +200,7 @@ EXPECTED_CASE_IDS = {
         "docs/webhooks-availability",
     ],
     "kuma-builder": [
+        "builder/adds-edit-button-column",
         "builder/asks-once-when-goal-unclear",
         "builder/asks-when-implied-table-missing",
         "builder/asks-when-named-table-missing",
@@ -215,9 +216,19 @@ EXPECTED_CASE_IDS = {
         "builder/creates-landing-page",
         "builder/creates-new-page-not-modifies-existing",
         "builder/creates-table-with-edit-button",
+        "builder/edits-table-columns",
         "builder/filtered-data-source-via-view",
+        "builder/keeps-link-column-settings",
         "builder/lists-pages",
+        "builder/menu-adds-link-keeps-button",
+        "builder/menu-adds-pages-one-by-one",
+        "builder/menu-button-opens-page",
+        "builder/menu-removes-dropdown",
+        "builder/menu-removes-sub-link",
+        "builder/menu-renames-button",
+        "builder/menu-reorders-items",
         "builder/moves-element-out-of-column",
+        "builder/moves-table-column",
         "builder/page-specific-nav-on-page",
         "builder/setup-user-source-existing-table",
         "builder/setup-user-source-new-table",
@@ -275,7 +286,7 @@ class TestDatasetCounts:
         assert len(grouped["kuma-core"]) == 3
         assert len(grouped["kuma-database"]) == 21
         assert len(grouped["kuma-docs"]) == 64
-        assert len(grouped["kuma-builder"]) == 21
+        assert len(grouped["kuma-builder"]) == 32
         assert len(grouped["kuma-automation"]) == 7
         assert len(grouped["kuma-prod-replay"]) == 7
 

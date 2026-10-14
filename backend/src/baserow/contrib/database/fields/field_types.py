@@ -6427,7 +6427,7 @@ class FormulaFieldType(FormulaFieldTypeArrayFilterSupport, ReadOnlyFieldType):
         return (
             super().has_compatible_model_fields(instance, instance2)
             and instance.formula_type == instance2.formula_type
-            and instance.array_formula_type == instance.array_formula_type
+            and instance.array_formula_type == instance2.array_formula_type
         )
 
     def prepare_value_for_db(self, instance, value):
@@ -9023,7 +9023,7 @@ class ButtonFieldType(ReadOnlyFieldType):
         user: Optional[AbstractUser] = None,
     ) -> None:
         # Field duplication skips the serialization import path, so without
-        # this the actions would be dropped (ADR 006 section 8).
+        # this the actions would be dropped (ADR 006 section 5).
         self._recreate_workflow_actions(
             new_field, serialized_field.get("workflow_actions") or [], user=user
         )
@@ -9070,7 +9070,7 @@ class ButtonFieldType(ReadOnlyFieldType):
         if isinstance(from_field, ButtonField):
             return
 
-        # `user` is checked against the restored actions (ADR 006 section 5),
+        # `user` is checked against the restored actions (ADR 006 section 4),
         # so a credential or workflow they may not read is dropped.
         self._recreate_workflow_actions(
             to_field,

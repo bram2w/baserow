@@ -958,12 +958,15 @@ class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
         values = super().prepare_values(values, user, instance)
 
         if "table" in values:
-            # Reset the view if the table has changed
+            # Reset the view if the table has changed or has been cleared.
             if (
                 "view_id" not in values
                 and instance
                 and instance.view_id
-                and instance.view.table_id != values["table"].id
+                and (
+                    values["table"] is None
+                    or instance.view.table_id != values["table"].id
+                )
             ):
                 values["view"] = None
 
@@ -1498,7 +1501,7 @@ class LocalBaserowAggregateRowsUserServiceType(
         if "table" in values:
             # Reset the field if the table has changed
             if (
-                "table_id" not in values
+                "field_id" not in values
                 and instance
                 and instance.field_id
                 and instance.table != values["table"]
@@ -1515,6 +1518,19 @@ class LocalBaserowAggregateRowsUserServiceType(
                 table_to_validate = values.get(
                     "table", getattr(instance, "table", None)
                 )
+
+                # This isn't possible in the UI, but if a REST API request
+                # sends us a `field_id` without a table existing on the
+                # instance or in the values, we'll raise a 400.
+                if not table_to_validate:
+                    raise DRFValidationError(
+                        detail={
+                            "detail": "A table ID is required alongside the field ID.",
+                            "error": "required",
+                        },
+                        code="required",
+                    )
+
                 if field.table_id == table_to_validate.id:
                     values["field"] = field
                 else:
@@ -1523,6 +1539,8 @@ class LocalBaserowAggregateRowsUserServiceType(
                         "related to the given table.",
                         code="invalid_field",
                     )
+            else:
+                values["field"] = None
 
             if aggregation_type and field:
                 agg_type = field_aggregation_registry.get(aggregation_type)
@@ -1536,7 +1554,7 @@ class LocalBaserowAggregateRowsUserServiceType(
             else:
                 values["aggregation_type"] = ""
 
-        return super().prepare_values(values, user, instance)
+        return values
 
     def export_prepared_values(self, instance: Service) -> dict[str, any]:
         values = super().export_prepared_values(instance)
@@ -1968,7 +1986,7 @@ class LocalBaserowUpsertRowServiceType(
             field_mappings = values.get("field_mappings", [])
             # The payload replaces the list. The editor sends mappings on
             # trashed fields back and undo replays them, so a trashed field of
-            # the service's table is accepted (ADR 006 section 8).
+            # the service's table is accepted.
             instance.field_mappings.all().delete()
             field_ids = {m["field_id"] for m in field_mappings if "field_id" in m}
             # Fetched in one query rather than one per mapping, and only from
@@ -2287,7 +2305,7 @@ class LocalBaserowUpsertRowServiceType(
         # Without an integration the service acts as the person in front of the
         # screen, so a mapping left pointing at a trashed field fails the
         # dispatch instead of being dropped, which would write the row without
-        # it (ADR 006 section 8). Raised before anything is written.
+        # it (ADR 006 section 5). Raised before anything is written.
         if len(field_mappings) != len(enabled_field_mappings) and (
             service.integration_id is None
         ):
@@ -2323,7 +2341,7 @@ class LocalBaserowUpsertRowServiceType(
 
         # Without an integration the service acts as the person in front of the
         # screen, so an unwritable field fails the dispatch instead of being
-        # skipped (ADR 006 section 5). Raised before anything is written.
+        # skipped (ADR 006 section 4). Raised before anything is written.
         if has_unwritable_fields and service.integration_id is None:
             # The names are left out: this message reaches the clicker, who may
             # have no access to the target table at all. Roles are not field

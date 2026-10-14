@@ -3,6 +3,11 @@
         ask {$PRIVATE_BACKEND_URL:localhost:8000}/api/builder/domains/ask-public-domain-exists/
     }
 
+    # Caddy's 16 KiB default rejects API URLs the backend accepts (~64 KiB); the rest is room for other headers.
+    servers {
+        max_header_size 128KiB
+    }
+
     {$BASEROW_CADDY_GLOBAL_CONF}
 }
 

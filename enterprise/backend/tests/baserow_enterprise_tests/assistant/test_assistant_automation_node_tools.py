@@ -799,6 +799,48 @@ def test_single_node_formula_pass_accepts_a_create_payload(data_fixture, monkeyp
     assert "gen" in str(service.to_emails)
 
 
+@pytest.mark.django_db(transaction=True)
+def test_inline_formula_marker_is_generated_not_stored_literally(
+    data_fixture, monkeypatch
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    automation, workflow_id = _create_test_workflow(data_fixture, user, workspace)
+
+    ctx = make_test_ctx(user, workspace)
+    nodes = list_nodes(ctx, workflow_id=workflow_id, thought="inspect")["nodes"]
+    orm_node = AutomationNode.objects.get(id=int(nodes[1]["id"])).specific
+
+    requested = {}
+
+    def generate(formulas, context):
+        requested.update(formulas)
+        return {k: "concat('New deal: ', 'gen')" for k in formulas}
+
+    monkeypatch.setattr(
+        automation_agents,
+        "get_generate_formulas_tool",
+        lambda model_profile: generate,
+    )
+
+    node_create = ActionNodeCreate(
+        ref="email2",
+        label="Send Email",
+        previous_node_ref=str(nodes[0]["id"]),
+        type="smtp_email",
+        to_emails="sales@example.com",
+        subject="New deal: $formula: the deal name from the trigger",
+        body="Hello",
+    )
+    update_single_node_formulas(node_create, orm_node, ctx.deps.tool_helpers)
+
+    assert set(requested) == {"subject"}
+    assert "New deal: $formula: the deal name from the trigger" in requested["subject"]
+    service = AutomationNode.objects.get(id=orm_node.id).specific.service.specific
+    assert "$formula" not in str(service.subject)
+    assert "gen" in str(service.subject)
+
+
 @pytest.fixture
 def row_action_node(data_fixture):
     user = data_fixture.create_user()

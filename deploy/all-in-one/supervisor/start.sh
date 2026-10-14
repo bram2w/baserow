@@ -14,7 +14,7 @@ cat << EOF
 ██████╔╝██║  ██║███████║███████╗██║  ██║╚██████╔╝╚███╔███╔╝
 ╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝ ╚═════╝  ╚══╝╚══╝
 
-Version 2.4.0
+Version 2.4.1
 
 =========================================================================================
 EOF
@@ -102,4 +102,4 @@ startup_plugin_setup
 # = STARTUP SUPERVISOR
 # ========================
 startup_echo "Starting all Baserow processes:"
-exec /usr/bin/supervisord --configuration "${SUPERVISOR_CONF:-/baserow/supervisor/supervisor.conf}"
+exec /usr/local/bin/supervisord --configuration "${SUPERVISOR_CONF:-/baserow/supervisor/supervisor.conf}"

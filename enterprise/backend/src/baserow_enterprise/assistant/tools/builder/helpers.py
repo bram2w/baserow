@@ -6,9 +6,10 @@ source/action creation orchestrators used by ``tools.py`` and ``agents.py``.
 """
 
 from collections import Counter
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from django.contrib.auth.models import AbstractUser
+from django.db import transaction
 from django.db.models import Q
 
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
@@ -20,8 +21,11 @@ from baserow.contrib.builder.elements.actions import (
 )
 from baserow.contrib.builder.elements.exceptions import ElementDoesNotExist
 from baserow.contrib.builder.elements.handler import ElementHandler
-from baserow.contrib.builder.elements.models import Element
-from baserow.contrib.builder.elements.operations import ReadElementOperationType
+from baserow.contrib.builder.elements.models import Element, MenuElement
+from baserow.contrib.builder.elements.operations import (
+    ReadElementOperationType,
+    UpdateElementOperationType,
+)
 from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.elements.service import ElementService
 from baserow.contrib.builder.models import Builder
@@ -51,6 +55,7 @@ from baserow_enterprise.assistant.tools.shared import (
     raise_if_permission_denied,
 )
 
+from .registries import assistant_element_type_registry
 from .types import (
     ActionCreate,
     ActionItem,
@@ -66,7 +71,6 @@ from .types import (
     PageItem,
     PageUpdate,
 )
-from .types.element import BUTTON_NAVIGATION_GUIDANCE
 
 if TYPE_CHECKING:
     pass
@@ -389,6 +393,13 @@ def create_element(
     ds = element_create.data_source
     if isinstance(ds, str) and ds in data_source_ref_to_id_map:
         element_create.data_source = data_source_ref_to_id_map[ds]
+    # An id sent as text, such as "12", still names an existing data source.
+    elif isinstance(ds, str) and not ds.strip().isdecimal():
+        raise ToolInputError(
+            f"Data source ref '{ds}' not found. Create the data source with "
+            "create_data_sources first, or use an id from list_data_sources. No "
+            "changes were applied."
+        )
 
     kwargs = element_create.to_orm_kwargs(user, target_page)
 
@@ -532,117 +543,166 @@ def move_element(
     )
 
 
+class ElementUpdateOutcome(NamedTuple):
+    """An updated element, its type, and the keys its type adds to the result."""
+
+    element: Element
+    element_type: str
+    result: dict[str, Any]
+
+
+def _accepted_update_keys(element: Element) -> set[str]:
+    """
+    Return the keys the element update API accepts for the element's type. They
+    include the relations the type saves itself, such as a menu's items.
+
+    :param element: The element to update.
+    :return: The accepted keys.
+    """
+
+    return (
+        set(ElementHandler.allowed_fields_update)
+        | set(element.get_type().allowed_fields)
+        | set(
+            element.get_type().get_field_names(request_serializer=True, extra_params={})
+        )
+    )
+
+
 def update_element(
     user: AbstractUser,
     element_update: ElementUpdate,
-) -> tuple[Any, str]:
+) -> ElementUpdateOutcome:
     """
     Update an existing element by ID.
 
-    If the element is a header/footer and ``menu_items`` are provided,
-    automatically finds or creates a child menu element and sets the
-    items on it (headers are containers, not menus themselves).
+    The element type's hooks check the update, add what they save with it, apply
+    what the element's own update doesn't save, and report on it.
 
-    Returns ``(orm_element, element_type_str)``.
+    :param user: The user updating the element.
+    :param element_update: The properties to change.
+    :return: The updated element, its type, and the keys its type's hooks add to
+        update_element's result.
+    :raises ToolInputError: When the element doesn't exist or a property can't be
+        applied. Nothing is saved then.
+    :raises PermissionDenied: When the user can't update the element.
     """
 
-    try:
-        element = ElementHandler().get_element_for_update(element_update.element_id)
-    except ElementDoesNotExist:
-        raise ToolInputError(
-            f"Element with ID {element_update.element_id} not found. "
-            "Use list_elements to find valid element IDs."
+    with transaction.atomic():
+        try:
+            element = ElementHandler().get_element_for_update(element_update.element_id)
+        except ElementDoesNotExist:
+            raise ToolInputError(
+                f"Element with ID {element_update.element_id} not found. "
+                "Use list_elements to find valid element IDs."
+            )
+
+        CoreHandler().check_permissions(
+            user,
+            UpdateElementOperationType.type,
+            workspace=element.page.builder.workspace,
+            context=element,
         )
 
-    element_type = element.get_type().type
-    kwargs = element_update.to_update_kwargs(element_type)
-    allowed = set(ElementHandler.allowed_fields_update) | set(
-        element.get_type().allowed_fields
-    )
-    # These relations are consumed by the element type's after_update hook,
-    # rather than assigned as model fields by ElementHandler.
-    allowed.update(
-        {"table": {"fields"}, "menu": {"menu_items"}}.get(element_type, set())
-    )
-    kwargs = {name: value for name, value in kwargs.items() if name in allowed}
-    unsupported = element_update.unsupported_fields(element_type, kwargs)
-    if unsupported:
-        if element_type == "button":
-            guidance = BUTTON_NAVIGATION_GUIDANCE
-        else:
-            allowed = set(element.get_type().allowed_fields) & set(
+        element_type = element.get_type().type
+        hooks = assistant_element_type_registry.get_for(element_type)
+        kwargs = element_update.to_update_kwargs(element_type)
+        allowed = _accepted_update_keys(element)
+        kwargs = {name: value for name, value in kwargs.items() if name in allowed}
+        prepared = hooks.prepare_update(user, element, element_update)
+        kwargs.update(prepared.kwargs)
+        unsupported = element_update.unsupported_fields(
+            kwargs, hooks.property_aliases, hooks.properties_applied_after_update
+        ) + hooks.conflicting_properties(element_update)
+        if unsupported:
+            supported = set(element.get_type().allowed_fields) & set(
                 ElementUpdate.model_fields
             )
-            allowed.update(("visibility", "role_type", "roles"))
-            guidance = f"Supported properties include: {', '.join(sorted(allowed))}."
-        raise ToolInputError(
-            f"Unsupported properties for {element_type}: {', '.join(unsupported)}. "
-            f"No changes were applied. {guidance}"
+            supported.update(("visibility", "role_type", "roles"))
+            supported.update(hooks.property_aliases)
+            supported.update(hooks.properties_applied_after_update)
+            raise ToolInputError(
+                f"Unsupported properties for {element_type}: {', '.join(unsupported)}. "
+                f"No changes were applied. {hooks.unsupported_guidance(supported)}"
+            )
+        # Deferred so a failed generation keeps the existing link or image.
+        deferred_fields = set(
+            element_update.get_formulas_to_update(element, None, element_type)
+        ) | set(element_update.get_formula_dependent_fields(element_type))
+        for field in deferred_fields:
+            kwargs.pop(field, None)
+        if kwargs:
+            element = UpdateElementActionType.do(user, element, kwargs)
+        after_update_result = hooks.after_update(user, element, element_update)
+
+        result = (
+            hooks.updated_result(element, element_update)
+            | prepared.result
+            | after_update_result
         )
-    # Save generated values and their source switches together after validation,
-    # so failed generation preserves the existing link/image behavior.
-    deferred_fields = set(
-        element_update.get_formulas_to_update(element, None, element_type)
-    ) | set(element_update.get_formula_dependent_fields(element_type))
-    for field in deferred_fields:
-        kwargs.pop(field, None)
-    if kwargs:
-        element = UpdateElementActionType.do(user, element, kwargs)
-
-    # Headers/footers are containers — menu_items belong on a child menu.
-    if element_type in ("header", "footer") and element_update.menu_items is not None:
-        _ensure_child_menu(user, element, element_update)
-
-    return element, element_type
+        return ElementUpdateOutcome(element, element_type, result)
 
 
-def _ensure_child_menu(
-    user: AbstractUser,
-    header_element: Any,
-    element_update: ElementUpdate,
-) -> None:
-    """Find or create a menu element inside a header/footer, then set its items."""
+def child_menu(container: Element) -> MenuElement | None:
+    """
+    Find the menu inside a header or footer, however deeply it is nested, and lock it
+    for update. Call it inside a transaction.
 
-    import uuid
+    :param container: The header or footer.
+    :return: Its menu, locked for update, or None when it has none.
+    :raises ToolInputError: When it holds more than one menu.
+    """
 
-    handler = ElementHandler()
-    children = handler.get_elements(header_element.page)
-    menu_child = None
-    for child in children:
-        if (
-            child.parent_element_id == header_element.id
-            and child.get_type().type == "menu"
-        ):
-            menu_child = child
-            break
-
-    menu_items_orm = [
-        {
-            "uid": str(uuid.uuid4()),
-            "type": "link",
-            "variant": "link",
-            "name": item.name,
-            "navigation_type": "page",
-            "navigate_to_page_id": item.page_id,
-            "target": "self",
-        }
-        for item in element_update.menu_items
+    descendant_ids = container.page.get_graph().collect_descendant_ids(container.id)
+    menus = [
+        element
+        for element in ElementHandler().get_elements(container.page)
+        if element.id in descendant_ids and element.get_type().type == "menu"
     ]
-
-    if menu_child is not None:
-        UpdateElementActionType.do(user, menu_child, {"menu_items": menu_items_orm})
-    else:
-        menu_type = element_type_registry.get("menu")
-        CreateElementActionType.do(
-            user,
-            menu_type,
-            header_element.page,
-            {
-                "reference_element_id": header_element.id,
-                "position": "child",
-                "menu_items": menu_items_orm,
-            },
+    if len(menus) > 1:
+        raise ToolInputError(
+            f"{container.get_type().type.capitalize()} {container.id} holds more than "
+            f"one menu: elements {[menu.id for menu in menus]}. Change one of them "
+            "with update_element and that menu's element_id. No changes were applied."
         )
+    return ElementHandler().get_element_for_update(menus[0].id) if menus else None
+
+
+def save_child_menu(
+    user: AbstractUser,
+    container: Element,
+    menu: MenuElement | None,
+    menu_items: list[dict[str, Any]],
+) -> Element:
+    """
+    Save a header's or footer's menu items, and create its menu when it has none.
+
+    :param user: The user updating the header or footer, who may update it.
+    :param container: The header or footer.
+    :param menu: Its menu, or None to create one.
+    :param menu_items: The menu's full item list, each top-level item with its
+        sub-links as children.
+    :return: The saved menu.
+    :raises PermissionDenied: When the user can't update or create the menu.
+    """
+
+    if menu is not None:
+        return UpdateElementActionType.do(user, menu, {"menu_items": menu_items})
+    # A new menu has no sub-links yet, and creating one doesn't take children.
+    top_level = [
+        {key: value for key, value in item.items() if key != "children"}
+        for item in menu_items
+    ]
+    return CreateElementActionType.do(
+        user,
+        element_type_registry.get("menu"),
+        container.page,
+        {
+            "reference_element_id": container.id,
+            "position": "child",
+            "menu_items": top_level,
+        },
+    )
 
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,9 @@
+{
+    "type": "feature",
+    "message": "Add the Helm chart value global.baserow.fullnameOverride to name all Baserow resources after one prefix, and serve the API under the frontend domain's /api/ path when global.baserow.backendDomain equals global.baserow.domain",
+    "issue_origin": "github",
+    "issue_number": 6211,
+    "domain": "core",
+    "bullet_points": [],
+    "created_at": "2026-10-13"
+}

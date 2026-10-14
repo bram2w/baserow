@@ -1,4 +1,5 @@
 import { Registerable } from '@baserow/modules/core/registry'
+import { RuntimeFunctionCollection } from '@baserow/modules/core/functionCollection'
 import TextElement from '@baserow/modules/builder/components/elements/components/TextElement'
 import HeadingElement from '@baserow/modules/builder/components/elements/components/HeadingElement'
 import LinkElement from '@baserow/modules/builder/components/elements/components/LinkElement'
@@ -29,6 +30,7 @@ import {
   DIRECTIONS,
   PAGE_PLACES,
   PAGE_ELEMENT_BEHAVIOURS,
+  DATA_PROVIDERS_ALLOWED_ELEMENTS,
 } from '@baserow/modules/builder/enums'
 import ColumnElement from '@baserow/modules/builder/components/elements/components/ColumnElement'
 import ColumnElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ColumnElementForm'
@@ -37,7 +39,7 @@ import ButtonElement from '@baserow/modules/builder/components/elements/componen
 import ButtonElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ButtonElementForm'
 import { ClickEvent, SubmitEvent } from '@baserow/modules/builder/eventTypes'
 import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
-import { resolveFormula } from '@baserow/modules/core/formula'
+import { isFormulaValid, resolveFormula } from '@baserow/modules/core/formula'
 import FormContainerElement from '@baserow/modules/builder/components/elements/components/FormContainerElement.vue'
 import FormContainerElementForm from '@baserow/modules/builder/components/elements/components/forms/general/FormContainerElementForm.vue'
 import SimpleContainerElement from '@baserow/modules/builder/components/elements/components/SimpleContainerElement.vue'
@@ -68,6 +70,7 @@ import { isValidEmail } from '@baserow/modules/core/utils/string'
 import { getBuilderBreakpoints } from '@baserow/modules/builder/utils/breakpoints'
 
 import {
+  DATA_SCOPES,
   VISIBILITY_NOT_LOGGED,
   VISIBILITY_LOGGED_IN,
   ROLE_TYPE_ALLOW_EXCEPT,
@@ -380,6 +383,32 @@ export class ElementType extends Registerable {
   }
 
   /**
+   * Returns the visibility-condition error, if the formula is invalid in the
+   * current element scope.
+   */
+  getVisibilityErrorMessage(element, applicationContext) {
+    const visibilityCondition = element.visibility_condition
+    const functions = new RuntimeFunctionCollection(this.app.$registry)
+    const dataProviderRegistry = DATA_PROVIDERS_ALLOWED_ELEMENTS.map((type) =>
+      this.app.$registry.get('builderDataProvider', type)
+    )
+    if (
+      visibilityCondition?.mode !== 'raw' &&
+      !isFormulaValid(visibilityCondition?.formula || '', functions, false, {
+        dataProviderRegistry,
+        applicationContext: {
+          ...applicationContext,
+          element,
+          dataScope: DATA_SCOPES.EXCLUDE_TARGET_SUBTREE,
+        },
+      }).valid
+    ) {
+      return this.app.$i18n.t('elementType.errorInvalidVisibilityCondition')
+    }
+    return null
+  }
+
+  /**
    * Returns the reason why the element configuration is invalid.
    * @param {object} param An object containing the workspace, page, element, and builder
    * @returns A string that represent the current error.
@@ -396,6 +425,14 @@ export class ElementType extends Registerable {
       this.workflowActionsInError(element, applicationContext)
     ) {
       return this.app.$i18n.t('elementType.errorWorkflowActionInError')
+    }
+
+    const visibilityError = this.getVisibilityErrorMessage(
+      element,
+      applicationContext
+    )
+    if (visibilityError) {
+      return visibilityError
     }
 
     return null
@@ -1923,12 +1960,16 @@ export class ChoiceElementType extends FormElementType {
         const formulaNames = ensureArray(
           this.resolveFormula(element.formula_name, applicationContext)
         )
+        // The format of the name formula, undefined when plain, so that the
+        // element can render the names accordingly.
+        const nameFormat = element.formula_name?.format
         return formulaValues.map((value, index) => ({
           id: index,
           value: ensureStringOrInteger(value),
           name: ensureString(
             index < formulaValues.length ? formulaNames[index] : value
           ),
+          nameFormat,
         }))
       }
       default:
