@@ -310,11 +310,16 @@ function applyDefaults(value) {
 }
 
 // A workspace the client is already connected to starts from that grant's tools,
-// so reconnecting never widens access unnoticed. Otherwise every tool is ticked.
+// so reconnecting never widens access unnoticed. A grant of `null` allows every
+// tool. Otherwise only the read-only tools are ticked, so changing data is opt-in.
 function tickFor(id, value = consent.value) {
-  const existing = value?.grants?.[id]
+  const grants = value?.grants || {}
+  const granted = Object.hasOwn(grants, id)
+  const existing = grants[id]
   for (const tool of value?.tools || []) {
-    ticked[tool.name] = existing ? existing.includes(tool.name) : true
+    ticked[tool.name] = granted
+      ? existing === null || existing.includes(tool.name)
+      : tool.read_only
   }
 }
 

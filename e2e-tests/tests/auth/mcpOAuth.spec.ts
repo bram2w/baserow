@@ -123,12 +123,17 @@ test("An MCP client connects with OAuth and is disconnected in settings", async 
   await expect(
     page.locator('[data-test="mcp-authorize-unverified"]')
   ).toContainText("Not verified");
+  // Only the read-only tools start ticked on a first connection.
   const deleteRows = page.locator(
     '[data-test="mcp-authorize-tool-delete_rows"]'
   );
-  await expect(deleteRows).toHaveClass(/checkbox--checked/);
-  await deleteRows.click();
+  const createRows = page.locator(
+    '[data-test="mcp-authorize-tool-create_rows"]'
+  );
   await expect(deleteRows).not.toHaveClass(/checkbox--checked/);
+  await expect(createRows).not.toHaveClass(/checkbox--checked/);
+  await createRows.click();
+  await expect(createRows).toHaveClass(/checkbox--checked/);
   await page.locator('[data-test="mcp-authorize-allow"]').click();
 
   await expect.poll(() => callbackUrl?.pathname).toBe("/callback");
@@ -165,6 +170,7 @@ test("An MCP client connects with OAuth and is disconnected in settings", async 
     (tool: { name: string }) => tool.name
   );
   expect(toolNames).toContain("list_databases");
+  expect(toolNames).toContain("create_rows");
   expect(toolNames).not.toContain("delete_rows");
 
   await goto(`${frontendUrl}/workspace/${workspace.id}`, {

@@ -96,7 +96,7 @@ describe('MCP authorize page', () => {
     return wrapper.find(`[data-test="mcp-authorize-tool-${name}"] input`)
   }
 
-  test('shows workspaces and tools grouped and ticked', async () => {
+  test('shows workspaces and tools grouped, with only reading ticked', async () => {
     const { wrapper } = await mountWithConsent()
     // The test i18n returns message keys, so only API values are visible.
     expect(wrapper.text()).toContain('Other')
@@ -106,29 +106,31 @@ describe('MCP authorize page', () => {
     expect(read.text()).not.toContain('Create rows')
     expect(change.text()).toContain('Create rows')
     expect(change.text()).toContain('Delete rows')
+    // Changing data is opt-in on a first connection.
     for (const name of allTools) {
-      expect(toolCheckbox(wrapper, name).element.checked).toBe(true)
+      expect(toolCheckbox(wrapper, name).element.checked).toBe(
+        name === 'list_tables'
+      )
     }
   })
 
-  test('every tool checkbox is visually checked and unticking updates it', async () => {
+  test('the checkboxes show what is ticked and ticking updates them', async () => {
     testApp.mock
       .onPost('/mcp/oauth/consent/', {
         query,
         allow: true,
         workspace_id: 2,
-        tools: ['list_tables', 'create_rows', 'update_rows'],
+        tools: ['list_tables', 'create_rows'],
       })
       .reply(200, { redirect_url: 'https://claude.ai/cb?code=v' })
     const { wrapper, assign } = await mountWithConsent()
     const checkbox = (name) =>
       wrapper.find(`[data-test="mcp-authorize-tool-${name}"]`)
-    for (const name of allTools) {
-      expect(checkbox(name).classes()).toContain('checkbox--checked')
-    }
-    await toolCheckbox(wrapper, 'delete_rows').setValue(false)
-    expect(checkbox('delete_rows').classes()).not.toContain('checkbox--checked')
+    expect(checkbox('list_tables').classes()).toContain('checkbox--checked')
+    expect(checkbox('create_rows').classes()).not.toContain('checkbox--checked')
+    await toolCheckbox(wrapper, 'create_rows').setValue(true)
     expect(checkbox('create_rows').classes()).toContain('checkbox--checked')
+    expect(checkbox('delete_rows').classes()).not.toContain('checkbox--checked')
     await wrapper.find('[data-test="mcp-authorize-allow"]').trigger('click')
     await flushPromises()
     expect(assign).toHaveBeenCalledWith('https://claude.ai/cb?code=v')
@@ -266,7 +268,7 @@ describe('MCP authorize page', () => {
         query,
         allow: true,
         workspace_id: 1,
-        tools: allTools,
+        tools: ['list_tables'],
       })
       .reply(200, { redirect_url: 'https://claude.ai/cb?code=z' })
     testApp.mock
@@ -293,7 +295,7 @@ describe('MCP authorize page', () => {
         query,
         allow: true,
         workspace_id: 2,
-        tools: allTools,
+        tools: ['list_tables'],
       })
       .reply(200, {
         redirect_url: 'https://claude.ai/api/mcp/auth_callback?code=x',
@@ -316,6 +318,9 @@ describe('MCP authorize page', () => {
       })
       .reply(200, { redirect_url: 'https://claude.ai/cb?code=y' })
     const { wrapper, assign } = await mountWithConsent()
+    await wrapper
+      .find('[data-test="mcp-authorize-select-all"]')
+      .trigger('click')
     await toolCheckbox(wrapper, 'create_rows').setValue(false)
     await wrapper.find('[data-test="mcp-authorize-allow"]').trigger('click')
     await flushPromises()
