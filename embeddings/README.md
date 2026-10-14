@@ -41,7 +41,7 @@ The service uses a multi-stage Docker build:
 ### Run locally
 
 ```
-docker run -p 8080:80 baserow/embeddings:1.0.0
+docker run -p 8080:80 baserow/embeddings:1.0.1
 ```
 
 ### Build for publish
@@ -49,7 +49,7 @@ docker run -p 8080:80 baserow/embeddings:1.0.0
 ```
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  -t baserow/embeddings:1.0.0 \
+  -t baserow/embeddings:1.0.1 \
   -t baserow/embeddings:latest \
   --push .
 ```
@@ -175,10 +175,10 @@ The embeddings enable the assistant to understand the semantic meaning of user q
 ## Dependencies
 
 -   Python 3.14
--   optimum[onnxruntime] 1.27.0
--   transformers 4.53.0
--   starlette 0.48.0
--   uvicorn 0.37.0
+-   onnxruntime 1.26.0
+-   transformers 5.19.0
+-   starlette 1.8.0
+-   uvicorn 0.54.0
 
 ## License
 

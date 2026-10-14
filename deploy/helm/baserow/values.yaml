@@ -686,7 +686,7 @@ baserow-embeddings:
   enabled: false
   image:
     repository: embeddings
-    tag: "1.0.0"
+    tag: "1.0.1"
   workingDir: ""
   resources:
     requests:

@@ -7,13 +7,19 @@ import os
 import shutil
 
 MODEL_ID = "optimum/all-MiniLM-L6-v2"
+# Pinned so rebuilding the image can never change the stored vectors.
+MODEL_REVISION = "10244843eba3d9e479b27a4b81c94b56d8e9f4f2"
 OUTPUT_DIR = "/model"
 
 print(f"Downloading {MODEL_ID} from Hugging Face...")
-local_dir = snapshot_download(repo_id=MODEL_ID, allow_patterns=["*.onnx", "*.json", "*.txt"])
+local_dir = snapshot_download(
+    repo_id=MODEL_ID,
+    revision=MODEL_REVISION,
+    allow_patterns=["*.onnx", "*.json", "*.txt"],
+)
 
 print(f"Saving tokenizer...")
-tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, revision=MODEL_REVISION)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 tokenizer.save_pretrained(OUTPUT_DIR)
 

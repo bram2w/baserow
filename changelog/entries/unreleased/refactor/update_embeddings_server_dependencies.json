@@ -1,0 +1,9 @@
+{
+    "type": "refactor",
+    "message": "Update the embeddings server dependencies and release baserow/embeddings:1.0.1",
+    "issue_origin": "github",
+    "issue_number": null,
+    "domain": "core",
+    "bullet_points": [],
+    "created_at": "2026-10-14"
+}
