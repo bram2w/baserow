@@ -12,7 +12,7 @@ MODEL_DIR = "/model"
 tokenizer = Tokenizer.from_file(os.path.join(MODEL_DIR, "tokenizer.json"))
 with open(os.path.join(MODEL_DIR, "tokenizer_config.json")) as f:
     tokenizer_config = json.load(f)
-# Match transformers' padding=True/truncation=True, not the 128-token defaults in tokenizer.json.
+# tokenizer.json truncates and pads to 128 tokens; use the model's 512 limit and pad per batch.
 tokenizer.enable_truncation(max_length=tokenizer_config["model_max_length"])
 tokenizer.enable_padding(
     pad_id=tokenizer.token_to_id(tokenizer_config["pad_token"]),

@@ -126,7 +126,7 @@ The service will be available at `http://localhost:8080`.
 
 ```bash
 # Install dependencies
-pip install optimum[onnxruntime]==1.27.0 transformers==4.53.0 starlette==0.48.0 uvicorn==0.37.0
+pip install optimum[onnxruntime]==1.27.0 transformers==4.53.0 starlette==1.7.0 uvicorn==0.37.0
 
 # Download model
 python -c "
@@ -175,9 +175,9 @@ The embeddings enable the assistant to understand the semantic meaning of user q
 ## Dependencies
 
 -   Python 3.14
--   optimum[onnxruntime] 1.27.0
--   transformers 4.53.0
--   starlette 0.48.0
+-   onnxruntime 1.24.1
+-   tokenizers 0.23.2
+-   starlette 1.7.0
 -   uvicorn 0.37.0
 
 ## License
