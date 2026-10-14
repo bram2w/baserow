@@ -91,6 +91,8 @@ describe('ButtonFieldActionList', () => {
       'local_baserow_delete_row',
       'slack_write_message',
       'start_workflow',
+      // Registered by the enterprise plugin, which the tests load as well.
+      'run_agent',
     ])
     // `$t` returns the key in the test env, so the name is checked against
     // the key the type uses and the copy itself is pinned separately.
@@ -515,6 +517,7 @@ describe('ButtonFieldActionList', () => {
         'local_baserow_delete_row',
         'slack_write_message',
         'start_workflow',
+        'run_agent',
       ])
     })
   })

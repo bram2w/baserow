@@ -87,8 +87,11 @@ export default {
      * only be harder to find.
      */
     editableFromHere() {
-      return !this.$registry.get('application', this.application.type)
-        .hasIntegrationSettingsPage
+      const type = this.application?.type
+      return (
+        Boolean(type) &&
+        !this.$registry.get('application', type).hasIntegrationSettingsPage
+      )
     },
     integrationType() {
       return this.$registry.get(
