@@ -274,11 +274,15 @@ const { data: consent } = useAsyncData(
   { server: false }
 )
 
-// Preselect the first workspace that has databases, so the user doesn't land on
-// an empty one, and tick every tool. Runs before the form is first rendered.
+// Preselect the workspace the client is already connected to, so reconnecting
+// keeps it there. Otherwise the first workspace that has databases, so the user
+// doesn't land on an empty one. Runs before the form is first rendered.
 function applyDefaults(value) {
   const workspaces = value?.workspaces || []
+  // A grant that allows every tool is `null`, so check the key.
+  const grants = value?.grants || {}
   const preferred =
+    workspaces.find((workspace) => Object.hasOwn(grants, workspace.id)) ||
     workspaces.find((workspace) => workspace.database_count > 0) ||
     workspaces[0]
   workspaceId.value = preferred?.id ?? null

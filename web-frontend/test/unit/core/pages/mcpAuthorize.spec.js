@@ -359,6 +359,35 @@ describe('MCP authorize page', () => {
     }
   })
 
+  test.each([
+    ['a tool list', ['list_tables'], ['list_tables']],
+    ['every tool', null, allTools],
+  ])(
+    'reconnecting preselects the granted workspace with %s',
+    async (_, grant, tools) => {
+      // Workspace 2 has databases, but the client is connected to workspace 1.
+      testApp.mock
+        .onGet('/mcp/oauth/consent/', { params: { query } })
+        .reply(200, { ...consent, grants: { 1: grant } })
+      testApp.mock
+        .onPost('/mcp/oauth/consent/', {
+          query,
+          allow: true,
+          workspace_id: 1,
+          tools,
+        })
+        .reply(200, { redirect_url: 'https://claude.ai/cb?code=g' })
+      const assign = vi.fn()
+      vi.stubGlobal('location', { assign })
+      const wrapper = await testApp.mount(MCPAuthorize, { route })
+      await flushPromises()
+
+      await wrapper.find('[data-test="mcp-authorize-allow"]').trigger('click')
+      await flushPromises()
+      expect(assign).toHaveBeenCalledWith('https://claude.ai/cb?code=g')
+    }
+  )
+
   test('warns when the client only redirects to loopback', async () => {
     testApp.mock
       .onGet('/mcp/oauth/consent/', { params: { query } })
