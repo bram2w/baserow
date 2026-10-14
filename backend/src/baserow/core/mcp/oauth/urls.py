@@ -1,16 +1,15 @@
 from django.urls import include, path
 
 from oauth2_provider import urls as oauth2_urls
-from oauth2_provider import views as oauth2_views
 
 from .registration import MCPRegistrationView, RegistrationManagementNotOffered
-from .token_view import MCPTokenView
+from .token_view import MCPRevokeTokenView, MCPTokenView
 from .views import MCPAuthorizeRedirectView, MCPProtectedResourceMetadataView
 
 oauth_patterns = [
     path("authorize/", MCPAuthorizeRedirectView.as_view(), name="authorize"),
     path("token/", MCPTokenView.as_view(), name="token"),
-    path("revoke_token/", oauth2_views.RevokeTokenView.as_view(), name="revoke-token"),
+    path("revoke_token/", MCPRevokeTokenView.as_view(), name="revoke-token"),
     path("register/", MCPRegistrationView.as_view(), name="dcr-register"),
     # The registration response reverses this name; management isn't offered.
     path(

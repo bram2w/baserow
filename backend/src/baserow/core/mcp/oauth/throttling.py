@@ -21,6 +21,12 @@ class MCPOAuthTokenRateThrottle(RateLimitThrottle):
         return get_user_remote_ip_address_from_request(request)
 
 
+class MCPOAuthRevokeRateThrottle(MCPOAuthTokenRateThrottle):
+    """Limits anonymous token revocations per client IP, with the token limits."""
+
+    scope = "mcp_oauth_revoke"
+
+
 class MCPOAuthRegistrationRateThrottle(MCPOAuthTokenRateThrottle):
     """Limits anonymous DCR registrations per client IP."""
 

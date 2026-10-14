@@ -4,6 +4,7 @@ import pytest
 from freezegun import freeze_time
 
 from baserow.throttling.types import RateLimit
+from tests.baserow.core.mcp.oauth.helpers import obtain_tokens
 
 LIMITS = (RateLimit(period_in_seconds=60, number_of_calls=2),)
 
@@ -75,3 +76,51 @@ def test_consent_api_is_rate_limited_per_user(api_client, data_fixture):
 
     assert limited.status_code == 429
     assert other_user.status_code != 429
+
+
+def _revoke_request(client, ip):
+    return client.post(
+        "/oauth/revoke_token/",
+        {"token": "nope", "client_id": "https://evil.example/client.json"},
+        HTTP_X_FORWARDED_FOR=ip,
+    )
+
+
+@pytest.mark.django_db
+@override_settings(BASEROW_MCP_OAUTH_TOKEN_RATE_LIMITS=LIMITS)
+def test_revoke_endpoint_is_rate_limited_per_ip(client):
+    with freeze_time("2026-01-01 12:00:00"):
+        assert _revoke_request(client, "1.1.1.1").status_code != 429
+        assert _revoke_request(client, "1.1.1.1").status_code != 429
+        limited = _revoke_request(client, "1.1.1.1")
+        other_ip = _revoke_request(client, "2.2.2.2")
+
+    assert limited.status_code == 429
+    assert limited.json()["error"] == "slow_down"
+    assert other_ip.status_code != 429
+
+
+@pytest.mark.django_db
+@override_settings(BASEROW_MCP_OAUTH_TOKEN_RATE_LIMITS=LIMITS)
+def test_successful_token_calls_do_not_count(client, api_client, data_fixture):
+    user, jwt = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    tokens = obtain_tokens(client, api_client, jwt, workspace)
+
+    refresh_token = tokens["refresh_token"]
+    for _ in range(3):
+        response = client.post(
+            "/oauth/token/",
+            {
+                "grant_type": "refresh_token",
+                "refresh_token": refresh_token,
+                "client_id": tokens["client_id"],
+            },
+        )
+        assert response.status_code == 200, response.content
+        refresh_token = response.json()["refresh_token"]
+
+    # The two failed calls still use up the limit.
+    assert _token_request(client, "127.0.0.1").status_code != 429
+    assert _token_request(client, "127.0.0.1").status_code != 429
+    assert _token_request(client, "127.0.0.1").status_code == 429
