@@ -13,6 +13,11 @@ from .validators import ALLOWED_GRANT_TYPES, is_allowed_redirect_uri
 # RFC 7592 fields; the management endpoint isn't offered.
 MANAGEMENT_FIELDS = ("registration_access_token", "registration_client_uri")
 
+# Registration is anonymous, so these bound what one request can store. The body
+# limit matches the library's CIMD document limit.
+MAX_REGISTRATION_BYTES = 16 * 1024
+MAX_REDIRECT_URIS = 10
+
 
 def _error(error: str, description: str) -> JsonResponse:
     return JsonResponse({"error": error, "error_description": description}, status=400)
@@ -29,6 +34,17 @@ class MCPRegistrationView(DynamicClientRegistrationView):
         limited = rate_limited(MCPOAuthRegistrationRateThrottle(), request, self)
         if limited is not None:
             return limited
+
+        try:
+            content_length = int(request.META.get("CONTENT_LENGTH") or 0)
+        except ValueError:
+            content_length = 0
+        if content_length > MAX_REGISTRATION_BYTES or (
+            len(request.body) > MAX_REGISTRATION_BYTES
+        ):
+            return _error(
+                "invalid_client_metadata", "The registration request is too large."
+            )
 
         try:
             metadata = json.loads(request.body)
@@ -54,13 +70,22 @@ class MCPRegistrationView(DynamicClientRegistrationView):
                 "Only the authorization_code and refresh_token grants are supported.",
             )
         redirect_uris = metadata.get("redirect_uris") or []
-        if not isinstance(redirect_uris, list) or not all(
-            is_allowed_redirect_uri(uri) for uri in redirect_uris
-        ):
+        if not isinstance(redirect_uris, list):
+            redirect_uris = []
+        # Older Cursor builds also send a `cursor://` URI next to the loopback one
+        # they use. RFC 7591 lets the server drop the ones it doesn't accept.
+        redirect_uris = [uri for uri in redirect_uris if is_allowed_redirect_uri(uri)]
+        if not redirect_uris:
             return _error(
                 "invalid_redirect_uri",
                 "Redirect URIs must use https or a loopback http address.",
             )
+        if len(redirect_uris) > MAX_REDIRECT_URIS:
+            return _error(
+                "invalid_redirect_uri",
+                f"At most {MAX_REDIRECT_URIS} redirect URIs can be registered.",
+            )
+        metadata["redirect_uris"] = redirect_uris
 
         # The library reads `request.body`, which Django serves from `_body`; give
         # it the defaulted auth method.

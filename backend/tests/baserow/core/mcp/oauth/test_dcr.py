@@ -419,3 +419,41 @@ def test_redirect_uri_with_its_own_error_param_gets_a_code(
     assert query["error"] == ["0"]
     assert query["code"]
     assert query["state"] == ["s1"]
+
+
+@pytest.mark.django_db
+def test_registration_keeps_only_the_allowed_redirect_uris(client):
+    # What Cursor 3.14.x sends.
+    uris = [
+        "cursor://anysphere.cursor-mcp/oauth/callback",
+        "http://localhost:4567/callback",
+        "https://app.example/cb",
+    ]
+    response = register(client, redirect_uris=uris)
+
+    assert response.status_code == 201, response.content
+    assert response.json()["redirect_uris"] == uris[1:]
+    application = get_application_model().objects.get(
+        client_id=response.json()["client_id"]
+    )
+    assert application.redirect_uris == " ".join(uris[1:])
+
+
+@pytest.mark.django_db
+def test_registration_limits_the_number_of_redirect_uris(client):
+    uris = [f"https://app.example/cb{index}" for index in range(11)]
+    response = register(client, redirect_uris=uris)
+
+    assert response.status_code == 400
+    assert response.json()["error"] == "invalid_redirect_uri"
+    assert register(client, redirect_uris=uris[:10]).status_code == 201
+
+
+@pytest.mark.django_db
+def test_registration_rejects_a_large_body(client):
+    # Unknown fields are ignored and stored nowhere, but still have to be read.
+    response = register(client, software_statement="x" * 17 * 1024)
+
+    assert response.status_code == 400
+    assert response.json()["error"] == "invalid_client_metadata"
+    assert not get_application_model().objects.exists()
