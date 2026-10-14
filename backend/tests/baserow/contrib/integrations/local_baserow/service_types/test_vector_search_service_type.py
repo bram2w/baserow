@@ -59,20 +59,28 @@ def test_vector_search_service_validates_its_fields(setup, data_fixture):
 
     base = {"table_id": table.id, "integration_id": integration.id}
     with pytest.raises(ValidationError):
-        service_type.prepare_values({**base, "field_id": other_field.id}, user)
+        service_type.prepare_values(
+            {**base, "search_field_ids": [other_field.id]}, user
+        )
     with pytest.raises(ValidationError):
         # Vector search is off on the name field.
-        service_type.prepare_values({**base, "field_id": name.id}, user)
+        service_type.prepare_values(
+            {**base, "search_field_ids": [notes.id, name.id]}, user
+        )
     with pytest.raises(ValidationError):
         service_type.prepare_values(
-            {**base, "field_id": notes.id, "included_field_ids": [other_field.id]},
+            {
+                **base,
+                "search_field_ids": [notes.id],
+                "included_field_ids": [other_field.id],
+            },
             user,
         )
 
     values = service_type.prepare_values(
         {
             **base,
-            "field_id": notes.id,
+            "search_field_ids": [notes.id],
             "included_field_ids": [name.id],
             "max_results": 3,
             "search_query": "'fruit'",
@@ -80,17 +88,17 @@ def test_vector_search_service_validates_its_fields(setup, data_fixture):
         user,
     )
     service = ServiceHandler().create_service(service_type, **values)
-    assert service.field_id == notes.id
+    assert service.search_field_ids == [notes.id]
     assert service.included_field_ids == [name.id]
-    assert service_type.export_prepared_values(service)["included_field_ids"] == [
-        name.id
-    ]
+    exported = service_type.export_prepared_values(service)
+    assert exported["search_field_ids"] == [notes.id]
+    assert exported["included_field_ids"] == [name.id]
 
     # Switching tables forgets the field selection.
     new_values = service_type.prepare_values(
         {"table_id": other_table.id}, user, instance=service
     )
-    assert new_values["field"] is None
+    assert new_values["search_field_ids"] == []
     assert new_values["included_field_ids"] == []
 
 
@@ -101,7 +109,7 @@ def test_vector_search_service_dispatches_matching_rows(setup):
         {
             "table_id": table.id,
             "integration_id": integration.id,
-            "field_id": notes.id,
+            "search_field_ids": [notes.id],
             "included_field_ids": [name.id],
             "max_results": 1,
             "search_query": "'fruit'",
@@ -114,28 +122,42 @@ def test_vector_search_service_dispatches_matching_rows(setup):
     with patch.object(
         SearchHandler,
         "vector_search",
-        return_value=[(rows[0].id, 0.93), (rows[1].id, 0.21)],
+        return_value=[(rows[0].id, 0.93, notes.id), (rows[1].id, 0.21, notes.id)],
     ) as search:
         resolved = service_type.resolve_service_formulas(service, dispatch_context)
         result = service_type.dispatch_transform(
             service_type.dispatch_data(service, resolved, dispatch_context)
         )
 
+    assert [field.id for field in search.call_args.args[1]] == [notes.id]
     assert search.call_args.args[2] == "fruit"
     assert search.call_args.kwargs["limit"] == 2
     assert result.data == {
-        "results": [{"id": rows[0].id, "Name": "Apple", "score": 0.93}],
+        "results": [
+            {
+                "id": rows[0].id,
+                "Name": "Apple",
+                "score": 0.93,
+                "matched_field": "Notes",
+            }
+        ],
         "count": 1,
     }
 
 
 @pytest.mark.django_db
-def test_vector_search_service_needs_a_field(setup):
+def test_vector_search_service_needs_a_searchable_field(setup):
     user, table, name, notes, rows, integration, service_type = setup
     values = service_type.prepare_values(
         {"table_id": table.id, "integration_id": integration.id}, user
     )
     service = ServiceHandler().create_service(service_type, **values)
+    # Without a selection every field with vector search enabled is searched.
+    assert [field.id for field in service_type.get_fields_to_search(service)] == [
+        notes.id
+    ]
+
+    FieldHandler().update_field(user, notes, vector_search_enabled=False)
     with pytest.raises(ServiceImproperlyConfiguredDispatchException):
         service_type.resolve_service_formulas(service, FakeDispatchContext())
 
@@ -146,7 +168,7 @@ def _create_service(setup):
         {
             "table_id": table.id,
             "integration_id": integration.id,
-            "field_id": notes.id,
+            "search_field_ids": [notes.id],
             "included_field_ids": [name.id],
             "search_query": "'fruit'",
         },
@@ -181,7 +203,7 @@ def test_vector_search_service_import_drops_unmapped_fields(setup, data_fixture)
         is_duplicate=True,
         is_template=True,
     )
-    assert imported.field_id is None
+    assert imported.search_field_ids == []
     assert imported.included_field_ids == []
 
     # An import into another workspace that only mapped some of the fields.
@@ -189,7 +211,7 @@ def test_vector_search_service_import_drops_unmapped_fields(setup, data_fixture)
     imported = _reimport(
         service_type, service, {"database_fields": {name.id: other_name.id}}
     )
-    assert imported.field_id is None
+    assert imported.search_field_ids == []
     assert imported.included_field_ids == [other_name.id]
 
 
@@ -201,7 +223,7 @@ def test_vector_search_service_duplicate_keeps_unmapped_fields(setup):
     imported = _reimport(
         service_type, service, {"database_fields": {}}, is_duplicate=True
     )
-    assert imported.field_id == notes.id
+    assert imported.search_field_ids == [notes.id]
     assert imported.included_field_ids == [name.id]
 
 
@@ -231,3 +253,51 @@ def test_vector_search_service_reports_an_unavailable_embeddings_service(setup):
                 service, {"search_query": "fruit"}, FakeDispatchContext()
             )
     assert str(exc_info.value) == "The embeddings service is unavailable."
+
+
+@pytest.mark.django_db
+def test_vector_search_service_searches_every_field_when_none_are_chosen(setup):
+    from tests.baserow.contrib.database.search.test_vector_search import (
+        fake_embedder,
+    )
+
+    user, table, name, notes, rows, integration, service_type = setup
+    with override_settings(BASEROW_EMBEDDINGS_API_URL="http://embeddings.test"):
+        title = FieldHandler().create_field(
+            user, table, "text", name="Title", vector_search_enabled=True
+        )
+    RowHandler().update_rows(
+        user,
+        table,
+        [
+            {"id": rows[0].id, f"field_{title.id}": "Red"},
+            {"id": rows[1].id, f"field_{title.id}": "Fruit delivery"},
+        ],
+    )
+    SearchHandler.update_search_data(table)
+    SearchHandler.update_embeddings(table, [title.id, notes.id], embedder=fake_embedder)
+    values = service_type.prepare_values(
+        {
+            "table_id": table.id,
+            "integration_id": integration.id,
+            "included_field_ids": [name.id],
+            "max_results": 5,
+            "search_query": "'fruit'",
+        },
+        user,
+    )
+    service = ServiceHandler().create_service(service_type, **values)
+
+    # Only the embeddings service is replaced; the search runs for real.
+    with (
+        override_settings(BASEROW_EMBEDDINGS_API_URL="http://embeddings.test"),
+        patch(
+            "baserow.contrib.database.search.handler.get_embedder",
+            return_value=fake_embedder,
+        ),
+    ):
+        result = ServiceHandler().dispatch_service(service, FakeDispatchContext())
+
+    matched = {row["Name"]: row["matched_field"] for row in result.data["results"]}
+    # "A fruit" in Notes and "Fruit delivery" in Title both match.
+    assert matched == {"Apple": "Notes", "Truck": "Title"}

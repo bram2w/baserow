@@ -3120,9 +3120,10 @@ class LocalBaserowRowsDeletedServiceType(LocalBaserowRowsSignalServiceType):
 
 class LocalBaserowVectorSearchServiceType(LocalBaserowTableServiceType):
     """
-    Semantic search over one field with vector search enabled. The agent builder
-    exposes it as an action tool: the query comes from the tool input, the
-    result lists the best matching rows with the chosen fields and a score.
+    Semantic search over the fields with vector search enabled, all of them
+    unless some are chosen. The agent builder exposes it as an action tool: the
+    query comes from the tool input, the result lists the best matching rows
+    with the chosen fields, a score and the field that matched.
     """
 
     type = "local_baserow_vector_search"
@@ -3138,12 +3139,12 @@ class LocalBaserowVectorSearchServiceType(LocalBaserowTableServiceType):
 
     @property
     def allowed_fields(self):
-        return super().allowed_fields + ["field", "max_results", "search_query"]
+        return super().allowed_fields + ["max_results", "search_query"]
 
     @property
     def serializer_field_names(self):
         return super().serializer_field_names + [
-            "field_id",
+            "search_field_ids",
             "included_field_ids",
             "max_results",
             "search_query",
@@ -3153,10 +3154,11 @@ class LocalBaserowVectorSearchServiceType(LocalBaserowTableServiceType):
     def serializer_field_overrides(self):
         return {
             **super().serializer_field_overrides,
-            "field_id": serializers.IntegerField(
+            "search_field_ids": serializers.ListField(
+                child=serializers.IntegerField(),
                 required=False,
-                allow_null=True,
-                help_text="The id of the field with vector search enabled to search.",
+                help_text="The ids of the fields with vector search enabled to "
+                "search; all of them when empty.",
             ),
             "included_field_ids": serializers.ListField(
                 child=serializers.IntegerField(),
@@ -3176,7 +3178,7 @@ class LocalBaserowVectorSearchServiceType(LocalBaserowTableServiceType):
         }
 
     class SerializedDict(LocalBaserowTableServiceType.SerializedDict):
-        field_id: int
+        search_field_ids: List[int]
         included_field_ids: List[int]
         max_results: int
         search_query: str
@@ -3185,8 +3187,7 @@ class LocalBaserowVectorSearchServiceType(LocalBaserowTableServiceType):
         return (
             super()
             .enhance_queryset(queryset)
-            .select_related("field")
-            .prefetch_related("included_fields")
+            .prefetch_related("search_fields", "included_fields")
         )
 
     def prepare_values(
@@ -3204,27 +3205,30 @@ class LocalBaserowVectorSearchServiceType(LocalBaserowTableServiceType):
             and instance.table_id != getattr(values["table"], "id", None)
         ):
             # Fields belong to a table; a new table starts from scratch.
-            values["field"] = None
+            values["search_field_ids"] = []
             values["included_field_ids"] = []
 
-        if "field_id" in values:
-            field = None
-            field_id = values.pop("field_id")
-            if field_id is not None:
-                field = FieldHandler().get_field(field_id)
-                if table is None or field.table_id != table.id:
-                    raise DRFValidationError(
-                        detail=f"The field with ID {field_id} is not related to "
-                        "the given table.",
-                        code="invalid_field",
-                    )
-                if not field.vector_search_enabled:
-                    raise DRFValidationError(
-                        detail=f"The field with ID {field_id} does not have vector "
-                        "search enabled.",
-                        code="invalid_field",
-                    )
-            values["field"] = field
+        if "search_field_ids" in values:
+            wanted = {int(field_id) for field_id in values["search_field_ids"]}
+            fields = (
+                list(Field.objects.filter(table=table, id__in=wanted))
+                if table is not None
+                else []
+            )
+            if wanted - {field.id for field in fields}:
+                raise DRFValidationError(
+                    detail="One or more fields to search are not related to the "
+                    "given table.",
+                    code="invalid_field",
+                )
+            disabled = [field.id for field in fields if not field.vector_search_enabled]
+            if disabled:
+                raise DRFValidationError(
+                    detail=f"The fields with IDs {disabled} do not have vector "
+                    "search enabled.",
+                    code="invalid_field",
+                )
+            values["search_field_ids"] = sorted(wanted)
 
         if "included_field_ids" in values and table is not None:
             wanted = {int(field_id) for field_id in values["included_field_ids"]}
@@ -3243,23 +3247,25 @@ class LocalBaserowVectorSearchServiceType(LocalBaserowTableServiceType):
 
         return values
 
-    def after_create(self, instance: LocalBaserowVectorSearch, values: Dict):
-        super().after_create(instance, values)
+    def _set_field_lists(self, instance: LocalBaserowVectorSearch, values: Dict):
+        if "search_field_ids" in values:
+            instance.search_fields.set(values["search_field_ids"])
         if "included_field_ids" in values:
             instance.included_fields.set(values["included_field_ids"])
+
+    def after_create(self, instance: LocalBaserowVectorSearch, values: Dict):
+        super().after_create(instance, values)
+        self._set_field_lists(instance, values)
 
     def after_update(
         self, instance: LocalBaserowVectorSearch, values: Dict, changes: Dict
     ):
         super().after_update(instance, values, changes)
-        if "included_field_ids" in values:
-            instance.included_fields.set(values["included_field_ids"])
+        self._set_field_lists(instance, values)
 
     def export_prepared_values(self, instance: Service) -> dict[str, any]:
         values = super().export_prepared_values(instance)
-        if "field" in values:
-            del values["field"]
-        values["field_id"] = instance.field_id
+        values["search_field_ids"] = instance.search_field_ids
         values["included_field_ids"] = instance.included_field_ids
         return values
 
@@ -3271,6 +3277,8 @@ class LocalBaserowVectorSearchServiceType(LocalBaserowTableServiceType):
         storage=None,
         cache=None,
     ):
+        if prop_name == "search_field_ids":
+            return service.search_field_ids
         if prop_name == "included_field_ids":
             return service.included_field_ids
         return super().serialize_property(
@@ -3288,7 +3296,7 @@ class LocalBaserowVectorSearchServiceType(LocalBaserowTableServiceType):
         **kwargs,
     ):
         if (
-            prop_name in ("field_id", "included_field_ids")
+            prop_name in ("search_field_ids", "included_field_ids")
             and "database_fields" in id_mapping
         ):
             # Same rule as `table_id`: a duplicate stays in the workspace, so
@@ -3299,8 +3307,6 @@ class LocalBaserowVectorSearchServiceType(LocalBaserowTableServiceType):
                 config, "is_template", False
             )
             database_fields = id_mapping["database_fields"]
-            if prop_name == "field_id":
-                return database_fields.get(value, value if keep_unmapped else None)
             mapped = [
                 database_fields.get(field_id, field_id if keep_unmapped else None)
                 for field_id in value
@@ -3325,6 +3331,7 @@ class LocalBaserowVectorSearchServiceType(LocalBaserowTableServiceType):
         cache=None,
         **kwargs,
     ):
+        search_field_ids = serialized_values.pop("search_field_ids", [])
         included_field_ids = serialized_values.pop("included_field_ids", [])
         service = super().create_instance_from_serialized(
             serialized_values,
@@ -3334,6 +3341,8 @@ class LocalBaserowVectorSearchServiceType(LocalBaserowTableServiceType):
             cache=cache,
             **kwargs,
         )
+        if search_field_ids:
+            service.search_fields.set(search_field_ids)
         if included_field_ids:
             service.included_fields.set(included_field_ids)
         return service
@@ -3350,22 +3359,41 @@ class LocalBaserowVectorSearchServiceType(LocalBaserowTableServiceType):
             )
         ]
 
+    def get_fields_to_search(self, service: LocalBaserowVectorSearch) -> list[Field]:
+        """
+        The chosen fields, or every field of the table when none are chosen,
+        that can be searched right now. A chosen field that was deleted or had
+        vector search turned off is skipped instead of breaking the search.
+
+        :raises ServiceImproperlyConfiguredDispatchException: When no field
+            can be searched.
+        """
+
+        if service.table_id is None:
+            raise ServiceImproperlyConfiguredDispatchException(
+                "No table selected to search in."
+            )
+        queryset = Field.objects.filter(
+            table_id=service.table_id, vector_search_enabled=True, trashed=False
+        )
+        search_field_ids = service.search_field_ids
+        if search_field_ids:
+            queryset = queryset.filter(id__in=search_field_ids)
+        fields = list(queryset.order_by("id"))
+        if not fields:
+            raise ServiceImproperlyConfiguredDispatchException(
+                "No field with vector search enabled to search in."
+                if not search_field_ids
+                else "None of the selected fields can be searched anymore."
+            )
+        return fields
+
     def resolve_service_formulas(
         self, service: LocalBaserowVectorSearch, dispatch_context: DispatchContext
     ) -> Dict[str, Any]:
         resolved_values = super().resolve_service_formulas(service, dispatch_context)
-        if service.field_id is None:
-            raise ServiceImproperlyConfiguredDispatchException(
-                "No field selected to search in."
-            )
-        if service.field.trashed:
-            raise ServiceImproperlyConfiguredDispatchException(
-                "The selected field has been deleted."
-            )
-        if not service.field.vector_search_enabled:
-            raise ServiceImproperlyConfiguredDispatchException(
-                "The selected field no longer has vector search enabled."
-            )
+        # Checked before running, like the other configuration errors.
+        self.get_fields_to_search(service)
         return resolved_values
 
     def dispatch_data(
@@ -3378,10 +3406,13 @@ class LocalBaserowVectorSearchServiceType(LocalBaserowTableServiceType):
         model = self.get_table_model(service)
         queryset = self.build_queryset(service, table, dispatch_context, model)
 
+        fields = self.get_fields_to_search(service)
+        field_names = {field.id: field.name for field in fields}
+
         try:
             hits = SearchHandler.vector_search(
                 table,
-                service.field,
+                fields,
                 resolved_values.get("search_query") or "",
                 limit=service.max_results * self.candidate_multiplier,
             )
@@ -3389,11 +3420,11 @@ class LocalBaserowVectorSearchServiceType(LocalBaserowTableServiceType):
             raise UnexpectedDispatchException(str(exc)) from exc
         rows_by_id = {
             row.id: row
-            for row in queryset.filter(id__in=[row_id for row_id, _ in hits])
+            for row in queryset.filter(id__in=[row_id for row_id, _, _ in hits])
         }
         rows = [
-            (rows_by_id[row_id], score)
-            for row_id, score in hits
+            (rows_by_id[row_id], score, field_names[field_id])
+            for row_id, score, field_id in hits
             if row_id in rows_by_id
         ][: service.max_results]
         return {
@@ -3411,11 +3442,14 @@ class LocalBaserowVectorSearchServiceType(LocalBaserowTableServiceType):
             user_field_names=True,
         )
         results = []
-        for row, score in dispatch_data["rows"]:
+        for row, score, matched_field in dispatch_data["rows"]:
             data = serializer(row).data
             # The row order is meaningless to a reader of search results.
             data.pop("order", None)
             data["score"] = score
+            # Lets the agent tell why a row came up when several fields are
+            # searched.
+            data["matched_field"] = matched_field
             results.append(data)
         return DispatchResult(data={"results": results, "count": len(results)})
 

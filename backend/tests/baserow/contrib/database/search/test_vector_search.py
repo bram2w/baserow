@@ -224,17 +224,17 @@ def test_vector_search_mixes_semantic_and_lexical_hits(vector_table):
 
     with override_settings(BASEROW_EMBEDDINGS_API_URL=EMBEDDINGS_URL):
         hits = SearchHandler.vector_search(
-            table, field, "fruit", limit=2, embedder=fake_embedder
+            table, [field], "fruit", limit=2, embedder=fake_embedder
         )
-    assert hits[0] == (rows[0].id, 1.0)
+    assert hits[0] == (rows[0].id, 1.0, field.id)
     assert len(hits) == 2
     # "garage" is a lexical hit even though the fake vectors put it elsewhere.
     hits = SearchHandler.vector_search(
-        table, field, "garage", limit=3, embedder=fake_embedder
+        table, [field], "garage", limit=3, embedder=fake_embedder
     )
-    assert rows[1].id in [row_id for row_id, _ in hits]
+    assert rows[1].id in [row_id for row_id, _, _ in hits]
     assert (
-        SearchHandler.vector_search(table, field, "   ", embedder=fake_embedder) == []
+        SearchHandler.vector_search(table, [field], "   ", embedder=fake_embedder) == []
     )
 
 
@@ -265,9 +265,74 @@ def test_a_text_field_can_be_searched_semantically(data_fixture):
 
     with override_settings(BASEROW_EMBEDDINGS_API_URL=EMBEDDINGS_URL):
         hits = SearchHandler.vector_search(
-            table, field, "fruit", limit=1, embedder=fake_embedder
+            table, [field], "fruit", limit=1, embedder=fake_embedder
         )
-    assert hits == [(rows[0].id, 1.0)]
+    assert hits == [(rows[0].id, 1.0, field.id)]
+
+
+@pytest.mark.django_db
+def test_several_fields_are_searched_together(data_fixture):
+    if not is_pgvector_enabled():
+        pytest.skip("pgvector is not installed in the test database")
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    with override_settings(BASEROW_EMBEDDINGS_API_URL=EMBEDDINGS_URL):
+        title = FieldHandler().create_field(
+            user, table, "text", name="Title", vector_search_enabled=True
+        )
+        notes = FieldHandler().create_field(
+            user, table, "long_text", name="Notes", vector_search_enabled=True
+        )
+    in_title, in_notes, in_both, elsewhere = (
+        RowHandler()
+        .create_rows(
+            user,
+            table,
+            rows_values=[
+                {f"field_{title.id}": "Fruit basket", f"field_{notes.id}": "Cars"},
+                {f"field_{title.id}": "Garage", f"field_{notes.id}": "Some fruit"},
+                {f"field_{title.id}": "Fruit", f"field_{notes.id}": "More fruit"},
+                {f"field_{title.id}": "Garage", f"field_{notes.id}": "Cars"},
+            ],
+        )
+        .created_rows
+    )
+    SearchHandler.update_search_data(table)
+    axes = {}
+
+    def topic_embedder(texts):
+        # Like `fake_embedder`, but every text also gets a small axis of its
+        # own: identical vectors are ranked unreliably by the vector index.
+        vectors = []
+        for text in texts:
+            vector = [0.0] * DEFAULT_EMBEDDING_DIMENSIONS
+            vector[0 if "fruit" in text.lower() else 1] = 1.0
+            vector[2 + axes.setdefault(text, len(axes))] = 0.1
+            vectors.append(vector)
+        return vectors
+
+    SearchHandler.update_embeddings(
+        table, [title.id, notes.id], embedder=topic_embedder
+    )
+
+    with override_settings(BASEROW_EMBEDDINGS_API_URL=EMBEDDINGS_URL):
+        hits = SearchHandler.vector_search(
+            table, [title, notes], "fruit", limit=3, embedder=topic_embedder
+        )
+        only_title = SearchHandler.vector_search(
+            table, [title], "fruit", limit=2, embedder=topic_embedder
+        )
+
+    # The rows matching in either field come first, each once, with the
+    # field it matched in.
+    matched = {row_id: field_id for row_id, _, field_id in hits}
+    assert len(hits) == 3
+    assert set(matched) == {in_title.id, in_notes.id, in_both.id}
+    assert matched[in_title.id] == title.id
+    assert matched[in_notes.id] == notes.id
+    assert elsewhere.id not in matched
+    # Searching only the title leaves out what only the notes mention.
+    assert {row_id for row_id, _, _ in only_title} == {in_title.id, in_both.id}
 
 
 @pytest.mark.django_db
@@ -405,7 +470,7 @@ def test_vector_search_is_not_capped_by_the_default_hnsw_ef_search(data_fixture)
         cursor.execute("SET LOCAL enable_seqscan = off")
         cursor.execute("SET LOCAL enable_sort = off")
     hits = SearchHandler.vector_search(
-        table, first, "fruit", limit=50, embedder=axis_embedder
+        table, [first], "fruit", limit=50, embedder=axis_embedder
     )
     assert len(hits) == 50
 

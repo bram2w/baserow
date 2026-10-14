@@ -551,7 +551,7 @@
     "approvalsWaiting": "{count} approval waiting | {count} approvals waiting",
     "configure": "Configure",
     "lastRun": "Last run: {time}",
-    "neverRan": "Never ran"
+    "neverRan": "Never triggered"
   },
   "agentSidebar": {
     "pendingApprovals": "{count} pending approval | {count} pending approvals"

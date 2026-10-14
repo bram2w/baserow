@@ -12,13 +12,13 @@
       small-label
       :label="$t('localBaserowVectorSearchForm.fieldLabel')"
       :helper-text="$t('localBaserowVectorSearchForm.fieldHelper')"
-      required
       class="margin-bottom-2"
     >
       <Dropdown
-        v-model="values.field_id"
+        v-model="values.search_field_ids"
         :disabled="fieldsLoading || vectorFields.length === 0"
         :placeholder="$t('localBaserowVectorSearchForm.fieldPlaceholder')"
+        multiple
       >
         <DropdownItem
           v-for="field in vectorFields"
@@ -109,14 +109,14 @@ export default {
     return {
       allowedValues: [
         'table_id',
-        'field_id',
+        'search_field_ids',
         'included_field_ids',
         'max_results',
         'search_query',
       ],
       values: {
         table_id: null,
-        field_id: null,
+        search_field_ids: [],
         included_field_ids: [],
         max_results: 5,
         search_query: '',

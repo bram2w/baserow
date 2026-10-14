@@ -1202,32 +1202,38 @@ class SearchHandler:
     def vector_search(
         cls,
         table: "Table",
-        field: "Field",
+        fields: list["Field"],
         query: str,
         limit: int = 10,
         embedder: Callable[[list[str]], list[list[float]]] | None = None,
-    ) -> list[tuple[int, float]]:
+    ) -> list[tuple[int, float, int]]:
         """
-        Hybrid search over one vector-enabled field: the nearest embeddings by
+        Hybrid search over vector-enabled fields: the nearest embeddings by
         cosine distance interleaved with the full-text matches of the same
-        field, de-duplicated. Trashed rows may be included because the search
+        fields, one hit per row. Trashed rows may be included because the search
         data keeps them; callers fetch the rows and drop what no longer exists.
 
-        :return: `(row_id, score)` pairs, best first. The score is the cosine
-            similarity for semantic hits and the text rank for lexical ones.
+        :param fields: The fields to search in; those without vector search
+            enabled are skipped.
+        :return: `(row_id, score, field_id)` triples, best first. The score is
+            the cosine similarity for semantic hits and the text rank for
+            lexical ones, and the field is where the row matched best.
         """
 
         from pgvector.django import CosineDistance
 
         workspace_id = table.database.workspace_id
-        if not field.vector_search_enabled or not cls.vector_search_ready(workspace_id):
+        field_ids = [field.id for field in fields if field.vector_search_enabled]
+        if not field_ids or not cls.vector_search_ready(workspace_id):
             return []
         query = (query or "").strip()
         if not query:
             return []
 
         search_model = cls.get_workspace_search_table_model(workspace_id)
-        candidates = max(limit * 4, 20)
+        # Every field gets its share of candidates, so a row matching in one
+        # field isn't pushed out by the cells of another.
+        candidates = max(limit * 4, 20) * len(field_ids)
 
         embedder = embedder or get_embedder()
         query_vector = embedder([query[:EMBEDDING_TEXT_LIMIT]])[0]
@@ -1244,10 +1250,12 @@ class SearchHandler:
                     )
                 )
             semantic = list(
-                search_model.objects.filter(field_id=field.id, embedding__isnull=False)
+                search_model.objects.filter(
+                    field_id__in=field_ids, embedding__isnull=False
+                )
                 .annotate(distance=CosineDistance("embedding", query_vector))
                 .order_by("distance")
-                .values_list("row_id", "distance")[:candidates]
+                .values_list("row_id", "distance", "field_id")[:candidates]
             )
 
         lexical = []
@@ -1257,21 +1265,23 @@ class SearchHandler:
                 sanitized, search_type="raw", config=cls.search_config()
             )
             lexical = list(
-                search_model.objects.filter(field_id=field.id, value=search_query)
+                search_model.objects.filter(field_id__in=field_ids, value=search_query)
                 .annotate(rank=SearchRank(F("value"), search_query))
                 .order_by("-rank", "row_id")
-                .values_list("row_id", "rank")[:candidates]
+                .values_list("row_id", "rank", "field_id")[:candidates]
             )
 
-        results: list[tuple[int, float]] = []
+        results: list[tuple[int, float, int]] = []
         seen = set()
         for semantic_hit, lexical_hit in zip_longest(semantic, lexical):
             for hit, is_semantic in ((semantic_hit, True), (lexical_hit, False)):
+                # Both lists are ordered best first, so the first hit of a row
+                # is its best match.
                 if hit is None or hit[0] in seen:
                     continue
                 seen.add(hit[0])
                 score = 1 - float(hit[1]) if is_semantic else float(hit[1])
-                results.append((hit[0], round(score, 4)))
+                results.append((hit[0], round(score, 4), hit[2]))
                 if len(results) >= limit:
                     return results
         return results

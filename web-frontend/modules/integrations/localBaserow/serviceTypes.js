@@ -628,13 +628,6 @@ export class LocalBaserowVectorSearchServiceType extends WorkflowActionServiceTy
   get formComponent() {
     return LocalBaserowVectorSearchForm
   }
-
-  getErrorMessage({ service, application }) {
-    if (service !== undefined && service.table_id && !service.field_id) {
-      return this.app.$i18n.t('serviceType.errorNoVectorFieldSelected')
-    }
-    return super.getErrorMessage({ service, application })
-  }
 }
 
 export class LocalBaserowDeleteRowWorkflowServiceType extends WorkflowActionServiceTypeMixin(

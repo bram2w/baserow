@@ -56,12 +56,10 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "field",
-                    models.ForeignKey(
-                        help_text="The field with vector search enabled that is "
-                        "searched.",
-                        null=True,
-                        on_delete=django.db.models.deletion.SET_NULL,
+                    "search_fields",
+                    models.ManyToManyField(
+                        help_text="The fields with vector search enabled that are "
+                        "searched. All of them when empty.",
                         related_name="+",
                         to="database.field",
                     ),

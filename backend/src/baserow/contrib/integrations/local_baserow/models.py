@@ -203,16 +203,15 @@ class LocalBaserowRowsDeleted(LocalBaserowTableService):
 
 class LocalBaserowVectorSearch(LocalBaserowTableService):
     """
-    Semantic search over one vector-enabled field of a table. Used as an agent
+    Semantic search over the vector-enabled fields of a table. Used as an agent
     action tool: the agent supplies the query, the results carry the chosen
     fields of the best matching rows.
     """
 
-    field = models.ForeignKey(
+    search_fields = models.ManyToManyField(
         "database.Field",
-        help_text="The field with vector search enabled that is searched.",
-        null=True,
-        on_delete=models.SET_NULL,
+        help_text="The fields with vector search enabled that are searched. All "
+        "of them when empty.",
         related_name="+",
     )
     included_fields = models.ManyToManyField(
@@ -224,6 +223,10 @@ class LocalBaserowVectorSearch(LocalBaserowTableService):
         default=5, db_default=5, help_text="The maximum number of rows returned."
     )
     search_query = FormulaField(default="", help_text="The text to search for.")
+
+    @property
+    def search_field_ids(self) -> list[int]:
+        return list(self.search_fields.values_list("id", flat=True))
 
     @property
     def included_field_ids(self) -> list[int]:

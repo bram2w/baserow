@@ -49,7 +49,6 @@
     "localBaserowDeleteRowDescription": "Deletes one or more rows in a Baserow table.",
     "localBaserowVectorSearch": "Semantic search",
     "localBaserowVectorSearchDescription": "Finds the rows whose text is closest in meaning to a query, in a field with semantic search enabled.",
-    "errorNoVectorFieldSelected": "No field selected to search in.",
     "localBaserowRowsCreated": "Rows are created",
     "localBaserowRowsCreatedDescription": "Triggered when rows are created in a Baserow table.",
     "localBaserowRowsUpdated": "Rows are updated",
@@ -463,9 +462,9 @@
     "rowsHelper": "The expression must return an array of row objects, or a JSON string that parses to one. Each object must include an id property. Use field names or field IDs as object keys. Up to {limit} rows can be updated at once."
   },
   "localBaserowVectorSearchForm": {
-    "fieldLabel": "Field to search",
-    "fieldHelper": "Only text and long text fields with semantic search enabled in their advanced settings are listed.",
-    "fieldPlaceholder": "Choose a field",
+    "fieldLabel": "Fields to search",
+    "fieldHelper": "Text and long text fields with semantic search enabled in their advanced settings. Leave empty to search all of them.",
+    "fieldPlaceholder": "All semantic search fields",
     "noVectorFields": "This table has no field with semantic search enabled yet.",
     "setupHeading": "How to enable semantic search on a field",
     "setupDescription": "Semantic search works on text and long text fields that keep an embedding of every cell. Enable it once per field:",
