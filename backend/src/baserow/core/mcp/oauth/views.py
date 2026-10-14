@@ -59,13 +59,14 @@ class MCPAuthorizeRedirectView(View):
                 _consent_error_url(request, error.oauthlib_error)
             )
 
-        # The consent page gets the query as unpadded base64url: the login redirect
-        # passes it through encodeURI and the router, which would re-encode a plain
-        # query string, but leave base64url characters alone.
+        # The consent page gets the query as unpadded base64url in its path. SSO
+        # sign-in only keeps the path of the page to return to, and the login
+        # redirect passes it through encodeURI and the router, which leave base64url
+        # characters alone.
         query = request.META.get("QUERY_STRING", "")
         encoded = base64.urlsafe_b64encode(query.encode()).rstrip(b"=").decode()
         frontend_url = settings.PUBLIC_WEB_FRONTEND_URL.rstrip("/")
-        return HttpResponseRedirect(f"{frontend_url}/mcp-authorize?request={encoded}")
+        return HttpResponseRedirect(f"{frontend_url}/mcp-authorize/{encoded}")
 
 
 class MCPProtectedResourceMetadataView(OAuthProtectedResourceMetadataView):

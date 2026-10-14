@@ -54,7 +54,7 @@ describe('MCP authorize page', () => {
     '&code_challenge=x-_y%2B~&code_challenge_method=S256&scope=mcp&scope=b' +
     '&state=s%C3%A9&resource=http%3A%2F%2Flocalhost%3A8000%2Fmcp'
   const request = Buffer.from(query).toString('base64url')
-  const route = `/mcp-authorize?request=${request}`
+  const route = `/mcp-authorize/${request}`
 
   beforeEach(() => {
     testApp = new TestApp()
@@ -533,8 +533,23 @@ describe('MCP authorize page', () => {
     ).toBeUndefined()
     // Awaited, so the login navigation and its settings middleware finish while
     // the request mock is still in place.
-    await authenticatedUnlessError({ query: { request }, fullPath: route })
+    await authenticatedUnlessError({
+      query: {},
+      params: { request },
+      fullPath: route,
+    })
     expect(useRouter().currentRoute.value.name).toBe('login')
+  })
+
+  test('still reads a request sent as a query parameter', async () => {
+    testApp.mock
+      .onGet('/mcp/oauth/consent/', { params: { query } })
+      .reply(200, consent)
+    const wrapper = await testApp.mount(MCPAuthorize, {
+      route: `/mcp-authorize?request=${request}`,
+    })
+    await flushPromises()
+    expect(wrapper.text()).toContain('List tables')
   })
 
   test('an invalid request value sends an empty query', async () => {
@@ -542,7 +557,7 @@ describe('MCP authorize page', () => {
       .onGet('/mcp/oauth/consent/', { params: { query: '' } })
       .reply(400, { error: 'invalid_request' })
     const wrapper = await testApp.mount(MCPAuthorize, {
-      route: '/mcp-authorize?request=%25%25',
+      route: '/mcp-authorize/%25%25',
     })
     expect(wrapper.text()).not.toContain('List tables')
   })

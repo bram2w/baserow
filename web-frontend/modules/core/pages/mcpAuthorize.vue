@@ -196,8 +196,16 @@ const route = useRoute()
 const { $client, $store: store } = useNuxtApp()
 const { t } = useI18n()
 
+// The consent page grants a client access, so it must not be framed
+// (clickjacking). Set here rather than in a route rule, which would miss other
+// spellings of the path that the router also serves.
+if (import.meta.server) {
+  useResponseHeader('Content-Security-Policy').value = "frame-ancestors 'none'"
+  useResponseHeader('X-Frame-Options').value = 'DENY'
+}
+
 /**
- * Decodes the unpadded base64url `request` param the backend puts the original
+ * Decodes the unpadded base64url `request` the backend puts the original
  * authorize query string in. base64url survives the login redirect's
  * `encodeURI` and the router untouched, unlike a plain query string.
  */
@@ -215,8 +223,11 @@ function decodeRequest(value) {
   }
 }
 
+// The request is in the path, which SSO sign-in keeps. Older backends sent it
+// as a query parameter.
+const encodedRequest = route.params.request || route.query.request
 // The raw query string of the original authorize request.
-const query = decodeRequest(route.query.request)
+const query = decodeRequest(encodedRequest)
 
 const workspaceId = ref(null)
 // Tool name -> whether the user leaves it ticked.
@@ -246,7 +257,7 @@ const framed = ref(false)
 // Client only: the defaults below are applied when the data arrives, so a
 // server-rendered form would ship unticked checkboxes that hydration can't fix.
 const { data: consent } = useAsyncData(
-  `mcp-consent-${route.query.request}`,
+  `mcp-consent-${encodedRequest}`,
   async () => {
     if (error.value.visible) {
       return null

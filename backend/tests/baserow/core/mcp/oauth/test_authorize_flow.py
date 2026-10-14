@@ -49,12 +49,12 @@ def test_authorize_redirects_to_frontend_consent(client):
     assert response.status_code == 302
     location = urlparse(response["Location"])
     assert response["Location"].startswith(settings.PUBLIC_WEB_FRONTEND_URL)
-    assert location.path == "/mcp-authorize"
-    # The query travels base64url-encoded, unpadded, so the login round trip
-    # (encodeURI + router) can't re-encode it.
-    params = parse_qs(location.query)
-    assert list(params) == ["request"]
-    encoded = params["request"][0]
+    # The query travels base64url-encoded, unpadded, in the path: SSO sign-in only
+    # keeps the path, and the login round trip (encodeURI + router) can't
+    # re-encode it.
+    assert location.query == ""
+    prefix, encoded = location.path.rsplit("/", 1)
+    assert prefix == "/mcp-authorize"
     assert re.fullmatch(r"[A-Za-z0-9_-]+", encoded)
     padded = encoded + "=" * (-len(encoded) % 4)
     assert base64.urlsafe_b64decode(padded).decode() == query
@@ -570,7 +570,7 @@ def test_authorize_redirect_has_no_double_slash(client, settings):
     query = authorize_query(cimd_client(client), challenge)
     response = client.get(f"/oauth/authorize/?{query}")
     assert response.status_code == 302
-    assert response["Location"].startswith("https://br.example/mcp-authorize?")
+    assert response["Location"].startswith("https://br.example/mcp-authorize/")
 
 
 @pytest.mark.django_db

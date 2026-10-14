@@ -556,3 +556,41 @@ def test_oauth2_callback_login_auth_flow_error(
         assert response.headers["Location"] == (
             f"{settings.PUBLIC_WEB_FRONTEND_URL}/login/error?error=errorAuthFlowError"
         )
+
+
+# The MCP consent page carries the authorize request in its path, because the
+# return URL only keeps the path.
+MCP_CONSENT_PATH = "/mcp-authorize/cmVzcG9uc2VfdHlwZT1jb2RlJmNsaWVudF9pZD1hYmM"
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_oauth2_callback_returns_to_the_mcp_consent_page(
+    api_client, enterprise_data_fixture
+):
+    enterprise_data_fixture.enable_enterprise()
+    provider = enterprise_data_fixture.create_oauth_provider(
+        type="google", client_id="g_client_id", secret="g_secret"
+    )
+
+    with patch(GET_USER_INFO, create_get_user_info_stub(provider)):
+        session = api_client.session
+        session["oauth_request_data"] = json.dumps(
+            {"original": MCP_CONSENT_PATH, "oauth_state": "generated_oauth_state"}
+        )
+        session.save()
+        api_client.cookies[settings.SESSION_COOKIE_NAME] = session.session_key
+
+        response = api_client.get(
+            reverse(
+                "api:enterprise_sso_oauth2:callback",
+                kwargs={"provider_id": provider.id},
+            )
+            + "?code=validcode",
+            format="json",
+        )
+
+    assert response.status_code == HTTP_302_FOUND
+    assert response.headers["Location"].startswith(
+        f"{settings.PUBLIC_WEB_FRONTEND_URL}{MCP_CONSENT_PATH}?token="
+    )

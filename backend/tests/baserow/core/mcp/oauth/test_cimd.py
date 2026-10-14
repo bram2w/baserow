@@ -139,7 +139,7 @@ def test_cimd_real_client_documents_reach_consent(client, metadata):
 
     assert response.status_code == 302
     location = response["Location"]
-    assert "/mcp-authorize?" in location
+    assert "/mcp-authorize/" in location
     assert "error" not in parse_qs(urlparse(location).query)
     application = Application.objects.get(client_id=client_id)
     assert application.client_type == Application.CLIENT_PUBLIC
