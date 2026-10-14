@@ -237,7 +237,10 @@ const error = ref({ visible: false, title: '', message: '' })
 // The backend sends authorize errors here instead of to the client's redirect
 // URI, which can't be trusted before the user has signed in and allowed it.
 // Only the code is read, so the URL can't put its own text on the page.
-const ERROR_MESSAGES = { unknown_client: 'mcpAuthorize.unknownClient' }
+const ERROR_MESSAGES = {
+  unknown_client: 'mcpAuthorize.unknownClient',
+  client_rejected: 'mcpAuthorize.clientRejected',
+}
 const routeError = route.query.error
 if (routeError) {
   error.value = {
@@ -271,14 +274,20 @@ const { data: consent } = useAsyncData(
       applyDefaults(data)
       return data
     } catch (e) {
-      error.value = {
-        visible: true,
-        title: t('mcpAuthorize.invalid'),
-        message:
-          e.handler?.response?.data?.detail ||
-          e.handler?.response?.data?.error ||
-          '',
-      }
+      const response = e.handler?.response
+      // An outage isn't a broken request, and reloading the page tries again.
+      error.value =
+        !response || response.status >= 500
+          ? {
+              visible: true,
+              title: t('mcpAuthorize.loadFailed'),
+              message: t('mcpAuthorize.loadFailedMessage'),
+            }
+          : {
+              visible: true,
+              title: t('mcpAuthorize.invalid'),
+              message: response.data?.detail || response.data?.error || '',
+            }
       return null
     }
   },

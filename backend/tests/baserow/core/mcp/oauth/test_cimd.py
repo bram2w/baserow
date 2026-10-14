@@ -52,11 +52,11 @@ def test_cimd_other_host_is_rejected(client, settings):
         response = client.get(f"/oauth/authorize/?{query}")
 
     fetch.assert_not_called()
-    # Re-adding the server wouldn't help, so the re-add hint isn't shown.
+    # Re-adding the server wouldn't help, so the page says the app can't sign in.
     assert response.status_code == 302
     location = response["Location"]
     assert location.startswith(f"{settings.PUBLIC_WEB_FRONTEND_URL}/mcp-authorize?")
-    assert parse_qs(urlparse(location).query) == {"error": ["invalid_request"]}
+    assert parse_qs(urlparse(location).query) == {"error": ["client_rejected"]}
     assert EVIL_REDIRECT not in location
     assert "code=" not in location
     assert not Application.objects.filter(client_id=EVIL_CLIENT).exists()
@@ -161,7 +161,7 @@ def test_cimd_client_that_cannot_use_none_is_rejected(client):
         )
         response = client.get(f"/oauth/authorize/?{query}")
 
-    assert "/mcp-authorize?error=" in response["Location"]
+    assert "/mcp-authorize?error=client_rejected" in response["Location"]
     assert not Application.objects.filter(client_id=metadata["client_id"]).exists()
 
 
@@ -180,5 +180,5 @@ def test_cimd_client_without_authorization_code_is_rejected(client):
         )
         response = client.get(f"/oauth/authorize/?{query}")
 
-    assert "/mcp-authorize?error=" in response["Location"]
+    assert "/mcp-authorize?error=client_rejected" in response["Location"]
     assert not Application.objects.filter(client_id=metadata["client_id"]).exists()

@@ -482,6 +482,18 @@ describe('MCP authorize page', () => {
     expect(wrapper.text()).toContain('invalid_request')
   })
 
+  test.each([
+    ['a server error', (mock) => mock.reply(500)],
+    ['a network error', (mock) => mock.networkError()],
+  ])('%s asks to try again', async (_, reply) => {
+    reply(testApp.mock.onGet('/mcp/oauth/consent/', { params: { query } }))
+    const wrapper = await testApp.mount(MCPAuthorize, { route })
+    await flushPromises()
+    expect(wrapper.text()).toContain('mcpAuthorize.loadFailed')
+    expect(wrapper.text()).toContain('mcpAuthorize.loadFailedMessage')
+    expect(wrapper.text()).not.toContain('mcpAuthorize.invalid')
+  })
+
   function consentRequests() {
     return testApp.mock.history.get.filter(
       (r) => r.url === '/mcp/oauth/consent/'
@@ -499,6 +511,15 @@ describe('MCP authorize page', () => {
       false
     )
     expect(consentRequests()).toEqual([])
+  })
+
+  test('a rejected CIMD client is told it cannot sign in', async () => {
+    const wrapper = await testApp.mount(MCPAuthorize, {
+      route: '/mcp-authorize?error=client_rejected',
+    })
+    await flushPromises()
+    expect(wrapper.text()).toContain('mcpAuthorize.clientRejected')
+    expect(wrapper.text()).not.toContain('mcpAuthorize.invalidMessage')
   })
 
   test('an unknown error code shows the generic message', async () => {
@@ -556,9 +577,10 @@ describe('MCP authorize page', () => {
     testApp.mock
       .onGet('/mcp/oauth/consent/', { params: { query: '' } })
       .reply(400, { error: 'invalid_request' })
-    const wrapper = await testApp.mount(MCPAuthorize, {
-      route: '/mcp-authorize/%25%25',
-    })
-    expect(wrapper.text()).not.toContain('List tables')
+    await testApp.mount(MCPAuthorize, { route: '/mcp-authorize/%25%25' })
+    await flushPromises()
+    expect(consentRequests().map((call) => call.params)).toEqual([
+      { query: '' },
+    ])
   })
 })

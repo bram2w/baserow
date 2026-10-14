@@ -14,9 +14,11 @@ from .authorize import validate_query
 from .throttling import MCPOAuthAuthorizeRateThrottle, rate_limited
 from .validators import MCP_SCOPE
 
-# The consent page shows the text for this code: re-adding the server registers the
-# app again.
+# The consent page shows its own text for these codes. Re-adding the server
+# registers an unknown client again; a rejected CIMD client fails the same way
+# every time, so it can't help there.
 UNKNOWN_CLIENT_ERROR = "unknown_client"
+CLIENT_REJECTED_ERROR = "client_rejected"
 
 
 def _consent_error_url(request, oauthlib_error) -> str:
@@ -27,13 +29,15 @@ def _consent_error_url(request, oauthlib_error) -> str:
     """
 
     error = oauthlib_error.error
-    # A registered client that was cleaned up keeps sending its stored client_id,
-    # and the app only registers again once it's re-added. CIMD clients are
-    # fetched again instead, so it doesn't apply to them.
-    if isinstance(oauthlib_error, InvalidClientIdError) and not cimd.is_cimd_client_id(
-        request.GET.get("client_id", "")
-    ):
-        error = UNKNOWN_CLIENT_ERROR
+    if isinstance(oauthlib_error, InvalidClientIdError):
+        # A registered client that was cleaned up keeps sending its stored
+        # client_id, and the app only registers again once it's re-added. A CIMD
+        # client is fetched every time, so it was refused: its host isn't allowed,
+        # CIMD is off, or its document is invalid. The reason is in the server log.
+        if cimd.is_cimd_client_id(request.GET.get("client_id", "")):
+            error = CLIENT_REJECTED_ERROR
+        else:
+            error = UNKNOWN_CLIENT_ERROR
     frontend_url = settings.PUBLIC_WEB_FRONTEND_URL.rstrip("/")
     return f"{frontend_url}/mcp-authorize?{urlencode({'error': error})}"
 
