@@ -2947,7 +2947,7 @@
 // Read-only preview of an agent inside the template modal.
 
 .agent-usage {
-  width: 320px;
+  width: 440px;
   max-width: calc(100vw - 24px);
   padding: 12px 16px;
 }
@@ -3049,4 +3049,34 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.agent-chat__composer-private-chevron {
+  margin-left: 2px;
+  font-size: 12px;
+}
+
+.agent-chat__privacy-context {
+  width: 280px;
+}
+
+.agent-usage-summary {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 12px;
+
+  &--stacked {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+}
+
+.agent-usage-summary__part {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
 }

@@ -231,6 +231,7 @@ class AgentChatSerializer(serializers.ModelSerializer):
             "completed_on",
             "error",
             "total_input_tokens",
+            "total_cached_input_tokens",
             "total_output_tokens",
             "total_cost",
             "unpriced_turns",
@@ -378,6 +379,9 @@ class AgentChatRunStartedSerializer(AgentChatSerializer):
 
 class AgentUsagePeriodSerializer(serializers.Serializer):
     input_tokens = serializers.IntegerField()
+    cached_input_tokens = serializers.IntegerField(
+        help_text="The part of the input the provider read from its cache."
+    )
     output_tokens = serializers.IntegerField()
     cost = serializers.DecimalField(
         max_digits=20,
@@ -627,6 +631,7 @@ class AgentFollowUpSerializer(serializers.ModelSerializer):
             "checks_count",
             "notifications_count",
             "total_input_tokens",
+            "total_cached_input_tokens",
             "total_output_tokens",
             "total_cost",
             "unpriced_turns",

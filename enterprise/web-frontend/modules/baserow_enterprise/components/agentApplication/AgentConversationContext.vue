@@ -41,19 +41,11 @@
         </a>
       </li>
       <li
-        v-if="usageLine"
+        v-if="hasUsage"
         class="context__menu-item context__menu-item--with-separator"
       >
-        <div
-          class="agent-conversation-context__usage"
-          :title="
-            $t('agentUsage.conversationBreakdown', {
-              input: (chat.total_input_tokens || 0).toLocaleString(),
-              output: (chat.total_output_tokens || 0).toLocaleString(),
-            })
-          "
-        >
-          {{ usageLine }}
+        <div class="agent-conversation-context__usage">
+          <AgentUsageSummary :usage="chat" stacked />
         </div>
       </li>
     </ul>
@@ -65,15 +57,12 @@ import context from '@baserow/modules/core/mixins/context'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import { AgentContextMixin } from '@baserow_enterprise/composables/useAgentContext'
 import { isChatRunning } from '@baserow_enterprise/utils/agentChatStatus'
-import {
-  formatCost,
-  formatTokens,
-  hasCost,
-  totalTokens,
-} from '@baserow_enterprise/utils/agentUsage'
+import { totalTokens } from '@baserow_enterprise/utils/agentUsage'
+import AgentUsageSummary from '@baserow_enterprise/components/agentApplication/AgentUsageSummary'
 
 export default {
   name: 'AgentConversationContext',
+  components: { AgentUsageSummary },
   mixins: [AgentContextMixin, context],
   props: {
     application: {
@@ -90,19 +79,8 @@ export default {
     return { deleting: false }
   },
   computed: {
-    usageLine() {
-      const tokens = totalTokens(this.chat)
-      if (tokens === 0) {
-        return ''
-      }
-      return hasCost(this.chat)
-        ? this.$t('agentUsage.conversation', {
-            tokens: formatTokens(tokens),
-            cost: formatCost(this.chat.total_cost),
-          })
-        : this.$t('agentUsage.conversationTokens', {
-            tokens: formatTokens(tokens),
-          })
+    hasUsage() {
+      return totalTokens(this.chat) > 0
     },
     canUpdate() {
       return this.hasAgentPermission(

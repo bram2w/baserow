@@ -6,7 +6,10 @@
         <tr>
           <th class="agent-usage__heading"></th>
           <th class="agent-usage__heading agent-usage__number">
-            {{ $t('agentUsage.tokens') }}
+            {{ $t('agentUsage.inputColumn') }}
+          </th>
+          <th class="agent-usage__heading agent-usage__number">
+            {{ $t('agentUsage.outputColumn') }}
           </th>
           <th class="agent-usage__heading agent-usage__number">
             {{ $t('agentUsage.cost') }}
@@ -19,13 +22,26 @@
           <td
             class="agent-usage__cell agent-usage__number"
             :title="
-              $t('agentUsage.tokensBreakdown', {
+              $t('agentUsage.inputCachedTitle', {
                 input: usage[period].input_tokens.toLocaleString(),
-                output: usage[period].output_tokens.toLocaleString(),
+                cached: usage[period].cached_input_tokens.toLocaleString(),
               })
             "
           >
-            {{ formatTokens(totalTokens(usage[period])) }}
+            {{ formatTokens(usage[period].input_tokens) }}
+            <template v-if="usage[period].cached_input_tokens > 0">
+              {{
+                $t('agentUsage.cached', {
+                  tokens: formatTokens(usage[period].cached_input_tokens),
+                })
+              }}
+            </template>
+          </td>
+          <td
+            class="agent-usage__cell agent-usage__number"
+            :title="usage[period].output_tokens.toLocaleString()"
+          >
+            {{ formatTokens(usage[period].output_tokens) }}
           </td>
           <td class="agent-usage__cell agent-usage__number">
             <template v-if="usage[period].turns === 0">–</template>
@@ -57,7 +73,6 @@ import {
   formatCost,
   formatTokens,
   hasCost,
-  totalTokens,
 } from '@baserow_enterprise/utils/agentUsage'
 
 defineProps({

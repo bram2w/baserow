@@ -418,6 +418,11 @@ class AgentChat(
         ),
     )
     total_input_tokens = models.BigIntegerField(default=0, db_default=0)
+    total_cached_input_tokens = models.BigIntegerField(
+        default=0,
+        db_default=0,
+        help_text="The part of the input the provider read from its cache.",
+    )
     total_output_tokens = models.BigIntegerField(default=0, db_default=0)
     total_cost = models.DecimalField(
         max_digits=20,
@@ -498,6 +503,12 @@ class AgentChatMessage(
         ),
     )
     input_tokens = models.IntegerField(null=True, blank=True, db_default=None)
+    cached_input_tokens = models.IntegerField(
+        null=True,
+        blank=True,
+        db_default=None,
+        help_text="The part of the input the provider read from its cache.",
+    )
     output_tokens = models.IntegerField(null=True, blank=True, db_default=None)
     cost = models.DecimalField(
         max_digits=20,
@@ -652,6 +663,11 @@ class AgentUsage(models.Model):
     )
     hour = models.DateTimeField(help_text="The start of the hour, in UTC.")
     input_tokens = models.BigIntegerField(default=0, db_default=0)
+    cached_input_tokens = models.BigIntegerField(
+        default=0,
+        db_default=0,
+        help_text="The part of the input the provider read from its cache.",
+    )
     output_tokens = models.BigIntegerField(default=0, db_default=0)
     cost = models.DecimalField(
         max_digits=20,
@@ -758,6 +774,7 @@ class AgentFollowUp(CreatedAndUpdatedOnMixin, models.Model):
     failed_checks_in_a_row = models.PositiveIntegerField(default=0, db_default=0)
     notifications_count = models.PositiveIntegerField(default=0, db_default=0)
     total_input_tokens = models.BigIntegerField(default=0, db_default=0)
+    total_cached_input_tokens = models.BigIntegerField(default=0, db_default=0)
     total_output_tokens = models.BigIntegerField(default=0, db_default=0)
     total_cost = models.DecimalField(
         max_digits=20, decimal_places=10, default=0, db_default=0

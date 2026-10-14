@@ -119,12 +119,8 @@
             {{ $t('agentChat.retry') }}
           </Button>
         </div>
-        <div
-          v-if="usageLine && !loadingConversation"
-          class="agent-chat__usage"
-          :title="usageBreakdown"
-        >
-          {{ usageLine }}
+        <div v-if="hasUsage && !loadingConversation" class="agent-chat__usage">
+          <AgentUsageSummary :usage="conversationUsage" />
         </div>
         <div
           v-else-if="running && !loadingConversation"
@@ -260,6 +256,7 @@
             </button>
             <a
               v-if="canChangePrivacy"
+              ref="privacyChip"
               class="agent-chat__composer-private"
               :class="{ 'agent-chat__composer-private--active': isPrivate }"
               :title="
@@ -267,11 +264,51 @@
                   ? $t('agentChat.privateDescription')
                   : $t('agentChat.publicDescription')
               "
-              @click.prevent="togglePrivate"
+              @click.prevent="
+                $refs.privacyContext.toggle($refs.privacyChip, 'top', 'left', 4)
+              "
             >
               <i :class="isPrivate ? 'iconoir-lock' : 'iconoir-community'"></i>
               {{ isPrivate ? $t('agentChat.private') : $t('agentChat.public') }}
+              <i
+                class="iconoir-nav-arrow-down agent-chat__composer-private-chevron"
+              ></i>
             </a>
+            <Context
+              v-if="canChangePrivacy"
+              ref="privacyContext"
+              class="agent-chat__privacy-context"
+              :hide-on-click-outside="true"
+            >
+              <ul class="context__menu context__menu--can-be-active">
+                <li
+                  v-for="option in privacyOptions"
+                  :key="option.value"
+                  class="context__menu-item"
+                >
+                  <a
+                    class="context__menu-item-link context__menu-item-link--with-desc"
+                    :class="{ active: option.value === isPrivate }"
+                    @click="choosePrivacy(option.value)"
+                  >
+                    <span class="context__menu-item-title">
+                      <i
+                        class="context__menu-item-icon"
+                        :class="option.icon"
+                      ></i>
+                      {{ option.label }}
+                    </span>
+                    <div class="context__menu-item-description">
+                      {{ option.description }}
+                    </div>
+                    <i
+                      v-if="option.value === isPrivate"
+                      class="context__menu-active-icon iconoir-check"
+                    ></i>
+                  </a>
+                </li>
+              </ul>
+            </Context>
             <span
               v-else-if="isPrivate"
               class="agent-chat__composer-private agent-chat__composer-private--active"
@@ -345,12 +382,8 @@ import {
   ACT_AS_USER,
   approvalActsAsUser,
 } from '@baserow_enterprise/utils/agentToolIdentities'
-import {
-  formatCost,
-  formatTokens,
-  hasCost,
-  totalTokens,
-} from '@baserow_enterprise/utils/agentUsage'
+import { totalTokens } from '@baserow_enterprise/utils/agentUsage'
+import AgentUsageSummary from '@baserow_enterprise/components/agentApplication/AgentUsageSummary'
 
 const MIN_ROWS = 1
 const MAX_ROWS = 4
@@ -359,6 +392,7 @@ const MAX_FILES = 10
 export default defineComponent({
   name: 'AgentChat',
   components: {
+    AgentUsageSummary,
     AgentToolApprovals,
     AgentChatEmptyState,
     AgentChatMessage,
@@ -413,31 +447,10 @@ export default defineComponent({
     const conversationUsage = computed(() =>
       template ? null : store.getters[`${storePrefix}agentChat/getUsage`]
     )
-    // Turns of a model without a known price only add tokens.
-    const usageLine = computed(() => {
-      const usage = conversationUsage.value
-      const tokens = totalTokens(usage)
-      if (!usage || tokens === 0) {
-        return ''
-      }
-      if (!hasCost(usage)) {
-        return t('agentUsage.conversationTokens', {
-          tokens: formatTokens(tokens),
-        })
-      }
-      return t('agentUsage.conversation', {
-        tokens: formatTokens(tokens),
-        cost: formatCost(usage.total_cost),
-      })
-    })
-    const usageBreakdown = computed(() =>
-      usageLine.value
-        ? t('agentUsage.conversationBreakdown', {
-            input: conversationUsage.value.total_input_tokens.toLocaleString(),
-            output:
-              conversationUsage.value.total_output_tokens.toLocaleString(),
-          })
-        : ''
+    const hasUsage = computed(
+      () =>
+        conversationUsage.value !== null &&
+        totalTokens(conversationUsage.value) > 0
     )
     const retrying = ref(false)
     const retry = async () => {
@@ -964,10 +977,31 @@ export default defineComponent({
               props.application.workspace.id
             )))
     )
-    const togglePrivate = async () => {
+    const privacyOptions = computed(() => [
+      {
+        value: false,
+        icon: 'iconoir-community',
+        label: t('agentChat.public'),
+        description: t('agentChat.publicOption'),
+      },
+      {
+        value: true,
+        icon: 'iconoir-lock',
+        label: t('agentChat.private'),
+        description: t('agentChat.privateOption'),
+      },
+    ])
+    const privacyContext = ref(null)
+    // Picked from a menu instead of flipped by a click, so who can read the
+    // conversation never changes by accident.
+    const choosePrivacy = async (value) => {
+      privacyContext.value?.hide()
+      if (value === isPrivate.value) {
+        return
+      }
       try {
         await store.dispatch(`${storePrefix}agentChat/setPrivate`, {
-          private: !isPrivate.value,
+          private: value,
         })
       } catch (error) {
         notifyIf(error, 'application')
@@ -1055,8 +1089,8 @@ export default defineComponent({
 
     return {
       followUp,
-      usageLine,
-      usageBreakdown,
+      conversationUsage,
+      hasUsage,
       canDecide,
       canDecideApprovals,
       canUpdateAgent,
@@ -1066,7 +1100,9 @@ export default defineComponent({
       readOnlyReason,
       isPrivate,
       canChangePrivacy,
-      togglePrivate,
+      privacyOptions,
+      privacyContext,
+      choosePrivacy,
       isChannelChat,
       hasError,
       retrying,

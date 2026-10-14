@@ -170,6 +170,11 @@ def test_a_priced_turn_is_counted_everywhere(usage_setup, api_client):
     last_usage = len(types) - 1 - types[::-1].index("ai/usage")
     assert last_usage < types.index("ai/message")
     assert events[last_usage]["total_input_tokens"] == chat.total_input_tokens
+    assert (
+        events[last_usage]["total_cached_input_tokens"]
+        == chat.total_cached_input_tokens
+    )
+    assert finished["total_cached_input_tokens"] == chat.total_cached_input_tokens
     assert Decimal(events[last_usage]["total_cost"]) == chat.total_cost
     assert chat.total_input_tokens == answer.input_tokens
     assert chat.total_output_tokens == answer.output_tokens
@@ -252,7 +257,14 @@ def test_periods_follow_the_viewers_timezone(usage_setup, api_client, data_fixtu
     handler.record(application.id, 10, 0, Decimal("2"), at=at("2026-10-12T09:00"))
     # Late on Wednesday in UTC, but already Thursday in Amsterdam.
     handler.record(application.id, 100, 0, None, at=at("2026-10-14T22:30"))
-    handler.record(application.id, 1000, 0, Decimal("4"), at=at("2026-10-15T08:00"))
+    handler.record(
+        application.id,
+        1000,
+        0,
+        Decimal("4"),
+        at=at("2026-10-15T08:00"),
+        cached_input_tokens=600,
+    )
 
     with freeze_time("2026-10-15T12:00:00Z"):
         # A token from before the frozen time would have expired.
@@ -261,6 +273,9 @@ def test_periods_follow_the_viewers_timezone(usage_setup, api_client, data_fixtu
         in_amsterdam = _get_usage(api_client, token, application, "Europe/Amsterdam")
 
     assert in_utc["today"]["input_tokens"] == 1000
+    # Part of the input came from the provider's cache.
+    assert in_utc["today"]["cached_input_tokens"] == 600
+    assert in_utc["lifetime"]["cached_input_tokens"] == 600
     assert in_amsterdam["today"]["input_tokens"] == 1100
     assert in_amsterdam["today"]["unpriced_turns"] == 1
     assert in_utc["week"]["input_tokens"] == 1110

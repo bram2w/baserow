@@ -50,6 +50,7 @@ class AiUsageMessage(BaseModel):
 
     type: Literal["ai/usage"] = "ai/usage"
     total_input_tokens: int
+    total_cached_input_tokens: int = 0
     total_output_tokens: int
     total_cost: str = Field(description="In USD, as a decimal string.")
     unpriced_turns: int

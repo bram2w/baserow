@@ -908,6 +908,8 @@ class AgentRunner:
             AiUsageMessage(
                 total_input_tokens=self.chat.total_input_tokens
                 + (usage.input_tokens or 0),
+                total_cached_input_tokens=self.chat.total_cached_input_tokens
+                + (usage.cache_read_tokens or 0),
                 total_output_tokens=self.chat.total_output_tokens
                 + (usage.output_tokens or 0),
                 total_cost=str(self.chat.total_cost + (usage.cost or 0)),
@@ -928,15 +930,21 @@ class AgentRunner:
         if not usage.requests and not usage.input_tokens and not usage.output_tokens:
             return
         cost = usage.cost
+        # Part of the input, read from the provider's cache at a lower price.
+        cached = usage.cache_read_tokens or 0
         if ai_message is not None:
             ai_message.input_tokens = (ai_message.input_tokens or 0) + (
                 usage.input_tokens or 0
             )
+            ai_message.cached_input_tokens = (
+                ai_message.cached_input_tokens or 0
+            ) + cached
             ai_message.output_tokens = (ai_message.output_tokens or 0) + (
                 usage.output_tokens or 0
             )
             ai_message.cost = cost
         self.chat.total_input_tokens += usage.input_tokens or 0
+        self.chat.total_cached_input_tokens += cached
         self.chat.total_output_tokens += usage.output_tokens or 0
         if cost is not None:
             self.chat.total_cost += cost
@@ -945,6 +953,7 @@ class AgentRunner:
         await self.chat.asave(
             update_fields=[
                 "total_input_tokens",
+                "total_cached_input_tokens",
                 "total_output_tokens",
                 "total_cost",
                 "unpriced_turns",
@@ -958,6 +967,7 @@ class AgentRunner:
                 usage.input_tokens or 0,
                 usage.output_tokens or 0,
                 cost,
+                cached_input_tokens=cached,
             )
             if self.chat.follow_up_id is not None:
                 from .follow_ups import AgentFollowUpHandler
@@ -967,6 +977,7 @@ class AgentRunner:
                     usage.input_tokens or 0,
                     usage.output_tokens or 0,
                     cost,
+                    cached_input_tokens=cached,
                 )
 
         await sync_to_async(record)()
@@ -987,6 +998,7 @@ class AgentRunner:
                 "content",
                 "artifacts",
                 "input_tokens",
+                "cached_input_tokens",
                 "output_tokens",
                 "cost",
             ]
@@ -1075,6 +1087,7 @@ class AgentRunner:
             update_fields=[
                 "artifacts",
                 "input_tokens",
+                "cached_input_tokens",
                 "output_tokens",
                 "cost",
                 "updated_on",
@@ -1101,6 +1114,7 @@ class AgentRunner:
             update_fields=[
                 "artifacts",
                 "input_tokens",
+                "cached_input_tokens",
                 "output_tokens",
                 "cost",
                 "updated_on",
@@ -1115,6 +1129,7 @@ class AgentRunner:
             update_fields=[
                 "artifacts",
                 "input_tokens",
+                "cached_input_tokens",
                 "output_tokens",
                 "cost",
                 "updated_on",

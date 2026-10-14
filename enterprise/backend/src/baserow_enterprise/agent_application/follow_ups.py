@@ -622,9 +622,12 @@ class AgentFollowUpHandler:
         input_tokens: int,
         output_tokens: int,
         cost: Optional[Decimal],
+        cached_input_tokens: int = 0,
     ) -> None:
         AgentFollowUp.objects.filter(id=follow_up_id).update(
             total_input_tokens=F("total_input_tokens") + input_tokens,
+            total_cached_input_tokens=F("total_cached_input_tokens")
+            + cached_input_tokens,
             total_output_tokens=F("total_output_tokens") + output_tokens,
             total_cost=F("total_cost") + (cost or 0),
             unpriced_turns=F("unpriced_turns") + (0 if cost is not None else 1),

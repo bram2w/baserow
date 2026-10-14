@@ -553,24 +553,27 @@
     "lastRun": "Last run: {time}",
     "neverRan": "Never triggered",
     "costThisMonth": "{cost} this month",
-    "tokensThisMonth": "{tokens} tokens this month"
+    "tokensThisMonth": "{input} input · {output} output tokens this month"
   },
   "agentUsage": {
     "title": "Usage",
-    "tokens": "Tokens",
+    "inputColumn": "Input",
+    "outputColumn": "Output",
+    "input": "{tokens} input",
+    "output": "{tokens} output",
+    "cached": "({tokens} cached)",
+    "inputTitle": "{input} input tokens sent to the model.",
+    "inputCachedTitle": "{input} input tokens sent to the model, of which {cached} were read from the provider's cache at a lower price.",
+    "outputTitle": "{output} output tokens written by the model.",
     "cost": "Cost",
     "today": "Today",
     "week": "This week",
     "month": "This month",
     "lifetime": "Lifetime",
-    "tokensBreakdown": "{input} input, {output} output",
     "partlyUnpriced": "Not included: {count} turn without a known price | Not included: {count} turns without a known price",
     "unpriced": "The model has no known price",
-    "footnote": "Estimated from the public list prices of the models, in USD. Your provider's invoice is leading.",
-    "conversation": "{tokens} tokens · {cost}",
-    "conversationTokens": "{tokens} tokens",
-    "counting": "Counting tokens…",
-    "conversationBreakdown": "{input} input and {output} output tokens"
+    "footnote": "Costs are estimates in USD, based on the models' public prices; your provider's invoice is leading. Each step sends the whole conversation to the model again, so input is much larger than output. Input the provider has already seen recently is cached and costs less.",
+    "counting": "Counting tokens…"
   },
   "agentSidebar": {
     "pendingApprovals": "{count} pending approval | {count} pending approvals"
@@ -633,7 +636,8 @@
     "configureModel": "Configure model",
     "openAttachment": "Open attachment",
     "private": "Private",
-    "privateDescription": "Only you can see this conversation. Click to make it visible to everyone.",
+    "privateDescription": "Only you can see this conversation.",
+    "privateOption": "Only you can see this conversation.",
     "minRoleEditor": "editors and up",
     "minRoleBuilder": "builders and up",
     "minRoleAdmin": "admins",
@@ -643,7 +647,8 @@
     "continueTriggeredDisabled": "Conversations that a trigger started can't be continued.",
     "welcomeYou": "you",
     "public": "Visible to everyone",
-    "publicDescription": "Everyone who can see this agent can read this conversation. Click to make it private."
+    "publicDescription": "Everyone who can see this agent can read this conversation.",
+    "publicOption": "Everyone who can see this agent can read it."
   },
   "agentChatTrigger": {
     "preview": "Preview",

@@ -790,4 +790,37 @@ class Migration(migrations.Migration):
                 fields=["application", "status"], name="baserow_ent_applica_84c7f0_idx"
             ),
         ),
+        migrations.AddField(
+            model_name="agentchat",
+            name="total_cached_input_tokens",
+            field=models.BigIntegerField(
+                db_default=0,
+                default=0,
+                help_text="The part of the input the provider read from its cache.",
+            ),
+        ),
+        migrations.AddField(
+            model_name="agentchatmessage",
+            name="cached_input_tokens",
+            field=models.IntegerField(
+                blank=True,
+                db_default=None,
+                help_text="The part of the input the provider read from its cache.",
+                null=True,
+            ),
+        ),
+        migrations.AddField(
+            model_name="agentfollowup",
+            name="total_cached_input_tokens",
+            field=models.BigIntegerField(db_default=0, default=0),
+        ),
+        migrations.AddField(
+            model_name="agentusage",
+            name="cached_input_tokens",
+            field=models.BigIntegerField(
+                db_default=0,
+                default=0,
+                help_text="The part of the input the provider read from its cache.",
+            ),
+        ),
     ]

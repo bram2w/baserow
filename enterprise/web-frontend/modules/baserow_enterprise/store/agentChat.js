@@ -142,6 +142,7 @@ function pickUsage(chat) {
   }
   return {
     total_input_tokens: chat.total_input_tokens,
+    total_cached_input_tokens: chat.total_cached_input_tokens ?? 0,
     total_output_tokens: chat.total_output_tokens,
     total_cost: chat.total_cost,
     unpriced_turns: chat.unpriced_turns,

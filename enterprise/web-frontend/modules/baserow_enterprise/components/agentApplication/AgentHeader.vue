@@ -86,7 +86,8 @@ import {
   formatCost,
   formatTokens,
   hasCost,
-  totalTokens,
+  inputTokens,
+  outputTokens,
 } from '@baserow_enterprise/utils/agentUsage'
 
 export default defineComponent({
@@ -148,7 +149,8 @@ export default defineComponent({
       return hasCost(usage.value.lifetime)
         ? i18n.t('agentHeader.costThisMonth', { cost: formatCost(month.cost) })
         : i18n.t('agentHeader.tokensThisMonth', {
-            tokens: formatTokens(totalTokens(month)),
+            input: formatTokens(inputTokens(month)),
+            output: formatTokens(outputTokens(month)),
           })
     })
     const usageButton = ref(null)

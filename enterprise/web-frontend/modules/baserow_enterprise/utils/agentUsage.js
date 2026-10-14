@@ -45,6 +45,20 @@ export function totalTokens(usage) {
   )
 }
 
+export function inputTokens(usage) {
+  return Number(usage?.input_tokens ?? usage?.total_input_tokens) || 0
+}
+
+export function outputTokens(usage) {
+  return Number(usage?.output_tokens ?? usage?.total_output_tokens) || 0
+}
+
+export function cachedInputTokens(usage) {
+  return (
+    Number(usage?.cached_input_tokens ?? usage?.total_cached_input_tokens) || 0
+  )
+}
+
 /**
  * The browser's timezone, so "today" and "this week" are the viewer's.
  */

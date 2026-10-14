@@ -39,7 +39,10 @@
             })
           }}</span>
           <span v-else>{{ $t('agentFollowUps.notCheckedYet') }}</span>
-          <span v-if="usageLine(followUp)">{{ usageLine(followUp) }}</span>
+          <AgentUsageSummary
+            v-if="totalTokens(followUp) > 0"
+            :usage="followUp"
+          />
         </div>
         <div
           v-if="followUp.outcome"
@@ -111,12 +114,8 @@ import {
   describeWatch,
   followUpFields,
 } from '@baserow_enterprise/utils/agentFollowUp'
-import {
-  formatCost,
-  formatTokens,
-  hasCost,
-  totalTokens,
-} from '@baserow_enterprise/utils/agentUsage'
+import { totalTokens } from '@baserow_enterprise/utils/agentUsage'
+import AgentUsageSummary from '@baserow_enterprise/components/agentApplication/AgentUsageSummary'
 
 const props = defineProps({
   application: {
@@ -173,19 +172,6 @@ const subtitle = (followUp) =>
     : t(`agentFollowUps.status_${followUp.status}`)
 
 const relative = (time) => moment(time).fromNow()
-
-const usageLine = (followUp) => {
-  const tokens = totalTokens(followUp)
-  if (tokens === 0) {
-    return ''
-  }
-  return hasCost(followUp)
-    ? t('agentUsage.conversation', {
-        tokens: formatTokens(tokens),
-        cost: formatCost(followUp.total_cost),
-      })
-    : t('agentUsage.conversationTokens', { tokens: formatTokens(tokens) })
-}
 
 // Opens the check so the person sees what it found, also when nothing
 // changed.

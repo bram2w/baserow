@@ -20,6 +20,7 @@ class AgentUsageHandler:
         output_tokens: int,
         cost: Optional[Decimal],
         at: Optional[datetime] = None,
+        cached_input_tokens: int = 0,
     ) -> None:
         """
         Adds one turn to the hour it happened in. A single upsert that adds to
@@ -37,11 +38,13 @@ class AgentUsageHandler:
             cursor.execute(
                 f"""
                 INSERT INTO {table}
-                    (application_id, hour, input_tokens, output_tokens, cost,
-                     turns, unpriced_turns)
-                VALUES (%s, %s, %s, %s, %s, 1, %s)
+                    (application_id, hour, input_tokens, cached_input_tokens,
+                     output_tokens, cost, turns, unpriced_turns)
+                VALUES (%s, %s, %s, %s, %s, %s, 1, %s)
                 ON CONFLICT (application_id, hour) DO UPDATE SET
                     input_tokens = {table}.input_tokens + EXCLUDED.input_tokens,
+                    cached_input_tokens = {table}.cached_input_tokens
+                        + EXCLUDED.cached_input_tokens,
                     output_tokens = {table}.output_tokens + EXCLUDED.output_tokens,
                     cost = {table}.cost + EXCLUDED.cost,
                     turns = {table}.turns + 1,
@@ -52,6 +55,7 @@ class AgentUsageHandler:
                     application_id,
                     hour,
                     input_tokens or 0,
+                    cached_input_tokens or 0,
                     output_tokens or 0,
                     cost or 0,
                     0 if cost is not None else 1,
@@ -87,6 +91,9 @@ class AgentUsageHandler:
                     f"{period}_input_tokens": Sum(
                         "input_tokens", filter=period_filter, default=0
                     ),
+                    f"{period}_cached_input_tokens": Sum(
+                        "cached_input_tokens", filter=period_filter, default=0
+                    ),
                     f"{period}_output_tokens": Sum(
                         "output_tokens", filter=period_filter, default=0
                     ),
@@ -105,6 +112,7 @@ class AgentUsageHandler:
                 key: totals[f"{period}_{key}"]
                 for key in (
                     "input_tokens",
+                    "cached_input_tokens",
                     "output_tokens",
                     "cost",
                     "turns",

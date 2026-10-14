@@ -1,8 +1,10 @@
 import { expect, vi } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
+import { mountSuspended } from '@nuxt/test-utils/runtime'
 import MockAdapter from 'axios-mock-adapter'
 
 import { registerRealtimeEvents } from '@baserow_enterprise/realtime'
+import AgentUsageSummary from '@baserow_enterprise/components/agentApplication/AgentUsageSummary'
 import {
   formatCost,
   formatTokens,
@@ -54,6 +56,34 @@ describe('agent usage', () => {
     expect(formatCost(0)).toBe('$0.00')
     expect(hasCost({ cost: 0 })).toBe(false)
     expect(hasCost({ total_cost: '0.0100000000' })).toBe(true)
+  })
+
+  test('input, its cached part and output are shown apart', async () => {
+    const wrapper = await mountSuspended(AgentUsageSummary, {
+      props: {
+        usage: {
+          total_input_tokens: 242309,
+          total_cached_input_tokens: 130000,
+          total_output_tokens: 3715,
+          total_cost: '0.0145363600',
+        },
+      },
+    })
+    const parts = wrapper.findAll('.agent-usage-summary__part')
+    // Translations aren't loaded in unit tests, so the keys render.
+    expect(parts.map((part) => part.text())).toEqual([
+      'agentUsage.input agentUsage.cached',
+      'agentUsage.output',
+      '$0.01',
+    ])
+    expect(parts[0].attributes('title')).toBe('agentUsage.inputCachedTitle')
+
+    await wrapper.setProps({
+      usage: { input_tokens: 950, output_tokens: 20, cost: 0 },
+    })
+    expect(
+      wrapper.findAll('.agent-usage-summary__part').map((part) => part.text())
+    ).toEqual(['agentUsage.input', 'agentUsage.output'])
   })
 
   test('the usage is fetched in the viewers timezone', async () => {
@@ -120,6 +150,7 @@ describe('agent usage', () => {
         id: 9,
         status: 'idle',
         total_input_tokens: 300,
+        total_cached_input_tokens: 120,
         total_output_tokens: 40,
         total_cost: 0.03,
         unpriced_turns: 1,
@@ -127,6 +158,7 @@ describe('agent usage', () => {
     })
     expect(store.getters['agentChat/getUsage']).toEqual({
       total_input_tokens: 300,
+      total_cached_input_tokens: 120,
       total_output_tokens: 40,
       total_cost: 0.03,
       unpriced_turns: 1,
