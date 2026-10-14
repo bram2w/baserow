@@ -67,10 +67,12 @@ test("An MCP client connects with OAuth and is disconnected in settings", async 
   const metadataResponse = await request.get(
     `${backendUrl}/.well-known/oauth-authorization-server`
   );
+  // Only a missing route means the flag is off; any other error must fail.
   test.skip(
-    metadataResponse.status() !== 200,
+    metadataResponse.status() === 404,
     "BASEROW_MCP_OAUTH_ENABLED is off on the backend under test"
   );
+  expect(metadataResponse.status()).toBe(200);
   const metadata = await metadataResponse.json();
 
   const clientName = `E2E MCP client ${randomBytes(4).toString("hex")}`;
