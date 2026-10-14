@@ -333,7 +333,7 @@ import {
 } from '@baserow_enterprise/utils/agentToolIdentities'
 
 const MIN_ROWS = 1
-const MAX_ROWS = 6
+const MAX_ROWS = 4
 const MAX_FILES = 10
 
 export default defineComponent({
@@ -733,11 +733,16 @@ export default defineComponent({
 
       const computedStyle = window.getComputedStyle(textarea)
       const lineHeight = parseInt(computedStyle.lineHeight) || 20
+      // The height includes the vertical padding (border-box), just like
+      // scrollHeight, so the rows alone would clip the last line.
+      const padding =
+        parseFloat(computedStyle.paddingTop) +
+        parseFloat(computedStyle.paddingBottom)
 
       // Otherwise scrollHeight never shrinks below the current height.
       textarea.style.height = 'auto'
-      const minHeight = lineHeight * MIN_ROWS
-      const maxHeight = lineHeight * MAX_ROWS
+      const minHeight = lineHeight * MIN_ROWS + padding
+      const maxHeight = lineHeight * MAX_ROWS + padding
       const newHeight = Math.max(
         minHeight,
         Math.min(textarea.scrollHeight, maxHeight)

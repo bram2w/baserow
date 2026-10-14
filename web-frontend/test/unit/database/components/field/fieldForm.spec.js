@@ -77,7 +77,7 @@ describe('FieldForm vector search option', () => {
       },
     })
 
-  test('only long text fields on a configured instance can enable it', async () => {
+  test('only text fields on a configured instance can enable it', async () => {
     const wrapper = await mountForm({ type: 'long_text' })
     expect(wrapper.vm.canHaveVectorSearch).toBe(true)
     expect(wrapper.vm.vectorSearchAvailable).toBe(false)
@@ -91,8 +91,14 @@ describe('FieldForm vector search option', () => {
     await wrapper.vm.$nextTick()
     expect(wrapper.vm.getFormValues().vector_search_enabled).toBe(true)
 
-    // Switching to a type without vector search drops the flag on submit.
+    // A single line text field supports it too.
     wrapper.vm.values = { ...wrapper.vm.values, type: 'text' }
+    await wrapper.vm.$nextTick()
+    expect(wrapper.vm.canHaveVectorSearch).toBe(true)
+    expect(wrapper.vm.getFormValues().vector_search_enabled).toBe(true)
+
+    // Switching to a type without vector search drops the flag on submit.
+    wrapper.vm.values = { ...wrapper.vm.values, type: 'number' }
     await wrapper.vm.$nextTick()
     expect(wrapper.vm.canHaveVectorSearch).toBe(false)
     expect(wrapper.vm.getFormValues().vector_search_enabled).toBe(false)

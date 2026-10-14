@@ -125,7 +125,7 @@ def test_vector_search_option_needs_a_supported_type_and_an_instance_setup(
 
     with pytest.raises(VectorSearchNotSupportedError):
         FieldHandler().create_field(
-            user, table, "text", name="Name", vector_search_enabled=True
+            user, table, "number", name="Amount", vector_search_enabled=True
         )
 
     with override_settings(BASEROW_EMBEDDINGS_API_URL=""):
@@ -236,6 +236,38 @@ def test_vector_search_mixes_semantic_and_lexical_hits(vector_table):
     assert (
         SearchHandler.vector_search(table, field, "   ", embedder=fake_embedder) == []
     )
+
+
+@pytest.mark.django_db
+def test_a_text_field_can_be_searched_semantically(data_fixture):
+    if not is_pgvector_enabled():
+        pytest.skip("pgvector is not installed in the test database")
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    with override_settings(BASEROW_EMBEDDINGS_API_URL=EMBEDDINGS_URL):
+        field = FieldHandler().create_field(
+            user, table, "text", name="Title", vector_search_enabled=True
+        )
+    rows = (
+        RowHandler()
+        .create_rows(
+            user,
+            table,
+            rows_values=[
+                {f"field_{field.id}": "A basket of fruit"},
+                {f"field_{field.id}": "A vehicle in the garage"},
+            ],
+        )
+        .created_rows
+    )
+    SearchHandler.update_search_data(table)
+    SearchHandler.update_embeddings(table, [field.id], embedder=fake_embedder)
+
+    with override_settings(BASEROW_EMBEDDINGS_API_URL=EMBEDDINGS_URL):
+        hits = SearchHandler.vector_search(
+            table, field, "fruit", limit=1, embedder=fake_embedder
+        )
+    assert hits == [(rows[0].id, 1.0)]
 
 
 @pytest.mark.django_db

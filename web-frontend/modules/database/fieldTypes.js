@@ -1255,6 +1255,10 @@ export class TextFieldType extends FieldType {
     return 'string'
   }
 
+  canHaveVectorSearch(fieldValues) {
+    return true
+  }
+
   getFormComponent() {
     return FieldTextSubForm
   }

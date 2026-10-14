@@ -501,6 +501,7 @@ class TextFieldType(CollationSortMixin, FieldType):
     serializer_field_names = ["text_default"]
     _can_group_by = True
     _can_have_db_index = True
+    _can_have_vector_search = True
 
     can_upsert = True
 

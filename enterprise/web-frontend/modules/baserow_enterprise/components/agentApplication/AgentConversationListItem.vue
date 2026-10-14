@@ -25,7 +25,10 @@
     </span>
     <span class="agent-conversation-list__item-text">
       <span class="agent-conversation-list__item-heading">
-        <span class="agent-conversation-list__item-title">
+        <span
+          class="agent-conversation-list__item-title"
+          :title="chat.title || $t('agentConversationList.untitled')"
+        >
           <Editable
             ref="rename"
             :value="chat.title || $t('agentConversationList.untitled')"

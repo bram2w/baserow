@@ -1582,15 +1582,15 @@
   padding-bottom: 8px;
 }
 
+// No flex sizing: in the column composer box it would size the textarea from
+// its single row and ignore the height set while typing.
 .agent-chat__composer-textarea {
-  flex: 1;
   width: 100%;
   border: none;
   resize: none;
   background: transparent;
   font-size: 13px;
   line-height: 20px;
-  max-height: 120px;
   outline: none;
   box-shadow: none;
   padding: 2px 4px;
