@@ -63,13 +63,13 @@ Each grant is stored as an `MCPEndpoint` row with `oauth_client_id` set. Its tok
 ### Client registration
 
 - **CIMD**: the client URL is the client id. On by default; set `BASEROW_MCP_OAUTH_CIMD_ENABLED=false` to turn it off. `BASEROW_MCP_OAUTH_CIMD_ALLOWED_HOSTS` is a comma-separated host list and defaults to `*`. Its redirect URIs must also be https or loopback.
-- **DCR**: on by default. Set `BASEROW_MCP_OAUTH_DCR_ENABLED=false` to turn it off. It only accepts public clients that use the authorization code grant, with https or loopback redirect URIs.
+- **DCR**: on by default. Set `BASEROW_MCP_OAUTH_DCR_ENABLED=false` to turn it off. It only accepts public clients that use the authorization code grant, with at most 10 https or loopback redirect URIs and a body of at most 16 KB. Other redirect URIs are dropped; the registration fails only when none is left.
 
 A Celery task deletes clients that have no grant: DCR clients once they have not been used for 30 days (issuing or refreshing a token counts as use), CIMD clients one day after they were first fetched, since they are fetched again when needed. An app whose client was deleted gets a 400 asking the user to remove the Baserow server from the app and add it again.
 
 ### Rate limits and tokens
 
-The limits are per IP, as comma-separated lists. The consent API also applies the authorize limits per user, as it can fetch CIMD documents too.
+The limits are per IP, as comma-separated lists. The consent API also applies the authorize limits per user, as it can fetch CIMD documents too. Only failed token calls count, since hosted apps refresh every user's token from a few IPs. Token revocation has its own limit with the token values, because it loads the client and so can fetch a CIMD document.
 
 | Variable | Default |
 |---|---|

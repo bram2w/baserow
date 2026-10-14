@@ -47,6 +47,8 @@ Baserow by following one the guides below:
   when using a Nginx reverse proxy.
 * [Install behind Apache](installation/install-behind-apache.md): How to configure Baserow
   when using an Apache reverse proxy.
+* [MCP OAuth sign-in](installation/mcp-oauth.md): What a self-hosted Baserow needs so
+  MCP clients can sign in with OAuth.
 * [DEPRECATED: Install on Ubuntu](installation/old-install-on-ubuntu.md): A deprecated
   and now unsupported guide on how to manually install Baserow and its required services
   on a fresh Ubuntu install. Please use the guides above instead.
