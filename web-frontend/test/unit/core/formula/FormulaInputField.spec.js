@@ -633,3 +633,74 @@ describe('FormulaInputField formats', () => {
     expect(wrapper.emitted('update:format')).toEqual([['markdown']])
   })
 })
+
+// ── Enabled modes ───────────────────────────────────────────────────
+// A parent restricts the modes through `enabledModes`. A given mode outside
+// that list falls back to expert mode, the only mode that renders any formula
+// unchanged, and the parent is told so the next edit is saved in that mode.
+
+describe('FormulaInputField enabled modes', () => {
+  let testApp = null
+
+  beforeEach(() => {
+    testApp = new TestApp()
+  })
+
+  afterEach(async () => {
+    await testApp.afterEach()
+  })
+
+  /** Only expert mode renders function tokens, so one tells the modes apart. */
+  const functionNode = (wrapper) => wrapper.find('.function-formula-component')
+
+  async function mountField(props) {
+    const wrapper = await testApp.mount(FormulaInputField, {
+      props: { value: "upper('hello')", ...props },
+    })
+    await wrapper.vm.$nextTick()
+    return wrapper
+  }
+
+  it('falls back to expert mode when the given mode is not enabled', async () => {
+    const wrapper = await mountField({
+      mode: 'simple',
+      enabledModes: ['advanced'],
+    })
+
+    expect(wrapper.emitted('update:mode')).toEqual([['advanced']])
+    expect(functionNode(wrapper).exists()).toBe(true)
+  })
+
+  it('keeps a mode that is enabled', async () => {
+    const wrapper = await mountField({
+      mode: 'simple',
+      enabledModes: ['simple', 'advanced'],
+    })
+
+    expect(wrapper.emitted('update:mode')).toBeUndefined()
+    expect(functionNode(wrapper).exists()).toBe(false)
+  })
+
+  it('never falls back to basic or raw mode', async () => {
+    // Those modes would turn the formula into a literal, so an expert formula
+    // stays in expert mode even when only the other modes are enabled.
+    const wrapper = await mountField({
+      mode: 'advanced',
+      enabledModes: ['raw', 'simple'],
+    })
+
+    expect(wrapper.emitted('update:mode')).toBeUndefined()
+    expect(functionNode(wrapper).exists()).toBe(true)
+  })
+
+  it('follows a later change of the enabled modes', async () => {
+    const wrapper = await mountField({ mode: 'simple' })
+    expect(functionNode(wrapper).exists()).toBe(false)
+
+    await wrapper.setProps({ enabledModes: ['advanced'] })
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.emitted('update:mode')).toEqual([['advanced']])
+    expect(functionNode(wrapper).exists()).toBe(true)
+  })
+})

@@ -102,26 +102,24 @@ describe('NodeErrorHandlingForm', () => {
     expect(wrapper.find('.control__messages--error').exists()).toBe(false)
   })
 
-  test('the condition is edited in advanced mode only', async () => {
-    // The API returns `simple` for the empty default, and an older node may
-    // have stored the condition in simple mode: both open in advanced mode.
+  test('the condition input is restricted to advanced mode', async () => {
+    // The stored value is passed as is: the API returns `simple` for the empty
+    // default, and an older node may hold a simple-mode condition. The input
+    // itself falls back to advanced mode when the stored mode is not enabled.
+    const condition = {
+      formula: "get('current_node.status_code') = 503",
+      mode: 'simple',
+      version: '0.1',
+    }
     const wrapper = await mountForm({
       ...retryNode,
-      retry_condition: {
-        formula: "get('current_node.status_code') = 503",
-        mode: 'simple',
-        version: '0.1',
-      },
+      retry_condition: condition,
     })
 
     const input = conditionInput(wrapper)
     expect(input.exists()).toBe(true)
     expect(input.props('enabledModes')).toEqual(['advanced'])
-    expect(input.props('modelValue')).toEqual({
-      formula: "get('current_node.status_code') = 503",
-      mode: 'advanced',
-      version: '0.1',
-    })
+    expect(input.props('modelValue')).toEqual(condition)
     // The node's own result is offered on top of what the service form gets.
     expect(input.props('dataProvidersAllowed')).toEqual([
       'current_node',
@@ -131,16 +129,6 @@ describe('NodeErrorHandlingForm', () => {
     expect(input.props('placeholder')).toBe(
       'nodeErrorHandlingForm.conditionPlaceholder'
     )
-  })
-
-  test('an empty condition opens in advanced mode too', async () => {
-    const wrapper = await mountForm(retryNode)
-
-    expect(conditionInput(wrapper).props('modelValue')).toEqual({
-      formula: '',
-      mode: 'advanced',
-      version: '0.1',
-    })
   })
 
   test('an edit of the condition is emitted as is', async () => {
