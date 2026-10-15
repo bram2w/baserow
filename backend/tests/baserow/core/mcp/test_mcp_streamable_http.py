@@ -126,8 +126,15 @@ def test_endpoint_key_lists_tools(data_fixture):
     assert _post(INIT, endpoint.key).status_code == 200
     response = _post(LIST, endpoint.key)
     assert response.status_code == 200
-    names = [t["name"] for t in response.json()["result"]["tools"]]
-    assert "list_tables" in names
+    tools = {t["name"]: t for t in response.json()["result"]["tools"]}
+    assert "list_tables" in tools
+    # OpenAI's app review requires all three hints to be sent explicitly.
+    assert tools["list_tables"]["annotations"] == {
+        "title": "List tables",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "openWorldHint": False,
+    }
 
 
 @pytest.mark.django_db(transaction=True)

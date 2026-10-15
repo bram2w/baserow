@@ -88,6 +88,10 @@ claude mcp add --transport http baserow http://localhost:8000/mcp
 
 `ALLOW_LOCALHOST_LOOPBACK` is already on in the settings, so clients can use `http://localhost` redirect URIs.
 
+### ChatGPT app domain verification
+
+OpenAI verifies the domain of a submitted ChatGPT app by fetching `/.well-known/openai-apps-challenge`. Set `BASEROW_MCP_OPENAI_APPS_CHALLENGE` to the token shown in OpenAI's portal and the backend returns it as plain text. When it's empty the route returns a 404. Like the other OAuth routes, it only exists with `BASEROW_MCP_OAUTH_ENABLED=true`.
+
 ## Tools
 
 Some tools are currently disabled (`enabled = False`) and hidden from MCP clients. They will be enabled once users can control tool availability through the UI.

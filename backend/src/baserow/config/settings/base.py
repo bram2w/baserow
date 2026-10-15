@@ -947,6 +947,11 @@ except ValueError as exc:
         f"separated list of rate limits, for example '10/m,60/h'. {exc}"
     ) from exc
 MCP_OAUTH_UNUSED_CLIENT_DAYS = 30
+# The domain verification token OpenAI shows when submitting the app. It's served
+# at /.well-known/openai-apps-challenge.
+BASEROW_MCP_OPENAI_APPS_CHALLENGE = (
+    os.getenv("BASEROW_MCP_OPENAI_APPS_CHALLENGE") or ""
+).strip()
 MCP_OAUTH_UNUSED_CIMD_CLIENT_DAYS = 1
 
 # django-oauth-toolkit's migrations declare swappable dependencies on these settings,
