@@ -949,7 +949,7 @@
     "placeholder": "Create company asset tracker",
     "build": "Build it"
   },
-  "agentApplication": {
+  "agent": {
     "applicationName": "Agent",
     "applicationNamePlural": "Agents",
     "applicationDescription": "Create an agent in your workspace.",
