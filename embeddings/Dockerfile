@@ -8,7 +8,7 @@ COPY _download_model.py .
 
 RUN pip install --no-cache-dir \
     huggingface_hub==2.2.0 \
-    transformers==5.19.0 && \
+    tokenizers==0.23.3 && \
     python _download_model.py && \
     rm _download_model.py
 
@@ -21,9 +21,10 @@ RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 # Nothing installs packages at runtime, so pip only adds CVEs.
 RUN pip install --no-cache-dir \
     onnxruntime==1.26.0 \
-    tokenizers==0.23.3 \
     starlette==1.8.0 \
     uvicorn==0.54.0 && \
+    # tokenizers needs huggingface-hub only for from_pretrained, which isn't used.
+    pip install --no-cache-dir --no-deps tokenizers==0.23.3 && \
     pip uninstall -y --root-user-action=ignore pip && \
     rm -rf /root/.cache
 

@@ -7,20 +7,11 @@ import onnxruntime as ort
 from tokenizers import Tokenizer
 import numpy as np
 import asyncio
-import json
 import math
 import os
 
-MODEL_DIR = "/model"
+MODEL_DIR = os.environ.get("EMBEDDINGS_MODEL_DIR", "/model")
 tokenizer = Tokenizer.from_file(os.path.join(MODEL_DIR, "tokenizer.json"))
-with open(os.path.join(MODEL_DIR, "tokenizer_config.json")) as f:
-    tokenizer_config = json.load(f)
-# tokenizer.json truncates and pads to 128 tokens; use the model's 512 limit and pad per batch.
-tokenizer.enable_truncation(max_length=tokenizer_config["model_max_length"])
-tokenizer.enable_padding(
-    pad_id=tokenizer.token_to_id(tokenizer_config["pad_token"]),
-    pad_token=tokenizer_config["pad_token"],
-)
 
 
 def read_cgroup_cpu_quota() -> tuple[int, int] | None:

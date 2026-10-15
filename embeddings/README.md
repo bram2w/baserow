@@ -24,7 +24,7 @@ This service converts text into dense vector representations (embeddings) that c
 
 The service uses a multi-stage Docker build:
 
-1. **Builder stage**: Downloads the model and converts it to ONNX format
+1. **Builder stage**: Downloads the ONNX model and configures its tokenizer
 2. **Runtime stage**: Minimal Python image with only runtime dependencies
 3. **Result**: Small, production-ready container (~500MB)
 
@@ -59,6 +59,7 @@ docker buildx build \
 | Environment variable     | Description                                                                                        | Default                    |
 | ------------------------ | -------------------------------------------------------------------------------------------------- | -------------------------- |
 | `EMBEDDINGS_NUM_THREADS` | Number of CPU threads used for inference. Requests are processed one at a time, using all threads. | The container's CPU limit. |
+| `EMBEDDINGS_MODEL_DIR`   | Directory with the model files. Change it only to run the service outside Docker.                  | `/model`                   |
 
 ## API
 
@@ -132,17 +133,12 @@ The service will be available at `http://localhost:8080`.
 
 ```bash
 # Install dependencies
-pip install optimum[onnxruntime]==1.27.0 transformers==4.53.0 starlette==1.7.0 uvicorn==0.37.0
+pip install huggingface_hub==2.2.0 tokenizers==0.23.3 onnxruntime==1.26.0 \
+    starlette==1.8.0 uvicorn==0.54.0
 
 # Download model
-python -c "
-from optimum.onnxruntime import ORTModelForFeatureExtraction
-from transformers import AutoTokenizer
-model = ORTModelForFeatureExtraction.from_pretrained('sentence-transformers/all-MiniLM-L6-v2', export=True)
-tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
-model.save_pretrained('./model')
-tokenizer.save_pretrained('./model')
-"
+export EMBEDDINGS_MODEL_DIR=./model
+python _download_model.py
 
 # Run locally
 uvicorn app:app --host 0.0.0.0 --port 8080
@@ -154,7 +150,7 @@ uvicorn app:app --host 0.0.0.0 --port 8080
 import requests
 
 response = requests.post('http://localhost:8080/embed', json={
-    'text': ['Hello world', 'How are you?']
+    'texts': ['Hello world', 'How are you?']
 })
 
 embeddings = response.json()['embeddings']
