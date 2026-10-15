@@ -24,6 +24,7 @@ import {
 } from '@baserow/modules/core/formula/parser/errors'
 import { reverseString, generateUUID } from '@baserow/modules/core/utils/string'
 import { avg, sum } from '@baserow/modules/core/utils/number'
+import { markdownToHtml } from '@baserow/modules/core/utils/markdownToHtml'
 import {
   ensureString,
   ensureArray,
@@ -2618,6 +2619,42 @@ export class RuntimeEncodeUriComponent extends RuntimeFormulaFunction {
       {
         formula: "encode_uri_component('a&b')",
         result: "'a%26b'",
+      },
+    ]
+  }
+}
+
+export class RuntimeMarkdownToHtml extends RuntimeFormulaFunction {
+  static getType() {
+    return 'markdown_to_html'
+  }
+
+  static getFormulaType() {
+    return FORMULA_TYPE.FUNCTION
+  }
+
+  static getCategoryType() {
+    return FORMULA_CATEGORY.TEXT
+  }
+
+  get args() {
+    return [new TextBaserowRuntimeFormulaArgumentType()]
+  }
+
+  execute(context, [value]) {
+    return markdownToHtml(value)
+  }
+
+  getDescription() {
+    const { $i18n: i18n } = this.app
+    return i18n.t('runtimeFormulaTypes.markdownToHtmlDescription')
+  }
+
+  getExamples() {
+    return [
+      {
+        formula: "markdown_to_html('**Hello** world')",
+        result: "'<p><strong>Hello</strong> world</p>'",
       },
     ]
   }

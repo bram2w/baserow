@@ -22,6 +22,7 @@ import {
   RuntimeLessThan,
   RuntimeLessThanOrEqual,
   RuntimeLower,
+  RuntimeMarkdownToHtml,
   RuntimeMinus,
   RuntimeMinute,
   RuntimeMonth,
@@ -2077,6 +2078,47 @@ describe('RuntimeEncodeUriComponent', () => {
     { args: ['foo', 'bar'], expected: false },
   ])('validates number of args', ({ args, expected }) => {
     expect(new RuntimeEncodeUriComponent().validateNumberOfArgs(args)).toBe(
+      expected
+    )
+  })
+})
+
+// The rendering itself is covered by `utils/markdownToHtml.spec.js`; these
+// only check the argument handling, like the backend tests do.
+describe('RuntimeMarkdownToHtml', () => {
+  test.each([
+    { args: [''], expected: '' },
+    { args: [null], expected: '' },
+    { args: ['**b**'], expected: '<p><strong>b</strong></p>' },
+    // Non-string values are coerced to text first.
+    { args: [42], expected: '<p>42</p>' },
+    {
+      args: ['- [ ] a'],
+      expected:
+        '<ul class="contains-task-list">\n' +
+        '<li class="task-list-item"><input class="task-list-item-checkbox" ' +
+        'disabled="" type="checkbox"> a</li>\n' +
+        '</ul>',
+    },
+  ])('execute returns expected value', ({ args, expected }) => {
+    const formulaType = new RuntimeMarkdownToHtml()
+    expect(formulaType.execute({}, formulaType.parseArgs(args))).toBe(expected)
+  })
+
+  test.each([
+    { args: [''], expected: [] },
+    { args: ['foo'], expected: [] },
+  ])('validates type of args', ({ args, expected }) => {
+    const formulaType = new RuntimeMarkdownToHtml()
+    expect(formulaType.validateTypeOfArgs(args)).toStrictEqual(expected)
+  })
+
+  test.each([
+    { args: [], expected: false },
+    { args: ['foo'], expected: true },
+    { args: ['foo', 'bar'], expected: false },
+  ])('validates number of args', ({ args, expected }) => {
+    expect(new RuntimeMarkdownToHtml().validateNumberOfArgs(args)).toBe(
       expected
     )
   })

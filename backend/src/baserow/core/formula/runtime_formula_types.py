@@ -42,6 +42,7 @@ from baserow.core.formula.validator import (
     ensure_json_serializable,
     ensure_string,
 )
+from baserow.core.markdown import markdown_to_html
 from baserow.core.utils import to_path
 
 
@@ -742,6 +743,17 @@ class RuntimeEncodeUriComponent(RuntimeFormulaFunction):
 
     def execute(self, context: FormulaContext, args: FormulaArgs):
         return quote(args[0], safe=ENCODE_URI_COMPONENT_SAFE_CHARACTERS)
+
+
+class RuntimeMarkdownToHtml(RuntimeFormulaFunction):
+    type = "markdown_to_html"
+
+    args = [
+        TextBaserowRuntimeFormulaArgumentType(),
+    ]
+
+    def execute(self, context: FormulaContext, args: FormulaArgs):
+        return markdown_to_html(args[0])
 
 
 class RuntimeSum(RuntimeFormulaFunction):

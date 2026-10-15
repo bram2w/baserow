@@ -74,6 +74,7 @@ class CoreConfig(AppConfig):
             RuntimeLessThan,
             RuntimeLessThanOrEqual,
             RuntimeLower,
+            RuntimeMarkdownToHtml,
             RuntimeMinus,
             RuntimeMinute,
             RuntimeMonth,
@@ -149,6 +150,7 @@ class CoreConfig(AppConfig):
         formula_runtime_function_registry.register(RuntimeStrip())
         formula_runtime_function_registry.register(RuntimeEncodeUri())
         formula_runtime_function_registry.register(RuntimeEncodeUriComponent())
+        formula_runtime_function_registry.register(RuntimeMarkdownToHtml())
         formula_runtime_function_registry.register(RuntimeSum())
         formula_runtime_function_registry.register(RuntimeAvg())
         formula_runtime_function_registry.register(RuntimeAt())
