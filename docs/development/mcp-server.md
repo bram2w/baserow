@@ -23,13 +23,14 @@ ActionTypes → Django ORM
 - **Services layer** (`services.py`) — Workspace-scoped database operations. Shared by both MCP tools and the enterprise AI assistant.
 - **Action types** — All mutations go through Baserow's action-type layer, so operations are undoable and audit-logged.
 - **Workspace isolation** — Every service function enforces workspace-scoped access. Tools cannot touch data outside the endpoint's workspace.
+- **OAuth** (`backend/src/baserow/core/mcp/oauth/`) — Authorization server, client registration and token views for `POST /mcp`.
 
 ## Endpoint model
 
 An `MCPEndpoint` links a user to one workspace and to the tools they allowed (`allowed_tools`, null allows every enabled tool). There are two kinds:
 
-- **OAuth grants**: created when a client signs in through the consent page (see [OAuth sign-in](#oauth-sign-in)). The client calls `POST /mcp` with an access token.
-- **Endpoint keys**: a 32-character secret key, created under **Settings > MCP server** in the Baserow UI. Older clients use it in the SSE URL, `GET /mcp/{key}/sse`. `POST /mcp` also accepts it as `Authorization: Bearer <key>`.
+- **OAuth grants**: created when a client signs in through the consent page (see [OAuth sign-in](#oauth-sign-in)). The client calls `POST /mcp` with an access token. They are listed, and can be disconnected, on the **OAuth** tab of **Settings > MCP server**.
+- **Endpoint keys**: a 32-character secret key, created on the **Endpoint** tab of **Settings > MCP server**. Keys allow every enabled tool. Older clients use it in the SSE URL, `GET /mcp/{key}/sse`. `POST /mcp` also accepts it as `Authorization: Bearer <key>`.
 
 Users install the client side, the MCP server config plus a skill, from [baserow/baserow-mcp](https://github.com/baserow/baserow-mcp).
 
@@ -134,7 +135,10 @@ Set `enabled = False` on the class if the tool should not be exposed to MCP clie
 See [docs/testing/mcp-test-plan.md](../testing/mcp-test-plan.md) for manual testing instructions.
 
 ```bash
-# All MCP tests
+# Server, transports and OAuth
+just b test tests/baserow/core/mcp/
+
+# Tools and services
 just b test tests/baserow/contrib/database/mcp/
 
 # Service layer only

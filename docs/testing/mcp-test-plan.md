@@ -3,34 +3,51 @@
 ## Prerequisites
 
 - A running Baserow instance (local dev or deployed)
-- An MCP endpoint key (created via Settings > MCP in the Baserow UI)
+- For OAuth: `BASEROW_MCP_OAUTH_ENABLED=true` on the backend
 - An MCP-compatible client (see step 1)
 
 ## 1. Connect an MCP client
 
-Go to **Settings > MCP** in Baserow and create an endpoint. The UI shows the
-SSE URL with the key pre-filled:
+Clients connect in one of two ways. Both are under **Settings > MCP server**.
+
+### OAuth (recommended)
+
+The **OAuth** tab shows one URL for every client:
+
+```
+http://localhost:8000/mcp
+```
+
+- **Claude Code**:
+  ```bash
+  claude mcp add --transport http baserow http://localhost:8000/mcp
+  ```
+  Run `/mcp` in Claude Code to sign in.
+- **claude.ai or Claude Desktop**: open **Settings > Connectors**, click
+  **Add custom connector** and paste the URL. A local URL only works from
+  Claude Desktop; claude.ai needs a public one.
+- **MCP Inspector**: run `npx @modelcontextprotocol/inspector`, choose the
+  Streamable HTTP transport and paste the URL.
+
+The client opens the Baserow consent page. Pick a workspace and the tools to
+allow, then approve. The app then shows under **Connected apps** on the OAuth
+tab.
+
+### Endpoint key
+
+On the **Endpoint** tab, create an endpoint. The UI shows the SSE URL with the
+key pre-filled:
 
 ```
 http://localhost:8000/mcp/YOUR_ENDPOINT_KEY/sse
 ```
 
-How you use this URL depends on your MCP client:
+- **MCP Inspector**: choose the SSE transport and paste the URL.
+- **Claude Desktop, Cursor, Windsurf**: paste the JSON config snippet shown in
+  the Baserow UI into the client's config file and restart the client.
 
-- **MCP Inspector** (recommended for quick testing, no install needed):
-  ```bash
-  npx @modelcontextprotocol/inspector
-  ```
-  Paste the SSE URL in the Inspector UI to list and call tools interactively.
-
-- **Claude Desktop**:
-  1. Open Claude Desktop settings (`Cmd+,` on macOS, `Ctrl+,` on Windows/Linux).
-  2. Go to the **Develop** tab and click **Edit Config**.
-  3. Paste the JSON config snippet shown in the Baserow UI into
-     `claude_desktop_config.json` and save.
-  4. Restart Claude Desktop.
-
-- **Any other MCP client**: point it at the SSE URL above.
+The key also works on the OAuth URL as a bearer token:
+`Authorization: Bearer YOUR_ENDPOINT_KEY` on `POST http://localhost:8000/mcp`.
 
 ## 2. Verify connection
 
@@ -97,11 +114,21 @@ Expected: Claude calls `list_table_rows` with a `search` parameter.
 ## 5. Verify disabled tools are not exposed
 
 The following tools exist in the codebase but are **not** exposed to MCP
-clients (they will be enabled once users can control tool availability through
-the UI):
+clients, whatever is ticked on the consent page:
 
 - `create_database`
 - `create_table`, `update_table`, `delete_table`
 - `create_fields`, `update_fields`, `delete_fields`
 
 Verify these do **not** appear in your client's tool list.
+
+## 6. Verify tool selection (OAuth)
+
+Connect with OAuth and leave only `list_databases` and `list_tables` ticked on
+the consent page. Verify the client lists only those two tools, and that asking
+it to create a row fails.
+
+## 7. Verify disconnect
+
+Click **Disconnect** next to the app under **Connected apps**. Verify the next
+tool call from the client fails and the client asks you to sign in again.
