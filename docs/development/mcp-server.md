@@ -6,9 +6,9 @@ Baserow ships a built-in [Model Context Protocol](https://modelcontextprotocol.i
 
 ```
 LLM / MCP client
-      │ SSE (text/event-stream)
+      │ POST /mcp (Streamable HTTP, bearer token)   GET /mcp/{key}/sse (legacy SSE)
       ▼
-DjangoChannelsSseServerTransport   ← ASGI only
+Starlette app, ASGI only           ← backend/src/baserow/core/mcp/__init__.py
       │
 BaserowMCPServer                   ← backend/src/baserow/core/mcp/__init__.py
       │
@@ -26,13 +26,12 @@ ActionTypes → Django ORM
 
 ## Endpoint model
 
-An `MCPEndpoint` links a 32-character secret key to a user and workspace. The key is embedded in the SSE URL:
+An `MCPEndpoint` links a user to one workspace and to the tools they allowed (`allowed_tools`, null allows every enabled tool). There are two kinds:
 
-```
-GET /mcp/{key}/sse
-```
+- **OAuth grants**: created when a client signs in through the consent page (see [OAuth sign-in](#oauth-sign-in)). The client calls `POST /mcp` with an access token.
+- **Endpoint keys**: a 32-character secret key, created under **Settings > MCP server** in the Baserow UI. Older clients use it in the SSE URL, `GET /mcp/{key}/sse`. `POST /mcp` also accepts it as `Authorization: Bearer <key>`.
 
-Endpoints are created via **Settings > MCP** in the Baserow UI.
+Users install the client side, the MCP server config plus a skill, from [baserow/baserow-mcp](https://github.com/baserow/baserow-mcp).
 
 ## Running the server
 
@@ -90,7 +89,7 @@ claude mcp add --transport http baserow http://localhost:8000/mcp
 
 ## Tools
 
-Some tools are currently disabled (`enabled = False`) and hidden from MCP clients. They will be enabled once users can control tool availability through the UI.
+Some tools are currently disabled (`enabled = False`) and hidden from MCP clients, whatever the user ticks on the consent page.
 
 | Tool | Status | Description |
 |---|---|---|
