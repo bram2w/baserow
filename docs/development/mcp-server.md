@@ -23,14 +23,15 @@ ActionTypes → Django ORM
 - **Services layer** (`services.py`) — Workspace-scoped database operations. Shared by both MCP tools and the enterprise AI assistant.
 - **Action types** — All mutations go through Baserow's action-type layer, so operations are undoable and audit-logged.
 - **Workspace isolation** — Every service function enforces workspace-scoped access. Tools cannot touch data outside the endpoint's workspace.
-- **OAuth** (`backend/src/baserow/core/mcp/oauth/`) — Authorization server, client registration and token views for `POST /mcp`.
+- **SSE transport** (`backend/src/baserow/core/mcp/sse.py`) — `DjangoChannelsSseServerTransport` serves the legacy `GET /mcp/{key}/sse` stream and `POST /mcp/messages/`.
+- **OAuth** (`backend/src/baserow/core/mcp/oauth/`) — Authorization server, client registration and token views for `POST /mcp`. The consent and connected-apps APIs used by the frontend are in `backend/src/baserow/api/mcp/oauth_views.py`.
 
 ## Endpoint model
 
 An `MCPEndpoint` links a user to one workspace and to the tools they allowed (`allowed_tools`, null allows every enabled tool). There are two kinds:
 
-- **OAuth grants**: created when a client signs in through the consent page (see [OAuth sign-in](#oauth-sign-in)). The client calls `POST /mcp` with an access token. They are listed, and can be disconnected, on the **OAuth** tab of **Settings > MCP server**.
-- **Endpoint keys**: a 32-character secret key, created on the **Endpoint** tab of **Settings > MCP server**. Keys allow every enabled tool. Older clients use it in the SSE URL, `GET /mcp/{key}/sse`. `POST /mcp` also accepts it as `Authorization: Bearer <key>`.
+- **OAuth grants**: created when a client signs in through the consent page (see [OAuth sign-in](#oauth-sign-in)). The client calls `POST /mcp` with an access token. They are listed, and can be disconnected, on the **OAuth** tab of **My settings > MCP server**.
+- **Endpoint keys**: a 32-character secret key, created under **My settings > MCP server** (on the **Endpoint** tab when OAuth is on). Keys allow every enabled tool. Older clients use it in the SSE URL, `GET /mcp/{key}/sse`. `POST /mcp` also accepts it as `Authorization: Bearer <key>`.
 
 Users install the client side, the MCP server config plus a skill, from [baserow/baserow-mcp](https://github.com/baserow/baserow-mcp). Its README has the setup steps for each agent.
 
@@ -92,7 +93,7 @@ See the [test plan](../testing/mcp-test-plan.md#1-connect-an-mcp-client) for oth
 
 ## Tools
 
-Some tools are currently disabled (`enabled = False`) and hidden from MCP clients, whatever the user ticks on the consent page.
+Some tools are currently disabled (`enabled = False`) and hidden from MCP clients. The consent page does not list them.
 
 | Tool | Status | Description |
 |---|---|---|
@@ -142,6 +143,12 @@ just b test tests/baserow/core/mcp/
 
 # Tools and services
 just b test tests/baserow/contrib/database/mcp/
+
+# Endpoint API
+just b test tests/baserow/api/test_mcp_views.py
+
+# OAuth audit log (enterprise)
+just b test ../enterprise/backend/tests/baserow_enterprise_tests/audit_log/test_mcp_oauth_audit_log.py
 
 # Service layer only
 just b test tests/baserow/contrib/database/mcp/test_mcp_services.py

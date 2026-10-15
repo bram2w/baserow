@@ -6,10 +6,11 @@ of a pasted endpoint key. Setup steps for each client are in the
 [baserow-mcp README](https://github.com/baserow/baserow-mcp). A few things to check on
 a self-hosted install:
 
-* **Public HTTPS URL.** Hosted apps like claude.ai and ChatGPT reach Baserow from the
-  internet, so `PUBLIC_BACKEND_URL` (or `BASEROW_PUBLIC_URL`) must be the public HTTPS
+* **Public HTTPS URL.** Apps like claude.ai, Claude Desktop and ChatGPT reach Baserow from
+  the internet, so `PUBLIC_BACKEND_URL` (or `BASEROW_PUBLIC_URL`) must be the public HTTPS
   URL. Otherwise the app fails early, claude.ai for example only says "Couldn't
-  register". Desktop and CLI apps on the same machine also work with `localhost`.
+  register". CLI apps such as Claude Code on the same machine also work with
+  `localhost`.
 * **Routing.** Besides `/api/` and `/ws/`, the reverse proxy must send `/mcp`,
   `/oauth/`, `/.well-known/oauth-authorization-server` and
   `/.well-known/oauth-protected-resource` to the backend. `/mcp` must reach the ASGI
