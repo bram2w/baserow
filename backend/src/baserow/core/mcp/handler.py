@@ -4,7 +4,7 @@ from django.db.models import QuerySet
 from baserow.core.handler import CoreHandler
 from baserow.core.utils import random_string
 
-from ..models import Workspace
+from ..models import Workspace, WorkspaceUser
 from .exceptions import (
     MaximumUniqueEndpointTriesError,
     MCPEndpointDoesNotBelongToUser,
@@ -20,32 +20,12 @@ from .operations import (
 
 
 class MCPEndpointHandler:
-    def get_by_key(self, key: str) -> MCPEndpoint:
-        """
-        Fetches a single MCP endpoint instance based on the key.
-
-        :param key: The unique endpoint key.
-        :raises MCPEndpointDoesNotExist: Raised when the requested endpoint was not
-            found.
-        :return: The fetched endpoint matching the provided key.
-        """
-
-        try:
-            endpoint = MCPEndpoint.objects.select_related("workspace", "user").get(
-                key=key
-            )
-        except MCPEndpoint.DoesNotExist:
-            raise MCPEndpointDoesNotExist(
-                f"The MCP endpoint with key {key} does not exist."
-            )
-
-        return endpoint
-
     def get_endpoint(
         self, user: AbstractUser, endpoint_id: int, base_queryset: QuerySet = None
     ) -> MCPEndpoint:
         """
-        Fetches a single MCP endpoint and checks if the user belongs to the workspace.
+        Fetches a single key MCP endpoint and checks if the user belongs to the
+        workspace. OAuth grants are never returned, use `get_oauth_grant` for those.
 
         :param user: The user on whose behalf the endpoint is requested.
         :type user: User
@@ -65,7 +45,7 @@ class MCPEndpointHandler:
 
         try:
             endpoint = base_queryset.select_related("workspace").get(
-                id=endpoint_id, user=user
+                id=endpoint_id, user=user, oauth_client_id__isnull=True
             )
         except MCPEndpoint.DoesNotExist:
             raise MCPEndpointDoesNotExist(
@@ -111,7 +91,10 @@ class MCPEndpointHandler:
                 return key
 
     def create_endpoint(
-        self, user: AbstractUser, workspace: Workspace, name: str
+        self,
+        user: AbstractUser,
+        workspace: Workspace,
+        name: str,
     ) -> MCPEndpoint:
         """
         Creates a new MCP endpoint.
@@ -134,10 +117,64 @@ class MCPEndpointHandler:
         )
 
         endpoint = MCPEndpoint.objects.create(
-            name=name, key=self.generate_unique_key(), user=user, workspace=workspace
+            name=name,
+            key=self.generate_unique_key(),
+            user=user,
+            workspace=workspace,
         )
 
         return endpoint
+
+    def grant_oauth_client(
+        self,
+        user: AbstractUser,
+        workspace: Workspace,
+        client_id: str,
+        name: str,
+        allowed_tools: list[str],
+    ) -> tuple[MCPEndpoint, bool]:
+        """
+        Returns the grant backing an OAuth client's access to a workspace, creating
+        it on first consent and replacing its allowed tools afterwards.
+
+        :param user: The user giving consent.
+        :param workspace: The workspace the client gets access to.
+        :param client_id: The OAuth client id.
+        :param name: The client name, used as the grant name when creating.
+        :param allowed_tools: The tool names the client may use.
+        :return: The created or updated grant, and whether it was created.
+        """
+
+        # Removing the member deletes this row and then the member's grants. With
+        # the row locked, a removal running at the same time either waits and then
+        # deletes this grant too, or commits first and the check below fails.
+        WorkspaceUser.objects.select_for_update().filter(
+            user=user, workspace=workspace
+        ).first()
+        CoreHandler().check_permissions(
+            user,
+            CreateMCPEndpointOperationType.type,
+            workspace=workspace,
+            context=workspace,
+        )
+        # get_or_create retries the lookup when a parallel consent created the row
+        # first, so the unique constraint never surfaces as an error.
+        endpoint, created = MCPEndpoint.objects.get_or_create(
+            user=user,
+            workspace=workspace,
+            oauth_client_id=client_id,
+            defaults={"name": name, "allowed_tools": allowed_tools, "key": None},
+        )
+        if not created:
+            CoreHandler().check_permissions(
+                user,
+                UpdateMCPEndpointOperationType.type,
+                workspace=workspace,
+                context=endpoint,
+            )
+            endpoint.allowed_tools = allowed_tools
+            endpoint.save(update_fields=["allowed_tools"])
+        return endpoint, created
 
     def update_endpoint(
         self, user: AbstractUser, endpoint: MCPEndpoint, name: str
@@ -194,3 +231,39 @@ class MCPEndpointHandler:
         )
 
         endpoint.delete()
+
+    def get_oauth_grant(self, user: AbstractUser, grant_id: int) -> MCPEndpoint:
+        """
+        Fetches one of the user's OAuth grants. There is no permission check: a
+        user can always see and disconnect what they connected.
+
+        :raises MCPEndpointDoesNotExist: When the user has no grant with that id.
+        """
+
+        try:
+            return MCPEndpoint.objects.select_related("workspace").get(
+                id=grant_id, user=user, oauth_client_id__isnull=False
+            )
+        except MCPEndpoint.DoesNotExist:
+            raise MCPEndpointDoesNotExist(
+                f"The MCP OAuth grant with id {grant_id} does not exist."
+            )
+
+    def disconnect_oauth_grant(self, endpoint: MCPEndpoint):
+        """
+        Deletes an OAuth grant from `get_oauth_grant`, which revokes its tokens.
+        Skips the MCP endpoint permission checks, so losing them never keeps a
+        client connected.
+        """
+
+        endpoint.delete()
+
+    def revoke_workspace_grants(self, user_id: int, workspace_id: int) -> None:
+        """
+        Deletes the user's OAuth grants in the workspace and their tokens, without
+        a permission check, for when the user is no longer a member.
+        """
+
+        MCPEndpoint.objects.filter(
+            user_id=user_id, workspace_id=workspace_id, oauth_client_id__isnull=False
+        ).delete()

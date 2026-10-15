@@ -22,7 +22,7 @@ spec:
     - host: {{ $backendDomain | quote }}
       http:
         paths:
-          {{- range list "/ws/" "/mcp/" "/assistant/" }}
+          {{- range list "/ws/" "/mcp" "/assistant/" }}
           - path: {{ . }}
             pathType: Prefix
             backend:
@@ -43,6 +43,13 @@ spec:
       http:
         paths:
           {{- if $sharedDomain }}
+          - path: /mcp
+            pathType: Exact
+            backend:
+              service:
+                name: {{ $asgi }}
+                port:
+                  number: 80
           {{- range list "/ws/" "/mcp/" "/assistant/" }}
           - path: {{ . }}
             pathType: Prefix
@@ -52,13 +59,15 @@ spec:
                 port:
                   number: 80
           {{- end }}
-          - path: /api/
+          {{- range list "/api/" "/oauth/" "/.well-known/oauth-authorization-server" "/.well-known/oauth-protected-resource" }}
+          - path: {{ . }}
             pathType: Prefix
             backend:
               service:
                 name: {{ $wsgi }}
                 port:
                   number: 80
+          {{- end }}
           {{- end }}
           - path: /
             pathType: Prefix

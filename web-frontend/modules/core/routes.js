@@ -27,6 +27,12 @@ export const routes = [
         file: path.resolve(__dirname, 'pages/login.vue'),
       },
       {
+        name: 'mcp-authorize',
+        // The authorize request is in the path, which SSO sign-in keeps.
+        path: '/mcp-authorize/:request?',
+        file: path.resolve(__dirname, 'pages/mcpAuthorize.vue'),
+      },
+      {
         name: 'signup',
         path: '/signup',
         file: path.resolve(__dirname, 'pages/signup.vue'),

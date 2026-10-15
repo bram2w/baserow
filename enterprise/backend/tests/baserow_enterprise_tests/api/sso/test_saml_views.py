@@ -460,3 +460,31 @@ def test_saml_assertion_consumer_service(api_client, enterprise_data_fixture):
         assert response.headers["Location"] == (
             f"{get_frontend_login_error_url()}?error=errorInvalidSamlResponse"
         )
+
+
+@pytest.mark.django_db()
+@override_settings(DEBUG=True)
+def test_saml_acs_returns_to_the_mcp_consent_page(api_client, enterprise_data_fixture):
+    # The MCP consent page carries the authorize request in its path, because the
+    # ACS drops the RelayState query.
+    consent_url = (
+        f"{settings.PUBLIC_WEB_FRONTEND_URL}"
+        "/mcp-authorize/cmVzcG9uc2VfdHlwZT1jb2RlJmNsaWVudF9pZD1hYmM"
+    )
+    enterprise_data_fixture.enable_enterprise()
+    (
+        metadata,
+        saml_response,
+    ) = enterprise_data_fixture.get_valid_saml_idp_metadata_and_response()
+    enterprise_data_fixture.create_saml_auth_provider(
+        domain="baserow.io", metadata=metadata
+    )
+
+    with freeze_time("2022-11-23T14:23:25.00Z"):
+        response = api_client.post(
+            reverse("api:enterprise_sso_saml:acs"),
+            data={"SAMLResponse": saml_response, "RelayState": consent_url},
+        )
+
+    assert response.status_code == HTTP_302_FOUND
+    assert response.headers["Location"].startswith(f"{consent_url}?token=")

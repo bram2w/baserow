@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-28 10:12+0000\n"
+"POT-Creation-Date: 2026-10-14 16:49+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -326,36 +326,55 @@ msgstr ""
 msgid "Integration (%(integration_id)s) moved"
 msgstr ""
 
-#: src/baserow/core/mcp/actions.py:20
+#: src/baserow/core/mcp/actions.py:24
 msgid "Create MCP endpoint"
 msgstr ""
 
-#: src/baserow/core/mcp/actions.py:22
+#: src/baserow/core/mcp/actions.py:26
 #, python-format
 msgid ""
 "An MCP Endpoint with name \"%(endpoint_name)s\" (%(endpoint_id)s) has been "
 "created"
 msgstr ""
 
-#: src/baserow/core/mcp/actions.py:60
+#: src/baserow/core/mcp/actions.py:64
 msgid "Update MCP endpoint name"
 msgstr ""
 
-#: src/baserow/core/mcp/actions.py:62
+#: src/baserow/core/mcp/actions.py:66
 #, python-format
 msgid ""
 "The MCP Endpoint (%(endpoint_id)s) name changed from "
 "\"%(original_endpoint_name)s\" to \"%(endpoint_name)s\""
 msgstr ""
 
-#: src/baserow/core/mcp/actions.py:108
+#: src/baserow/core/mcp/actions.py:112
 msgid "Delete MCP endpoint"
 msgstr ""
 
-#: src/baserow/core/mcp/actions.py:109
+#: src/baserow/core/mcp/actions.py:113
 #, python-format
 msgid ""
 "The MCP Endpoint \"%(endpoint_name)s\" (%(endpoint_id)s) has been deleted"
+msgstr ""
+
+#: src/baserow/core/mcp/actions.py:159
+msgid "Connect app to MCP"
+msgstr ""
+
+#: src/baserow/core/mcp/actions.py:161
+#, python-format
+msgid ""
+"\"%(client_name)s\" was connected to the MCP server with %(tool_count)s tools"
+msgstr ""
+
+#: src/baserow/core/mcp/actions.py:225
+msgid "Disconnect app from MCP"
+msgstr ""
+
+#: src/baserow/core/mcp/actions.py:226
+#, python-format
+msgid "\"%(client_name)s\" was disconnected from the MCP server"
 msgstr ""
 
 #: src/baserow/core/notification_types.py:92

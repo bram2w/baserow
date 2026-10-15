@@ -53,6 +53,10 @@ images:
   need to:
   * Redirect `/api/` and `/ws/` requests to the backend gunicorn service without 
     dropping these prefixes.
+  * With `BASEROW_MCP_OAUTH_ENABLED=true`, also send `/mcp`, `/oauth/`,
+    `/.well-known/oauth-authorization-server` and
+    `/.well-known/oauth-protected-resource` to the backend. See
+    [MCP OAuth sign-in](mcp-oauth.md).
   * Serve the files in the `/baserow/media` folder in the backend gunicorn service 
     (share with your proxy using a volume) at the `/media` endpoint. Ensure all media
     responses have `X-Content-Type-Options: nosniff` and
