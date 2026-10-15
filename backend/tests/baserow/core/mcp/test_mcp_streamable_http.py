@@ -571,6 +571,34 @@ def test_initialize_is_captured_as_connected(data_fixture):
     )
 
 
+@pytest.mark.django_db(transaction=True)
+def test_oauth_calls_are_captured_with_the_app(client, api_client, data_fixture):
+    from unittest.mock import patch
+
+    from tests.baserow.core.mcp.oauth.helpers import cimd_client
+
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    client_id = cimd_client(client, client_name="Claude")
+    tokens = obtain_tokens(client, api_client, token, workspace, client_id=client_id)
+
+    with patch("baserow.core.posthog.capture_user_event") as mock_capture:
+        _post(INIT, tokens["access_token"])
+        _post(_call("list_databases"), tokens["access_token"])
+
+    oauth = {
+        "endpoint_id": tokens["endpoint_id"],
+        "transport": "streamable_http",
+        "auth": "oauth",
+        "client_name": "Claude",
+        "client_host": "claude.ai",
+    }
+    assert [(c.args[1], c.args[2]) for c in mock_capture.call_args_list] == [
+        ("mcp_connected", oauth),
+        ("mcp_tool_called", {**oauth, "tool": "list_databases", "success": True}),
+    ]
+
+
 @pytest.mark.django_db
 def test_connection_properties_tell_transport_auth_and_app_apart(data_fixture):
     user = data_fixture.create_user()

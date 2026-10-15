@@ -154,7 +154,20 @@ class DeleteMCPEndpointActionType(ActionType):
         return WorkspaceActionScopeType.value(workspace_id)
 
 
-class ConnectMCPOAuthClientActionType(ActionType):
+class OAuthClientAnalyticsMixin:
+    """Adds the OAuth app's name and CIMD host to the action's PostHog event."""
+
+    @classmethod
+    def get_analytics_properties(cls, action_params: dict) -> dict:
+        return {
+            **super().get_analytics_properties(action_params),
+            **oauth_client_properties(
+                action_params["client_id"], action_params["client_name"]
+            ),
+        }
+
+
+class ConnectMCPOAuthClientActionType(OAuthClientAnalyticsMixin, ActionType):
     type = "connect_mcp_oauth_client"
     description = ActionTypeDescription(
         _("Connect app to MCP"),
@@ -206,10 +219,7 @@ class ConnectMCPOAuthClientActionType(ActionType):
         )
         cls.register_action(user, params, cls.scope(workspace.id), workspace)
 
-        properties = {
-            **cls.get_analytics_properties(dataclasses.asdict(params)),
-            **oauth_client_properties(client_id, name),
-        }
+        properties = cls.get_analytics_properties(dataclasses.asdict(params))
         session = get_untrusted_client_session_id(user)
         transaction.on_commit(
             lambda: posthog.capture_user_event(
@@ -223,7 +233,7 @@ class ConnectMCPOAuthClientActionType(ActionType):
         return WorkspaceActionScopeType.value(workspace_id)
 
 
-class DisconnectMCPOAuthClientActionType(ActionType):
+class DisconnectMCPOAuthClientActionType(OAuthClientAnalyticsMixin, ActionType):
     type = "disconnect_mcp_oauth_client"
     description = ActionTypeDescription(
         _("Disconnect app from MCP"),

@@ -380,7 +380,9 @@ def oauth_client_properties(client_id: str, client_name: str) -> dict:
     of a CIMD client id, and None for DCR clients, whose name isn't verified.
     """
 
-    host = urlparse(client_id).hostname if client_id[:8].lower() == "https://" else None
+    from oauth2_provider.cimd import is_cimd_client_id
+
+    host = urlparse(client_id).hostname if is_cimd_client_id(client_id) else None
     return {"client_name": client_name, "client_host": host}
 
 
@@ -388,7 +390,8 @@ def connection_properties(endpoint: "MCPEndpoint") -> dict:
     """
     PostHog properties telling how the current request reached the endpoint: the
     transport, how it authenticated, and for OAuth grants which app it is. `/mcp`
-    sets `current_endpoint`; the SSE transport only sets `current_key`.
+    sets `current_endpoint`; the SSE transport only sets `current_key`. This is the
+    same check `get_endpoint` uses to pick the endpoint, so the two can't disagree.
     """
 
     streamable_http = current_endpoint.get(None) is not None

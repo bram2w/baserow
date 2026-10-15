@@ -135,12 +135,12 @@ class MCPEndpointHandler:
     ) -> tuple[MCPEndpoint, bool]:
         """
         Returns the grant backing an OAuth client's access to a workspace, creating
-        it on first consent and replacing its allowed tools afterwards.
+        it on first consent and replacing its name and allowed tools afterwards.
 
         :param user: The user giving consent.
         :param workspace: The workspace the client gets access to.
         :param client_id: The OAuth client id.
-        :param name: The client name, used as the grant name when creating.
+        :param name: The client name, stored as the grant name.
         :param allowed_tools: The tool names the client may use.
         :return: The created or updated grant, and whether it was created.
         """
@@ -172,8 +172,10 @@ class MCPEndpointHandler:
                 workspace=workspace,
                 context=endpoint,
             )
+            # The client may have been renamed since the first consent.
+            endpoint.name = name
             endpoint.allowed_tools = allowed_tools
-            endpoint.save(update_fields=["allowed_tools"])
+            endpoint.save(update_fields=["name", "allowed_tools"])
         return endpoint, created
 
     def update_endpoint(
