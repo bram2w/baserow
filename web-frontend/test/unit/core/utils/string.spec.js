@@ -5,6 +5,7 @@ import {
   slugify,
   isValidURL,
   isValidEmail,
+  isValidStrictEmail,
   isSecureURL,
   isNumeric,
   parseLocalizedNumber,
@@ -186,6 +187,80 @@ describe('test string utils', () => {
       expect(isValidEmail(validEmail)).toBe(true)
     }
   })
+
+  // These vectors are shared with the backend test
+  // `test_input_text_element_is_valid` in
+  // `backend/tests/baserow/contrib/builder/elements/test_element_types.py` so
+  // the two validators stay pinned to each other. Keep both lists identical.
+  const strictEmailsAcceptedByBothSides = [
+    'foo@bar.com',
+    'FOO@BAR.COM',
+    'first.last+tag@sub.domain.co.uk',
+    'first_part_underscores_ok@hyphens-ok.com',
+    'user@localhost',
+    'user@пример.рф',
+    'test@example.xn--p1ai',
+    'x@xn--80ak6aa92e.com',
+    'a@b.cd',
+    'test@' + 'a'.repeat(63) + '.com',
+  ]
+  const strictEmailsRejectedByBothSides = [
+    'aaa@aa',
+    'dzd@vz',
+    'a@b',
+    'a@b.c',
+    'foobar.com',
+    'a@',
+    '@b',
+    'a@@b',
+    'a @b.com',
+    '.a@b.com',
+    'a..b@c.com',
+    'a@-b.com',
+    'a@b-.com',
+    'a@b..com',
+    'a@b.com.',
+    'коля@пример.рф',
+    'Dörte@Sörensen.example.com',
+    'test@' + 'a'.repeat(64) + '.com',
+    // 321 characters, over Django's 320 limit.
+    'a'.repeat(315) + '@b.com',
+  ]
+  // Accepted by Django but deliberately not by the helper: IP literal domains
+  // and quoted-string local parts.
+  const strictEmailsAcceptedByBackendOnly = [
+    'wierd@[1.1.1.1]',
+    '"john..doe"@example.com',
+  ]
+  // Accepted by Django and the helper, which mirrors it, but rejected by the
+  // database email field regex behind `isValidEmail`. The builder input text
+  // element checks both, see `elementTypes.spec.js`.
+  const strictEmailsRejectedByEmailFieldOnly = [
+    "o'brien@example.com",
+    '100%@example.com',
+  ]
+
+  test.each(strictEmailsAcceptedByBothSides)(
+    'isValidStrictEmail accepts %s',
+    (email) => {
+      expect(isValidStrictEmail(email)).toBe(true)
+    }
+  )
+
+  test.each([
+    ...strictEmailsRejectedByBothSides,
+    ...strictEmailsAcceptedByBackendOnly,
+  ])('isValidStrictEmail rejects %s', (email) => {
+    expect(isValidStrictEmail(email)).toBe(false)
+  })
+
+  test.each(strictEmailsRejectedByEmailFieldOnly)(
+    'isValidStrictEmail accepts %s, which isValidEmail rejects',
+    (email) => {
+      expect(isValidStrictEmail(email)).toBe(true)
+      expect(isValidEmail(email)).toBe(false)
+    }
+  )
 
   test('isSecureURL', () => {
     expect(isSecureURL('test')).toBe(false)

@@ -66,7 +66,10 @@ import {
   CollectionElementTypeMixin,
   MultiPageElementTypeMixin,
 } from '@baserow/modules/builder/elementTypeMixins'
-import { isValidEmail } from '@baserow/modules/core/utils/string'
+import {
+  isValidEmail,
+  isValidStrictEmail,
+} from '@baserow/modules/core/utils/string'
 import { getBuilderBreakpoints } from '@baserow/modules/builder/utils/breakpoints'
 
 import {
@@ -1523,7 +1526,13 @@ export class InputTextElementType extends FormElementType {
         // Failed parsing leaves raw text in form data for display.
         return Number.isFinite(value)
       case 'email':
-        return isValidEmail(value)
+        // The backend validates with Django's `validate_email`, which
+        // `isValidStrictEmail` mirrors. The value is usually written into a
+        // database email field, whose regex rejects some addresses Django
+        // accepts, such as `'` or `%` in the local part, so the permissive
+        // `isValidEmail` must pass too or the submit fails on the row write
+        // instead of inline.
+        return isValidStrictEmail(value) && isValidEmail(value)
       default:
         return true
     }

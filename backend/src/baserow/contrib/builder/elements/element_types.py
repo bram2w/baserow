@@ -1696,6 +1696,10 @@ class InputTextElementType(InputElementType):
                 raise TypeError(f"{value} is not a valid number") from exc
 
         elif element.validation_type == "email":
+            # The frontend mirrors this in `isValidStrictEmail`
+            # (`web-frontend/modules/core/utils/string.js`). If the validator here
+            # changes, that helper and the shared vectors in
+            # `test_input_text_element_is_valid` must change too.
             try:
                 validate_email(value)
             except ValidationError as exc:

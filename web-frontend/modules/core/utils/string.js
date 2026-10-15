@@ -161,6 +161,70 @@ export const isValidEmail = (str) => {
   return !!pattern.test(str)
 }
 
+// The Django `EmailValidator` rules below are ported piece by piece so each one
+// can be compared with `django/core/validators.py` directly. The hostname label
+// and TLD patterns encode "does not start or end with a hyphen" structurally
+// instead of with Django's lookarounds, because Safari only added lookbehind
+// support in 16.4. The `u` flag gives the unicode range code point semantics,
+// as in Python, so astral characters do not match.
+const STRICT_EMAIL_MAX_LENGTH = 320
+// Django's dot-atom local part. The quoted-string alternative is left out.
+const strictEmailAtom = "[-!#$%&'*+/=?^_`{}|~0-9a-z]+"
+const strictEmailUserRegex = new RegExp(
+  `^${strictEmailAtom}(?:\\.${strictEmailAtom})*$`,
+  'iu'
+)
+// Django's `ul` unicode letter range is `\u00a1-\uffff`.
+const strictEmailLetter = 'a-z\\u00a1-\\uffff'
+const strictEmailLetterOrDigit = `${strictEmailLetter}0-9`
+// A hostname label: 1 to 63 characters, no leading or trailing hyphen.
+const strictEmailLabel =
+  `[${strictEmailLetterOrDigit}]` +
+  `(?:[${strictEmailLetterOrDigit}-]{0,61}[${strictEmailLetterOrDigit}])?`
+// A TLD: 2 to 63 letters or hyphens with no leading or trailing hyphen, or a
+// punycode label. Like Django, a non-punycode TLD does not allow digits.
+const strictEmailTld =
+  `(?:[${strictEmailLetter}][${strictEmailLetter}-]{0,61}[${strictEmailLetter}]` +
+  `|xn--[a-z0-9]{1,59})`
+const strictEmailDomainRegex = new RegExp(
+  `^${strictEmailLabel}(?:\\.${strictEmailLabel})*\\.${strictEmailTld}$`,
+  'iu'
+)
+
+/**
+ * Mirrors Django's `EmailValidator`, which the Application Builder backend uses
+ * for input text elements with the email validation type
+ * (`InputTextElementType.is_valid`) and which `ensure_email` uses for the SMTP
+ * email action. Keep it in sync with Django.
+ *
+ * Unlike the permissive `isValidEmail` above, which belongs to the database
+ * email field, this requires an ASCII dot-atom local part and a dotted domain
+ * whose TLD is 2 to 63 letters or punycode, or the domain `localhost`. IP
+ * literal domains and quoted-string local parts are deliberately not supported,
+ * so every value this accepts is accepted by the backend, but not the other way
+ * round.
+ *
+ * The two rules are not nested: Django accepts `'` and `%` in the local part,
+ * which the database email field rejects. The builder input text element
+ * therefore checks both helpers, because its value usually ends up in an email
+ * field.
+ */
+export const isValidStrictEmail = (str) => {
+  if (typeof str !== 'string' || str.length > STRICT_EMAIL_MAX_LENGTH) {
+    return false
+  }
+  const at = str.lastIndexOf('@')
+  if (at === -1) {
+    return false
+  }
+  const user = str.slice(0, at)
+  const domain = str.slice(at + 1)
+  return (
+    strictEmailUserRegex.test(user) &&
+    (domain === 'localhost' || strictEmailDomainRegex.test(domain))
+  )
+}
+
 export const getFilenameFromUrl = (url) => {
   const pathname = new URL(url).pathname
   const index = pathname.lastIndexOf('/')

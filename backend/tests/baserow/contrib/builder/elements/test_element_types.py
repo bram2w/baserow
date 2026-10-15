@@ -484,6 +484,59 @@ def test_choice_element_import_export_formula(data_fixture):
     assert imported_element.formula_value["formula"] == expected_formula
 
 
+# The email vectors below are shared with the frontend specs
+# `web-frontend/test/unit/core/utils/string.spec.js` (`isValidStrictEmail`) and
+# `web-frontend/test/unit/builder/elementTypes.spec.js` so the two validators stay
+# pinned to each other. Keep the lists identical on both sides.
+STRICT_EMAILS_ACCEPTED_BY_BOTH_SIDES = [
+    "foo@bar.com",
+    "FOO@BAR.COM",
+    "first.last+tag@sub.domain.co.uk",
+    "first_part_underscores_ok@hyphens-ok.com",
+    "user@localhost",
+    "user@пример.рф",
+    "test@example.xn--p1ai",
+    "x@xn--80ak6aa92e.com",
+    "a@b.cd",
+    "test@" + "a" * 63 + ".com",
+]
+STRICT_EMAILS_REJECTED_BY_BOTH_SIDES = [
+    "aaa@aa",
+    "dzd@vz",
+    "a@b",
+    "a@b.c",
+    "foobar.com",
+    "a@",
+    "@b",
+    "a@@b",
+    "a @b.com",
+    ".a@b.com",
+    "a..b@c.com",
+    "a@-b.com",
+    "a@b-.com",
+    "a@b..com",
+    "a@b.com.",
+    "коля@пример.рф",
+    "Dörte@Sörensen.example.com",
+    "test@" + "a" * 64 + ".com",
+    # 321 characters, over Django's 320 limit.
+    "a" * 315 + "@b.com",
+]
+# Accepted by Django's `validate_email` but deliberately not by the frontend
+# helper: IP literal domains and quoted-string local parts.
+STRICT_EMAILS_ACCEPTED_BY_BACKEND_ONLY = [
+    "wierd@[1.1.1.1]",
+    '"john..doe"@example.com',
+]
+# Accepted by Django's `validate_email` but rejected by the database email field
+# regex (`EmailFieldType.regex`). The frontend element rejects them inline because
+# the value usually ends up in an email field; see `elementTypes.spec.js`.
+STRICT_EMAILS_REJECTED_BY_EMAIL_FIELD_ONLY = [
+    "o'brien@example.com",
+    "100%@example.com",
+]
+
+
 @pytest.mark.django_db
 @pytest.mark.parametrize(
     "required,type,value,result",
@@ -500,8 +553,16 @@ def test_choice_element_import_export_formula(data_fixture):
         (False, "integer", "", ""),
         (False, "integer", None, None),
         (True, "email", "", ValueError),
-        (True, "email", "foo@bar.com", "foo@bar.com"),
-        (True, "email", "foobar.com", ValueError),
+        *[
+            (True, "email", email, email)
+            for email in STRICT_EMAILS_ACCEPTED_BY_BOTH_SIDES
+            + STRICT_EMAILS_ACCEPTED_BY_BACKEND_ONLY
+            + STRICT_EMAILS_REJECTED_BY_EMAIL_FIELD_ONLY
+        ],
+        *[
+            (True, "email", email, ValueError)
+            for email in STRICT_EMAILS_REJECTED_BY_BOTH_SIDES
+        ],
         (False, "email", "", ""),
         (True, "any", "", ValueError),
         (True, "any", 42, 42),
