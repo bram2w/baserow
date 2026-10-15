@@ -412,14 +412,20 @@ def test_0128_upgrades_instance_with_duplicate_template_slugs(
     second = Template.objects.create(
         name="CRM", slug="crm", icon="file", workspace=Workspace.objects.create()
     )
+    # Already uses the slug the duplicate would get with its id appended.
+    taken = Template.objects.create(
+        name="CRM", slug=f"crm-{second.id}", icon="file", workspace=Workspace.objects.create()
+    )
 
     new_state = migrator.migrate([("core", "0129_template_backfill_official")])
     NewTemplate = new_state.apps.get_model("core", "Template")
 
-    rows = {t.id: t for t in NewTemplate.objects.filter(id__in=[first.id, second.id])}
-    assert set(rows) == {first.id, second.id}
+    ids = [first.id, second.id, taken.id]
+    rows = {t.id: t for t in NewTemplate.objects.filter(id__in=ids)}
+    assert set(rows) == set(ids)
     assert rows[first.id].slug == "crm"
-    assert rows[second.id].slug not in ("", "crm")
+    assert rows[taken.id].slug == f"crm-{second.id}"
+    assert rows[second.id].slug not in ("", "crm", f"crm-{second.id}")
     assert rows[second.id].workspace_id == second.workspace_id
 
     NewTemplate.objects.update(public_revision=None)

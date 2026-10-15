@@ -22,6 +22,36 @@ def _set_lock_timeout(cursor):
     )
 
 
+def rename_duplicate_root_slugs(apps, schema_editor):
+    """
+    Appends the id to the slug of every root sharing its slug with an older root,
+    and a counter on top if another root already uses the result.
+    """
+
+    Template = apps.get_model("core", "Template")
+    roots = Template.objects.using(schema_editor.connection.alias).filter(
+        root__isnull=True
+    )
+    max_length = Template._meta.get_field("slug").max_length
+
+    taken = set()
+    duplicates = []
+    for template_id, slug in roots.order_by("id").values_list("id", "slug"):
+        if slug in taken:
+            duplicates.append((template_id, slug))
+        else:
+            taken.add(slug)
+
+    for template_id, slug in duplicates:
+        counter = 1
+        suffix = f"-{template_id}"
+        while (new_slug := slug[: max_length - len(suffix)] + suffix) in taken:
+            counter += 1
+            suffix = f"-{template_id}-{counter}"
+        taken.add(new_slug)
+        roots.filter(id=template_id).update(slug=new_slug)
+
+
 class Migration(migrations.Migration):
     """
     Changes `core_template` with a short lock timeout and retries, so that a long
@@ -446,13 +476,7 @@ class Migration(migrations.Migration):
         # Two syncs running at the same time could create two templates for the
         # same file. Keep the oldest slug and rename the others, so that the next
         # full sync removes them like any template without a file.
-        migrations.RunSQL(
-            "UPDATE core_template t SET slug = "
-            "LEFT(t.slug, 49 - LENGTH(t.id::text)) || '-' || t.id "
-            "WHERE t.root_id IS NULL AND EXISTS (SELECT 1 FROM core_template o "
-            "WHERE o.root_id IS NULL AND o.slug = t.slug AND o.id < t.id)",
-            migrations.RunSQL.noop,
-        ),
+        migrations.RunPython(rename_duplicate_root_slugs, migrations.RunPython.noop),
         migrations.AddConstraint(
             model_name="template",
             constraint=models.UniqueConstraint(
