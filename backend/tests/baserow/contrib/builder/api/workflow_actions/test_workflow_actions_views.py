@@ -1043,6 +1043,75 @@ def test_dispatch_local_baserow_create_row_workflow_action(api_client, data_fixt
 
 
 @pytest.mark.django_db
+def test_create_row_action_uses_clicked_property_row_of_get_row_source(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    products = data_fixture.create_database_table(user=user)
+    product_name = data_fixture.create_text_field(
+        table=products, name="Name", primary=True
+    )
+    suppliers = data_fixture.create_database_table(user=user)
+    linked_products = data_fixture.create_link_row_field(
+        table=suppliers, link_row_table=products, name="Products"
+    )
+    first_product = RowHandler().create_row(
+        user, products, values={product_name.db_column: "Oil"}
+    )
+    second_product = RowHandler().create_row(
+        user, products, values={product_name.db_column: "Pork"}
+    )
+    supplier = RowHandler().create_row(
+        user,
+        suppliers,
+        values={linked_products.db_column: [first_product.id, second_product.id]},
+    )
+
+    builder = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user,
+        page=page,
+        table=suppliers,
+        row_id=str(supplier.id),
+        integration_args={"authorized_user": user},
+    )
+    property_table = data_fixture.create_builder_table_element(
+        page=page,
+        data_source=data_source,
+        schema_property=linked_products.db_column,
+        fields=[{"name": "Create", "type": "button", "config": {"label": "'Create'"}}],
+    )
+    workflow_action = data_fixture.create_local_baserow_create_row_workflow_action(
+        page=page, element=property_table, event=EventTypes.CLICK, user=user
+    )
+    action_service = workflow_action.service.specific
+    action_service.table = products
+    action_service.save()
+    action_service.field_mappings.create(
+        field=product_name,
+        value="concat('New: ', get('current_record.value'))",
+    )
+
+    response = api_client.post(
+        reverse(
+            "api:builder:workflow_action:dispatch",
+            kwargs={"workflow_action_id": workflow_action.id},
+        ),
+        {"metadata": json.dumps({"current_record": {"index_path": [1]}})},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK, response.json()
+    assert list(
+        products.get_model()
+        .objects.filter(id__gt=second_product.id)
+        .values_list(product_name.db_column, flat=True)
+    ) == ["New: Pork"]
+
+
+@pytest.mark.django_db
 def test_dispatch_workflow_action_in_preview_without_user_source_authentication(
     api_client, data_fixture
 ):
@@ -1552,7 +1621,9 @@ def test_dispatch_local_baserow_upsert_row_workflow_action_with_current_record(
             "external": {workflow_action.service.id: [index.db_column]},
         }
         payload = {
-            "metadata": json.dumps({"current_record": {"index": 123, "record_id": 123}})
+            "metadata": json.dumps(
+                {"current_record": {"index_path": [123], "record_id": 123}}
+            )
         }
         response = api_client.post(
             url,
@@ -1661,7 +1732,7 @@ def test_dispatch_local_baserow_upsert_row_workflow_action_with_unmatching_index
         payload = {
             "metadata": json.dumps(
                 {
-                    "current_record": {"index": 0, "record_id": rows[2].id},
+                    "current_record": {"index_path": [0], "record_id": rows[2].id},
                     "data_source": {"element": table_element.id},
                 }
             )
@@ -1682,7 +1753,7 @@ def test_dispatch_local_baserow_upsert_row_workflow_action_with_unmatching_index
         payload = {
             "metadata": json.dumps(
                 {
-                    "current_record": {"index": 0, "record_id": rows[3].id},
+                    "current_record": {"index_path": [0], "record_id": rows[3].id},
                     "data_source": {"element": table_element.id},
                 }
             )
@@ -2357,7 +2428,10 @@ def test_dispatch_current_record_action_when_data_source_is_filtered_by_other_da
         url,
         {
             "metadata": {
-                "current_record": {"index": 2, "record_id": clicked_row.id},
+                "current_record": {
+                    "index_path": [2],
+                    "record_id": clicked_row.id,
+                },
                 "data_source": {"element": table_element.id},
             }
         },

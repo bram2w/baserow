@@ -33,7 +33,9 @@ describe('PageEditorContent', () => {
         stubs: {
           PageHeader: true,
           PagePreview: {
-            template: '<div data-test-id="page-preview" />',
+            inject: ['applicationContext'],
+            template:
+              '<div data-test-id="page-preview">{{ applicationContext.dataScope.includeTargetElement }}</div>',
           },
           PageSidePanels: true,
           SkeletonBlock: true,
@@ -47,6 +49,7 @@ describe('PageEditorContent', () => {
     await nextTick()
 
     expect(wrapper.find('[data-test-id="page-preview"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test-id="page-preview"]').text()).toBe('false')
     wrapper.unmount()
   })
 })

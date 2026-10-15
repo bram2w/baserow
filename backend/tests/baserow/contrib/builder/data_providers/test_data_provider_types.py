@@ -31,6 +31,7 @@ from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.builder.workflow_actions.models import EventTypes
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.cache import local_cache
 from baserow.core.formula.exceptions import (
     InvalidFormulaContext,
@@ -1501,7 +1502,7 @@ def test_translate_default_user_role_returns_translated_role(data_fixture):
 
 
 @pytest.mark.django_db
-def test_current_record_provider_get_data_chunk_without_record_index(data_fixture):
+def test_current_record_provider_get_data_chunk_without_index_path(data_fixture):
     current_record_provider = CurrentRecordDataProviderType()
 
     user, token = data_fixture.create_user_and_token()
@@ -1518,12 +1519,18 @@ def test_current_record_provider_get_data_chunk_without_record_index(data_fixtur
     dispatch_context = BuilderDispatchContext(fake_request, page, workflow_action)
     assert current_record_provider.get_data_chunk(dispatch_context, ["path"]) is None
 
+    fake_request.data = {"metadata": json.dumps({"current_record": {"index": 1}})}
+    dispatch_context = BuilderDispatchContext(fake_request, page, workflow_action)
+    assert current_record_provider.get_data_chunk(dispatch_context, ["__idx__"]) is None
+
 
 def test_current_record_provider_get_data_chunk_for_idx():
     current_record_provider = CurrentRecordDataProviderType()
     fake_request = HttpRequest()
     fake_request.data = {
-        "metadata": json.dumps({"current_record": {"index": 123, "record_id": 123}})
+        "metadata": json.dumps(
+            {"current_record": {"index_path": [2, 123], "record_id": 123}}
+        )
     }
     dispatch_context = BuilderDispatchContext(
         fake_request, Mock(builder=Mock(get_workspace=Mock(return_value=Mock(id=-1))))
@@ -1570,7 +1577,7 @@ def test_current_record_provider_get_data_chunk(data_fixture):
     fake_request.user = user
     fake_request.data = {
         "metadata": json.dumps(
-            {"current_record": {"index": 0, "record_id": rows[0].id}}
+            {"current_record": {"index_path": [0], "record_id": rows[0].id}}
         )
     }
 
@@ -1583,6 +1590,60 @@ def test_current_record_provider_get_data_chunk(data_fixture):
     assert (
         current_record_provider.get_data_chunk(dispatch_context, [field.db_column])
         == "Badger"
+    )
+
+
+@pytest.mark.django_db
+def test_current_record_provider_for_table_bound_to_parent_property(data_fixture):
+    user, _ = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    options_field = data_fixture.create_multiple_select_field(table=table)
+    first_option = data_fixture.create_select_option(field=options_field, value="Green")
+    second_option = data_fixture.create_select_option(field=options_field, value="Blue")
+    parent_row = RowHandler().create_row(
+        user=user,
+        table=table,
+        values={options_field.db_column: [first_option.id, second_option.id]},
+    )
+
+    page = data_fixture.create_builder_page(user=user)
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        page=page, table=table, integration_args={"authorized_user": user}
+    )
+    repeat = data_fixture.create_builder_repeat_element(
+        page=page, data_source=data_source
+    )
+    property_table = data_fixture.create_builder_table_element(
+        page=page,
+        data_source=None,
+        schema_property=options_field.db_column,
+        reference_element=repeat,
+        position=GraphPointPosition.CHILD,
+        fields=[{"name": "Open", "type": "button", "config": {"label": "'Open'"}}],
+    )
+    workflow_action = data_fixture.create_local_baserow_create_row_workflow_action(
+        page=page, element=property_table, event=EventTypes.CLICK, user=user
+    )
+    request = HttpRequest()
+    request.user = user
+    request.data = {
+        "metadata": json.dumps(
+            {
+                "current_record": {
+                    "index_path": [0, 1],
+                    "record_id": parent_row.id,
+                },
+                "data_source": {},
+            }
+        )
+    }
+    dispatch_context = BuilderDispatchContext(
+        request, page, workflow_action, only_expose_public_allowed_properties=False
+    )
+
+    assert (
+        CurrentRecordDataProviderType().get_data_chunk(dispatch_context, ["value"])
+        == "Blue"
     )
 
 
@@ -1622,7 +1683,7 @@ def test_current_record_provider_with_element_created_after_it(data_fixture):
     fake_request.user = user
     fake_request.data = {
         "metadata": json.dumps(
-            {"current_record": {"index": 0, "record_id": rows[0].id}}
+            {"current_record": {"index_path": [0], "record_id": rows[0].id}}
         )
     }
 
