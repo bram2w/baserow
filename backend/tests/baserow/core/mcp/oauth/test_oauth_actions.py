@@ -145,7 +145,12 @@ def test_consent_sends_posthog_event_after_commit(
     capture.assert_called_once_with(
         user,
         "connect_mcp_oauth_client",
-        {"endpoint_id": endpoint.id, "workspace_id": workspace.id},
+        {
+            "endpoint_id": endpoint.id,
+            "workspace_id": workspace.id,
+            "client_name": "Test MCP client",
+            "client_host": "claude.ai",
+        },
         workspace=workspace,
         session=None,
     )

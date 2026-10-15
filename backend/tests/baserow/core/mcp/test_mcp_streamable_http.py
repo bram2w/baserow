@@ -8,7 +8,12 @@ import pytest
 from asgiref.sync import async_to_sync
 from httpx import ASGITransport, AsyncClient
 
-from baserow.core.mcp import BaserowMCPServer, current_endpoint, current_key
+from baserow.core.mcp import (
+    BaserowMCPServer,
+    connection_properties,
+    current_endpoint,
+    current_key,
+)
 from baserow.core.mcp.models import MCPEndpoint
 from tests.baserow.core.mcp.oauth.helpers import enabled_tool_names, obtain_tokens
 
@@ -557,6 +562,48 @@ def test_initialize_is_captured_as_connected(data_fixture):
     mock_capture.assert_called_once_with(
         endpoint.user,
         "mcp_connected",
-        {"endpoint_id": endpoint.id},
+        {
+            "endpoint_id": endpoint.id,
+            "transport": "streamable_http",
+            "auth": "key_header",
+        },
         workspace=endpoint.workspace,
     )
+
+
+@pytest.mark.django_db
+def test_connection_properties_tell_transport_auth_and_app_apart(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    key = data_fixture.create_mcp_endpoint(user=user, workspace=workspace)
+    cimd = data_fixture.create_mcp_endpoint(
+        user=user,
+        workspace=workspace,
+        name="Claude",
+        oauth_client_id="https://claude.ai/oauth/client.json",
+    )
+    dcr = data_fixture.create_mcp_endpoint(
+        user=user, workspace=workspace, name="Cursor", oauth_client_id="a1b2c3"
+    )
+
+    def over_mcp(endpoint):
+        ctx = current_endpoint.set(endpoint)
+        try:
+            return connection_properties(endpoint)
+        finally:
+            current_endpoint.reset(ctx)
+
+    assert connection_properties(key) == {"transport": "sse", "auth": "key_url"}
+    assert over_mcp(key) == {"transport": "streamable_http", "auth": "key_header"}
+    assert over_mcp(cimd) == {
+        "transport": "streamable_http",
+        "auth": "oauth",
+        "client_name": "Claude",
+        "client_host": "claude.ai",
+    }
+    assert over_mcp(dcr) == {
+        "transport": "streamable_http",
+        "auth": "oauth",
+        "client_name": "Cursor",
+        "client_host": None,
+    }

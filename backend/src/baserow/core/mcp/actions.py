@@ -13,6 +13,7 @@ from baserow.core.action.scopes import (
 )
 from baserow.core.models import Workspace
 
+from . import oauth_client_properties
 from .handler import MCPEndpointHandler
 from .models import MCPEndpoint
 from .registries import mcp_tool_registry
@@ -205,7 +206,10 @@ class ConnectMCPOAuthClientActionType(ActionType):
         )
         cls.register_action(user, params, cls.scope(workspace.id), workspace)
 
-        properties = cls.get_analytics_properties(dataclasses.asdict(params))
+        properties = {
+            **cls.get_analytics_properties(dataclasses.asdict(params)),
+            **oauth_client_properties(client_id, name),
+        }
         session = get_untrusted_client_session_id(user)
         transaction.on_commit(
             lambda: posthog.capture_user_event(

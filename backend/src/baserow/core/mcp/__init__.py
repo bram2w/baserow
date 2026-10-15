@@ -1,6 +1,7 @@
 import contextvars
 import json
 from typing import TYPE_CHECKING
+from urllib.parse import urlparse
 
 from asgiref.sync import sync_to_async
 from loguru import logger
@@ -144,7 +145,11 @@ class BaserowMCPServer:
         capture_user_event(
             endpoint.user,
             event,
-            {"endpoint_id": endpoint.id, **properties},
+            {
+                "endpoint_id": endpoint.id,
+                **connection_properties(endpoint),
+                **properties,
+            },
             workspace=endpoint.workspace,
         )
 
@@ -367,6 +372,41 @@ class BaserowMCPServer:
         # The redirect would point clients to an http:// URL behind a TLS proxy.
         app.router.redirect_slashes = False
         return app
+
+
+def oauth_client_properties(client_id: str, client_name: str) -> dict:
+    """
+    PostHog properties naming the OAuth app behind a grant. `client_host` is the host
+    of a CIMD client id, and None for DCR clients, whose name isn't verified.
+    """
+
+    host = urlparse(client_id).hostname if client_id[:8].lower() == "https://" else None
+    return {"client_name": client_name, "client_host": host}
+
+
+def connection_properties(endpoint: "MCPEndpoint") -> dict:
+    """
+    PostHog properties telling how the current request reached the endpoint: the
+    transport, how it authenticated, and for OAuth grants which app it is. `/mcp`
+    sets `current_endpoint`; the SSE transport only sets `current_key`.
+    """
+
+    streamable_http = current_endpoint.get(None) is not None
+    if endpoint.oauth_client_id:
+        auth = "oauth"
+    elif streamable_http:
+        auth = "key_header"
+    else:
+        auth = "key_url"
+    properties = {
+        "transport": "streamable_http" if streamable_http else "sse",
+        "auth": auth,
+    }
+    if endpoint.oauth_client_id:
+        properties.update(
+            oauth_client_properties(endpoint.oauth_client_id, endpoint.name)
+        )
+    return properties
 
 
 def _is_initialize(body: bytes) -> bool:
