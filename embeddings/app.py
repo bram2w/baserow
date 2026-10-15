@@ -18,7 +18,7 @@ MODEL_DIR = os.environ.get("EMBEDDINGS_MODEL_DIR", "/model")
 INFERENCE_BATCH_SIZE = 8
 # The tokenizer reads whole texts before truncating them, so bound the input.
 MAX_BODY_BYTES = 2**20
-# Each text adds about 32 KB of JSON to the response.
+# Each text adds about 8 KB of JSON to the response.
 MAX_TEXTS = 256
 
 tokenizer = Tokenizer.from_file(os.path.join(MODEL_DIR, "tokenizer.json"))
