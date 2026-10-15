@@ -43,7 +43,14 @@ spec:
       http:
         paths:
           {{- if $sharedDomain }}
-          {{- range list "/ws/" "/mcp" "/assistant/" }}
+          - path: /mcp
+            pathType: Exact
+            backend:
+              service:
+                name: {{ $asgi }}
+                port:
+                  number: 80
+          {{- range list "/ws/" "/mcp/" "/assistant/" }}
           - path: {{ . }}
             pathType: Prefix
             backend:
