@@ -93,11 +93,22 @@
   },
   "dataProviderType": {
     "currentIteration": "Current iteration",
+    "currentNode": "This node",
     "item": "Item",
     "previousNode": "Previous node"
   },
   "nodeSidePanel": {
     "labelTitle": "Label"
+  },
+  "nodeErrorHandlingForm": {
+    "title": "Error handling",
+    "onFailureLabel": "On failure",
+    "stop": "Stop",
+    "retry": "Retry",
+    "conditionLabel": "Condition",
+    "conditionHelp": "Checked against the result of this node after each attempt. When it is true, the attempt counts as failed and the node is retried, for example when an HTTP request returns a certain status code.",
+    "conditionPlaceholder": "get('current_node.status_code') = 429",
+    "retriesLabel": "Retries"
   },
   "historySidePanel": {
     "title": "History",
@@ -110,6 +121,7 @@
     "statusSuccessBadge": "Completed",
     "statusErrorBadge": "Failed",
     "statusSkippedBadge": "Skipped",
+    "statusRetriedBadge": "Retried",
     "statusDisabled": "Disabled by Baserow",
     "startedBy": "Started by {name}",
     "successfulRuns": "Successful runs",
@@ -124,6 +136,7 @@
     "errorHideDetails": "Hide details",
     "errorShowDetails": "Show details",
     "runNumber": "Run {n}",
+    "retryNumber": "Retry {n}",
     "runCount": "{n} runs",
     "testRun": "Test",
     "showResult": "Show result"
