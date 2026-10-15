@@ -456,7 +456,7 @@ class CurrentRecordDataProviderType(BuilderDataProviderType):
             return index_path[-1]
 
         current_record_id = current_record_data.get("record_id")
-        if current_record_id is None or dispatch_context.workflow_action is None:
+        if dispatch_context.workflow_action is None:
             return None
 
         element = dispatch_context.workflow_action.element
@@ -482,7 +482,12 @@ class CurrentRecordDataProviderType(BuilderDataProviderType):
             return None
         index_path = index_path[-len(collections) :]
         nested_path = []
-        for collection, index in zip(collections[1:], index_path[1:]):
+        for collection, index in zip(collections, index_path):
+            # A single-row source can expose a list through its own property.
+            # Its selected index is needed just like the index of a nested
+            # collection that follows a property on an ancestor.
+            if collection is collections[0] and not collection.schema_property:
+                continue
             if not collection.schema_property:
                 return None
             nested_path.extend([collection.schema_property, str(index)])
@@ -491,16 +496,19 @@ class CurrentRecordDataProviderType(BuilderDataProviderType):
         data_source = DataSourceHandler().get_data_source_with_cache(
             dispatch_context.page, data_source_id
         )
-        source_path = (
-            ["0"] if data_source.service.specific.get_type().returns_list else []
-        )
+        returns_list = data_source.service.specific.get_type().returns_list
+        source_path = ["0"] if returns_list else []
 
-        # Narrow down our range to just our record index.
-        dispatch_context = dispatch_context.clone(
-            offset=0,
-            count=1,
-            only_record_id=current_record_id,
-        )
+        if returns_list:
+            if current_record_id is None:
+                return None
+            # Narrow down a list source to its selected record. A single-row
+            # source already selects its own row and needs no record ID.
+            dispatch_context = dispatch_context.clone(
+                offset=0,
+                count=1,
+                only_record_id=current_record_id,
+            )
 
         return DataSourceDataProviderType().get_data_chunk(
             dispatch_context, [data_source_id, *source_path, *nested_path, *path]
