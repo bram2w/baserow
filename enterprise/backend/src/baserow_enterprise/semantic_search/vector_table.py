@@ -1,9 +1,21 @@
 from dataclasses import dataclass
+from functools import lru_cache
 
 from django.db import connection, transaction
 
 from baserow.core.pgvector import DEFAULT_EMBEDDING_DIMENSIONS
 from baserow.core.psycopg import sql
+
+# Within this number of distinct rows, similarities are computed exactly instead
+# of with the approximate vector index. Exact results matter most when filters
+# leave few rows, and the vector index can't apply those filters itself.
+EXACT_SEARCH_MAX_ROWS = 2000
+
+# The vector index is shared by all fields of the workspace, so it must look at
+# more candidates than requested to still find enough chunks of the searched
+# field after filtering on it.
+MAX_INDEX_CANDIDATES = 1000
+
 
 # Workspaces of which the vector table is known to exist, so that it isn't checked
 # on every indexing run. Tables are only dropped together with their workspace.
@@ -20,6 +32,17 @@ class Chunk:
 
 def _vector_literal(embedding: list[float]) -> str:
     return "[" + ",".join(str(value) for value in embedding) + "]"
+
+
+@lru_cache(maxsize=1)
+def _supports_iterative_index_scans() -> bool:
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT extversion FROM pg_extension WHERE extname = 'vector'")
+        row = cursor.fetchone()
+    if not row:
+        return False
+    major, minor = (int(part) for part in row[0].split(".")[:2])
+    return (major, minor) >= (0, 8)
 
 
 class SemanticSearchVectorTable:
@@ -235,3 +258,71 @@ class SemanticSearchVectorTable:
                 ).format(target=self.identifier, source=source.identifier),
                 [target_field_id, source_field_id],
             )
+
+    def get_similarities(
+        self,
+        field_ids: list[int],
+        query_embedding: list[float],
+        row_ids: list[int],
+        limit: int,
+    ) -> list[tuple[int, int, float]]:
+        """
+        Returns `(row_id, field_id, similarity)` of the most similar rows within the
+        provided rows, using the chunk of the fields that matches best.
+        """
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                sql.SQL(
+                    """
+                    SELECT row_id, field_id, similarity FROM (
+                        SELECT DISTINCT ON (row_id)
+                            row_id, field_id, 1 - (embedding <=> %s::vector) AS similarity
+                        FROM {table}
+                        WHERE field_id = ANY(%s) AND row_id = ANY(%s)
+                        ORDER BY row_id, similarity DESC
+                    ) best_chunks
+                    ORDER BY similarity DESC
+                    LIMIT %s
+                    """
+                ).format(table=self.identifier),
+                [_vector_literal(query_embedding), field_ids, row_ids, limit],
+            )
+            return cursor.fetchall()
+
+    def get_nearest_chunks(
+        self, field_ids: list[int], query_embedding: list[float], limit: int
+    ) -> list[tuple[int, int, float]]:
+        """
+        Returns `(row_id, field_id, similarity)` of the nearest chunks of the fields
+        using the approximate vector index. A row can occur multiple times.
+        """
+
+        with transaction.atomic(), connection.cursor() as cursor:
+            cursor.execute(
+                sql.SQL("SET LOCAL hnsw.ef_search = {value}").format(
+                    value=sql.Literal(min(max(limit, 40), MAX_INDEX_CANDIDATES))
+                )
+            )
+            if _supports_iterative_index_scans():
+                # Keeps scanning the index until enough chunks of the fields are
+                # found, instead of filtering a fixed number of candidates.
+                cursor.execute("SET LOCAL hnsw.iterative_scan = relaxed_order")
+            cursor.execute(
+                sql.SQL(
+                    """
+                    SELECT row_id, field_id, 1 - (embedding <=> %s::vector) AS similarity
+                    FROM {table}
+                    WHERE field_id = ANY(%s)
+                    ORDER BY embedding <=> %s::vector
+                    LIMIT %s
+                    """
+                ).format(table=self.identifier),
+                [
+                    _vector_literal(query_embedding),
+                    field_ids,
+                    _vector_literal(query_embedding),
+                    limit,
+                ],
+            )
+            return cursor.fetchall()
