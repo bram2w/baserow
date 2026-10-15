@@ -347,8 +347,10 @@ const actions = {
    * undo removes the whole recipe. If a step fails, the nodes created so far
    * are deleted again under that same group id, so an undo of the failed
    * attempt is a no-op rather than resurrecting part of it, and the error is
-   * rethrown for the caller to report. Nothing is selected while the recipe
-   * runs; its first node is selected once it is complete.
+   * rethrown for the caller to report. A node that cannot be deleted stays in
+   * the workflow together with the ones created before it, and a warning
+   * toast says so. Nothing is selected while the recipe runs; its first node
+   * is selected once it is complete.
    * @returns {Array} - The created nodes, in creation order.
    */
   async createFromRecipe(
@@ -407,16 +409,38 @@ const actions = {
         addNode,
       })
     } catch (error) {
-      for (const node of [...created].reverse()) {
+      // Remove the nodes created so far, last first. `delete` puts back a node
+      // it could not remove, so the first failed removal ends the rollback:
+      // what stays behind is then the start of the recipe rather than a
+      // scattered subset, and if the connection dropped the remaining
+      // requests would fail the same way.
+      const remaining = [...created]
+      while (remaining.length > 0) {
         try {
           await dispatch('delete', {
             workflow,
-            nodeId: node.id,
+            nodeId: remaining[remaining.length - 1].id,
             undoRedoActionGroupId,
           })
         } catch (_) {
-          // Best effort: the original error is the one the user should see.
+          break
         }
+        remaining.pop()
+      }
+      if (remaining.length > 0) {
+        // The caller reports the original error; this says what it left in
+        // the workflow. Those nodes keep the attempt's undo group, so one undo
+        // still removes them.
+        dispatch(
+          'toast/warning',
+          {
+            title: this.$i18n.t('nodeRecipe.nodesLeftTitle'),
+            message: this.$i18n.t('nodeRecipe.nodesLeftMessage', {
+              recipe: recipe.name,
+            }),
+          },
+          { root: true }
+        )
       }
       throw error
     }

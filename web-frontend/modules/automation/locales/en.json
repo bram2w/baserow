@@ -216,7 +216,9 @@
     "whileLoopDescription": "Adds a List rows node and a Go to node that jumps back while rows are found. Add nodes between them that change those rows, or the loop never ends.",
     "whileLoopAliases": "loop, repeat until, until, retry",
     "whileLoopListRowsLabel": "Find rows to process",
-    "whileLoopGotoLabel": "Repeat while rows are found"
+    "whileLoopGotoLabel": "Repeat while rows are found",
+    "nodesLeftTitle": "Recipe partly added",
+    "nodesLeftMessage": "The {recipe} recipe could not be completed, and the nodes it had already added could not be removed. Undo removes them, or delete them from the workflow."
   },
   "serviceType": {
     "periodicTrigger": "Periodic trigger",
