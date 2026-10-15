@@ -73,6 +73,7 @@
       v-if="!isRawMode && isFocused && !readOnly"
       ref="formulaInputExplorerContext"
       :node-selected="nodeSelected"
+      :reveal-node="revealNode"
       :loading="loading"
       :mode="activeMode"
       :has-value="Boolean(value && value.length)"
@@ -116,7 +117,10 @@ import { ArrowKeyNavigationExtension } from '@baserow/modules/core/components/fo
 import { SmartDeletionExtension } from '@baserow/modules/core/components/formula/extensions/SmartDeletionExtension'
 import { ZWSManagementExtension } from '@baserow/modules/core/components/formula/extensions/ZWSManagementExtension'
 import { FunctionHelpTooltipExtension } from '@baserow/modules/core/components/formula/extensions/FunctionHelpTooltipExtension'
-import { ParenMatchHighlightExtension } from '@baserow/modules/core/components/formula/extensions/ParenMatchHighlightExtension'
+import {
+  ParenMatchHighlightExtension,
+  findFunctionOpener,
+} from '@baserow/modules/core/components/formula/extensions/ParenMatchHighlightExtension'
 import {
   FormulaInsertionExtension,
   FunctionFormulaComponentNode,
@@ -344,6 +348,10 @@ export default {
       errorExpanded: false,
       isFocused: false,
       hoveredFunctionNode: null,
+      // The formula node the user last clicked, which the explorer context
+      // reveals by opening its tab and scrolling to it. A new object is set on
+      // every click so clicking the same node twice reveals it again.
+      revealNode: null,
       isHandlingModeChange: false,
       intersectionObserver: null,
       isEditorInitialized: false,
@@ -690,6 +698,7 @@ export default {
       this.isEditorInitialized = true
 
       this.editor.on('data-node-clicked', this.dataNodeClicked)
+      this.editor.on('formula-node-clicked', this.formulaNodeClicked)
     },
     recreateEditor(formula = null) {
       const currentFormula =
@@ -959,10 +968,39 @@ export default {
     },
     dataNodeClicked(node) {
       this.editor.commands.selectNode(node)
+      this.revealNode = { type: 'data', path: node.attrs.path }
     },
-    handleEditorClick() {
+    /**
+     * Called when a function or operator node is clicked in the editor.
+     * @param {Object} target the `{ type, name }` of the clicked node, where
+     *   `name` is the function name or the operator symbol.
+     */
+    formulaNodeClicked(target) {
+      this.revealNode = { ...target }
+    },
+    handleEditorClick(event) {
       if (this.editor && !this.disabled && !this.readOnly) {
         this.editor.commands.showContext()
+        this.revealClickedFunctionPunctuation(event.target)
+      }
+    },
+    /**
+     * Closing parentheses and argument commas are plain nodes without a
+     * component to emit `formula-node-clicked`, so a click on one reveals the
+     * function it belongs to from here.
+     * @param {HTMLElement} target the clicked element.
+     */
+    revealClickedFunctionPunctuation(target) {
+      const punctuation = target?.closest?.(
+        '[data-formula-closing-paren], [data-formula-comma]'
+      )
+      if (!punctuation) {
+        return
+      }
+      const opener = findFunctionOpener(this.editor.view.dom, punctuation)
+      const name = opener?.textContent.trim().match(/^[A-Za-z_]\w*/)?.[0]
+      if (name) {
+        this.formulaNodeClicked({ type: 'function', name })
       }
     },
     /**
