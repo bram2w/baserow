@@ -7,7 +7,8 @@
     "bullet_points": [
         "transformers is replaced by tokenizers",
         "Health checks can't import requests anymore",
-        "Derived images can't RUN pip install"
+        "Use python -m ensurepip --default-pip for pip",
+        "The image moves to Python 3.14 and Debian 13"
     ],
     "created_at": "2026-10-14"
 }

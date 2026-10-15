@@ -7,7 +7,8 @@
     "bullet_points": [
         "Helm and Cloudron now use embeddings 1.1.0",
         "Inference threads follow the CPU limit",
-        "Health checks answer during long batches"
+        "Health checks answer during long requests",
+        "Large requests no longer run out of memory"
     ],
     "created_at": "2026-10-14"
 }
