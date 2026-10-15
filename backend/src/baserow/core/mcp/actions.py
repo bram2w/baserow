@@ -13,6 +13,7 @@ from baserow.core.action.scopes import (
 )
 from baserow.core.models import Workspace
 
+from . import oauth_client_properties
 from .handler import MCPEndpointHandler
 from .models import MCPEndpoint
 from .registries import mcp_tool_registry
@@ -153,7 +154,20 @@ class DeleteMCPEndpointActionType(ActionType):
         return WorkspaceActionScopeType.value(workspace_id)
 
 
-class ConnectMCPOAuthClientActionType(ActionType):
+class OAuthClientAnalyticsMixin:
+    """Adds the OAuth app's name and CIMD host to the action's PostHog event."""
+
+    @classmethod
+    def get_analytics_properties(cls, action_params: dict) -> dict:
+        return {
+            **super().get_analytics_properties(action_params),
+            **oauth_client_properties(
+                action_params["client_id"], action_params["client_name"]
+            ),
+        }
+
+
+class ConnectMCPOAuthClientActionType(OAuthClientAnalyticsMixin, ActionType):
     type = "connect_mcp_oauth_client"
     description = ActionTypeDescription(
         _("Connect app to MCP"),
@@ -219,7 +233,7 @@ class ConnectMCPOAuthClientActionType(ActionType):
         return WorkspaceActionScopeType.value(workspace_id)
 
 
-class DisconnectMCPOAuthClientActionType(ActionType):
+class DisconnectMCPOAuthClientActionType(OAuthClientAnalyticsMixin, ActionType):
     type = "disconnect_mcp_oauth_client"
     description = ActionTypeDescription(
         _("Disconnect app from MCP"),
