@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.db import OperationalError, transaction
+from django.test import override_settings
 
 import pytest
 from itsdangerous.exc import BadSignature
@@ -1400,6 +1401,140 @@ def test_sync_templates(data_fixture, tmpdir):
     assert file_path.open().read() == "Hello World"
 
     settings.APPLICATION_TEMPLATES_DIR = old_templates
+
+
+TEST_TEMPLATES_DIR = os.path.join(settings.BASE_DIR, "../../../tests/templates")
+
+
+@pytest.mark.django_db
+@override_settings(APPLICATION_TEMPLATES_DIR=TEST_TEMPLATES_DIR)
+def test_sync_templates_creates_listed_official_templates(data_fixture, tmpdir):
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+
+    CoreHandler().sync_templates(storage=storage)
+
+    templates = Template.objects.all()
+    assert len(templates) == 3
+    for template in templates:
+        assert template.type == Template.Type.OFFICIAL
+        assert template.review_state == Template.ReviewState.APPROVED
+        assert template.public_revision_id == template.id
+
+
+@pytest.mark.django_db
+@override_settings(APPLICATION_TEMPLATES_DIR=TEST_TEMPLATES_DIR)
+def test_sync_templates_updates_template_without_type(data_fixture, tmpdir):
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    template = data_fixture.create_template(
+        type=None, slug="example-template", export_hash="IS_NOT_GOING_MATCH"
+    )
+
+    CoreHandler().sync_templates(storage=storage)
+
+    template.refresh_from_db()
+    assert template.type == Template.Type.OFFICIAL
+    assert template.name == "Example template"
+    assert Template.objects.filter(slug="example-template").count() == 1
+
+
+@pytest.mark.django_db
+@override_settings(APPLICATION_TEMPLATES_DIR=TEST_TEMPLATES_DIR)
+def test_sync_templates_ignores_user_templates(data_fixture, tmpdir):
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    user_category = data_fixture.create_template_category(name="User category")
+    user_template = data_fixture.create_user_template(
+        name="User template", slug="user-template-abc123", category=user_category
+    )
+    revision = data_fixture.create_user_template_revision(
+        user_template, category=user_category
+    )
+
+    CoreHandler().sync_templates(storage=storage)
+
+    assert set(Template.objects.user()) == {user_template, revision}
+    user_template.refresh_from_db()
+    assert user_template.name == "User template"
+    assert user_template.workspace.trashed is False
+    assert TemplateCategory.objects.filter(id=user_category.id).exists()
+    assert Template.objects.official().count() == 3
+
+
+@pytest.mark.django_db
+@override_settings(APPLICATION_TEMPLATES_DIR=TEST_TEMPLATES_DIR)
+def test_sync_templates_deletes_listed_official_template(data_fixture, tmpdir):
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    template = data_fixture.create_template(
+        slug="is-going-to-be-deleted", review_state=Template.ReviewState.APPROVED
+    )
+    template.public_revision = template
+    template.save()
+    workspace_id = template.workspace_id
+
+    CoreHandler().sync_templates(storage=storage)
+
+    assert not Template.objects.filter(id=template.id).exists()
+    assert not Workspace.objects.filter(id=workspace_id).exists()
+
+
+@pytest.mark.django_db
+@override_settings(APPLICATION_TEMPLATES_DIR=TEST_TEMPLATES_DIR)
+def test_sync_templates_keeps_install_count_changed_during_sync(data_fixture, tmpdir):
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    template = data_fixture.create_template(
+        slug="example-template", export_hash="IS_NOT_GOING_MATCH"
+    )
+    import_applications_to_workspace = CoreHandler.import_applications_to_workspace
+
+    def install_while_importing(self, *args, **kwargs):
+        # The template was loaded before, so this simulates an install finishing
+        # before the sync saves it.
+        Template.objects.filter(id=template.id).update(install_count=1)
+        return import_applications_to_workspace(self, *args, **kwargs)
+
+    with patch.object(
+        CoreHandler, "import_applications_to_workspace", install_while_importing
+    ):
+        CoreHandler().sync_templates(storage=storage, pattern="^example-template$")
+
+    template.refresh_from_db()
+    assert template.name == "Example template"
+    assert template.install_count == 1
+
+
+@pytest.mark.django_db
+@override_settings(APPLICATION_TEMPLATES_DIR=TEST_TEMPLATES_DIR)
+def test_sync_templates_keeps_revisions_of_synced_official_template(
+    data_fixture, tmpdir
+):
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    root = data_fixture.create_template(
+        slug="example-template", review_state=Template.ReviewState.APPROVED
+    )
+    revision = data_fixture.create_template(
+        type=Template.Type.OFFICIAL, root=root, slug="", version=2
+    )
+
+    CoreHandler().sync_templates(storage=storage)
+
+    assert Template.objects.filter(id=revision.id, root_id=root.id).exists()
+    assert Workspace.objects.filter(id=revision.workspace_id).exists()
+
+
+@pytest.mark.django_db
+@override_settings(APPLICATION_TEMPLATES_DIR=TEST_TEMPLATES_DIR)
+def test_sync_templates_update_sets_updated_on(data_fixture, tmpdir):
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    template = data_fixture.create_template(
+        slug="example-template", export_hash="IS_NOT_GOING_MATCH"
+    )
+    # Rows backfilled by the migration have no timestamps.
+    Template.objects.filter(id=template.id).update(created_on=None, updated_on=None)
+
+    CoreHandler().sync_templates(storage=storage, pattern="^example-template$")
+
+    template.refresh_from_db()
+    assert template.name == "Example template"
+    assert template.updated_on is not None
 
 
 @pytest.mark.django_db

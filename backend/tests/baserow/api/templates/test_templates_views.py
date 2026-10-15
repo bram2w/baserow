@@ -314,3 +314,76 @@ def test_async_install_template_serializer(api_client, data_fixture):
     assert installed_app["order"] == 1
     assert installed_app["workspace"]["id"] == workspace.id
     assert installed_app["type"] == "database"
+
+
+@pytest.mark.django_db
+def test_list_templates_without_user_templates(api_client, data_fixture):
+    category = data_fixture.create_template_category(name="Official")
+    user_category = data_fixture.create_template_category(name="User")
+    official = data_fixture.create_template(category=category)
+    legacy = data_fixture.create_template(type=None, category=category)
+    user_template = data_fixture.create_user_template(
+        categories=[category, user_category]
+    )
+    data_fixture.create_user_template_revision(user_template, category=category)
+
+    response = api_client.get(reverse("api:templates:list"))
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+
+    assert [c["id"] for c in response_json] == [category.id]
+    assert {t["id"] for t in response_json[0]["templates"]} == {official.id, legacy.id}
+
+
+@pytest.mark.django_db
+def test_list_templates_keeps_category_without_templates(api_client, data_fixture):
+    # A pattern sync moving a template to another category leaves the old one
+    # without templates until the next full sync. Official listing is unchanged.
+    empty = data_fixture.create_template_category(name="Empty")
+    category = data_fixture.create_template_category(name="Official")
+    data_fixture.create_template(category=category)
+
+    response = api_client.get(reverse("api:templates:list"))
+    assert response.status_code == HTTP_200_OK
+    assert [c["id"] for c in response.json()] == [empty.id, category.id]
+
+
+@pytest.mark.django_db
+def test_get_template_ignores_user_templates(api_client, data_fixture):
+    official = data_fixture.create_template(type=None)
+    user_template = data_fixture.create_user_template()
+
+    response = api_client.get(
+        reverse("api:templates:item", kwargs={"slug": official.slug})
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json()["id"] == official.id
+
+    response = api_client.get(
+        reverse("api:templates:item", kwargs={"slug": user_template.slug})
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_TEMPLATE_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+@override_settings(APPLICATION_TEMPLATES_DIR=TEST_TEMPLATES_DIR)
+def test_install_template_ignores_user_templates(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    user_template = data_fixture.create_user_template(slug="example-template-2")
+    revision = data_fixture.create_user_template_revision(user_template)
+
+    for template in [user_template, revision]:
+        for url_name in ["api:templates:install", "api:templates:install_async"]:
+            response = api_client.post(
+                reverse(
+                    url_name,
+                    kwargs={"workspace_id": workspace.id, "template_id": template.id},
+                ),
+                HTTP_AUTHORIZATION=f"JWT {token}",
+            )
+            assert response.status_code == HTTP_404_NOT_FOUND
+            assert response.json()["error"] == "ERROR_TEMPLATE_DOES_NOT_EXIST"
+
+    assert not Application.objects.filter(workspace=workspace).exists()

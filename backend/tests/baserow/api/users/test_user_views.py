@@ -1804,3 +1804,24 @@ def test_create_user_captcha_only_for_configured_context(client, data_fixture):
     )
     assert response.status_code == HTTP_200_OK
     assert User.objects.filter(email="captcha_context@test.nl").exists()
+
+
+@pytest.mark.django_db
+def test_user_account_creation_with_user_template(data_fixture, client):
+    data_fixture.create_password_provider()
+    user_template = data_fixture.create_user_template()
+
+    response = client.post(
+        reverse("api:user:index"),
+        {
+            "name": "Test1",
+            "email": "test0@test.nl",
+            "password": "thisIsAValidPassword",
+            "template_id": user_template.id,
+        },
+        format="json",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"]["template_id"][0]["code"] == "does_not_exist"
