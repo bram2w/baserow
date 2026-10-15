@@ -32,7 +32,7 @@ An `MCPEndpoint` links a user to one workspace and to the tools they allowed (`a
 - **OAuth grants**: created when a client signs in through the consent page (see [OAuth sign-in](#oauth-sign-in)). The client calls `POST /mcp` with an access token. They are listed, and can be disconnected, on the **OAuth** tab of **Settings > MCP server**.
 - **Endpoint keys**: a 32-character secret key, created on the **Endpoint** tab of **Settings > MCP server**. Keys allow every enabled tool. Older clients use it in the SSE URL, `GET /mcp/{key}/sse`. `POST /mcp` also accepts it as `Authorization: Bearer <key>`.
 
-Users install the client side, the MCP server config plus a skill, from [baserow/baserow-mcp](https://github.com/baserow/baserow-mcp).
+Users install the client side, the MCP server config plus a skill, from [baserow/baserow-mcp](https://github.com/baserow/baserow-mcp). Its README has the setup steps for each agent.
 
 ## Running the server
 
@@ -87,6 +87,8 @@ claude mcp add --transport http baserow http://localhost:8000/mcp
 ```
 
 `ALLOW_LOCALHOST_LOOPBACK` is already on in the settings, so clients can use `http://localhost` redirect URIs.
+
+See the [test plan](../testing/mcp-test-plan.md#1-connect-an-mcp-client) for other clients, the plugin and the skill.
 
 ## Tools
 
