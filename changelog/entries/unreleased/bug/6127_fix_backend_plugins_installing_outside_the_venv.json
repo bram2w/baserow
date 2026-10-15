@@ -1,0 +1,9 @@
+{
+    "type": "bug",
+    "message": "Fix backend plugins installing outside the venv",
+    "issue_origin": "github",
+    "issue_number": 6127,
+    "domain": "core",
+    "bullet_points": [],
+    "created_at": "2026-10-14"
+}
