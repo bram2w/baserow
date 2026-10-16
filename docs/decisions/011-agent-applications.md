@@ -1,4 +1,4 @@
-# ADR 010: Represent each reusable agent as a workspace application
+# ADR 011: Represent each reusable agent as a workspace application
 
 |              |                                                |
 | ------------ | ---------------------------------------------- |
