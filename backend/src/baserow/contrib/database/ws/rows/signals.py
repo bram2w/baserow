@@ -1,5 +1,5 @@
 import dataclasses
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Any, Iterable, List, Optional, Set
 
 from django.conf import settings
 from django.db import transaction
@@ -19,10 +19,12 @@ from baserow.contrib.database.rows import signals as row_signals
 from baserow.contrib.database.rows.registries import row_metadata_registry
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.table.signals import table_updated
-from baserow.contrib.database.views.models import View
 from baserow.contrib.database.ws.rows.messages import RealtimeRowMessages
 from baserow.contrib.database.ws.rows.tasks import broadcast_dependant_rows_updated
-from baserow.contrib.database.ws.views.rows.handler import ViewRealtimeRowsHandler
+from baserow.contrib.database.ws.views.rows.handler import (
+    DependantRowsViewChange,
+    ViewRealtimeRowsHandler,
+)
 from baserow.ws.registries import PageType, page_registry
 
 if TYPE_CHECKING:
@@ -59,6 +61,7 @@ def rows_created(
     send_webhook_events=True,
     **kwargs,
 ):
+    _mark_rows_written_directly(table.id, (row.id for row in rows))
     if not send_realtime_update:
         return
 
@@ -94,6 +97,7 @@ def rows_updated(
     serialize_only_updated_fields: bool = False,
     **kwargs,
 ):
+    _mark_rows_written_directly(table.id, (row.id for row in rows))
     if not send_realtime_update:
         return
 
@@ -128,6 +132,85 @@ def rows_updated(
     )
 
 
+class TableWritesInTransaction:
+    """
+    Who wrote a table's rows in the current transaction. A broadcast only decides
+    the rows nothing else wrote: another write makes its snapshot or decision stale.
+    """
+
+    def __init__(self, table_id: int) -> None:
+        """
+        :param table_id: The id of the table.
+        """
+
+        self.table_id = table_id
+        self.broadcasts: List["DependantRowsBroadcast"] = []
+        self.row_ids_written_directly: Set[int] = set()
+        # Set by bulk writes and by an overflowing broadcast, whose rows are unknown.
+        self.all_rows_written = False
+
+    def __call__(self) -> None:
+        """
+        Registered on commit only so the transaction's writers can find it.
+        """
+
+    def get_row_ids_written_by_others(
+        self, broadcast: "DependantRowsBroadcast"
+    ) -> Set[int]:
+        """
+        :param broadcast: One of the table's broadcasts.
+        :return: The ids of its rows that something else wrote too.
+        """
+
+        if self.all_rows_written:
+            return broadcast.get_listed_row_ids()
+        return self.row_ids_written_directly.union(
+            *(
+                other.get_listed_row_ids()
+                for other in self.broadcasts
+                if other is not broadcast
+            )
+        )
+
+
+def _get_table_writes(table_id: int) -> TableWritesInTransaction:
+    """
+    :param table_id: The id of the table.
+    :return: The table's writes in the current transaction.
+    """
+
+    for _, callback, _ in transaction.get_connection().run_on_commit:
+        if (
+            isinstance(callback, TableWritesInTransaction)
+            and callback.table_id == table_id
+        ):
+            return callback
+    table_writes = TableWritesInTransaction(table_id)
+    transaction.on_commit(table_writes)
+    return table_writes
+
+
+def _is_tracking_table_writes() -> bool:
+    """
+    :return: Whether a later cascade in this transaction could be broadcast.
+    """
+
+    return (
+        settings.DEPENDANT_ROWS_REALTIME_UPDATE_LIMIT > 0
+        and transaction.get_connection().in_atomic_block
+    )
+
+
+def _mark_rows_written_directly(table_id: int, row_ids: Iterable[int]) -> None:
+    """
+    :param table_id: The id of the table of the rows.
+    :param row_ids: The ids of the rows created, updated or deleted directly.
+    """
+
+    if _is_tracking_table_writes():
+        _get_table_writes(table_id).row_ids_written_directly.update(row_ids)
+
+
 class DependantRowsBroadcast:
     """
     A transaction's cascades into a table, broadcast as one update on commit so
@@ -143,19 +226,18 @@ class DependantRowsBroadcast:
         self.sender = sender
         self.table = table
         self.updates: List[DependantRowsUpdate] = []
-        self.visibility_changes: List[Tuple[View, Dict[str, Any]]] = []
-        self.closed = False
+        self.visibility_changes: List[DependantRowsViewChange] = []
         self.savepoint_ids: Set[str] = set(transaction.get_connection().savepoint_ids)
+        self.table_writes = _get_table_writes(table.id)
+        self.table_writes.broadcasts.append(self)
 
     def is_joinable(self) -> bool:
         """
-        :return: False once closed or inside a newer savepoint, which could roll
-            back the cascade but not the broadcast.
+        :return: False inside a newer savepoint, which could roll back the cascade
+            but not the broadcast.
         """
 
-        return not self.closed and (
-            set(transaction.get_connection().savepoint_ids) <= self.savepoint_ids
-        )
+        return set(transaction.get_connection().savepoint_ids) <= self.savepoint_ids
 
     def add(self, update: DependantRowsUpdate) -> None:
         """
@@ -167,6 +249,8 @@ class DependantRowsBroadcast:
 
         self.updates.append(update)
         merged_update = self.get_merged_update()
+        if merged_update is not None and merged_update.requires_refresh:
+            self.table_writes.all_rows_written = True
         self.visibility_changes = (
             []
             if merged_update is None or merged_update.requires_refresh
@@ -200,14 +284,12 @@ class DependantRowsBroadcast:
         merged_updates = merge_dependant_rows_updates(self.updates)
         return merged_updates[0] if merged_updates else None
 
-    def lists_any_row(self, row_ids: Iterable[int]) -> bool:
+    def get_listed_row_ids(self) -> Set[int]:
         """
-        :param row_ids: The ids of rows of the table.
-        :return: Whether any update lists one of them.
+        :return: The ids of the rows the cascades changed.
         """
 
-        row_ids = set(row_ids)
-        return any(row_ids.intersection(update.row_ids) for update in self.updates)
+        return {row_id for update in self.updates for row_id in update.row_ids}
 
     def __call__(self) -> None:
         """
@@ -227,8 +309,13 @@ class DependantRowsBroadcast:
             )
             handler.broadcast_force_rows_refresh_to_views(self.table)
             return
-        for view, payload in self.visibility_changes:
-            handler.broadcast_to_types(view, payload)
+        row_ids_written_by_others = self.table_writes.get_row_ids_written_by_others(
+            self
+        )
+        for view, rows, to_message in self.visibility_changes:
+            rows = [row for row in rows if row["id"] not in row_ids_written_by_others]
+            if rows:
+                handler.broadcast_to_types(view, to_message(rows))
         broadcast_dependant_rows_updated.delay(
             table_id=update.table.id,
             row_ids=list(update.row_ids),
@@ -263,19 +350,14 @@ def _get_latest_dependant_rows_broadcast(
     return broadcasts[-1] if broadcasts else None
 
 
-def close_dependant_rows_broadcast(table_id: int, row_ids: Iterable[int]) -> None:
+@receiver(table_updated)
+def table_rows_written_in_bulk(sender, table, force_table_refresh=False, **kwargs):
     """
-    Later cascades start a new broadcast if the current one lists any of the rows:
-    the views were just told about them, and merging would tell them twice.
-
-    :param table_id: The id of the table of the rows.
-    :param row_ids: The ids of the rows that left or entered a view.
-    :return: None.
+    A forced refresh means rows were written in bulk, without their ids.
     """
 
-    broadcast = _get_latest_dependant_rows_broadcast(table_id)
-    if broadcast is not None and broadcast.lists_any_row(row_ids):
-        broadcast.closed = True
+    if force_table_refresh and _is_tracking_table_writes():
+        _get_table_writes(table.id).all_rows_written = True
 
 
 @receiver(row_signals.dependant_rows_updated)
@@ -339,6 +421,7 @@ def before_rows_delete(sender, rows, user, table, model, **kwargs):
 def rows_deleted(
     sender, rows, user, table, model, before_return, send_realtime_update=True, **kwargs
 ):
+    _mark_rows_written_directly(table.id, (row.id for row in rows))
     if not send_realtime_update:
         return
 

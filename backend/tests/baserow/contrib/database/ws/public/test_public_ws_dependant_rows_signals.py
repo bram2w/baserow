@@ -407,7 +407,7 @@ def test_never_visible_row_changed_before_its_snapshot_sends_nothing_to_public_v
 
 
 @pytest.mark.parametrize(
-    "actions,operations,expected_types",
+    "actions,operations,expected_events",
     [
         ([], ["cascade:hidden too"], []),
         ([], ["cascade:keep", "cascade:hidden again"], []),
@@ -416,21 +416,35 @@ def test_never_visible_row_changed_before_its_snapshot_sends_nothing_to_public_v
         (
             ["keep"],
             ["cascade:keep too", "direct:off", "cascade:keep"],
-            ["rows_deleted"],
+            ["rows_deleted:a1"],
         ),
+        (
+            [],
+            ["cascade:keep", "direct:off"],
+            ["rows_created:a2", "rows_deleted:a1"],
+        ),
+        ([], ["cascade:keep", "direct:off", "cascade:hidden"], ["rows_deleted:a1"]),
+        ([], ["cascade:keep", "create:on", "cascade:hidden"], []),
+        (["keep"], ["cascade:keep too", "savepoint:hidden"], []),
+        (["keep", "note:paid"], ["undo"], []),
     ],
     ids=[
         "never_visible_single_cascade",
         "never_visible_two_cascades",
         "never_visible_cascade_direct_cascade",
         "never_visible_undone_action_group",
-        "direct_update_leaving_closes_the_cascade_broadcast",
+        "direct_update_leaving_is_sent_once",
+        "direct_update_leaves_its_row_to_the_direct_path",
+        "direct_update_keeps_the_other_rows_snapshot",
+        "row_created_in_the_transaction_is_left_to_the_create_path",
+        "rows_of_two_broadcasts_are_left_undecided",
+        "known_limit_a_first_cascade_no_view_follows_hides_the_leave",
     ],
 )
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_a_transaction_sends_each_row_entering_or_leaving_the_view_once(
-    mock_broadcast_to_channel_group, data_fixture, actions, operations, expected_types
+    mock_broadcast_to_channel_group, data_fixture, actions, operations, expected_events
 ):
     user = data_fixture.create_user(session_id="session-id")
     tables = _create_linked_tables(data_fixture, user)
@@ -438,12 +452,23 @@ def test_a_transaction_sends_each_row_entering_or_leaving_the_view_once(
         [(tables.lookup, "contains", "keep"), (tables.status, "equal", "on")],
         shown_fields=[tables.lookup],
     )
-    [row_b], [row_a] = tables.create_rows(["hidden"], {tables.status.db_column: "on"})
+    note_b = data_fixture.create_text_field(table=tables.table_b, name="note")
+    data_fixture.create_formula_field(
+        table=tables.table_a, name="notes", formula="join(lookup('link', 'note'), '')"
+    )
+
+    def create_row_a(status: str) -> GeneratedTableModel:
+        values = {tables.link.db_column: [row_b.id], tables.status.db_column: status}
+        return RowHandler().create_rows(user, tables.table_a, [values]).created_rows[0]
+
+    [row_b], [row_a1] = tables.create_rows(["hidden"], {tables.status.db_column: "on"})
+    row_a2 = create_row_a("on")
     set_client_undo_redo_action_group_id(user, str(uuid.uuid4()))
-    for name in actions:
+    for kind, _, value in (action.rpartition(":") for action in actions):
+        field = note_b if kind == "note" else tables.name_b
         with transaction.atomic():
             UpdateRowsActionType.do(
-                user, tables.table_b, [{"id": row_b.id, tables.name_b.db_column: name}]
+                user, tables.table_b, [{"id": row_b.id, field.db_column: value}]
             )
     set_client_undo_redo_action_group_id(user, None)
 
@@ -452,18 +477,29 @@ def test_a_transaction_sends_each_row_entering_or_leaving_the_view_once(
         for kind, _, value in (operation.partition(":") for operation in operations):
             if kind == "cascade":
                 tables.rename(row_b, value)
+            elif kind == "savepoint":
+                with transaction.atomic():
+                    tables.rename(row_b, value)
             elif kind == "direct":
                 RowHandler().update_rows(
                     user,
                     tables.table_a,
-                    [{"id": row_a.id, tables.status.db_column: value}],
+                    [{"id": row_a1.id, tables.status.db_column: value}],
                 )
+            elif kind == "create":
+                create_row_a(value)
             else:
                 scopes = [TableActionScopeType.value(tables.table_b.id)]
                 ActionHandler.undo(user, scopes, "session-id")
 
     payloads = _payloads_for_view(mock_broadcast_to_channel_group, public_view.slug)
-    assert _types_entering_or_leaving(payloads) == expected_types
+    labels = {row_a1.id: "a1", row_a2.id: "a2"}
+    assert [
+        f"{payload['type']}:{labels.get(row['id'], 'new')}"
+        for payload in payloads
+        if payload["type"] in ("rows_created", "rows_deleted")
+        for row in payload["rows"]
+    ] == expected_events
 
 
 @pytest.mark.parametrize(
@@ -511,7 +547,7 @@ def test_a_view_filtering_on_a_link_is_decided_unless_the_cascade_changed_it(
 
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
-def test_a_link_changed_by_an_earlier_closed_cascade_keeps_its_view_undecided(
+def test_a_link_changed_by_an_earlier_cascade_keeps_its_view_undecided(
     mock_broadcast_to_channel_group, data_fixture
 ):
     user = data_fixture.create_user()
@@ -589,6 +625,7 @@ def _count_cascade_queries(
     view_filter: Optional[str],
     n_views: int = 1,
     n_entering_rows: int = 1,
+    filters_disabled: bool = False,
 ) -> Tuple[int, bool]:
     """The query count of a cascade into A's lookup, and whether it locked A's rows."""
 
@@ -601,9 +638,11 @@ def _count_cascade_queries(
         "status": (tables.status, "equal", "on"),
         "lookup_not_updated": (lookup_c, "contains", "keep"),
         "lookup_updated": (tables.lookup, "contains", "keep"),
+        "link_changed": (tables.link, "link_row_contains", "keep"),
     }
     for _ in range(n_views if view_filter else 0):
-        tables.create_public_view([filters[view_filter]], [tables.lookup])
+        view = tables.create_public_view([filters[view_filter]], [tables.lookup])
+        GridView.objects.filter(id=view.id).update(filters_disabled=filters_disabled)
     rows_b, _ = tables.create_rows(["keep"] + [""] * n_entering_rows)
 
     with CaptureQueriesContext(connection) as captured:
@@ -620,10 +659,19 @@ def _count_cascade_queries(
     return len(sqls), any(lock in sql for sql in sqls)
 
 
-@pytest.mark.parametrize("view_filter", [None, "status", "lookup_not_updated"])
+@pytest.mark.parametrize(
+    "view_filter,filters_disabled",
+    [
+        (None, False),
+        ("status", False),
+        ("lookup_not_updated", False),
+        ("lookup_updated", True),
+        ("link_changed", False),
+    ],
+)
 @pytest.mark.django_db
 def test_a_cascade_no_view_filter_can_follow_takes_no_lock_and_no_extra_query(
-    data_fixture, view_filter
+    data_fixture, view_filter, filters_disabled
 ):
     count = partial(_count_cascade_queries, data_fixture, data_fixture.create_user())
     # The first cascade fills process-wide caches, like the content types one.
@@ -631,7 +679,7 @@ def test_a_cascade_no_view_filter_can_follow_takes_no_lock_and_no_extra_query(
 
     without_view = count(None)
     assert without_view == (ANY, False)
-    assert count(view_filter) == without_view
+    assert count(view_filter, filters_disabled=filters_disabled) == without_view
 
 
 @pytest.mark.django_db

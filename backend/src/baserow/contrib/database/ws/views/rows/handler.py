@@ -1,4 +1,5 @@
-from typing import Any, Dict, List, NamedTuple, Optional, Set, Tuple, Type
+from functools import partial
+from typing import Any, Callable, Dict, List, NamedTuple, Optional, Set, Type
 
 from django.db.models import (
     BooleanField,
@@ -38,6 +39,14 @@ class ViewsRowsChanges(NamedTuple):
     deleted: List[FilteredViewRows]
     created: List[FilteredViewRows]
     updated: List[FilteredViewRows]
+
+
+class DependantRowsViewChange(NamedTuple):
+    """The rows a cascade made leave or enter a view, and the message telling it."""
+
+    view: View
+    rows: List[Dict[str, Any]]
+    to_message: Callable[[List[Dict[str, Any]]], Dict[str, Any]]
 
 
 def split_views_rows_changes(
@@ -320,14 +329,14 @@ class ViewRealtimeRowsHandler:
 
     def get_dependant_rows_visibility_changes(
         self, update: DependantRowsUpdate
-    ) -> List[Tuple[View, Dict[str, Any]]]:
+    ) -> List[DependantRowsViewChange]:
         """
         A `rows_deleted` for the rows that left a checked view, a `rows_created`
         for those that entered. Must run while the cascade still locks the rows,
-        so the payloads show only its changes.
+        so the rows show only its changes.
 
         :param update: The transaction's merged update of the table.
-        :return: Per view, the payload to broadcast, in order.
+        :return: Per view, the rows that left or entered it, in order.
         """
 
         known_row_ids = sorted(
@@ -372,22 +381,18 @@ class ViewRealtimeRowsHandler:
             }
             for row_id in known_row_ids
         ]
-        payloads = [
-            (
+        view_changes = [
+            DependantRowsViewChange(
                 view,
-                RealtimeRowMessages.rows_deleted(
-                    table_id=table.id,
-                    serialized_rows=view_handler.restrict_rows_for_view(
-                        view, rows_before, deleted_row_ids
-                    ),
-                ),
+                view_handler.restrict_rows_for_view(view, rows_before, deleted_row_ids),
+                partial(RealtimeRowMessages.rows_deleted, table.id),
             )
             for view, deleted_row_ids in changes.deleted
         ]
 
         entered_row_ids = set().union(*(row_ids for _, row_ids in changes.created))
         if not entered_row_ids:
-            return payloads
+            return view_changes
         entered_rows = model.objects.filter(id__in=entered_row_ids).enhance_by_fields()
         serialized_rows = get_row_serializer_class(
             model, RowSerializer, is_response=True
@@ -397,15 +402,16 @@ class ViewRealtimeRowsHandler:
                 view, serialized_rows, created_row_ids
             )
             if created_rows:
-                payloads.append(
-                    (
+                view_changes.append(
+                    DependantRowsViewChange(
                         view,
-                        RealtimeRowMessages.rows_created(
-                            table_id=table.id,
-                            serialized_rows=created_rows,
+                        created_rows,
+                        partial(
+                            RealtimeRowMessages.rows_created,
+                            table.id,
                             metadata={},
                             before=None,
                         ),
                     )
                 )
-        return payloads
+        return view_changes

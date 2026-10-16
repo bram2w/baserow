@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 
 from django.db import transaction
 from django.dispatch import receiver
@@ -11,10 +11,7 @@ from baserow.contrib.database.table.models import GeneratedTableModel
 from baserow.contrib.database.views.registries import view_type_registry
 from baserow.contrib.database.views.row_checker import FilteredViewRows, ViewHandler
 from baserow.contrib.database.ws.rows.messages import RealtimeRowMessages
-from baserow.contrib.database.ws.rows.signals import (
-    close_dependant_rows_broadcast,
-    serialize_rows_values,
-)
+from baserow.contrib.database.ws.rows.signals import serialize_rows_values
 from baserow.contrib.database.ws.views.rows.handler import (
     ViewRealtimeRowsHandler,
     split_views_rows_changes,
@@ -22,25 +19,6 @@ from baserow.contrib.database.ws.views.rows.handler import (
 from baserow.core.telemetry.utils import baserow_trace
 
 tracer = trace.get_tracer(__name__)
-
-
-def _get_row_ids_in_views(
-    views_rows: List[FilteredViewRows], rows: List[GeneratedTableModel]
-) -> Set[int]:
-    """
-    :param views_rows: Per view, the ids of the rows in it.
-    :param rows: The rows the views can contain.
-    :return: The ids of the rows in any of the views.
-    """
-
-    row_ids = set()
-    for view_rows in views_rows:
-        row_ids |= (
-            {row.id for row in rows}
-            if view_rows.all_allowed()
-            else view_rows.allowed_row_ids
-        )
-    return row_ids
 
 
 @baserow_trace(tracer, allow_nested=True)
@@ -146,7 +124,6 @@ def views_rows_deleted(
     serialized_deleted_rows = dict(before_return)[views_before_rows_delete][
         "deleted_rows"
     ]
-    close_dependant_rows_broadcast(table.id, _get_row_ids_in_views(views, rows))
     transaction.on_commit(
         lambda: _send_rows_deleted_event_to_views(
             serialized_deleted_rows, views, user=user
@@ -195,9 +172,6 @@ def views_rows_updated(
         existing_checker.get_filtered_views_where_rows_are_visible(rows)
     )
     changes = split_views_rows_changes(old_row_views, view_rows)
-    close_dependant_rows_broadcast(
-        table.id, _get_row_ids_in_views(changes.deleted + changes.created, rows)
-    )
 
     @baserow_trace(tracer, allow_nested=True)
     def _send_created_updated_deleted_row_signals_to_views():
