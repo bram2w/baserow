@@ -113,7 +113,7 @@ future needs. We accept that introducing an Agent Builder later may require more
 - Each agent has a direct creation flow and independent roles and lifecycle operations.
   More agents also mean more sidebar entries, and administering related agents can
   involve repeated role assignments, resource-access configuration and settings changes.
-- **Application ID becomes the agent reference.** APIs, callers and exported references
+- **Agents are referenced by application ID.** APIs, callers and exported references
   will depend on application IDs. A future change to the ownership model must preserve
   those references or provide migration and compatibility handling.
 - **Permissions and configuration ownership become established boundaries.** Introducing
@@ -123,10 +123,13 @@ future needs. We accept that introducing an Agent Builder later may require more
   release, restoration or deletion of related agents will need dependency handling and
   additional lifecycle rules. Grouping agents in the sidebar alone would not provide
   those guarantees.
-- **Snapshot restore creates a new application under either option.** Rolling an agent
-  back means pointing its callers at the new application ID. An Agent Builder restores
-  related agents together and keeps links between them, but outside callers still need
-  the new IDs.
+- **Snapshots are per agent.** Rolling back one agent restores only that agent, without
+  touching the others. Rolling back related agents takes one restore each, and links
+  between the restored agents still point to the originals. An Agent Builder would
+  restore them together and keep those links. As with any Baserow application, a
+  restore creates a new application, so callers keep referencing the original until
+  pointed at the new ID. Restoring a database snapshot works the same way: automations
+  keep referencing the original database.
 - Collaboration can be designed through references between independent agent
   applications. That would still need authorization and policies for missing
   dependencies, duplication and deletion; this ownership decision does not prescribe an
