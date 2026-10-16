@@ -2,7 +2,10 @@ import {
   NodeType,
   CoreRouterNodeType,
   CoreInboundEmailTriggerNodeType,
+  CoreIteratorNodeType,
+  CoreGotoNodeType,
 } from '@baserow/modules/automation/nodeTypes'
+import { ServiceType } from '@baserow/modules/core/serviceTypes'
 import { TestApp } from '@baserow/test/helpers/testApp'
 
 describe('NodeType.getHistoryLabel', () => {
@@ -181,6 +184,25 @@ describe('Automation node types', () => {
     ).toEqual(['workflow', 'workflow', 'workflow'])
   })
 
+  test('exposes search aliases for the Iterator and Go to nodes', () => {
+    const registry = testApp.getRegistry()
+
+    // The i18n mock returns the key, so this pins the locale keys the two
+    // node types read their alias lists from; other nodes have none.
+    expect(
+      Object.fromEntries(
+        ['iterator', 'goto', 'router', 'local_baserow_create_row'].map(
+          (type) => [type, registry.get('node', type).aliases]
+        )
+      )
+    ).toEqual({
+      iterator: ['nodeType.iteratorAliases'],
+      goto: ['nodeType.gotoAliases'],
+      router: [],
+      local_baserow_create_row: [],
+    })
+  })
+
   test('uses service-specific icons and images for workflow action nodes', () => {
     const registry = testApp.getRegistry()
     const createRow = registry.get('node', 'local_baserow_create_row')
@@ -228,5 +250,46 @@ describe('NodeType.isEnabled', () => {
     // Settings not loaded yet, or an older backend without the flag.
     expect(makeType({}).isEnabled()).toBe(false)
     expect(makeType(null).isEnabled()).toBe(false)
+  })
+})
+
+describe('NodeType.aliases', () => {
+  const makeApp = (translations = {}) => ({
+    $i18n: { t: (key) => translations[key] ?? key },
+  })
+
+  test('service types have no aliases by default', () => {
+    expect(new ServiceType({ app: {} }).aliases).toEqual([])
+  })
+
+  test('node types take their aliases from their service type', () => {
+    class AliasedNodeType extends NodeType {
+      static getType() {
+        return 'aliased'
+      }
+
+      get serviceType() {
+        return { aliases: ['jump'] }
+      }
+    }
+
+    expect(new AliasedNodeType({ app: {} }).aliases).toEqual(['jump'])
+  })
+
+  test('the Iterator and Go to nodes parse one translatable alias string', () => {
+    const app = makeApp({
+      'nodeType.iteratorAliases': 'loop, for loop, repeat',
+      'nodeType.gotoAliases': 'while loop,retry',
+    })
+
+    expect(new CoreIteratorNodeType({ app }).aliases).toEqual([
+      'loop',
+      'for loop',
+      'repeat',
+    ])
+    expect(new CoreGotoNodeType({ app }).aliases).toEqual([
+      'while loop',
+      'retry',
+    ])
   })
 })
