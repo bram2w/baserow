@@ -354,7 +354,10 @@ def test_list_templates_keeps_category_without_templates(api_client, data_fixtur
 
 
 @pytest.mark.django_db
-def test_get_template_ignores_user_templates(api_client, data_fixture):
+def test_get_template_ignores_user_templates_with_flag_off(
+    api_client, data_fixture, settings
+):
+    settings.FEATURE_FLAGS = []
     official = data_fixture.create_template(type=None)
     user_template = data_fixture.create_user_template()
 

@@ -123,7 +123,11 @@
 @import 'admin_health';
 @import 'templates';
 @import 'template_details';
+@import 'template_empty_state';
 @import 'template_list';
+@import 'user_template_list';
+@import 'create_user_template_modal';
+@import 'template_icon_select_context';
 @import 'legacy_templates';
 @import 'paginator';
 @import 'sortable';

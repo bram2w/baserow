@@ -1,0 +1,343 @@
+import os
+import re
+from datetime import timedelta
+from unittest.mock import patch
+
+from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.core.files.base import ContentFile
+from django.core.files.storage import FileSystemStorage
+from django.db import IntegrityError
+from django.test.utils import override_settings
+from django.utils import timezone
+
+import pytest
+
+from baserow.core.handler import CoreHandler
+from baserow.core.import_export.handler import ImportExportHandler
+from baserow.core.models import Template, Workspace
+from baserow.core.user_templates.constants import USER_TEMPLATE_ICONS, UserTemplateState
+from baserow.core.user_templates.exceptions import (
+    InvalidTemplateCategory,
+    InvalidTemplateIcon,
+    TemplateSlugGenerationFailed,
+)
+from baserow.core.user_templates.handler import (
+    UserTemplateHandler,
+    generate_template_slug,
+)
+
+TEST_TEMPLATES_DIR = os.path.join(settings.BASE_DIR, "../../../tests/templates")
+SLUG_SUFFIX_PATH = "baserow.core.user_templates.handler.generate_slug_suffix"
+
+
+def create_root(data_fixture, **kwargs):
+    kwargs.setdefault("owner", data_fixture.create_user())
+    kwargs.setdefault("name", "My template")
+    kwargs.setdefault("description", "What it does")
+    kwargs.setdefault("icon", "iconoir-view-grid")
+    kwargs.setdefault("category_ids", [data_fixture.create_template_category().id])
+    kwargs.setdefault("workspace", data_fixture.create_workspace())
+    return UserTemplateHandler().create_template_root(**kwargs)
+
+
+def test_user_template_icons_fit_the_icon_column():
+    max_length = Template._meta.get_field("icon").max_length
+
+    assert len(USER_TEMPLATE_ICONS) == len(set(USER_TEMPLATE_ICONS))
+    assert "iconoir-view-grid" in USER_TEMPLATE_ICONS
+    for icon in USER_TEMPLATE_ICONS:
+        assert len(icon) <= max_length
+        assert icon.startswith("iconoir-")
+
+
+def test_generate_template_slug_format():
+    for _ in range(50):
+        slug = generate_template_slug("My Great Template!")
+        assert re.fullmatch(r"my-great-template-[a-z0-9]{6}", slug)
+        assert re.search(r"[0-9]", slug.rsplit("-", 1)[1])
+
+
+def test_generate_template_slug_truncates_long_names():
+    slug = generate_template_slug("word " * 30)
+
+    assert len(slug) <= Template._meta.get_field("slug").max_length
+    base = slug.rsplit("-", 1)[0]
+    assert base.startswith("word-word")
+    assert not base.endswith("-")
+
+
+def test_generate_template_slug_without_ascii_characters():
+    assert re.fullmatch(r"template-[a-z0-9]{6}", generate_template_slug("模板"))
+    assert re.fullmatch(r"template-[a-z0-9]{6}", generate_template_slug("!!!"))
+
+
+@pytest.mark.django_db
+def test_create_template_root(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace()
+    category_1 = data_fixture.create_template_category()
+    category_2 = data_fixture.create_template_category()
+
+    template = create_root(
+        data_fixture,
+        owner=user,
+        name="Sales pipeline",
+        description="Track deals",
+        icon="iconoir-coins",
+        category_ids=[category_1.id, category_2.id],
+        workspace=workspace,
+    )
+
+    template = Template.objects.get(id=template.id)
+    assert template.type == Template.Type.USER
+    assert template.owner == user
+    assert template.author == user
+    assert template.version == 1
+    assert template.root is None
+    assert template.name == "Sales pipeline"
+    assert template.description == "Track deals"
+    assert template.icon == "iconoir-coins"
+    assert template.workspace == workspace
+    assert re.fullmatch(r"sales-pipeline-[a-z0-9]{6}", template.slug)
+    assert set(template.categories.all()) == {category_1, category_2}
+    assert template.review_state == Template.ReviewState.NOT_SUBMITTED
+    assert template.public_revision is None
+    assert template.shared_revision is None
+    assert template.private_link_token is None
+    assert not template.archive
+    assert template.metadata == {}
+    assert UserTemplateHandler().get_template_state(template) == (
+        UserTemplateState.PRIVATE,
+        None,
+    )
+
+
+@pytest.mark.django_db
+def test_create_template_root_stores_metadata(data_fixture):
+    workspace = data_fixture.create_workspace()
+    metadata = UserTemplateHandler().build_template_metadata(workspace, [3, 1])
+
+    template = create_root(data_fixture, metadata=metadata)
+
+    template = Template.objects.get(id=template.id)
+    assert template.metadata == {
+        "source_workspace_id": workspace.id,
+        "source_application_ids": [3, 1],
+    }
+    assert UserTemplateHandler().get_template_metadata(template) == metadata
+
+
+@pytest.mark.django_db
+def test_create_template_root_opens_a_workspace_checked_before(data_fixture):
+    # Anyone can check the workspace while the job copies into it, e.g. through
+    # the applications list of its id. The answer is cached in that process.
+    workspace = data_fixture.create_workspace()
+    assert not Workspace.objects.get(id=workspace.id).has_openable_template()
+
+    create_root(data_fixture, workspace=workspace)
+
+    # The next request loads the workspace again.
+    assert Workspace.objects.get(id=workspace.id).has_openable_template()
+
+
+@pytest.mark.django_db
+def test_create_template_root_stores_archive(data_fixture, tmpdir):
+    with override_settings(MEDIA_ROOT=str(tmpdir)):
+        template = create_root(data_fixture, archive=ContentFile(b"zip", "a.zip"))
+
+        template.refresh_from_db()
+        assert template.archive.name.startswith("template-revisions/")
+        assert template.archive.read() == b"zip"
+
+
+@pytest.mark.django_db
+def test_create_template_root_rejects_icon_outside_allowlist(data_fixture):
+    with pytest.raises(InvalidTemplateIcon):
+        create_root(data_fixture, icon="iconoir-not-an-icon")
+
+    with pytest.raises(InvalidTemplateIcon):
+        create_root(data_fixture, icon="")
+
+    assert not Template.objects.exists()
+
+
+@pytest.mark.django_db
+def test_create_template_root_rejects_missing_or_unknown_categories(data_fixture):
+    category = data_fixture.create_template_category()
+
+    with pytest.raises(InvalidTemplateCategory):
+        create_root(data_fixture, category_ids=[])
+
+    with pytest.raises(InvalidTemplateCategory):
+        create_root(data_fixture, category_ids=[category.id, category.id + 100])
+
+    assert not Template.objects.exists()
+
+
+@pytest.mark.django_db
+def test_create_template_root_runs_full_clean(data_fixture):
+    with pytest.raises(ValidationError) as exc_info:
+        create_root(data_fixture, name="a" * 65)
+    assert "name" in exc_info.value.message_dict
+
+    with pytest.raises(ValidationError):
+        create_root(data_fixture, name="")
+
+    used_workspace = data_fixture.create_template().workspace
+    with pytest.raises(ValidationError):
+        create_root(data_fixture, workspace=used_workspace)
+
+    assert Template.objects.user().count() == 0
+
+
+@pytest.mark.django_db
+def test_create_template_root_retries_on_slug_collision(data_fixture):
+    data_fixture.create_template(slug="taken-a1b2c3")
+
+    with patch(SLUG_SUFFIX_PATH, side_effect=["a1b2c3", "d4e5f6"]):
+        template = create_root(data_fixture, name="Taken")
+
+    assert template.slug == "taken-d4e5f6"
+    assert Template.objects.get(id=template.id).categories.count() == 1
+
+
+@pytest.mark.django_db
+def test_create_template_root_gives_up_after_three_collisions(data_fixture):
+    data_fixture.create_template(slug="taken-a1b2c3")
+
+    with (
+        patch(SLUG_SUFFIX_PATH, return_value="a1b2c3") as suffix_mock,
+        pytest.raises(TemplateSlugGenerationFailed),
+    ):
+        create_root(data_fixture, name="Taken")
+
+    assert suffix_mock.call_count == 3
+    assert Template.objects.user().count() == 0
+
+
+@pytest.mark.django_db
+def test_create_template_root_reraises_other_integrity_errors(data_fixture):
+    with (
+        patch.object(Template, "save", side_effect=IntegrityError("other")) as save,
+        pytest.raises(IntegrityError),
+    ):
+        create_root(data_fixture)
+
+    assert save.call_count == 1
+
+
+@pytest.mark.django_db
+def test_store_archive_tracks_the_name_given_by_the_storage(data_fixture, tmpdir):
+    storage = FileSystemStorage(location=str(tmpdir))
+    resource = data_fixture.create_import_export_resource(
+        created_by=data_fixture.create_user(), original_name="export.zip"
+    )
+    storage.save(
+        ImportExportHandler().export_file_path(resource.get_archive_name()),
+        ContentFile(b"archive"),
+    )
+    taken_name = storage.save("template-revisions/taken.zip", ContentFile(b"other"))
+    tracked = []
+
+    with patch(
+        "baserow.core.user_templates.handler.template_archive_upload_to",
+        return_value=taken_name,
+    ):
+        stored_name = UserTemplateHandler()._store_archive(
+            resource, storage, lambda **content: tracked.append(content)
+        )
+
+    assert stored_name != taken_name
+    assert tracked == [{"archive_name": taken_name}, {"archive_name": stored_name}]
+    with storage.open(stored_name) as stored_file:
+        assert stored_file.read() == b"archive"
+
+
+@pytest.mark.django_db
+@override_settings(APPLICATION_TEMPLATES_DIR=TEST_TEMPLATES_DIR)
+def test_sync_templates_installs_official_template_next_to_user_slug(
+    data_fixture, tmpdir
+):
+    user_template = create_root(data_fixture, name="Example template")
+    assert user_template.slug.startswith("example-template-")
+
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    CoreHandler().sync_templates(storage=storage)
+
+    official = Template.objects.official().get(slug="example-template")
+    assert official.workspace.application_set.count() == 1
+    user_template.refresh_from_db()
+    assert user_template.name == "Example template"
+    assert Template.objects.user().get() == user_template
+
+
+@pytest.mark.django_db
+def test_list_own_templates(data_fixture):
+    user = data_fixture.create_user()
+    other_user = data_fixture.create_user()
+    now = timezone.now()
+
+    older = data_fixture.create_user_template(user=user)
+    newer = data_fixture.create_user_template(user=user)
+    same_time = data_fixture.create_user_template(user=user)
+    Template.objects.filter(id=older.id).update(updated_on=now - timedelta(days=2))
+    Template.objects.filter(id__in=[newer.id, same_time.id]).update(updated_on=now)
+
+    data_fixture.create_user_template_revision(newer)
+    data_fixture.create_user_template(user=other_user)
+    data_fixture.create_user_template(user=user, marked_for_deletion_at=now)
+    data_fixture.create_template()
+
+    templates = list(UserTemplateHandler().list_own_templates(user))
+
+    assert templates == [same_time, newer, older]
+
+
+@pytest.mark.django_db
+def test_list_own_templates_prefetches_categories(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    for _ in range(3):
+        data_fixture.create_user_template(user=user)
+
+    with django_assert_num_queries(2):
+        templates = list(UserTemplateHandler().list_own_templates(user))
+        for template in templates:
+            assert len(template.categories.all()) == 1
+
+
+@pytest.mark.django_db
+def test_get_template_state(data_fixture):
+    handler = UserTemplateHandler()
+    template = data_fixture.create_user_template()
+
+    assert handler.get_template_state(template) == (UserTemplateState.PRIVATE, None)
+
+    template.review_state = Template.ReviewState.PENDING
+    assert handler.get_template_state(template) == (
+        UserTemplateState.IN_REVIEW,
+        None,
+    )
+
+    template.review_state = Template.ReviewState.REJECTED
+    template.reject_reason = "Not useful"
+    assert handler.get_template_state(template) == (
+        UserTemplateState.REJECTED,
+        "Not useful",
+    )
+
+    template.review_state = Template.ReviewState.APPROVED
+    template.public_revision = template
+    assert handler.get_template_state(template) == (UserTemplateState.PUBLIC, None)
+
+    template.blocked_at = timezone.now()
+    template.blocked_reason = "Spam"
+    assert handler.get_template_state(template) == (
+        UserTemplateState.BLOCKED,
+        "Spam",
+    )
+
+    template.blocked_reason = ""
+    assert handler.get_template_state(template) == (UserTemplateState.BLOCKED, None)

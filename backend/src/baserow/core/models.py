@@ -13,6 +13,7 @@ from django.db import models
 from django.db.models import Q, QuerySet, UniqueConstraint
 from django.db.models.manager import BaseManager
 
+from baserow.core.feature_flags import FF_USER_TEMPLATES, feature_flag_is_enabled
 from baserow.core.jobs.mixins import (
     JobWithUndoRedoIds,
     JobWithUserIpAddress,
@@ -296,6 +297,35 @@ class BlacklistedToken(CreatedAndUpdatedOnMixin, models.Model):
     expires_at = models.DateTimeField()
 
 
+class _WorkspaceTemplatesCacheKey:
+    """
+    Caches the template types of a workspace by its id and `updated_on`, and keeps
+    the instance, so that its prefetched `template_set` is used on a miss.
+    """
+
+    __slots__ = ("key", "workspace")
+
+    def __init__(self, workspace: "Workspace"):
+        self.workspace = workspace
+        self.key = (workspace.id, workspace.updated_on)
+
+    def __hash__(self):
+        return hash(self.key)
+
+    def __eq__(self, other):
+        return isinstance(other, _WorkspaceTemplatesCacheKey) and self.key == other.key
+
+
+@lru_cache
+def _get_workspace_template_types(key: _WorkspaceTemplatesCacheKey) -> frozenset[str]:
+    # Iterates `all()`, so that a prefetched `template_set` is used. A null `type`
+    # means official.
+    return frozenset(
+        template.type or Template.Type.OFFICIAL
+        for template in key.workspace.template_set.all()
+    )
+
+
 class Workspace(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOnMixin):
     name = models.CharField(max_length=165)
     users = models.ManyToManyField(User, through="WorkspaceUser")
@@ -325,16 +355,36 @@ class Workspace(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOn
 
         return self.application_set(manager="objects_and_trash")
 
-    @lru_cache
     def has_template(self):
-        return len(self.template_set.all()) > 0
+        return len(self.get_template_types()) > 0
 
-    @lru_cache
-    def has_official_template(self):
-        # Iterates `all()` instead of calling `.official()`, so that a prefetched
-        # `template_set` is used.
+    def get_template_types(self) -> frozenset[str]:
+        """
+        The types of the templates in this workspace. Cached in the process, because
+        the type of a template never changes. A workspace can get its first template
+        after it was checked, so creating a user template updates `updated_on`, which
+        is part of the cache key.
+        """
+
+        return _get_workspace_template_types(_WorkspaceTemplatesCacheKey(self))
+
+    def has_openable_template(self) -> bool:
+        """
+        Whether anyone can open this workspace as a template: it holds an official
+        template or, while user templates are enabled, a user template not marked
+        for deletion. Matches `Template.objects.openable()`.
+        """
+
+        template_types = self.get_template_types()
+        if Template.Type.OFFICIAL in template_types:
+            return True
+        if Template.Type.USER not in template_types or not feature_flag_is_enabled(
+            FF_USER_TEMPLATES
+        ):
+            return False
+        # Not cached, because a user template can be marked for deletion.
         return any(
-            template.type in (None, Template.Type.OFFICIAL)
+            template.root_id is None and template.marked_for_deletion_at is None
             for template in self.template_set.all()
         )
 
@@ -545,6 +595,24 @@ class TemplateQuerySet(QuerySet):
     def user(self):
         return self.filter(type=Template.Type.USER)
 
+    def openable(self):
+        """
+        The templates anyone can open: the official ones and, while user templates
+        are enabled, the user templates not marked for deletion.
+        """
+
+        official = Q(type__isnull=True) | Q(type=Template.Type.OFFICIAL)
+        if not feature_flag_is_enabled(FF_USER_TEMPLATES):
+            return self.filter(official)
+        return self.filter(
+            official
+            | Q(
+                type=Template.Type.USER,
+                root__isnull=True,
+                marked_for_deletion_at__isnull=True,
+            )
+        )
+
 
 class Template(models.Model):
     """
@@ -713,6 +781,12 @@ class Template(models.Model):
         db_default=0,
         help_text="How many times any revision of the template was installed. Only "
         "counted on roots.",
+    )
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+        db_default={},
+        help_text="Private, owner-only revision metadata.",
     )
     review_state = models.CharField(
         max_length=16,

@@ -16,6 +16,14 @@ const categories = [
   { id: 1, name: 'Business', templates: [projectTracker] },
   { id: 2, name: 'Personal', templates: [recipeBook] },
 ]
+// The id of an official template, to show that it doesn't pick its categories.
+const sprintTracker = {
+  id: 2,
+  type: 'user',
+  slug: 'sprint-tracker-a1b2c3',
+  name: 'Sprint Tracker',
+  categories: [{ id: 7, name: 'Agile' }],
+}
 
 const ModalStub = defineComponent({
   name: 'Modal',
@@ -46,6 +54,7 @@ describe('TemplateModal', () => {
           TemplateList: true,
           TemplateDetails: true,
         },
+        mocks: { $featureFlagIsEnabled: () => false },
       },
     })
   }
@@ -68,8 +77,13 @@ describe('TemplateModal navigation', () => {
   })
 
   afterEach(async () => {
+    mocks = {}
+    refreshList = vi.fn()
+    showCreateModal = vi.fn()
     await testApp.afterEach()
   })
+
+  let mocks = {}
 
   const stubs = {
     Modal: ModalStub,
@@ -87,15 +101,46 @@ describe('TemplateModal navigation', () => {
       props: ['categories', 'active'],
       emits: ['selected'],
       template: `<div class="list">
+        <slot name="head" />
         <a class="list__recipe-book" @click="$emit('selected', categories[1].templates[0])" />
       </div>`,
     }),
+    UserTemplateList: defineComponent({
+      name: 'UserTemplateList',
+      props: ['active'],
+      emits: ['selected', 'create'],
+      template: `<div class="own-list">
+        <slot name="head" />
+        <a class="own-list__sprint-tracker" @click="$emit('selected', sprintTracker)" />
+        <a class="own-list__create" @click="$emit('create')" />
+      </div>`,
+      setup: () => ({ sprintTracker }),
+      methods: {
+        refresh() {
+          refreshList()
+        },
+      },
+    }),
+    CreateUserTemplateModal: defineComponent({
+      name: 'CreateUserTemplateModal',
+      props: ['categories'],
+      emits: ['created', 'hidden'],
+      methods: {
+        show() {
+          showCreateModal()
+        },
+      },
+      template: '<div class="create-modal" />',
+    }),
   }
+
+  let refreshList = vi.fn()
+  let showCreateModal = vi.fn()
 
   const mountAndShow = async (...args) => {
     const wrapper = await testApp.mount(TemplateModal, {
       props: { workspace: { id: 1 } },
-      global: { stubs },
+      global: { stubs, mocks },
     })
     await wrapper.vm.show(...args)
     await flushPromises()
@@ -187,5 +232,113 @@ describe('TemplateModal navigation', () => {
     } finally {
       $priorityBus.$off('start-search', pageSearch)
     }
+  })
+
+  describe('tabs', () => {
+    const tabs = (wrapper) => wrapper.findAll('.segment-control__button')
+    const ownList = (wrapper) => wrapper.find('.own-list')
+
+    const openOwnTab = async (wrapper) => {
+      await tabs(wrapper)[1].trigger('click')
+      await flushPromises()
+    }
+
+    it('are hidden for anonymous users', async () => {
+      const wrapper = await mountAndShow()
+
+      expect(tabs(wrapper)).toHaveLength(0)
+      expect(ownList(wrapper).exists()).toBe(false)
+    })
+
+    it('are hidden while the feature flag is off', async () => {
+      testApp.authenticate({ id: 1 })
+      mocks = { $featureFlagIsEnabled: () => false }
+      const wrapper = await mountAndShow()
+
+      expect(tabs(wrapper)).toHaveLength(0)
+    })
+
+    it('switch between the official and the own templates', async () => {
+      testApp.authenticate({ id: 1 })
+      const wrapper = await mountAndShow()
+
+      expect(tabs(wrapper).map((tab) => tab.text())).toStrictEqual([
+        'templateModal.officialTemplates',
+        'templateModal.yourTemplates',
+      ])
+      // The own templates are only loaded when their tab is opened.
+      expect(ownList(wrapper).exists()).toBe(false)
+
+      await openOwnTab(wrapper)
+
+      expect(ownList(wrapper).isVisible()).toBe(true)
+      expect(wrapper.find('.list').isVisible()).toBe(false)
+      expect(
+        wrapper.findComponent({ name: 'UserTemplateList' }).props('active')
+      ).toBe(true)
+      expect(
+        wrapper.findComponent({ name: 'TemplateList' }).props('active')
+      ).toBe(false)
+
+      await tabs(wrapper)[0].trigger('click')
+
+      expect(wrapper.find('.list').isVisible()).toBe(true)
+      // Kept mounted, so that it doesn't load again.
+      expect(ownList(wrapper).isVisible()).toBe(false)
+    })
+
+    it('open an own template with its categories and go back', async () => {
+      testApp.authenticate({ id: 1 })
+      const wrapper = await mountAndShow()
+      await openOwnTab(wrapper)
+
+      await wrapper.find('.own-list__sprint-tracker').trigger('click')
+
+      expect(wrapper.find('.details').text()).toBe('Sprint Tracker: Agile')
+      expect(ownList(wrapper).isVisible()).toBe(false)
+
+      await wrapper.find('.details__back').trigger('click')
+
+      expect(ownList(wrapper).isVisible()).toBe(true)
+      expect(wrapper.find('.list').isVisible()).toBe(false)
+    })
+
+    it('create a template and list it', async () => {
+      testApp.authenticate({ id: 1 })
+      const wrapper = await mountAndShow()
+      await openOwnTab(wrapper)
+      const ownListComponent = () =>
+        wrapper.findComponent({ name: 'UserTemplateList' })
+      const createModal = wrapper.findComponent({
+        name: 'CreateUserTemplateModal',
+      })
+
+      expect(createModal.props('categories')).toStrictEqual(categories)
+
+      await wrapper.find('.own-list__create').trigger('click')
+
+      expect(showCreateModal).toHaveBeenCalledTimes(1)
+      // The create modal takes the search shortcut.
+      expect(ownListComponent().props('active')).toBe(false)
+
+      createModal.vm.$emit('created', { id: 9, template: 3 })
+      createModal.vm.$emit('hidden')
+      await flushPromises()
+
+      expect(refreshList).toHaveBeenCalledTimes(1)
+      expect(ownListComponent().props('active')).toBe(true)
+    })
+
+    it('start at the official templates when shown again', async () => {
+      testApp.authenticate({ id: 1 })
+      const wrapper = await mountAndShow()
+      await openOwnTab(wrapper)
+
+      await wrapper.vm.show()
+      await flushPromises()
+
+      expect(wrapper.find('.list').isVisible()).toBe(true)
+      expect(ownList(wrapper).exists()).toBe(false)
+    })
   })
 })

@@ -130,6 +130,9 @@
     "duplicating": "Duplicating",
     "duplicatedTitle": "Application duplicated"
   },
+  "createUserTemplateJobType": {
+    "name": "Create template"
+  },
   "InstallTemplateJobType": {
     "installing": "Installing",
     "installedTitle": "Template installed"
@@ -536,6 +539,10 @@
     "allTemplates": "All templates",
     "noResults": "No templates found"
   },
+  "templateEmptyState": {
+    "noResultsTitle": "No templates found",
+    "noResultsDescription": "No templates match “{query}”. Try a different search."
+  },
   "templateHeader": {
     "use": "Use this template",
     "selectWorkspace": "Choose workspace"
@@ -549,6 +556,62 @@
   "templateDetails": {
     "back": "Back to Templates",
     "contents": "What’s inside"
+  },
+  "templateModal": {
+    "officialTemplates": "Official templates",
+    "yourTemplates": "Your templates"
+  },
+  "createUserTemplateModal": {
+    "detailsTitle": "New template",
+    "detailsDescription": "Save a reusable copy of your work as a private template.",
+    "name": "Name",
+    "namePlaceholder": "Template name",
+    "nameRequired": "A name is required.",
+    "chooseIcon": "Choose an icon",
+    "description": "Description",
+    "descriptionPlaceholder": "What is this template for?",
+    "categories": "Categories",
+    "categoriesRequired": "Choose at least one category.",
+    "continue": "Continue",
+    "contentTitle": "Choose template content",
+    "contentDescription": "Choose the workspace to take the content from, then pick what the template should include.",
+    "workspace": "Workspace",
+    "applications": "Content",
+    "noticeTitle": "What is not copied",
+    "noticeSecrets": "Most passwords, tokens and API keys of integrations and data syncs.",
+    "noticePeople": "People: collaborator field values, role assignments and the user that automatic AI field updates run as.",
+    "noticePersonalViews": "Personal views.",
+    "noticeReferences": "References to applications that are not included.",
+    "noticeRest": "Everything else is shared as it is.",
+    "selectedApplications": "0 applications selected | 1 application selected | {count} applications selected",
+    "create": "Create template",
+    "cannotBeCancelled": "It’s not possible to cancel, because the template has already been created.",
+    "failedAfterCreated": "The template was created, but something went wrong afterwards."
+  },
+  "templateIconSelectContext": {
+    "search": "Search icons",
+    "noResults": "No icons found"
+  },
+  "userTemplateList": {
+    "title": "Your templates",
+    "count": "0 templates | 1 template | {count} templates",
+    "search": "Search templates",
+    "newTemplate": "New template",
+    "name": "Name",
+    "visibility": "Visibility",
+    "lastUpdated": "Last updated",
+    "emptyTitle": "You have not created any template yet",
+    "emptyDescription": "Turn your work into a template that you can preview and share later.",
+    "noWorkspace": "A template is created from a workspace. Create or join a workspace first.",
+    "noPermission": "You don't have permission to create a template from any of your workspaces.",
+    "statePrivate": "Private",
+    "stateInReview": "In review",
+    "stateRejected": "Rejected",
+    "stateBlocked": "Blocked",
+    "statePublic": "Public",
+    "errorTitle": "Your templates couldn't be loaded",
+    "errorDescription": "Something went wrong while loading your templates.",
+    "retry": "Retry"
   },
   "trashSidebar": {
     "unnamedWorkspace": "Unnamed workspace {id}",
@@ -899,6 +962,7 @@
     "stateFailed": "Failed",
     "errorJobCannotBeCancelledTitle": "Could not cancel",
     "errorJobCannotBeCancelledDescription": "It’s not possible to cancel the job as it has already been completed.\nPlease delete the first snapshot in the list below to remove it.",
+    "errorJobCannotBeCancelledGenericDescription": "It’s not possible to cancel the job as it has already been completed.",
     "errorJobAlreadyRunningTitle": "Already running",
     "errorJobAlreadyRunningDescription": "Another import job is already running. You need to wait for that one to finish before starting another."
   },

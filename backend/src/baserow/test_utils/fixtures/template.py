@@ -37,6 +37,9 @@ class TemplateFixtures:
             kwargs["type"] = Template.Type.OFFICIAL
 
         template = Template.objects.create(**kwargs)
+        # Like the handlers, so that the cached template types of the workspace are
+        # read again.
+        template.workspace.save(update_fields=["updated_on"])
 
         if not categories:
             categories = []

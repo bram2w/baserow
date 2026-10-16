@@ -153,8 +153,6 @@ def test_list_applications(api_client, data_fixture, django_assert_num_queries):
     assert response.status_code == HTTP_401_UNAUTHORIZED
 
     data_fixture.create_template(workspace=workspace_1)
-    workspace_1.has_template.cache_clear()
-    workspace_1.has_official_template.cache_clear()
     url = reverse("api:applications:list", kwargs={"workspace_id": workspace_1.id})
     response = api_client.get(url)
     assert response.status_code == HTTP_200_OK
@@ -203,20 +201,27 @@ def test_list_applications(api_client, data_fixture, django_assert_num_queries):
 
 
 @pytest.mark.django_db
-def test_list_applications_of_official_template_workspaces_only(
-    api_client, data_fixture
+@pytest.mark.parametrize("user_templates_enabled", [True, False])
+def test_list_applications_of_openable_template_workspaces_only(
+    api_client, data_fixture, settings, user_templates_enabled
 ):
+    if not user_templates_enabled:
+        settings.FEATURE_FLAGS = []
     _, token = data_fixture.create_user_and_token()
     official = data_fixture.create_template()
     user_template = data_fixture.create_user_template()
     revision = data_fixture.create_user_template_revision(user_template)
-    for template in (official, user_template, revision):
+    marked = data_fixture.create_user_template(marked_for_deletion_at=timezone.now())
+    for template in (official, user_template, revision, marked):
         data_fixture.create_database_application(workspace=template.workspace)
 
-    for template, anonymous_status, stranger_status in [
-        (official, HTTP_200_OK, HTTP_200_OK),
-        (user_template, HTTP_401_UNAUTHORIZED, HTTP_400_BAD_REQUEST),
-        (revision, HTTP_401_UNAUTHORIZED, HTTP_400_BAD_REQUEST),
+    opened = (HTTP_200_OK, HTTP_200_OK)
+    closed = (HTTP_401_UNAUTHORIZED, HTTP_400_BAD_REQUEST)
+    for template, (anonymous_status, stranger_status) in [
+        (official, opened),
+        (user_template, opened if user_templates_enabled else closed),
+        (revision, closed),
+        (marked, closed),
     ]:
         url = reverse(
             "api:applications:list", kwargs={"workspace_id": template.workspace_id}

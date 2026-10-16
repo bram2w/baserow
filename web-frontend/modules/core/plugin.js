@@ -5,6 +5,7 @@ import { Registry } from '@baserow/modules/core/registry'
 import { PasswordAuthProviderType } from '@baserow/modules/core/authProviderTypes'
 import {
   CreateSnapshotJobType,
+  CreateUserTemplateJobType,
   DuplicateApplicationJobType,
   ExportApplicationsJobType,
   ImportApplicationsJobType,
@@ -280,6 +281,7 @@ export default defineNuxtPlugin({
 
     registry.register('job', new DuplicateApplicationJobType(context))
     registry.register('job', new InstallTemplateJobType(context))
+    registry.register('job', new CreateUserTemplateJobType(context))
     registry.register('job', new CreateSnapshotJobType(context))
     registry.register('job', new RestoreSnapshotJobType(context))
     registry.register('job', new ExportApplicationsJobType(context))

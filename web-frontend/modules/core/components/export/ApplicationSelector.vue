@@ -5,7 +5,7 @@
   >
     <div class="application-selector__header">
       <h4 class="application-selector__title">
-        {{ $t('exportWorkspaceForm.selectDataToExport') }}
+        {{ title || $t('exportWorkspaceForm.selectDataToExport') }}
       </h4>
       <div class="application-selector__actions">
         <button
@@ -106,6 +106,11 @@ export default {
     disabled: {
       type: Boolean,
       default: false,
+    },
+    // Replaces the export copy of the header.
+    title: {
+      type: String,
+      default: null,
     },
   },
   emits: ['update'],

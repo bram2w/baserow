@@ -4,6 +4,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.db import connection
 from django.db.models import Q, QuerySet
 from django.test.utils import CaptureQueriesContext, override_settings
+from django.utils import timezone
 
 import pytest
 
@@ -21,11 +22,12 @@ from baserow.core.integrations.operations import (
     ListIntegrationsApplicationOperationType,
     UpdateIntegrationOperationType,
 )
-from baserow.core.models import Agent
+from baserow.core.models import Agent, Workspace
 from baserow.core.operations import (
     CreateApplicationsWorkspaceOperationType,
     ListApplicationsWorkspaceOperationType,
     ListWorkspacesOperationType,
+    ReadWorkspaceOperationType,
     UpdateApplicationOperationType,
     UpdateSettingsOperationType,
     UpdateWorkspaceOperationType,
@@ -1434,55 +1436,136 @@ def test_all_scope_types_query_methods():
             assert isinstance(scope_type.get_filter_for_scope_type(parent, []), Q)
 
 
-@pytest.mark.django_db
-def test_allow_if_template_permissions_object_lists_official_templates_only(
-    data_fixture,
-):
-    user = data_fixture.create_user()
+def create_templates_of_each_kind(data_fixture, user=None):
+    """
+    Returns templates with whether anyone can open them while user templates are
+    enabled and while they are disabled.
+    """
+
     official = data_fixture.create_template()
     legacy = data_fixture.create_template(type=None)
     user_template = data_fixture.create_user_template(user=user)
-    data_fixture.create_user_template_revision(user_template)
+    revision = data_fixture.create_user_template_revision(user_template)
+    marked = data_fixture.create_user_template(
+        user=user, marked_for_deletion_at=timezone.now()
+    )
+    return [
+        (official, True, True),
+        (legacy, True, True),
+        (user_template, True, False),
+        (revision, False, False),
+        (marked, False, False),
+    ]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("user_templates_enabled", [True, False])
+def test_allow_if_template_permissions_object_lists_openable_templates(
+    data_fixture, settings, user_templates_enabled
+):
+    if not user_templates_enabled:
+        settings.FEATURE_FLAGS = []
+    user = data_fixture.create_user()
+    templates = create_templates_of_each_kind(data_fixture, user=user)
 
     permissions = AllowIfTemplatePermissionManagerType().get_permissions_object(user)
 
     assert set(permissions["workspace_template_ids"]) == {
-        official.workspace_id,
-        legacy.workspace_id,
+        template.workspace_id
+        for template, open_when_enabled, open_when_disabled in templates
+        if (open_when_enabled if user_templates_enabled else open_when_disabled)
     }
 
 
 @pytest.mark.django_db
-def test_allow_if_template_permission_manager_allows_official_templates_only(
-    data_fixture,
+@pytest.mark.parametrize("user_templates_enabled", [True, False])
+def test_allow_if_template_permission_manager_allows_openable_templates(
+    data_fixture, settings, user_templates_enabled
 ):
-    official = data_fixture.create_template()
-    legacy = data_fixture.create_template(type=None)
-    user_template = data_fixture.create_user_template()
-    revision = data_fixture.create_user_template_revision(user_template)
+    if not user_templates_enabled:
+        settings.FEATURE_FLAGS = []
+    templates = create_templates_of_each_kind(data_fixture)
+    not_a_template = data_fixture.create_workspace()
     actor = AnonymousUser()
-    operation = ListApplicationsWorkspaceOperationType.type
     manager = AllowIfTemplatePermissionManagerType()
 
-    for template, allowed in [
-        (official, True),
-        (legacy, True),
-        (user_template, False),
-        (revision, False),
-    ]:
-        workspace = template.workspace
-        check = PermissionCheck(actor, operation, workspace)
-        queryset = workspace.application_set.all()
+    for workspace, allowed in [
+        (template.workspace, enabled if user_templates_enabled else disabled)
+        for template, enabled, disabled in templates
+    ] + [(not_a_template, False)]:
+        for operation in [
+            ReadWorkspaceOperationType.type,
+            ListApplicationsWorkspaceOperationType.type,
+        ]:
+            check = PermissionCheck(actor, operation, workspace)
+            queryset = workspace.application_set.all()
 
-        assert manager.check_multiple_permissions([check], workspace) == (
-            {check: True} if allowed else {}
-        )
-        assert (
-            manager.filter_queryset(actor, operation, queryset, workspace) is not None
-        ) is allowed
-        assert (
-            workspace.id
-            in manager.filter_queryset_for_workspaces(
-                actor, operation, queryset, [workspace]
+            assert manager.check_multiple_permissions([check], workspace) == (
+                {check: True} if allowed else {}
             )
-        ) is allowed
+            assert (
+                manager.filter_queryset(actor, operation, queryset, workspace)
+                is not None
+            ) is allowed
+            assert (
+                workspace.id
+                in manager.filter_queryset_for_workspaces(
+                    actor, operation, queryset, [workspace]
+                )
+            ) is allowed
+
+
+@pytest.mark.django_db
+def test_allow_if_template_permission_manager_refuses_template_once_marked(
+    data_fixture,
+):
+    user_template = data_fixture.create_user_template()
+    workspace = user_template.workspace
+    check = PermissionCheck(
+        AnonymousUser(), ListApplicationsWorkspaceOperationType.type, workspace
+    )
+    manager = AllowIfTemplatePermissionManagerType()
+    assert manager.check_multiple_permissions([check], workspace) == {check: True}
+
+    user_template.marked_for_deletion_at = timezone.now()
+    user_template.save()
+
+    # The template types of the workspace are cached, its marking is not.
+    assert manager.check_multiple_permissions([check], workspace) == {}
+
+
+@pytest.mark.django_db
+def test_openable_template_check_uses_prefetched_templates(
+    data_fixture, django_assert_num_queries
+):
+    templates = create_templates_of_each_kind(data_fixture)
+    workspace_ids = [template.workspace_id for template, _, _ in templates]
+    workspaces = list(
+        Workspace.objects.filter(id__in=workspace_ids).prefetch_related("template_set")
+    )
+
+    with django_assert_num_queries(0):
+        openable = {w.id for w in workspaces if w.has_openable_template()}
+
+    assert openable == {
+        template.workspace_id for template, enabled, _ in templates if enabled
+    }
+
+
+@pytest.mark.django_db
+def test_allow_if_template_permission_manager_checks_a_user_template_once(
+    data_fixture, django_assert_num_queries
+):
+    workspace = data_fixture.create_user_template().workspace
+    workspace = Workspace.objects.get(id=workspace.id)
+    workspace.get_template_types()
+    manager = AllowIfTemplatePermissionManagerType()
+    checks = [
+        PermissionCheck(AnonymousUser(), operation, workspace)
+        for operation in manager.OPERATION_ALLOWED_ON_TEMPLATES
+    ]
+
+    with django_assert_num_queries(1):
+        assert manager.check_multiple_permissions(checks, workspace) == {
+            check: True for check in checks
+        }

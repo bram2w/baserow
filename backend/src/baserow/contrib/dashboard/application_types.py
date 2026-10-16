@@ -80,6 +80,7 @@ class DashboardApplicationType(ApplicationType):
         serialized_integrations = [
             IntegrationHandler().export_integration(
                 i,
+                import_export_config=import_export_config,
                 files_zip=files_zip,
                 storage=storage,
                 cache=self.cache,
@@ -175,6 +176,7 @@ class DashboardApplicationType(ApplicationType):
                 cache=self.cache,
                 files_zip=files_zip,
                 storage=storage,
+                import_export_config=import_export_config,
             )
             integrations_progress.increment()
 

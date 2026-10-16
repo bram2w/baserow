@@ -22,18 +22,56 @@
         @installed="hide()"
       ></TemplateDetails>
       <TemplateList
-        v-show="selectedTemplate === null"
+        v-show="selectedTemplate === null && tab === 'official'"
         :categories="categories"
-        :active="open && selectedTemplate === null"
+        :active="open && selectedTemplate === null && tab === 'official'"
         class="templates__body"
         @selected="selectTemplate"
-      ></TemplateList>
+      >
+        <template v-if="showTabs" #head>
+          <SegmentControl
+            :segments="tabs"
+            :active-index="tabIndex"
+            type="pills"
+            @update:active-index="selectTab(tabs[$event].value)"
+          ></SegmentControl>
+        </template>
+      </TemplateList>
+      <UserTemplateList
+        v-if="showTabs && userTemplatesOpened"
+        v-show="selectedTemplate === null && tab === 'own'"
+        ref="userTemplateList"
+        :active="
+          open && selectedTemplate === null && tab === 'own' && !creating
+        "
+        class="templates__body"
+        @selected="selectTemplate"
+        @create="openCreateModal"
+      >
+        <template #head>
+          <SegmentControl
+            :segments="tabs"
+            :active-index="tabIndex"
+            type="pills"
+            @update:active-index="selectTab(tabs[$event].value)"
+          ></SegmentControl>
+        </template>
+      </UserTemplateList>
       <div class="modal__actions">
         <a class="modal__close" @click="hide()">
           <i class="iconoir-cancel"></i>
         </a>
       </div>
     </template>
+    <!-- Outside of the loaded content, so that a running job stays monitored
+    when the modal is shown again. -->
+    <CreateUserTemplateModal
+      v-if="showTabs"
+      ref="createUserTemplateModal"
+      :categories="categories"
+      @hidden="creating = false"
+      @created="templateCreated"
+    ></CreateUserTemplateModal>
   </Modal>
 </template>
 
@@ -41,13 +79,21 @@
 import modal from '@baserow/modules/core/mixins/modal'
 import TemplateService from '@baserow/modules/core/services/template'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import { FF_USER_TEMPLATES } from '@baserow/modules/core/plugins/featureFlags'
 
+import CreateUserTemplateModal from '@baserow/modules/core/components/template/CreateUserTemplateModal'
 import TemplateDetails from '@baserow/modules/core/components/template/TemplateDetails'
 import TemplateList from '@baserow/modules/core/components/template/TemplateList'
+import UserTemplateList from '@baserow/modules/core/components/template/UserTemplateList'
 
 export default {
   name: 'TemplateModal',
-  components: { TemplateDetails, TemplateList },
+  components: {
+    CreateUserTemplateModal,
+    TemplateDetails,
+    TemplateList,
+    UserTemplateList,
+  },
   mixins: [modal],
   props: {
     // When no workspace is provided, the user must choose the workspace to install
@@ -65,10 +111,42 @@ export default {
       loading: true,
       categories: [],
       selectedTemplate: null,
+      tab: 'official',
+      // The list of the user's templates is loaded when its tab is opened first.
+      userTemplatesOpened: false,
+      // While a template is created, its modal takes the search shortcut.
+      creating: false,
     }
   },
   computed: {
+    showTabs() {
+      return (
+        this.$featureFlagIsEnabled(FF_USER_TEMPLATES) &&
+        this.$store.getters['auth/isAuthenticated']
+      )
+    },
+    tabs() {
+      return [
+        {
+          value: 'official',
+          label: this.$t('templateModal.officialTemplates'),
+          icon: 'baserow-icon-templates',
+        },
+        {
+          value: 'own',
+          label: this.$t('templateModal.yourTemplates'),
+          icon: 'iconoir-box',
+        },
+      ]
+    },
+    tabIndex() {
+      return this.tabs.findIndex((tab) => tab.value === this.tab)
+    },
     selectedTemplateCategories() {
+      // A user template lists its own categories.
+      if (this.selectedTemplate.type === 'user') {
+        return this.selectedTemplate.categories
+      }
       return this.categories.filter((category) =>
         category.templates.some((t) => t.id === this.selectedTemplate.id)
       )
@@ -104,6 +182,8 @@ export default {
       this.loading = true
       this.categories = []
       this.selectedTemplate = null
+      this.tab = 'official'
+      this.userTemplatesOpened = false
 
       try {
         const { data } = await TemplateService(this.$client).fetchAll()
@@ -124,8 +204,21 @@ export default {
         }
       }
     },
+    selectTab(tab) {
+      this.tab = tab
+      if (tab === 'own') {
+        this.userTemplatesOpened = true
+      }
+    },
     selectTemplate(template) {
       this.selectedTemplate = template
+    },
+    openCreateModal() {
+      this.creating = true
+      this.$refs.createUserTemplateModal.show()
+    },
+    templateCreated() {
+      this.$refs.userTemplateList?.refresh()
     },
     /**
      * Called however the modal is closed, also with escape or a click outside. The

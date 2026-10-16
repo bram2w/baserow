@@ -11,22 +11,32 @@ from rest_framework.views import APIView
 from baserow.api.applications.serializers import (
     PolymorphicApplicationResponseSerializer,
 )
-from baserow.api.decorators import map_exceptions
-from baserow.api.errors import ERROR_GROUP_DOES_NOT_EXIST, ERROR_USER_NOT_IN_GROUP
+from baserow.api.decorators import map_exceptions, validate_query_parameters
+from baserow.api.errors import (
+    ERROR_FEATURE_DISABLED,
+    ERROR_GROUP_DOES_NOT_EXIST,
+    ERROR_USER_NOT_IN_GROUP,
+)
 from baserow.api.jobs.errors import ERROR_MAX_JOB_COUNT_EXCEEDED
 from baserow.api.jobs.serializers import JobSerializer
+from baserow.api.mixins import SearchableViewMixin
+from baserow.api.pagination import LimitOffsetPagination
 from baserow.api.schemas import (
     CLIENT_SESSION_ID_SCHEMA_PARAMETER,
     CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
     get_error_schema,
 )
+from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.api.templates.serializers import (
+    ListRequestQueryParamSerializer,
     TemplateCategoriesSerializer,
     TemplateSerializer,
+    UserTemplateSerializer,
 )
 from baserow.core.action.registries import action_type_registry
 from baserow.core.actions import InstallTemplateActionType
 from baserow.core.exceptions import (
+    FeatureDisabledException,
     TemplateDoesNotExist,
     TemplateFileDoesNotExist,
     UserNotInWorkspace,
@@ -38,6 +48,7 @@ from baserow.core.jobs.exceptions import MaxJobCountExceeded
 from baserow.core.jobs.handler import JobHandler
 from baserow.core.jobs.registries import job_type_registry
 from baserow.core.models import Template, TemplateCategory
+from baserow.core.user_templates.service import UserTemplateService
 
 from .errors import ERROR_TEMPLATE_DOES_NOT_EXIST, ERROR_TEMPLATE_FILE_DOES_NOT_EXIST
 
@@ -70,6 +81,64 @@ class TemplatesView(APIView):
         return Response(serializer.data)
 
 
+class OwnTemplatesView(APIView, SearchableViewMixin):
+    permission_classes = (IsAuthenticated,)
+    search_fields = ["name", "description"]
+
+    @extend_schema(
+        tags=["Templates"],
+        operation_id="list_own_templates",
+        parameters=[
+            OpenApiParameter(
+                name="limit",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.INT,
+                description="Defines how many templates should be returned.",
+            ),
+            OpenApiParameter(
+                name="offset",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.INT,
+                description="Defines the offset of the templates that should be "
+                "returned.",
+            ),
+            OpenApiParameter(
+                name="search",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description="Only templates whose name or description contains "
+                "this value are returned.",
+            ),
+        ],
+        description=(
+            "Lists the user templates created by the authenticated user, most "
+            "recently updated first. The template's `workspace_id` can be used "
+            "for previewing purposes."
+        ),
+        responses={
+            200: get_example_pagination_serializer_class(
+                UserTemplateSerializer, serializer_name="UserTemplatePagination"
+            ),
+            403: get_error_schema(["ERROR_FEATURE_DISABLED"]),
+        },
+    )
+    @validate_query_parameters(ListRequestQueryParamSerializer)
+    @map_exceptions({FeatureDisabledException: ERROR_FEATURE_DISABLED})
+    def get(self, request, query_params):
+        """Responds with a page of the user templates of the user."""
+
+        templates = UserTemplateService().list_own_templates(request.user)
+        templates = self.apply_search(query_params.get("search"), templates)
+
+        paginator = LimitOffsetPagination()
+        paginator.default_limit = 20
+        paginator.max_limit = 100
+        page = paginator.paginate_queryset(templates, request, self)
+        return paginator.get_paginated_response(
+            UserTemplateSerializer(page, many=True).data
+        )
+
+
 class TemplateView(APIView):
     permission_classes = (AllowAny,)
 
@@ -87,7 +156,7 @@ class TemplateView(APIView):
 
         try:
             template = (
-                Template.objects.official()
+                Template.objects.openable()
                 .prefetch_related("categories")
                 .get(slug=slug)
             )
