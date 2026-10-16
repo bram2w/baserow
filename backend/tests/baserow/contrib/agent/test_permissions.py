@@ -1,18 +1,33 @@
 import pytest
 
-from baserow.contrib.agent.operations import ReadAgentConfigurationOperationType
+from baserow.contrib.agent.operations import (
+    CreateAgentConversationOperationType,
+    CreateAgentMessageOperationType,
+    ReadAgentConfigurationOperationType,
+    ReadAgentConversationsOperationType,
+)
 from baserow.contrib.agent.service import AgentService
 from baserow.core.actions import ExportApplicationsActionType
 from baserow.core.handler import CoreHandler
 from baserow.core.operations import UpdateApplicationOperationType
 
 
-def call(name, user, agent):
+def call(name, user, agent, conversation, message):
     service = AgentService()
     calls = {
         "read configuration": lambda: service.get_configuration(user, agent.id),
         "update configuration": lambda: service.update_configuration(
             user, agent.id, instructions="Changed"
+        ),
+        "list conversations": lambda: service.list_conversations(user, agent.id),
+        "list messages": lambda: service.list_messages(
+            user, agent.id, conversation.uuid
+        ),
+        "retry conversation": lambda: service.create_conversation(
+            user, agent.id, conversation.uuid, message.uuid, message.content
+        ),
+        "retry message": lambda: service.create_message(
+            user, agent.id, conversation.uuid, message.uuid, message.content
         ),
         "export": lambda: ExportApplicationsActionType.do(
             user, agent.workspace, [agent]
@@ -30,6 +45,13 @@ def call(name, user, agent):
             "update configuration",
             [UpdateApplicationOperationType, ReadAgentConfigurationOperationType],
         ),
+        ("list conversations", [ReadAgentConversationsOperationType]),
+        ("list messages", [ReadAgentConversationsOperationType]),
+        (
+            "retry conversation",
+            [CreateAgentConversationOperationType, CreateAgentMessageOperationType],
+        ),
+        ("retry message", [CreateAgentMessageOperationType]),
         ("export", [ReadAgentConfigurationOperationType]),
     ],
 )
@@ -38,9 +60,11 @@ def test_each_call_checks_its_operation_on_the_agent(
 ):
     user = data_fixture.create_user()
     agent = configured_agent(user=user)
+    message = data_fixture.create_agent_message(user=user, agent=agent)
+    conversation = message.conversation
     check = mocker.spy(CoreHandler, "check_multiple_permissions")
 
-    call(name, user, agent)
+    call(name, user, agent, conversation, message)
 
     assert [
         (permission.operation_name, permission.context.id)

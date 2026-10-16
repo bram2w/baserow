@@ -7,6 +7,7 @@ from django.db.transaction import Atomic
 from django.urls import URLResolver, include, path
 
 from baserow.contrib.agent.api.serializers import AgentApplicationSerializer
+from baserow.contrib.agent.handler import AgentHandler
 from baserow.contrib.agent.models import AgentApplication
 from baserow.contrib.agent.operations import ReadAgentConfigurationOperationType
 from baserow.core.ai_provider.constants import AI_PROVIDER_FEATURE_AI_AGENT
@@ -26,6 +27,18 @@ class AgentApplicationType(ApplicationType):
     serializer_mixins = [AgentApplicationSerializer]
     request_serializer_field_names = ["name"]
     request_serializer_mixins = []
+
+    @staticmethod
+    def _includes_conversations(import_export_config: ImportExportConfig) -> bool:
+        """Conversations are private, so only internal full-data copies carry them."""
+
+        return (
+            import_export_config.is_duplicate
+            and not import_export_config.is_template
+            and not import_export_config.is_publishing
+            and not import_export_config.only_structure
+            and not import_export_config.exclude_sensitive_data
+        )
 
     def get_api_urls(self) -> list[URLResolver]:
         from baserow.contrib.agent.api import urls as api_urls
@@ -63,7 +76,7 @@ class AgentApplicationType(ApplicationType):
         storage: Storage | None = None,
         progress_builder: ChildProgressBuilder | None = None,
     ) -> dict:
-        """Package the configuration, which only configuration readers may export."""
+        """Package the configuration, adding conversations only to internal copies."""
 
         if import_export_config.exported_by is not None:
             CoreHandler().check_permissions(
@@ -80,8 +93,13 @@ class AgentApplicationType(ApplicationType):
             provider_type=application.provider_type,
             model_identifier=application.model_identifier,
         )
+        if self._includes_conversations(import_export_config):
+            serialized["conversations"] = AgentHandler().export_conversations(
+                application
+            )
         return serialized
 
+    @transaction.atomic
     def import_serialized(
         self,
         workspace: Workspace | None,
@@ -92,7 +110,7 @@ class AgentApplicationType(ApplicationType):
         storage: Storage | None = None,
         progress_builder: ChildProgressBuilder | None = None,
     ) -> AgentApplication:
-        """Import the configuration as an independent copy."""
+        """Import the configuration and any copied conversations as one new Agent."""
 
         application = super().import_serialized(
             workspace,
@@ -107,4 +125,8 @@ class AgentApplicationType(ApplicationType):
         application.provider_type = serialized_values.get("provider_type") or None
         application.model_identifier = serialized_values.get("model_identifier") or None
         application.save()
+        if self._includes_conversations(import_export_config):
+            AgentHandler().import_conversations(
+                application, serialized_values.get("conversations", [])
+            )
         return application

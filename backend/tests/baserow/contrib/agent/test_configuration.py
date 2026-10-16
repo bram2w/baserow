@@ -11,11 +11,8 @@ from baserow.core.ai_provider.resolution import (
     clear_ai_provider_state_cache,
     load_ai_provider_state,
 )
-from baserow.core.models import Application
 
-
-def agent_url(agent: Application, view: str) -> str:
-    return reverse(f"api:agent:{view}", kwargs={"agent_id": agent.id})
+from .utils import agent_url
 
 
 @pytest.mark.django_db

@@ -4,11 +4,16 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from baserow.api.mixins import UnknownFieldRaisesExceptionSerializerMixin
+from baserow.api.pagination import PageNumberPagination
 from baserow.contrib.agent.handler import AgentHandler
-from baserow.contrib.agent.models import AgentApplication
+from baserow.contrib.agent.models import (
+    AgentApplication,
+    AgentConversation,
+    AgentMessage,
+)
 from baserow.contrib.agent.types import AgentReadinessState
+from baserow.contrib.agent.validators import AGENT_TEXT_MAX_LENGTH
 
-AGENT_TEXT_MAX_LENGTH = 100000
 READINESS_CHOICES = get_args(AgentReadinessState)
 
 
@@ -63,3 +68,52 @@ class AgentConfigurationUpdateSerializer(
                 "trim_whitespace": False,
             },
         }
+
+
+class AgentConversationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AgentConversation
+        fields = ("uuid", "title", "created_on", "updated_on")
+
+
+class AgentMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AgentMessage
+        fields = ("uuid", "role", "content", "created_on")
+
+
+class AgentMessageContentSerializer(
+    UnknownFieldRaisesExceptionSerializerMixin, serializers.Serializer
+):
+    content = serializers.CharField(
+        max_length=AGENT_TEXT_MAX_LENGTH, trim_whitespace=False
+    )
+
+    def validate_content(self, value: str) -> str:
+        if not value.strip():
+            raise serializers.ValidationError(
+                "This field may not be blank.", code="blank"
+            )
+        return value
+
+
+class AgentConversationCreateSerializer(AgentMessageContentSerializer):
+    uuid = serializers.UUIDField()
+    message_uuid = serializers.UUIDField()
+
+
+class AgentMessageCreateSerializer(AgentMessageContentSerializer):
+    uuid = serializers.UUIDField()
+
+
+class AgentMessageCreatedSerializer(serializers.Serializer):
+    conversation = AgentConversationSerializer()
+    message = AgentMessageSerializer()
+
+
+class AgentConversationPagination(PageNumberPagination):
+    page_size = 20
+
+
+class AgentMessagePagination(PageNumberPagination):
+    page_size = 50

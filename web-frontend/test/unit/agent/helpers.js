@@ -86,6 +86,27 @@ export const mockSaves = (testApp, ...responses) =>
 export const mockAvailability = (testApp, ...responses) =>
   respond(testApp.mock.onGet('/workspaces/'), ...responses)
 
+export const mockConversations = (testApp, ...responses) =>
+  respond(testApp.mock.onGet('/agent/10/conversations/'), ...responses)
+
+export const mockStartConversation = (testApp, ...responses) =>
+  respond(testApp.mock.onPost('/agent/10/conversations/'), ...responses)
+
+export const mockMessages = (testApp, uuid, ...responses) =>
+  respond(
+    testApp.mock.onGet(`/agent/10/conversations/${uuid}/messages/`),
+    ...responses
+  )
+
+export const mockSendMessage = (testApp, uuid, ...responses) =>
+  respond(
+    testApp.mock.onPost(`/agent/10/conversations/${uuid}/messages/`),
+    ...responses
+  )
+
+export const sentBodies = (testApp) =>
+  testApp.mock.history.post.map(({ data }) => JSON.parse(data))
+
 export const savedValues = (testApp) =>
   testApp.mock.history.patch
     .filter(({ url }) => url === '/agent/10/configuration/')
@@ -102,6 +123,8 @@ export async function createAgentPage() {
   mockAvailability(testApp, [workspace])
   mockAgent(testApp, agentData)
   mockConfiguration(testApp, completeConfiguration())
+  mockConversations(testApp, page([]))
+  mockStartConversation(testApp, acceptConversation)
   // Nuxt's $hasPermission is a non-configurable getter, so override a child.
   const permissionApp = Object.create(testApp.nuxtApp)
   Object.defineProperty(permissionApp, '$hasPermission', {
@@ -178,3 +201,70 @@ export async function choose(dropdown, text) {
     .find((item) => item.text().includes(text))
     .trigger('click')
 }
+
+export const page = (results, next = null) => ({
+  count: results.length,
+  next,
+  previous: null,
+  results,
+})
+
+export const conversation = (
+  uuid,
+  title,
+  updatedOn = '2026-10-14T10:00:00Z'
+) => ({
+  uuid,
+  title,
+  created_on: '2026-10-14T10:00:00Z',
+  updated_on: updatedOn,
+})
+
+export const message = (uuid, content) => ({
+  uuid,
+  role: 'user',
+  content,
+  created_on: '2026-10-14T10:00:00Z',
+})
+
+export const acceptConversation = (config) => {
+  const body = JSON.parse(config.data)
+  return [
+    200,
+    {
+      conversation: conversation(body.uuid, body.content),
+      message: message(body.message_uuid, body.content),
+    },
+  ]
+}
+
+export const composer = (wrapper) =>
+  wrapper.get('.agent-chat__composer textarea')
+
+export const send = (wrapper) => wrapper.get('.agent-chat__composer button')
+
+export async function sendMessage(wrapper, content) {
+  await composer(wrapper).setValue(content)
+  await send(wrapper).trigger('click')
+  await flushPromises()
+}
+
+export const composerExists = (wrapper) =>
+  wrapper.find('.agent-chat__composer').exists()
+
+export async function selectConversation(wrapper, title) {
+  await wrapper
+    .findAll('.agent-conversations__item')
+    .find((item) => item.text().includes(title))
+    .trigger('click')
+  await flushPromises()
+}
+
+export const selected = (wrapper) =>
+  wrapper.get('.agent-conversations__item[aria-current="true"]')
+
+export const messages = (wrapper) =>
+  wrapper.findAll('.agent-chat__message-content').map((item) => item.text())
+
+export const conversationTitles = (wrapper) =>
+  wrapper.findAll('.agent-conversations__item').map((item) => item.text())

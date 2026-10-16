@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
@@ -12,16 +14,38 @@ from baserow.api.applications.serializers import (
 from baserow.api.decorators import map_exceptions, validate_body
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.schemas import get_error_schema
-from baserow.contrib.agent.actions import UpdateAgentConfigurationActionType
+from baserow.api.serializers import get_example_pagination_serializer_class
+from baserow.contrib.agent.actions import (
+    CreateAgentConversationActionType,
+    CreateAgentMessageActionType,
+    UpdateAgentConfigurationActionType,
+)
+from baserow.contrib.agent.exceptions import (
+    AgentConversationDoesNotExist,
+    AgentMessageConflict,
+    AgentNotReady,
+)
 from baserow.contrib.agent.models import AgentApplication
 from baserow.contrib.agent.service import AgentService
 from baserow.contrib.agent.signals import agent_loaded
 from baserow.core.exceptions import ApplicationDoesNotExist, UserNotInWorkspace
 from baserow.core.service import CoreService
 
+from .errors import (
+    ERROR_AGENT_CONVERSATION_DOES_NOT_EXIST,
+    ERROR_AGENT_MESSAGE_CONFLICT,
+    ERROR_AGENT_NOT_READY,
+)
 from .serializers import (
     AgentConfigurationSerializer,
     AgentConfigurationUpdateSerializer,
+    AgentConversationCreateSerializer,
+    AgentConversationPagination,
+    AgentConversationSerializer,
+    AgentMessageCreatedSerializer,
+    AgentMessageCreateSerializer,
+    AgentMessagePagination,
+    AgentMessageSerializer,
 )
 
 AGENT_ID_PATH_PARAMETER = OpenApiParameter(
@@ -30,10 +54,26 @@ AGENT_ID_PATH_PARAMETER = OpenApiParameter(
     type=OpenApiTypes.INT,
     description="The id of the agent.",
 )
-AGENT_EXCEPTIONS = {ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST}
+AGENT_EXCEPTIONS = {
+    ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
+    AgentConversationDoesNotExist: ERROR_AGENT_CONVERSATION_DOES_NOT_EXIST,
+    AgentNotReady: ERROR_AGENT_NOT_READY,
+    AgentMessageConflict: ERROR_AGENT_MESSAGE_CONFLICT,
+}
 READ_ERRORS = {
     401: get_error_schema(["ERROR_PERMISSION_DENIED"]),
     404: get_error_schema(["ERROR_APPLICATION_DOES_NOT_EXIST"]),
+}
+CONVERSATION_READ_ERRORS = {
+    **READ_ERRORS,
+    404: get_error_schema(
+        ["ERROR_APPLICATION_DOES_NOT_EXIST", "ERROR_AGENT_CONVERSATION_DOES_NOT_EXIST"]
+    ),
+}
+CONVERSATION_WRITE_ERRORS = {
+    **CONVERSATION_READ_ERRORS,
+    400: get_error_schema(["ERROR_REQUEST_BODY_VALIDATION", "ERROR_AGENT_NOT_READY"]),
+    409: get_error_schema(["ERROR_AGENT_MESSAGE_CONFLICT"]),
 }
 
 
@@ -146,3 +186,99 @@ class AgentConfigurationView(APIView):
             request.user, agent_id, **data
         )
         return Response(AgentConfigurationSerializer(configuration).data)
+
+
+class AgentConversationsView(APIView):
+    @extend_schema(
+        tags=["Agent applications"],
+        operation_id="list_agent_conversations",
+        parameters=[
+            AGENT_ID_PATH_PARAMETER,
+            OpenApiParameter("page", OpenApiTypes.INT, default=1),
+            OpenApiParameter(
+                "size",
+                OpenApiTypes.INT,
+                default=20,
+                description="Number of conversations per page, up to 100.",
+            ),
+        ],
+        responses={
+            200: get_example_pagination_serializer_class(AgentConversationSerializer),
+            **READ_ERRORS,
+        },
+    )
+    @map_exceptions(AGENT_EXCEPTIONS)
+    def get(self, request: Request, agent_id: int) -> Response:
+        """Paginate only the authenticated owner's conversations."""
+
+        conversations = AgentService().list_conversations(request.user, agent_id)
+        paginator = AgentConversationPagination(limit_page_size=100)
+        page = paginator.paginate_queryset(conversations, request, self)
+        return paginator.get_paginated_response(
+            AgentConversationSerializer(page, many=True).data
+        )
+
+    @extend_schema(
+        tags=["Agent applications"],
+        operation_id="create_agent_conversation",
+        request=AgentConversationCreateSerializer,
+        responses={200: AgentMessageCreatedSerializer, **CONVERSATION_WRITE_ERRORS},
+    )
+    @map_exceptions(AGENT_EXCEPTIONS)
+    @validate_body(AgentConversationCreateSerializer, return_validated=True)
+    def post(self, request: Request, agent_id: int, data: dict) -> Response:
+        """Starts a private conversation with its first message."""
+
+        result = CreateAgentConversationActionType.do(request.user, agent_id, **data)
+        return Response(AgentMessageCreatedSerializer(result).data)
+
+
+class AgentMessagesView(APIView):
+    @extend_schema(
+        tags=["Agent applications"],
+        operation_id="list_agent_messages",
+        parameters=[
+            AGENT_ID_PATH_PARAMETER,
+            OpenApiParameter("page", OpenApiTypes.INT, default=1),
+            OpenApiParameter(
+                "size",
+                OpenApiTypes.INT,
+                default=50,
+                description="Number of messages per page, up to 100.",
+            ),
+        ],
+        responses={
+            200: get_example_pagination_serializer_class(AgentMessageSerializer),
+            **CONVERSATION_READ_ERRORS,
+        },
+    )
+    @map_exceptions(AGENT_EXCEPTIONS)
+    def get(self, request: Request, agent_id: int, conversation_uuid: UUID) -> Response:
+        """Lists messages in pages from the newest, each in chronological order."""
+
+        messages = AgentService().list_messages(
+            request.user, agent_id, conversation_uuid
+        )
+        paginator = AgentMessagePagination(limit_page_size=100)
+        page = paginator.paginate_queryset(messages, request, self)
+        return paginator.get_paginated_response(
+            AgentMessageSerializer(list(reversed(page)), many=True).data
+        )
+
+    @extend_schema(
+        tags=["Agent applications"],
+        operation_id="create_agent_message",
+        request=AgentMessageCreateSerializer,
+        responses={200: AgentMessageCreatedSerializer, **CONVERSATION_WRITE_ERRORS},
+    )
+    @map_exceptions(AGENT_EXCEPTIONS)
+    @validate_body(AgentMessageCreateSerializer, return_validated=True)
+    def post(
+        self, request: Request, agent_id: int, conversation_uuid: UUID, data: dict
+    ) -> Response:
+        """Accept an authorized owner's message or recover its identical retry."""
+
+        result = CreateAgentMessageActionType.do(
+            request.user, agent_id, conversation_uuid, **data
+        )
+        return Response(AgentMessageCreatedSerializer(result).data)

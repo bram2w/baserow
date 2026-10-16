@@ -13,16 +13,36 @@ class AgentConfig(AppConfig):
         )
         from baserow.core.search.registries import workspace_search_registry
 
-        from .actions import UpdateAgentConfigurationActionType
+        from .actions import (
+            CreateAgentConversationActionType,
+            CreateAgentMessageActionType,
+            UpdateAgentConfigurationActionType,
+        )
         from .application_types import AgentApplicationType
         from .last_viewed_types import AgentLastViewedItemType
-        from .operations import ReadAgentConfigurationOperationType
+        from .operations import (
+            CreateAgentConversationOperationType,
+            CreateAgentMessageOperationType,
+            ReadAgentConfigurationOperationType,
+            ReadAgentConversationsOperationType,
+        )
         from .search_types import AgentSearchType
 
         application_type_registry.register(AgentApplicationType())
         workspace_search_registry.register(AgentSearchType())
         last_viewed_item_type_registry.register(AgentLastViewedItemType())
-        operation_type_registry.register(ReadAgentConfigurationOperationType())
-        action_type_registry.register(UpdateAgentConfigurationActionType())
+        for operation in (
+            ReadAgentConversationsOperationType,
+            CreateAgentConversationOperationType,
+            CreateAgentMessageOperationType,
+            ReadAgentConfigurationOperationType,
+        ):
+            operation_type_registry.register(operation())
+        for action in (
+            CreateAgentConversationActionType,
+            CreateAgentMessageActionType,
+            UpdateAgentConfigurationActionType,
+        ):
+            action_type_registry.register(action())
 
         import baserow.contrib.agent.receivers  # noqa: F401

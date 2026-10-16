@@ -118,6 +118,20 @@ export function useAgentConfiguration(agent) {
     }
     return errors
   })
+  const readyToSend = computed(
+    () =>
+      readiness.value === 'ready' &&
+      !readinessError.value &&
+      !availabilityLoading.value &&
+      !availabilityError.value &&
+      !savingConfiguration.value &&
+      (!canReadConfiguration.value ||
+        (!configurationLoading.value &&
+          !configurationLoadError.value &&
+          !hasPendingConfiguration.value &&
+          !configurationSaveError.value &&
+          !Object.keys(fieldErrors.value).length))
+  )
   const scopeIsCurrent = (currentScope) => scope === currentScope
 
   function updateApplication(data) {
@@ -449,6 +463,7 @@ export function useAgentConfiguration(agent) {
     configurationLoadError,
     savingConfiguration,
     configurationSaveError,
+    readyToSend,
     renameAgent,
     updateConfiguration,
     saveConfiguration,

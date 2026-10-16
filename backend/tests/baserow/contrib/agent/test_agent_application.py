@@ -98,13 +98,20 @@ def test_new_agent_selects_the_first_enabled_model(data_fixture, models_availabl
     "configuration", [{}, {"provider_type": None, "model_identifier": None}]
 )
 @pytest.mark.parametrize(
-    "copy_agent", [duplicate, restore_snapshot, import_workspace_archive]
+    "copy_agent,keeps_conversations",
+    [(duplicate, True), (restore_snapshot, True), (import_workspace_archive, False)],
 )
-def test_agent_copy_is_a_new_agent_with_the_same_configuration(
-    data_fixture, use_tmp_media_root, configured_agent, copy_agent, configuration
+def test_agent_copy_keeps_configuration_and_only_internal_copies_keep_conversations(
+    data_fixture,
+    use_tmp_media_root,
+    configured_agent,
+    copy_agent,
+    keeps_conversations,
+    configuration,
 ):
     user = data_fixture.create_user()
     agent = configured_agent(user=user, **configuration)
+    data_fixture.create_agent_message(user=user, agent=agent)
 
     copied = copy_agent(data_fixture, user, agent).specific
 
@@ -116,6 +123,7 @@ def test_agent_copy_is_a_new_agent_with_the_same_configuration(
         agent.provider_type,
         agent.model_identifier,
     )
+    assert copied.conversations.count() == int(keeps_conversations)
 
 
 @pytest.mark.django_db
