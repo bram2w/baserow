@@ -1,4 +1,4 @@
-# ADR 011: Represent each reusable agent as a workspace application
+# ADR 011: Represent each agent as a workspace application
 
 |              |                                                |
 | ------------ | ---------------------------------------------- |
@@ -10,117 +10,142 @@
 
 ## Summary
 
-Reusable agents need an ownership model that makes them easy to create, configure and
-manage. We considered an Agent Builder application containing several agents and one
-workspace application per agent. We choose one application per agent to prioritize a
-simple starting experience and independent management.
+Agents need an ownership model that makes them easy to create, configure and manage.
+We considered an Agent Builder (option 1), which contains many agents, and an agent
+application (option 2), which is exactly one agent. We choose the agent application to
+prioritize a simple starting experience and independent management.
+
+## Terms
+
+| Term                         | Meaning                                                                                             |
+| ---------------------------- | --------------------------------------------------------------------------------------------------- |
+| Agent                        | A reusable, configured AI agent that callers can invoke.                                            |
+| `Agent` subject              | The core permission subject with a workspace role. An agent may run as one: its execution identity. |
+| Caller                       | Anything that references an agent to invoke it, such as a conversation or an automatic job.         |
+| Agent Builder (option 1)     | A workspace application containing many agents, as a database contains tables.                      |
+| Agent application (option 2) | A workspace application of type `agent` that is exactly one agent.                                  |
+| Related agents               | Agents a team wants to manage together, such as all support agents.                                 |
+| Lifecycle operations         | Duplicate, export/import, snapshot, trash and restore.                                              |
+| Workspace integration        | A planned integration owned by the workspace, so several applications can share its secrets.        |
 
 ## Context
 
 Baserow organizes related resources within workspace applications: databases contain
 tables, Application Builders contain pages, and Automations contain workflows. These
 applications provide a common boundary for navigation, permissions and lifecycle
-operations such as duplication, export/import, snapshots and trash.
+operations.
 
-Agents need a similar management boundary. Each agent has reusable configuration that
-can be referenced by conversations and automatic jobs, with permissions controlling
-who can configure or invoke it. The ownership model must support these needs while
-keeping creation and everyday management understandable.
+Agents need a similar management boundary. Each agent has configuration that callers
+reference, with permissions controlling who can configure or invoke it. The ownership
+model must support these needs while keeping creation and everyday management
+understandable.
 
 Both options can reuse Baserow's application infrastructure, permission system, internal
-tools and supported backend services. Sharing a management boundary does not itself
-authorize shared credentials, determine execution identity or provide orchestration.
-The existing core `Agent` permission subject remains distinct from a configurable agent.
+tools and supported backend services. Sharing a management boundary does not by itself
+authorize sharing integrations, determine execution identity or provide orchestration.
+The `Agent` subject remains distinct from an agent.
 
-This record decides the ownership boundary. Execution, orchestration and the separately
-planned move of integrations to workspaces are outside its scope. The
+This record decides the ownership model. Execution, orchestration and workspace
+integrations are outside its scope. The
 [delivery issue](https://github.com/baserow/baserow/issues/6259) defines release scope.
 
 ## Options considered
 
-### 1. An Agent Builder application containing agents
+### 1. Agent Builder
 
-An Agent Builder would be a workspace application containing a list of independently
-configured agents, following the database-and-tables model. Users create the application
-and then create agents within it. The application provides a common management boundary,
-while each agent has its own identity, configuration and permission assignments.
+An Agent Builder is a workspace application containing a list of independently
+configured agents, following the database-and-tables model. Users create the Agent
+Builder and then create agents within it. The Agent Builder provides a common management
+boundary, while each agent has its own ID, configuration and role assignments.
 
-This fits users who want to organize and administer related agents together. Roles and
-shared settings can be applied at the parent, with individual agent exceptions where
-needed. The application is also a natural package for copying, exporting and recovering
-a related set. These benefits require a parent/child model, child management operations,
+This fits users who want to manage related agents together. Roles and shared settings
+can be applied on the Agent Builder, with exceptions for individual agents where needed.
+The Agent Builder is also a natural unit for lifecycle operations on related agents.
+These benefits require a parent/child model, operations to manage the agents inside it,
 permission-filtered navigation and lifecycle handling for the agents it contains.
 
-### 2. One workspace application per agent
+### 2. Agent application
 
-Each workspace application represents one agent and directly owns its configuration.
-Users create an Agent through the standard application flow, configure that agent and
-open it from its application entry. Its application ID is the reference used by callers.
+Each agent application is one agent and directly owns its configuration. Users create it
+through the standard application flow, configure it and open it from its sidebar entry.
+Callers reference its application ID.
 
-This gives each agent independent permissions, duplication, export/import, snapshots and
-deletion through existing application operations. Related agents have separate application
-entries and assignments; managing a selected set together requires additional support.
+This gives each agent independent roles and lifecycle operations through existing
+application code. Related agents have separate sidebar entries and role assignments;
+managing them together requires additional support.
 
-| Aspect            | Agent Builder containing agents                                                       | One application per agent                                                                             |
-| ----------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Creation          | Create and name an application, then create agents within it.                         | Create and name the agent application.                                                                |
-| Navigation        | One application entry with a list of agents to select.                                | One application entry per agent.                                                                      |
-| Permissions       | Application roles inherited by child agents, with individual overrides.               | Workspace roles inherited by agent applications, with individual application assignments.             |
-| Lifecycle         | Related agents share an application packaging and recovery boundary.                  | Each agent has an independent application packaging and recovery boundary.                            |
-| Shared management | A common parent can hold roles and settings for a related set.                        | Workspace inheritance remains available; shared management of a selected set needs another mechanism. |
-| Implementation    | Application infrastructure plus child CRUD, scopes, navigation and lifecycle support. | Application infrastructure applied directly to the agent.                                             |
+| Aspect                        | Agent Builder (option 1)                             | Agent application (option 2)                   | Favours           |
+| ----------------------------- | ---------------------------------------------------- | ---------------------------------------------- | ----------------- |
+| First agent                   | Create the Agent Builder, then the agent             | Create the agent                               | Agent application |
+| Many agents                   | One sidebar entry                                    | One sidebar entry each                         | Agent Builder     |
+| Roles for related agents      | Set once on the Agent Builder                        | Set on each agent, or workspace-wide           | Agent Builder     |
+| Roles for one agent           | Override per agent, a new scope                      | Existing application roles                     | Agent application |
+| Duplicate, export, snapshot   | All related agents together; links between them kept | One agent; links between agents need remapping | Depends           |
+| Build effort                  | Nested agent CRUD, scopes, navigation, lifecycle     | Existing application infrastructure            | Agent application |
+| Grouping related agents later | Already available                                    | Migrate application IDs, roles and references  | Agent Builder     |
 
 ## Decision
 
-Represent each reusable agent as a workspace application with application type `agent`.
-Each application directly owns one agent's configuration and uses application roles and
-lifecycle operations. Callers reference the application ID. Configuration, invocation
-and private conversation/run visibility remain separate permission concerns.
+Represent each agent as an agent application: a workspace application with application
+type `agent`. Each agent application directly owns one agent's configuration and uses
+application roles and lifecycle operations. Callers reference the application ID.
+Configuration, invocation and private conversation/run visibility remain separate
+permission concerns.
+
+Per-agent roles need role-based access control (RBAC), available on the Advanced and
+Enterprise plans. Without it, members get the same access to every agent, based on their
+workspace role.
 
 We expect users to start by wanting to build a single agent. Making that agent the
-application gives them one thing to name, configure, open and manage. Independent access
-and recovery boundaries also match the reusable agent as the unit that callers select.
-Existing application operations support this model with less additional ownership and
-permission machinery.
+application gives them one thing to name, configure, open and manage. Independent roles
+and lifecycle operations also match the agent as the unit that callers select. Existing
+application operations support this model with less additional ownership and permission
+machinery.
 
-The Agent Builder option is consistent with Baserow's other container applications and
-offers useful shared administration and packaging. However, we do not yet have established
-requirements for managing agents as a related set. We prefer the clear benefits of a
-simple starting point over immediate structural complexity for possible future needs.
-We accept that introducing shared ownership later may require more work.
+The Agent Builder is consistent with databases, Application Builders and Automations,
+and offers useful shared administration and lifecycle operations. However, we do not yet
+have established requirements for managing related agents together. We prefer the clear
+benefits of a simple starting point over immediate structural complexity for possible
+future needs. We accept that introducing an Agent Builder later may require more work.
 
 ## Consequences
 
-- Each agent has a direct creation flow and independent permissions and lifecycle. More
-  agents also mean more application entries, and administering a selected set can involve
-  repeated role assignments, resource-access configuration and settings changes.
-- **Application identity becomes the agent identity.** APIs, callers and exported
-  references will depend on application IDs. A future change to the ownership model must
-  preserve those references or provide migration and compatibility handling.
+- Each agent has a direct creation flow and independent roles and lifecycle operations.
+  More agents also mean more sidebar entries, and administering related agents can
+  involve repeated role assignments, resource-access configuration and settings changes.
+- **Application ID becomes the agent reference.** APIs, callers and exported references
+  will depend on application IDs. A future change to the ownership model must preserve
+  those references or provide migration and compatibility handling.
 - **Permissions and configuration ownership become established boundaries.** Introducing
-  an owning parent later would require rules for inherited roles, shared settings and
+  an Agent Builder later would require rules for inherited roles, shared settings and
   resource access, including how to resolve conflicts while preserving effective access.
-- **Packaging and recovery are per agent.** Coordinated copying, installation, release,
-  restoration or deletion of related agents will need dependency handling and additional
-  lifecycle rules. Navigation grouping alone would not provide those guarantees.
-- Collaboration can be designed through references between independently owned agents.
-  That would still need authorization and policies for missing dependencies, copying and
-  deletion; this ownership decision does not prescribe an execution model.
-- The planned move to workspace integrations may reduce repeated connection setup under
-  either option. Shared agent settings, resource access and governance remain separate
-  needs and are not solved by changing connection ownership alone.
+- **Lifecycle operations are per agent.** Coordinated duplication, installation,
+  release, restoration or deletion of related agents will need dependency handling and
+  additional lifecycle rules. Grouping agents in the sidebar alone would not provide
+  those guarantees.
+- **Snapshot restore creates a new application under either option.** Rolling an agent
+  back means pointing its callers at the new application ID. An Agent Builder restores
+  related agents together and keeps links between them, but outside callers still need
+  the new IDs.
+- Collaboration can be designed through references between independent agent
+  applications. That would still need authorization and policies for missing
+  dependencies, duplication and deletion; this ownership decision does not prescribe an
+  execution model.
+- Workspace integrations may reduce repeated integration setup under either option.
+  Shared agent settings, resource access and governance remain separate needs and are
+  not solved by changing integration ownership alone.
 
-Introducing a common owning application would become more costly once agent IDs,
-caller references, permission assignments and lifecycle contracts are in use. We accept
-that potential migration cost in exchange for simplicity now, while the need for shared
-ownership is uncertain.
+Introducing an Agent Builder would become more costly once application IDs, caller
+references, role assignments and lifecycle contracts are in use. We accept that
+potential migration cost in exchange for simplicity now, while the need to manage
+related agents together is uncertain.
 
 ## Revisit triggers
 
 - Users repeatedly configure the same roles, resource access or settings across related
-  agents and need those changes to propagate to a selected group.
-- Repeated connection setup remains costly after workspace integrations are available.
+  agents and need those changes to propagate to all of them.
+- Repeated integration setup remains costly after workspace integrations are available.
 - Customers need clear management and access boundaries for related agents, similar to
   the boundaries provided by databases/tables, Application Builders/pages or
   Automations/workflows.
-- Related agents regularly need to be installed, released, recovered or deleted together.
+- Related agents regularly need to be installed, released, restored or deleted together.
