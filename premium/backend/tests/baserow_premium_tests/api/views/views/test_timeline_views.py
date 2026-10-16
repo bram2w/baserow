@@ -39,6 +39,7 @@ def test_list_without_valid_premium_license(api_client, premium_data_fixture):
     premium_data_fixture.create_template(workspace=timeline.table.database.workspace)
 
     timeline.table.database.workspace.has_template.cache_clear()
+    timeline.table.database.workspace.has_official_template.cache_clear()
 
     response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
 
@@ -184,6 +185,7 @@ def test_list_rows(api_client, premium_data_fixture):
 
     premium_data_fixture.create_template(workspace=timeline.table.database.workspace)
     timeline.table.database.workspace.has_template.cache_clear()
+    timeline.table.database.workspace.has_official_template.cache_clear()
     url = reverse("api:database:views:timeline:list", kwargs={"view_id": timeline.id})
     response = api_client.get(url)
     assert response.status_code == HTTP_200_OK

@@ -1,4 +1,4 @@
-from django.db import IntegrityError, connection
+from django.db import IntegrityError, connection, transaction
 from django.utils import timezone
 
 import pytest
@@ -336,3 +336,97 @@ def test_0125_imports_legacy_ai_provider_settings(
         (workspace.id, instance_provider.id),
         (trashed_workspace.id, instance_provider.id),
     }
+
+
+@pytest.mark.once_per_day_in_ci
+def test_0129_backfills_existing_templates_as_listed_official_templates(
+    migrator, teardown_table_metadata
+):
+    old_state = migrator.migrate(
+        [("core", "0127_mcpendpoint_allowed_tools")]
+    )
+    Template = old_state.apps.get_model("core", "Template")
+    Workspace = old_state.apps.get_model("core", "Workspace")
+    template = Template.objects.create(
+        name="Template", slug="template", icon="file", workspace=Workspace.objects.create()
+    )
+    # Left behind when the sync failed to delete a template after its workspace.
+    orphan = Template.objects.create(name="Orphan", slug="orphan", icon="file")
+
+    new_state = migrator.migrate([("core", "0129_template_backfill_official")])
+    NewTemplate = new_state.apps.get_model("core", "Template")
+
+    migrated = NewTemplate.objects.get(id=template.id)
+    assert migrated.type == "official"
+    assert migrated.version == 1
+    assert migrated.review_state == "approved"
+    assert migrated.public_revision_id == template.id
+    assert migrated.install_count == 0
+    assert migrated.created_on is None
+    assert migrated.updated_on is None
+
+    # Without content it can't be listed.
+    migrated_orphan = NewTemplate.objects.get(id=orphan.id)
+    assert migrated_orphan.type == "official"
+    assert migrated_orphan.review_state == "not_submitted"
+    assert migrated_orphan.public_revision_id is None
+
+    # The previous version keeps inserting templates during the deploy, without
+    # knowing the new columns.
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "INSERT INTO core_template "
+            "(name, slug, icon, export_hash, keywords, open_application) "
+            "VALUES ('Old', 'old', 'file', '', '', NULL) RETURNING id"
+        )
+        old_id = cursor.fetchone()[0]
+
+    inserted = NewTemplate.objects.get(id=old_id)
+    assert inserted.type is None
+    assert inserted.version == 1
+    assert inserted.review_state == "not_submitted"
+    assert inserted.public_revision_id is None
+
+    with pytest.raises(IntegrityError), transaction.atomic():
+        NewTemplate.objects.create(name="Duplicate", slug="template", icon="file")
+
+    NewTemplate.objects.update(public_revision=None)
+    NewTemplate.objects.all().delete()
+
+
+@pytest.mark.once_per_day_in_ci
+def test_0128_upgrades_instance_with_duplicate_template_slugs(
+    migrator, teardown_table_metadata
+):
+    # Two syncs running at the same time (the task before it was a singleton, or
+    # `manage.py sync_templates` next to the task) each create a template for the
+    # same file. Such an instance must still be able to upgrade, keeping both rows.
+    old_state = migrator.migrate(
+        [("core", "0127_mcpendpoint_allowed_tools")]
+    )
+    Template = old_state.apps.get_model("core", "Template")
+    Workspace = old_state.apps.get_model("core", "Workspace")
+    first = Template.objects.create(
+        name="CRM", slug="crm", icon="file", workspace=Workspace.objects.create()
+    )
+    second = Template.objects.create(
+        name="CRM", slug="crm", icon="file", workspace=Workspace.objects.create()
+    )
+    # Already uses the slug the duplicate would get with its id appended.
+    taken = Template.objects.create(
+        name="CRM", slug=f"crm-{second.id}", icon="file", workspace=Workspace.objects.create()
+    )
+
+    new_state = migrator.migrate([("core", "0129_template_backfill_official")])
+    NewTemplate = new_state.apps.get_model("core", "Template")
+
+    ids = [first.id, second.id, taken.id]
+    rows = {t.id: t for t in NewTemplate.objects.filter(id__in=ids)}
+    assert set(rows) == set(ids)
+    assert rows[first.id].slug == "crm"
+    assert rows[taken.id].slug == f"crm-{second.id}"
+    assert rows[second.id].slug not in ("", "crm", f"crm-{second.id}")
+    assert rows[second.id].workspace_id == second.workspace_id
+
+    NewTemplate.objects.update(public_revision=None)
+    NewTemplate.objects.all().delete()

@@ -7,6 +7,8 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
+from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models import Q, QuerySet, UniqueConstraint
 from django.db.models.manager import BaseManager
@@ -181,6 +183,12 @@ class Settings(models.Model):
         help_text="Indicates whether anonymous visitors can report publicly shared "
         "resources, like views and forms, for abuse.",
     )
+    user_templates_require_approval = models.BooleanField(
+        default=True,
+        db_default=True,
+        help_text="Indicates whether a user template must be approved by an admin "
+        "before it's publicly listed.",
+    )
 
 
 class UserProfile(models.Model):
@@ -318,6 +326,15 @@ class Workspace(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOn
     @lru_cache
     def has_template(self):
         return len(self.template_set.all()) > 0
+
+    @lru_cache
+    def has_official_template(self):
+        # Iterates `all()` instead of calling `.official()`, so that a prefetched
+        # `template_set` is used.
+        return any(
+            template.type in (None, Template.Type.OFFICIAL)
+            for template in self.template_set.all()
+        )
 
     def get_workspace_user(
         self, user: User, include_trash: bool = False
@@ -508,11 +525,82 @@ class TemplateCategory(models.Model):
         ordering = ("name",)
 
 
+def template_archive_upload_to(instance, filename):
+    """
+    Stores the archive of a template revision in its own directory, separate from
+    the temporary export files that are cleaned up.
+    """
+
+    return f"template-revisions/{uuid.uuid4().hex}.zip"
+
+
+class TemplateQuerySet(QuerySet):
+    def official(self):
+        # TODO ZDM: `type` is null for rows inserted by the previous version during
+        # the deploy. Drop the null check once `type` is not nullable.
+        return self.filter(Q(type__isnull=True) | Q(type=Template.Type.OFFICIAL))
+
+    def user(self):
+        return self.filter(type=Template.Type.USER)
+
+
 class Template(models.Model):
+    """
+    An official or user template revision. A root row (`root` is null) is the
+    template itself and also holds revision 1. Every later revision is a new row
+    pointing directly at the root. The fields describing the template as a whole
+    are only set on the root.
+    """
+
+    class Type(models.TextChoices):
+        OFFICIAL = "official", "Official"
+        USER = "user", "User"
+
+    class ReviewState(models.TextChoices):
+        NOT_SUBMITTED = "not_submitted", "Not submitted"
+        PENDING = "pending", "Pending"
+        APPROVED = "approved", "Approved"
+        REJECTED = "rejected", "Rejected"
+        WITHDRAWN = "withdrawn", "Withdrawn"
+
+    # TODO ZDM: make this field not nullable in the next version, after re-running
+    # both steps of migration 0129 for rows inserted by the previous version during
+    # the deploy: set `type` to official, then mark official roots approved and
+    # their own public revision.
+    type = models.CharField(
+        max_length=16,
+        null=True,
+        choices=Type.choices,
+        help_text="Whether this is an official or a user template. Null means "
+        "official. Revisions have the same type as their root.",
+    )
+    root = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="revisions",
+        help_text="The template this revision belongs to. Null for the template "
+        "itself, which also holds revision 1.",
+    )
+    version = models.PositiveIntegerField(
+        default=1,
+        db_default=1,
+        help_text="The revision number. 1 for the root, 2 or higher for later "
+        "revisions.",
+    )
     name = models.CharField(max_length=64)
     slug = models.SlugField(
-        help_text="The template slug that is used to match the template with the JSON "
-        "file name."
+        blank=True,
+        help_text="The permanent address of the template, unique among roots. For "
+        "official templates it also matches the JSON file name. Empty for "
+        "revisions.",
+    )
+    description = models.TextField(
+        default="",
+        db_default="",
+        blank=True,
+        help_text="The description of this revision.",
     )
     icon = models.CharField(
         max_length=32,
@@ -526,6 +614,13 @@ class Template(models.Model):
         help_text="The group containing the applications related to the template. The "
         "read endpoints related to that group are publicly accessible for "
         "preview purposes.",
+    )
+    archive = models.FileField(
+        upload_to=template_archive_upload_to,
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text="The downloadable file of this revision.",
     )
     export_hash = models.CharField(
         max_length=64,
@@ -543,12 +638,267 @@ class Template(models.Model):
         help_text="The application ID that must be opened when the template is "
         "previewed. If null, then the first will automatically be chosen.",
     )
+    owner = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="owned_template_roots",
+        help_text="The user who controls a user template. Only set on user roots.",
+    )
+    author = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="authored_template_roots",
+        help_text="The user who created a user template. Only set on user roots.",
+    )
+    public_revision = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="published_by_roots",
+        help_text="The approved revision that is publicly listed. Null means not "
+        "listed. Only set on roots, pointing at the root or one of its revisions.",
+    )
+    shared_revision = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="shared_by_roots",
+        help_text="The revision shared through the private link. Only set on roots, "
+        "pointing at the root or one of its revisions.",
+    )
+    private_link_token = models.CharField(
+        max_length=64,
+        null=True,
+        blank=True,
+        unique=True,
+        validators=[RegexValidator(r"\A[0-9a-f]{64}\Z")],
+        help_text="The secret token of the private link. Null disables the link. "
+        "Only set on user roots and never returned in ordinary responses.",
+    )
+    blocked_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When an admin blocked the template. Only set on user roots.",
+    )
+    blocked_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="blocked_template_roots",
+        help_text="The admin who blocked the template.",
+    )
+    blocked_reason = models.TextField(
+        default="",
+        db_default="",
+        blank=True,
+        help_text="Why the template was blocked, shown to its author.",
+    )
+    marked_for_deletion_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When the template was deleted. It's unavailable from then on and "
+        "removed permanently later.",
+    )
+    install_count = models.PositiveBigIntegerField(
+        default=0,
+        db_default=0,
+        help_text="How many times any revision of the template was installed. Only "
+        "counted on roots.",
+    )
+    review_state = models.CharField(
+        max_length=16,
+        choices=ReviewState.choices,
+        default=ReviewState.NOT_SUBMITTED,
+        db_default=ReviewState.NOT_SUBMITTED,
+        help_text="The review state of this revision. Approval alone doesn't list "
+        "it, the root's `public_revision` does.",
+    )
+    submitted_on = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When this revision was last submitted for review.",
+    )
+    reviewed_on = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When this revision was last approved or rejected.",
+    )
+    reviewed_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="reviewed_template_revisions",
+        help_text="The admin who last approved or rejected this revision.",
+    )
+    reject_reason = models.TextField(
+        default="",
+        db_default="",
+        blank=True,
+        help_text="Why this revision was rejected, shown to the template author.",
+    )
+    pruned_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When the workspace and archive of this revision were removed to "
+        "save space. The row itself is kept.",
+    )
+    created_on = models.DateTimeField(
+        auto_now_add=True,
+        null=True,
+        help_text="Null for templates created before this field existed.",
+    )
+    updated_on = models.DateTimeField(
+        auto_now=True,
+        null=True,
+        help_text="Null for templates not saved since this field existed.",
+    )
+
+    objects = TemplateQuerySet.as_manager()
 
     class Meta:
         ordering = ("name",)
+        indexes = [
+            models.Index(fields=["type"], name="core_template_type_idx"),
+            models.Index(
+                fields=["review_state", "submitted_on"],
+                name="core_template_review_idx",
+            ),
+        ]
+        constraints = [
+            # The root holds the fields of the template as a whole, revisions keep
+            # them empty.
+            models.CheckConstraint(
+                name="core_template_row_role",
+                condition=(
+                    Q(root__isnull=True, version=1)
+                    | Q(
+                        root__isnull=False,
+                        version__gte=2,
+                        slug="",
+                        owner__isnull=True,
+                        author__isnull=True,
+                        public_revision__isnull=True,
+                        shared_revision__isnull=True,
+                        private_link_token__isnull=True,
+                        blocked_at__isnull=True,
+                        blocked_by__isnull=True,
+                        blocked_reason="",
+                        marked_for_deletion_at__isnull=True,
+                        install_count=0,
+                    )
+                ),
+            ),
+            models.CheckConstraint(
+                name="core_template_root_slug",
+                condition=Q(root__isnull=False) | ~Q(slug=""),
+            ),
+            models.CheckConstraint(
+                name="core_template_valid_type",
+                condition=Q(type__in=["official", "user"]),
+            ),
+            # Null `type` means official, so it must be checked explicitly. A
+            # `type = 'user'` comparison is null for it, which passes a check.
+            models.CheckConstraint(
+                name="core_template_official_no_owner",
+                condition=(
+                    (Q(type__isnull=False) & Q(type="user"))
+                    | Q(owner__isnull=True, author__isnull=True)
+                ),
+            ),
+            models.CheckConstraint(
+                name="core_template_user_owner",
+                condition=(
+                    Q(root__isnull=False)
+                    | Q(type__isnull=True)
+                    | Q(type="official")
+                    | Q(owner__isnull=False)
+                    | Q(marked_for_deletion_at__isnull=False)
+                ),
+            ),
+            models.CheckConstraint(
+                name="core_template_nonempty_token",
+                condition=Q(private_link_token__isnull=True)
+                | ~Q(private_link_token=""),
+            ),
+            models.UniqueConstraint(
+                fields=["root", "version"],
+                name="core_template_root_version",
+            ),
+            models.UniqueConstraint(
+                fields=["slug"],
+                condition=Q(root__isnull=True),
+                name="core_template_unique_root_slug",
+            ),
+            # Every revision has its own copy of the workspace.
+            models.UniqueConstraint(
+                fields=["workspace"],
+                condition=Q(workspace__isnull=False),
+                name="core_template_unique_workspace",
+            ),
+        ]
 
     def __str__(self):
         return self.name
+
+    @property
+    def family_id(self):
+        return self.root_id if self.root_id is not None else self.pk
+
+    def get_root(self):
+        return self.root if self.root_id is not None else self
+
+    def clean(self):
+        """
+        Validates the rules that span multiple rows. `save()` doesn't call this, so
+        handlers changing these fields must check them too.
+        """
+
+        super().clean()
+        errors = {}
+        templates = Template.objects.using(self._state.db)
+
+        if self.root_id is not None:
+            root = templates.filter(pk=self.root_id).first()
+            if root is None or root.root_id is not None:
+                errors["root"] = "A revision must point directly at a root."
+            elif self.type != root.type:
+                errors["type"] = "A revision must have the same type as its root."
+
+        for field_name in ("public_revision", "shared_revision"):
+            revision_id = getattr(self, f"{field_name}_id")
+            if revision_id is None:
+                continue
+            if self.root_id is not None or self.pk is None:
+                errors[field_name] = "Only a saved root can select a revision."
+                continue
+
+            revision = (
+                self
+                if revision_id == self.pk
+                else templates.filter(pk=revision_id).first()
+            )
+            if revision is None or self.pk not in (revision.pk, revision.root_id):
+                errors[field_name] = "The selected revision must belong to this root."
+            elif revision.type != self.type:
+                errors[field_name] = "The selected revision must have the root's type."
+            elif revision.pruned_at or not revision.workspace_id:
+                errors[field_name] = "The selected revision must have content."
+            elif (
+                field_name == "public_revision"
+                and revision.review_state != self.ReviewState.APPROVED
+            ):
+                errors[field_name] = "A public revision must be approved."
+
+        if errors:
+            raise ValidationError(errors)
 
 
 class UserLogEntry(models.Model):

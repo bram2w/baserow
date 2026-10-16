@@ -2044,7 +2044,7 @@ class CoreHandler:
         """
 
         if base_queryset is None:
-            base_queryset = Template.objects
+            base_queryset = Template.objects.official()
 
         try:
             template = base_queryset.get(id=template_id)
@@ -2086,7 +2086,8 @@ class CoreHandler:
             clean_templates = True
 
         installed_templates = (
-            Template.objects.all()
+            Template.objects.official()
+            .filter(root__isnull=True)
             .prefetch_related("categories")
             .select_related("workspace")
         )
@@ -2135,8 +2136,15 @@ class CoreHandler:
                 for template_file_path in template_files_paths
             ]
 
-            for template in Template.objects.filter(~Q(slug__in=slugs)):
+            for template in (
+                Template.objects.official()
+                .filter(root__isnull=True)
+                .filter(~Q(slug__in=slugs))
+            ):
                 with transaction.atomic():
+                    # The listed revision is protected, so it must be cleared first.
+                    template.public_revision = None
+                    template.save(update_fields=["public_revision"])
                     TrashHandler.permanently_delete(template.workspace)
                     template.delete()
 
@@ -2239,6 +2247,7 @@ class CoreHandler:
             workspace.save()
 
         kwargs = {
+            "type": Template.Type.OFFICIAL,
             "name": parsed_json["name"],
             "icon": parsed_json["icon"],
             "export_hash": export_hash,
@@ -2254,13 +2263,20 @@ class CoreHandler:
             )
 
         if not installed_template:
-            installed_template = Template.objects.create(slug=slug, **kwargs)
+            installed_template = Template.objects.create(
+                slug=slug, review_state=Template.ReviewState.APPROVED, **kwargs
+            )
+            # Official templates are approved and listed from the start.
+            installed_template.public_revision = installed_template
+            installed_template.save(update_fields=["public_revision"])
         else:
             # If the installed template already exists, we only need to update the
-            # values to the latest version according to the JSON template.
+            # values to the latest version according to the JSON template. Only these
+            # fields are saved, so changes made to other fields since the template was
+            # loaded, like `install_count`, aren't reverted.
             for key, value in kwargs.items():
                 setattr(installed_template, key, value)
-            installed_template.save()
+            installed_template.save(update_fields=[*kwargs, "updated_on"])
 
         # Loop over the categories related to the template and check which ones
         # already exist and which need to be created. Based on that we can create

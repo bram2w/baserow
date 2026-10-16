@@ -152,7 +152,7 @@ class StaffOnlyPermissionManagerType(PermissionManagerType):
 
 class AllowIfTemplatePermissionManagerType(PermissionManagerType):
     """
-    Allows read operation on templates.
+    Allows read operations on official templates.
     """
 
     type = "allow_if_template"
@@ -170,13 +170,13 @@ class AllowIfTemplatePermissionManagerType(PermissionManagerType):
     def check_multiple_permissions(self, checks, workspace=None, include_trash=False):
         result = {}
 
-        def has_template():
-            return workspace and workspace.has_template()
+        def has_official_template():
+            return workspace and workspace.has_official_template()
 
         for check in checks:
             if (
                 check.operation_name in self.OPERATION_ALLOWED_ON_TEMPLATES
-                and has_template()
+                and has_official_template()
             ):
                 result[check] = True
 
@@ -186,7 +186,7 @@ class AllowIfTemplatePermissionManagerType(PermissionManagerType):
         return {
             "allowed_operations_on_templates": self.OPERATION_ALLOWED_ON_TEMPLATES,
             "workspace_template_ids": list(
-                Template.objects.values_list("workspace_id", flat=True)
+                Template.objects.official().values_list("workspace_id", flat=True)
             ),
         }
 
@@ -197,10 +197,13 @@ class AllowIfTemplatePermissionManagerType(PermissionManagerType):
         queryset,
         workspace=None,
     ):
-        def has_template():
-            return workspace and workspace.has_template()
+        def has_official_template():
+            return workspace and workspace.has_official_template()
 
-        if operation_name in self.OPERATION_ALLOWED_ON_TEMPLATES and has_template():
+        if (
+            operation_name in self.OPERATION_ALLOWED_ON_TEMPLATES
+            and has_official_template()
+        ):
             return queryset, True
 
     def filter_queryset_for_workspaces(
@@ -212,7 +215,7 @@ class AllowIfTemplatePermissionManagerType(PermissionManagerType):
         return {
             workspace.id: WORKSPACE_FILTER_ALLOW_ALL
             for workspace in workspaces
-            if workspace.has_template()
+            if workspace.has_official_template()
         }
 
 
