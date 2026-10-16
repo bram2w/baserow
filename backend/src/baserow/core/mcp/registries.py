@@ -43,6 +43,9 @@ class MCPTool(Instance):
     destructive: bool = False
     """True when the tool can overwrite or delete data. Clients always confirm."""
 
+    open_world: bool = False
+    """True when the tool reaches outside the endpoint's workspace."""
+
     @property
     def name(self) -> str:
         """MCP tool name, derived from ``type``."""
@@ -79,6 +82,7 @@ class MCPTool(Instance):
             title=self.display_title,
             readOnlyHint=self.read_only,
             destructiveHint=self.destructive,
+            openWorldHint=self.open_world,
         )
         return [
             Tool(
