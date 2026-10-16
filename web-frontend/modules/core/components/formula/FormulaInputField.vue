@@ -95,6 +95,8 @@
       ref="nodeHelpTooltip"
       :node="hoveredFunctionNode"
       :nodes-hierarchy="nodesHierarchy"
+      @mouseenter="onHelpTooltipEnter"
+      @mouseleave="onHelpTooltipLeave"
     />
 
     <FormulaInputModeChangeModal
@@ -224,6 +226,10 @@ const FORMAT_BADGES = {
   [BASEROW_FORMULA_FORMAT_MARKDOWN]: 'M',
 }
 
+// How long the function help tooltip stays open after the mouse leaves the
+// function or the tooltip. Matches the tooltip in the explorer.
+const HELP_TOOLTIP_HIDE_DELAY = 250
+
 export default {
   name: 'FormulaInputField',
   components: {
@@ -348,9 +354,14 @@ export default {
       errorExpanded: false,
       isFocused: false,
       hoveredFunctionNode: null,
+      // Whether the mouse is over the function help tooltip, which then stays
+      // open so its examples can be read and scrolled.
+      isHelpTooltipHovered: false,
+      helpTooltipHideTimer: null,
       // The formula node the user last clicked, which the explorer context
       // reveals by opening its tab and scrolling to it. A new object is set on
-      // every click so clicking the same node twice reveals it again.
+      // every click so clicking the same node twice reveals it again. Cleared
+      // on blur, see the `isFocused` watcher.
       revealNode: null,
       isHandlingModeChange: false,
       intersectionObserver: null,
@@ -512,13 +523,18 @@ export default {
           : [
               FunctionHelpTooltipExtension.configure({
                 functionDefinitions: this.formulaRegistry.definitions,
+                // Long enough for the mouse to travel from the function into
+                // the tooltip, which then keeps it open.
+                hideDelay: HELP_TOOLTIP_HIDE_DELAY,
                 onShowTooltip: (el, node) => {
+                  this.cancelHelpTooltipHide()
                   this.hoveredFunctionNode = node
                   this.$refs.nodeHelpTooltip?.show(el, 'bottom', 'right', 6, 10)
                 },
                 onHideTooltip: () => {
-                  this.$refs.nodeHelpTooltip?.hide()
-                  this.hoveredFunctionNode = null
+                  if (!this.isHelpTooltipHovered) {
+                    this.hideHelpTooltip()
+                  }
                 },
               }),
             ]),
@@ -562,6 +578,14 @@ export default {
     },
   },
   watch: {
+    // The explorer context only exists while focused and reveals `revealNode`
+    // when it mounts, so a reveal must not outlive the focus. Otherwise every
+    // later focus would reveal the node again, even after it was deleted.
+    isFocused(newValue) {
+      if (!newValue) {
+        this.revealNode = null
+      }
+    },
     // The `input` event only fires for valid formulas, so parents that must
     // block submission on an invalid one need this signal too.
     isFormulaInvalid(newValue) {
@@ -640,6 +664,7 @@ export default {
     this.setupIntersectionObserver()
   },
   beforeUnmount() {
+    this.cancelHelpTooltipHide()
     this.editor?.destroy()
     this.cleanupIntersectionObserver()
   },
@@ -977,6 +1002,26 @@ export default {
      */
     formulaNodeClicked(target) {
       this.revealNode = { ...target }
+    },
+    onHelpTooltipEnter() {
+      this.isHelpTooltipHovered = true
+      this.cancelHelpTooltipHide()
+    },
+    onHelpTooltipLeave() {
+      this.isHelpTooltipHovered = false
+      this.cancelHelpTooltipHide()
+      this.helpTooltipHideTimer = setTimeout(() => {
+        this.helpTooltipHideTimer = null
+        this.hideHelpTooltip()
+      }, HELP_TOOLTIP_HIDE_DELAY)
+    },
+    cancelHelpTooltipHide() {
+      clearTimeout(this.helpTooltipHideTimer)
+      this.helpTooltipHideTimer = null
+    },
+    hideHelpTooltip() {
+      this.$refs.nodeHelpTooltip?.hide()
+      this.hoveredFunctionNode = null
     },
     handleEditorClick(event) {
       if (this.editor && !this.disabled && !this.readOnly) {

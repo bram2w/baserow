@@ -778,6 +778,26 @@ describe('FormulaInputField reveals clicked nodes in the explorer', () => {
     expect(wrapper.vm.revealNode).toBe(null)
   })
 
+  it('forgets the revealed node when the field loses focus', async () => {
+    // The explorer reveals `revealNode` whenever it mounts on focus, so a kept
+    // value would reveal it again on every focus, even once deleted.
+    const wrapper = await mountField("concat('a', 'b')")
+    wrapper.vm.isFocused = true
+    await wrapper.find('.function-formula-component').trigger('click')
+    expect(wrapper.vm.revealNode).not.toBe(null)
+
+    wrapper.vm.isFocused = false
+    await wrapper.vm.$nextTick()
+    expect(wrapper.vm.revealNode).toBe(null)
+
+    wrapper.vm.isFocused = true
+    await wrapper.vm.$nextTick()
+    const explorer = wrapper.findComponent({
+      name: 'FormulaInputExplorerContext',
+    })
+    expect(explorer.props('revealNode')).toBe(null)
+  })
+
   it('reveals the same node again when clicked twice', async () => {
     const wrapper = await mountField("concat('a', 'b')")
     const functionNode = wrapper.find('.function-formula-component')
@@ -802,5 +822,98 @@ describe('FormulaInputField reveals clicked nodes in the explorer', () => {
       type: 'function',
       name: 'concat',
     })
+  })
+})
+
+describe('FormulaInputField function help tooltip', () => {
+  let testApp = null
+
+  beforeEach(() => {
+    testApp = new TestApp()
+  })
+
+  afterEach(async () => {
+    vi.useRealTimers()
+    await testApp.afterEach()
+  })
+
+  async function mountField() {
+    const wrapper = await testApp.mount(FormulaInputField, {
+      props: { value: "upper('a')", mode: 'advanced' },
+    })
+    await wrapper.vm.$nextTick()
+    // Only the hide timers must be fake; mounting itself runs on real ones.
+    vi.useFakeTimers()
+    return wrapper
+  }
+
+  /**
+   * Shows the tooltip the way the hover extension does, and returns its
+   * `onHideTooltip` callback, which the extension calls once the mouse has
+   * left the function for a moment.
+   */
+  function showTooltip(wrapper) {
+    const { onShowTooltip, onHideTooltip } =
+      wrapper.vm.editor.extensionManager.extensions.find(
+        (extension) => extension.name === 'functionHelpTooltip'
+      ).options
+    onShowTooltip(wrapper.find('.function-formula-component').element, {
+      name: 'upper',
+      type: 'function',
+    })
+    return onHideTooltip
+  }
+
+  function tooltip(wrapper) {
+    return wrapper.findComponent({ name: 'NodeHelpTooltip' })
+  }
+
+  it('stays open while the mouse is over the tooltip', async () => {
+    const wrapper = await mountField()
+    const onHideTooltip = showTooltip(wrapper)
+
+    tooltip(wrapper).vm.$emit('mouseenter')
+    onHideTooltip()
+    vi.advanceTimersByTime(1000)
+
+    expect(wrapper.vm.hoveredFunctionNode).toEqual({
+      name: 'upper',
+      type: 'function',
+    })
+  })
+
+  it('hides a moment after the mouse leaves the tooltip', async () => {
+    const wrapper = await mountField()
+    const onHideTooltip = showTooltip(wrapper)
+    tooltip(wrapper).vm.$emit('mouseenter')
+    onHideTooltip()
+
+    tooltip(wrapper).vm.$emit('mouseleave')
+    vi.advanceTimersByTime(249)
+    expect(wrapper.vm.hoveredFunctionNode).not.toBe(null)
+
+    vi.advanceTimersByTime(1)
+    expect(wrapper.vm.hoveredFunctionNode).toBe(null)
+  })
+
+  it('stays open when the mouse moves from the tooltip back to a function', async () => {
+    const wrapper = await mountField()
+    showTooltip(wrapper)
+    tooltip(wrapper).vm.$emit('mouseenter')
+
+    tooltip(wrapper).vm.$emit('mouseleave')
+    showTooltip(wrapper)
+    vi.advanceTimersByTime(1000)
+
+    expect(wrapper.vm.hoveredFunctionNode).not.toBe(null)
+  })
+
+  it('hides when the mouse leaves the function without entering the tooltip', async () => {
+    const wrapper = await mountField()
+    const onHideTooltip = showTooltip(wrapper)
+
+    onHideTooltip()
+
+    expect(wrapper.vm.hoveredFunctionNode).toBe(null)
   })
 })
