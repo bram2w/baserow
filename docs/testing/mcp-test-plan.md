@@ -43,7 +43,9 @@ step 4. Approve, and the app shows under **Connected apps** on the OAuth tab.
 Claude Desktop, claude.ai and ChatGPT connect to Baserow from the internet,
 so they can't reach `localhost`. Expose the backend with a tunnel, for example
 `cloudflared tunnel --url http://localhost:8000`, set `PUBLIC_BACKEND_URL` to
-the tunnel URL and restart the backend. `<server url>` is then
+the tunnel URL and restart the backend. Unset `BASEROW_PUBLIC_URL` if it is
+set: it overrides `PUBLIC_BACKEND_URL`, and setting it to the tunnel URL would
+also move the frontend there. `<server url>` is then
 `<tunnel url>/mcp`.
 
 The server only accepts tokens issued for its current `PUBLIC_BACKEND_URL`.
