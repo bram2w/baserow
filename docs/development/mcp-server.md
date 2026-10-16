@@ -6,9 +6,9 @@ Baserow ships a built-in [Model Context Protocol](https://modelcontextprotocol.i
 
 ```
 LLM / MCP client
-      │ SSE (text/event-stream)
+      │ POST /mcp (Streamable HTTP, bearer token)   GET /mcp/{key}/sse (legacy SSE)
       ▼
-DjangoChannelsSseServerTransport   ← ASGI only
+Starlette app, ASGI only           ← backend/src/baserow/core/mcp/__init__.py
       │
 BaserowMCPServer                   ← backend/src/baserow/core/mcp/__init__.py
       │
@@ -23,16 +23,17 @@ ActionTypes → Django ORM
 - **Services layer** (`services.py`) — Workspace-scoped database operations. Shared by both MCP tools and the enterprise AI assistant.
 - **Action types** — All mutations go through Baserow's action-type layer, so operations are undoable and audit-logged.
 - **Workspace isolation** — Every service function enforces workspace-scoped access. Tools cannot touch data outside the endpoint's workspace.
+- **SSE transport** (`backend/src/baserow/core/mcp/sse.py`) — `DjangoChannelsSseServerTransport` serves the legacy `GET /mcp/{key}/sse` stream and `POST /mcp/messages/`.
+- **OAuth** (`backend/src/baserow/core/mcp/oauth/`) — Authorization server, client registration and token views for `POST /mcp`. The consent and connected-apps APIs used by the frontend are in `backend/src/baserow/api/mcp/oauth_views.py`.
 
 ## Endpoint model
 
-An `MCPEndpoint` links a 32-character secret key to a user and workspace. The key is embedded in the SSE URL:
+An `MCPEndpoint` links a user to one workspace and to the tools they allowed (`allowed_tools`, null allows every enabled tool). There are two kinds:
 
-```
-GET /mcp/{key}/sse
-```
+- **OAuth grants**: created when a client signs in through the consent page (see [OAuth sign-in](#oauth-sign-in)). The client calls `POST /mcp` with an access token. They are listed, and can be disconnected, on the **OAuth** tab of **My settings > MCP server**.
+- **Endpoint keys**: a 32-character secret key, created under **My settings > MCP server** (on the **Endpoint** tab when OAuth is on). Keys allow every enabled tool. Older clients use it in the SSE URL, `GET /mcp/{key}/sse`. `POST /mcp` also accepts it as `Authorization: Bearer <key>`.
 
-Endpoints are created via **Settings > MCP** in the Baserow UI.
+Users install the client side, the MCP server config plus a skill, from [baserow/baserow-mcp](https://github.com/baserow/baserow-mcp). Its README has the setup steps for each agent.
 
 ## Running the server
 
@@ -88,13 +89,15 @@ claude mcp add --transport http baserow http://localhost:8000/mcp
 
 `ALLOW_LOCALHOST_LOOPBACK` is already on in the settings, so clients can use `http://localhost` redirect URIs.
 
+See the [test plan](../testing/mcp-test-plan.md#1-connect-an-mcp-client) for other clients, the plugin and the skill.
+
 ### ChatGPT app domain verification
 
 OpenAI verifies the domain of a submitted ChatGPT app by fetching `/.well-known/openai-apps-challenge`. Set `BASEROW_MCP_OPENAI_APPS_CHALLENGE` to the token shown in OpenAI's portal and the backend returns it as plain text. When it's empty the route returns a 404. Like the other OAuth routes, it only exists with `BASEROW_MCP_OAUTH_ENABLED=true`.
 
 ## Tools
 
-Some tools are currently disabled (`enabled = False`) and hidden from MCP clients. They will be enabled once users can control tool availability through the UI.
+Some tools are currently disabled (`enabled = False`) and hidden from MCP clients. The consent page does not list them.
 
 | Tool | Status | Description |
 |---|---|---|
@@ -139,8 +142,17 @@ Set `enabled = False` on the class if the tool should not be exposed to MCP clie
 See [docs/testing/mcp-test-plan.md](../testing/mcp-test-plan.md) for manual testing instructions.
 
 ```bash
-# All MCP tests
+# Server, transports and OAuth
+just b test tests/baserow/core/mcp/
+
+# Tools and services
 just b test tests/baserow/contrib/database/mcp/
+
+# Endpoint API
+just b test tests/baserow/api/test_mcp_views.py
+
+# OAuth audit log (enterprise)
+just b test ../enterprise/backend/tests/baserow_enterprise_tests/audit_log/test_mcp_oauth_audit_log.py
 
 # Service layer only
 just b test tests/baserow/contrib/database/mcp/test_mcp_services.py
