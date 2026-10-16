@@ -1,6 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 
-from baserow.contrib.automation.nodes.node_types import AutomationNodeActionNodeType
+from baserow.contrib.automation.nodes.node_types import AutomationActionNodeType
 from baserow_enterprise.automation.nodes.models import (
     CoreCodeActionNode,
     CoreXLSFileReaderActionNode,
@@ -13,7 +13,7 @@ from baserow_enterprise.integrations.core.service_types import (
 from baserow_premium.license.handler import LicenseHandler
 
 
-class CoreCodeNodeType(AutomationNodeActionNodeType):
+class CoreCodeActionNodeType(AutomationActionNodeType):
     type = "code"
     model_class = CoreCodeActionNode
     service_type = CoreCodeServiceType.type
@@ -26,7 +26,7 @@ class CoreCodeNodeType(AutomationNodeActionNodeType):
         LicenseHandler.raise_if_workspace_doesnt_have_feature(CODE_RUNNER, workspace)
 
 
-class CoreXLSFileReaderNodeType(AutomationNodeActionNodeType):
+class CoreXLSFileReaderActionNodeType(AutomationActionNodeType):
     type = "xls_file_reader"
     model_class = CoreXLSFileReaderActionNode
     service_type = CoreXLSFileReaderServiceType.type

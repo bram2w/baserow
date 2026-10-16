@@ -38,7 +38,7 @@ from baserow.contrib.automation.nodes.exceptions import (
 )
 from baserow.contrib.automation.nodes.models import AutomationNode
 from baserow.contrib.automation.nodes.node_types import (
-    AutomationNodeActionNodeType,
+    AutomationActionNodeType,
     AutomationNodeType,
 )
 from baserow.contrib.automation.nodes.registries import automation_node_type_registry
@@ -825,7 +825,7 @@ class AutomationNodeHandler:
             current_iterations=current_iterations,
         )
         iteration_path = dispatch_context.get_iteration_path(node)
-        node_type: Type[AutomationNodeActionNodeType] = node.get_type()
+        node_type: Type[AutomationActionNodeType] = node.get_type()
 
         try:
             self._before_node_dispatch(node, workflow_history)
@@ -1076,7 +1076,7 @@ class AutomationNodeHandler:
         """Persists a node result and returns the canvas for its next nodes."""
 
         history_handler = AutomationHistoryHandler()
-        node_type: Type[AutomationNodeActionNodeType] = node.get_type()
+        node_type: Type[AutomationActionNodeType] = node.get_type()
         history_id = node_history.workflow_history_id
         simulate_until_node = dispatch_context.simulate_until_node
 

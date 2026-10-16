@@ -1,9 +1,9 @@
 import {
   NodeType,
-  CoreRouterNodeType,
+  CoreRouterActionNodeType,
   CoreInboundEmailTriggerNodeType,
-  CoreIteratorNodeType,
-  CoreGotoNodeType,
+  CoreIteratorActionNodeType,
+  CoreGotoActionNodeType,
 } from '@baserow/modules/automation/nodeTypes'
 import { ServiceType } from '@baserow/modules/core/serviceTypes'
 import { TestApp } from '@baserow/test/helpers/testApp'
@@ -74,7 +74,7 @@ describe('NodeType service validation context', () => {
   })
 })
 
-describe('CoreRouterNodeType.getHistoryLabel', () => {
+describe('CoreRouterActionNodeType.getHistoryLabel', () => {
   const makeApp = () => ({
     $i18n: {
       t: (key, values) => (values ? `${key}:${JSON.stringify(values)}` : key),
@@ -83,7 +83,7 @@ describe('CoreRouterNodeType.getHistoryLabel', () => {
   })
 
   test('appends the branch that was taken', () => {
-    const nodeType = new CoreRouterNodeType({ app: makeApp() })
+    const nodeType = new CoreRouterActionNodeType({ app: makeApp() })
     expect(
       nodeType.getHistoryLabel({
         nodeHistory: { node_label: 'My router', edge_label: 'Yes' },
@@ -92,7 +92,7 @@ describe('CoreRouterNodeType.getHistoryLabel', () => {
   })
 
   test('appends the fallback edge label when no branch was recorded', () => {
-    const nodeType = new CoreRouterNodeType({ app: makeApp() })
+    const nodeType = new CoreRouterActionNodeType({ app: makeApp() })
     expect(
       nodeType.getHistoryLabel({
         nodeHistory: { node_label: 'My router', edge_label: '' },
@@ -103,7 +103,7 @@ describe('CoreRouterNodeType.getHistoryLabel', () => {
   })
 
   test('falls back to the node type name when the node has no label', () => {
-    const nodeType = new CoreRouterNodeType({ app: makeApp() })
+    const nodeType = new CoreRouterActionNodeType({ app: makeApp() })
     expect(
       nodeType.getHistoryLabel({
         nodeHistory: { node_label: '', edge_label: 'Yes' },
@@ -282,12 +282,12 @@ describe('NodeType.aliases', () => {
       'nodeType.gotoAliases': 'while loop,retry',
     })
 
-    expect(new CoreIteratorNodeType({ app }).aliases).toEqual([
+    expect(new CoreIteratorActionNodeType({ app }).aliases).toEqual([
       'loop',
       'for loop',
       'repeat',
     ])
-    expect(new CoreGotoNodeType({ app }).aliases).toEqual([
+    expect(new CoreGotoActionNodeType({ app }).aliases).toEqual([
       'while loop',
       'retry',
     ])

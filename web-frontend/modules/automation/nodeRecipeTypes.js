@@ -1,7 +1,7 @@
 import { Registerable } from '@baserow/modules/core/registry'
 import {
-  CoreGotoNodeType,
-  CoreIteratorNodeType,
+  CoreGotoActionNodeType,
+  CoreIteratorActionNodeType,
   LocalBaserowListRowsActionNodeType,
 } from '@baserow/modules/automation/nodeTypes'
 import { parseAliases } from '@baserow/modules/automation/utils/aliases'
@@ -128,7 +128,7 @@ export class ForLoopNodeRecipeType extends NodeRecipeType {
 
   async create({ workflow, referenceNode, position, output, addNode }) {
     await addNode({
-      type: CoreIteratorNodeType.getType(),
+      type: CoreIteratorActionNodeType.getType(),
       referenceNode,
       position,
       output,
@@ -181,7 +181,7 @@ export class WhileLoopNodeRecipeType extends NodeRecipeType {
     // was (north, south or child): the backend derives the edge from the
     // reference node itself.
     await addNode({
-      type: CoreGotoNodeType.getType(),
+      type: CoreGotoActionNodeType.getType(),
       referenceNode: listRows,
       position: 'south',
       output: '',

@@ -2945,7 +2945,7 @@ class LocalBaserowDeleteRowServiceType(
         return DispatchResult(data=dispatch_data["data"], status=204)
 
 
-class LocalBaserowRowsSignalServiceType(
+class LocalBaserowRowsSignalTriggerServiceType(
     TriggerServiceTypeMixin, LocalBaserowTableServiceType
 ):
     # The signal that this service type is called by.
@@ -3064,27 +3064,35 @@ class LocalBaserowRowsSignalServiceType(
         return [index, imported_field_dbname, *rest]
 
 
-class LocalBaserowRowsCreatedServiceType(LocalBaserowRowsSignalServiceType):
+class LocalBaserowRowsCreatedTriggerServiceType(
+    LocalBaserowRowsSignalTriggerServiceType
+):
     signal = rows_created
     type = "local_baserow_rows_created"
     model_class = LocalBaserowRowsCreated
 
 
-class LocalBaserowRowsUpdatedServiceType(LocalBaserowRowsSignalServiceType):
+class LocalBaserowRowsUpdatedTriggerServiceType(
+    LocalBaserowRowsSignalTriggerServiceType
+):
     signal = rows_updated
     type = "local_baserow_rows_updated"
     model_class = LocalBaserowRowsUpdated
 
 
-class LocalBaserowRowsDeletedServiceType(LocalBaserowRowsSignalServiceType):
+class LocalBaserowRowsDeletedTriggerServiceType(
+    LocalBaserowRowsSignalTriggerServiceType
+):
     signal = rows_deleted
     type = "local_baserow_rows_deleted"
     model_class = LocalBaserowRowsDeleted
 
 
-class LocalBaserowFieldsUpdatedServiceType(LocalBaserowRowsSignalServiceType):
+class LocalBaserowFieldsUpdatedTriggerServiceType(
+    LocalBaserowRowsSignalTriggerServiceType
+):
     """
-    Like `LocalBaserowRowsUpdatedServiceType`, this service listens to the
+    Like `LocalBaserowRowsUpdatedTriggerServiceType`, this service listens to the
     `rows_updated` signal, but it only dispatches when one of the watched
     `fields` is among the fields that actually changed (`updated_field_ids`).
     This lets users avoid recursive trigger loops by watching specific fields.
@@ -3113,7 +3121,7 @@ class LocalBaserowFieldsUpdatedServiceType(LocalBaserowRowsSignalServiceType):
             ),
         }
 
-    class SerializedDict(LocalBaserowRowsSignalServiceType.SerializedDict):
+    class SerializedDict(LocalBaserowRowsSignalTriggerServiceType.SerializedDict):
         field_ids: List[int]
 
     def enhance_queryset(self, queryset):

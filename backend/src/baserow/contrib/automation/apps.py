@@ -19,30 +19,30 @@ class AutomationConfig(AppConfig):
         )
         from baserow.contrib.automation.nodes.node_types import (
             AIAgentActionNodeType,
-            CoreCSVFileReaderNodeType,
+            CoreCSVFileReaderActionNodeType,
             CoreGotoActionNodeType,
-            CoreHttpRequestNodeType,
+            CoreHTTPRequestActionNodeType,
             CoreHTTPTriggerNodeType,
             CoreInboundEmailTriggerNodeType,
-            CoreIteratorNodeType,
+            CoreIteratorActionNodeType,
             CoreManualTriggerNodeType,
             CorePeriodicTriggerNodeType,
-            CoreResponseNodeType,
+            CoreResponseActionNodeType,
             CoreRouterActionNodeType,
-            CoreSMTPEmailNodeType,
-            CoreStartWorkflowNodeType,
-            LocalBaserowAggregateRowsNodeType,
-            LocalBaserowCreateRowNodeType,
-            LocalBaserowCreateRowsNodeType,
-            LocalBaserowDeleteRowNodeType,
-            LocalBaserowFieldsUpdatedNodeTriggerType,
-            LocalBaserowGetRowNodeType,
-            LocalBaserowListRowsNodeType,
-            LocalBaserowRowsCreatedNodeTriggerType,
-            LocalBaserowRowsDeletedNodeTriggerType,
-            LocalBaserowRowsUpdatedNodeTriggerType,
-            LocalBaserowUpdateRowNodeType,
-            LocalBaserowUpdateRowsNodeType,
+            CoreSMTPEmailActionNodeType,
+            CoreStartWorkflowActionNodeType,
+            LocalBaserowAggregateRowsActionNodeType,
+            LocalBaserowCreateRowActionNodeType,
+            LocalBaserowCreateRowsActionNodeType,
+            LocalBaserowDeleteRowActionNodeType,
+            LocalBaserowFieldsUpdatedTriggerNodeType,
+            LocalBaserowGetRowActionNodeType,
+            LocalBaserowListRowsActionNodeType,
+            LocalBaserowRowsCreatedTriggerNodeType,
+            LocalBaserowRowsDeletedTriggerNodeType,
+            LocalBaserowRowsUpdatedTriggerNodeType,
+            LocalBaserowUpdateRowActionNodeType,
+            LocalBaserowUpdateRowsActionNodeType,
             SlackWriteMessageActionNodeType,
         )
         from baserow.contrib.automation.nodes.object_scopes import (
@@ -182,27 +182,29 @@ class AutomationConfig(AppConfig):
             AllowIfTemplatePermissionManagerType(prev_manager)
         )
 
-        automation_node_type_registry.register(LocalBaserowCreateRowNodeType())
-        automation_node_type_registry.register(LocalBaserowCreateRowsNodeType())
-        automation_node_type_registry.register(LocalBaserowUpdateRowNodeType())
-        automation_node_type_registry.register(LocalBaserowUpdateRowsNodeType())
-        automation_node_type_registry.register(LocalBaserowDeleteRowNodeType())
-        automation_node_type_registry.register(LocalBaserowGetRowNodeType())
-        automation_node_type_registry.register(LocalBaserowListRowsNodeType())
-        automation_node_type_registry.register(LocalBaserowAggregateRowsNodeType())
-        automation_node_type_registry.register(CoreHttpRequestNodeType())
-        automation_node_type_registry.register(CoreIteratorNodeType())
-        automation_node_type_registry.register(CoreCSVFileReaderNodeType())
-        automation_node_type_registry.register(CoreSMTPEmailNodeType())
-        automation_node_type_registry.register(CoreRouterActionNodeType())
-        automation_node_type_registry.register(CoreStartWorkflowNodeType())
-        automation_node_type_registry.register(CoreGotoActionNodeType())
-        automation_node_type_registry.register(CoreResponseNodeType())
-        automation_node_type_registry.register(LocalBaserowRowsCreatedNodeTriggerType())
-        automation_node_type_registry.register(LocalBaserowRowsUpdatedNodeTriggerType())
-        automation_node_type_registry.register(LocalBaserowRowsDeletedNodeTriggerType())
+        automation_node_type_registry.register(LocalBaserowCreateRowActionNodeType())
+        automation_node_type_registry.register(LocalBaserowCreateRowsActionNodeType())
+        automation_node_type_registry.register(LocalBaserowUpdateRowActionNodeType())
+        automation_node_type_registry.register(LocalBaserowUpdateRowsActionNodeType())
+        automation_node_type_registry.register(LocalBaserowDeleteRowActionNodeType())
+        automation_node_type_registry.register(LocalBaserowGetRowActionNodeType())
+        automation_node_type_registry.register(LocalBaserowListRowsActionNodeType())
         automation_node_type_registry.register(
-            LocalBaserowFieldsUpdatedNodeTriggerType()
+            LocalBaserowAggregateRowsActionNodeType()
+        )
+        automation_node_type_registry.register(CoreHTTPRequestActionNodeType())
+        automation_node_type_registry.register(CoreIteratorActionNodeType())
+        automation_node_type_registry.register(CoreCSVFileReaderActionNodeType())
+        automation_node_type_registry.register(CoreSMTPEmailActionNodeType())
+        automation_node_type_registry.register(CoreRouterActionNodeType())
+        automation_node_type_registry.register(CoreStartWorkflowActionNodeType())
+        automation_node_type_registry.register(CoreGotoActionNodeType())
+        automation_node_type_registry.register(CoreResponseActionNodeType())
+        automation_node_type_registry.register(LocalBaserowRowsCreatedTriggerNodeType())
+        automation_node_type_registry.register(LocalBaserowRowsUpdatedTriggerNodeType())
+        automation_node_type_registry.register(LocalBaserowRowsDeletedTriggerNodeType())
+        automation_node_type_registry.register(
+            LocalBaserowFieldsUpdatedTriggerNodeType()
         )
         automation_node_type_registry.register(CorePeriodicTriggerNodeType())
         automation_node_type_registry.register(CoreHTTPTriggerNodeType())

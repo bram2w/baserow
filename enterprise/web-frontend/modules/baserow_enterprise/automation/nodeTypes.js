@@ -5,7 +5,7 @@ import {
   CoreXLSFileReaderServiceType,
 } from '@baserow_enterprise/integrations/core/serviceTypes'
 
-export class CoreCodeNodeType extends ActionNodeTypeMixin(NodeType) {
+export class CoreCodeActionNodeType extends ActionNodeTypeMixin(NodeType) {
   static getType() {
     return 'code'
   }
@@ -23,7 +23,9 @@ export class CoreCodeNodeType extends ActionNodeTypeMixin(NodeType) {
   }
 }
 
-export class CoreXLSFileReaderNodeType extends ActionNodeTypeMixin(NodeType) {
+export class CoreXLSFileReaderActionNodeType extends ActionNodeTypeMixin(
+  NodeType
+) {
   static getType() {
     return 'xls_file_reader'
   }

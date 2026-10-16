@@ -38,12 +38,12 @@ class IntegrationsConfig(AppConfig):
             LocalBaserowAggregateRowsUserServiceType,
             LocalBaserowCreateRowsServiceType,
             LocalBaserowDeleteRowServiceType,
-            LocalBaserowFieldsUpdatedServiceType,
+            LocalBaserowFieldsUpdatedTriggerServiceType,
             LocalBaserowGetRowUserServiceType,
             LocalBaserowListRowsUserServiceType,
-            LocalBaserowRowsCreatedServiceType,
-            LocalBaserowRowsDeletedServiceType,
-            LocalBaserowRowsUpdatedServiceType,
+            LocalBaserowRowsCreatedTriggerServiceType,
+            LocalBaserowRowsDeletedTriggerServiceType,
+            LocalBaserowRowsUpdatedTriggerServiceType,
             LocalBaserowUpdateRowsServiceType,
             LocalBaserowUpsertRowServiceType,
         )
@@ -55,10 +55,10 @@ class IntegrationsConfig(AppConfig):
         service_type_registry.register(LocalBaserowCreateRowsServiceType())
         service_type_registry.register(LocalBaserowUpdateRowsServiceType())
         service_type_registry.register(LocalBaserowDeleteRowServiceType())
-        service_type_registry.register(LocalBaserowRowsCreatedServiceType())
-        service_type_registry.register(LocalBaserowRowsUpdatedServiceType())
-        service_type_registry.register(LocalBaserowRowsDeletedServiceType())
-        service_type_registry.register(LocalBaserowFieldsUpdatedServiceType())
+        service_type_registry.register(LocalBaserowRowsCreatedTriggerServiceType())
+        service_type_registry.register(LocalBaserowRowsUpdatedTriggerServiceType())
+        service_type_registry.register(LocalBaserowRowsDeletedTriggerServiceType())
+        service_type_registry.register(LocalBaserowFieldsUpdatedTriggerServiceType())
 
         from baserow.contrib.integrations.slack.service_types import (
             SlackWriteMessageServiceType,
@@ -74,7 +74,7 @@ class IntegrationsConfig(AppConfig):
             CoreInboundEmailTriggerServiceType,
             CoreIteratorServiceType,
             CoreManualTriggerServiceType,
-            CorePeriodicServiceType,
+            CorePeriodicTriggerServiceType,
             CoreResponseServiceType,
             CoreRouterServiceType,
             CoreSMTPEmailServiceType,
@@ -89,7 +89,7 @@ class IntegrationsConfig(AppConfig):
         service_type_registry.register(CoreInboundEmailTriggerServiceType())
         service_type_registry.register(CoreManualTriggerServiceType())
         service_type_registry.register(CoreIteratorServiceType())
-        service_type_registry.register(CorePeriodicServiceType())
+        service_type_registry.register(CorePeriodicTriggerServiceType())
         service_type_registry.register(CoreCSVFileReaderServiceType())
         service_type_registry.register(CoreStartWorkflowServiceType())
         service_type_registry.register(CoreResponseServiceType())

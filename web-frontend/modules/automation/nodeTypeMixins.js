@@ -31,12 +31,12 @@ export const ActionNodeTypeMixin = (Base) =>
     isWorkflowAction = true
   }
 
-export const UtilityNodeMixin = (Base) =>
+export const UtilityNodeTypeMixin = (Base) =>
   class extends Base {
     isUtilityNode = true
   }
 
-export const containerNodeTypeMixin = (Base) =>
+export const ContainerNodeTypeMixin = (Base) =>
   class extends Base {
     isContainer = true
   }

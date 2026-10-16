@@ -25,7 +25,9 @@ from baserow.contrib.integrations.core.constants import (
     PERIODIC_INTERVAL_DAY,
 )
 from baserow.contrib.integrations.core.models import CorePeriodicService
-from baserow.contrib.integrations.core.service_types import CorePeriodicServiceType
+from baserow.contrib.integrations.core.service_types import (
+    CorePeriodicTriggerServiceType,
+)
 from baserow.core.formula.types import BASEROW_FORMULA_MODE_RAW, BaserowFormulaObject
 from baserow.core.handler import CoreHandler
 from baserow.core.services.exceptions import (
@@ -56,7 +58,7 @@ def test_automation_node_type_is_replaceable_with():
     assert not action_node_type.is_replaceable_with(update_trigger_node_type)
 
 
-def test_local_baserow_fields_updated_node_trigger_type_is_registered():
+def test_local_baserow_fields_updated_trigger_node_type_is_registered():
     node_type = automation_node_type_registry.get("local_baserow_fields_updated")
 
     assert node_type.is_workflow_trigger is True
@@ -109,7 +111,7 @@ def test_core_response_node_preserves_provided_status_code(data_fixture):
 @patch(
     "baserow.contrib.automation.workflows.service.AutomationWorkflowHandler.async_start_workflow"
 )
-def test_automation_service_node_trigger_type_on_event(
+def test_automation_service_trigger_node_type_on_event(
     mock_async_start_workflow, data_fixture
 ):
     user = data_fixture.create_user()
@@ -370,7 +372,7 @@ def test_automation_node_type_delete_row_dispatch(mock_dispatch, data_fixture):
 )
 def test_on_event_excludes_disabled_workflows(mock_async_start_workflow, data_fixture):
     """
-    Ensure that the AutomationNodeTriggerType::on_event() excludes any disabled
+    Ensure that the AutomationTriggerNodeType::on_event() excludes any disabled
     workflows.
     """
 
@@ -623,7 +625,7 @@ def test_core_http_trigger_node(api_client, data_fixture):
         user=user, application=automation
     )
 
-    trigger_node = data_fixture.create_http_trigger_node(
+    trigger_node = data_fixture.create_core_http_trigger_node(
         workflow=workflow,
         service_kwargs={"is_public": True},
     )
@@ -667,7 +669,9 @@ def test_core_http_trigger_node_duplicating_application_sets_unique_uid(data_fix
     workflow = data_fixture.create_automation_workflow(
         user=user, state=WorkflowState.LIVE, create_trigger=False
     )
-    trigger_node = data_fixture.create_http_trigger_node(user=user, workflow=workflow)
+    trigger_node = data_fixture.create_core_http_trigger_node(
+        user=user, workflow=workflow
+    )
     assert isinstance(trigger_node.service.uid, uuid.UUID)
 
     duplicated_automation = CoreHandler().duplicate_application(
@@ -690,7 +694,9 @@ def test_core_http_trigger_node_duplicating_workflow_sets_unique_uid(data_fixtur
     workflow = data_fixture.create_automation_workflow(
         user=user, state=WorkflowState.LIVE, create_trigger=False
     )
-    trigger_node = data_fixture.create_http_trigger_node(user=user, workflow=workflow)
+    trigger_node = data_fixture.create_core_http_trigger_node(
+        user=user, workflow=workflow
+    )
     assert isinstance(trigger_node.service.uid, uuid.UUID)
 
     duplicated_workflow = AutomationWorkflowService().duplicate_workflow(user, workflow)
@@ -724,7 +730,7 @@ def test_periodic_trigger_node_on_event_only_updates_dispatched_services(data_fi
         state=WorkflowState.DRAFT,
         create_trigger=False,
     )
-    trigger_node_a = data_fixture.create_periodic_trigger_node(
+    trigger_node_a = data_fixture.create_core_periodic_trigger_node(
         workflow=workflow_a,
         service_kwargs={
             "interval": PERIODIC_INTERVAL_DAY,
@@ -738,7 +744,7 @@ def test_periodic_trigger_node_on_event_only_updates_dispatched_services(data_fi
     workflow_b1 = data_fixture.create_automation_workflow(
         automation=automation, create_trigger=False
     )
-    trigger_node_b1 = data_fixture.create_periodic_trigger_node(
+    trigger_node_b1 = data_fixture.create_core_periodic_trigger_node(
         workflow=workflow_b1,
         service_kwargs={
             "interval": PERIODIC_INTERVAL_DAY,
@@ -751,7 +757,7 @@ def test_periodic_trigger_node_on_event_only_updates_dispatched_services(data_fi
     workflow_b2 = data_fixture.create_automation_workflow(
         state=WorkflowState.LIVE, create_trigger=False
     )
-    trigger_node_b2 = data_fixture.create_periodic_trigger_node(
+    trigger_node_b2 = data_fixture.create_core_periodic_trigger_node(
         workflow=workflow_b2,
         service_kwargs={
             "interval": PERIODIC_INTERVAL_DAY,
@@ -769,7 +775,7 @@ def test_periodic_trigger_node_on_event_only_updates_dispatched_services(data_fi
         state=WorkflowState.DRAFT,
         create_trigger=False,
     )
-    trigger_node_c1 = data_fixture.create_periodic_trigger_node(
+    trigger_node_c1 = data_fixture.create_core_periodic_trigger_node(
         workflow=workflow_c1,
         service_kwargs={
             "interval": PERIODIC_INTERVAL_DAY,
@@ -785,7 +791,7 @@ def test_periodic_trigger_node_on_event_only_updates_dispatched_services(data_fi
         state=WorkflowState.DRAFT,
         create_trigger=False,
     )
-    trigger_node_c2 = data_fixture.create_periodic_trigger_node(
+    trigger_node_c2 = data_fixture.create_core_periodic_trigger_node(
         workflow=workflow_c2,
         service_kwargs={
             "interval": PERIODIC_INTERVAL_DAY,
@@ -799,10 +805,12 @@ def test_periodic_trigger_node_on_event_only_updates_dispatched_services(data_fi
     with freeze_time("2026-03-04 12:00:00"):
         current_time = now()
         services_due = list(
-            CorePeriodicServiceType().get_periodic_services_that_are_due(current_time)
+            CorePeriodicTriggerServiceType().get_periodic_services_that_are_due(
+                current_time
+            )
         )
         service_type_registry.get(
-            CorePeriodicServiceType.type
+            CorePeriodicTriggerServiceType.type
         ).call_periodic_services_that_are_due()
         services_dispatched = CorePeriodicService.objects.filter(
             last_periodic_run=now()
