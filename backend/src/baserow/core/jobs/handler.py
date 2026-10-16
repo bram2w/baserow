@@ -30,18 +30,49 @@ class JobHandler:
 
         :param job: The job to cancel.
         :return: The job that was marked for cancellation.
-        :raises JobNotCancellable: If the job is already finished or failed, and
-            cannot be cancelled.
+        :raises JobNotCancellable: If the job is already finished or failed, or its
+            type refuses the cancellation, and cannot be cancelled.
         """
 
-        if job.cancelled:
-            return
-        elif job.ended:
-            raise JobNotCancellable()
+        job_type = job_type_registry.get_by_model(job.specific_class)
+        if not job_type.lock_on_cancel:
+            if job.cancelled:
+                return
+            elif job.ended:
+                raise JobNotCancellable()
 
-        job.set_state_cancelled()
-        job.save()
+            job.set_state_cancelled()
+            job.save()
+            return job
+
+        with transaction.atomic():
+            locked_job = cls.lock_job(job)
+            if locked_job.cancelled:
+                return
+            elif locked_job.ended or not job_type.is_cancellable(locked_job):
+                raise JobNotCancellable()
+
+            # Only the state is saved, so that what the job saved in the meantime
+            # is kept.
+            job.set_state_cancelled()
+            job.save(update_fields=["state", "updated_on"])
         return job
+
+    @classmethod
+    def lock_job(cls, job: AnyJob) -> AnyJob:
+        """
+        Locks the row of the job until the end of the current transaction, see
+        `JobType.lock_on_cancel`.
+
+        Only the row of the base job is locked. A multi-table save of the job
+        updates that row first, so the locks are always taken in the same order.
+
+        :param job: The job to lock.
+        :return: The specific job, as it is in the database.
+        """
+
+        Job._base_manager.select_for_update().only("id").get(id=job.id)
+        return job.specific_class._base_manager.get(id=job.id)
 
     @classmethod
     def run(cls, job: AnyJob):

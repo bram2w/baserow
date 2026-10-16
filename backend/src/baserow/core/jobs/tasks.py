@@ -1,10 +1,12 @@
 from datetime import timedelta
 
 from django.conf import settings
+from django.db import transaction
 
 from loguru import logger
 
 from baserow.config.celery import app
+from baserow.core.jobs.constants import JOB_CANCELLED
 from baserow.core.jobs.exceptions import JobCancelled
 from baserow.core.jobs.registries import job_type_registry
 from baserow.core.sentry import setup_user_in_sentry
@@ -37,8 +39,24 @@ def run_async_job(self, job_id: int):
     with setup_user_in_baggage_and_spans(job.user):
         setup_user_in_sentry(job.user)
 
-        job.set_state_started()
-        job.save()
+        if job_type.lock_on_cancel:
+            # A cancellation accepted after the check above must not be overwritten
+            # by saving the whole job, see `JobType.lock_on_cancel`.
+            with transaction.atomic():
+                cancelled = JobHandler.lock_job(job).state == JOB_CANCELLED
+                if not cancelled:
+                    job.set_state_started()
+                    job.save(update_fields=["state", "updated_on"])
+            if cancelled:
+                job.set_state_cancelled()
+                try:
+                    job_type.on_cancelled(job)
+                finally:
+                    job.clear_job_cache()
+                return
+        else:
+            job.set_state_started()
+            job.save()
 
         try:
             with job_type.transaction_atomic_context(job):
