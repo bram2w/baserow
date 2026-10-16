@@ -16,7 +16,9 @@ a self-hosted install:
   `/.well-known/oauth-protected-resource` to the backend. `/mcp` must reach the ASGI
   backend. The [Caddyfile](https://github.com/baserow/baserow/blob/master/Caddyfile),
   the [Nginx](install-behind-nginx.md), [Apache](install-behind-apache.md) and
-  [K8S](install-with-k8s.md) guides already do this.
+  [K8S](install-with-k8s.md) guides already do this. To submit your own ChatGPT app
+  to OpenAI, also send `/.well-known/openai-apps-challenge` to the backend and set
+  `BASEROW_MCP_OPENAI_APPS_CHALLENGE`. Only the Caddyfile routes it already.
 * **Outbound HTTPS.** Apps that identify themselves with a client metadata document
   (CIMD), like Claude, ChatGPT and VS Code, make the backend fetch that document over
   HTTPS. The fetch connects directly and ignores `HTTPS_PROXY`. Without direct outbound
