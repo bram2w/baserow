@@ -2,8 +2,8 @@ import {
   NodeType,
   CoreRouterActionNodeType,
   CoreInboundEmailTriggerNodeType,
-  CoreIteratorNodeType,
-  CoreGotoNodeType,
+  CoreIteratorActionNodeType,
+  CoreGotoActionNodeType,
 } from '@baserow/modules/automation/nodeTypes'
 import { ServiceType } from '@baserow/modules/core/serviceTypes'
 import { TestApp } from '@baserow/test/helpers/testApp'
@@ -282,12 +282,12 @@ describe('NodeType.aliases', () => {
       'nodeType.gotoAliases': 'while loop,retry',
     })
 
-    expect(new CoreIteratorNodeType({ app }).aliases).toEqual([
+    expect(new CoreIteratorActionNodeType({ app }).aliases).toEqual([
       'loop',
       'for loop',
       'repeat',
     ])
-    expect(new CoreGotoNodeType({ app }).aliases).toEqual([
+    expect(new CoreGotoActionNodeType({ app }).aliases).toEqual([
       'while loop',
       'retry',
     ])

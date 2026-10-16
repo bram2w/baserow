@@ -39,7 +39,7 @@ TRIGGER_NODE_TYPE_PATH = (
     "baserow.contrib.automation.nodes.node_types.LocalBaserowRowsCreatedTriggerNodeType"
 )
 HTTP_NODE_TYPE_PATH = (
-    "baserow.contrib.automation.nodes.node_types.CoreHttpRequestNodeType"
+    "baserow.contrib.automation.nodes.node_types.CoreHTTPRequestActionNodeType"
 )
 NODE_HANDLER_PATH = "baserow.contrib.automation.nodes.handler"
 UPSERT_ROW_SERVICE_TYPE_PATH = (
