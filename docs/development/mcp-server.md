@@ -91,6 +91,10 @@ claude mcp add --transport http baserow http://localhost:8000/mcp
 
 See the [test plan](../testing/mcp-test-plan.md#1-connect-an-mcp-client) for other clients, the plugin and the skill.
 
+### ChatGPT app domain verification
+
+OpenAI verifies the domain of a submitted ChatGPT app by fetching `/.well-known/openai-apps-challenge`. Set `BASEROW_MCP_OPENAI_APPS_CHALLENGE` to the token shown in OpenAI's portal and the backend returns it as plain text. When it's empty the route returns a 404. Like the other OAuth routes, it only exists with `BASEROW_MCP_OAUTH_ENABLED=true`.
+
 ## Tools
 
 Some tools are currently disabled (`enabled = False`) and hidden from MCP clients. The consent page does not list them.
