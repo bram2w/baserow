@@ -58,7 +58,26 @@ class CreateUserTemplateJob(
         null=True,
         on_delete=models.SET_NULL,
         related_name="+",
-        help_text="The template the job created. Empty until it's committed.",
+        help_text=(
+            "The template the job created, or the one it updates. Empty until a "
+            "created template is committed."
+        ),
+    )
+    revision = models.ForeignKey(
+        Template,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        help_text="The revision the job committed. Empty until commit.",
+    )
+    base_revision = models.ForeignKey(
+        Template,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        help_text=(
+            "The latest revision when an update was scheduled. Empty when creating."
+        ),
     )
 
 

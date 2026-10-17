@@ -10,16 +10,20 @@
   >
     <div v-if="loading" class="loading-absolute-center"></div>
     <template v-else>
+      <!-- Keyed by the workspace too, so that the preview shows the content of a
+      new revision. -->
       <TemplateDetails
         v-if="selectedTemplate !== null"
-        :key="selectedTemplate.id"
+        :key="`${selectedTemplate.id}:${selectedTemplate.workspace_id}`"
         :template="selectedTemplate"
         :categories="selectedTemplateCategories"
         :workspace="workspace"
+        :is-own="selectedIsOwn"
         show-back
         class="templates__body"
-        @back="selectedTemplate = null"
+        @back="selectTemplate(null)"
         @installed="hide()"
+        @edit="openUpdateModal(selectedTemplate, $event)"
       ></TemplateDetails>
       <TemplateList
         v-show="selectedTemplate === null && tab === 'official'"
@@ -42,11 +46,16 @@
         v-show="selectedTemplate === null && tab === 'own'"
         ref="userTemplateList"
         :active="
-          open && selectedTemplate === null && tab === 'own' && !creating
+          open &&
+          selectedTemplate === null &&
+          tab === 'own' &&
+          !creating &&
+          !updating
         "
         class="templates__body"
-        @selected="selectTemplate"
+        @selected="selectTemplate($event, true)"
         @create="openCreateModal"
+        @edit="openUpdateModal"
       >
         <template #head>
           <SegmentControl
@@ -72,6 +81,16 @@
       @hidden="creating = false"
       @created="templateCreated"
     ></CreateUserTemplateModal>
+    <UpdateUserTemplateModal
+      v-if="showTabs && updatedTemplate !== null"
+      :key="updatedTemplate.id"
+      ref="updateUserTemplateModal"
+      :template="updatedTemplate"
+      :mode="updateMode"
+      :categories="categories"
+      @hidden="updating = false"
+      @updated="templateUpdated"
+    ></UpdateUserTemplateModal>
   </Modal>
 </template>
 
@@ -84,6 +103,7 @@ import { FF_USER_TEMPLATES } from '@baserow/modules/core/plugins/featureFlags'
 import CreateUserTemplateModal from '@baserow/modules/core/components/template/CreateUserTemplateModal'
 import TemplateDetails from '@baserow/modules/core/components/template/TemplateDetails'
 import TemplateList from '@baserow/modules/core/components/template/TemplateList'
+import UpdateUserTemplateModal from '@baserow/modules/core/components/template/UpdateUserTemplateModal'
 import UserTemplateList from '@baserow/modules/core/components/template/UserTemplateList'
 
 export default {
@@ -92,6 +112,7 @@ export default {
     CreateUserTemplateModal,
     TemplateDetails,
     TemplateList,
+    UpdateUserTemplateModal,
     UserTemplateList,
   },
   mixins: [modal],
@@ -111,11 +132,19 @@ export default {
       loading: true,
       categories: [],
       selectedTemplate: null,
+      // Whether the selected template is one of the user's, who can update it.
+      selectedIsOwn: false,
       tab: 'official',
       // The list of the user's templates is loaded when its tab is opened first.
       userTemplatesOpened: false,
       // While a template is created, its modal takes the search shortcut.
       creating: false,
+      // The user's template that is or was last updated. It's kept after the
+      // update modal is closed, so that a running job stays monitored.
+      updatedTemplate: null,
+      updateMode: 'details',
+      // While a template is updated, its modal takes the search shortcut.
+      updating: false,
     }
   },
   computed: {
@@ -182,7 +211,7 @@ export default {
 
       this.loading = true
       this.categories = []
-      this.selectedTemplate = null
+      this.selectTemplate(null)
       this.tab = 'official'
       this.userTemplatesOpened = false
 
@@ -213,8 +242,9 @@ export default {
         this.userTemplatesOpened = true
       }
     },
-    selectTemplate(template) {
+    selectTemplate(template, own = false) {
       this.selectedTemplate = template
+      this.selectedIsOwn = own
     },
     openCreateModal() {
       this.creating = true
@@ -223,6 +253,42 @@ export default {
     templateCreated() {
       this.$refs.userTemplateList?.refresh()
     },
+    async openUpdateModal(template, mode) {
+      // Only one update runs at a time. Its modal is shown again instead, also
+      // while it's being sent, because mounting the modal of another template
+      // stops monitoring the running job.
+      const current = this.$refs.updateUserTemplateModal
+      if (current?.jobIsRunning || current?.updateLoading) {
+        this.updating = true
+        current.show()
+        return
+      }
+      this.updatedTemplate = template
+      this.updateMode = mode
+      this.updating = true
+      // Mounts the modal of another template first.
+      await this.$nextTick()
+      this.$refs.updateUserTemplateModal.show()
+    },
+    /**
+     * The list and the opened preview show the new revision. The updated template
+     * is among the most recently updated ones of the user.
+     */
+    async templateUpdated(job) {
+      this.$refs.userTemplateList?.refresh()
+      if (!this.selectedIsOwn || this.selectedTemplate?.id !== job.template) {
+        return
+      }
+      try {
+        const { data } = await TemplateService(this.$client).fetchOwn()
+        const template = data.results.find(({ id }) => id === job.template)
+        if (template && this.selectedTemplate?.id === job.template) {
+          this.selectedTemplate = template
+        }
+      } catch (error) {
+        notifyIf(error, 'templates')
+      }
+    },
     /**
      * Called however the modal is closed, also with escape or a click outside. The
      * content stays mounted, so the template is cleared to unmount its preview,
@@ -230,7 +296,7 @@ export default {
      */
     hidden() {
       this.open = false
-      this.selectedTemplate = null
+      this.selectTemplate(null)
     },
     searchStarted({ event }) {
       event.preventDefault()

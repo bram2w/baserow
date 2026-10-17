@@ -22,6 +22,7 @@ const sprintTracker = {
   type: 'user',
   slug: 'sprint-tracker-a1b2c3',
   name: 'Sprint Tracker',
+  workspace_id: 102,
   categories: [{ id: 7, name: 'Agile' }],
 }
 
@@ -80,6 +81,7 @@ describe('TemplateModal navigation', () => {
     mocks = {}
     refreshList = vi.fn()
     showCreateModal = vi.fn()
+    showUpdateModal = vi.fn()
     await testApp.afterEach()
   })
 
@@ -89,11 +91,12 @@ describe('TemplateModal navigation', () => {
     Modal: ModalStub,
     TemplateDetails: defineComponent({
       name: 'TemplateDetails',
-      props: ['template', 'categories', 'workspace', 'showBack'],
-      emits: ['back', 'installed'],
+      props: ['template', 'categories', 'workspace', 'showBack', 'isOwn'],
+      emits: ['back', 'installed', 'edit'],
       template: `<div class="details">
         {{ template.name }}: {{ categories.map((c) => c.name).join(',') }}
         <a class="details__back" @click="$emit('back')" />
+        <a class="details__edit" @click="$emit('edit', 'details')" />
       </div>`,
     }),
     TemplateList: defineComponent({
@@ -108,11 +111,12 @@ describe('TemplateModal navigation', () => {
     UserTemplateList: defineComponent({
       name: 'UserTemplateList',
       props: ['active'],
-      emits: ['selected', 'create'],
+      emits: ['selected', 'create', 'edit'],
       template: `<div class="own-list">
         <slot name="head" />
         <a class="own-list__sprint-tracker" @click="$emit('selected', sprintTracker)" />
         <a class="own-list__create" @click="$emit('create')" />
+        <a class="own-list__edit" @click="$emit('edit', sprintTracker, 'content')" />
       </div>`,
       setup: () => ({ sprintTracker }),
       methods: {
@@ -132,10 +136,23 @@ describe('TemplateModal navigation', () => {
       },
       template: '<div class="create-modal" />',
     }),
+    UpdateUserTemplateModal: defineComponent({
+      name: 'UpdateUserTemplateModal',
+      props: ['template', 'mode', 'categories'],
+      emits: ['updated', 'hidden'],
+      data: () => ({ jobIsRunning: false, updateLoading: false }),
+      methods: {
+        show() {
+          showUpdateModal(this.template, this.mode)
+        },
+      },
+      template: '<div class="update-modal" />',
+    }),
   }
 
   let refreshList = vi.fn()
   let showCreateModal = vi.fn()
+  let showUpdateModal = vi.fn()
 
   const mountAndShow = async (...args) => {
     const wrapper = await testApp.mount(TemplateModal, {
@@ -342,6 +359,131 @@ describe('TemplateModal navigation', () => {
 
       expect(refreshList).toHaveBeenCalledTimes(1)
       expect(ownListComponent().props('active')).toBe(true)
+    })
+
+    it('update an own template from the list', async () => {
+      testApp.authenticate({ id: 1 })
+      const wrapper = await mountAndShow()
+      await openOwnTab(wrapper)
+      const ownListComponent = () =>
+        wrapper.findComponent({ name: 'UserTemplateList' })
+
+      await wrapper.find('.own-list__edit').trigger('click')
+      await flushPromises()
+
+      expect(showUpdateModal).toHaveBeenCalledWith(sprintTracker, 'content')
+      const updateModal = wrapper.findComponent({
+        name: 'UpdateUserTemplateModal',
+      })
+      expect(updateModal.props('categories')).toStrictEqual(categories)
+      // The update modal takes the search shortcut.
+      expect(ownListComponent().props('active')).toBe(false)
+
+      updateModal.vm.$emit('updated', { id: 9, template: 2 })
+      updateModal.vm.$emit('hidden')
+      await flushPromises()
+
+      expect(refreshList).toHaveBeenCalledTimes(1)
+      expect(ownListComponent().props('active')).toBe(true)
+    })
+
+    it('update an own template from its preview, which shows the new revision', async () => {
+      testApp.authenticate({ id: 1 })
+      const updated = { ...sprintTracker, name: 'Sprints', workspace_id: 202 }
+      // Another template was updated after it in the meantime.
+      const recipeTracker = { ...sprintTracker, id: 3, name: 'Recipe Tracker' }
+      testApp.mock.onGet('/templates/').reply(({ params }) =>
+        params?.owned
+          ? [
+              200,
+              {
+                count: 2,
+                next: null,
+                previous: null,
+                results: [recipeTracker, updated],
+              },
+            ]
+          : [200, categories]
+      )
+      const wrapper = await mountAndShow()
+      await openOwnTab(wrapper)
+      await wrapper.find('.own-list__sprint-tracker').trigger('click')
+      const details = wrapper.findComponent({ name: 'TemplateDetails' })
+
+      expect(details.props('isOwn')).toBe(true)
+
+      await wrapper.find('.details__edit').trigger('click')
+      await flushPromises()
+
+      expect(showUpdateModal).toHaveBeenCalledWith(sprintTracker, 'details')
+
+      wrapper
+        .findComponent({ name: 'UpdateUserTemplateModal' })
+        .vm.$emit('updated', { id: 9, template: 2 })
+      await flushPromises()
+
+      expect(refreshList).toHaveBeenCalledTimes(1)
+      expect(wrapper.find('.details').text()).toBe('Sprints: Agile')
+      // Mounted again, so that the preview loads the new workspace.
+      const newDetails = wrapper.findComponent({ name: 'TemplateDetails' })
+      expect(newDetails.vm).not.toBe(details.vm)
+      expect(newDetails.props('template')).toStrictEqual(updated)
+    })
+
+    it('show the running update again instead of updating another template', async () => {
+      testApp.authenticate({ id: 1 })
+      const recipeTracker = { ...sprintTracker, id: 3, name: 'Recipe Tracker' }
+      const wrapper = await mountAndShow()
+      await openOwnTab(wrapper)
+      await wrapper.find('.own-list__edit').trigger('click')
+      await flushPromises()
+      const updateModal = wrapper.findComponent({
+        name: 'UpdateUserTemplateModal',
+      })
+      updateModal.vm.jobIsRunning = true
+      updateModal.vm.$emit('hidden')
+
+      await wrapper.vm.openUpdateModal(recipeTracker, 'details')
+      await flushPromises()
+
+      // The modal monitoring the running update stays mounted.
+      expect(showUpdateModal).toHaveBeenLastCalledWith(sprintTracker, 'content')
+      expect(wrapper.vm.updating).toBe(true)
+      expect(
+        wrapper.findComponent({ name: 'UpdateUserTemplateModal' }).vm
+      ).toBe(updateModal.vm)
+
+      // Also while the update is being sent, before its job is known.
+      updateModal.vm.jobIsRunning = false
+      updateModal.vm.updateLoading = true
+      await wrapper.vm.openUpdateModal(recipeTracker, 'details')
+      await flushPromises()
+
+      expect(showUpdateModal).toHaveBeenLastCalledWith(sprintTracker, 'content')
+      expect(
+        wrapper.findComponent({ name: 'UpdateUserTemplateModal' }).vm
+      ).toBe(updateModal.vm)
+
+      updateModal.vm.updateLoading = false
+      await wrapper.vm.openUpdateModal(recipeTracker, 'details')
+      await flushPromises()
+
+      expect(showUpdateModal).toHaveBeenLastCalledWith(recipeTracker, 'details')
+    })
+
+    it("don't update an official template", async () => {
+      testApp.authenticate({ id: 1 })
+      const wrapper = await mountAndShow()
+      await openOwnTab(wrapper)
+      await wrapper.find('.own-list__sprint-tracker').trigger('click')
+      await wrapper.find('.details__back').trigger('click')
+      await tabs(wrapper)[0].trigger('click')
+
+      await wrapper.find('.list__recipe-book').trigger('click')
+
+      expect(
+        wrapper.findComponent({ name: 'TemplateDetails' }).props('isOwn')
+      ).toBe(false)
     })
 
     it('start at the official templates when shown again', async () => {

@@ -189,11 +189,15 @@ class AllowIfTemplatePermissionManagerType(PermissionManagerType):
 
     def get_permissions_object(self, actor, workspace=None):
         # Not every template the actor can open, so that the list doesn't grow with
-        # the public templates of other users.
+        # the public templates of other users. Revisions can share a workspace, so
+        # it's listed once. The ordering is cleared, because it would otherwise be
+        # part of the distinct.
         workspace_template_ids = (
             Template.objects.official_or_owned(actor)
             .openable(actor)
+            .order_by()
             .values_list("workspace_id", flat=True)
+            .distinct()
         )
         return {
             "allowed_operations_on_templates": self.OPERATION_ALLOWED_ON_TEMPLATES,

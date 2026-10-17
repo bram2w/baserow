@@ -371,9 +371,13 @@ class CoreConfig(AppConfig):
         action_type_registry.register(DeleteSnapshotActionType())
         action_type_registry.register(RestoreSnapshotActionType())
 
-        from baserow.core.user_templates.actions import CreateUserTemplateActionType
+        from baserow.core.user_templates.actions import (
+            CreateUserTemplateActionType,
+            UpdateUserTemplateActionType,
+        )
 
         action_type_registry.register(CreateUserTemplateActionType())
+        action_type_registry.register(UpdateUserTemplateActionType())
 
         from baserow.core.trash.actions import (
             EmptyTrashActionType,

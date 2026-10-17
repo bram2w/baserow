@@ -15,3 +15,17 @@ class NoApplicationsSelected(Exception):
 
 class TemplateSlugGenerationFailed(Exception):
     """Raised when no free slug was found for a user template after a few tries."""
+
+
+class TemplateChangedDuringUpdate(Exception):
+    """
+    Raised when a user template got a new revision after an update of it was
+    scheduled, so that the update would overwrite changes it didn't see.
+    """
+
+
+class TemplateHasNoContent(Exception):
+    """
+    Raised when the details of a user template are updated, but its latest revision
+    has no content left to copy.
+    """

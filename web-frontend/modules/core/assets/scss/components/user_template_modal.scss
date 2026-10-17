@@ -1,0 +1,80 @@
+.user-template-modal-wrapper {
+  div.modal__box {
+    max-width: 560px;
+  }
+}
+
+.user-template-modal__head {
+  @include flex-align-items(8px);
+
+  padding: 16px 24px;
+  border-bottom: 1px solid $palette-neutral-200;
+}
+
+.user-template-modal__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 24px;
+  color: $palette-neutral-1200;
+}
+
+.user-template-modal__head-action {
+  @include center-text(24px, 18px);
+
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: $palette-neutral-700;
+  cursor: pointer;
+
+  @include rounded($rounded-md);
+
+  &:hover:not([disabled]) {
+    background-color: $palette-neutral-100;
+    color: $palette-neutral-1200;
+  }
+
+  &[disabled] {
+    cursor: not-allowed;
+    color: $palette-neutral-400;
+  }
+}
+
+.user-template-modal__body {
+  padding: 24px;
+}
+
+.user-template-modal__description {
+  margin: 0 0 20px;
+  font-size: 13px;
+  line-height: 20px;
+  color: $palette-neutral-900;
+}
+
+.user-template-modal__footer {
+  @include flex-align-items(16px);
+
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-top: 1px solid $palette-neutral-200;
+}
+
+.user-template-modal__selected {
+  color: $palette-neutral-900;
+}
+
+.user-template-modal__progress {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.user-template-modal__footer-actions {
+  @include flex-align-items(8px);
+
+  flex: 0 0 auto;
+  margin-left: auto;
+}

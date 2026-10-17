@@ -1,9 +1,28 @@
 import { defineComponent } from 'vue'
 import { flushPromises } from '@vue/test-utils'
-import { afterEach, beforeEach, describe, expect, test } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { TestApp } from '@baserow/test/helpers/testApp'
 import CreateUserTemplateModal from '@baserow/modules/core/components/template/CreateUserTemplateModal'
+import UserTemplateContentForm from '@baserow/modules/core/components/template/UserTemplateContentForm'
+
+// The permission plugin allows everything in tests and can't be replaced.
+const permission = vi.hoisted(() => ({ check: () => true }))
+
+vi.mock('#app', async (importOriginal) => {
+  const original = await importOriginal()
+  return {
+    ...original,
+    useNuxtApp: () =>
+      new Proxy(original.useNuxtApp(), {
+        get(target, property) {
+          return property === '$hasPermission'
+            ? (...args) => permission.check(...args)
+            : Reflect.get(target, property)
+        },
+      }),
+  }
+})
 
 const categories = [
   { id: 1, name: 'Business' },
@@ -45,11 +64,10 @@ const runningJob = (values = {}) => ({
 
 describe('CreateUserTemplateModal', () => {
   let testApp = null
-  let mocks = {}
 
   beforeEach(async () => {
     testApp = new TestApp()
-    mocks = {}
+    permission.check = () => true
     const { store } = testApp
     const workspaces = [
       { id: 1, name: 'Acme' },
@@ -84,6 +102,7 @@ describe('CreateUserTemplateModal', () => {
   })
 
   afterEach(async () => {
+    vi.restoreAllMocks()
     await testApp.store.dispatch('job/clearAll')
     await testApp.afterEach()
   })
@@ -91,7 +110,7 @@ describe('CreateUserTemplateModal', () => {
   const mountAndShow = async (props = { categories }) => {
     const wrapper = await testApp.mount(CreateUserTemplateModal, {
       props,
-      global: { stubs: { Modal: ModalStub }, mocks },
+      global: { stubs: { Modal: ModalStub } },
     })
     await wrapper.vm.show()
     await flushPromises()
@@ -117,6 +136,7 @@ describe('CreateUserTemplateModal', () => {
   const goToContent = async (wrapper) => {
     await fillDetails(wrapper)
     await continueButton(wrapper).trigger('click')
+    await flushPromises()
   }
 
   const selectedApplicationIds = (wrapper) =>
@@ -135,11 +155,11 @@ describe('CreateUserTemplateModal', () => {
     const wrapper = await mountAndShow()
     await goToContent(wrapper)
 
-    expect(wrapper.find('.create-user-template-modal__title').text()).toBe(
+    expect(wrapper.find('.user-template-modal__title').text()).toBe(
       'createUserTemplateModal.contentTitle'
     )
 
-    await wrapper.find('.create-user-template-modal__back').trigger('click')
+    await wrapper.find('.user-template-modal__back').trigger('click')
 
     expect(wrapper.find('input').element.value).toBe('Sprint Tracker')
     expect(wrapper.find('textarea').element.value).toBe('Plan sprints')
@@ -153,12 +173,12 @@ describe('CreateUserTemplateModal', () => {
 
     await continueButton(wrapper).trigger('click')
 
-    expect(wrapper.find('.create-user-template-modal__title').text()).toBe(
+    expect(wrapper.find('.user-template-modal__title').text()).toBe(
       'createUserTemplateModal.detailsTitle'
     )
-    expect(wrapper.text()).toContain('createUserTemplateModal.nameRequired')
+    expect(wrapper.text()).toContain('userTemplateDetailsForm.nameRequired')
     expect(wrapper.text()).toContain(
-      'createUserTemplateModal.categoriesRequired'
+      'userTemplateDetailsForm.categoriesRequired'
     )
   })
 
@@ -177,7 +197,7 @@ describe('CreateUserTemplateModal', () => {
     const wrapper = await mountAndShow()
 
     expect(
-      wrapper.find('.create-user-template-modal__icon-button i').classes()
+      wrapper.find('.user-template-form__icon-button i').classes()
     ).toContain('iconoir-view-grid')
 
     wrapper
@@ -186,7 +206,7 @@ describe('CreateUserTemplateModal', () => {
     await flushPromises()
 
     expect(
-      wrapper.find('.create-user-template-modal__icon-button i').classes()
+      wrapper.find('.user-template-form__icon-button i').classes()
     ).toContain('iconoir-agile')
   })
 
@@ -216,17 +236,15 @@ describe('CreateUserTemplateModal', () => {
 
     expect(selectedApplicationIds(wrapper)).toStrictEqual([21])
 
-    await wrapper.find('.create-user-template-modal__back').trigger('click')
+    await wrapper.find('.user-template-modal__back').trigger('click')
 
     expect(wrapper.find('input').element.value).toBe('Sprint Tracker')
     expect(wrapper.find('textarea').element.value).toBe('Plan sprints')
   })
 
   test('disables the workspaces the user cannot export', async () => {
-    mocks = {
-      $hasPermission: (operation, context, workspaceId) =>
-        operation === 'workspace.export' && workspaceId !== 3,
-    }
+    permission.check = (operation, context, workspaceId) =>
+      operation === 'workspace.export' && workspaceId !== 3
     const wrapper = await mountAndShow()
     await goToContent(wrapper)
 
@@ -242,9 +260,7 @@ describe('CreateUserTemplateModal', () => {
   })
 
   test('explains why a workspace is disabled', async () => {
-    mocks = {
-      $hasPermission: (operation, context, workspaceId) => workspaceId !== 3,
-    }
+    permission.check = (operation, context, workspaceId) => workspaceId !== 3
     testApp.store.commit('application/DELETE_ITEM', 21)
     const wrapper = await mountAndShow()
     await goToContent(wrapper)
@@ -259,8 +275,8 @@ describe('CreateUserTemplateModal', () => {
         ])
     ).toStrictEqual([
       [1, false, null],
-      [2, true, 'createUserTemplateModal.workspaceEmpty'],
-      [3, true, 'createUserTemplateModal.workspaceNoPermission'],
+      [2, true, 'userTemplateContentForm.workspaceEmpty'],
+      [3, true, 'userTemplateContentForm.workspaceNoPermission'],
     ])
   })
 
@@ -299,11 +315,11 @@ describe('CreateUserTemplateModal', () => {
     const wrapper = await mountAndShow({ categories: [] })
 
     expect(wrapper.find('.chips').exists()).toBe(false)
-    expect(wrapper.text()).not.toContain('createUserTemplateModal.categories')
+    expect(wrapper.text()).not.toContain('userTemplateDetailsForm.categories')
 
     await wrapper.find('input').setValue('Sprint Tracker')
     await continueButton(wrapper).trigger('click')
-    expect(wrapper.find('.create-user-template-modal__title').text()).toBe(
+    expect(wrapper.find('.user-template-modal__title').text()).toBe(
       'createUserTemplateModal.contentTitle'
     )
 
@@ -313,9 +329,7 @@ describe('CreateUserTemplateModal', () => {
   })
 
   test('starts with an exportable workspace', async () => {
-    mocks = {
-      $hasPermission: (operation, context, workspaceId) => workspaceId === 2,
-    }
+    permission.check = (operation, context, workspaceId) => workspaceId === 2
     const wrapper = await mountAndShow()
     await goToContent(wrapper)
 
@@ -327,19 +341,45 @@ describe('CreateUserTemplateModal', () => {
 
   test("doesn't switch a workspace the author picked", async () => {
     let deniedWorkspaceId = null
-    mocks = {
-      $hasPermission: (operation, context, workspaceId) =>
-        workspaceId !== deniedWorkspaceId,
-    }
+    permission.check = (operation, context, workspaceId) =>
+      workspaceId !== deniedWorkspaceId
     const wrapper = await mountAndShow()
     await goToContent(wrapper)
     await selectWorkspace(wrapper, 2)
 
     // The permissions of the workspace load after it was picked.
     deniedWorkspaceId = 2
-    await wrapper.vm.loadPermissions()
+    await wrapper.findComponent(UserTemplateContentForm).vm.loadPermissions()
     await flushPromises()
 
+    expect(
+      wrapper.findComponent({ name: 'Dropdown' }).props('modelValue')
+    ).toBe(2)
+    expect(selectedApplicationIds(wrapper)).toStrictEqual([21])
+  })
+
+  test('keeps the picked workspace and its permissions between the steps', async () => {
+    let deniedWorkspaceId = null
+    permission.check = (operation, context, workspaceId) =>
+      workspaceId !== deniedWorkspaceId
+    const dispatch = vi.spyOn(testApp.store, 'dispatch')
+    const wrapper = await mountAndShow()
+    await goToContent(wrapper)
+    await selectWorkspace(wrapper, 2)
+    const fetched = dispatch.mock.calls.filter(
+      ([type]) => type === 'workspace/fetchPermissions'
+    ).length
+
+    await wrapper.find('.user-template-modal__back').trigger('click')
+    deniedWorkspaceId = 2
+    await continueButton(wrapper).trigger('click')
+    await flushPromises()
+
+    expect(
+      dispatch.mock.calls.filter(
+        ([type]) => type === 'workspace/fetchPermissions'
+      )
+    ).toHaveLength(fetched)
     expect(
       wrapper.findComponent({ name: 'Dropdown' }).props('modelValue')
     ).toBe(2)
@@ -387,7 +427,7 @@ describe('CreateUserTemplateModal', () => {
     )
     // Cancelled: back to the content step with the inputs kept.
     expect(wrapper.findComponent({ name: 'ProgressBar' }).exists()).toBe(false)
-    expect(wrapper.find('.create-user-template-modal__title').text()).toBe(
+    expect(wrapper.find('.user-template-modal__title').text()).toBe(
       'createUserTemplateModal.contentTitle'
     )
     expect(selectedApplicationIds(wrapper)).toStrictEqual([11])
@@ -447,7 +487,12 @@ describe('CreateUserTemplateModal', () => {
     const job = testApp.store.getters['job/get'](7)
     await testApp.store.dispatch('job/forceUpdate', {
       job,
-      data: { state: 'failed', human_readable_error: 'Failed', template: 3 },
+      data: {
+        state: 'failed',
+        human_readable_error: 'Failed',
+        template: 3,
+        revision: 3,
+      },
     })
     await flushPromises()
 
@@ -496,7 +541,7 @@ describe('CreateUserTemplateModal', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('Permission denied')
-    expect(wrapper.find('.create-user-template-modal__title').text()).toBe(
+    expect(wrapper.find('.user-template-modal__title').text()).toBe(
       'createUserTemplateModal.contentTitle'
     )
     expect(selectedApplicationIds(wrapper)).toStrictEqual([11, 12])
@@ -544,11 +589,48 @@ describe('CreateUserTemplateModal', () => {
     })
   })
 
+  test('keeps a template that is still being sent when shown again', async () => {
+    let respond = null
+    testApp.mock.onPost('/jobs/').reply(
+      () =>
+        new Promise((resolve) => {
+          respond = resolve
+        })
+    )
+    const wrapper = await mountAndShow()
+    await goToContent(wrapper)
+    await createButton(wrapper).trigger('click')
+    await flushPromises()
+
+    expect(
+      wrapper.find('.user-template-modal__back').attributes('disabled')
+    ).toBeDefined()
+    expect(wrapper.findComponent({ name: 'Dropdown' }).props('disabled')).toBe(
+      true
+    )
+
+    wrapper.vm.hide()
+    await wrapper.vm.show()
+    await flushPromises()
+
+    expect(wrapper.find('.user-template-modal__title').text()).toBe(
+      'createUserTemplateModal.contentTitle'
+    )
+    expect(wrapper.vm.values.name).toBe('Sprint Tracker')
+    expect(createButton(wrapper).attributes('disabled')).toBeDefined()
+
+    respond([200, runningJob()])
+    await flushPromises()
+
+    expect(wrapper.vm.values.name).toBe('Sprint Tracker')
+    expect(wrapper.findComponent({ name: 'ProgressBar' }).exists()).toBe(true)
+  })
+
   test('shows a running job again', async () => {
     await testApp.store.dispatch('job/forceCreate', runningJob())
     const wrapper = await mountAndShow()
 
-    expect(wrapper.find('.create-user-template-modal__title').text()).toBe(
+    expect(wrapper.find('.user-template-modal__title').text()).toBe(
       'createUserTemplateModal.contentTitle'
     )
     expect(wrapper.findComponent({ name: 'ProgressBar' }).exists()).toBe(true)
@@ -569,5 +651,19 @@ describe('CreateUserTemplateModal', () => {
       workspaceId: 1,
       applicationIds: [11],
     })
+  })
+
+  test("doesn't show the job of a template update", async () => {
+    await testApp.store.dispatch(
+      'job/forceCreate',
+      runningJob({ template: 3, application_ids: [] })
+    )
+    const wrapper = await mountAndShow()
+
+    expect(wrapper.find('.user-template-modal__title').text()).toBe(
+      'createUserTemplateModal.detailsTitle'
+    )
+    expect(wrapper.findComponent({ name: 'ProgressBar' }).exists()).toBe(false)
+    expect(wrapper.find('input').element.value).toBe('')
   })
 })

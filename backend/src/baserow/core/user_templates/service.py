@@ -6,8 +6,11 @@ from baserow.core.exceptions import PermissionDenied
 from baserow.core.feature_flags import FF_USER_TEMPLATES, feature_flag_is_enabled
 from baserow.core.job_types import ExportApplicationsJobType
 from baserow.core.jobs.registries import job_type_registry
-from baserow.core.models import Application, Workspace
-from baserow.core.user_templates.exceptions import NoApplicationsSelected
+from baserow.core.models import Application, Template, Workspace
+from baserow.core.user_templates.exceptions import (
+    NoApplicationsSelected,
+    TemplateHasNoContent,
+)
 from baserow.core.user_templates.handler import UserTemplateHandler
 from baserow.core.utils import ChildProgressBuilder
 
@@ -82,3 +85,42 @@ class UserTemplateService:
             progress_builder=progress_builder,
             track_content=track_content,
         )
+
+    def get_own_template(self, user: AbstractUser, template_id: int) -> Template:
+        """
+        Returns a user template the user owns, so that they can manage it. See
+        `UserTemplateHandler.get_own_template` for further details.
+
+        :param user: The user who must own the template.
+        :param template_id: The id of the template, which is its root.
+        :raises FeatureDisabledException: If user templates are disabled.
+        :raises TemplateDoesNotExist: If the user doesn't own the template.
+        :return: The root of the template.
+        """
+
+        feature_flag_is_enabled(FF_USER_TEMPLATES, raise_if_disabled=True)
+
+        return UserTemplateHandler().get_own_template(user, template_id)
+
+    def get_template_content(
+        self, base_revision: Template
+    ) -> Tuple[Workspace, Optional[str]]:
+        """
+        Returns the content of a revision of a user template, which its next
+        revision reuses when only the details change. The revisions then share the
+        workspace and the archive, so that a details-only update is cheap and can
+        be told apart from a content change. The ownership of the template is
+        checked by the caller.
+
+        :param base_revision: The revision whose content is reused.
+        :raises FeatureDisabledException: If user templates are disabled.
+        :raises TemplateHasNoContent: If the content of the revision was removed.
+        :return: The workspace and the name of the archive of the revision.
+        """
+
+        feature_flag_is_enabled(FF_USER_TEMPLATES, raise_if_disabled=True)
+
+        if base_revision.workspace_id is None or base_revision.pruned_at:
+            raise TemplateHasNoContent("The template has no content anymore.")
+
+        return base_revision.workspace, base_revision.archive.name or None

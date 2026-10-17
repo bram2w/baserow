@@ -1,23 +1,23 @@
 <template>
   <Modal
     ref="modal"
-    small
+    class="user-template-modal-wrapper"
     :box-padding="false"
     :close-button="false"
     @hidden="$emit('hidden')"
   >
-    <div class="create-user-template-modal">
-      <div class="create-user-template-modal__head">
+    <div class="user-template-modal">
+      <div class="user-template-modal__head">
         <button
           v-if="step === 'content'"
           type="button"
-          class="create-user-template-modal__head-action create-user-template-modal__back"
-          :disabled="jobIsRunning"
+          class="user-template-modal__head-action user-template-modal__back"
+          :disabled="jobIsRunning || createLoading"
           @click="goToDetails"
         >
           <i class="iconoir-nav-arrow-left"></i>
         </button>
-        <h2 class="create-user-template-modal__title">
+        <h2 class="user-template-modal__title">
           {{
             step === 'details'
               ? $t('createUserTemplateModal.detailsTitle')
@@ -26,7 +26,7 @@
         </h2>
         <button
           type="button"
-          class="create-user-template-modal__head-action"
+          class="user-template-modal__head-action"
           :title="$t('action.close')"
           @click="hide()"
         >
@@ -35,93 +35,21 @@
       </div>
 
       <template v-if="step === 'details'">
-        <div class="create-user-template-modal__body">
-          <p class="create-user-template-modal__description">
+        <div class="user-template-modal__body">
+          <p class="user-template-modal__description">
             {{ $t('createUserTemplateModal.detailsDescription') }}
           </p>
-
-          <FormGroup
-            :label="$t('createUserTemplateModal.name')"
-            small-label
-            required
-            :error-message="nameError"
-            class="margin-bottom-2"
-          >
-            <div class="create-user-template-modal__name">
-              <button
-                ref="iconButton"
-                type="button"
-                class="create-user-template-modal__icon-button"
-                :title="$t('createUserTemplateModal.chooseIcon')"
-                @click="
-                  $refs.iconContext.toggle(
-                    $refs.iconButton,
-                    'bottom',
-                    'left',
-                    4
-                  )
-                "
-              >
-                <i :class="values.icon"></i>
-                <i
-                  class="create-user-template-modal__icon-button-arrow iconoir-nav-arrow-down"
-                ></i>
-              </button>
-              <FormInput
-                v-model="values.name"
-                class="create-user-template-modal__name-input"
-                :maxlength="nameMaxLength"
-                :placeholder="$t('createUserTemplateModal.namePlaceholder')"
-                :error="Boolean(nameError)"
-              />
-            </div>
-            <TemplateIconSelectContext
-              ref="iconContext"
-              :active="values.icon"
-              @selected="values.icon = $event"
-            />
-          </FormGroup>
-
-          <FormGroup
-            :label="$t('createUserTemplateModal.description')"
-            small-label
-            :helper-text="`${values.description.length} / ${descriptionMaxLength}`"
-            class="margin-bottom-2"
-          >
-            <FormTextarea
-              v-model="values.description"
-              :rows="2"
-              :maxlength="descriptionMaxLength"
-              :placeholder="
-                $t('createUserTemplateModal.descriptionPlaceholder')
-              "
-            />
-          </FormGroup>
-
-          <FormGroup
-            v-if="categories.length > 0"
-            :label="$t('createUserTemplateModal.categories')"
-            small-label
-            required
-            :error-message="categoriesError"
-          >
-            <div class="create-user-template-modal__categories">
-              <Chips
-                v-for="category in categories"
-                :key="category.id"
-                type="button"
-                size="small"
-                :active="values.categoryIds.includes(category.id)"
-                @click="toggleCategory(category.id)"
-              >
-                {{ category.name }}
-              </Chips>
-            </div>
-          </FormGroup>
+          <UserTemplateDetailsForm
+            ref="detailsForm"
+            :model-value="details"
+            :categories="categories"
+            :show-errors="detailsSubmitted"
+            @update:model-value="Object.assign(values, $event)"
+          />
         </div>
 
-        <div class="create-user-template-modal__footer">
-          <div class="create-user-template-modal__footer-actions">
+        <div class="user-template-modal__footer">
+          <div class="user-template-modal__footer-actions">
             <Button type="secondary" @click="hide()">
               {{ $t('action.cancel') }}
             </Button>
@@ -132,79 +60,42 @@
         </div>
       </template>
 
-      <template v-else>
-        <div class="create-user-template-modal__body">
-          <p class="create-user-template-modal__description">
-            {{ $t('createUserTemplateModal.contentDescription') }}
-          </p>
+      <!-- The content form stays mounted between the steps, so that it loads the
+      permissions and keeps the chosen workspace once per opening. -->
+      <div v-show="step === 'content'" class="user-template-modal__body">
+        <p class="user-template-modal__description">
+          {{ $t('createUserTemplateModal.contentDescription') }}
+        </p>
 
-          <FormGroup
-            :label="$t('createUserTemplateModal.workspace')"
-            small-label
-            required
-            class="margin-bottom-2"
-          >
-            <Dropdown
-              :model-value="values.workspaceId"
-              :disabled="jobIsRunning"
-              @update:model-value="chooseWorkspace"
-            >
-              <DropdownItem
-                v-for="workspace in workspaces"
-                :key="workspace.id"
-                :name="workspace.name"
-                :value="workspace.id"
-                :disabled="getDisabledReason(workspace) !== null"
-                :description="getDisabledReason(workspace)"
-              />
-            </Dropdown>
-          </FormGroup>
+        <UserTemplateContentForm
+          :model-value="content"
+          :disabled="jobIsRunning || createLoading"
+          @update:model-value="Object.assign(values, $event)"
+          @update:valid="contentValid = $event"
+        />
 
-          <ApplicationSelector
-            v-if="selectedWorkspace"
-            :key="selectedWorkspace.id"
-            :workspace="selectedWorkspace"
-            :selected-application-ids="values.applicationIds"
-            :disabled="jobIsRunning"
-            :title="$t('createUserTemplateModal.applications')"
-            class="margin-bottom-2"
-            @update="values.applicationIds = $event"
-          />
+        <Error :error="error" class="margin-bottom-0"></Error>
+      </div>
 
-          <Alert type="info-neutral" class="margin-bottom-0">
-            <template #title>
-              {{ $t('createUserTemplateModal.noticeTitle') }}
-            </template>
-            <ul class="create-user-template-modal__notice-list">
-              <li>{{ $t('createUserTemplateModal.noticeSecrets') }}</li>
-              <li>{{ $t('createUserTemplateModal.noticePeople') }}</li>
-              <li>{{ $t('createUserTemplateModal.noticePersonalViews') }}</li>
-              <li>{{ $t('createUserTemplateModal.noticeReferences') }}</li>
-            </ul>
-            <p>{{ $t('createUserTemplateModal.noticeRest') }}</p>
-          </Alert>
-
-          <Error :error="error" class="margin-bottom-0"></Error>
-        </div>
-
-        <div class="create-user-template-modal__footer">
+      <template v-if="step === 'content'">
+        <div class="user-template-modal__footer">
           <div
             v-if="jobIsRunning || jobIsFinished"
-            class="create-user-template-modal__progress"
+            class="user-template-modal__progress"
           >
             <ProgressBar
               :value="job.progress_percentage"
               :status="jobHumanReadableState"
             />
           </div>
-          <div v-else class="create-user-template-modal__selected">
+          <div v-else class="user-template-modal__selected">
             {{
-              $t('createUserTemplateModal.selectedApplications', {
+              $t('userTemplateContentForm.selectedApplications', {
                 count: values.applicationIds.length,
               })
             }}
           </div>
-          <div class="create-user-template-modal__footer-actions">
+          <div class="user-template-modal__footer-actions">
             <ButtonText
               v-if="jobIsRunning || cancelLoading"
               tag="a"
@@ -240,17 +131,12 @@ import job from '@baserow/modules/core/mixins/job'
 import JobService from '@baserow/modules/core/services/job'
 import { CreateUserTemplateJobType } from '@baserow/modules/core/jobTypes'
 import { DEFAULT_TEMPLATE_ICON } from '@baserow/modules/core/utils/templateIcons'
-import { fetchPermissionsOfWorkspaces } from '@baserow/modules/core/utils/workspace'
-import ApplicationSelector from '@baserow/modules/core/components/export/ApplicationSelector'
-import TemplateIconSelectContext from '@baserow/modules/core/components/template/TemplateIconSelectContext'
-
-// Mirrors the limits of the create request.
-const NAME_MAX_LENGTH = 64
-const DESCRIPTION_MAX_LENGTH = 80
+import UserTemplateContentForm from '@baserow/modules/core/components/template/UserTemplateContentForm'
+import UserTemplateDetailsForm from '@baserow/modules/core/components/template/UserTemplateDetailsForm'
 
 export default {
   name: 'CreateUserTemplateModal',
-  components: { ApplicationSelector, TemplateIconSelectContext },
+  components: { UserTemplateContentForm, UserTemplateDetailsForm },
   mixins: [modal, error, job],
   props: {
     // The categories an author can pick from, each with an `id` and a `name`. An
@@ -267,45 +153,23 @@ export default {
       // The errors of the details step show after the first attempt to continue.
       detailsSubmitted: false,
       createLoading: false,
-      // Whether the author picked the workspace, which must then stay selected.
-      workspaceChosen: false,
+      // Whether the content form allows to create the template.
+      contentValid: false,
       values: this.getDefaultValues(),
-      nameMaxLength: NAME_MAX_LENGTH,
-      descriptionMaxLength: DESCRIPTION_MAX_LENGTH,
     }
   },
   computed: {
-    workspaces() {
-      return this.$store.getters['workspace/getAllSorted']
+    details() {
+      const { icon, name, description, categoryIds } = this.values
+      return { icon, name, description, categoryIds }
     },
-    selectedWorkspace() {
-      return (
-        this.workspaces.find(
-          (workspace) => workspace.id === this.values.workspaceId
-        ) || null
-      )
-    },
-    nameError() {
-      if (this.detailsSubmitted && this.values.name.trim() === '') {
-        return this.$t('createUserTemplateModal.nameRequired')
-      }
-      return ''
-    },
-    categoriesError() {
-      if (
-        this.detailsSubmitted &&
-        this.categories.length > 0 &&
-        this.values.categoryIds.length === 0
-      ) {
-        return this.$t('createUserTemplateModal.categoriesRequired')
-      }
-      return ''
+    content() {
+      const { workspaceId, applicationIds } = this.values
+      return { workspaceId, applicationIds }
     },
     canCreate() {
       return (
-        this.selectedWorkspace !== null &&
-        this.getDisabledReason(this.selectedWorkspace) === null &&
-        this.values.applicationIds.length > 0 &&
+        this.contentValid &&
         !this.createLoading &&
         !this.jobIsRunning &&
         !this.jobIsFinished
@@ -316,17 +180,17 @@ export default {
     show(...args) {
       // A running job is shown again instead of an empty form, also one started
       // from another wizard. A job that failed while the modal was closed is shown
-      // once with its error and inputs.
+      // once with its error and inputs. A template still being sent keeps its
+      // inputs.
       const runningJob = this.findRunningJob()
       if (runningJob && runningJob.id !== this.job?.id) {
         this.reset()
         this.restoreJob(runningJob)
       } else if (this.job?.state === 'failed') {
         this.job = null
-      } else if (!this.jobIsRunning) {
+      } else if (!this.jobIsRunning && !this.createLoading) {
         this.reset()
       }
-      this.loadPermissions()
       modal.methods.show.call(this, ...args)
     },
     getDefaultValues() {
@@ -335,6 +199,7 @@ export default {
         name: '',
         description: '',
         categoryIds: [],
+        // The content form selects a workspace when it's shown.
         workspaceId: null,
         applicationIds: [],
       }
@@ -343,29 +208,16 @@ export default {
       this.step = 'details'
       this.detailsSubmitted = false
       this.createLoading = false
-      this.workspaceChosen = false
+      this.contentValid = false
       this.job = null
       this.values = this.getDefaultValues()
       this.hideError()
-      this.selectWorkspace(this.getDefaultWorkspaceId())
-    },
-    /**
-     * The selected workspace if a template can be created from it, otherwise the
-     * first one it can be created from.
-     */
-    getDefaultWorkspaceId() {
-      const selected = this.$store.getters['workspace/getSelected']
-      const candidates = selected
-        ? [selected, ...this.workspaces]
-        : [...this.workspaces]
-      const workspace =
-        candidates.find((w) => this.getDisabledReason(w) === null) ||
-        candidates[0]
-      return workspace?.id ?? null
     },
     findRunningJob() {
+      // A job with a template from the start updates that template.
       return this.$store.getters['job/getUnfinishedJobs'].find(
-        (job) => job.type === CreateUserTemplateJobType.getType()
+        (job) =>
+          job.type === CreateUserTemplateJobType.getType() && !job.template
       )
     },
     restoreJob(runningJob) {
@@ -380,69 +232,9 @@ export default {
         applicationIds: [...runningJob.application_ids],
       }
     },
-    /**
-     * The permissions of a workspace are only fetched when needed, so the ones of
-     * the workspaces a template can be created from are fetched here. Until then
-     * the global permissions are used and the backend checks again.
-     */
-    async loadPermissions() {
-      await fetchPermissionsOfWorkspaces(this.$store, this.workspaces)
-      if (
-        this.jobIsRunning ||
-        this.workspaceChosen ||
-        this.getDisabledReason(this.selectedWorkspace) === null
-      ) {
-        return
-      }
-      this.selectWorkspace(this.getDefaultWorkspaceId())
-    },
-    /**
-     * Explains why a template can't be created from the workspace, or is null when
-     * it can.
-     */
-    getDisabledReason(workspace) {
-      if (workspace === null) {
-        return ''
-      }
-      if (
-        this.$store.getters['application/getAllOfWorkspace'](workspace)
-          .length === 0
-      ) {
-        return this.$t('createUserTemplateModal.workspaceEmpty')
-      }
-      if (!this.$hasPermission('workspace.export', workspace, workspace.id)) {
-        return this.$t('createUserTemplateModal.workspaceNoPermission')
-      }
-      return null
-    },
-    chooseWorkspace(workspaceId) {
-      this.workspaceChosen = true
-      this.selectWorkspace(workspaceId)
-    },
-    /**
-     * A different workspace has different applications, so the selection starts
-     * again with all of them.
-     */
-    selectWorkspace(workspaceId) {
-      this.values.workspaceId = workspaceId
-      const workspace = this.selectedWorkspace
-      this.values.applicationIds = workspace
-        ? this.$store.getters['application/getAllOfWorkspace'](workspace).map(
-            (application) => application.id
-          )
-        : []
-    },
-    toggleCategory(categoryId) {
-      const index = this.values.categoryIds.indexOf(categoryId)
-      if (index === -1) {
-        this.values.categoryIds.push(categoryId)
-      } else {
-        this.values.categoryIds.splice(index, 1)
-      }
-    },
     goToContent() {
       this.detailsSubmitted = true
-      if (this.nameError || this.categoriesError) {
+      if (!this.$refs.detailsForm.isValid()) {
         return
       }
       this.step = 'content'
@@ -482,7 +274,7 @@ export default {
       this.reset()
     },
     onJobFailed() {
-      if (this.job.template) {
+      if (this.job.revision) {
         // It failed after the template was created, which is kept. It's handled
         // as created, so that the author doesn't create it again.
         this.$store.dispatch('toast/warning', {

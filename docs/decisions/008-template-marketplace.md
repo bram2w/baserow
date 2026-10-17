@@ -28,7 +28,7 @@ Official templates keep working as they do today.
 | Template link      | Permanent, non-secret address of a template.                                                                                                         |
 | Private link       | Optional secret, rotatable, login-only link the author can create to share a template. Opening it grants the signed-in user access to that template. |
 | Revision           | One version of a user template's content and details. The first one is created with the template, and every update creates a new one.                |
-| Template workspace | Hidden, memberless workspace holding one revision's content.                                                                                         |
+| Template workspace | Hidden, memberless workspace holding a revision's content.                                                                                           |
 
 ## Decision
 
@@ -62,8 +62,8 @@ it, install copies from it, and download exports it.
 - The copy follows the content rules below. Before creating or updating content, the
   author is told which kinds of data the copy removes and that everything else is shared
   as it is.
-- Updating content or details creates a new revision with its own copy; earlier
-  revisions are not changed. The template keeps its identity and links, and a failed or
+- Updating content or details creates a new revision; earlier revisions and their
+  content are not changed. The template keeps its identity and links, and a failed or
   cancelled update leaves its revisions as they were.
 - The template workspace is migrated like every other workspace, so installs always
   start from current data.
@@ -169,7 +169,7 @@ if it does not exist.
   follows section 2. It copies the revision the user opened, even if the author updates
   the template meanwhile.
 - Download works the same way as downloading a workspace export: a signed archive that
-  another instance can import. Each revision's archive is made when the revision is
+  another instance can import. A revision's archive is ready when the revision is
   created.
 - Installed copies are independent: later changes to the template never affect them.
 
@@ -192,7 +192,7 @@ permanently later; downloaded archives and installed copies are unaffected.
 
 ## Consequences
 
-- Each revision of a user template costs a full copy of its tables and files. There are
+- Every revision of a user template keeps its content, which costs storage. There are
   no size or count limits; instance admins can delete templates, and limits are the lever
   if storage grows.
 - User template previews cannot demonstrate every behavior (section 3).

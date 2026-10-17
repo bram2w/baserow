@@ -1,0 +1,50 @@
+.user-template-form__name {
+  @include flex-align-items(8px);
+}
+
+.user-template-form__name-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.user-template-form__icon-button {
+  @include flex-align-items(4px);
+
+  flex: 0 0 auto;
+  height: 36px;
+  padding: 0 8px;
+  border: 1px solid $palette-neutral-400;
+  background-color: $palette-neutral-0;
+  color: $palette-neutral-1200;
+  font-size: 16px;
+  cursor: pointer;
+
+  @include elevation($elevation-low);
+  @include rounded($rounded-md);
+
+  &:hover:not([disabled]) {
+    background-color: $palette-neutral-50;
+  }
+
+  &[disabled] {
+    cursor: not-allowed;
+    color: $palette-neutral-700;
+  }
+}
+
+.user-template-form__icon-button-arrow {
+  font-size: 12px;
+  color: $palette-neutral-700;
+}
+
+.user-template-form__categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.user-template-form__notice-list {
+  margin: 0 0 8px;
+  padding-left: 16px;
+  list-style: disc;
+}

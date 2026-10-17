@@ -348,6 +348,52 @@ describe('UserTemplateList', () => {
       .trigger('click')
 
     expect(wrapper.emitted('selected')).toStrictEqual([[template]])
+
+    const name = wrapper.find('.user-template-list__name[role="button"]')
+    expect(name.attributes('tabindex')).toBe('0')
+
+    await name.trigger('keydown', { key: 'Enter' })
+    await name.trigger('keydown', { key: ' ' })
+
+    expect(wrapper.emitted('selected')).toStrictEqual([
+      [template],
+      [template],
+      [template],
+    ])
+  })
+
+  test('opens the actions of a row without selecting it', async () => {
+    const templates = [
+      userTemplate(1, 'Sprint Tracker'),
+      userTemplate(2, 'Growth Playbook', 'blocked'),
+    ]
+    mockPages(page(templates))
+    const wrapper = await mountComponent()
+    const actionButtons = wrapper.findAll(
+      '.user-template-list__actions .button-icon'
+    )
+
+    // Any state, blocked included, can be updated.
+    expect(actionButtons).toHaveLength(2)
+
+    await actionButtons[1].trigger('keydown', { key: 'Enter' })
+    await actionButtons[1].trigger('click')
+
+    expect(wrapper.emitted('selected')).toBeUndefined()
+
+    const links = wrapper.findAll('.context__menu-item-link')
+    expect(links.map((link) => link.text())).toStrictEqual([
+      'userTemplateList.editDetails',
+      'userTemplateList.updateContent',
+    ])
+
+    await links[1].trigger('click')
+    expect(wrapper.emitted('edit')).toStrictEqual([[templates[1], 'content']])
+
+    await actionButtons[0].trigger('click')
+    await wrapper.findAll('.context__menu-item-link')[0].trigger('click')
+    expect(wrapper.emitted('edit')[1]).toStrictEqual([templates[0], 'details'])
+    expect(wrapper.emitted('selected')).toBeUndefined()
   })
 
   test('reloads the first page on refresh', async () => {
