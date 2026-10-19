@@ -43,6 +43,7 @@ def test_dashboard_export_serialized(data_fixture):
         "type": "dashboard",
         "integrations": [],
         "data_sources": [],
+        "filters": [],
         "widgets": [],
     }
 
@@ -146,6 +147,7 @@ def test_dashboard_export_serialized_with_widgets(data_fixture):
                 },
             },
         ],
+        "filters": [],
         "widgets": [
             {
                 "data_source_id": dashboard_widget.data_source.id,
@@ -234,6 +236,7 @@ def test_dashboard_import_serialized(data_fixture):
         "type": "dashboard",
         "integrations": [],
         "data_sources": [],
+        "filters": [],
         "widgets": [],
     }
 
@@ -318,6 +321,7 @@ def test_dashboard_import_serialized_with_legacy_widgets(data_fixture):
                 },
             },
         ],
+        "filters": [],
         "widgets": [
             {
                 "data_source_id": 1,

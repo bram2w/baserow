@@ -1,9 +1,14 @@
 from django.db import transaction
 
 from baserow.contrib.dashboard.handler import DashboardHandler
+from baserow.contrib.dashboard.widgets.models import Widget
+from baserow.contrib.dashboard.widgets.operations import UpdateWidgetOperationType
+from baserow.contrib.database.fields.models import Field
 from baserow.core.handler import CoreHandler
 from baserow.core.trash.handler import TrashHandler
 
+from .exceptions import DashboardFilterInvalidBinding
+from .field_types import get_text_field_type
 from .handler import DashboardFilterHandler
 from .operations import (
     CreateDashboardFilterOperationType,
@@ -42,6 +47,7 @@ class DashboardFilterService:
             workspace=dashboard.workspace,
             context=dashboard,
         )
+        self.validate_bindings(user, dashboard, values.get("bindings", []))
         dashboard_filter = self.handler.create_filter(dashboard, **values)
         dashboard_filters_updated.send(self, dashboard=dashboard, user=user)
         return dashboard_filter
@@ -72,8 +78,40 @@ class DashboardFilterService:
             workspace=dashboard_filter.dashboard.workspace,
             context=dashboard_filter,
         )
+        if "bindings" in values:
+            self.validate_bindings(user, dashboard_filter.dashboard, values["bindings"])
         previous, updated = self.handler.update_filter(dashboard_filter, **values)
         dashboard_filters_updated.send(
             self, dashboard=dashboard_filter.dashboard, user=user
         )
         return dashboard_filter, previous, updated
+
+    def validate_bindings(self, user, dashboard, bindings):
+        widget_ids = [binding["widget_id"] for binding in bindings]
+        widgets = {
+            widget.id: widget.specific
+            for widget in Widget.objects.filter(dashboard=dashboard, id__in=widget_ids)
+        }
+        if len(widget_ids) != len(set(widget_ids)) or set(widget_ids) != widgets.keys():
+            raise DashboardFilterInvalidBinding(
+                "Each binding must reference a different widget in this dashboard."
+            )
+        for binding in bindings:
+            widget = widgets[binding["widget_id"]]
+            CoreHandler().check_permissions(
+                user,
+                UpdateWidgetOperationType.type,
+                workspace=dashboard.workspace,
+                context=widget,
+            )
+            if binding["field_id"] is None:
+                # A missing field remains a broken association, including after undo.
+                continue
+            field = Field.objects.filter(id=binding["field_id"]).first()
+            source = getattr(widget, "data_source", None)
+            service = source.service.specific if source and source.service else None
+            if field is None or field.table_id != getattr(service, "table_id", None):
+                raise DashboardFilterInvalidBinding(
+                    "The field must belong to the widget's source table."
+                )
+            get_text_field_type(field.specific)

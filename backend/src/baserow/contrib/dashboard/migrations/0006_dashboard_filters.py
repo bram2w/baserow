@@ -6,9 +6,9 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("dashboard", "0005_populate_widget_grid_layout"),
+        ("database", "0227_backfill_rowhistory_anonymous_actor_type"),
     ]
 
     operations = [
@@ -67,6 +67,53 @@ class Migration(migrations.Migration):
             ],
             options={
                 "ordering": ("id",),
+            },
+        ),
+        migrations.CreateModel(
+            name="DashboardFilterBinding",
+            fields=[
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "field",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="database.field",
+                    ),
+                ),
+                (
+                    "filter",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="bindings",
+                        to="dashboard.dashboardfilter",
+                    ),
+                ),
+                (
+                    "widget",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="filter_bindings",
+                        to="dashboard.widget",
+                    ),
+                ),
+            ],
+            options={
+                "ordering": ("widget_id",),
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=("filter", "widget"),
+                        name="dashboard_filter_widget_unique",
+                    )
+                ],
             },
         ),
     ]

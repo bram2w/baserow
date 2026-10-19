@@ -38,3 +38,23 @@ class DashboardFilter(
 
     def get_parent(self):
         return self.dashboard
+
+
+class DashboardFilterBinding(models.Model):
+    """An explicit association, retained as broken if its field is deleted."""
+
+    filter = models.ForeignKey(
+        DashboardFilter, on_delete=models.CASCADE, related_name="bindings"
+    )
+    widget = models.ForeignKey(
+        "dashboard.Widget", on_delete=models.CASCADE, related_name="filter_bindings"
+    )
+    field = models.ForeignKey("database.Field", on_delete=models.SET_NULL, null=True)
+
+    class Meta:
+        ordering = ("widget_id",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=("filter", "widget"), name="dashboard_filter_widget_unique"
+            )
+        ]

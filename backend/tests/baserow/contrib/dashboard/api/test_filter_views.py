@@ -112,3 +112,71 @@ def test_filter_rejects_unsupported_configuration(api_client, data_fixture, valu
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == 400
+
+
+@pytest.mark.django_db
+def test_bind_filter_to_widget_and_preserve_binding_through_undo(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    dashboard = data_fixture.create_dashboard_application(user=user)
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_text_field(table=table)
+    source = data_fixture.create_dashboard_local_baserow_aggregate_rows_data_source(
+        dashboard=dashboard, table=table
+    )
+    widget = data_fixture.create_summary_widget(dashboard=dashboard, data_source=source)
+    url = reverse("api:dashboard:filters:list", kwargs={"dashboard_id": dashboard.id})
+    headers = {
+        "HTTP_AUTHORIZATION": f"JWT {token}",
+        "HTTP_CLIENTSESSIONID": "bindings-session",
+    }
+    created = api_client.post(url, {"label": "Team"}, format="json", **headers).json()
+    item_url = reverse(
+        "api:dashboard:filters:item", kwargs={"filter_id": created["id"]}
+    )
+    bindings = [{"widget_id": widget.id, "field_id": field.id}]
+    response = api_client.patch(
+        item_url, {"bindings": bindings}, format="json", **headers
+    )
+    assert response.status_code == 200
+    assert response.json()["bindings"] == bindings
+    assert api_client.delete(item_url, **headers).status_code == 204
+    ActionHandler.undo(
+        user, [ApplicationActionScopeType.value(dashboard.id)], "bindings-session"
+    )
+    assert api_client.get(url, **headers).json()[0]["bindings"] == bindings
+    ActionHandler.undo(
+        user, [ApplicationActionScopeType.value(dashboard.id)], "bindings-session"
+    )
+    assert api_client.get(url, **headers).json()[0]["bindings"] == []
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("invalid", ["widget", "table", "type", "duplicate"])
+def test_filter_rejects_invalid_bindings(api_client, data_fixture, invalid):
+    user, token = data_fixture.create_user_and_token()
+    dashboard = data_fixture.create_dashboard_application(user=user)
+    table = data_fixture.create_database_table(user=user)
+    source = data_fixture.create_dashboard_local_baserow_aggregate_rows_data_source(
+        dashboard=dashboard, table=table
+    )
+    widget = data_fixture.create_summary_widget(dashboard=dashboard, data_source=source)
+    field = data_fixture.create_text_field(table=table)
+    if invalid == "widget":
+        widget = data_fixture.create_summary_widget()
+    elif invalid == "table":
+        field = data_fixture.create_text_field()
+    elif invalid == "type":
+        field = data_fixture.create_number_field(table=table)
+    bindings = [{"widget_id": widget.id, "field_id": field.id}]
+    if invalid == "duplicate":
+        bindings *= 2
+    url = reverse("api:dashboard:filters:list", kwargs={"dashboard_id": dashboard.id})
+    response = api_client.post(
+        url,
+        {"label": "Team", "bindings": bindings},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == 400

@@ -8,6 +8,8 @@ from django.urls import include, path
 from rest_framework import serializers
 
 from baserow.contrib.dashboard.data_sources.handler import DashboardDataSourceHandler
+from baserow.contrib.dashboard.filters.handler import DashboardFilterHandler
+from baserow.contrib.dashboard.filters.models import DashboardFilter
 from baserow.contrib.dashboard.models import Dashboard
 from baserow.contrib.dashboard.types import DashboardDict
 from baserow.contrib.dashboard.widgets.handler import WidgetHandler
@@ -85,6 +87,11 @@ class DashboardApplicationType(ApplicationType):
         for widget in widgets:
             TrashHandler.permanently_delete(widget)
 
+        for dashboard_filter in DashboardFilter.objects_and_trash.filter(
+            dashboard=dashboard
+        ):
+            TrashHandler.permanently_delete(dashboard_filter)
+
     def export_serialized(
         self,
         dashboard: Dashboard,
@@ -141,6 +148,10 @@ class DashboardApplicationType(ApplicationType):
             integrations=serialized_integrations,
             data_sources=serialized_data_sources,
             widgets=serialized_widgets,
+            filters=[
+                DashboardFilterHandler().export_filter(f)
+                for f in DashboardFilterHandler().get_filters(dashboard)
+            ],
             **serialized_dashboard,
         )
 
@@ -163,6 +174,7 @@ class DashboardApplicationType(ApplicationType):
         serialized_integrations = serialized_values.pop("integrations")
         serialized_data_sources = serialized_values.pop("data_sources")
         serialized_widgets = serialized_values.pop("widgets")
+        serialized_filters = serialized_values.pop("filters", [])
 
         progress = ChildProgressBuilder.build(progress_builder, child_total=100)
         application_progress = progress.create_child_builder(represents_progress=20)
@@ -222,5 +234,10 @@ class DashboardApplicationType(ApplicationType):
                 self.cache,
             )
             widgets_progress.increment()
+
+        for serialized_filter in serialized_filters:
+            DashboardFilterHandler().import_filter(
+                application, serialized_filter, id_mapping
+            )
 
         return application

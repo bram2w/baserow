@@ -18,10 +18,16 @@ from baserow.contrib.dashboard.filters.actions import (
     DeleteDashboardFilterActionType,
     UpdateDashboardFilterActionType,
 )
-from baserow.contrib.dashboard.filters.exceptions import DashboardFilterDoesNotExist
+from baserow.contrib.dashboard.filters.exceptions import (
+    DashboardFilterDoesNotExist,
+    DashboardFilterInvalidBinding,
+)
 from baserow.contrib.dashboard.filters.service import DashboardFilterService
 
-from .errors import ERROR_DASHBOARD_FILTER_DOES_NOT_EXIST
+from .errors import (
+    ERROR_DASHBOARD_FILTER_DOES_NOT_EXIST,
+    ERROR_DASHBOARD_FILTER_INVALID_BINDING,
+)
 from .serializers import DashboardFilterSerializer
 
 
@@ -37,7 +43,12 @@ class DashboardFiltersView(APIView):
             404: get_error_schema(["ERROR_DASHBOARD_DOES_NOT_EXIST"]),
         },
     )
-    @map_exceptions({DashboardDoesNotExist: ERROR_DASHBOARD_DOES_NOT_EXIST})
+    @map_exceptions(
+        {
+            DashboardDoesNotExist: ERROR_DASHBOARD_DOES_NOT_EXIST,
+            DashboardFilterInvalidBinding: ERROR_DASHBOARD_FILTER_INVALID_BINDING,
+        }
+    )
     def get(self, request, dashboard_id):
         filters = DashboardFilterService().get_filters(request.user, dashboard_id)
         return Response(DashboardFilterSerializer(filters, many=True).data)
@@ -58,8 +69,13 @@ class DashboardFiltersView(APIView):
         },
     )
     @transaction.atomic
-    @map_exceptions({DashboardDoesNotExist: ERROR_DASHBOARD_DOES_NOT_EXIST})
-    @validate_body(DashboardFilterSerializer)
+    @map_exceptions(
+        {
+            DashboardDoesNotExist: ERROR_DASHBOARD_DOES_NOT_EXIST,
+            DashboardFilterInvalidBinding: ERROR_DASHBOARD_FILTER_INVALID_BINDING,
+        }
+    )
+    @validate_body(DashboardFilterSerializer, return_validated=True)
     def post(self, request, dashboard_id, data):
         dashboard_filter = CreateDashboardFilterActionType.do(
             request.user, dashboard_id, data
@@ -86,9 +102,12 @@ class DashboardFilterView(APIView):
     )
     @transaction.atomic
     @map_exceptions(
-        {DashboardFilterDoesNotExist: ERROR_DASHBOARD_FILTER_DOES_NOT_EXIST}
+        {
+            DashboardFilterDoesNotExist: ERROR_DASHBOARD_FILTER_DOES_NOT_EXIST,
+            DashboardFilterInvalidBinding: ERROR_DASHBOARD_FILTER_INVALID_BINDING,
+        }
     )
-    @validate_body(DashboardFilterSerializer, partial=True)
+    @validate_body(DashboardFilterSerializer, partial=True, return_validated=True)
     def patch(self, request, filter_id, data):
         dashboard_filter = UpdateDashboardFilterActionType.do(
             request.user, filter_id, data

@@ -5,11 +5,21 @@ from django.db import models
 from django.db.models import Func
 
 from baserow.contrib.dashboard.data_sources.models import DashboardDataSource
-from baserow.contrib.dashboard.filters.models import DashboardFilter
+from baserow.contrib.dashboard.filters.models import (
+    DashboardFilter,
+    DashboardFilterBinding,
+)
 from baserow.contrib.dashboard.widgets.models import SummaryWidget, Widget
 from baserow.core.models import Application
 
-__all__ = ["Dashboard", "DashboardDataSource", "DashboardFilter", "SummaryWidget", "Widget"]
+__all__ = [
+    "Dashboard",
+    "DashboardDataSource",
+    "DashboardFilter",
+    "DashboardFilterBinding",
+    "SummaryWidget",
+    "Widget",
+]
 
 
 class RandomSlug(Func):
