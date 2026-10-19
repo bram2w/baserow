@@ -18,6 +18,7 @@
     <FormGroup
       :label="$t('dashboardFilter.type')"
       small-label
+      required
       class="margin-bottom-2"
     >
       <Dropdown model-value="text" disabled
@@ -30,6 +31,7 @@
     <FormGroup
       :label="$t('dashboardFilter.operator')"
       small-label
+      required
       class="margin-bottom-2"
     >
       <Dropdown
@@ -49,6 +51,7 @@
     <FormGroup
       :label="$t('dashboardFilter.mode')"
       small-label
+      required
       class="margin-bottom-2"
     >
       <SegmentControl
@@ -66,6 +69,7 @@
       v-if="filter.mode === 'dropdown'"
       :label="$t('dashboardFilter.usersCanPick')"
       small-label
+      required
       class="margin-bottom-2"
     >
       <SegmentControl

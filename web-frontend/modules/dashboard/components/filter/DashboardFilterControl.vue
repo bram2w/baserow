@@ -13,9 +13,15 @@
       <button
         :id="controlId"
         ref="trigger"
+        v-tooltip.focus="
+          hasUnavailable ? $t('dashboardFilter.unavailableHelp') : null
+        "
         class="dashboard-filter__trigger"
         type="button"
         :aria-expanded="opened"
+        :aria-description="
+          hasUnavailable ? $t('dashboardFilter.unavailableHelp') : undefined
+        "
         @click="activate"
       >
         <i class="iconoir-filter" aria-hidden="true"></i>
@@ -26,8 +32,7 @@
         }}</span>
         <i
           v-if="hasUnavailable"
-          v-tooltip="$t('dashboardFilter.unavailableHelp')"
-          class="iconoir-info-circle dashboard-filter__info"
+          class="iconoir-info-empty dashboard-filter__info"
           :aria-label="$t('dashboardFilter.unavailable')"
         ></i>
       </button>
@@ -88,8 +93,10 @@
                 <span class="dashboard-filter__option-value">{{ value }}</span>
                 <span
                   v-if="optionState.unavailable.includes(value)"
-                  v-tooltip="$t('dashboardFilter.unavailableHelp')"
+                  v-tooltip.focus="$t('dashboardFilter.unavailableHelp')"
                   class="dashboard-filter__unavailable"
+                  tabindex="0"
+                  :aria-label="$t('dashboardFilter.unavailableHelp')"
                   >{{ $t('dashboardFilter.unavailable') }}</span
                 >
               </Checkbox>
@@ -131,6 +138,7 @@
           <FormGroup
             :label="`${$t(`dashboardFilter.${filter.operator}`)}...`"
             small-label
+            required
           >
             <FormInput
               ref="input"

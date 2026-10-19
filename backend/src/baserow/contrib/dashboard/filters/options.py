@@ -1,6 +1,3 @@
-from django.db.models import F, TextField
-from django.db.models.functions import Cast, Collate
-
 from baserow.contrib.dashboard.data_sources.dispatch_context import (
     DashboardDispatchContext,
 )
@@ -15,7 +12,7 @@ from baserow.core.handler import CoreHandler
 from baserow.core.services.registries import service_type_registry
 
 from .exceptions import DashboardFilterInvalidBinding
-from .field_types import text_field_expression
+from .handler import DashboardFilterHandler
 from .runtime import get_binding_field
 from .service import DashboardFilterService
 
@@ -38,7 +35,7 @@ class DashboardFilterOptionsService:
             for widget in WidgetService().get_widgets(user, configuration.dashboard_id)
         }
         context = DashboardDispatchContext(request, configuration.dashboard.workspace)
-        choices, available = [], []
+        querysets = []
         visited_sources = set()
         for binding in configuration.bindings.filter(
             widget_id__in=widgets
@@ -70,45 +67,7 @@ class DashboardFilterOptionsService:
             # the same restricted queryset as dispatch, without dynamic selections.
             service_type.resolve_service_formulas(service, context)
             queryset = service_type.build_queryset(service, service.table, context)
-            queryset = (
-                queryset.annotate(
-                    dashboard_option_text=Cast(
-                        text_field_expression(field), TextField()
-                    ),
-                )
-                .annotate(dashboard_option=Collate(F("dashboard_option_text"), "C"))
-                .exclude(dashboard_option__isnull=True)
-                .exclude(dashboard_option__regex=r"^\s*$")
-                .order_by()
-            )
-            if selected:
-                available.append(
-                    queryset.filter(dashboard_option__in=selected)
-                    .values_list("dashboard_option", flat=True)
-                    .distinct()
-                )
-            if search:
-                queryset = queryset.filter(dashboard_option_text__icontains=search)
-            if after is not None:
-                queryset = queryset.filter(dashboard_option__gt=after)
-            choices.append(
-                queryset.values_list("dashboard_option", flat=True).distinct()
-            )
-
-        results = (
-            list(
-                choices[0].union(*choices[1:]).order_by("dashboard_option")[: limit + 1]
-            )
-            if choices
-            else []
+            querysets.append((queryset, field))
+        return DashboardFilterHandler().get_options(
+            querysets, search=search, after=after, limit=limit, selected=selected
         )
-        selected_available = (
-            list(available[0].union(*available[1:]).order_by("dashboard_option"))
-            if available
-            else []
-        )
-        return {
-            "results": results[:limit],
-            "next": results[limit - 1] if len(results) > limit else None,
-            "available": selected_available,
-        }

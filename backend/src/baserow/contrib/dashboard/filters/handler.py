@@ -1,7 +1,11 @@
+from django.db.models import F, TextField
+from django.db.models.functions import Cast, Collate
+
 from baserow.contrib.database.fields.models import Field
 from baserow.core.utils import extract_allowed
 
 from .exceptions import DashboardFilterDoesNotExist
+from .field_types import text_field_expression
 from .models import DashboardFilter, DashboardFilterBinding
 
 
@@ -93,3 +97,50 @@ class DashboardFilterHandler:
             dashboard_filter.id
         )
         return dashboard_filter
+
+    def get_options(self, querysets, *, search="", after=None, limit=50, selected=None):
+        """Union options from authorized source querysets, independently of selections."""
+        choices, available = [], []
+        for queryset, field in querysets:
+            queryset = (
+                queryset.annotate(
+                    dashboard_option_text=Cast(
+                        text_field_expression(field), TextField()
+                    ),
+                )
+                .annotate(dashboard_option=Collate(F("dashboard_option_text"), "C"))
+                .exclude(dashboard_option__isnull=True)
+                .exclude(dashboard_option__regex=r"^\s*$")
+                .order_by()
+            )
+            if selected:
+                available.append(
+                    queryset.filter(dashboard_option__in=selected)
+                    .values_list("dashboard_option", flat=True)
+                    .distinct()
+                )
+            if search:
+                queryset = queryset.filter(dashboard_option_text__icontains=search)
+            if after is not None:
+                queryset = queryset.filter(dashboard_option__gt=after)
+            choices.append(
+                queryset.values_list("dashboard_option", flat=True).distinct()
+            )
+
+        results = (
+            list(
+                choices[0].union(*choices[1:]).order_by("dashboard_option")[: limit + 1]
+            )
+            if choices
+            else []
+        )
+        selected_available = (
+            list(available[0].union(*available[1:]).order_by("dashboard_option"))
+            if available
+            else []
+        )
+        return {
+            "results": results[:limit],
+            "next": results[limit - 1] if len(results) > limit else None,
+            "available": selected_available,
+        }
