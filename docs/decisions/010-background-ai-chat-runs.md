@@ -105,9 +105,9 @@ Serve HTTP streaming endpoints through the existing ASGI deployment. Use async
 followers with a separate capacity limit and bounded Redis read pool. Long
 streams must not occupy ordinary REST admission slots or retain a database
 connection or request thread while waiting. Apply authentication, permissions
-and CORS explicitly, recheck access during long streams, send compatible
-heartbeats and release blocked reads on disconnect. Read permission does not
-grant Stop; a run identifier alone grants no access.
+and CORS explicitly, check read access when a stream opens or reconnects, send
+compatible heartbeats and release blocked reads on disconnect. Read permission
+does not grant Stop; a run identifier alone grants no access.
 
 ### 4. Keep lifecycle and final outcomes in Postgres
 
@@ -142,10 +142,11 @@ partial answer.
 
 Every started run without a durable complete result must leave or reconstruct
 an interruption warning for the next model request: changes may already exist.
-Preserve that warning before pruning run metadata, even after a failed product
-persistence hook. Only work that provably never started may report that nothing
-was done. Persistence retries may save an already-computed outcome, but cannot
-repeat model calls or tool effects.
+Try once more to preserve that warning before pruning run metadata after a
+failed product persistence hook; pruning does not wait for it to succeed, so
+run metadata never accumulates. Only work that provably never started may
+report that nothing was done. Persistence retries may save an already-computed
+outcome, but cannot repeat model calls or tool effects.
 
 ### Decision factors
 
@@ -191,10 +192,12 @@ repeat model calls or tool effects.
   may lose queued Celery work, which ends through the not-started timeout. An interrupted worker
   is not resumable, and shutdown grace can interrupt a long run.
 - Deployment must route streaming endpoints to ASGI and forward response chunks
-  without proxy buffering, with suitable idle timeouts, follower admission limits,
-  access rechecks and bounded reconnects. Redis persistence, failover and eviction
-  policies must be assessed per installation; another logical Redis database does
-  not isolate memory or eviction.
+  without proxy buffering, with suitable idle timeouts, follower admission limits
+  and bounded reconnects. Redis persistence, failover and eviction policies must
+  be assessed per installation; another logical Redis database does not isolate
+  memory or eviction.
+- A user who loses access keeps an already open stream until the run ends;
+  reconnecting checks access again.
 
 ## Revisit triggers
 
