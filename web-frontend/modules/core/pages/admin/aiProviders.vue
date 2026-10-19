@@ -111,6 +111,11 @@ import AIProviderModelFormModal from '@baserow/modules/core/components/ai/AIProv
 import aiProviderModelUsage from '@baserow/modules/core/mixins/aiProviderModelUsage'
 import { aiProviderErrorMessage } from '@baserow/modules/core/utils/aiProvider'
 
+definePageMeta({
+  layout: 'app',
+  middleware: ['staff'],
+})
+
 export default {
   name: 'AdminAIProviders',
   components: {
@@ -123,12 +128,6 @@ export default {
   },
   mixins: [aiProviderModelUsage],
   setup() {
-    // Must be declared via `definePageMeta` because Nuxt ignores the legacy
-    // `layout` and `middleware` component options.
-    definePageMeta({
-      layout: 'app',
-      middleware: ['staff'],
-    })
     const { $i18n } = useNuxtApp()
     useHead({ title: $i18n.t('aiProviderAdmin.title') })
   },
