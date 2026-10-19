@@ -45,9 +45,15 @@ class DashboardFilterOptionsService:
                     "The widget has no usable data source."
                 )
             service = source.service.specific
+            service_type = service_type_registry.get_by_model(service)
+            if not isinstance(service_type, LocalBaserowTableServiceType):
+                raise DashboardFilterInvalidBinding(
+                    "This data source does not support text filter options."
+                )
             table_id = getattr(service, "table_id", None)
             if table_id is None:
-                raise DashboardFilterInvalidBinding("The widget has no source table.")
+                # A widget without a selected table cannot contribute any options yet.
+                continue
             CoreHandler().check_permissions(
                 user,
                 DispatchDashboardDataSourceOperationType.type,
@@ -59,11 +65,6 @@ class DashboardFilterOptionsService:
             if source_key in visited_sources:
                 continue
             visited_sources.add(source_key)
-            service_type = service_type_registry.get_by_model(service)
-            if not isinstance(service_type, LocalBaserowTableServiceType):
-                raise DashboardFilterInvalidBinding(
-                    "This data source does not support text filter options."
-                )
             # Validate the source and resolve it with its integration identity. Build
             # the same restricted queryset as dispatch, without dynamic selections.
             service_type.resolve_service_formulas(service, context)
