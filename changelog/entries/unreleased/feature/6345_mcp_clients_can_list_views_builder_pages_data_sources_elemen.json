@@ -1,0 +1,9 @@
+{
+    "type": "feature",
+    "message": "MCP clients can list views, builder pages, data sources, elements, page actions, workflows and workflow nodes.",
+    "issue_origin": "github",
+    "issue_number": 6345,
+    "domain": "core",
+    "bullet_points": [],
+    "created_at": "2026-10-19"
+}
