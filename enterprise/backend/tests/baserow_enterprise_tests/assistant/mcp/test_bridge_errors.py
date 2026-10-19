@@ -14,6 +14,7 @@ from loguru import logger as loguru_logger
 from mcp.shared.memory import (
     create_connected_server_and_client_session as client_session,
 )
+from pydantic import TypeAdapter, ValidationError
 from pydantic_ai import ModelRetry
 
 from baserow.contrib.builder.pages.exceptions import PageDoesNotExist
@@ -108,6 +109,28 @@ def test_wrong_argument_type_names_the_argument(
     assert "application_id" in result.content[0].text
     assert "Internal error" not in result.content[0].text
     _assert_no_error_logged(caplog, error_records)
+
+
+@pytest.mark.django_db(transaction=True)
+def test_validation_error_inside_a_tool_body_is_internal(
+    data_fixture, setup, caplog, error_records
+):
+    user, mine, other, endpoint = setup
+    builder = data_fixture.create_builder_application(user=user, workspace=mine)
+    try:
+        TypeAdapter(int).validate_python("abc")
+    except ValidationError as exc:
+        body_error = exc
+
+    with patch(
+        "baserow_enterprise.assistant.tools.builder.helpers.list_pages",
+        side_effect=body_error,
+    ):
+        result = _call(endpoint, "list_pages", {"application_id": builder.id})
+
+    assert result.isError is True
+    assert result.content[0].text == "Internal error."
+    assert len(error_records) == 1
 
 
 @pytest.mark.django_db(transaction=True)

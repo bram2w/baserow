@@ -1,3 +1,5 @@
+import pytest
+
 from baserow_enterprise.assistant.tools.mcp_meta import get_mcp_meta, mcp_tool
 
 
@@ -20,7 +22,5 @@ def test_undecorated_function_has_no_meta():
 
 
 def test_read_only_and_destructive_are_exclusive():
-    import pytest
-
     with pytest.raises(ValueError):
         mcp_tool(title="x", group="g", read_only=True, destructive=True)

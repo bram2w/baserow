@@ -2,9 +2,10 @@ import json
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Union
 
 from asgiref.sync import sync_to_async
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from baserow.core.mcp.constants import LEGACY_DEFAULT_TOOLS
+from baserow.core.mcp.exceptions import MCPToolInputError, format_validation_error
 from baserow.core.mcp.models import MCPEndpoint
 from baserow.core.registry import Instance, Registry
 
@@ -124,7 +125,10 @@ class MCPTool(Instance):
         from mcp.types import TextContent
 
         if self.input_schema:
-            args = self.input_schema(**call_arguments)
+            try:
+                args = self.input_schema(**call_arguments)
+            except ValidationError as exc:
+                raise MCPToolInputError(format_validation_error(exc)) from exc
         else:
             args = call_arguments
         result = await sync_to_async(self._sync_call)(endpoint, args)
@@ -160,8 +164,8 @@ class MCPToolRegistry(Registry[MCPTool]):
     def get_allowed_tools(self, endpoint: MCPEndpoint) -> List[MCPTool]:
         """
         Return the enabled tools the endpoint may use. ``allowed_tools = None``
-        allows the ``LEGACY_DEFAULT_TOOLS`` that are enabled. Tools that are not available to the endpoint
-        are left out. This can query the database, so async code must call it
+        allows the ``LEGACY_DEFAULT_TOOLS`` that are enabled. Tools that are not
+        available to the endpoint are left out. This can query the database, so async code must call it
         through ``sync_to_async``.
         """
         tools = self.get_enabled_tools()

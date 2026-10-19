@@ -49,7 +49,7 @@ def _is_does_not_exist(exc: Exception) -> bool:
     )
 
 
-def _format_validation_error(exc: ValidationError) -> str:
+def format_validation_error(exc: ValidationError) -> str:
     problems = []
     for error in exc.errors(include_url=False, include_context=False):
         name = ".".join(str(part) for part in error["loc"])
@@ -90,8 +90,6 @@ def to_mcp_error(exc: Exception) -> str | None:
 
     if isinstance(exc, MCPToolInputError):
         return str(exc)
-    if isinstance(exc, ValidationError):
-        return _format_validation_error(exc)
     # UserNotInWorkspace is a PermissionException, but the user must not learn
     # whether the object exists in another workspace.
     if isinstance(exc, UserNotInWorkspace):

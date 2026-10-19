@@ -3,6 +3,7 @@ import json
 import pytest
 from asgiref.sync import async_to_sync
 
+from baserow.core.exceptions import InstanceTypeAlreadyRegistered
 from baserow.core.mcp.exceptions import MCPToolInputError
 from baserow.core.mcp.registries import mcp_tool_registry
 from baserow_enterprise.assistant.mcp.tools import (
@@ -31,8 +32,15 @@ def test_phase_one_tools_are_registered(name, expected):
     assert tool.destructive is False
 
 
+def test_only_phase_one_tools_are_registered():
+    names = {
+        t.type for t in mcp_tool_registry.get_all() if isinstance(t, AssistantMCPTool)
+    }
+    assert names == set(PHASE_ONE_TOOLS)
+
+
 def test_register_twice_fails():
-    with pytest.raises(Exception):
+    with pytest.raises(InstanceTypeAlreadyRegistered):
         register_assistant_mcp_tools()
 
 

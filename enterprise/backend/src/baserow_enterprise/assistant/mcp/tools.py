@@ -3,9 +3,10 @@ import json
 from typing import Any
 
 from asgiref.sync import async_to_sync, sync_to_async
+from pydantic import ValidationError
 from pydantic_ai import ModelRetry
 
-from baserow.core.mcp.exceptions import MCPToolInputError
+from baserow.core.mcp.exceptions import MCPToolInputError, format_validation_error
 from baserow.core.mcp.models import MCPEndpoint
 from baserow.core.mcp.registries import MCPTool, mcp_tool_registry
 from baserow_enterprise.assistant.deps import AssistantDeps, ToolHelpers
@@ -86,7 +87,10 @@ class AssistantMCPTool(MCPTool):
 
     def _sync_call(self, endpoint: MCPEndpoint, args: dict[str, Any]) -> Any:
         schema = self._tool.function_schema
-        kwargs = schema.validator.validate_python({**args, "thought": ""})
+        try:
+            kwargs = schema.validator.validate_python({**args, "thought": ""})
+        except ValidationError as exc:
+            raise MCPToolInputError(format_validation_error(exc)) from exc
         ctx = _Ctx(build_mcp_deps(endpoint))
         try:
             if schema.is_async:
