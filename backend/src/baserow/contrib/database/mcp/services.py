@@ -8,11 +8,12 @@ so callers never need to worry about permissions or cross-workspace access.
 """
 
 from contextlib import contextmanager
-from typing import Any
+from typing import Any, Callable
 
 from django.contrib.auth.models import AbstractUser
 from django.db import transaction
 
+from baserow.api.utils import _search_up_class_hierarchy_for_mapping
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
@@ -28,13 +29,15 @@ from baserow.core.models import Workspace
 # ---------------------------------------------------------------------------
 
 
-def _user_error_messages() -> dict[type[Exception], str]:
+def _user_error_messages() -> dict[type[Exception], str | Callable[[Exception], str]]:
     """
     Baserow exceptions that a client causes with its input, with the message to give
-    it. Most of them carry no message of their own.
+    it, or a function that builds the message from the exception. Most of them carry
+    no message of their own.
     """
 
     from baserow.contrib.database.fields import exceptions as f
+    from baserow.contrib.database.rows import exceptions as r
 
     return {
         f.FieldWithSameNameAlreadyExists: "A field with this name already exists in "
@@ -61,6 +64,17 @@ def _user_error_messages() -> dict[type[Exception], str]:
         "this field.",
         f.InvalidFieldConstraint: "The field constraint is invalid.",
         f.InvalidDefaultValueFunction: "The default value function is invalid.",
+        f.FieldDataConstraintException: "The values violate a field constraint, "
+        "for example a duplicate value in a field that must be unique.",
+        r.CannotCreateRowsInTable: lambda exc: (
+            str(exc) or "Rows cannot be created in this table."
+        ),
+        r.CannotDeleteRowsInTable: lambda exc: (
+            str(exc) or "Rows cannot be deleted in this table."
+        ),
+        r.RowIdsNotUnique: lambda exc: (
+            "The row ids are not unique: " + ", ".join(str(i) for i in exc.ids) + "."
+        ),
     }
 
 
@@ -87,9 +101,11 @@ def input_errors():
     except _formula_error_types() as exc:
         raise MCPToolInputError(f"Invalid formula: {exc}") from exc
     except Exception as exc:
-        message = _user_error_messages().get(type(exc))
+        message = _search_up_class_hierarchy_for_mapping(exc, _user_error_messages())
         if message is None:
             raise
+        if callable(message):
+            message = message(exc)
         raise MCPToolInputError(message) from exc
 
 

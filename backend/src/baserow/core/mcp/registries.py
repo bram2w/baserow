@@ -2,6 +2,7 @@ import json
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Union
 
 from asgiref.sync import sync_to_async
+from loguru import logger
 from pydantic import BaseModel, ValidationError
 
 from baserow.core.mcp.constants import LEGACY_DEFAULT_TOOLS
@@ -161,6 +162,16 @@ class MCPToolRegistry(Registry[MCPTool]):
             return set(LEGACY_DEFAULT_TOOLS)
         return set(endpoint.allowed_tools)
 
+    @staticmethod
+    def _is_available(tool: MCPTool, endpoint: MCPEndpoint) -> bool:
+        # A failing check hides the tool instead of failing the whole request, and
+        # its error must not reach the client.
+        try:
+            return tool.is_available(endpoint)
+        except Exception:
+            logger.exception("MCP tool '{}' availability check failed", tool.name)
+            return False
+
     def get_allowed_tools(self, endpoint: MCPEndpoint) -> List[MCPTool]:
         """
         Return the enabled tools the endpoint may use. ``allowed_tools = None``
@@ -171,7 +182,7 @@ class MCPToolRegistry(Registry[MCPTool]):
         tools = self.get_enabled_tools()
         allowed = self._allowed_names(endpoint)
         tools = [tool for tool in tools if tool.name in allowed]
-        return [tool for tool in tools if tool.is_available(endpoint)]
+        return [tool for tool in tools if self._is_available(tool, endpoint)]
 
     async def list_all_tools(self, endpoint: MCPEndpoint) -> List["Tool"]:
         """Return the enabled tools the given endpoint is allowed to use."""
@@ -192,7 +203,7 @@ class MCPToolRegistry(Registry[MCPTool]):
             return None
         if name not in self._allowed_names(endpoint):
             return None
-        return tool if tool.is_available(endpoint) else None
+        return tool if self._is_available(tool, endpoint) else None
 
 
 mcp_tool_registry = MCPToolRegistry()

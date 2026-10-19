@@ -44,6 +44,10 @@ def _is_does_not_exist(exc: Exception) -> bool:
     # PageDoesNotExist, AutomationWorkflowDoesNotExist, ...) derive straight from
     # `Exception`, so there is no common base to test. Matching the name is the same
     # rule the assistant's mode router uses.
+    # Django's RelatedObjectDoesNotExist (a missing one-to-one, like user.profile) is
+    # also an AttributeError. It is a server bug, not a missing resource.
+    if isinstance(exc, AttributeError):
+        return False
     return isinstance(exc, ObjectDoesNotExist) or any(
         cls.__name__.endswith("DoesNotExist") for cls in type(exc).__mro__
     )
@@ -57,10 +61,17 @@ def format_validation_error(exc: ValidationError) -> str:
     return "Invalid arguments. " + "; ".join(problems)
 
 
+def _is_error_leaf(detail) -> bool:
+    # `validate_data` stores each error as {"error": message, "code": code}.
+    return isinstance(detail, dict) and set(detail) == {"error", "code"}
+
+
 def _flatten_detail(detail, prefix: str = "") -> list[str]:
     """Flattens nested DRF error details into ``name: message`` strings."""
 
-    if isinstance(detail, dict):
+    if _is_error_leaf(detail):
+        detail = detail["error"]
+    elif isinstance(detail, dict):
         messages = []
         for key, value in detail.items():
             child = f"{prefix}.{key}" if prefix else str(key)
@@ -71,7 +82,7 @@ def _flatten_detail(detail, prefix: str = "") -> list[str]:
         for index, value in enumerate(detail):
             child = (
                 prefix
-                if not isinstance(value, (dict, list, tuple))
+                if _is_error_leaf(value) or not isinstance(value, (dict, list, tuple))
                 else (f"{prefix}.{index}" if prefix else str(index))
             )
             messages.extend(_flatten_detail(value, child))
@@ -102,9 +113,10 @@ def to_mcp_error(exc: Exception) -> str | None:
         return "Invalid value. " + "; ".join(_flatten_detail(exc.detail["detail"]))
     if isinstance(exc, DRFValidationError):
         return "Invalid value. " + "; ".join(_flatten_detail(exc.detail))
-    # Before the generic rule: the type name is the client's own input.
+    # Before the generic rule. `Registry.get` passes the client's type name and a
+    # message, while `Registry.get_by_model` passes only a message for a server bug.
     if isinstance(exc, InstanceTypeDoesNotExist):
-        return f"'{exc.type_name}' is not a valid type."
+        return f"'{exc.type_name}' is not a valid type." if exc.args else None
     if _is_does_not_exist(exc):
         logger.warning(
             "MCP tool referenced a missing resource: {}: {}", type(exc).__name__, exc

@@ -97,3 +97,21 @@ def test_endpoint_without_allow_list_gets_only_legacy_default_tools(data_fixture
     ]
     assert registry.get_allowed_tool(endpoint, "brand_new_tool") is None
     assert registry.get_allowed_tool(endpoint, LEGACY_DEFAULT_TOOLS[0]) is not None
+
+
+@pytest.mark.django_db
+def test_failing_availability_check_hides_the_tool(data_fixture):
+    class FailingTool(MCPTool):
+        """A tool whose check fails."""
+
+        type = "availability_failing"
+
+        def is_available(self, endpoint):
+            raise RuntimeError("secret internals")
+
+    registry = MCPToolRegistry()
+    registry.register(FailingTool())
+    endpoint = data_fixture.create_mcp_endpoint(allowed_tools=["availability_failing"])
+
+    assert registry.get_allowed_tools(endpoint) == []
+    assert registry.get_allowed_tool(endpoint, "availability_failing") is None

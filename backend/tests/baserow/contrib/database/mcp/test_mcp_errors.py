@@ -158,3 +158,78 @@ def test_to_mcp_error_flattens_validation_errors():
         RequestBodyValidationException({"items": [{"name": ["Required."]}]})
     )
     assert "items.0.name: Required." in body
+
+
+@pytest.mark.django_db
+def test_repeated_row_id(table_setup, caplog, error_records):
+    data_fixture, endpoint, table = table_setup
+    data_fixture.create_text_field(table=table, name="Name", primary=True)
+    row = table.get_model().objects.create()
+
+    result = _call(
+        endpoint,
+        "update_rows",
+        {"table_id": table.id, "rows": [{"id": row.id}, {"id": row.id}]},
+    )
+
+    _assert_readable_error(result, caplog, error_records, "not unique", str(row.id))
+
+
+@pytest.mark.parametrize(
+    "exc,expected",
+    [
+        ("CannotCreateRowsInTable", "data sync"),
+        ("CannotDeleteRowsInTable", "data sync"),
+    ],
+)
+def test_input_errors_keeps_the_row_exception_message(exc, expected):
+    from baserow.contrib.database.mcp.services import input_errors
+    from baserow.contrib.database.rows import exceptions
+    from baserow.core.mcp.exceptions import MCPToolInputError
+
+    with pytest.raises(MCPToolInputError, match=expected):
+        with input_errors():
+            raise getattr(exceptions, exc)("Can't change rows, it has a data sync.")
+
+
+def test_input_errors_maps_subclasses():
+    from baserow.contrib.database.fields.exceptions import FieldDataConstraintException
+    from baserow.contrib.database.mcp.services import input_errors
+    from baserow.core.mcp.exceptions import MCPToolInputError
+
+    class UniqueValueTaken(FieldDataConstraintException):
+        pass
+
+    with pytest.raises(MCPToolInputError, match="field constraint"):
+        with input_errors():
+            raise UniqueValueTaken()
+
+
+def test_to_mcp_error_reads_validate_data_errors():
+    from baserow.api.exceptions import RequestBodyValidationException
+    from baserow.core.mcp.exceptions import to_mcp_error
+
+    body = to_mcp_error(
+        RequestBodyValidationException(
+            {"name": [{"error": "This field is required.", "code": "required"}]}
+        )
+    )
+
+    assert body == "Invalid value. name: This field is required."
+
+
+def test_to_mcp_error_hides_server_bugs():
+    from django.contrib.auth.models import User
+
+    from baserow.contrib.database.fields.registries import field_type_registry
+    from baserow.core.exceptions import InstanceTypeDoesNotExist
+    from baserow.core.mcp.exceptions import to_mcp_error
+
+    with pytest.raises(InstanceTypeDoesNotExist) as by_model:
+        field_type_registry.get_by_model(User)
+    with pytest.raises(InstanceTypeDoesNotExist) as by_type:
+        field_type_registry.get("nonsense")
+
+    assert to_mcp_error(by_model.value) is None
+    assert to_mcp_error(by_type.value) == "'nonsense' is not a valid type."
+    assert to_mcp_error(User.profile.RelatedObjectDoesNotExist()) is None
