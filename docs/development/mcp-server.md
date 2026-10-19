@@ -28,10 +28,10 @@ ActionTypes → Django ORM
 
 ## Endpoint model
 
-An `MCPEndpoint` links a user to one workspace and to the tools they allowed (`allowed_tools`, null allows every enabled tool). There are two kinds:
+An `MCPEndpoint` links a user to one workspace and to the tools they allowed (`allowed_tools`). Null allows only the original database tools in `LEGACY_DEFAULT_TOOLS`, so endpoints created before a tool existed don't gain it. There are two kinds:
 
 - **OAuth grants**: created when a client signs in through the consent page (see [OAuth sign-in](#oauth-sign-in)). The client calls `POST /mcp` with an access token. They are listed, and can be disconnected, on the **OAuth** tab of **My settings > MCP server**.
-- **Endpoint keys**: a 32-character secret key, created under **My settings > MCP server** (on the **Endpoint** tab when OAuth is on). Keys allow every enabled tool. Older clients use it in the SSE URL, `GET /mcp/{key}/sse`. `POST /mcp` also accepts it as `Authorization: Bearer <key>`.
+- **Endpoint keys**: a 32-character secret key, created under **My settings > MCP server** (on the **Endpoint** tab when OAuth is on). Keys have a null `allowed_tools`, so they allow the `LEGACY_DEFAULT_TOOLS`. Older clients use it in the SSE URL, `GET /mcp/{key}/sse`. `POST /mcp` also accepts it as `Authorization: Bearer <key>`.
 
 Users install the client side, the MCP server config plus a skill, from [baserow/baserow-mcp](https://github.com/baserow/baserow-mcp). Its README has the setup steps for each agent.
 
@@ -97,7 +97,7 @@ OpenAI verifies the domain of a submitted ChatGPT app by fetching `/.well-known/
 
 ## Tools
 
-Some tools are currently disabled (`enabled = False`) and hidden from MCP clients. The consent page does not list them.
+Some tools are currently disabled (`enabled = False`) and hidden from MCP clients. The consent page does not list them. Kuma tools are the enterprise AI assistant's own tools, exposed over MCP with `@mcp_tool`. A Kuma tool is only listed and callable when its tool type's `can_use` allows the endpoint's user and workspace.
 
 | Tool | Status | Description |
 |---|---|---|
@@ -108,6 +108,13 @@ Some tools are currently disabled (`enabled = False`) and hidden from MCP client
 | `create_rows` | enabled | Create one or more rows using field names |
 | `update_rows` | enabled | Update rows by ID using field names |
 | `delete_rows` | enabled | Delete rows by ID |
+| `list_views` | enabled | List the views of a table (Kuma tool) |
+| `list_pages` | enabled | List the pages of an application builder (Kuma tool) |
+| `list_elements` | enabled | List the elements on a page (Kuma tool) |
+| `list_data_sources` | enabled | List the data sources of a page (Kuma tool) |
+| `list_actions` | enabled | List the actions on a page (Kuma tool) |
+| `list_workflows` | enabled | List the workflows of an automation (Kuma tool) |
+| `list_nodes` | enabled | List the nodes of a workflow (Kuma tool) |
 | `create_database` | disabled | Create a new database |
 | `create_table` | disabled | Create a table with optional initial fields |
 | `update_table` | disabled | Rename a table |

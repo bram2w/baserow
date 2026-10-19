@@ -175,21 +175,45 @@ def test_repeated_row_id(table_setup, caplog, error_records):
     _assert_readable_error(result, caplog, error_records, "not unique", str(row.id))
 
 
+@pytest.mark.django_db
+@pytest.mark.field_constraints
+def test_duplicate_value_in_unique_field(table_setup, caplog, error_records):
+    from baserow.contrib.database.fields.handler import FieldHandler
+
+    data_fixture, endpoint, table = table_setup
+    field = data_fixture.create_text_field(table=table, name="Name", primary=True)
+    FieldHandler().update_field(
+        endpoint.user,
+        field,
+        field_constraints=[{"type_name": "unique_with_empty"}],
+    )
+
+    result = _call(
+        endpoint,
+        "create_rows",
+        {"table_id": table.id, "rows": [{"Name": "A"}, {"Name": "A"}]},
+    )
+
+    _assert_readable_error(result, caplog, error_records, "field constraint")
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize(
-    "exc,expected",
+    "tool,arguments",
     [
-        ("CannotCreateRowsInTable", "data sync"),
-        ("CannotDeleteRowsInTable", "data sync"),
+        ("create_rows", lambda row: {"rows": [{"Name": "A"}]}),
+        ("delete_rows", lambda row: {"row_ids": [row.id]}),
     ],
 )
-def test_input_errors_keeps_the_row_exception_message(exc, expected):
-    from baserow.contrib.database.mcp.services import input_errors
-    from baserow.contrib.database.rows import exceptions
-    from baserow.core.mcp.exceptions import MCPToolInputError
+def test_data_synced_table(table_setup, caplog, error_records, tool, arguments):
+    data_fixture, endpoint, table = table_setup
+    data_fixture.create_text_field(table=table, name="Name", primary=True)
+    row = table.get_model().objects.create()
+    data_fixture.create_ical_data_sync(table=table)
 
-    with pytest.raises(MCPToolInputError, match=expected):
-        with input_errors():
-            raise getattr(exceptions, exc)("Can't change rows, it has a data sync.")
+    result = _call(endpoint, tool, {"table_id": table.id, **arguments(row)})
+
+    _assert_readable_error(result, caplog, error_records, "data sync")
 
 
 def test_input_errors_maps_subclasses():

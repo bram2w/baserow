@@ -64,6 +64,12 @@ def _user_error_messages() -> dict[type[Exception], str | Callable[[Exception], 
         "this field.",
         f.InvalidFieldConstraint: "The field constraint is invalid.",
         f.InvalidDefaultValueFunction: "The default value function is invalid.",
+        f.PrimaryFieldAlreadyExists: "The table already has a primary field.",
+        f.DbIndexNotSupportedError: lambda exc: (
+            f"The field type {exc.field_type} does not support database indexes."
+        ),
+        f.FieldConstraintDoesNotSupportDefaultValueError: "This constraint cannot be "
+        "set while the field has a default value.",
         f.FieldDataConstraintException: "The values violate a field constraint, "
         "for example a duplicate value in a field that must be unique.",
         r.CannotCreateRowsInTable: lambda exc: (
