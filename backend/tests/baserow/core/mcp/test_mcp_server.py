@@ -477,7 +477,7 @@ def test_call_tool_exception_returns_is_error_true(data_fixture):
                     "update_rows", {"table_id": 999999, "rows": []}
                 )
                 assert result.isError is True
-                assert "Error:" in result.content[0].text
+                assert result.content[0].text == "Not found in this workspace."
 
         with transaction.atomic():
             async_to_sync(inner)()

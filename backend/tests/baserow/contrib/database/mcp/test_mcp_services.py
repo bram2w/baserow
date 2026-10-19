@@ -9,6 +9,7 @@ from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.mcp import services
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.models import Table
+from baserow.core.mcp.exceptions import MCPToolInputError
 
 # ---------------------------------------------------------------------------
 # filter_tables / get_table
@@ -384,7 +385,7 @@ def test_create_rows_unknown_field_raises(data_fixture):
     table = data_fixture.create_database_table(database=db)
     data_fixture.create_text_field(name="Name", table=table, primary=True)
 
-    with pytest.raises(ValueError, match="Unknown field name 'NoSuchField'"):
+    with pytest.raises(MCPToolInputError, match="Unknown field name 'NoSuchField'"):
         services.create_rows(user, workspace, table.id, [{"NoSuchField": "bad"}])
 
 

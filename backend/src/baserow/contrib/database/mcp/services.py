@@ -7,6 +7,7 @@ All functions accept ``user`` and ``workspace`` and apply permission filtering
 so callers never need to worry about permissions or cross-workspace access.
 """
 
+from contextlib import contextmanager
 from typing import Any
 
 from django.contrib.auth.models import AbstractUser
@@ -19,11 +20,77 @@ from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
 from baserow.core.db import specific_iterator
 from baserow.core.handler import CoreHandler
+from baserow.core.mcp.exceptions import MCPToolInputError
 from baserow.core.models import Workspace
 
 # ---------------------------------------------------------------------------
 # Query helpers (shared with enterprise assistant)
 # ---------------------------------------------------------------------------
+
+
+def _user_error_messages() -> dict[type[Exception], str]:
+    """
+    Baserow exceptions that a client causes with its input, with the message to give
+    it. Most of them carry no message of their own.
+    """
+
+    from baserow.contrib.database.fields import exceptions as f
+
+    return {
+        f.FieldWithSameNameAlreadyExists: "A field with this name already exists in "
+        "the table.",
+        f.ReservedBaserowFieldNameException: "This field name is reserved. Choose "
+        "another name.",
+        f.InvalidBaserowFieldName: "The field name is empty or invalid.",
+        f.MaxFieldNameLengthExceeded: "The field name is too long.",
+        f.MaxFieldLimitExceeded: "The table has reached the maximum number of fields.",
+        f.CannotCreateFieldType: "This field type cannot be created.",
+        f.CannotChangeFieldType: "The field type cannot be changed this way.",
+        f.IncompatibleField: "The field is not compatible with this operation.",
+        f.IncompatiblePrimaryFieldTypeError: "This field type cannot be the primary "
+        "field.",
+        f.LinkRowTableNotProvided: "A link_row field needs a link_row_table_id.",
+        f.LinkRowTableNotInSameDatabase: "The linked table must be in the same "
+        "database.",
+        f.SelfReferencingLinkRowCannotHaveRelatedField: "A link to the same table "
+        "cannot have a related field.",
+        f.FieldNotInTable: "The field does not belong to this table.",
+        f.FieldIsAlreadyPrimary: "The field is already the primary field.",
+        f.CannotDeletePrimaryField: "The primary field cannot be deleted.",
+        f.SelectOptionDoesNotBelongToField: "The select option does not belong to "
+        "this field.",
+        f.InvalidFieldConstraint: "The field constraint is invalid.",
+        f.InvalidDefaultValueFunction: "The default value function is invalid.",
+    }
+
+
+def _formula_error_types() -> tuple[type[Exception], ...]:
+    from baserow.core.formula.parser.exceptions import BaserowFormulaException
+
+    return (BaserowFormulaException,)
+
+
+@contextmanager
+def input_errors():
+    """
+    Turns known Baserow user errors raised inside the block into
+    ``MCPToolInputError`` so the client gets a readable message.
+    """
+
+    from baserow.contrib.database.rows.exceptions import RowDoesNotExist
+
+    try:
+        yield
+    except RowDoesNotExist as exc:
+        ids = ", ".join(str(i) for i in exc.ids)
+        raise MCPToolInputError(f"Rows not found in this table: {ids}.") from exc
+    except _formula_error_types() as exc:
+        raise MCPToolInputError(f"Invalid formula: {exc}") from exc
+    except Exception as exc:
+        message = _user_error_messages().get(type(exc))
+        if message is None:
+            raise
+        raise MCPToolInputError(message) from exc
 
 
 def filter_tables(user: AbstractUser, workspace: Workspace):
@@ -226,6 +293,7 @@ _FIELD_CREATION_ORDER: dict[str, int] = {
 }
 
 
+@input_errors()
 def create_table(
     user: AbstractUser,
     workspace: Workspace,
@@ -309,6 +377,7 @@ def get_field(user: AbstractUser, workspace: Workspace, field_id: int):
     return FieldHandler().get_specific_field_for_update(field_id)
 
 
+@input_errors()
 def create_fields(
     user: AbstractUser, workspace: Workspace, table_id: int, fields: list[dict]
 ) -> list[dict]:
@@ -337,6 +406,7 @@ def create_fields(
     return created
 
 
+@input_errors()
 def update_fields(
     user: AbstractUser, workspace: Workspace, fields: list[dict]
 ) -> list[dict]:
@@ -362,6 +432,7 @@ def update_fields(
     return updated
 
 
+@input_errors()
 def delete_fields(
     user: AbstractUser, workspace: Workspace, field_ids: list[int]
 ) -> None:
@@ -422,7 +493,7 @@ def _map_user_field_names(model, rows: list[dict]) -> list[dict]:
 
     e.g. ``{"Name": "John"}`` → ``{"field_1": "John"}``.
 
-    :raises ValueError: if a field name is not recognised.
+    :raises MCPToolInputError: if a field name is not recognised.
     """
     name_to_col = {
         info["field"].name: info["name"] for info in model._field_objects.values()
@@ -437,13 +508,14 @@ def _map_user_field_names(model, rows: list[dict]) -> list[dict]:
                 converted[name_to_col[key]] = value
             else:
                 available = list(name_to_col.keys())
-                raise ValueError(
+                raise MCPToolInputError(
                     f"Unknown field name '{key}'. Available fields: {available}"
                 )
         result.append(converted)
     return result
 
 
+@input_errors()
 def create_rows(
     user: AbstractUser, workspace: Workspace, table_id: int, rows: list[dict]
 ) -> list[dict]:
@@ -466,6 +538,7 @@ def create_rows(
     return list(serialize_rows_for_response(created, model, user_field_names=True))
 
 
+@input_errors()
 def update_rows(
     user: AbstractUser, workspace: Workspace, table_id: int, rows: list[dict]
 ) -> list[dict]:
@@ -491,6 +564,7 @@ def update_rows(
     )
 
 
+@input_errors()
 def delete_rows(
     user: AbstractUser, workspace: Workspace, table_id: int, row_ids: list[int]
 ) -> None:
