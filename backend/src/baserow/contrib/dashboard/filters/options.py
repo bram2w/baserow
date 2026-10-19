@@ -30,30 +30,31 @@ class DashboardFilterOptionsService:
         selected=None,
     ):
         configuration = DashboardFilterService().get_filter(user, filter_id)
-        widgets = {
-            widget.id: widget
-            for widget in WidgetService().get_widgets(user, configuration.dashboard_id)
+        widgets = WidgetService().get_widgets(user, configuration.dashboard_id)
+        bindings = {
+            binding.table_id: binding
+            for binding in configuration.bindings.select_related("field")
         }
         context = DashboardDispatchContext(request, configuration.dashboard.workspace)
         querysets = []
         visited_sources = set()
-        for binding in configuration.bindings.filter(
-            widget_id__in=widgets
-        ).select_related("field"):
-            widget = widgets[binding.widget_id]
+        for widget in widgets:
             source = getattr(widget, "data_source", None)
             if source is None or source.trashed or source.service is None:
                 raise DashboardFilterInvalidBinding(
                     "The widget has no usable data source."
                 )
+            service = source.service.specific
+            table_id = getattr(service, "table_id", None)
+            if table_id is None:
+                raise DashboardFilterInvalidBinding("The widget has no source table.")
             CoreHandler().check_permissions(
                 user,
                 DispatchDashboardDataSourceOperationType.type,
                 workspace=configuration.dashboard.workspace,
                 context=source,
             )
-            service = source.service.specific
-            field = get_binding_field(binding, service)
+            field = get_binding_field(bindings.get(table_id), service)
             source_key = (service.id, field.id)
             if source_key in visited_sources:
                 continue

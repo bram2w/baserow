@@ -6,10 +6,14 @@ from baserow.core.services.exceptions import (
 
 from .exceptions import DashboardFilterInvalidBinding
 from .field_types import get_text_field_type, text_field_expression
-from .models import DashboardFilter, DashboardFilterBinding
+from .models import DashboardFilter
 
 
 def get_binding_field(binding, service):
+    if binding is None:
+        raise DashboardFilterInvalidBinding(
+            "Choose a field for this table in the dashboard filter settings."
+        )
     field = binding.field
     if (
         field is None
@@ -25,22 +29,25 @@ def get_binding_field(binding, service):
 
 
 def apply_widget_filters(widget, service, queryset, applied_filters):
-    """Apply server-owned associations and operators only to this widget's service."""
+    """Apply each global filter using the field configured for the source table."""
 
     if service.id != widget.data_source.service_id:
         return queryset
     selections = {
         selection["filter_id"]: selection["values"] for selection in applied_filters
     }
-    bindings = DashboardFilterBinding.objects.filter(
-        widget=widget, filter__trashed=False
-    ).select_related("filter", "field")
-    for binding in bindings:
+    configurations = DashboardFilter.objects.filter(
+        dashboard_id=widget.dashboard_id
+    ).prefetch_related("bindings__field")
+    for configuration in configurations:
+        binding = next(
+            (b for b in configuration.bindings.all() if b.table_id == service.table_id),
+            None,
+        )
         try:
             field = get_binding_field(binding, service)
         except DashboardFilterInvalidBinding as exc:
             raise ServiceImproperlyConfiguredDispatchException(str(exc)) from exc
-        configuration = binding.filter
         values = selections.get(configuration.id, [])
         if configuration.mode == DashboardFilter.Mode.INPUT:
             values = [value.strip() for value in values[:1]]

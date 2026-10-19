@@ -39,7 +39,7 @@ def test_viewer_can_apply_filters_but_only_builder_can_configure_them(
         admin,
         dashboard.id,
         label="Team",
-        bindings=[{"widget_id": widget.id, "field_id": fields[0].id}],
+        bindings=[{"table_id": table.id, "field_id": fields[0].id}],
     )
     headers = {"HTTP_AUTHORIZATION": f"JWT {token}"}
     listing = reverse(

@@ -46,15 +46,13 @@ class DashboardFilterBinding(models.Model):
     filter = models.ForeignKey(
         DashboardFilter, on_delete=models.CASCADE, related_name="bindings"
     )
-    widget = models.ForeignKey(
-        "dashboard.Widget", on_delete=models.CASCADE, related_name="filter_bindings"
-    )
+    table = models.ForeignKey("database.Table", on_delete=models.CASCADE)
     field = models.ForeignKey("database.Field", on_delete=models.SET_NULL, null=True)
 
     class Meta:
-        ordering = ("widget_id",)
+        ordering = ("table_id",)
         constraints = [
             models.UniqueConstraint(
-                fields=("filter", "widget"), name="dashboard_filter_widget_unique"
+                fields=("filter", "table"), name="dashboard_filter_table_unique"
             )
         ]

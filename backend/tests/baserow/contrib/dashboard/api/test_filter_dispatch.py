@@ -38,7 +38,7 @@ def filtered_dashboard(data_fixture):
         dashboard.id,
         label="Team",
         multiple=True,
-        bindings=[{"widget_id": widget.id, "field_id": fields[0].id}],
+        bindings=[{"table_id": table.id, "field_id": fields[0].id}],
     )
     return user, token, widget, filter_config, table, fields, rows
 
@@ -77,7 +77,7 @@ def test_dispatch_applies_saved_filter_before_aggregation(
 
 
 @pytest.mark.django_db
-def test_filter_is_scoped_to_widget_even_when_source_is_shared(
+def test_global_filter_applies_to_widgets_added_after_configuration(
     api_client, data_fixture, filtered_dashboard
 ):
     user, token, widget, filter_config, *_ = filtered_dashboard
@@ -91,7 +91,7 @@ def test_filter_is_scoped_to_widget_even_when_source_is_shared(
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == 200, response.json()
-    assert response.json() == {"result": "31"}
+    assert response.json() == {"result": "1"}
 
 
 @pytest.mark.django_db
@@ -172,7 +172,7 @@ def test_filter_compares_select_labels_and_scalar_formulas(
         user,
         filter_config.id,
         operator=operator,
-        bindings=[{"widget_id": widget.id, "field_id": field.id}],
+        bindings=[{"table_id": table.id, "field_id": field.id}],
     )
     response = api_client.post(
         reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": widget.id}),
@@ -205,7 +205,7 @@ def test_filters_intersect_with_each_other_and_saved_view_and_source_filters(
         label="Contains",
         operator="contains",
         mode="input",
-        bindings=[{"widget_id": widget.id, "field_id": fields[0].id}],
+        bindings=[{"table_id": table.id, "field_id": fields[0].id}],
     )
     response = api_client.post(
         reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": widget.id}),
@@ -251,3 +251,82 @@ def test_dropdown_can_apply_and_check_a_long_stored_text_value(
     )
     assert options.status_code == 200, options.json()
     assert options.json() == {"results": [], "next": None, "available": [value]}
+
+
+@pytest.mark.django_db
+def test_global_filter_keeps_each_widgets_source_restrictions(
+    api_client, data_fixture, filtered_dashboard
+):
+    user, token, widget, config, table, fields, _ = filtered_dashboard
+    view = data_fixture.create_grid_view(table=table)
+    data_fixture.create_view_filter(
+        view=view, field=fields[1], type="higher_than", value="1"
+    )
+    source = data_fixture.create_dashboard_local_baserow_aggregate_rows_data_source(
+        dashboard=widget.dashboard,
+        integration=widget.data_source.service.integration,
+        table=table,
+        view=view,
+        field=fields[1],
+        aggregation_type="sum",
+    )
+    restricted = data_fixture.create_summary_widget(
+        dashboard=widget.dashboard, data_source=source
+    )
+    for target, expected in [(widget, "3"), (restricted, "2")]:
+        response = api_client.post(
+            reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": target.id}),
+            {"filters": [{"filter_id": config.id, "values": ["Design", "design"]}]},
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+        assert response.status_code == 200, response.json()
+        assert response.json() == {"result": expected}
+
+
+@pytest.mark.django_db
+def test_new_table_requires_global_mapping_then_all_its_widgets_are_filtered(
+    api_client, data_fixture, filtered_dashboard
+):
+    user, token, widget, config, first_table, first_fields, _ = filtered_dashboard
+    table, fields, _ = data_fixture.build_table(
+        user=user,
+        columns=[("Department", "text"), ("Cost", "number")],
+        rows=[["Design", 100], ["Sales", 200]],
+    )
+    source = data_fixture.create_dashboard_local_baserow_aggregate_rows_data_source(
+        dashboard=widget.dashboard,
+        integration=widget.data_source.service.integration,
+        table=table,
+        field=fields[1],
+        aggregation_type="sum",
+    )
+    new_widget = data_fixture.create_summary_widget(
+        dashboard=widget.dashboard, data_source=source
+    )
+    url = reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": new_widget.id})
+    headers = {"HTTP_AUTHORIZATION": f"JWT {token}"}
+    values = {"filters": [{"filter_id": config.id, "values": ["Design"]}]}
+    assert api_client.post(url, values, format="json", **headers).status_code == 400
+    response = api_client.patch(
+        reverse("api:dashboard:filters:item", kwargs={"filter_id": config.id}),
+        {
+            "bindings": [
+                {"table_id": first_table.id, "field_id": first_fields[0].id},
+                {"table_id": table.id, "field_id": fields[0].id},
+            ]
+        },
+        format="json",
+        **headers,
+    )
+    assert response.status_code == 200, response.json()
+    assert api_client.post(url, values, format="json", **headers).json() == {
+        "result": "100"
+    }
+    second = data_fixture.create_summary_widget(
+        dashboard=widget.dashboard, data_source=source
+    )
+    url = reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": second.id})
+    assert api_client.post(url, values, format="json", **headers).json() == {
+        "result": "100"
+    }

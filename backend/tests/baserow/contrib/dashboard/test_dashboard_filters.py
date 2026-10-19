@@ -22,7 +22,7 @@ def test_dashboard_export_import_preserves_filters_and_remaps_bindings(data_fixt
         user,
         dashboard.id,
         label="Team",
-        bindings=[{"widget_id": widget.id, "field_id": field.id}],
+        bindings=[{"table_id": table.id, "field_id": field.id}],
     )
     application_type = DashboardApplicationType()
     config = ImportExportConfig(include_permission_data=True, is_duplicate=True)
@@ -36,17 +36,22 @@ def test_dashboard_export_import_preserves_filters_and_remaps_bindings(data_fixt
     imported_widget = WidgetService().get_widgets(user, imported.id)[0]
     imported_filter = DashboardFilterService().get_filters(user, imported.id)[0]
     assert imported_filter.label == "Team"
-    assert list(imported_filter.bindings.values("widget_id", "field_id")) == [
-        {"widget_id": imported_widget.id, "field_id": field.id}
+    assert list(imported_filter.bindings.values("table_id", "field_id")) == [
+        {"table_id": table.id, "field_id": field.id}
     ]
     assert imported_widget.id != widget.id
 
-    replacement = data_fixture.create_text_field(table=table)
+    replacement_table = data_fixture.create_database_table(user=user)
+    replacement = data_fixture.create_text_field(table=replacement_table)
     mapped = application_type.import_serialized(
         dashboard.workspace,
         deepcopy(exported),
         config,
-        {"database_fields": {field.id: replacement.id}},
+        {
+            "database_tables": {table.id: replacement_table.id},
+            "database_fields": {field.id: replacement.id},
+        },
     )
-    mapped_filter = DashboardFilterService().get_filters(user, mapped.id)[0]
-    assert mapped_filter.bindings.get().field_id == replacement.id
+    assert application_type.export_serialized(mapped, config)["filters"][0][
+        "bindings"
+    ] == [{"table_id": replacement_table.id, "field_id": replacement.id}]

@@ -4,7 +4,7 @@ from baserow.contrib.dashboard.filters.models import DashboardFilter
 
 
 class DashboardFilterBindingSerializer(serializers.Serializer):
-    widget_id = serializers.IntegerField(min_value=1)
+    table_id = serializers.IntegerField(min_value=1)
     field_id = serializers.IntegerField(min_value=1, allow_null=True)
 
 

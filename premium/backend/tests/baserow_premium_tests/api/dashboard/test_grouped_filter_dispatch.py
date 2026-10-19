@@ -43,7 +43,7 @@ def test_text_filter_is_applied_before_grouped_aggregation(
         user,
         dashboard.id,
         label="Team",
-        bindings=[{"widget_id": widget.id, "field_id": fields[0].id}],
+        bindings=[{"table_id": table.id, "field_id": fields[0].id}],
     )
     response = api_client.post(
         reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": widget.id}),

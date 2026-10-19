@@ -1,6 +1,6 @@
 {
     "type": "feature",
-    "message": "Added dashboard text filters with dropdown and input controls, per-widget field bindings, and manual refresh.",
+    "message": "Added dashboard text filters with dropdown and input controls, global field settings per table, and manual refresh.",
     "issue_origin": "github",
     "issue_number": 3305,
     "domain": "dashboard",

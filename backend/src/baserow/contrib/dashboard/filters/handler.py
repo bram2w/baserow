@@ -2,6 +2,7 @@ from django.db.models import F, TextField
 from django.db.models.functions import Cast, Collate
 
 from baserow.contrib.database.fields.models import Field
+from baserow.contrib.database.table.models import Table
 from baserow.core.utils import extract_allowed
 
 from .exceptions import DashboardFilterDoesNotExist
@@ -50,7 +51,7 @@ class DashboardFilterHandler:
         dashboard_filter.save()
         if bindings is not None:
             previous["bindings"] = list(
-                dashboard_filter.bindings.values("widget_id", "field_id")
+                dashboard_filter.bindings.values("table_id", "field_id")
             )
             values["bindings"] = bindings
             self.update_bindings(dashboard_filter, bindings)
@@ -70,8 +71,8 @@ class DashboardFilterHandler:
             "id": dashboard_filter.id,
             **{key: getattr(dashboard_filter, key) for key in self.allowed_fields},
             "bindings": list(
-                dashboard_filter.bindings.filter(widget__trashed=False).values(
-                    "widget_id", "field_id"
+                dashboard_filter.bindings.filter(table__trashed=False).values(
+                    "table_id", "field_id"
                 )
             ),
         }
@@ -79,24 +80,52 @@ class DashboardFilterHandler:
     def import_filter(self, dashboard, values, id_mapping):
         bindings = []
         for binding in values.get("bindings", []):
+            table_id = binding["table_id"]
+            if "database_tables" in id_mapping:
+                table_id = id_mapping["database_tables"].get(table_id)
             field_id = binding["field_id"]
             if "database_fields" in id_mapping:
                 field_id = id_mapping["database_fields"].get(field_id)
-            if field_id and not Field.objects_and_trash.filter(id=field_id).exists():
-                field_id = None
             bindings.append(
                 {
-                    "widget_id": id_mapping["dashboard_widgets"][binding["widget_id"]],
+                    "table_id": table_id,
                     "field_id": field_id,
                 }
             )
         dashboard_filter = self.create_filter(
-            dashboard, **extract_allowed(values, self.allowed_fields), bindings=bindings
+            dashboard,
+            **extract_allowed(values, self.allowed_fields),
+            bindings=self.normalize_binding_references(bindings),
         )
         id_mapping.setdefault("dashboard_filters", {})[values["id"]] = (
             dashboard_filter.id
         )
         return dashboard_filter
+
+    def normalize_binding_references(
+        self, bindings: list[dict[str, int | None]]
+    ) -> list[dict[str, int | None]]:
+        """Keep broken fields when replaying history or importing configuration."""
+        tables = set(
+            Table.objects_and_trash.filter(
+                id__in=[binding["table_id"] for binding in bindings]
+            ).values_list("id", flat=True)
+        )
+        fields = set(
+            Field.objects_and_trash.filter(
+                id__in=[binding["field_id"] for binding in bindings]
+            ).values_list("id", flat=True)
+        )
+        return [
+            {
+                "table_id": binding["table_id"],
+                "field_id": binding["field_id"]
+                if binding["field_id"] in fields
+                else None,
+            }
+            for binding in bindings
+            if binding["table_id"] in tables
+        ]
 
     def get_options(self, querysets, *, search="", after=None, limit=50, selected=None):
         """Union options from authorized source querysets, independently of selections."""

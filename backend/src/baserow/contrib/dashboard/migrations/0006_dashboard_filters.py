@@ -99,20 +99,19 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "widget",
+                    "table",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name="filter_bindings",
-                        to="dashboard.widget",
+                        to="database.table",
                     ),
                 ),
             ],
             options={
-                "ordering": ("widget_id",),
+                "ordering": ("table_id",),
                 "constraints": [
                     models.UniqueConstraint(
-                        fields=("filter", "widget"),
-                        name="dashboard_filter_widget_unique",
+                        fields=("filter", "table"),
+                        name="dashboard_filter_table_unique",
                     )
                 ],
             },
