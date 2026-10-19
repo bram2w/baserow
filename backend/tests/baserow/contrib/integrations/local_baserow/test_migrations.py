@@ -443,7 +443,7 @@ def test_0039_reuses_authorized_user_column_for_typed_subjects(migrator):
 
     old_state = migrator.migrate(migrate_from)
     ContentType = old_state.apps.get_model("contenttypes", "ContentType")
-    User = old_state.apps.get_model("core", "User")
+    User = old_state.apps.get_model("auth", "User")
     Workspace = old_state.apps.get_model("core", "Workspace")
     Application = old_state.apps.get_model("core", "Application")
     LocalBaserowIntegration = old_state.apps.get_model(

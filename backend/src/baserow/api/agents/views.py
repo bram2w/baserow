@@ -138,6 +138,7 @@ class WorkspaceAgentsView(APIView, SearchableViewMixin, SortableViewMixin):
             400: get_error_schema(
                 ["ERROR_USER_NOT_IN_GROUP", "ERROR_AGENT_ROLE_DOES_NOT_EXIST"]
             ),
+            403: get_error_schema(["ERROR_FEATURE_DISABLED"]),
         },
     )
     @transaction.atomic
