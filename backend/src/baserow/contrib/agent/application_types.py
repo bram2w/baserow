@@ -11,7 +11,6 @@ from baserow.core.registries import ApplicationType
 class AgentApplicationType(ApplicationType):
     type = "agent"
     model_class = AgentApplication
-    allowed_fields = []
     serializer_field_names = ["name"]
 
     def export_safe_transaction_context(self, application: AgentApplication) -> Atomic:
