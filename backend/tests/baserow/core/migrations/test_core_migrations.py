@@ -430,3 +430,41 @@ def test_0128_upgrades_instance_with_duplicate_template_slugs(
 
     NewTemplate.objects.update(public_revision=None)
     NewTemplate.objects.all().delete()
+
+
+@pytest.mark.once_per_day_in_ci
+def test_0130_freezes_mcp_endpoints_without_an_allow_list(
+    migrator, teardown_table_metadata
+):
+    old_state = migrator.migrate([("core", "0129_template_backfill_official")])
+    User = old_state.apps.get_model("auth", "User")
+    Workspace = old_state.apps.get_model("core", "Workspace")
+    MCPEndpoint = old_state.apps.get_model("core", "MCPEndpoint")
+    user = User.objects.create(username="mcp-freeze")
+    workspace = Workspace.objects.create(name="ws")
+    legacy = MCPEndpoint.objects.create(
+        name="legacy", key="a" * 32, user=user, workspace=workspace
+    )
+    limited = MCPEndpoint.objects.create(
+        name="limited",
+        key="b" * 32,
+        user=user,
+        workspace=workspace,
+        allowed_tools=["list_tables"],
+    )
+
+    new_state = migrator.migrate([("core", "0130_mcpendpoint_freeze_allowed_tools")])
+    NewMCPEndpoint = new_state.apps.get_model("core", "MCPEndpoint")
+
+    assert NewMCPEndpoint.objects.get(id=legacy.id).allowed_tools == [
+        "list_databases",
+        "list_tables",
+        "get_table_schema",
+        "list_table_rows",
+        "create_rows",
+        "update_rows",
+        "delete_rows",
+    ]
+    assert NewMCPEndpoint.objects.get(id=limited.id).allowed_tools == ["list_tables"]
+
+    NewMCPEndpoint.objects.all().delete()

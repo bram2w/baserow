@@ -5,6 +5,7 @@ from baserow.core.handler import CoreHandler
 from baserow.core.utils import random_string
 
 from ..models import Workspace, WorkspaceUser
+from .constants import LEGACY_DEFAULT_TOOLS
 from .exceptions import (
     MaximumUniqueEndpointTriesError,
     MCPEndpointDoesNotBelongToUser,
@@ -17,6 +18,7 @@ from .operations import (
     ReadMCPEndpointOperationType,
     UpdateMCPEndpointOperationType,
 )
+from .registries import mcp_tool_registry
 
 
 class MCPEndpointHandler:
@@ -90,6 +92,18 @@ class MCPEndpointHandler:
             if not MCPEndpoint.objects.filter(key=key).exists():
                 return key
 
+    def get_default_tools(self) -> list[str]:
+        """
+        The tools a new endpoint key starts with: every read-only tool, plus the
+        tools endpoint keys always had. The user can change them afterwards.
+        """
+
+        return [
+            tool.name
+            for tool in mcp_tool_registry.get_enabled_tools()
+            if tool.read_only or tool.name in LEGACY_DEFAULT_TOOLS
+        ]
+
     def create_endpoint(
         self,
         user: AbstractUser,
@@ -121,6 +135,7 @@ class MCPEndpointHandler:
             key=self.generate_unique_key(),
             user=user,
             workspace=workspace,
+            allowed_tools=self.get_default_tools(),
         )
 
         return endpoint

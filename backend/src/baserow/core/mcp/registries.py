@@ -157,10 +157,15 @@ class MCPToolRegistry(Registry[MCPTool]):
         return [tool for tool in self.registry.values() if tool.enabled]
 
     @staticmethod
-    def _allowed_names(endpoint: MCPEndpoint) -> set:
+    def get_allowed_names(endpoint: MCPEndpoint) -> List[str]:
+        """
+        The tool names stored on the endpoint. ``None`` is only left by code that
+        ran before the allow-lists were filled in, and means ``LEGACY_DEFAULT_TOOLS``.
+        """
+
         if endpoint.allowed_tools is None:
-            return set(LEGACY_DEFAULT_TOOLS)
-        return set(endpoint.allowed_tools)
+            return list(LEGACY_DEFAULT_TOOLS)
+        return list(endpoint.allowed_tools)
 
     @staticmethod
     def _is_available(tool: MCPTool, endpoint: MCPEndpoint) -> bool:
@@ -180,7 +185,7 @@ class MCPToolRegistry(Registry[MCPTool]):
         async code must call it through ``sync_to_async``.
         """
         tools = self.get_enabled_tools()
-        allowed = self._allowed_names(endpoint)
+        allowed = set(self.get_allowed_names(endpoint))
         tools = [tool for tool in tools if tool.name in allowed]
         return [tool for tool in tools if self._is_available(tool, endpoint)]
 
@@ -201,7 +206,7 @@ class MCPToolRegistry(Registry[MCPTool]):
         tool = self.match_by_name(name)
         if tool is None or not tool.enabled:
             return None
-        if name not in self._allowed_names(endpoint):
+        if name not in self.get_allowed_names(endpoint):
             return None
         return tool if self._is_available(tool, endpoint) else None
 

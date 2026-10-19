@@ -20,7 +20,6 @@ from baserow.core.mcp.actions import (
     ConnectMCPOAuthClientActionType,
     DisconnectMCPOAuthClientActionType,
 )
-from baserow.core.mcp.constants import LEGACY_DEFAULT_TOOLS
 from baserow.core.mcp.exceptions import MCPEndpointDoesNotExist
 from baserow.core.mcp.handler import MCPEndpointHandler
 from baserow.core.mcp.models import MCPEndpoint
@@ -136,11 +135,7 @@ class MCPOAuthConsentView(APIView):
             )
         ]
         grants = {
-            str(endpoint.workspace_id): (
-                endpoint.allowed_tools
-                if endpoint.allowed_tools is not None
-                else list(LEGACY_DEFAULT_TOOLS)
-            )
+            str(endpoint.workspace_id): mcp_tool_registry.get_allowed_names(endpoint)
             for endpoint in MCPEndpoint.objects.filter(
                 user=request.user,
                 oauth_client_id=credentials["client_id"],
@@ -262,7 +257,7 @@ class MCPOAuthConnectionsView(APIView):
                     **_verification(application),
                     "workspace_id": endpoint.workspace_id,
                     "workspace_name": endpoint.workspace.name,
-                    "allowed_tools": endpoint.allowed_tools,
+                    "allowed_tools": mcp_tool_registry.get_allowed_names(endpoint),
                     "tool_count": len(mcp_tool_registry.get_allowed_tools(endpoint)),
                     "created": endpoint.created,
                     # The app has to sign in again before it can use the grant.

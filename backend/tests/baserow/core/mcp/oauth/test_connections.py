@@ -84,7 +84,7 @@ def test_list_connections_counts_legacy_tools_when_unrestricted(
     assert connection["client_name"] == "Gone client"
     assert connection["verified"] is False
     assert connection["verified_host"] is None
-    assert connection["allowed_tools"] is None
+    assert connection["allowed_tools"] == LEGACY_DEFAULT_TOOLS
     assert connection["tool_count"] == len(LEGACY_DEFAULT_TOOLS)
 
 

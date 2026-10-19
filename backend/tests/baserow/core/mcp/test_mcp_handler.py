@@ -3,6 +3,7 @@ import string
 import pytest
 
 from baserow.core.exceptions import UserNotInWorkspace
+from baserow.core.mcp.constants import LEGACY_DEFAULT_TOOLS
 from baserow.core.mcp.exceptions import (
     MaximumUniqueEndpointTriesError,
     MCPEndpointDoesNotBelongToUser,
@@ -10,6 +11,7 @@ from baserow.core.mcp.exceptions import (
 )
 from baserow.core.mcp.handler import MCPEndpointHandler
 from baserow.core.mcp.models import MCPEndpoint
+from baserow.core.mcp.registries import mcp_tool_registry
 
 
 @pytest.mark.django_db
@@ -98,6 +100,24 @@ def test_create_endpoint(data_fixture):
     assert len(endpoint.key) == 32
 
     assert MCPEndpoint.objects.all().count() == 1
+
+
+@pytest.mark.django_db
+def test_create_endpoint_stores_read_only_and_legacy_tools(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+
+    endpoint = MCPEndpointHandler().create_endpoint(user, workspace, "Test")
+
+    expected = [
+        tool.name
+        for tool in mcp_tool_registry.get_enabled_tools()
+        if tool.read_only or tool.name in LEGACY_DEFAULT_TOOLS
+    ]
+    assert endpoint.allowed_tools == expected
+    assert set(LEGACY_DEFAULT_TOOLS) <= set(expected)
+    endpoint.refresh_from_db()
+    assert endpoint.allowed_tools == expected
 
 
 @pytest.mark.django_db
