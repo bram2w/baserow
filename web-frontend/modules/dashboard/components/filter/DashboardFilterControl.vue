@@ -10,21 +10,22 @@
       class="dashboard-filter__control"
       :class="{ 'dashboard-filter__control--active': appliedValues.length }"
     >
-      <button
+      <Button
         :id="controlId"
         ref="trigger"
         v-tooltip.focus="
           hasUnavailable ? $t('dashboardFilter.unavailableHelp') : null
         "
         class="dashboard-filter__trigger"
-        type="button"
+        type="secondary"
+        button-type="button"
+        icon="iconoir-filter"
         :aria-expanded="opened"
         :aria-description="
           hasUnavailable ? $t('dashboardFilter.unavailableHelp') : undefined
         "
         @click="activate"
       >
-        <i class="iconoir-filter" aria-hidden="true"></i>
         <span class="dashboard-filter__value">{{
           appliedValues.length > 1
             ? $t('dashboardFilter.selections', { count: appliedValues.length })
@@ -35,25 +36,25 @@
           class="iconoir-info-empty dashboard-filter__info"
           :aria-label="$t('dashboardFilter.unavailable')"
         ></i>
-      </button>
-      <button
+      </Button>
+      <ButtonIcon
         v-if="editMode"
         class="dashboard-filter__action"
-        type="button"
+        type="secondary"
+        size="small"
+        icon="iconoir-more-vert"
         :aria-label="$t('dashboardFilter.settings')"
         @click="$emit('select')"
-      >
-        <i class="iconoir-more-vert" aria-hidden="true"></i>
-      </button>
-      <button
+      />
+      <ButtonIcon
         v-else-if="appliedValues.length"
         class="dashboard-filter__action"
-        type="button"
+        type="secondary"
+        size="small"
+        icon="iconoir-cancel"
         :aria-label="$t('dashboardFilter.clear')"
         @click="$emit('apply', [])"
-      >
-        <i class="iconoir-cancel" aria-hidden="true"></i>
-      </button>
+      />
       <i
         v-else
         class="iconoir-nav-arrow-down dashboard-filter__arrow"
@@ -71,15 +72,11 @@
     >
       <form @submit.prevent="apply" @keydown.esc.stop.prevent="close">
         <template v-if="filter.mode === 'dropdown'">
-          <div class="dashboard-filter__search">
-            <FormInput
-              v-model="search"
-              :placeholder="$t('action.search')"
-              icon-left="iconoir-search"
-              :aria-label="$t('action.search')"
-              @update:model-value="searchOptions"
-            />
-          </div>
+          <SelectSearch
+            v-model="search"
+            :aria-label="$t('action.search')"
+            @update:model-value="searchOptions"
+          />
           <div class="dashboard-filter__operator">
             {{ $t(`dashboardFilter.${filter.operator}`) }}...
           </div>
@@ -97,20 +94,18 @@
               >
                 <span class="dashboard-filter__option-value">{{ value }}</span>
               </Checkbox>
-              <button
+              <Button
                 v-else
-                type="button"
+                type="secondary"
+                button-type="button"
+                full-width
+                :append-icon="draft.includes(value) ? 'iconoir-check' : ''"
                 class="dashboard-filter__single-choice"
                 :aria-pressed="draft.includes(value)"
                 @click="toggle(value, !draft.includes(value))"
               >
                 <span class="dashboard-filter__option-value">{{ value }}</span>
-                <i
-                  v-if="draft.includes(value)"
-                  class="iconoir-check"
-                  aria-hidden="true"
-                ></i>
-              </button>
+              </Button>
               <span
                 v-if="optionState.unavailable.includes(value)"
                 v-tooltip.focus="$t('dashboardFilter.unavailableHelp')"
@@ -190,6 +185,8 @@ import Checkbox from '@baserow/modules/core/components/Checkbox'
 import FormInput from '@baserow/modules/core/components/FormInput'
 import FormGroup from '@baserow/modules/core/components/FormGroup'
 import Button from '@baserow/modules/core/components/Button'
+import ButtonIcon from '@baserow/modules/core/components/ButtonIcon'
+import SelectSearch from '@baserow/modules/core/components/SelectSearch'
 
 const props = defineProps({
   filter: { type: Object, required: true },
@@ -243,9 +240,9 @@ const searchOptions = debounce(() => {
   if (opened.value) requestOptions()
 }, 250)
 
-function activate() {
+function activate(event) {
   if (props.editMode) emit('select')
-  else context.value.toggle(trigger.value, 'bottom', 'left', 4)
+  else context.value.toggle(event.currentTarget, 'bottom', 'left', 4)
 }
 async function onShown() {
   opened.value = true

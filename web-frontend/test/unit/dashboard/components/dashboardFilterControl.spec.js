@@ -28,11 +28,14 @@ async function render({
   appliedValues = ['Design'],
   multiple = true,
   unavailable = [],
+  realContext = false,
+  editMode = false,
 } = {}) {
   wrapper = await testApp.mount(DashboardFilterControl, {
     props: {
       filter: { id: 1, label: 'Team', operator: 'equal', mode, multiple },
       appliedValues,
+      editMode,
       optionState: {
         results: ['Design', 'Sales'],
         unavailable,
@@ -42,7 +45,7 @@ async function render({
       },
     },
     global: {
-      stubs: { Context: ContextStub },
+      stubs: realContext ? { teleport: true } : { Context: ContextStub },
     },
   })
   return wrapper
@@ -115,4 +118,59 @@ test('a single-choice dropdown replaces the previous value', async () => {
   await wrapper.findAll('.dashboard-filter__single-choice')[1].trigger('click')
   await wrapper.get('form').trigger('submit')
   expect(wrapper.emitted('apply')).toEqual([[['Sales']]])
+})
+
+test('opens the positioned context and restores trigger focus when Escape cancels the draft', async () => {
+  await render({ realContext: true })
+  const trigger = wrapper.get('.dashboard-filter__trigger')
+  await trigger.trigger('click')
+  await flushPromises()
+  expect(trigger.attributes('aria-expanded')).toBe('true')
+  expect(wrapper.get('.dashboard-filter__context').isVisible()).toBe(true)
+  await wrapper.findAll('input[type="checkbox"]')[1].setValue(true)
+  await wrapper.get('form').trigger('keydown', { key: 'Escape' })
+  await flushPromises()
+  expect(trigger.attributes('aria-expanded')).toBe('false')
+  expect(document.activeElement).toBe(trigger.element)
+  expect(wrapper.emitted('apply')).toBeUndefined()
+  await trigger.trigger('click')
+  await flushPromises()
+  expect(wrapper.findAll('input[type="checkbox"]')[1].element.checked).toBe(
+    false
+  )
+})
+
+test('clears the applied selection without opening the picker', async () => {
+  await render()
+  await wrapper.get('[aria-label="dashboardFilter.clear"]').trigger('click')
+  expect(wrapper.emitted('apply')).toEqual([[[]]])
+  expect(wrapper.emitted('options')).toBeUndefined()
+  expect(wrapper.find('[data-testid="panel"]').exists()).toBe(false)
+})
+
+test('selects the filter settings in edit mode without opening the picker', async () => {
+  await render({ editMode: true })
+  await wrapper.get('[aria-label="dashboardFilter.settings"]').trigger('click')
+  expect(wrapper.emitted('select')).toHaveLength(1)
+  await wrapper.get('.dashboard-filter__trigger').trigger('click')
+  expect(wrapper.emitted('select')).toHaveLength(2)
+  expect(wrapper.emitted('options')).toBeUndefined()
+  expect(wrapper.find('[data-testid="panel"]').exists()).toBe(false)
+})
+
+test('searches server options without applying or losing the current selection', async () => {
+  await render()
+  await wrapper.get('.dashboard-filter__trigger').trigger('click')
+  vi.useFakeTimers()
+  try {
+    await wrapper.get('input[type="text"]').setValue('Sales')
+    await vi.advanceTimersByTimeAsync(250)
+    expect(wrapper.emitted('options').at(-1)).toEqual([
+      { search: 'Sales', more: false, selected: ['Design'] },
+    ])
+    expect(wrapper.emitted('apply')).toBeUndefined()
+    expect(wrapper.get('input[type="checkbox"]').element.checked).toBe(true)
+  } finally {
+    vi.useRealTimers()
+  }
 })

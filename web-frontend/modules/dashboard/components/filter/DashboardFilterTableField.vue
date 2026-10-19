@@ -4,6 +4,19 @@
     small-label
     required
     class="dashboard-filter-table-field margin-bottom-2"
+    :error="broken || failed"
+    :error-message="
+      failed
+        ? $t('dashboardFilter.fieldsError')
+        : broken
+          ? $t('dashboardFilter.invalidFieldHelp')
+          : ''
+    "
+    :helper-text="
+      !loading && !failed && !fieldId && !broken
+        ? $t('dashboardFilter.missingFieldHelp')
+        : ''
+    "
   >
     <Dropdown
       :model-value="broken ? 'unavailable' : (fieldId ?? null)"
@@ -30,18 +43,6 @@
         :icon="$registry.get('field', field.type).getIconClass()"
       />
     </Dropdown>
-    <p v-if="broken" class="dashboard-filter-bindings__error">
-      {{ $t('dashboardFilter.invalidFieldHelp') }}
-    </p>
-    <p
-      v-else-if="!loading && !failed && !fieldId"
-      class="dashboard-filter-bindings__help"
-    >
-      {{ $t('dashboardFilter.missingFieldHelp') }}
-    </p>
-    <p v-if="failed" class="dashboard-filter-bindings__error">
-      {{ $t('dashboardFilter.fieldsError') }}
-    </p>
   </FormGroup>
 </template>
 

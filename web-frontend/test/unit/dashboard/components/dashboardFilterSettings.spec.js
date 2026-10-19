@@ -119,9 +119,7 @@ test('shows a deleted mapped field as unavailable in global settings', async () 
   expect(row.get('.dropdown__selected-text').text()).toBe(
     'dashboardFilter.invalidField'
   )
-  expect(row.get('.dashboard-filter-bindings__error').text()).toBe(
-    'dashboardFilter.invalidFieldHelp'
-  )
+  expect(row.text()).toContain('dashboardFilter.invalidFieldHelp')
 })
 
 test('keeps a saved table field repairable after its last widget is removed', async () => {
@@ -134,7 +132,5 @@ test('keeps a saved table field repairable after its last widget is removed', as
   const rows = wrapper.findAll('.dashboard-filter-table-field')
   expect(rows).toHaveLength(2)
   const projects = rows.find((row) => row.text().includes('Projects'))
-  expect(projects.get('.dashboard-filter-bindings__error').text()).toBe(
-    'dashboardFilter.invalidFieldHelp'
-  )
+  expect(projects.text()).toContain('dashboardFilter.invalidFieldHelp')
 })
