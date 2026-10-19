@@ -15,7 +15,7 @@ describe('dashboard text filters', () => {
     operator: 'equal',
     mode: 'dropdown',
     multiple: true,
-    bindings: [{ widget_id: 2, field_id: 20 }],
+    bindings: [{ table_id: 1, field_id: 20 }],
   }
 
   beforeEach(async () => {

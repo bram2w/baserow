@@ -81,9 +81,27 @@
         @update:active-index="save({ multiple: $event === 0 })"
       />
     </FormGroup>
-    <p class="dashboard-filter-settings__help">
-      {{ $t('dashboardFilter.bindingHelp') }}
-    </p>
+    <FormSection
+      :title="$t('dashboardFilter.tableFields')"
+      class="dashboard-filter-bindings"
+    >
+      <p class="dashboard-filter-settings__help">
+        {{ $t('dashboardFilter.bindingHelp') }}
+      </p>
+      <DashboardFilterTableField
+        v-for="table in tables"
+        :key="table.id"
+        :table="table"
+        :binding="
+          filter.bindings.find((binding) => binding.table_id === table.id)
+        "
+        :disabled="!canEdit || savingBinding"
+        @select="bindTable(table.id, $event)"
+      />
+      <p v-if="!tables.length" class="dashboard-filter-bindings__help">
+        {{ $t('dashboardFilter.noTables') }}
+      </p>
+    </FormSection>
     <Button
       v-if="canDelete"
       type="secondary"
@@ -99,6 +117,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useNuxtApp } from '#app'
+import DashboardFilterTableField from '@baserow/modules/dashboard/components/filter/DashboardFilterTableField'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 
 const props = defineProps({
@@ -106,9 +125,55 @@ const props = defineProps({
   dashboard: { type: Object, required: true },
   storePrefix: { type: String, default: '' },
 })
-const { $store, $hasPermission } = useNuxtApp()
+const { $store, $hasPermission, $i18n } = useNuxtApp()
 const label = ref(props.filter.label)
 const deleting = ref(false)
+const savingBinding = ref(false)
+const prefix = computed(() => `${props.storePrefix}dashboardApplication/`)
+const tables = computed(() => {
+  const tableIds = new Set(
+    props.filter.bindings.map((binding) => binding.table_id)
+  )
+  for (const widget of $store.getters[prefix.value + 'getWidgets']) {
+    const source = $store.getters[prefix.value + 'getDataSourceById'](
+      widget.data_source_id
+    )
+    if (source?.table_id) tableIds.add(source.table_id)
+  }
+  const databases = $store.getters[prefix.value + 'getIntegrations'].flatMap(
+    (integration) => integration.context_data?.databases || []
+  )
+  return [...tableIds]
+    .toSorted((first, second) => first - second)
+    .map((id) => {
+      const database = databases.find((database) =>
+        database.tables.some((table) => table.id === id)
+      )
+      const table = database?.tables.find((table) => table.id === id)
+      return {
+        id,
+        name: table
+          ? `${database.name} / ${table.name}`
+          : $i18n.t('dashboardFilter.tableFallback', { id }),
+      }
+    })
+})
+async function bindTable(tableId, fieldId) {
+  if (!canEdit.value || savingBinding.value) return
+  savingBinding.value = true
+  try {
+    await save({
+      bindings: [
+        ...props.filter.bindings.filter(
+          (binding) => binding.table_id !== tableId
+        ),
+        { table_id: tableId, field_id: fieldId },
+      ],
+    })
+  } finally {
+    savingBinding.value = false
+  }
+}
 const operators = ['equal', 'not_equal', 'contains', 'contains_not']
 const canEdit = computed(() =>
   $hasPermission(

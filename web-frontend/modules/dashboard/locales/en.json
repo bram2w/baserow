@@ -81,12 +81,15 @@
         "more": "Load more",
         "unavailable": "No longer available",
         "unavailableHelp": "This value is no longer present in the available data. It remains applied until you remove it.",
-        "bindingHelp": "Select a widget to connect this filter to a field in its data source.",
-        "widgetFilters": "Dashboard filters",
-        "notConnected": "Not connected",
-        "unboundHelp": "This filter does not affect this widget.",
+        "bindingHelp": "Choose a field for each table. This filter applies to all widgets using these tables, including new widgets.",
+        "tableFields": "Fields to filter",
+        "chooseField": "Choose a field",
+        "missingFieldHelp": "Choose a field to filter all widgets using this table.",
+        "fieldsError": "Unable to load this table’s fields. Reopen the filter settings to try again.",
+        "noTables": "Connect a widget to a table to choose a field here.",
+        "tableFallback": "Table {id}",
         "invalidField": "Field unavailable",
-        "invalidFieldHelp": "Choose a compatible text field or disconnect this filter."
+        "invalidFieldHelp": "Choose a compatible text field for this table."
     },
     "shareDashboardLink": {
         "shareDashboard": "Share dashboard",

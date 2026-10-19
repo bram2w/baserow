@@ -12,11 +12,6 @@
       :widget="widget"
       :store-prefix="storePrefix"
     />
-    <WidgetFilterBindings
-      :dashboard="dashboard"
-      :widget="widget"
-      :store-prefix="storePrefix"
-    />
   </div>
 </template>
 
@@ -24,12 +19,11 @@
 import _ from 'lodash'
 import DashboardFormulaInput from '@baserow/modules/dashboard/components/DashboardFormulaInput'
 import WidgetSettingsBaseForm from '@baserow/modules/dashboard/components/widget/WidgetSettingsBaseForm'
-import WidgetFilterBindings from '@baserow/modules/dashboard/components/filter/WidgetFilterBindings'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
   name: 'WidgetSettings',
-  components: { WidgetSettingsBaseForm, WidgetFilterBindings },
+  components: { WidgetSettingsBaseForm },
   provide() {
     return {
       formulaComponent: DashboardFormulaInput,
