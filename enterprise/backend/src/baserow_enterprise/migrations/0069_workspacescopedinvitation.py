@@ -8,7 +8,7 @@ import baserow.core.fields
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("baserow_enterprise", "0067_graph_element"),
+        ("baserow_enterprise", "0068_auditlogentry_agent"),
         ("contenttypes", "0002_remove_content_type_name"),
         ("core", "0126_alter_aiproviderconfig_api_key_max_length"),
     ]

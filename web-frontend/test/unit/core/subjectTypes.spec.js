@@ -68,7 +68,6 @@ describe('SubjectType', () => {
 describe('SubjectType invite options', () => {
   const app = (overrides = {}) => ({
     $i18n: { t: (key) => names[key] },
-    $featureFlagIsEnabled: () => true,
     $hasPermission: () => true,
     ...overrides,
   })
@@ -114,12 +113,11 @@ describe('SubjectType invite options', () => {
     expect(subjectType.getBadge()).toBe('Agent')
   })
 
-  test('only enables agents behind the feature flag', () => {
+  test('offers users and agents but not anonymous visitors for role assignments', () => {
     expect(new UserSubjectType({ app: app() }).isEnabled({ id: 1 })).toBe(true)
+    expect(new AgentSubjectType({ app: app() }).isEnabled({ id: 1 })).toBe(true)
     expect(
-      new AgentSubjectType({
-        app: app({ $featureFlagIsEnabled: () => false }),
-      }).isEnabled({ id: 1 })
+      new AnonymousUserSubjectType({ app: app() }).isEnabled({ id: 1 })
     ).toBe(false)
   })
 

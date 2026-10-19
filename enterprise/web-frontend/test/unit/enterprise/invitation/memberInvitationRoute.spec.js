@@ -89,7 +89,7 @@ function createTargetType() {
   }
 }
 
-function createClient() {
+function createClient({ withAgentAssignment = false } = {}) {
   return {
     get: vi.fn((url) => {
       if (url === '/role/12/invitations/') {
@@ -108,14 +108,18 @@ function createClient() {
               scope_id: 20,
               scope_type: 'database_table',
             },
-            {
-              id: 7,
-              subject_type: 'core.Agent',
-              subject: { id: 4, name: 'Smith' },
-              role: 'VIEWER',
-              scope_id: 20,
-              scope_type: 'database_table',
-            },
+            ...(withAgentAssignment
+              ? [
+                  {
+                    id: 7,
+                    subject_type: 'core.Agent',
+                    subject: { id: 4, name: 'Smith' },
+                    role: 'VIEWER',
+                    scope_id: 20,
+                    scope_type: 'database_table',
+                  },
+                ]
+              : []),
           ],
         })
       }
@@ -153,7 +157,7 @@ async function mountRoute(
   client,
   targetType,
   {
-    agentsEnabled = false,
+    canListAgents = false,
     captcha = false,
     canInviteNewUsers = true,
     realList = false,
@@ -163,8 +167,8 @@ async function mountRoute(
   picker.resets = 0
   const app = {
     $client: client,
-    $featureFlagIsEnabled: () => agentsEnabled,
-    $hasPermission: () => true,
+    $hasPermission: (operation) =>
+      operation !== 'workspace.list_agents' || canListAgents,
     $i18n: { t: (key) => key },
   }
   const wrapper = await mountSuspended(MemberInvitationRoute, {
@@ -172,7 +176,6 @@ async function mountRoute(
     global: {
       mocks: {
         $client: client,
-        $featureFlagIsEnabled: () => agentsEnabled,
         $hasPermission: (operation) =>
           operation !== 'workspace.create_invitation' || canInviteNewUsers,
         $config: { public: { baserowEmbeddedShareUrl: 'http://localhost' } },
@@ -233,18 +236,15 @@ test('lists pending invitations first and tells the picker who already has a rol
   const client = createClient()
   const wrapper = await mountRoute(client, createTargetType())
   try {
-    // The agent with a role on the table is left out: agents are off.
     expect(wrapper.find('.access').text()).toBe('invitation:1,auth.User:8')
     // Everyone but the current user reaches the picker, which lists the ones
     // with a role on the table as such.
     expect(wrapper.find('.picker').text()).toBe('Mark Delgado,Jane Roe')
     expect(wrapper.find('.picker-pending').text()).toBe('olga@x.com')
-    expect(wrapper.find('.picker-assigned').text()).toBe(
-      'auth.User:8,core.Agent:4'
-    )
+    expect(wrapper.find('.picker-assigned').text()).toBe('auth.User:8')
     expect(wrapper.find('.picker-agents').text()).toBe('')
     expect(wrapper.find('.picker-agents').attributes('data-enabled')).toBe(
-      'false'
+      'true'
     )
     expect(client.get).not.toHaveBeenCalledWith(
       '/agents/workspace/12/',
@@ -362,10 +362,14 @@ test('shows existing scope users, including the current user with a read-only ro
   }
 })
 
-test('lists and offers agents once the agents feature flag is on', async () => {
-  const wrapper = await mountRoute(createClient(), createTargetType(), {
-    agentsEnabled: true,
-  })
+test('lists assigned agents and offers agents when listing is permitted', async () => {
+  const wrapper = await mountRoute(
+    createClient({ withAgentAssignment: true }),
+    createTargetType(),
+    {
+      canListAgents: true,
+    }
+  )
   try {
     expect(wrapper.find('.access').text()).toBe(
       'invitation:1,auth.User:8,core.Agent:4'

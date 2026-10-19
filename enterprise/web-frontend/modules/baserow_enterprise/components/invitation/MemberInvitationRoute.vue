@@ -73,8 +73,7 @@ import { filterRoles } from '@baserow_enterprise/utils/roles'
  * the object through the workspace. Subjects can be given no access on the
  * object, which takes it away from them below their workspace role; an
  * invitation can't, as there is no point in inviting someone to nothing. Only
- * the subject types that are enabled take part, agents for example need the
- * agents feature flag: they are neither searched nor listed without it.
+ * assignable subject types take part; anonymous visitors are display-only.
  */
 export default {
   name: 'MemberInvitationRoute',
