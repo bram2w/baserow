@@ -24,7 +24,9 @@
             $emit('widget-variation-selected', $event)
           "
         />
+        <DashboardRefreshButton :store-prefix="storePrefix" />
       </div>
+      <DashboardRefreshButton v-if="!isEditMode" :store-prefix="storePrefix" />
     </template>
   </header>
 </template>
@@ -32,10 +34,12 @@
 <script>
 import DashboardHeaderMenuItems from '@baserow/modules/dashboard/components/DashboardHeaderMenuItems'
 import CreateWidgetButton from '@baserow/modules/dashboard/components/CreateWidgetButton'
+import DashboardRefreshButton from '@baserow/modules/dashboard/components/filter/DashboardRefreshButton'
 
 export default {
   name: 'DashboardHeader',
   components: {
+    DashboardRefreshButton,
     DashboardHeaderMenuItems,
     CreateWidgetButton,
   },
