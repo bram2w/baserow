@@ -1,9 +1,19 @@
+from typing import Optional, Union
+
+from django.contrib.auth.models import AbstractUser, AnonymousUser
 from django.db.models import QuerySet
 
 from baserow.contrib.dashboard.models import Dashboard
+from baserow.core.handler import CoreHandler
+from baserow.core.operations import ReadApplicationOperationType
+from baserow.core.public_sharing import (
+    encode_public_access_token,
+    is_public_access_token_valid,
+)
 from baserow.core.telemetry.utils import baserow_trace_handler
+from baserow.core.trash.handler import TrashHandler
 
-from .exceptions import DashboardDoesNotExist
+from .exceptions import DashboardDoesNotExist, NoAuthorizationToPublicDashboard
 
 
 @baserow_trace_handler
@@ -55,3 +65,75 @@ class DashboardHandler:
         dashboard.slug = slug
         dashboard.save()
         return dashboard
+
+    def get_public_dashboard_by_slug(
+        self,
+        user: Union[AbstractUser, AnonymousUser],
+        slug: str,
+        authorization_token: Optional[str] = None,
+        raise_authorization_error: bool = True,
+    ) -> Dashboard:
+        """
+        Returns the dashboard with the provided slug if it is public, if the user
+        can read it as a member of its workspace, or if a valid token is provided
+        for a password protected dashboard. Mirrors how publicly shared views
+        resolve their slug.
+
+        :param user: The user on whose behalf the dashboard is requested, possibly
+            anonymous.
+        :param slug: The public slug of the dashboard.
+        :param authorization_token: The token that grants access to a password
+            protected dashboard when the user isn't a member of the workspace.
+        :param raise_authorization_error: Whether a password protected dashboard
+            raises when the token is missing or invalid.
+        :raises DashboardDoesNotExist: If no dashboard has the slug, if it or its
+            workspace is trashed, or if it isn't public and the user can't read it.
+            The same error is used in all cases so that the slug never reveals
+            whether a private dashboard exists.
+        :raises NoAuthorizationToPublicDashboard: If the dashboard is password
+            protected and the token is missing or invalid.
+        :return: The requested dashboard.
+        """
+
+        try:
+            dashboard = Dashboard.objects.select_related("workspace").get(slug=slug)
+        except Dashboard.DoesNotExist as exc:
+            raise DashboardDoesNotExist from exc
+
+        if TrashHandler.item_has_a_trashed_parent(dashboard, check_item_also=True):
+            raise DashboardDoesNotExist
+
+        user_can_read_dashboard = user and CoreHandler().check_permissions(
+            user,
+            ReadApplicationOperationType.type,
+            workspace=dashboard.workspace,
+            context=dashboard,
+            raise_permission_exceptions=False,
+        )
+        if not user_can_read_dashboard:
+            if not dashboard.public:
+                raise DashboardDoesNotExist
+
+            token_is_valid = authorization_token and is_public_access_token_valid(
+                dashboard.slug, dashboard.public_password, authorization_token
+            )
+            if (
+                dashboard.public_has_password
+                and not token_is_valid
+                and raise_authorization_error
+            ):
+                raise NoAuthorizationToPublicDashboard
+
+        return dashboard
+
+    def encode_public_access_token(self, dashboard: Dashboard) -> str:
+        """
+        Creates the non-expiring token that grants access to the password
+        protected public dashboard. Rotating the slug or changing the password
+        invalidates it.
+
+        :param dashboard: The password protected public dashboard.
+        :return: The encoded token.
+        """
+
+        return encode_public_access_token(dashboard.slug, dashboard.public_password)

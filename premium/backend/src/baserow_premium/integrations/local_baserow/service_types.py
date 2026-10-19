@@ -428,6 +428,23 @@ class LocalBaserowGroupedAggregateRowsUserServiceType(
             ),
         }
 
+    @property
+    def public_serializer_field_names(self):
+        # Visitors of a publicly shared dashboard need the series and the group
+        # bys to label the chart, the sorts and filters stay private.
+        return super().public_serializer_field_names + [
+            "aggregation_series",
+            "aggregation_group_bys",
+        ]
+
+    @property
+    def public_serializer_field_overrides(self):
+        overrides = self.serializer_field_overrides
+        return {
+            "aggregation_series": overrides["aggregation_series"],
+            "aggregation_group_bys": overrides["aggregation_group_bys"],
+        }
+
     class SerializedDict(
         LocalBaserowViewServiceType.SerializedDict,
         LocalBaserowTableServiceFilterableMixin.SerializedDict,
