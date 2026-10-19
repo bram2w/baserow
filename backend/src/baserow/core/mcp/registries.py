@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Union
 from asgiref.sync import sync_to_async
 from pydantic import BaseModel
 
+from baserow.core.mcp.constants import LEGACY_DEFAULT_TOOLS
 from baserow.core.mcp.models import MCPEndpoint
 from baserow.core.registry import Instance, Registry
 
@@ -150,17 +151,22 @@ class MCPToolRegistry(Registry[MCPTool]):
         """Return the enabled tools, in registration order."""
         return [tool for tool in self.registry.values() if tool.enabled]
 
+    @staticmethod
+    def _allowed_names(endpoint: MCPEndpoint) -> set:
+        if endpoint.allowed_tools is None:
+            return set(LEGACY_DEFAULT_TOOLS)
+        return set(endpoint.allowed_tools)
+
     def get_allowed_tools(self, endpoint: MCPEndpoint) -> List[MCPTool]:
         """
         Return the enabled tools the endpoint may use. ``allowed_tools = None``
-        allows every enabled tool. Tools that are not available to the endpoint
+        allows the ``LEGACY_DEFAULT_TOOLS`` that are enabled. Tools that are not available to the endpoint
         are left out. This can query the database, so async code must call it
         through ``sync_to_async``.
         """
         tools = self.get_enabled_tools()
-        if endpoint.allowed_tools is not None:
-            allowed = set(endpoint.allowed_tools)
-            tools = [tool for tool in tools if tool.name in allowed]
+        allowed = self._allowed_names(endpoint)
+        tools = [tool for tool in tools if tool.name in allowed]
         return [tool for tool in tools if tool.is_available(endpoint)]
 
     async def list_all_tools(self, endpoint: MCPEndpoint) -> List["Tool"]:
@@ -180,7 +186,7 @@ class MCPToolRegistry(Registry[MCPTool]):
         tool = self.match_by_name(name)
         if tool is None or not tool.enabled:
             return None
-        if endpoint.allowed_tools is not None and name not in endpoint.allowed_tools:
+        if name not in self._allowed_names(endpoint):
             return None
         return tool if tool.is_available(endpoint) else None
 

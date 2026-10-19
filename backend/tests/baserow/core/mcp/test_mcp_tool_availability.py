@@ -7,6 +7,7 @@ from mcp.shared.memory import (
 )
 
 from baserow.core.mcp import BaserowMCPServer, current_key
+from baserow.core.mcp.constants import LEGACY_DEFAULT_TOOLS
 from baserow.core.mcp.registries import MCPTool, MCPToolRegistry
 
 
@@ -25,6 +26,9 @@ class UnavailableTool(MCPTool):
         return False
 
 
+NAMES = ["availability_available", "availability_unavailable"]
+
+
 def _registry():
     registry = MCPToolRegistry()
     registry.register(AvailableTool())
@@ -39,7 +43,7 @@ def test_tool_defaults():
 
 @pytest.mark.django_db
 def test_unavailable_tool_is_not_allowed(data_fixture):
-    endpoint = data_fixture.create_mcp_endpoint()
+    endpoint = data_fixture.create_mcp_endpoint(allowed_tools=NAMES)
     registry = _registry()
 
     assert [t.name for t in registry.get_allowed_tools(endpoint)] == [
@@ -51,7 +55,7 @@ def test_unavailable_tool_is_not_allowed(data_fixture):
 
 @pytest.mark.django_db
 def test_unavailable_tool_neither_lists_nor_calls_over_server(data_fixture):
-    endpoint = data_fixture.create_mcp_endpoint(allowed_tools=None)
+    endpoint = data_fixture.create_mcp_endpoint(allowed_tools=NAMES)
     registry = _registry()
 
     async def inner():
@@ -69,3 +73,27 @@ def test_unavailable_tool_neither_lists_nor_calls_over_server(data_fixture):
 
     with patch("baserow.core.mcp.registries.mcp_tool_registry", registry):
         async_to_sync(inner)()
+
+
+@pytest.mark.django_db
+def test_endpoint_without_allow_list_gets_only_legacy_default_tools(data_fixture):
+    class Legacy(MCPTool):
+        """Legacy."""
+
+        type = LEGACY_DEFAULT_TOOLS[0]
+
+    class New(MCPTool):
+        """New."""
+
+        type = "brand_new_tool"
+
+    registry = MCPToolRegistry()
+    registry.register(Legacy())
+    registry.register(New())
+    endpoint = data_fixture.create_mcp_endpoint(allowed_tools=None)
+
+    assert [t.name for t in registry.get_allowed_tools(endpoint)] == [
+        LEGACY_DEFAULT_TOOLS[0]
+    ]
+    assert registry.get_allowed_tool(endpoint, "brand_new_tool") is None
+    assert registry.get_allowed_tool(endpoint, LEGACY_DEFAULT_TOOLS[0]) is not None

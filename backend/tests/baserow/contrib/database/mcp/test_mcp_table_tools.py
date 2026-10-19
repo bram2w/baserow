@@ -11,6 +11,7 @@ from mcp.shared.memory import (
 )
 
 from baserow.core.mcp import BaserowMCPServer, current_key
+from baserow.core.mcp.constants import LEGACY_DEFAULT_TOOLS
 from baserow.core.mcp.registries import mcp_tool_registry
 
 ENABLED_TOOL_NAMES = {
@@ -42,6 +43,11 @@ def enable_all_tools(monkeypatch):
 
     for name in DISABLED_TOOL_NAMES:
         monkeypatch.setattr(mcp_tool_registry.get(name), "enabled", True)
+    # An endpoint without an allow-list only gets the legacy default tools.
+    monkeypatch.setattr(
+        "baserow.core.mcp.registries.LEGACY_DEFAULT_TOOLS",
+        [*LEGACY_DEFAULT_TOOLS, *DISABLED_TOOL_NAMES],
+    )
 
 
 @pytest.mark.django_db
@@ -60,12 +66,7 @@ def test_list_tools_returns_only_enabled_tools(data_fixture):
         async def inner():
             async with client_session(mcp._mcp_server) as client:
                 result = await client.list_tools()
-                # Tools with a group come from the enterprise Kuma bridge.
-                names = {
-                    t.name
-                    for t in result.tools
-                    if mcp_tool_registry.get(t.name).group is None
-                }
+                names = {t.name for t in result.tools}
                 assert names == ENABLED_TOOL_NAMES
                 assert not names & DISABLED_TOOL_NAMES
 

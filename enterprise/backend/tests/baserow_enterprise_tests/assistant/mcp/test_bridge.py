@@ -149,3 +149,34 @@ def test_bridge_tool_unavailable_when_tool_type_cannot_be_used(
         t.name for t in mcp_tool_registry.get_allowed_tools(endpoint)
     ]
     assert mcp_tool_registry.get_allowed_tool(endpoint, "list_views") is None
+
+
+@pytest.mark.django_db
+def test_endpoint_without_allow_list_cannot_use_kuma_tools(data_fixture):
+    from asgiref.sync import async_to_sync as a2s
+    from mcp.shared.memory import (
+        create_connected_server_and_client_session as client_session,
+    )
+
+    from baserow.core.mcp import BaserowMCPServer, current_key
+    from baserow.core.mcp.constants import LEGACY_DEFAULT_TOOLS
+
+    endpoint = data_fixture.create_mcp_endpoint(allowed_tools=None)
+    token = current_key.set(endpoint.key)
+
+    async def inner():
+        async with client_session(BaserowMCPServer()._mcp_server) as client:
+            names = {t.name for t in (await client.list_tools()).tools}
+            assert names == set(LEGACY_DEFAULT_TOOLS)
+            assert not names & set(PHASE_ONE_TOOLS)
+            result = await client.call_tool("list_pages", {"application_id": 1})
+            assert result.isError is True
+            assert result.content[0].text == "Tool 'list_pages' not found."
+
+    try:
+        from django.db import transaction
+
+        with transaction.atomic():
+            a2s(inner)()
+    finally:
+        current_key.reset(token)
