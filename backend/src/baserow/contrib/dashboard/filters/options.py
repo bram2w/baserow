@@ -1,4 +1,4 @@
-from django.db.models import TextField
+from django.db.models import F, TextField
 from django.db.models.functions import Cast, Collate
 
 from baserow.contrib.dashboard.data_sources.dispatch_context import (
@@ -72,10 +72,11 @@ class DashboardFilterOptionsService:
             queryset = service_type.build_queryset(service, service.table, context)
             queryset = (
                 queryset.annotate(
-                    dashboard_option=Collate(
-                        Cast(text_field_expression(field), TextField()), "C"
-                    )
+                    dashboard_option_text=Cast(
+                        text_field_expression(field), TextField()
+                    ),
                 )
+                .annotate(dashboard_option=Collate(F("dashboard_option_text"), "C"))
                 .exclude(dashboard_option__isnull=True)
                 .exclude(dashboard_option__regex=r"^\s*$")
                 .order_by()
@@ -87,7 +88,7 @@ class DashboardFilterOptionsService:
                     .distinct()
                 )
             if search:
-                queryset = queryset.filter(dashboard_option__icontains=search)
+                queryset = queryset.filter(dashboard_option_text__icontains=search)
             if after is not None:
                 queryset = queryset.filter(dashboard_option__gt=after)
             choices.append(

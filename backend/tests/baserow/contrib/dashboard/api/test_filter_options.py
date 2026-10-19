@@ -92,3 +92,39 @@ def test_options_do_not_expose_another_workspace(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == 401
+
+
+@pytest.mark.django_db
+def test_options_search_handles_unicode_case(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    dashboard = data_fixture.create_dashboard_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        authorized_user=user, application=dashboard
+    )
+    table, fields, _ = data_fixture.build_table(
+        user=user,
+        columns=[("Team", "text"), ("Count", "number")],
+        rows=[["Équipe", 1], ["équipe", 1]],
+    )
+    source = data_fixture.create_dashboard_local_baserow_aggregate_rows_data_source(
+        dashboard=dashboard,
+        integration=integration,
+        table=table,
+        field=fields[1],
+        aggregation_type="sum",
+    )
+    widget = data_fixture.create_summary_widget(dashboard=dashboard, data_source=source)
+    config = DashboardFilterService().create_filter(
+        user,
+        dashboard.id,
+        label="Team",
+        bindings=[{"widget_id": widget.id, "field_id": fields[0].id}],
+    )
+    response = api_client.post(
+        reverse("api:dashboard:filters:options", kwargs={"filter_id": config.id}),
+        {"search": "équipe"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == 200, response.json()
+    assert response.json()["results"] == ["Équipe", "équipe"]

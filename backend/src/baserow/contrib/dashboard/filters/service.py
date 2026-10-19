@@ -91,6 +91,16 @@ class DashboardFilterService:
         )
         if "bindings" in values:
             self.validate_bindings(user, dashboard_filter.dashboard, values["bindings"])
+            remaining_widgets = [binding["widget_id"] for binding in values["bindings"]]
+            for binding in dashboard_filter.bindings.exclude(
+                widget_id__in=remaining_widgets
+            ).select_related("widget"):
+                CoreHandler().check_permissions(
+                    user,
+                    UpdateWidgetOperationType.type,
+                    workspace=dashboard_filter.dashboard.workspace,
+                    context=binding.widget.specific,
+                )
         previous, updated = self.handler.update_filter(dashboard_filter, **values)
         dashboard_filters_updated.send(
             self, dashboard=dashboard_filter.dashboard, user=user

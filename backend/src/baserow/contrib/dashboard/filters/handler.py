@@ -13,7 +13,11 @@ class DashboardFilterHandler:
         if for_update:
             queryset = queryset.select_for_update(of=("self",))
         try:
-            return queryset.get(id=filter_id, dashboard__trashed=False)
+            return queryset.get(
+                id=filter_id,
+                dashboard__trashed=False,
+                dashboard__workspace__trashed=False,
+            )
         except DashboardFilter.DoesNotExist as exc:
             raise DashboardFilterDoesNotExist() from exc
 
