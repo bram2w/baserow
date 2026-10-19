@@ -39,9 +39,10 @@ class ChatRunService:
     """Permission-checked HTTP access to the synchronous lifecycle handler.
 
     Status and cancel views call this service directly. The async ``follow_run``
-    response calls ``snapshot`` through its synchronous database bridge, including
-    periodic permission rechecks. Reading and cancelling use independent adapter
-    permission hooks; none of these calls executes the run's AI work.
+    response calls ``snapshot`` through its synchronous database bridge when a
+    stream opens or reconnects. Later status reads bypass this service. Reading
+    and cancelling use independent adapter permission hooks; none of these calls
+    executes the run's AI work.
     """
 
     def get_run(self, user: AbstractUser, run_id: UUID, *, cancel=False) -> ChatRun:

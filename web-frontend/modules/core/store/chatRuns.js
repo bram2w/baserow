@@ -165,15 +165,14 @@ export const actions = {
       .finally(() => dispatch('streamEnded', { runId, controller }))
   },
 
-  streamEnded({ state, commit, dispatch }, payload) {
-    const { runId, controller } =
-      typeof payload === 'string' ? { runId: payload } : payload
+  streamEnded({ state, commit, dispatch }, { runId, controller }) {
     const follower = state.followers[runId]
     if (!follower) return
-    if (controller && runtime(this, runId).controller !== controller) return
-    runtime(this, runId).controller = null
+    const current = runtime(this, runId)
+    if (current.controller !== controller) return
+    current.controller = null
     commit('UPDATE_FOLLOWER', { runId, values: { streaming: false } })
-    if (!follower.finished && !runtime(this, runId).suspended) {
+    if (!follower.finished && !current.suspended) {
       dispatch('checkStatus', runId)
     }
   },

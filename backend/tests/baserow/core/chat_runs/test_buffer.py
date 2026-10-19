@@ -99,16 +99,8 @@ async def test_limit_marks_replay_unavailable_without_trimming_prefix(
 
 
 @pytest.mark.asyncio
-async def test_trimmed_prefix_is_not_replay_or_worker_recovery(buffer_redis):
-    writer = ChatRunBuffer(uuid4())
-    await writer.append(
-        [("run.started", {}), ("text.delta", {"segment": 0, "text": "tail"})]
-    )
-    await buffer_redis.xtrim(writer.stream_key, maxlen=1, approximate=False)
-    with pytest.raises(ReplayUnavailable, match="prefix"):
-        await writer.read()
-    assert await writer.recover() is None
-
+@pytest.mark.parametrize("damage", ["trim", "delete_middle"])
+async def test_incomplete_prefix_is_not_replay_or_worker_recovery(buffer_redis, damage):
     writer = ChatRunBuffer(uuid4())
     events = await writer.append(
         [
@@ -117,7 +109,10 @@ async def test_trimmed_prefix_is_not_replay_or_worker_recovery(buffer_redis):
             ("text.delta", {"segment": 0, "text": "tail"}),
         ]
     )
-    await buffer_redis.xdel(writer.stream_key, parse_cursor(events[1]["cursor"])[1])
+    if damage == "trim":
+        await buffer_redis.xtrim(writer.stream_key, maxlen=1, approximate=False)
+    else:
+        await buffer_redis.xdel(writer.stream_key, parse_cursor(events[1]["cursor"])[1])
     with pytest.raises(ReplayUnavailable, match="prefix"):
         await writer.read()
     assert await writer.recover() is None

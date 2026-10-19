@@ -29,12 +29,17 @@ def _scope(path="/stream/", method="POST", origin=None):
     }
 
 
+def _router(monkeypatch, path="/stream/", methods=("POST",)):
+    monkeypatch.setattr(streaming, "_paths", [])
+    streaming.register_async_stream_path(path, methods=methods)
+    return AsyncStreamingHTTPRouter(AsyncMock(), max_streams=1)
+
+
 @pytest.mark.asyncio
 async def test_http_stream_admission_does_not_hold_rest_capacity_or_thread_context(
     monkeypatch,
 ):
-    monkeypatch.setattr(streaming, "_paths", [])
-    streaming.register_async_stream_path(r"/stream/")
+    router = _router(monkeypatch)
     prepared = asyncio.Event()
     closed = asyncio.Event()
     observed_contexts = []
@@ -51,8 +56,6 @@ async def test_http_stream_admission_does_not_hold_rest_capacity_or_thread_conte
     monkeypatch.setattr(
         streaming, "_prepare", lambda scope, body: StreamingHttpResponse(chunks())
     )
-    fallback = AsyncMock()
-    router = AsyncStreamingHTTPRouter(fallback, max_streams=1)
     incoming = asyncio.Queue()
     await incoming.put({"type": "http.request", "body": b"{}"})
     output = []
@@ -73,7 +76,7 @@ async def test_http_stream_admission_does_not_hold_rest_capacity_or_thread_conte
     assert b"access-control-allow-origin" in dict(rejection[0]["headers"])
     assert dict(rejection[0]["headers"])[b"retry-after"] == b"1"
     await router(_scope("/ordinary/", "GET"), AsyncMock(), AsyncMock())
-    fallback.assert_awaited_once()
+    router.fallback.assert_awaited_once()
     await incoming.put({"type": "http.disconnect"})
     await asyncio.wait_for(active, 1)
     assert router.active == 0
@@ -82,8 +85,7 @@ async def test_http_stream_admission_does_not_hold_rest_capacity_or_thread_conte
 
 @pytest.mark.asyncio
 async def test_failed_http_iterator_releases_admission_and_closes_response(monkeypatch):
-    monkeypatch.setattr(streaming, "_paths", [])
-    streaming.register_async_stream_path(r"/stream/")
+    router = _router(monkeypatch)
     closed = []
 
     async def chunks():
@@ -95,7 +97,6 @@ async def test_failed_http_iterator_releases_admission_and_closes_response(monke
     monkeypatch.setattr(streaming, "_prepare", lambda scope, body: response)
     incoming = asyncio.Queue()
     await incoming.put({"type": "http.request", "body": b"{}"})
-    router = AsyncStreamingHTTPRouter(AsyncMock(), max_streams=1)
     await asyncio.wait_for(router(_scope(), incoming.get, AsyncMock()), 1)
     assert router.active == 0
     assert closed == [True]
@@ -103,10 +104,8 @@ async def test_failed_http_iterator_releases_admission_and_closes_response(monke
 
 @pytest.mark.asyncio
 async def test_unfinished_body_does_not_hold_a_stream_slot(monkeypatch):
-    monkeypatch.setattr(streaming, "_paths", [])
-    streaming.register_async_stream_path(r"/stream/")
+    router = _router(monkeypatch)
     monkeypatch.setattr(streaming, "_prepare", lambda scope, body: JsonResponse({}))
-    router = AsyncStreamingHTTPRouter(AsyncMock(), max_streams=1)
     uploading = asyncio.Queue()
     await uploading.put({"type": "http.request", "body": b"{", "more_body": True})
     slow = asyncio.create_task(router(_scope(), uploading.get, AsyncMock()))
@@ -127,8 +126,7 @@ async def test_unfinished_body_does_not_hold_a_stream_slot(monkeypatch):
 async def test_request_body_size_limit_applies_to_stream_paths(monkeypatch, settings):
     settings.DATA_UPLOAD_MAX_MEMORY_SIZE = 10
     path = reverse("api:user:token_auth")
-    monkeypatch.setattr(streaming, "_paths", [])
-    streaming.register_async_stream_path(path)
+    router = _router(monkeypatch, path)
     body = json.dumps({"email": "a" * 20, "password": "b"}).encode()
     scope = _scope(path)
     scope["headers"] += [
@@ -138,7 +136,6 @@ async def test_request_body_size_limit_applies_to_stream_paths(monkeypatch, sett
     incoming = asyncio.Queue()
     await incoming.put({"type": "http.request", "body": body})
     output = []
-    router = AsyncStreamingHTTPRouter(AsyncMock(), max_streams=1)
     await asyncio.wait_for(
         router(scope, incoming.get, AsyncMock(side_effect=output.append)), 2
     )
@@ -148,14 +145,12 @@ async def test_request_body_size_limit_applies_to_stream_paths(monkeypatch, sett
 
 @pytest.mark.asyncio
 async def test_nonstream_validation_response_is_preserved(monkeypatch):
-    monkeypatch.setattr(streaming, "_paths", [])
-    streaming.register_async_stream_path(r"/stream/")
+    router = _router(monkeypatch)
     response = JsonResponse({"error": "ERROR_REQUEST_BODY_VALIDATION"}, status=400)
     monkeypatch.setattr(streaming, "_prepare", lambda scope, body: response)
     incoming = asyncio.Queue()
     await incoming.put({"type": "http.request", "body": b"{}"})
     output = []
-    router = AsyncStreamingHTTPRouter(AsyncMock(), max_streams=1)
     await asyncio.wait_for(
         router(_scope(), incoming.get, AsyncMock(side_effect=output.append)), 1
     )
@@ -169,12 +164,10 @@ async def test_detached_preparation_preserves_real_django_authentication_and_cor
     monkeypatch,
 ):
     path = reverse("api:chat_runs:detail", kwargs={"run_id": uuid4()})
-    monkeypatch.setattr(streaming, "_paths", [])
-    streaming.register_async_stream_path(path, methods=("GET",))
+    router = _router(monkeypatch, path, methods=("GET",))
     incoming = asyncio.Queue()
     await incoming.put({"type": "http.request", "body": b"{}"})
     output = []
-    router = AsyncStreamingHTTPRouter(AsyncMock(), max_streams=1)
     await asyncio.wait_for(
         router(
             _scope(path, method="GET", origin="https://frontend.example"),

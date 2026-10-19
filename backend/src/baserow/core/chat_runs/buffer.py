@@ -117,7 +117,6 @@ class ReplayUnavailable(Exception):
 class BufferRead:
     events: list[dict[str, Any]]
     cursor: str | None
-    generation: str
     high_water: str | None
 
 
@@ -128,9 +127,6 @@ def parse_cursor(cursor: str) -> tuple[str, str]:
     if any(int(part) > 2**64 - 1 for part in match.group(2).split("-")):
         raise ValueError("Invalid chat run cursor")
     return match.group(1), match.group(2)
-
-
-validate_cursor = parse_cursor
 
 
 def stream_id_key(stream_id: str) -> tuple[int, int]:
@@ -335,7 +331,6 @@ class ChatRunBuffer:
         return BufferRead(
             events,
             events[-1]["cursor"] if events else cursor,
-            generation,
             f"{generation}:{meta['last']}",
         )
 

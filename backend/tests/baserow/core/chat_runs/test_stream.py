@@ -1,4 +1,5 @@
 import asyncio
+from contextlib import aclosing
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 from uuid import uuid4
@@ -46,7 +47,7 @@ async def test_resume_baseline_survives_appends_and_suppresses_catchup_effects(
         prefix[-1]["cursor"],
         snapshot=AsyncMock(return_value={"status": "running"}),
     )
-    try:
+    async with aclosing(follower):
         baseline = await anext(follower)
         navigation = await anext(follower)
         text = await anext(follower)
@@ -63,8 +64,6 @@ async def test_resume_baseline_survives_appends_and_suppresses_catchup_effects(
         live = await anext(follower)
         assert live["kind"] == "navigation"
         assert not live["replayed"]
-    finally:
-        await follower.aclose()
 
 
 @pytest.mark.asyncio
@@ -76,11 +75,9 @@ async def test_new_send_treats_its_own_fast_worker_output_as_live():
     follower = follow_run(
         run, None, replay=False, snapshot=AsyncMock(return_value={"status": "running"})
     )
-    try:
+    async with aclosing(follower):
         assert not (await anext(follower))["replayed"]
         assert not (await anext(follower))["replayed"]
-    finally:
-        await follower.aclose()
 
 
 @pytest.mark.asyncio
@@ -91,15 +88,13 @@ async def test_live_output_skips_saved_state_reads(monkeypatch):
     await writer.append([("run.started", {})])
     snapshot = AsyncMock(return_value={"status": "running"})
     follower = follow_run(run, None, replay=False, snapshot=snapshot)
-    try:
+    async with aclosing(follower):
         assert (await anext(follower))["kind"] == "run.started"
         for _ in range(6):
             await writer.append([("text.delta", {"segment": 0, "text": "x"})])
             assert (await anext(follower))["kind"] == "text.delta"
             await asyncio.sleep(0.05)
         assert snapshot.await_count == 1
-    finally:
-        await follower.aclose()
 
 
 @pytest.mark.asyncio
