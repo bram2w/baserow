@@ -1,6 +1,7 @@
 import { useNuxtApp } from '#app'
 import WidgetService from '@baserow/modules/dashboard/services/widget'
 import DataSourceService from '@baserow/modules/dashboard/services/dataSource'
+import PublicDashboardService from '@baserow/modules/dashboard/services/publicDashboard'
 import IntegrationService from '@baserow/modules/core/services/integration'
 import { ConcurrentPriorityTaskQueue } from '@baserow/modules/core/utils/queue'
 import debounce from 'lodash/debounce'
@@ -22,6 +23,11 @@ export const state = () => ({
   // returned as a result of dispatching
   // a data source. The keys are data source ids.
   data: {},
+  // Set while a publicly shared dashboard is shown. Its data sources are then
+  // dispatched through the public endpoint of the slug, with the token of a
+  // password protected dashboard.
+  publicSlug: null,
+  publicAuthToken: null,
 })
 
 let debouncedWidgetUpdate = null
@@ -229,6 +235,12 @@ export const mutations = {
     state.dataSources = []
     state.integrations = []
     state.data = {}
+    state.publicSlug = null
+    state.publicAuthToken = null
+  },
+  SET_PUBLIC(state, { slug, authToken = null }) {
+    state.publicSlug = slug
+    state.publicAuthToken = authToken
   },
   SET_DASHBOARD_ID(state, dashboardId) {
     if (state.dashboardId !== dashboardId) {
@@ -520,6 +532,45 @@ export const actions = {
       dashboardGeneration: state.dashboardGeneration,
     })
   },
+  /**
+   * Shows a publicly shared dashboard. Its widgets and data sources come from
+   * the public info endpoint, so nothing is fetched here. The data sources are
+   * dispatched afterwards with `dispatchDataSources`, in the browser only.
+   */
+  openPublicDashboard(
+    { commit },
+    { slug, authToken = null, dashboardId, widgets, dataSources }
+  ) {
+    commit('RESET')
+    commit('SET_DASHBOARD_ID', dashboardId)
+    commit('SET_PUBLIC', { slug, authToken })
+    commit('SET_WIDGETS', widgets)
+    commit('SET_DATA_SOURCES', dataSources)
+  },
+  /**
+   * Dispatches every data source of the current dashboard, the ones shown by the
+   * top most widgets first.
+   */
+  async dispatchDataSources({ state, dispatch }) {
+    const request = {
+      dashboardId: state.dashboardId,
+      dashboardGeneration: state.dashboardGeneration,
+    }
+    const queuedDataSources = prioritizeDataSources(
+      state.dataSources,
+      state.widgets
+    )
+    await Promise.allSettled(
+      queuedDataSources.map((dataSource, priority) =>
+        dispatch('dispatchDataSource', {
+          dataSourceId: dataSource.id,
+          dashboardId: request.dashboardId,
+          dashboardGeneration: request.dashboardGeneration,
+          priority,
+        })
+      )
+    )
+  },
   async fetchInitial({ state, commit, dispatch }, { dashboardId, forEditing }) {
     const { $client } = this
     commit('RESET')
@@ -717,6 +768,13 @@ export const actions = {
           if (!isDataSourceDispatchCurrent(state, request)) {
             return undefined
           }
+          if (state.publicSlug !== null) {
+            return PublicDashboardService($client).dispatch(
+              state.publicSlug,
+              request.dataSourceId,
+              state.publicAuthToken
+            )
+          }
           return DataSourceService($client).dispatch(request.dataSourceId)
         },
         priority,
@@ -846,6 +904,15 @@ export const getters = {
   },
   getDataForDataSource: (state, getters) => (dataSourceId) => {
     return state.data[dataSourceId]
+  },
+  isPublic(state) {
+    return state.publicSlug !== null
+  },
+  getPublicSlug(state) {
+    return state.publicSlug
+  },
+  getPublicAuthToken(state) {
+    return state.publicAuthToken
   },
   getIntegrations(state) {
     return state.integrations

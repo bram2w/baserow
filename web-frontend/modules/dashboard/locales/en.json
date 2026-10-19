@@ -32,6 +32,9 @@
     "generateNewUrl": "Generate new URL",
     "success": "Successfully generated new URL"
   },
+  "publicDashboard": {
+    "noWidgets": "This dashboard doesn't have any widgets yet."
+  },
   "createWidgetModal": {
     "title": "Add new widget"
   },

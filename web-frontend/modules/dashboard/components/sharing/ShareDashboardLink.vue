@@ -113,7 +113,7 @@ const props = defineProps({
   },
 })
 
-const { $store, $registry, $config } = useNuxtApp()
+const { $store, $registry, $config, $router } = useNuxtApp()
 
 const context = ref(null)
 const contextLink = ref(null)
@@ -122,10 +122,13 @@ const rotateSlugModal = ref(null)
 const loading = ref(false)
 
 const shareUrl = computed(() => {
-  // The public dashboard page and its route are added together with the
-  // anonymous access, so the path is built by hand instead of being resolved
-  // through the router.
-  return `${$config.public.baserowEmbeddedShareUrl}/public/dashboard/${props.dashboard.slug}`
+  return (
+    $config.public.baserowEmbeddedShareUrl +
+    $router.resolve({
+      name: 'dashboard-public',
+      params: { slug: props.dashboard.slug },
+    }).href
+  )
 })
 
 const additionalShareLinkOptions = computed(() => {
