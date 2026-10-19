@@ -9,13 +9,13 @@ const app = {
 }
 
 describe('SummaryWidgetType', () => {
-  const widget = { data_source_id: 42 }
+  const widget = { id: 1, data_source_id: 42 }
   const widgetType = new SummaryWidgetType({ app })
 
   test('owns data-source loading and configuration state', () => {
     expect(widgetType.isLoading(widget, {})).toBe(true)
-    expect(widgetType.isLoading(widget, { 42: { result: 1 } })).toBe(false)
-    expect(widgetType.isMisconfigured(widget, { 42: { _error: true } })).toBe(
+    expect(widgetType.isLoading(widget, { 1: { result: 1 } })).toBe(false)
+    expect(widgetType.isMisconfigured(widget, { 1: { _error: true } })).toBe(
       true
     )
   })

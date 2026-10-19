@@ -77,7 +77,7 @@ export class WidgetType extends Registerable {
 
 export class DataSourceWidgetType extends WidgetType {
   getDataSourceData(widget, data) {
-    return data?.[widget.data_source_id]
+    return data?.[widget.id]
   }
 
   isLoading(widget, data) {

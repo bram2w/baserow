@@ -33,6 +33,7 @@ describe('dashboardApplication store', () => {
       },
     })
 
+    mock.onGet(`/dashboard/${dashboardId}/filters/`).reply(200, [])
     mock.onGet(`/dashboard/${dashboardId}/widgets/`).reply(200, [])
     mock.onGet(`/dashboard/${dashboardId}/data-sources/`).replyOnce(200, [])
     await store.dispatch('dashboardApplication/fetchInitial', {
@@ -45,7 +46,7 @@ describe('dashboardApplication store', () => {
       .onGet(`/dashboard/${dashboardId}/data-sources/`)
       .reply(200, [dataSource])
     mock
-      .onPost(`/dashboard/data-sources/${dataSource.id}/dispatch/`)
+      .onPost(`/dashboard/widgets/${createdWidget.id}/dispatch/`)
       .reply(200, dataSourceResult)
   })
 
@@ -54,9 +55,10 @@ describe('dashboardApplication store', () => {
   })
 
   test('fetchNewDataSources awaits missing results for an existing source', async () => {
+    store.commit('dashboardApplication/ADD_WIDGET', createdWidget)
     store.commit('dashboardApplication/ADD_DATA_SOURCE', dataSource)
     let completeDispatch
-    mock.onPost(`/dashboard/data-sources/${dataSource.id}/dispatch/`).reply(
+    mock.onPost(`/dashboard/widgets/${createdWidget.id}/dispatch/`).reply(
       () =>
         new Promise((resolve) => {
           completeDispatch = resolve
@@ -89,9 +91,10 @@ describe('dashboardApplication store', () => {
   })
 
   test('fetchNewDataSources preserves cached results without dispatching again', async () => {
+    store.commit('dashboardApplication/ADD_WIDGET', createdWidget)
     store.commit('dashboardApplication/ADD_DATA_SOURCE', dataSource)
     store.commit('dashboardApplication/UPDATE_DATA', {
-      dataSourceId: dataSource.id,
+      widgetId: createdWidget.id,
       values: dataSourceResult,
     })
 
@@ -127,7 +130,7 @@ describe('dashboardApplication store', () => {
     expect(
       store.getters['dashboardApplication/getDataSourceById'](dataSource.id)
     ).toMatchObject(dataSource)
-    expect(store.state.dashboardApplication.data[dataSource.id]).toEqual(
+    expect(store.state.dashboardApplication.data[createdWidget.id]).toEqual(
       dataSourceResult
     )
   })
@@ -151,7 +154,7 @@ describe('dashboardApplication store', () => {
     expect(
       store.getters['dashboardApplication/getDataSourceById'](dataSource.id)
     ).toMatchObject(dataSource)
-    expect(store.state.dashboardApplication.data[dataSource.id]).toEqual(
+    expect(store.state.dashboardApplication.data[createdWidget.id]).toEqual(
       dataSourceResult
     )
   })
@@ -172,7 +175,7 @@ describe('dashboardApplication store', () => {
         .onGet(`/dashboard/${dashboardId}/data-sources/`)
         .reply(200, [existingDataSource])
       mock
-        .onPost(`/dashboard/data-sources/${existingDataSource.id}/dispatch/`)
+        .onPost(`/dashboard/widgets/${existingWidget.id}/dispatch/`)
         .reply(400, { error: 'ERROR_SERVICE_INVALID' })
       await store.dispatch('dashboardApplication/fetchInitial', {
         dashboardId,
@@ -221,7 +224,7 @@ describe('dashboardApplication store', () => {
 
         expect(loadingStates.length).toBeGreaterThan(0)
         expect(loadingStates).not.toContain(true)
-        expect(store.state.dashboardApplication.data[dataSource.id]).toEqual(
+        expect(store.state.dashboardApplication.data[createdWidget.id]).toEqual(
           dataSourceResult
         )
       } finally {
@@ -233,15 +236,15 @@ describe('dashboardApplication store', () => {
         .onPatch(`/dashboard/data-sources/${existingDataSource.id}/`)
         .reply(200, configuredDataSource)
       mock
-        .onPost(`/dashboard/data-sources/${existingDataSource.id}/dispatch/`)
+        .onPost(`/dashboard/widgets/${existingWidget.id}/dispatch/`)
         .reply(200, dataSourceResult)
       await store.dispatch('dashboardApplication/updateDataSource', {
         dataSourceId: existingDataSource.id,
         values: { table_id: 1 },
       })
-      expect(
-        store.state.dashboardApplication.data[existingDataSource.id]
-      ).toEqual(dataSourceResult)
+      expect(store.state.dashboardApplication.data[existingWidget.id]).toEqual(
+        dataSourceResult
+      )
     }
   )
 })

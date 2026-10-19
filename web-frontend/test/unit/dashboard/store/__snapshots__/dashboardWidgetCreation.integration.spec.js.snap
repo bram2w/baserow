@@ -3,7 +3,7 @@
 exports[`dashboardApplication store > fetchNewDataSources awaits missing results for an existing source 1`] = `
 {
   "data": {
-    "10": {
+    "5": {
       "result": 42,
     },
   },
@@ -20,7 +20,7 @@ exports[`dashboardApplication store > fetchNewDataSources awaits missing results
 exports[`dashboardApplication store > fetchNewDataSources preserves cached results without dispatching again 1`] = `
 {
   "data": {
-    "10": {
+    "5": {
       "result": 42,
     },
   },

@@ -1,4 +1,15 @@
 export const registerRealtimeEvents = (realtime) => {
+  realtime.registerEvent(
+    'dashboard_filters_updated',
+    async ({ store }, data) => {
+      if (
+        data.dashboard_id ===
+        store.getters['dashboardApplication/getDashboardId']
+      ) {
+        await store.dispatch('dashboardApplication/handleFiltersUpdated')
+      }
+    }
+  )
   realtime.registerEvent('widget_created', async ({ store }, data) => {
     const dashboardId = data.dashboard_id
     if (dashboardId === store.getters['dashboardApplication/getDashboardId']) {
