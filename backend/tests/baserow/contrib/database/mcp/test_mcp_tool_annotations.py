@@ -42,9 +42,11 @@ def test_enabled_tools_have_annotations(data_fixture):
 @pytest.mark.django_db
 def test_all_registered_tools_are_annotated(data_fixture):
     endpoint = data_fixture.create_mcp_endpoint()
-    # Tools with a group come from the enterprise Kuma bridge, not from here.
+    # The enterprise Kuma bridge registers more tools, tested there.
     core_names = {
-        name for name, tool in mcp_tool_registry.registry.items() if tool.group is None
+        name
+        for name, tool in mcp_tool_registry.registry.items()
+        if type(tool).__module__.startswith("baserow.contrib.database")
     }
     assert core_names == set(EXPECTED)
     for name, (read_only, destructive) in EXPECTED.items():

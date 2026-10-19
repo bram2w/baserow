@@ -1251,8 +1251,17 @@ class DatabaseConfig(AppConfig):
             ListTablesMcpTool,
             UpdateTableMcpTool,
         )
+        from baserow.core.mcp.groups import (
+            DatabaseDeleteMCPToolGroup,
+            DatabaseEditMCPToolGroup,
+            DatabaseReadMCPToolGroup,
+            mcp_tool_group_registry,
+        )
         from baserow.core.mcp.registries import mcp_tool_registry
 
+        mcp_tool_group_registry.register(DatabaseReadMCPToolGroup())
+        mcp_tool_group_registry.register(DatabaseEditMCPToolGroup())
+        mcp_tool_group_registry.register(DatabaseDeleteMCPToolGroup())
         mcp_tool_registry.register(ListDatabasesMcpTool())
         mcp_tool_registry.register(ListTablesMcpTool())
         mcp_tool_registry.register(GetTableSchemaMcpTool())

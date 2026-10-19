@@ -4,6 +4,7 @@ from baserow.contrib.database.mcp.fields.schemas import (
     DeleteFieldsInput,
     UpdateFieldsInput,
 )
+from baserow.core.mcp.groups import GROUP_DATABASE_DELETE, GROUP_DATABASE_EDIT
 from baserow.core.mcp.models import MCPEndpoint
 from baserow.core.mcp.registries import MCPTool
 
@@ -17,6 +18,7 @@ class CreateFieldsMcpTool(MCPTool):
     """
 
     type = "create_fields"
+    group = GROUP_DATABASE_EDIT
     title = "Create fields"
     enabled = False
     input_schema = CreateFieldsInput
@@ -37,6 +39,7 @@ class UpdateFieldsMcpTool(MCPTool):
     """
 
     type = "update_fields"
+    group = GROUP_DATABASE_EDIT
     title = "Update fields"
     destructive = True
     enabled = False
@@ -56,6 +59,7 @@ class DeleteFieldsMcpTool(MCPTool):
     """
 
     type = "delete_fields"
+    group = GROUP_DATABASE_DELETE
     title = "Delete fields"
     destructive = True
     enabled = False

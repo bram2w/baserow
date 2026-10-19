@@ -168,7 +168,9 @@ class MCPToolRegistry(Registry[MCPTool]):
         return list(endpoint.allowed_tools)
 
     @staticmethod
-    def _is_available(tool: MCPTool, endpoint: MCPEndpoint) -> bool:
+    def is_available(tool: MCPTool, endpoint: MCPEndpoint) -> bool:
+        """``tool.is_available``, where a failing check counts as unavailable."""
+
         # A failing check hides the tool instead of failing the whole request, and
         # its error must not reach the client.
         try:
@@ -187,7 +189,7 @@ class MCPToolRegistry(Registry[MCPTool]):
         tools = self.get_enabled_tools()
         allowed = set(self.get_allowed_names(endpoint))
         tools = [tool for tool in tools if tool.name in allowed]
-        return [tool for tool in tools if self._is_available(tool, endpoint)]
+        return [tool for tool in tools if self.is_available(tool, endpoint)]
 
     async def list_all_tools(self, endpoint: MCPEndpoint) -> List["Tool"]:
         """Return the enabled tools the given endpoint is allowed to use."""
@@ -208,7 +210,7 @@ class MCPToolRegistry(Registry[MCPTool]):
             return None
         if name not in self.get_allowed_names(endpoint):
             return None
-        return tool if self._is_available(tool, endpoint) else None
+        return tool if self.is_available(tool, endpoint) else None
 
 
 mcp_tool_registry = MCPToolRegistry()

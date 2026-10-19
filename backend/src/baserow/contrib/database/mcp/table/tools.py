@@ -8,6 +8,11 @@ from baserow.contrib.database.mcp.table.schemas import (
     ListTablesInput,
     UpdateTableInput,
 )
+from baserow.core.mcp.groups import (
+    GROUP_DATABASE_DELETE,
+    GROUP_DATABASE_EDIT,
+    GROUP_DATABASE_READ,
+)
 from baserow.core.mcp.models import MCPEndpoint
 from baserow.core.mcp.registries import MCPTool
 
@@ -19,6 +24,7 @@ class ListDatabasesMcpTool(MCPTool):
     """
 
     type = "list_databases"
+    group = GROUP_DATABASE_READ
     title = "List databases"
     read_only = True
     input_schema = ListDatabasesInput
@@ -35,6 +41,7 @@ class CreateDatabaseMcpTool(MCPTool):
     """
 
     type = "create_database"
+    group = GROUP_DATABASE_EDIT
     title = "Create database"
     enabled = False
     input_schema = CreateDatabaseInput
@@ -51,6 +58,7 @@ class ListTablesMcpTool(MCPTool):
     """
 
     type = "list_tables"
+    group = GROUP_DATABASE_READ
     title = "List tables"
     read_only = True
     input_schema = ListTablesInput
@@ -78,6 +86,7 @@ class CreateTableMcpTool(MCPTool):
     """
 
     type = "create_table"
+    group = GROUP_DATABASE_EDIT
     title = "Create table"
     enabled = False
     input_schema = CreateTableInput
@@ -99,6 +108,7 @@ class UpdateTableMcpTool(MCPTool):
     """
 
     type = "update_table"
+    group = GROUP_DATABASE_EDIT
     title = "Update table"
     destructive = True
     enabled = False
@@ -117,6 +127,7 @@ class DeleteTableMcpTool(MCPTool):
     """
 
     type = "delete_table"
+    group = GROUP_DATABASE_DELETE
     title = "Delete table"
     destructive = True
     enabled = False
@@ -135,6 +146,7 @@ class GetTableSchemaMcpTool(MCPTool):
     """
 
     type = "get_table_schema"
+    group = GROUP_DATABASE_READ
     title = "Get table schema"
     read_only = True
     input_schema = GetTableSchemaInput

@@ -1,0 +1,136 @@
+from django.shortcuts import reverse
+
+import pytest
+
+from baserow.core.mcp.groups import (
+    GROUP_DATABASE_DELETE,
+    GROUP_DATABASE_EDIT,
+    GROUP_DATABASE_READ,
+    MCPToolGroup,
+    MCPToolGroupRegistry,
+    mcp_tool_group_registry,
+)
+from baserow.core.mcp.registries import MCPTool, mcp_tool_registry
+from tests.baserow.core.mcp.oauth.helpers import (
+    authorize_query,
+    cimd_client,
+    pkce_pair,
+)
+
+
+def test_every_tool_has_a_registered_group():
+    # Disabled tools too, so a tool can't be turned on without a group.
+    groups = {group.type for group in mcp_tool_group_registry.get_all()}
+    ungrouped = [
+        tool.name for tool in mcp_tool_registry.get_all() if tool.group not in groups
+    ]
+    assert ungrouped == []
+
+
+def test_core_database_tool_groups():
+    groups = {tool.name: tool.group for tool in mcp_tool_registry.get_all()}
+    assert groups["list_databases"] == GROUP_DATABASE_READ
+    assert groups["list_tables"] == GROUP_DATABASE_READ
+    assert groups["get_table_schema"] == GROUP_DATABASE_READ
+    assert groups["list_table_rows"] == GROUP_DATABASE_READ
+    assert groups["create_rows"] == GROUP_DATABASE_EDIT
+    assert groups["update_rows"] == GROUP_DATABASE_EDIT
+    assert groups["create_database"] == GROUP_DATABASE_EDIT
+    assert groups["create_table"] == GROUP_DATABASE_EDIT
+    assert groups["update_table"] == GROUP_DATABASE_EDIT
+    assert groups["create_fields"] == GROUP_DATABASE_EDIT
+    assert groups["update_fields"] == GROUP_DATABASE_EDIT
+    assert groups["delete_rows"] == GROUP_DATABASE_DELETE
+    assert groups["delete_table"] == GROUP_DATABASE_DELETE
+    assert groups["delete_fields"] == GROUP_DATABASE_DELETE
+
+
+def test_read_only_preset_groups_hold_only_read_only_tools():
+    preset = {g.type for g in mcp_tool_group_registry.get_all() if g.read_only_preset}
+    assert GROUP_DATABASE_READ in preset
+    assert GROUP_DATABASE_EDIT not in preset
+    assert GROUP_DATABASE_DELETE not in preset
+    for tool in mcp_tool_registry.get_all():
+        if tool.group in preset:
+            assert tool.read_only, tool.name
+
+
+def test_groups_are_returned_in_order():
+    class Second(MCPToolGroup):
+        type = "second"
+        title = "Second"
+        area = "database"
+        order = 20
+
+    class First(MCPToolGroup):
+        type = "first"
+        title = "First"
+        area = "database"
+        order = 10
+
+    registry = MCPToolGroupRegistry()
+    registry.register(Second())
+    registry.register(First())
+    assert [group.type for group in registry.get_ordered()] == ["first", "second"]
+
+
+def _consent(client, api_client, token):
+    _, challenge = pkce_pair()
+    return api_client.get(
+        reverse("api:mcp:oauth_consent"),
+        {"query": authorize_query(cimd_client(client), challenge)},
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    ).json()
+
+
+@pytest.mark.django_db
+def test_consent_returns_the_groups_of_the_listed_tools_in_order(
+    client, api_client, data_fixture
+):
+    _, token = data_fixture.create_user_and_token()
+    data = _consent(client, api_client, token)
+
+    listed = {tool["group"] for tool in data["tools"]}
+    expected = [
+        {
+            "type": group.type,
+            "title": group.title,
+            "area": group.area,
+            "read_only_preset": group.read_only_preset,
+        }
+        for group in mcp_tool_group_registry.get_ordered()
+        if group.type in listed
+    ]
+    assert data["groups"] == expected
+    types = [group["type"] for group in data["groups"]]
+    assert types.index(GROUP_DATABASE_READ) < types.index(GROUP_DATABASE_EDIT)
+    assert types.index(GROUP_DATABASE_EDIT) < types.index(GROUP_DATABASE_DELETE)
+
+
+@pytest.mark.django_db
+def test_consent_lists_tools_unavailable_per_workspace(
+    client, api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    allowed = data_fixture.create_workspace(user=user)
+    blocked = data_fixture.create_workspace(user=user)
+
+    class Limited(MCPTool):
+        """Only available in one workspace."""
+
+        type = "limited_test_tool"
+        group = GROUP_DATABASE_READ
+        read_only = True
+
+        def is_available(self, endpoint):
+            return endpoint.workspace_id == allowed.id
+
+    mcp_tool_registry.register(Limited())
+    try:
+        data = _consent(client, api_client, token)
+    finally:
+        mcp_tool_registry.unregister("limited_test_tool")
+
+    unavailable = {w["id"]: w["unavailable_tools"] for w in data["workspaces"]}
+    assert unavailable == {allowed.id: [], blocked.id: ["limited_test_tool"]}
+    assert "limited_test_tool" in [tool["name"] for tool in data["tools"]]

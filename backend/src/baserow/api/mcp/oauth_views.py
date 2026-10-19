@@ -21,6 +21,7 @@ from baserow.core.mcp.actions import (
     DisconnectMCPOAuthClientActionType,
 )
 from baserow.core.mcp.exceptions import MCPEndpointDoesNotExist
+from baserow.core.mcp.groups import mcp_tool_group_registry
 from baserow.core.mcp.handler import MCPEndpointHandler
 from baserow.core.mcp.models import MCPEndpoint
 from baserow.core.mcp.oauth.authorize import (
@@ -105,6 +106,43 @@ def _client_info(credentials: dict) -> dict:
     }
 
 
+def _serialize_tool(tool) -> dict:
+    return {
+        "name": tool.name,
+        "title": tool.display_title,
+        "read_only": tool.read_only,
+        "destructive": tool.destructive,
+        "group": tool.group,
+    }
+
+
+def _serialize_groups(tools) -> list[dict]:
+    """The groups of the given tools, in display order."""
+
+    used = {tool.group for tool in tools}
+    return [
+        {
+            "type": group.type,
+            "title": group.title,
+            "area": group.area,
+            "read_only_preset": group.read_only_preset,
+        }
+        for group in mcp_tool_group_registry.get_ordered()
+        if group.type in used
+    ]
+
+
+def _unavailable_tools(tools, user, workspace) -> list[str]:
+    """Names of the tools a connection to the workspace couldn't use."""
+
+    endpoint = MCPEndpoint(user=user, workspace=workspace)
+    return [
+        tool.name
+        for tool in tools
+        if not mcp_tool_registry.is_available(tool, endpoint)
+    ]
+
+
 class MCPOAuthConsentView(APIView):
     permission_classes = (IsAuthenticated,)
     throttle_classes = (*APIView.throttle_classes, MCPOAuthConsentRateThrottle)
@@ -142,6 +180,7 @@ class MCPOAuthConsentView(APIView):
                 workspace_id__in=[wu.workspace_id for wu in workspace_users],
             )
         }
+        tools = mcp_tool_registry.get_enabled_tools()
         database_model = application_type_registry.get("database").model_class
         database_counts = dict(
             database_model.objects.filter(
@@ -159,19 +198,15 @@ class MCPOAuthConsentView(APIView):
                         "id": wu.workspace_id,
                         "name": wu.workspace.name,
                         "database_count": database_counts.get(wu.workspace_id, 0),
+                        "unavailable_tools": _unavailable_tools(
+                            tools, request.user, wu.workspace
+                        ),
                     }
                     for wu in workspace_users
                 ],
                 "grants": grants,
-                "tools": [
-                    {
-                        "name": tool.name,
-                        "title": tool.display_title,
-                        "read_only": tool.read_only,
-                        "destructive": tool.destructive,
-                    }
-                    for tool in mcp_tool_registry.get_enabled_tools()
-                ],
+                "tools": [_serialize_tool(tool) for tool in tools],
+                "groups": _serialize_groups(tools),
             }
         )
 
