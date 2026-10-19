@@ -52,6 +52,15 @@ class RolePermissionManagerType(PermissionManagerType):
             partial(LicenseHandler.workspace_has_feature, RBAC, workspace),
         )
 
+    def get_workspace_user_role_uid(self, workspace_user):
+        if self.is_enabled(workspace_user.workspace):
+            return (
+                RoleAssignmentHandler()
+                .get_role_by_uid(workspace_user.permissions, use_fallback=True)
+                .uid
+            )
+        return None
+
     def get_role_operations(self, role: Role) -> List[str]:
         """
         Return the operation name list for the role with the given role_id.

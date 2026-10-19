@@ -57,6 +57,7 @@ if TYPE_CHECKING:
         Template,
         Workspace,
         WorkspaceInvitation,
+        WorkspaceUser,
     )
 
 
@@ -986,6 +987,13 @@ class PermissionManagerType(abc.ABC, Instance):
                 )
 
         return decisions or None
+
+    def get_workspace_user_role_uid(
+        self, workspace_user: "WorkspaceUser"
+    ) -> Optional[str]:
+        """Resolve a workspace user's role UID, or defer to another manager."""
+
+        return None
 
     def get_roles(self) -> List:
         """

@@ -12,15 +12,15 @@ const roles = [
   { uid: 'MEMBER', name: 'Member', isVisible: false },
 ]
 
-test('summarises the workspace roles with basic members as builders', async () => {
+test('summarises normalized workspace roles without counting no-access users', async () => {
   const workspace = {
     id: 12,
     name: 'Widelab',
     users: [
-      { user_id: 1, permissions: 'ADMIN' },
-      { user_id: 2, permissions: 'BUILDER' },
-      { user_id: 3, permissions: 'MEMBER' },
-      { user_id: 4, permissions: 'NO_ACCESS' },
+      { user_id: 1, permissions: 'ADMIN', role_uid: 'ADMIN' },
+      { user_id: 2, permissions: 'BUILDER', role_uid: 'BUILDER' },
+      { user_id: 3, permissions: 'MEMBER', role_uid: 'BUILDER' },
+      { user_id: 4, permissions: 'NO_ACCESS', role_uid: 'NO_ACCESS' },
     ],
     _: { roles },
   }

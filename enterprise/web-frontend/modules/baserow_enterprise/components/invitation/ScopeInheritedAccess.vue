@@ -44,7 +44,6 @@
 
 <script>
 import nameAbbreviation from '@baserow/modules/core/filters/nameAbbreviation'
-import { getRbacRoleUid } from '@baserow_enterprise/utils/roles'
 
 const ROLES_WITHOUT_ACCESS = ['NO_ACCESS', 'NO_ROLE_LOW_PRIORITY']
 
@@ -68,7 +67,7 @@ export default {
     roleCounts() {
       const counts = {}
       for (const user of this.workspace.users || []) {
-        const uid = getRbacRoleUid(user.permissions)
+        const uid = user.role_uid
         counts[uid] = (counts[uid] || 0) + 1
       }
       return this.workspace._.roles
