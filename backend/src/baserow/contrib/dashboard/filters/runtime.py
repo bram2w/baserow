@@ -40,14 +40,6 @@ def apply_widget_filters(widget, service, queryset, applied_filters):
         dashboard_id=widget.dashboard_id
     ).prefetch_related("bindings__field")
     for configuration in configurations:
-        binding = next(
-            (b for b in configuration.bindings.all() if b.table_id == service.table_id),
-            None,
-        )
-        try:
-            field = get_binding_field(binding, service)
-        except DashboardFilterInvalidBinding as exc:
-            raise ServiceImproperlyConfiguredDispatchException(str(exc)) from exc
         values = selections.get(configuration.id, [])
         if configuration.mode == DashboardFilter.Mode.INPUT:
             values = [value.strip() for value in values[:1]]
@@ -57,6 +49,14 @@ def apply_widget_filters(widget, service, queryset, applied_filters):
         if not values:
             continue
 
+        binding = next(
+            (b for b in configuration.bindings.all() if b.table_id == service.table_id),
+            None,
+        )
+        try:
+            field = get_binding_field(binding, service)
+        except DashboardFilterInvalidBinding as exc:
+            raise ServiceImproperlyConfiguredDispatchException(str(exc)) from exc
         alias = f"dashboard_filter_{configuration.id}"
         queryset = queryset.alias(**{alias: text_field_expression(field)})
         contains = configuration.operator in (

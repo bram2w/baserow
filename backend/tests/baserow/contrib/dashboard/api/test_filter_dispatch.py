@@ -103,7 +103,12 @@ def test_broken_binding_fails_but_deleted_filter_is_ignored(
     fields[0].save()
     url = reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": widget.id})
     headers = {"HTTP_AUTHORIZATION": f"JWT {token}"}
-    response = api_client.post(url, {}, format="json", **headers)
+    response = api_client.post(
+        url,
+        {"filters": [{"filter_id": filter_config.id, "values": ["Design"]}]},
+        format="json",
+        **headers,
+    )
     assert response.status_code == 400
     DashboardFilterService().delete_filter(user, filter_config.id)
     response = api_client.post(
@@ -330,3 +335,59 @@ def test_new_table_requires_global_mapping_then_all_its_widgets_are_filtered(
     assert api_client.post(url, values, format="json", **headers).json() == {
         "result": "100"
     }
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "binding_state", ["missing", "null", "trashed", "incompatible"]
+)
+@pytest.mark.parametrize("values", [None, [], ["   "]])
+def test_inactive_filter_does_not_block_widgets_with_incomplete_configuration(
+    api_client, filtered_dashboard, binding_state, values
+):
+    user, token, widget, config, _, fields, _ = filtered_dashboard
+    DashboardFilterService().update_filter(user, config.id, mode="input")
+    if binding_state == "missing":
+        config.bindings.all().delete()
+    elif binding_state == "null":
+        config.bindings.update(field=None)
+    elif binding_state == "trashed":
+        fields[0].trashed = True
+        fields[0].save()
+    else:
+        config.bindings.update(field=fields[1])
+    url = reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": widget.id})
+    headers = {"HTTP_AUTHORIZATION": f"JWT {token}"}
+    payload = (
+        {}
+        if values is None
+        else {"filters": [{"filter_id": config.id, "values": values}]}
+    )
+    response = api_client.post(url, payload, format="json", **headers)
+    assert response.status_code == 200, response.json()
+    assert response.json() == {"result": "31"}
+    response = api_client.post(
+        url,
+        {"filters": [{"filter_id": config.id, "values": ["Design"]}]},
+        format="json",
+        **headers,
+    )
+    assert response.status_code == 400
+
+
+@pytest.mark.django_db
+def test_new_unconfigured_filter_does_not_disable_another_active_filter(
+    api_client, filtered_dashboard
+):
+    user, token, widget, config, *_ = filtered_dashboard
+    DashboardFilterService().create_filter(
+        user, widget.dashboard_id, label="New filter"
+    )
+    response = api_client.post(
+        reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": widget.id}),
+        {"filters": [{"filter_id": config.id, "values": ["Design"]}]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == 200, response.json()
+    assert response.json() == {"result": "1"}
