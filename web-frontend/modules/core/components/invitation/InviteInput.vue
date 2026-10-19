@@ -42,7 +42,7 @@
       />
       <Button
         type="primary"
-        :disabled="validSelected.length === 0 || disabled"
+        :disabled="validSelected.length === 0 || hasInvalidEmails || disabled"
         @click="submit"
       >
         <slot
@@ -181,7 +181,9 @@ export function extractEmails(text) {
  * address that belongs to it turns into a chip marked as an error that is left
  * out of what is submitted. The same happens to every new address while a role
  * outside `emailRoleUids` is chosen, for a role that can be given to a member
- * but makes no sense as an invitation. The parent decides what is disabled and
+ * but makes no sense as an invitation. Malformed email addresses are also
+ * marked as errors, but block the whole batch until corrected or removed.
+ * The parent decides what is disabled and
  * why, so the input needs to know nothing about members, agents or invitations.
  *
  * `tabs` are `{ value, label }` matching the option types, and an "All" tab is
@@ -344,6 +346,17 @@ export default {
     validSelected() {
       return this.selected.filter((item) => this.chipError(item) === null)
     },
+    /**
+     * A malformed address blocks the whole batch, including an address still
+     * in the text field, so successful invitations can't clear it unseen.
+     */
+    hasInvalidEmails() {
+      return (
+        this.selected.some(
+          (item) => item.type === 'email' && !isValidEmail(item.email)
+        ) || this.queryEmails.some((email) => !isValidEmail(email))
+      )
+    },
   },
   watch: {
     showResults(show) {
@@ -419,6 +432,9 @@ export default {
      * soon as they are.
      */
     chipError(item) {
+      if (item.type === 'email' && !isValidEmail(item.email)) {
+        return this.$t('error.invalidEmail')
+      }
       if (item.disabledReason) {
         return item.disabledReason
       }
@@ -464,22 +480,18 @@ export default {
     /**
      * Picks every address in the text: the option it belongs to, which makes
      * a chip marked as an error when that option can't be picked, or else a
-     * new address. Only text that isn't an address stays in the field.
+     * new address. Malformed addresses stay visible as error chips and block
+     * submission until removed and corrected.
      */
     pickEmails(text) {
-      const leftovers = []
       for (const token of extractEmails(text)) {
         const email = token.toLowerCase()
-        if (!isValidEmail(email)) {
-          leftovers.push(token)
-          continue
-        }
         const pick = this.optionWithEmail(email) || this.emailPick(email)
         if (!this.isSelected(pick)) {
           this.selected.push(pick)
         }
       }
-      this.query = leftovers.join(' ')
+      this.query = ''
       this.focus()
     },
     /**
@@ -496,7 +508,11 @@ export default {
       this.open = true
     },
     submit() {
-      if (this.validSelected.length === 0 || this.disabled) {
+      if (
+        this.validSelected.length === 0 ||
+        this.hasInvalidEmails ||
+        this.disabled
+      ) {
         return
       }
       this.$emit('add', [...this.validSelected], this.roleUid)
