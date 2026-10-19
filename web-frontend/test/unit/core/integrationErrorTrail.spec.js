@@ -10,13 +10,18 @@ const LOCAL_BASEROW_OK = {
   id: 1,
   name: 'Local Baserow',
   type: 'local_baserow',
-  authorized_user: { first_name: 'Ada', username: 'ada@example.com' },
+  authorized_subject: {
+    id: 1,
+    type: 'auth.User',
+    first_name: 'Ada',
+    username: 'ada@example.com',
+  },
 }
 const LOCAL_BASEROW_NO_USER = {
   id: 2,
   name: 'Local Baserow',
   type: 'local_baserow',
-  authorized_user: null,
+  authorized_subject: null,
 }
 
 describe('Integration error trail', () => {

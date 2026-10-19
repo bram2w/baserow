@@ -41,13 +41,6 @@ export class LocalBaserowIntegrationType extends IntegrationType {
     })
   }
 
-  getErrorMessage(integration) {
-    if (!integration.authorized_user) {
-      return this.app.$i18n.t('localBaserowIntegrationType.errorNoUser')
-    }
-    return super.getErrorMessage(integration)
-  }
-
   get formComponent() {
     return LocalBaserowForm
   }
@@ -87,8 +80,11 @@ export class LocalBaserowIntegrationType extends IntegrationType {
   }
 
   getErrorMessage(integration) {
+    if (!integration.authorized_subject) {
+      return this.app.$i18n.t('localBaserowIntegrationType.errorNoUser')
+    }
     if (
-      integration.authorized_subject?.type === 'core.Agent' &&
+      integration.authorized_subject.type === 'core.Agent' &&
       integration.authorized_subject.trashed
     ) {
       return this.app.$i18n.t('localBaserowIntegrationType.errorTrashedAgent')
