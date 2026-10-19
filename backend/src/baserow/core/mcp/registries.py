@@ -165,8 +165,8 @@ class MCPToolRegistry(Registry[MCPTool]):
         """
         Return the enabled tools the endpoint may use. ``allowed_tools = None``
         allows the ``LEGACY_DEFAULT_TOOLS`` that are enabled. Tools that are not
-        available to the endpoint are left out. This can query the database, so async code must call it
-        through ``sync_to_async``.
+        available to the endpoint are left out. This can query the database, so
+        async code must call it through ``sync_to_async``.
         """
         tools = self.get_enabled_tools()
         allowed = self._allowed_names(endpoint)
