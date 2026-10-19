@@ -1,6 +1,7 @@
 from contextlib import nullcontext
 
 from django.urls import reverse
+from django.utils import timezone
 
 import pytest
 
@@ -9,6 +10,7 @@ from baserow.core.exceptions import FeatureDisabledException
 from baserow.core.feature_flags import FF_AGENT_BUILDER
 from baserow.core.handler import CoreHandler
 from baserow.core.import_export.handler import ImportExportHandler
+from baserow.core.last_viewed.handler import LastViewedHandler, LastViewedUpdate
 from baserow.core.registries import ImportExportConfig
 from baserow.core.snapshots.handler import SnapshotHandler
 from baserow.core.storage import get_default_storage
@@ -96,4 +98,23 @@ def test_workspace_search_finds_agents(data_fixture, api_client):
         agent.id,
         "agent",
         "Agent",
+    )
+
+
+@pytest.mark.django_db
+def test_agent_is_its_own_last_viewed_application(data_fixture):
+    user = data_fixture.create_user()
+    outsider = data_fixture.create_user()
+    agent = data_fixture.create_agent_application(user=user)
+    viewed_at = timezone.now()
+
+    assert (
+        LastViewedHandler.mark_viewed(outsider.id, "agent", agent.id, viewed_at) is None
+    )
+    assert LastViewedHandler.mark_viewed(
+        user.id, "agent", agent.id, viewed_at
+    ) == LastViewedUpdate(
+        application_id=agent.id,
+        workspace_id=agent.workspace_id,
+        last_viewed=viewed_at,
     )

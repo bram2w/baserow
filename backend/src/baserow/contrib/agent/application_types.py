@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import transaction
 from django.db.transaction import Atomic
+from django.urls import URLResolver, include, path
 
 from baserow.contrib.agent.models import AgentApplication
 from baserow.core.feature_flags import FF_AGENT_BUILDER, feature_flag_is_enabled
@@ -12,6 +13,11 @@ class AgentApplicationType(ApplicationType):
     type = "agent"
     model_class = AgentApplication
     serializer_field_names = ["name"]
+
+    def get_api_urls(self) -> list[URLResolver]:
+        from .api import urls as api_urls
+
+        return [path("agent/", include(api_urls, namespace=self.type))]
 
     def export_safe_transaction_context(self, application: AgentApplication) -> Atomic:
         return transaction.atomic()

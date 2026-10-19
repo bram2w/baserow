@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from 'vitest'
 import { AgentApplicationType } from '@baserow/modules/agent/applicationTypes'
+import { AgentLastViewedItemType } from '@baserow/modules/agent/lastViewedItemTypes'
 
 describe('AgentApplicationType', () => {
   const agent = { id: 10, type: 'agent', workspace: { id: 1 } }
@@ -19,6 +20,20 @@ describe('AgentApplicationType', () => {
       expect(makeType({ flagEnabled: enabled }).type.canBeCreated()).toBe(
         enabled
       )
+    }
+  )
+
+  test.each([true, false])(
+    'offers the recently viewed filter only while the rollout flag is enabled=%s',
+    (enabled) => {
+      const { type, app } = makeType({ flagEnabled: enabled })
+      app.$i18n = { t: (key) => key }
+      app.$registry = { get: () => type }
+      const lastViewedType = new AgentLastViewedItemType({ app })
+
+      expect(
+        lastViewedType.getFilterOptions().map(({ value }) => value)
+      ).toEqual(enabled ? ['agent'] : [])
     }
   )
 
