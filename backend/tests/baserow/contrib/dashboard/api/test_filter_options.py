@@ -122,7 +122,7 @@ def test_options_search_handles_unicode_case(api_client, data_fixture):
     )
     response = api_client.post(
         reverse("api:dashboard:filters:options", kwargs={"filter_id": config.id}),
-        {"search": "équipe"},
+        {"search": "équipe", "selected": [f"Missing {i}" for i in range(101)]},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )

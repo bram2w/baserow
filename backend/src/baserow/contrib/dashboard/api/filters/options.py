@@ -41,7 +41,6 @@ class DashboardFilterOptionsRequestSerializer(serializers.Serializer):
         child=serializers.CharField(trim_whitespace=False, max_length=10000),
         required=False,
         default=list,
-        max_length=100,
     )
 
 

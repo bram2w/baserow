@@ -56,6 +56,7 @@ def filtered_dashboard(data_fixture):
         ("contains", "dropdown", ["DESIGN"], "11"),
         ("contains_not", "dropdown", ["DESIGN"], "20"),
         ("equal", "dropdown", [], "31"),
+        ("equal", "dropdown", ["Design"] + [f"Other {i}" for i in range(100)], "1"),
     ],
 )
 def test_dispatch_applies_saved_filter_before_aggregation(

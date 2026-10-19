@@ -117,7 +117,8 @@ export const filterActions = {
     const { data } = await FilterService(this.$client).update(filterId, values)
     if (
       !isCurrent(state, request) ||
-      generation !== state.filterMutationGenerations[filterId]
+      generation !== state.filterMutationGenerations[filterId] ||
+      !state.filters.some((filter) => filter.id === filterId)
     )
       return
     commit('INVALIDATE_FILTER_FETCH')

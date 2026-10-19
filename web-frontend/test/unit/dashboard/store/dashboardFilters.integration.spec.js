@@ -153,4 +153,24 @@ describe('dashboard text filters', () => {
       store.getters['dashboardApplication/getFilterOptions'](5)
     ).toMatchObject({ loading: false, results: [] })
   })
+
+  test('does not restore a deleted filter from a delayed update response', async () => {
+    let resolveUpdate
+    mock.onPatch('/dashboard/filters/5/').reply(
+      () =>
+        new Promise((resolve) => {
+          resolveUpdate = resolve
+        })
+    )
+    const update = store.dispatch('dashboardApplication/updateFilter', {
+      filterId: 5,
+      values: { label: 'Renamed' },
+    })
+    await vi.waitFor(() => expect(resolveUpdate).toBeTypeOf('function'))
+    mock.onGet('/dashboard/1/filters/').reply(200, [])
+    await store.dispatch('dashboardApplication/handleFiltersUpdated')
+    resolveUpdate([200, { ...filter, label: 'Renamed' }])
+    await update
+    expect(store.getters['dashboardApplication/getFilters']).toEqual([])
+  })
 })

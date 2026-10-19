@@ -36,14 +36,11 @@ class AppliedDashboardFilterSerializer(serializers.Serializer):
         child=serializers.CharField(
             max_length=10000, trim_whitespace=False, allow_blank=True
         ),
-        max_length=100,
     )
 
 
 class DispatchWidgetSerializer(serializers.Serializer):
-    filters = AppliedDashboardFilterSerializer(
-        many=True, required=False, default=list, max_length=100
-    )
+    filters = AppliedDashboardFilterSerializer(many=True, required=False, default=list)
 
 
 class DispatchWidgetView(APIView):
