@@ -1,9 +1,12 @@
+from contextlib import nullcontext
+
 from django.urls import reverse
 
 import pytest
 
 from baserow.contrib.agent.models import AgentApplication
 from baserow.core.exceptions import FeatureDisabledException
+from baserow.core.feature_flags import FF_AGENT_BUILDER
 from baserow.core.handler import CoreHandler
 from baserow.core.import_export.handler import ImportExportHandler
 from baserow.core.registries import ImportExportConfig
@@ -42,15 +45,18 @@ def import_workspace_archive(data_fixture, user, agent):
 
 
 @pytest.mark.django_db
-def test_agent_creation_requires_feature_flag(data_fixture, settings):
+@pytest.mark.parametrize("enabled", [True, False])
+def test_agent_creation_requires_feature_flag(data_fixture, settings, enabled):
     user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)
-    settings.FEATURE_FLAGS = []
+    settings.FEATURE_FLAGS = [FF_AGENT_BUILDER] if enabled else []
 
-    with pytest.raises(FeatureDisabledException):
+    with nullcontext() if enabled else pytest.raises(FeatureDisabledException):
         CoreHandler().create_application(user, workspace, "agent", name="Agent")
 
-    assert not AgentApplication.objects.exists()
+    assert list(AgentApplication.objects.values_list("workspace", "name")) == (
+        [(workspace.id, "Agent")] if enabled else []
+    )
 
 
 @pytest.mark.import_export_workspace
