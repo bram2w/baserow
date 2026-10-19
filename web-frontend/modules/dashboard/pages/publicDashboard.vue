@@ -12,7 +12,13 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { createError, useAsyncData, useNuxtApp, useState } from '#app'
+import {
+  createError,
+  navigateTo,
+  useAsyncData,
+  useNuxtApp,
+  useState,
+} from '#app'
 import { useHead } from '#imports'
 
 import Toasts from '@baserow/modules/core/components/toasts/Toasts'
@@ -37,10 +43,13 @@ const detectedLocale = useState('public-dashboard-detected-locale', () => {
 $i18n.locale.value = detectedLocale.value
 await $i18n.loadLocaleMessages(detectedLocale.value)
 
-// Password protected dashboards hand out a token for the right password. The
-// password page that stores it is added separately, until then visitors of a
-// protected dashboard get the error below.
-const authToken = null
+// A password protected dashboard hands out a token for the right password,
+// which the password page keeps in a cookie keyed by the slug. It is read here,
+// on the server and in the browser, so that every request can carry it.
+const authToken = await $store.dispatch(
+  'dashboardApplication/restorePublicAuthToken',
+  { slug }
+)
 
 const { data, error } = await useAsyncData(
   `dashboard-public-${slug}`,
@@ -57,14 +66,14 @@ const { data, error } = await useAsyncData(
       const statusCode = e.response?.status
 
       if (statusCode === 401) {
-        throw createError({
-          statusCode: 401,
-          message: 'This dashboard is password protected.',
-          data: {
-            report: false,
+        // The password page stores the token and sends the visitor back here.
+        return {
+          redirect: {
+            name: 'dashboard-public-auth',
+            params: { slug },
+            query: { original: route.path },
           },
-          fatal: true,
-        })
+        }
       } else if (statusCode === 404) {
         throw createError({
           statusCode: 404,
@@ -103,16 +112,21 @@ const dashboard = computed(() => {
   }
 })
 
-// The widgets and data sources arrive with the dashboard, so the store only has
-// to be filled. This runs during server side rendering and again while
-// hydrating, which is harmless because nothing has been dispatched yet.
-await $store.dispatch('dashboardApplication/openPublicDashboard', {
-  slug,
-  authToken,
-  dashboardId: data.value.dashboard.id,
-  widgets: data.value.widgets,
-  dataSources: data.value.data_sources,
-})
+const redirect = data.value?.redirect
+if (redirect) {
+  await navigateTo(redirect)
+} else {
+  // The widgets and data sources arrive with the dashboard, so the store only
+  // has to be filled. This runs during server side rendering and again while
+  // hydrating, which is harmless because nothing has been dispatched yet.
+  await $store.dispatch('dashboardApplication/openPublicDashboard', {
+    slug,
+    authToken,
+    dashboardId: data.value.dashboard.id,
+    widgets: data.value.widgets,
+    dataSources: data.value.data_sources,
+  })
+}
 
 const loading = computed(() => $store.getters['dashboardApplication/isLoading'])
 
@@ -125,6 +139,9 @@ useHead(() => {
 })
 
 onMounted(() => {
+  if (redirect) {
+    return
+  }
   // The data is loaded in the browser only. The server rendered page already
   // shows the widgets in their loading state.
   $store.dispatch('dashboardApplication/dispatchDataSources')

@@ -23,6 +23,17 @@ vi.mock('@baserow/modules/dashboard/services/publicDashboard', () => ({
   default: vi.fn(),
 }))
 
+const { getToken, setToken } = vi.hoisted(() => ({
+  getToken: vi.fn(),
+  setToken: vi.fn(),
+}))
+
+vi.mock('@baserow/modules/core/utils/auth', async (importOriginal) => ({
+  ...(await importOriginal()),
+  getToken,
+  setToken,
+}))
+
 const deferred = () => {
   let resolve
   let reject
@@ -1151,5 +1162,64 @@ describe('Dashboard application store public mode', () => {
     expect(getters.isPublic(dashboardState)).toBe(false)
     expect(getters.getPublicAuthToken(dashboardState)).toBe(null)
     expect(dashboardState.dashboardId).toBe(43)
+  })
+
+  test('setPublicAuthToken remembers the token in a cookie keyed by the slug', async () => {
+    const dashboardState = createState()
+    const commit = applyCommit(dashboardState)
+    const app = { name: 'nuxt app' }
+
+    await actions.setPublicAuthToken.call(
+      { app },
+      { commit },
+      { slug: 'public-slug', token: 'public-token' }
+    )
+
+    expect(setToken).toHaveBeenCalledWith(app, 'public-token', 'public-slug')
+    expect(getters.getPublicSlug(dashboardState)).toBe('public-slug')
+    expect(getters.getPublicAuthToken(dashboardState)).toBe('public-token')
+  })
+
+  test('restorePublicAuthToken returns the token that was just entered', async () => {
+    const dashboardState = createState()
+    openPublicDashboard(dashboardState)
+
+    const token = await actions.restorePublicAuthToken.call(
+      { app: {} },
+      { state: dashboardState },
+      { slug: 'public-slug' }
+    )
+
+    expect(token).toBe('public-token')
+    expect(getToken).not.toHaveBeenCalled()
+  })
+
+  test('restorePublicAuthToken reads the cookie of another slug', async () => {
+    const dashboardState = createState()
+    openPublicDashboard(dashboardState)
+    const app = { name: 'nuxt app' }
+    getToken.mockResolvedValue('cookie-token')
+
+    const token = await actions.restorePublicAuthToken.call(
+      { app },
+      { state: dashboardState },
+      { slug: 'other-slug' }
+    )
+
+    expect(token).toBe('cookie-token')
+    expect(getToken).toHaveBeenCalledWith(app, 'other-slug')
+  })
+
+  test('restorePublicAuthToken returns null without a cookie', async () => {
+    const dashboardState = createState()
+    getToken.mockResolvedValue(undefined)
+
+    const token = await actions.restorePublicAuthToken.call(
+      { app: {} },
+      { state: dashboardState },
+      { slug: 'public-slug' }
+    )
+
+    expect(token).toBe(null)
   })
 })

@@ -11,4 +11,10 @@ export const routes = [
     path: '/public/dashboard/:slug',
     file: path.resolve(__dirname, 'pages/publicDashboard.vue'),
   },
+  {
+    name: 'dashboard-public-auth',
+    path: '/public/dashboard/:slug/auth',
+    file: path.resolve(__dirname, 'pages/publicDashboardAuth.vue'),
+    meta: { layout: 'login' },
+  },
 ]

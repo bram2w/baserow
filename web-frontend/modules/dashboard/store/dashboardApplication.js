@@ -3,6 +3,7 @@ import WidgetService from '@baserow/modules/dashboard/services/widget'
 import DataSourceService from '@baserow/modules/dashboard/services/dataSource'
 import PublicDashboardService from '@baserow/modules/dashboard/services/publicDashboard'
 import IntegrationService from '@baserow/modules/core/services/integration'
+import { getToken, setToken } from '@baserow/modules/core/utils/auth'
 import { ConcurrentPriorityTaskQueue } from '@baserow/modules/core/utils/queue'
 import debounce from 'lodash/debounce'
 
@@ -546,6 +547,26 @@ export const actions = {
     commit('SET_PUBLIC', { slug, authToken })
     commit('SET_WIDGETS', widgets)
     commit('SET_DATA_SOURCES', dataSources)
+  },
+  /**
+   * Remembers the token that the public auth endpoint handed out for the right
+   * password: in a cookie keyed by the slug, so that it survives a reload, and
+   * in the store for the navigation to the dashboard that follows.
+   */
+  async setPublicAuthToken({ commit }, { slug, token }) {
+    await setToken(this.app, token, slug)
+    commit('SET_PUBLIC', { slug, authToken: token })
+  },
+  /**
+   * Returns the token remembered for the slug: the one in the store when the
+   * visitor just entered the password, otherwise the one in the cookie. `null`
+   * when there is none, which is fine for a dashboard without a password.
+   */
+  async restorePublicAuthToken({ state }, { slug }) {
+    if (state.publicSlug === slug && state.publicAuthToken) {
+      return state.publicAuthToken
+    }
+    return (await getToken(this.app, slug)) || null
   },
   /**
    * Dispatches every data source of the current dashboard, the ones shown by the

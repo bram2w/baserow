@@ -108,3 +108,18 @@
     color: $palette-neutral-500;
   }
 }
+
+.dashboard-sharing__option-icon {
+  font-size: 14px;
+}
+
+.dashboard-sharing__option-change-password {
+  margin-left: 8px;
+  font-size: 14px;
+  color: $palette-neutral-900;
+
+  &:hover {
+    text-decoration: none;
+    color: $palette-neutral-1200;
+  }
+}

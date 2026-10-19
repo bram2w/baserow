@@ -4,6 +4,8 @@ import { vi } from 'vitest'
 import { TestApp } from '@baserow/test/helpers/testApp'
 import ShareDashboardLink from '@baserow/modules/dashboard/components/sharing/ShareDashboardLink'
 import DashboardRotateSlugModal from '@baserow/modules/dashboard/components/sharing/DashboardRotateSlugModal'
+import DashboardEnablePasswordModal from '@baserow/modules/dashboard/components/sharing/DashboardEnablePasswordModal'
+import DashboardDisablePasswordModal from '@baserow/modules/dashboard/components/sharing/DashboardDisablePasswordModal'
 import Context from '@baserow/modules/core/components/Context'
 import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
 
@@ -59,6 +61,17 @@ describe('ShareDashboardLink', () => {
     return wrapper
       .findAll('button')
       .filter((button) => button.text().includes(text))
+      .at(0)
+  }
+
+  function findPasswordOption(context) {
+    return context
+      .findAll('.dashboard-sharing__option')
+      .filter(
+        (option) =>
+          option.text().includes('shareDashboardLink.restrictWithPassword') ||
+          option.text().includes('shareDashboardLink.passwordProtected')
+      )
       .at(0)
   }
 
@@ -195,5 +208,180 @@ describe('ShareDashboardLink', () => {
       'dashboard-slug'
     )
     expect(store.state.toast.items).toHaveLength(0)
+  })
+
+  test('protects the link with a password after it was entered', async () => {
+    const dashboard = await createDashboard({ public: true })
+    testApp.mock
+      .onPatch(`/applications/${DASHBOARD_ID}/`, {
+        public_password: 'secret-password',
+      })
+      .reply(200, {
+        id: DASHBOARD_ID,
+        type: 'dashboard',
+        public: true,
+        public_has_password: true,
+      })
+
+    const { wrapper, context } = await openContext(dashboard)
+    const option = findPasswordOption(context)
+    expect(option.text()).toContain('shareDashboardLink.restrictWithPassword')
+    expect(
+      context.find('.dashboard-sharing__option-change-password').exists()
+    ).toBe(false)
+
+    await option.find('.switch').trigger('click')
+
+    const modal = wrapper.findComponent(DashboardEnablePasswordModal)
+    expect(modal.text()).toContain('dashboardEnablePasswordModal.title')
+
+    await modal.find('input').setValue('secret-password')
+    await modal.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(
+      store.getters['application/get'](DASHBOARD_ID).public_has_password
+    ).toBe(true)
+    expect(findPasswordOption(context).text()).toContain(
+      'shareDashboardLink.passwordProtected'
+    )
+    expect(
+      context.find('.dashboard-sharing__option-change-password').exists()
+    ).toBe(true)
+  })
+
+  test('does not send a password shorter than 8 characters', async () => {
+    const dashboard = await createDashboard({ public: true })
+
+    const { wrapper, context } = await openContext(dashboard)
+    await findPasswordOption(context).find('.switch').trigger('click')
+
+    const modal = wrapper.findComponent(DashboardEnablePasswordModal)
+    await modal.find('input').setValue('short')
+    await modal.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(testApp.mock.history.patch).toHaveLength(0)
+    expect(modal.text()).toContain('error.minLength')
+    expect(
+      store.getters['application/get'](DASHBOARD_ID).public_has_password
+    ).toBe(false)
+  })
+
+  test('changes the password from the pencil icon', async () => {
+    const dashboard = await createDashboard({
+      public: true,
+      public_has_password: true,
+    })
+    testApp.mock
+      .onPatch(`/applications/${DASHBOARD_ID}/`, {
+        public_password: 'another-password',
+      })
+      .reply(200, {
+        id: DASHBOARD_ID,
+        type: 'dashboard',
+        public: true,
+        public_has_password: true,
+      })
+
+    const { wrapper, context } = await openContext(dashboard)
+    await context
+      .find('.dashboard-sharing__option-change-password')
+      .trigger('click')
+
+    const modal = wrapper.findComponent(DashboardEnablePasswordModal)
+    expect(modal.text()).toContain('dashboardEnablePasswordModal.changeTitle')
+
+    await modal.find('input').setValue('another-password')
+    await modal.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(testApp.mock.history.patch).toHaveLength(1)
+    expect(
+      store.getters['application/get'](DASHBOARD_ID).public_has_password
+    ).toBe(true)
+  })
+
+  test('removes the password after confirmation', async () => {
+    const dashboard = await createDashboard({
+      public: true,
+      public_has_password: true,
+    })
+    testApp.mock
+      .onPatch(`/applications/${DASHBOARD_ID}/`, { public_password: '' })
+      .reply(200, {
+        id: DASHBOARD_ID,
+        type: 'dashboard',
+        public: true,
+        public_has_password: false,
+      })
+
+    const { wrapper, context } = await openContext(dashboard)
+    const option = findPasswordOption(context)
+    expect(option.text()).toContain('shareDashboardLink.passwordProtected')
+
+    await option.find('.switch').trigger('click')
+
+    const modal = wrapper.findComponent(DashboardDisablePasswordModal)
+    expect(modal.text()).toContain('dashboardDisablePasswordModal.title')
+
+    await findButtonByText(
+      modal,
+      'dashboardDisablePasswordModal.disable'
+    ).trigger('click')
+    await flushPromises()
+
+    expect(
+      store.getters['application/get'](DASHBOARD_ID).public_has_password
+    ).toBe(false)
+    expect(findPasswordOption(context).text()).toContain(
+      'shareDashboardLink.restrictWithPassword'
+    )
+  })
+
+  test('keeps the password when the removal is cancelled', async () => {
+    const dashboard = await createDashboard({
+      public: true,
+      public_has_password: true,
+    })
+
+    const { wrapper, context } = await openContext(dashboard)
+    await findPasswordOption(context).find('.switch').trigger('click')
+
+    const modal = wrapper.findComponent(DashboardDisablePasswordModal)
+    await findButtonByText(modal, 'action.cancel').trigger('click')
+    await flushPromises()
+
+    expect(testApp.mock.history.patch).toHaveLength(0)
+    expect(
+      store.getters['application/get'](DASHBOARD_ID).public_has_password
+    ).toBe(true)
+  })
+
+  test('forgets the password when the shared link is disabled', async () => {
+    const dashboard = await createDashboard({
+      public: true,
+      public_has_password: true,
+    })
+    // Disabling the link also removes the password on the backend, which the
+    // response reports.
+    testApp.mock
+      .onPatch(`/applications/${DASHBOARD_ID}/`, { public: false })
+      .reply(200, {
+        id: DASHBOARD_ID,
+        type: 'dashboard',
+        public: false,
+        public_has_password: false,
+      })
+
+    const { context } = await openContext(dashboard)
+    await findButtonByText(context, 'shareDashboardLink.disableLink').trigger(
+      'click'
+    )
+    await flushPromises()
+
+    const updated = store.getters['application/get'](DASHBOARD_ID)
+    expect(updated.public).toBe(false)
+    expect(updated.public_has_password).toBe(false)
   })
 })

@@ -62,10 +62,45 @@
               </a>
             </div>
 
-            <div
-              v-if="additionalShareLinkOptions.length > 0"
-              class="dashboard-sharing__shared-link-options"
-            >
+            <div class="dashboard-sharing__shared-link-options">
+              <div class="dashboard-sharing__option">
+                <SwitchInput
+                  small
+                  :value="dashboard.public_has_password"
+                  @input="togglePassword"
+                >
+                  <i
+                    class="switch__icon dashboard-sharing__option-icon"
+                    :class="
+                      dashboard.public_has_password
+                        ? 'iconoir-lock'
+                        : 'iconoir-globe'
+                    "
+                  />
+                  <span>{{ $t(passwordOptionText) }}</span>
+                </SwitchInput>
+                <a
+                  v-if="dashboard.public_has_password"
+                  v-tooltip="$t('shareDashboardLink.changePassword')"
+                  class="dashboard-sharing__option-change-password"
+                  @click.stop="enablePasswordModal.show()"
+                >
+                  <i class="iconoir-edit-pencil" />
+                </a>
+                <!--
+                  Kept inside the context so that clicks in the modals count as
+                  clicks inside the context and don't close it.
+                -->
+                <DashboardEnablePasswordModal
+                  ref="enablePasswordModal"
+                  :dashboard="dashboard"
+                />
+                <DashboardDisablePasswordModal
+                  ref="disablePasswordModal"
+                  :dashboard="dashboard"
+                />
+              </div>
+
               <component
                 :is="component"
                 v-for="(component, i) in additionalShareLinkOptions"
@@ -103,6 +138,9 @@
 import { ref, computed } from 'vue'
 import { useNuxtApp } from '#app'
 import DashboardRotateSlugModal from '@baserow/modules/dashboard/components/sharing/DashboardRotateSlugModal'
+import DashboardEnablePasswordModal from '@baserow/modules/dashboard/components/sharing/DashboardEnablePasswordModal'
+import DashboardDisablePasswordModal from '@baserow/modules/dashboard/components/sharing/DashboardDisablePasswordModal'
+import { updateDashboardSharing } from '@baserow/modules/dashboard/utils/sharing'
 import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 
@@ -113,12 +151,14 @@ const props = defineProps({
   },
 })
 
-const { $store, $registry, $config, $router } = useNuxtApp()
+const { $store, $registry, $config, $router, $client } = useNuxtApp()
 
 const context = ref(null)
 const contextLink = ref(null)
 const copied = ref(null)
 const rotateSlugModal = ref(null)
+const enablePasswordModal = ref(null)
+const disablePasswordModal = ref(null)
 const loading = ref(false)
 
 const shareUrl = computed(() => {
@@ -137,18 +177,40 @@ const additionalShareLinkOptions = computed(() => {
     .filter((component) => component !== null)
 })
 
+const passwordOptionText = computed(() => {
+  return props.dashboard.public_has_password
+    ? 'shareDashboardLink.passwordProtected'
+    : 'shareDashboardLink.restrictWithPassword'
+})
+
+/**
+ * The switch itself never changes the password, the modals do after the
+ * password was entered or the removal confirmed.
+ */
+const togglePassword = () => {
+  if (props.dashboard.public_has_password) {
+    disablePasswordModal.value.show()
+  } else {
+    enablePasswordModal.value.show()
+  }
+}
+
 const copyShareUrlToClipboard = () => {
   copyToClipboard(shareUrl.value)
   copied.value.show()
 }
 
+/**
+ * Creates or disables the link. Either change also removes a password, which
+ * the helper reflects in the store from the response.
+ */
 const updateDashboard = async (values) => {
   const application = props.dashboard
   loading.value = true
   $store.dispatch('application/setItemLoading', { application, value: true })
 
   try {
-    await $store.dispatch('application/update', { application, values })
+    await updateDashboardSharing({ $client, $store }, application, values)
   } catch (error) {
     notifyIf(error, 'application')
   } finally {
