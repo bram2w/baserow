@@ -217,10 +217,7 @@ export default {
       }
     },
     openCreateApplicationModal(type) {
-      if (
-        !this.canCreateApplication ||
-        !this.$registry.get('application', type).canBeCreated()
-      ) {
+      if (!this.canCreateApplication) {
         return
       }
 
