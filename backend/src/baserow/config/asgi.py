@@ -23,7 +23,7 @@ setup_telemetry(add_django_instrumentation=True)
 # Same as django.core.asgi.get_asgi_application, but with Baserow's ASGI handler that
 # doesn't keep per-request memory alive in reference cycles.
 django.setup(set_prefix=False)
-from baserow.core.chat_runs.stream import ChatRunHTTPRouter  # noqa: E402
+from baserow.config.streaming import AsyncStreamingHTTPRouter  # noqa: E402
 
 django_asgi_app = BaserowASGIHandler()
 setup_django_lifecycle_instrumentation()
@@ -37,7 +37,7 @@ log_env_warnings()
 
 application = ProtocolTypeRouter(
     {
-        "http": ChatRunHTTPRouter(
+        "http": AsyncStreamingHTTPRouter(
             ConcurrencyLimiterASGI(
                 URLRouter(
                     [

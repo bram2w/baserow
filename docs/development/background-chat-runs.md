@@ -50,11 +50,12 @@ cursors and a `replayed` flag. Suppress navigation and other live-only effects
 for replay, reconnect catch-up and reset baselines. A terminal database outcome
 replaces temporary output even when Redis completion is missing.
 
-Register a streaming path with `register_stream_path` and return an async
-`StreamingHttpResponse` from the existing authenticated Django view. The ASGI
-router applies Django middleware during preparation, closes its database
-connections, and follows asynchronously outside the ordinary HTTP limiter. Long
-responses have a separate admission limit and Redis read pool. Always validate
+Register a streaming path with `register_async_stream_path` from
+`baserow.config.streaming` and return an async `StreamingHttpResponse` from the
+existing authenticated Django view. The shared `AsyncStreamingHTTPRouter` applies
+Django middleware during preparation, closes its database connections, and streams
+asynchronously outside the ordinary HTTP limiter. Long responses have a separate
+admission limit and Redis read pool. Always validate
 authentication, permissions and resume parameters before returning HTTP 200.
 Initial request bodies are limited to 2 MiB and 15 seconds, independently of the
 stream lifetime, so incomplete anonymous requests cannot reserve slots indefinitely.

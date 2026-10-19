@@ -17,6 +17,7 @@ from django.http import StreamingHttpResponse
 import pytest
 from asgiref.sync import SyncToAsync
 
+from baserow.config import streaming
 from baserow.config.helpers import ConcurrencyLimiterASGI
 from baserow.core.chat_runs import buffer as buffer_module
 from baserow.core.chat_runs import stream
@@ -93,8 +94,8 @@ async def test_hundred_http_followers_leave_rest_and_threads_available(
 ):
     settings.REDIS_URL = REDIS_URL
     buffer_module.set_buffer_redis(None)
-    monkeypatch.setattr(stream, "_paths", [])
-    stream.register_stream_path(r"/chat/stream/")
+    monkeypatch.setattr(streaming, "_paths", [])
+    streaming.register_async_stream_path(r"/chat/stream/")
     run = SimpleNamespace(id=uuid4())
     writer = ChatRunBuffer(run.id)
     await writer.append([("run.started", {})])
@@ -132,15 +133,15 @@ async def test_hundred_http_followers_leave_rest_and_threads_available(
 
         return StreamingHttpResponse(records())
 
-    monkeypatch.setattr(stream, "_prepare", prepare)
+    monkeypatch.setattr(streaming, "_prepare", prepare)
 
     async def rest_app(request_scope, receive, send):
         await asyncio.sleep(0.001)
         await send({"type": "http.response.start", "status": 204, "headers": []})
         await send({"type": "http.response.body", "body": b""})
 
-    router = stream.ChatRunHTTPRouter(
-        ConcurrencyLimiterASGI(rest_app, max_concurrency=1), max_followers=100
+    router = streaming.AsyncStreamingHTTPRouter(
+        ConcurrencyLimiterASGI(rest_app, max_concurrency=1), max_streams=100
     )
 
     def send(index):
