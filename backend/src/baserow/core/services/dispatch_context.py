@@ -2,6 +2,7 @@ from abc import ABC
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from django.contrib.auth.models import AbstractUser
+from django.db.models import QuerySet
 
 from baserow.core.formula.runtime_formula_context import RuntimeFormulaContext
 from baserow.core.services.models import Service
@@ -126,6 +127,11 @@ class DispatchContext(RuntimeFormulaContext, ABC):
         """
 
         return True
+
+    def apply_table_filters(self, service: Service, queryset: QuerySet) -> QuerySet:
+        """Apply trusted context-specific restrictions before a table is aggregated."""
+
+        return queryset
 
     @property
     def is_publicly_searchable(self) -> bool:

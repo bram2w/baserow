@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, Optional
 
 from django.http import HttpRequest
 
+from baserow.contrib.dashboard.filters.runtime import apply_widget_filters
 from baserow.core.services.dispatch_context import DispatchContext
 
 if TYPE_CHECKING:
@@ -14,6 +15,7 @@ class DashboardDispatchContext(DispatchContext):
         "request",
         "widget",
         "workspace",
+        "applied_filters",
     ]
 
     def __init__(
@@ -21,6 +23,7 @@ class DashboardDispatchContext(DispatchContext):
         request: HttpRequest,
         workspace: Optional["Workspace"] = None,
         widget: Optional["Widget"] = None,
+        applied_filters: list[dict] | None = None,
     ):
         """Create a context for dispatching a dashboard data source."""
 
@@ -33,5 +36,13 @@ class DashboardDispatchContext(DispatchContext):
 
         self.request = request
         self.widget = widget
+        self.applied_filters = applied_filters or []
 
         super().__init__(workspace)
+
+    def apply_table_filters(self, service, queryset):
+        if self.widget is None:
+            return queryset
+        return apply_widget_filters(
+            self.widget, service, queryset, self.applied_filters
+        )

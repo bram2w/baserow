@@ -400,7 +400,7 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
             model = self.get_table_model(service)
 
         queryset = self.get_table_queryset(service, table, dispatch_context, model)
-        return queryset
+        return dispatch_context.apply_table_filters(service, queryset)
 
     def get_table_queryset(
         self,
