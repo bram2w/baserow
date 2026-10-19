@@ -51,9 +51,13 @@ describe('InviteModal', () => {
     return wrapper.findAll('.modal-sidebar__nav-link')
   }
 
-  async function mountAndShow() {
+  async function mountAndShow({
+    workspace: selectedWorkspace = workspace,
+    hasPermission = () => true,
+  } = {}) {
     const wrapper = await testApp.mount(InviteModal, {
-      propsData: { workspace },
+      propsData: { workspace: selectedWorkspace },
+      global: { mocks: { $hasPermission: hasPermission } },
     })
     await wrapper.vm.show()
     await flushPromises()
@@ -158,6 +162,175 @@ describe('InviteModal', () => {
     expect(wrapper.find('.invite-list__subtitle').text()).toBe(
       'inviteModal.pendingNoWorkspaceRole'
     )
+  })
+
+  test('changes a pending workspace role and prevents overlapping updates', async () => {
+    const invitation = {
+      id: 3,
+      workspace: 1,
+      email: 'olga@x.com',
+      permissions: 'ADMIN',
+    }
+    const selectedWorkspace = {
+      ...workspace,
+      _: {
+        roles: [
+          ...workspace._.roles,
+          { uid: 'MEMBER', name: 'Member', isVisible: true },
+        ],
+      },
+    }
+    mockServer.mock
+      .onGet('/workspaces/invitations/workspace/1/')
+      .reply(200, [invitation])
+    let respond
+    mockServer.mock.onPatch('/workspaces/invitations/3/').reply(
+      () =>
+        new Promise((resolve) => {
+          respond = resolve
+        })
+    )
+    const busEmit = vi.spyOn(testApp.getApp().$bus, '$emit')
+    const wrapper = await mountAndShow({ workspace: selectedWorkspace })
+    try {
+      const row = wrapper.find('.invite-list__item')
+      await row.find('.invite-list__role > a').trigger('click')
+      await row
+        .findAll('.context__menu-item-link')
+        .find((link) => link.text().trim() === 'Member')
+        .trigger('click')
+      await flushPromises()
+
+      expect(mockServer.mock.history.patch).toHaveLength(1)
+      expect(JSON.parse(mockServer.mock.history.patch[0].data)).toEqual({
+        permissions: 'MEMBER',
+      })
+      expect(row.find('.invite-list__role > a').exists()).toBe(false)
+      expect(row.find('.invite-list__role > span').text()).toBe('Admin')
+      expect(busEmit).not.toHaveBeenCalledWith(
+        'invite-updated',
+        expect.anything()
+      )
+
+      const updated = { ...invitation, permissions: 'MEMBER' }
+      respond([200, updated])
+      await flushPromises()
+      expect(row.find('.invite-list__role > a').text()).toBe('Member')
+      expect(busEmit).toHaveBeenCalledWith('invite-updated', updated)
+    } finally {
+      respond?.([200, invitation])
+    }
+  })
+
+  test('cancels a workspace invitation and allows its email to be invited again', async () => {
+    const invitation = {
+      id: 3,
+      workspace: 1,
+      email: 'olga@x.com',
+      permissions: 'ADMIN',
+    }
+    mockServer.mock
+      .onGet('/workspaces/invitations/workspace/1/')
+      .reply(200, [invitation])
+    mockServer.mock.onDelete('/workspaces/invitations/3/').reply(204)
+    const busEmit = vi.spyOn(testApp.getApp().$bus, '$emit')
+    const wrapper = await mountAndShow()
+
+    const row = wrapper.find('.invite-list__item')
+    await row.find('.invite-list__role > a').trigger('click')
+    await row.find('.context__menu-item-link--delete').trigger('click')
+    await flushPromises()
+
+    expect(mockServer.mock.history.delete.map(({ url }) => url)).toEqual([
+      '/workspaces/invitations/3/',
+    ])
+    expect(wrapper.find('.invite-list__empty').text()).toContain(
+      'inviteModal.pendingEmptyTitle'
+    )
+    expect(busEmit).toHaveBeenCalledWith('invite-deleted', invitation)
+    await pickEmails(wrapper, ['olga@x.com'])
+    expect(wrapper.find('.invite-input__chip--error').exists()).toBe(false)
+  })
+
+  test.each(['patch', 'delete'])(
+    'preserves the invitation and allows retry after a failed %s',
+    async (method) => {
+      testApp.dontFailOnErrorResponses()
+      const invitation = {
+        id: 3,
+        workspace: 1,
+        email: 'olga@x.com',
+        permissions: 'ADMIN',
+      }
+      mockServer.mock
+        .onGet('/workspaces/invitations/workspace/1/')
+        .reply(200, [invitation])
+      const selectedWorkspace = {
+        ...workspace,
+        _: {
+          roles: [
+            ...workspace._.roles,
+            { uid: 'MEMBER', name: 'Member', isVisible: true },
+          ],
+        },
+      }
+      const adapter = method === 'patch' ? 'onPatch' : 'onDelete'
+      mockServer.mock[adapter]('/workspaces/invitations/3/').replyOnce(500)
+      mockServer.mock[adapter]('/workspaces/invitations/3/').reply(
+        method === 'patch' ? 200 : 204,
+        { ...invitation, permissions: 'MEMBER' }
+      )
+      const wrapper = await mountAndShow({ workspace: selectedWorkspace })
+      const selectAction = async () => {
+        const row = wrapper.find('.invite-list__item')
+        await row.find('.invite-list__role > a').trigger('click')
+        const link =
+          method === 'delete'
+            ? row.find('.context__menu-item-link--delete')
+            : row
+                .findAll('.context__menu-item-link')
+                .find((link) => link.text().trim() === 'Member')
+        await link.trigger('click')
+        await flushPromises()
+      }
+
+      await selectAction()
+      expect(wrapper.find('.invite-list__name').text()).toBe('olga@x.com')
+      expect(wrapper.find('.invite-list__role > a').text()).toBe('Admin')
+      await selectAction()
+      expect(mockServer.mock.history[method]).toHaveLength(2)
+      if (method === 'delete') {
+        expect(wrapper.find('.invite-list__item').exists()).toBe(false)
+      } else {
+        expect(wrapper.find('.invite-list__role > a').text()).toBe('Member')
+      }
+    }
+  )
+
+  test('offers only cancellation when workspace role changes are not permitted', async () => {
+    mockServer.mock
+      .onGet('/workspaces/invitations/workspace/1/')
+      .reply(200, [{ id: 3, email: 'olga@x.com', permissions: 'ADMIN' }])
+    const wrapper = await mountAndShow({
+      hasPermission: (operation) => operation === 'invitation.delete',
+    })
+    const row = wrapper.find('.invite-list__item')
+    await row.find('.invite-list__role > a').trigger('click')
+    expect(
+      row.findAll('.context__menu-item-link').map((link) => link.text())
+    ).toEqual(['action.remove'])
+  })
+
+  test('shows the role without controls when workspace invitation changes are not permitted', async () => {
+    mockServer.mock
+      .onGet('/workspaces/invitations/workspace/1/')
+      .reply(200, [{ id: 3, email: 'olga@x.com', permissions: 'ADMIN' }])
+    const wrapper = await mountAndShow({ hasPermission: () => false })
+    const row = wrapper.find('.invite-list__item')
+    expect(row.find('.invite-list__role > a').exists()).toBe(false)
+    expect(row.find('.invite-list__role > span').text()).toBe('Admin')
+    expect(mockServer.mock.history.patch).toHaveLength(0)
+    expect(mockServer.mock.history.delete).toHaveLength(0)
   })
 
   test('hides a route that is not enabled for the workspace', async () => {

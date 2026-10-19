@@ -51,6 +51,23 @@
   color: $palette-neutral-900;
 }
 
+.invite-list__items--scrollable {
+  // Six rows, including text, padding and separators.
+  max-height: 390px;
+  padding-right: 12px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+
+  .invite-list__item {
+    min-height: 65px;
+  }
+
+  .invite-list__name,
+  .invite-list__subtitle {
+    line-height: 20px;
+  }
+}
+
 .invite-list__empty {
   padding: 32px 16px;
   text-align: center;

@@ -40,6 +40,11 @@ function createRegistry(app) {
   return {
     get: (namespace, type) => subjectTypes.find((s) => s.type === type),
     getOrderedList: () => subjectTypes,
+    getAll: () =>
+      [...roles, noAccess].map((role) => ({
+        getUid: () => role.uid,
+        getDeactivatedClickModal: () => null,
+      })),
   }
 }
 const team = {
@@ -147,7 +152,12 @@ function createClient() {
 async function mountRoute(
   client,
   targetType,
-  { agentsEnabled = false, captcha = false, canInviteNewUsers = true } = {}
+  {
+    agentsEnabled = false,
+    captcha = false,
+    canInviteNewUsers = true,
+    realList = false,
+  } = {}
 ) {
   picker.removed = []
   picker.resets = 0
@@ -199,13 +209,15 @@ async function mountRoute(
             },
           },
         },
-        ScopeAccessList: {
-          props: ['items'],
-          template:
-            '<div class="access">{{ items.map((i) => i.key).join(",") }}</div>' +
-            '<div class="access-roles">{{ items.map((i) => i.key + "=" + ' +
-            'i.roles.map((r) => r.uid).join("/")).join(",") }}</div>',
-        },
+        ScopeAccessList: realList
+          ? false
+          : {
+              props: ['items'],
+              template:
+                '<div class="access">{{ items.map((i) => i.key).join(",") }}</div>' +
+                '<div class="access-roles">{{ items.map((i) => i.key + "=" + ' +
+                'i.roles.map((r) => r.uid).join("/")).join(",") }}</div>',
+            },
         ScopeInheritedAccess: { template: '<div class="inherited"></div>' },
         CaptchaWidget: captcha
           ? captchaWidget
@@ -260,6 +272,90 @@ test('explains why a scope admin cannot invite new people', async () => {
     expect(
       wrapper.find('.picker').attributes('data-email-disabled-reason')
     ).toBe('shareScope.workspaceInvitationRequired')
+    expect(wrapper.find('.picker').text()).toBe('Mark Delgado,Jane Roe')
+  } finally {
+    wrapper.unmount()
+  }
+})
+
+test('uses the shared list to change and revoke only a scoped invitation', async () => {
+  const client = createClient()
+  const wrapper = await mountRoute(client, createTargetType(), {
+    realList: true,
+  })
+  try {
+    expect(wrapper.find('.invite-list__items--scrollable').exists()).toBe(true)
+    const row = wrapper.find('.invite-list__item')
+    expect(row.find('.invite-list__name').text()).toContain('olga@x.com')
+    expect(row.find('.invite-list__role > a').text()).toBe('Editor')
+
+    await row.find('.invite-list__role > a').trigger('click')
+    await row
+      .findAll('.context__menu-item-link')
+      .find((link) => link.text().trim() === 'Viewer')
+      .trigger('click')
+    await flushPromises()
+    expect(client.patch).toHaveBeenCalledWith('/role/invitations/1/', {
+      role: 'VIEWER',
+    })
+    expect(row.find('.invite-list__role > a').text()).toBe('Viewer')
+
+    await row.find('.invite-list__role > a').trigger('click')
+    await row.find('.context__menu-item-link--delete').trigger('click')
+    await flushPromises()
+    expect(client.delete.mock.calls).toEqual([['/role/invitations/1/']])
+    expect(wrapper.findAll('.invite-list__item')).toHaveLength(1)
+    expect(wrapper.find('.invite-list__name').text()).toBe('Mark Delgado')
+  } finally {
+    wrapper.unmount()
+  }
+})
+
+test('shows existing scope users, including the current user with a read-only role', async () => {
+  const client = createClient()
+  const get = client.get.getMockImplementation()
+  client.get.mockImplementation(async (url, ...args) => {
+    const response = await get(url, ...args)
+    if (url !== '/role/12/') {
+      return response
+    }
+    return {
+      data: [
+        ...response.data,
+        {
+          id: 8,
+          subject_type: 'auth.User',
+          subject: { id: 7, name: 'Current user', email: 'me@x.com' },
+          role: 'VIEWER',
+          scope_id: 20,
+          scope_type: 'database_table',
+        },
+        {
+          id: 9,
+          subject_type: 'baserow_enterprise.Team',
+          subject: { id: 3, name: 'Management', subject_count: 2 },
+          role: 'EDITOR',
+          scope_id: 20,
+          scope_type: 'database_table',
+        },
+      ],
+    }
+  })
+  const wrapper = await mountRoute(client, createTargetType(), {
+    realList: true,
+  })
+  try {
+    const rows = wrapper.findAll('.invite-list__item')
+    expect(rows.map((row) => row.find('.invite-list__name').text())).toEqual([
+      expect.stringContaining('olga@x.com'),
+      'Mark Delgado',
+      'Current user',
+      expect.stringContaining('Management'),
+    ])
+    expect(rows[1].find('.invite-list__role > a').text()).toBe('Viewer')
+    expect(rows[2].find('.invite-list__role > a').exists()).toBe(false)
+    expect(rows[2].find('.invite-list__role > span').text()).toBe('Viewer')
+    expect(rows[3].find('.invite-list__role > a').text()).toBe('Editor')
     expect(wrapper.find('.picker').text()).toBe('Mark Delgado,Jane Roe')
   } finally {
     wrapper.unmount()

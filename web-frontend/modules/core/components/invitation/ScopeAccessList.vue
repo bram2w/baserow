@@ -1,10 +1,10 @@
 <template>
   <div class="invite-list">
     <div v-if="items.length === 0" class="invite-list__empty">
-      <div>{{ $t('shareScope.emptyTitle', { type: scopeTypeName }) }}</div>
-      <div>{{ $t('shareScope.emptyDescription') }}</div>
+      <div>{{ emptyTitle }}</div>
+      <div>{{ emptyDescription }}</div>
     </div>
-    <ul v-else class="invite-list__items">
+    <ul v-else class="invite-list__items invite-list__items--scrollable">
       <li v-for="item in items" :key="item.key" class="invite-list__item">
         <div class="invite-list__subject">
           <Avatar
@@ -31,11 +31,12 @@
             </div>
           </div>
         </div>
-        <RoleSelector
+        <ScopeRoleSelector
+          class="invite-list__role"
           :value="getRole(item)"
           :roles="item.roles || roles"
           :disabled="item.disabled"
-          :allow-removing-role="true"
+          :allow-removing-role="item.allowRemovingRole !== false"
           :workspace="workspace"
           @delete="$emit('role-updated', item, null)"
           @input="({ uid }) => $emit('role-updated', item, uid)"
@@ -46,20 +47,20 @@
 </template>
 
 <script>
-import RoleSelector from '@baserow_enterprise/components/member-roles/RoleSelector'
+import ScopeRoleSelector from '@baserow/modules/core/components/invitation/ScopeRoleSelector'
 
 /**
- * Everyone with a role set directly on the object: members, teams, agents and
- * the pending email invitations, each with an editable and removable role.
+ * Direct access for existing users, teams and agents, plus pending invitations.
+ * Callers provide normalized rows and own the permissions, API calls and
+ * meaning of removal. Null roles emitted here request removal, not no access.
  */
 export default {
   name: 'ScopeAccessList',
-  components: { RoleSelector },
+  components: { ScopeRoleSelector },
   props: {
     /**
      * Rows of `{ key, name, subtitle, badge, badgeColor, initials, icon, color,
-     * roleUid, disabled }`, prepared by the parent from the role assignments and
-     * the scoped invitations.
+     * roleUid, roles, disabled, allowRemovingRole }`, prepared by the caller.
      */
     items: {
       type: Array,
@@ -69,7 +70,11 @@ export default {
       type: Array,
       required: true,
     },
-    scopeTypeName: {
+    emptyTitle: {
+      type: String,
+      required: true,
+    },
+    emptyDescription: {
       type: String,
       required: true,
     },

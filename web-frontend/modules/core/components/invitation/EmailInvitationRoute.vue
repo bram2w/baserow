@@ -18,33 +18,22 @@
     />
     <h3 class="invite-list__title">{{ $t('inviteModal.pendingTitle') }}</h3>
     <div v-if="loading" class="loading"></div>
-    <div v-else-if="invitations.length === 0" class="invite-list__empty">
-      <div>{{ $t('inviteModal.pendingEmptyTitle') }}</div>
-      <div>{{ $t('inviteModal.pendingEmptyDescription') }}</div>
-    </div>
-    <ul v-else class="invite-list__items">
-      <li
-        v-for="invitation in invitations"
-        :key="invitation.id"
-        class="invite-list__item"
-      >
-        <div class="invite-list__subject">
-          <Avatar icon="iconoir-mail" color="neutral" rounded size="large" />
-          <div>
-            <div class="invite-list__name">{{ invitation.email }}</div>
-            <div class="invite-list__subtitle">
-              {{ roleName(invitation.permissions) }}
-            </div>
-          </div>
-        </div>
-      </li>
-    </ul>
+    <ScopeAccessList
+      v-else
+      :items="accessItems"
+      :roles="roles"
+      :workspace="workspace"
+      :empty-title="$t('inviteModal.pendingEmptyTitle')"
+      :empty-description="$t('inviteModal.pendingEmptyDescription')"
+      @role-updated="updateItemRole"
+    />
   </div>
 </template>
 
 <script>
 import CaptchaWidget from '@baserow/modules/core/components/auth/CaptchaWidget'
 import InviteInput from '@baserow/modules/core/components/invitation/InviteInput'
+import ScopeAccessList from '@baserow/modules/core/components/invitation/ScopeAccessList'
 import emailInvitations from '@baserow/modules/core/mixins/emailInvitations'
 import error from '@baserow/modules/core/mixins/error'
 import WorkspaceService from '@baserow/modules/core/services/workspace'
@@ -64,7 +53,7 @@ const NO_WORKSPACE_ROLE_UID = 'NO_ROLE_LOW_PRIORITY'
  */
 export default {
   name: 'EmailInvitationRoute',
-  components: { CaptchaWidget, InviteInput },
+  components: { CaptchaWidget, ScopeAccessList, InviteInput },
   mixins: [error, emailInvitations],
   props: {
     workspace: {
@@ -86,6 +75,7 @@ export default {
       inviting: false,
       loading: true,
       invitations: [],
+      updatingInvitationIds: [],
     }
   },
   computed: {
@@ -94,6 +84,43 @@ export default {
     },
     pendingEmails() {
       return this.invitations.map(({ email }) => email)
+    },
+    /**
+     * Workspace invitations use the same rows as scoped access. Editing and
+     * cancellation are independent capabilities on each invitation; cancelling
+     * here removes the whole invitation, including any pending scoped grants.
+     */
+    accessItems() {
+      return this.invitations.map((invitation) => {
+        const canUpdate = this.$hasPermission(
+          'invitation.update',
+          invitation,
+          this.workspace.id
+        )
+        const canRemove = this.$hasPermission(
+          'invitation.delete',
+          invitation,
+          this.workspace.id
+        )
+        return {
+          key: `invitation:${invitation.id}`,
+          name: invitation.email,
+          subtitle:
+            invitation.permissions === NO_WORKSPACE_ROLE_UID
+              ? this.$t('inviteModal.pendingNoWorkspaceRole')
+              : null,
+          icon: 'iconoir-mail',
+          color: 'neutral',
+          roleUid: invitation.permissions,
+          roles: canUpdate ? this.roles : [],
+          allowRemovingRole: canRemove,
+          disabled:
+            this.inviting ||
+            this.updatingInvitationIds.includes(invitation.id) ||
+            (!canUpdate && !canRemove),
+          invitation,
+        }
+      })
     },
     /**
      * Nothing here can be picked: the modal invites by address, and these are
@@ -136,18 +163,51 @@ export default {
   },
   methods: {
     /**
-     * The name of the role an invitation grants, looked up in every role of
-     * the workspace as an older invitation can hold one that isn't offered.
-     * An invitation without a workspace role can still hold roles on specific
-     * items through scoped invitations, so it says so rather than "No role".
+     * Updates a workspace invitation or cancels it entirely. Keep the row until
+     * the request succeeds so a failure preserves both the role and the pending
+     * address. The busy row prevents overlapping changes to the same invitation.
      */
-    roleName(uid) {
-      if (uid === NO_WORKSPACE_ROLE_UID) {
-        return this.$t('inviteModal.pendingNoWorkspaceRole')
-      }
-      return (
-        this.workspace._.roles.find((role) => role.uid === uid)?.name ?? uid
+    async updateItemRole(item, roleUid) {
+      const invitation = this.invitations.find(
+        ({ id }) => id === item.invitation.id
       )
+      if (
+        !invitation ||
+        this.updatingInvitationIds.includes(invitation.id) ||
+        !this.$hasPermission(
+          roleUid === null ? 'invitation.delete' : 'invitation.update',
+          invitation,
+          this.workspace.id
+        )
+      ) {
+        return
+      }
+      this.updatingInvitationIds.push(invitation.id)
+      try {
+        const service = WorkspaceService(this.$client)
+        if (roleUid === null) {
+          await service.deleteInvitation(invitation.id)
+          this.invitations = this.invitations.filter(
+            ({ id }) => id !== invitation.id
+          )
+          this.$bus.$emit('invite-deleted', invitation)
+        } else {
+          const { data } = await service.updateInvitation(invitation.id, {
+            permissions: roleUid,
+          })
+          const index = this.invitations.findIndex(
+            ({ id }) => id === invitation.id
+          )
+          this.invitations.splice(index, 1, data)
+          this.$bus.$emit('invite-updated', data)
+        }
+      } catch (error) {
+        notifyIf(error, 'workspace')
+      } finally {
+        this.updatingInvitationIds = this.updatingInvitationIds.filter(
+          (id) => id !== invitation.id
+        )
+      }
     },
     async invite(picks, roleUid) {
       this.inviting = true

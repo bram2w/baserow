@@ -33,7 +33,8 @@
         v-else
         :items="accessItems"
         :roles="assignableRoles"
-        :scope-type-name="scopeTypeName"
+        :empty-title="$t('shareScope.emptyTitle', { type: scopeTypeName })"
+        :empty-description="$t('shareScope.emptyDescription')"
         :workspace="workspace"
         @role-updated="updateItemRole"
       />
@@ -55,10 +56,10 @@
 import { mapGetters } from 'vuex'
 
 import CaptchaWidget from '@baserow/modules/core/components/auth/CaptchaWidget'
+import ScopeAccessList from '@baserow/modules/core/components/invitation/ScopeAccessList'
 import emailInvitations from '@baserow/modules/core/mixins/emailInvitations'
 import error from '@baserow/modules/core/mixins/error'
 import { notifyIf } from '@baserow/modules/core/utils/error'
-import ScopeAccessList from '@baserow_enterprise/components/invitation/ScopeAccessList'
 import ScopeInheritedAccess from '@baserow_enterprise/components/invitation/ScopeInheritedAccess'
 import ShareScopeInput from '@baserow_enterprise/components/invitation/ShareScopeInput'
 import RoleAssignmentsService from '@baserow_enterprise/services/roleAssignments'
