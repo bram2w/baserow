@@ -1,3 +1,4 @@
+import asyncio
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 from uuid import uuid4
@@ -78,6 +79,25 @@ async def test_new_send_treats_its_own_fast_worker_output_as_live():
     try:
         assert not (await anext(follower))["replayed"]
         assert not (await anext(follower))["replayed"]
+    finally:
+        await follower.aclose()
+
+
+@pytest.mark.asyncio
+async def test_live_output_skips_saved_state_reads(monkeypatch):
+    monkeypatch.setattr(stream, "STATUS_INTERVAL_SECONDS", 0.2)
+    run = SimpleNamespace(id=uuid4())
+    writer = ChatRunBuffer(run.id)
+    await writer.append([("run.started", {})])
+    snapshot = AsyncMock(return_value={"status": "running"})
+    follower = follow_run(run, None, replay=False, snapshot=snapshot)
+    try:
+        assert (await anext(follower))["kind"] == "run.started"
+        for _ in range(6):
+            await writer.append([("text.delta", {"segment": 0, "text": "x"})])
+            assert (await anext(follower))["kind"] == "text.delta"
+            await asyncio.sleep(0.05)
+        assert snapshot.await_count == 1
     finally:
         await follower.aclose()
 

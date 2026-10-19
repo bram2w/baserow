@@ -46,7 +46,8 @@ application = ProtocolTypeRouter(
                     ]
                 ),
                 max_concurrency=settings.ASGI_HTTP_MAX_CONCURRENCY,
-            )
+            ),
+            max_streams=settings.ASGI_HTTP_MAX_CONCURRENT_STREAMS,
         ),
         "websocket": websocket_router,
     }

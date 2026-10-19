@@ -45,6 +45,7 @@ x-backend-variables:
   BASEROW_BUILDER_PREVIEW_GRANT_TTL_SECONDS:
   BASEROW_EMBEDDED_SHARE_URL:
   BASEROW_FRONTEND_COOKIE_PREFIX:
+  BASEROW_ASGI_HTTP_MAX_CONCURRENT_STREAMS:
 
   # Set these if you want to use an external postgres instead of the db service below.
   DATABASE_USER: ${DATABASE_USER:-baserow}

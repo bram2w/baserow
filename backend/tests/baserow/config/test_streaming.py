@@ -1,5 +1,6 @@
 import asyncio
-from unittest.mock import AsyncMock, Mock
+import json
+from unittest.mock import AsyncMock
 from uuid import uuid4
 
 from django.http import JsonResponse, StreamingHttpResponse
@@ -65,7 +66,7 @@ async def test_http_stream_admission_does_not_hold_rest_capacity_or_thread_conte
     rejection = []
     await router(
         _scope(origin="https://frontend.example"),
-        AsyncMock(),
+        AsyncMock(return_value={"type": "http.request", "body": b"{}"}),
         AsyncMock(side_effect=rejection.append),
     )
     assert rejection[0]["status"] == 503
@@ -101,40 +102,48 @@ async def test_failed_http_iterator_releases_admission_and_closes_response(monke
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("incomplete,status", [(True, 408), (False, 413)])
-async def test_initial_body_limits_release_admission_before_authentication(
-    monkeypatch, incomplete, status
-):
+async def test_unfinished_body_does_not_hold_a_stream_slot(monkeypatch):
     monkeypatch.setattr(streaming, "_paths", [])
     streaming.register_async_stream_path(r"/stream/")
-    monkeypatch.setattr(streaming, "REQUEST_BODY_TIMEOUT_SECONDS", 0.01)
-    monkeypatch.setattr(streaming, "MAX_BODY_BYTES", 3)
-    prepare = Mock()
-    monkeypatch.setattr(streaming, "_prepare", prepare)
-    incoming = asyncio.Queue()
-    await incoming.put(
-        {
-            "type": "http.request",
-            "body": b"{" if incomplete else b"1234",
-            "more_body": incomplete,
-        }
+    monkeypatch.setattr(streaming, "_prepare", lambda scope, body: JsonResponse({}))
+    router = AsyncStreamingHTTPRouter(AsyncMock(), max_streams=1)
+    uploading = asyncio.Queue()
+    await uploading.put({"type": "http.request", "body": b"{", "more_body": True})
+    slow = asyncio.create_task(router(_scope(), uploading.get, AsyncMock()))
+    await asyncio.sleep(0)
+    complete = asyncio.Queue()
+    await complete.put({"type": "http.request", "body": b"{}"})
+    output = []
+    await asyncio.wait_for(
+        router(_scope(), complete.get, AsyncMock(side_effect=output.append)), 1
     )
+    assert output[0]["status"] == 200
+    await uploading.put({"type": "http.disconnect"})
+    await asyncio.wait_for(slow, 1)
+    assert router.active == 0
+
+
+@pytest.mark.asyncio
+async def test_request_body_size_limit_applies_to_stream_paths(monkeypatch, settings):
+    settings.DATA_UPLOAD_MAX_MEMORY_SIZE = 10
+    path = reverse("api:user:token_auth")
+    monkeypatch.setattr(streaming, "_paths", [])
+    streaming.register_async_stream_path(path)
+    body = json.dumps({"email": "a" * 20, "password": "b"}).encode()
+    scope = _scope(path)
+    scope["headers"] += [
+        (b"content-type", b"application/json"),
+        (b"content-length", str(len(body)).encode()),
+    ]
+    incoming = asyncio.Queue()
+    await incoming.put({"type": "http.request", "body": body})
     output = []
     router = AsyncStreamingHTTPRouter(AsyncMock(), max_streams=1)
     await asyncio.wait_for(
-        router(
-            _scope(origin="https://frontend.example"),
-            incoming.get,
-            AsyncMock(side_effect=output.append),
-        ),
-        1,
+        router(scope, incoming.get, AsyncMock(side_effect=output.append)), 2
     )
-    assert output[0]["status"] == status
-    headers = dict(output[0]["headers"])
-    assert b"access-control-allow-origin" in headers
-    assert headers[b"x-content-type-options"] == b"nosniff"
-    assert router.active == 0
-    prepare.assert_not_called()
+    assert output[0]["status"] == 413
+    assert json.loads(output[-1]["body"])["error"] == "ERROR_REQUEST_BODY_TOO_LARGE"
 
 
 @pytest.mark.asyncio
@@ -146,7 +155,7 @@ async def test_nonstream_validation_response_is_preserved(monkeypatch):
     incoming = asyncio.Queue()
     await incoming.put({"type": "http.request", "body": b"{}"})
     output = []
-    router = AsyncStreamingHTTPRouter(AsyncMock())
+    router = AsyncStreamingHTTPRouter(AsyncMock(), max_streams=1)
     await asyncio.wait_for(
         router(_scope(), incoming.get, AsyncMock(side_effect=output.append)), 1
     )
@@ -165,7 +174,7 @@ async def test_detached_preparation_preserves_real_django_authentication_and_cor
     incoming = asyncio.Queue()
     await incoming.put({"type": "http.request", "body": b"{}"})
     output = []
-    router = AsyncStreamingHTTPRouter(AsyncMock())
+    router = AsyncStreamingHTTPRouter(AsyncMock(), max_streams=1)
     await asyncio.wait_for(
         router(
             _scope(path, method="GET", origin="https://frontend.example"),

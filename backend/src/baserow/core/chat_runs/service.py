@@ -12,6 +12,12 @@ from .registries import chat_run_type_registry
 
 
 def serialize_run(run: ChatRun) -> dict:
+    """Serialize saved state for HTTP snapshots and worker completion events.
+
+    Calls the adapter's synchronous ``serialize_outcome`` hook in the caller's
+    context; it neither executes work nor reads the temporary Redis output.
+    """
+
     try:
         message = chat_run_type_registry.get(run.run_type).serialize_outcome(run)
     except chat_run_type_registry.does_not_exist_exception_class:
@@ -30,7 +36,13 @@ def serialize_run(run: ChatRun) -> dict:
 
 
 class ChatRunService:
-    """Reading and cancelling have independent adapter permission checks."""
+    """Permission-checked HTTP access to the synchronous lifecycle handler.
+
+    Status and cancel views call this service directly. The async ``follow_run``
+    response calls ``snapshot`` through its synchronous database bridge, including
+    periodic permission rechecks. Reading and cancelling use independent adapter
+    permission hooks; none of these calls executes the run's AI work.
+    """
 
     def get_run(self, user: AbstractUser, run_id: UUID, *, cancel=False) -> ChatRun:
         # Adapters and permission managers must use the same primary as the run:

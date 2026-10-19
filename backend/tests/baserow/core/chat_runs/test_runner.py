@@ -5,7 +5,7 @@ from django.db import connection
 import pytest
 from asgiref.sync import async_to_sync
 
-from baserow.core.chat_runs.constants import STOP_CANCELLED
+from baserow.core.chat_runs.constants import ChatRunStopReason
 from baserow.core.chat_runs.handler import ChatRunHandler
 from baserow.core.chat_runs.models import ChatRun, ChatRunStatus
 from baserow.core.chat_runs.runner import run_chat_run
@@ -128,7 +128,7 @@ def test_stop_polling_continues_while_redis_append_blocks(
         await entered.wait()
         await sync_to_async(ChatRunHandler().request_cancel)(run.id)
         reason = await asyncio.wait_for(journal.wait_for_stop(), 1)
-        assert reason == STOP_CANCELLED
+        assert reason == ChatRunStopReason.CANCELLED
         return ChatRunOutcome(ChatRunStatus.CANCELLED, result="partial")
 
     fake_run_type.execute = execute

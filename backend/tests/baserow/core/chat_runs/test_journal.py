@@ -7,7 +7,7 @@ from uuid import uuid4
 import pytest
 
 from baserow.core.chat_runs import journal as journal_module
-from baserow.core.chat_runs.constants import STOP_CANCELLED
+from baserow.core.chat_runs.constants import ChatRunStopReason
 from baserow.core.chat_runs.journal import ChatRunJournal, coalesce_events
 
 
@@ -114,7 +114,10 @@ async def test_lease_stop_polling_proceeds_while_output_append_waits(
     flush = asyncio.create_task(journal.flush())
     keeper = asyncio.create_task(journal.keep_alive())
     await waiting.wait()
-    assert await asyncio.wait_for(journal.wait_for_stop(), 0.5) == STOP_CANCELLED
+    assert (
+        await asyncio.wait_for(journal.wait_for_stop(), 0.5)
+        == ChatRunStopReason.CANCELLED
+    )
     for task in [flush, keeper]:
         task.cancel()
         with suppress(asyncio.CancelledError):

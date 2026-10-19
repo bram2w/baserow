@@ -1,109 +1,193 @@
 # Background chat runs
 
-The shared backend engine is `baserow.core.chat_runs`; the frontend follower is
-in the core module under `chatRuns`. Both work without enterprise installed.
-Kuma supplies an adapter. See [ADR 010](../decisions/010-background-ai-chat-runs.md)
-for the architecture and durability trade-offs.
+An AI answer can take minutes. A chat run computes it in a Celery worker, not
+inside the HTTP request. The browser only follows the output. Refreshing the page,
+closing the tab or losing the connection does not stop the answer.
 
-## Backend adapters
+Use it for a chat-like feature where a user sends a message and watches a long,
+streamed answer, such as Kuma. For a quick request, a normal API view is simpler.
 
-Register a `ChatRunType` in `chat_run_type_registry` during app startup. It owns:
+The engine lives in `baserow.core.chat_runs` (backend) and the core `chatRuns`
+module (frontend). It does not need enterprise. See
+[ADR 010](../decisions/010-background-ai-chat-runs.md) for why it works this way.
 
-- `can_read`, `can_cancel` and `can_follow_chat`: independent access checks for
-  output, Stop and conversation discovery.
-- `execute(run, journal)`: execute once, emitting cumulative text with
-  `journal.emit_text(text)` and other JSON events with `journal.emit(kind, data)`.
-  Observe `journal.stop_requested` and drain active tools before returning a
-  `ChatRunOutcome`. Core provides `ToolExecutor` and `ShieldedToolset` for
-  pydantic-ai tools that must drain before Stop completes.
-- `persist_outcome`: save the answer and conversation history. It runs in the
-  transaction that ends the locked run. Return the serialized saved message;
-  core saves that payload as the durable run outcome.
-- `serialize_outcome`: return the saved result for recovery. The default uses
-  that durable payload. An adapter with mutable message metadata can resolve its
-  saved message by the stored ID, so feedback and titles stay current.
-- `on_run_lost(run, events)`: save an interrupted turn. `events` is a complete,
-  retained Redis prefix or `None`, obtained before the finalization transaction.
-  Missing output cannot establish that no tools changed anything.
-- `on_run_not_started`: save the outcome of work which provably never started.
-- `ensure_interruption_warning`: preserve a missing-result warning in durable
-  conversation state before pruning run metadata. Return `False` to retain the
-  run when that cannot be done safely. Reconstruct any missing prior-turn
-  warnings before the next model call.
+## The pieces
 
-Create the human message and call `ChatRunHandler.start_run` in one transaction.
-Celery enqueue runs after commit. Only a successful conditional claim executes
-the model. The run engine does not restart execution after a broker failure,
-refresh, worker loss or incomplete replay. Product-level provider-request and
-validation retries within a live run are separate from run recovery.
+- **Run**: a `ChatRun` row in PostgreSQL. It holds the status and, at the end,
+  the saved result. It is the source of truth.
+- **Worker**: a Celery task. It computes the answer once, by calling the
+  product's `execute`.
+- **Journal**: what `execute` writes output to. It batches output and sends it to
+  the buffer.
+- **Buffer**: a Redis stream with a temporary copy of the output. A browser that
+  joins late or reconnects replays it from the start. It can be lost.
+- **Follower**: one streaming HTTP response that reads the buffer for one browser
+  tab. A run can have many followers. Closing one never stops the run.
+- **Adapter**: the product's `ChatRunType`. It decides who can see a run, computes
+  the answer and saves it into the product's own conversation.
 
-Use `ChatRunService` for permission-aware reads and cancellation. The core API
-provides `GET /api/chat-runs/<id>/` for durable status/outcome and
-`POST /api/chat-runs/<id>/cancel/` for Stop. Read and cancel checks are separate.
-Read status from the primary; Redis completion alone is not authoritative.
+```mermaid
+sequenceDiagram
+    participant Browser
+    participant API as Web process<br/>HTTP request
+    participant DB as PostgreSQL
+    participant Worker as Celery worker<br/>execute_chat_run()
+    participant Buffer as Redis output<br/>buffer
 
-## HTTP adapters
+    Browser->>API: Send message
+    API->>DB: start_run(): create queued run<br/>in the message transaction
+    DB-->>API: Committed
+    API->>Worker: _enqueue() calls<br/>execute_chat_run.delay()
+    Worker->>Worker: claim_run(), then run_chat_run()<br/>calls run_type.execute()
 
-`follow_run` replays and waits with `XREAD BLOCK`, then periodically rechecks
-permissions and durable status. It yields ordered events with generation-bearing
-cursors and a `replayed` flag. Suppress navigation and other live-only effects
-for replay, reconnect catch-up and reset baselines. A terminal database outcome
-replaces temporary output even when Redis completion is missing.
+    Note over API: follow_run() runs in<br/>the HTTP response
+    Note over Worker: execute() calls<br/>journal.emit_text() / emit()
+    loop While the answer is being generated
+        Worker->>Buffer: journal.flush()<br/>calls buffer.append()
+        API->>Buffer: follow_run() calls buffer.read(cursor)
+        Buffer-->>API: Output + cursor
+        API-->>Browser: Stream output
+    end
 
-Register a streaming path with `register_async_stream_path` from
-`baserow.config.streaming` and return an async `StreamingHttpResponse` from the
-existing authenticated Django view. The shared `AsyncStreamingHTTPRouter` applies
-Django middleware during preparation, closes its database connections, and streams
-asynchronously outside the ordinary HTTP limiter. Long responses have a separate
-admission limit and Redis read pool. Always validate
-authentication, permissions and resume parameters before returning HTTP 200.
-Initial request bodies are limited to 2 MiB and 15 seconds, independently of the
-stream lifetime, so incomplete anonymous requests cannot reserve slots indefinitely.
-Disconnect closes only the follower.
+    Worker->>DB: _finish(): persist_outcome()<br/>+ finish_run() in one transaction
+    DB-->>Worker: Committed
+    Worker->>Buffer: publish_finished()
+    API->>Buffer: buffer.read(cursor)
+    Buffer-->>API: run.finished event
+    API->>DB: _read_state()<br/>reads the saved run
+    DB-->>API: Final result + status
+    API-->>Browser: Final result,<br/>then close stream
+```
 
-Kuma preserves `POST /assistant/chat/<uuid>/messages/`, HTTP 200 and raw cumulative
-JSON records separated by `\n\n`. It adds `_run` metadata to records, including
-the run ID in the first streamed record. A resume-only POST carries `run_id`,
-optional `cursor` and `tab_id`; it cannot contain a prompt or UI context. GET remains
-JSON history with additive active/latest run metadata. Heartbeats are blank record
-separators, not SSE comments.
+The follower is the API's streaming HTTP response, not another worker. Redis
+holds the live output; PostgreSQL holds the saved result. If the browser
+disconnects, the Celery worker keeps running.
 
-## Output bounds and recovery
+Websocket messages only say that a run started or ended. They never carry output.
 
-Redis keys use the stable `baserow:chat-runs:v1` namespace, independent of the
-Django cache version. Streams use Redis 6.2-compatible commands without consumer
-groups. Each follower receives every event.
+## What runs where
 
-Buffers retain their whole prefix and are bounded to 8 MiB or 10,000 events.
-The journal coalesces output every 250 ms and bounds pending events to 1 MiB or
-1,024 events, including callbacks from tool threads. Active buffers expire after
-one hour, longer than the 900-second run deadline and 1,020-second task limit;
-available finished replay expires after 24 hours. Hitting a bound disables replay instead
-of silently trimming a needed prefix. Generation changes, missing prefixes and
-invalid cursors are explicit recovery conditions.
+The HTTP request and Celery task run in separate processes. Calling
+`execute_chat_run.delay(...)` queues work for Celery; it does not execute the
+answer in the web process. After that, the worker and HTTP follower run
+independently.
 
-Output failure never cancels a healthy claimed worker. The adapter retains its
-computed answer in memory and saves it only at termination. Lease renewal and
-Stop do not wait for Redis publication. PostgreSQL holds no token-event table or
-periodic output snapshots. A combined worker and replay loss can lose all partial
-text; committed tool changes remain.
+| Context | Caller and method |
+| --- | --- |
+| HTTP: prepare the response | `AsyncStreamingHTTPRouter.__call__` runs `_prepare` in the web process's thread pool. `_prepare` calls Django's middleware and the product view. |
+| HTTP: start a run | The product view calls `ChatRunHandler.start_run`, which calls `create_run`. The view saves the user's message in the same transaction. After commit, `_enqueue` calls `execute_chat_run.delay`. |
+| Celery: generate the answer | `execute_chat_run` calls `ChatRunHandler.claim_run`. If it claims the run, it calls `run_chat_run` through `async_to_sync`. The runner awaits the product's `ChatRunType.execute(run, journal)`. |
+| Celery: publish output | The adapter calls `journal.emit_text` or `emit`. The runner also starts `journal.keep_flushing`, which calls `flush` and then `ChatRunBuffer.append` to write batches to Redis. |
+| Celery: watch for Stop | The runner starts `journal.keep_alive`, which calls `ChatRunHandler.renew_lease` through `sync_to_async`. It sets `journal.stop_requested` when cancellation is requested. The adapter observes it and lets running tools finish. |
+| Celery: save the answer | When `execute` returns a `ChatRunOutcome`, the runner calls `_finish` through `sync_to_async`. `_finish` calls the adapter's `persist_outcome` and the handler's `finish_run` in one transaction. After commit, the runner calls `journal.publish_finished`. |
+| HTTP: stream output | The view returns an iterator without running it. On the HTTP event loop, `_send_response` consumes the product's iterator, which consumes `follow_run`. The follower calls `ChatRunBuffer.read` to wait for Redis output. |
+| HTTP: check durable state | `follow_run` calls `_read_state` through `sync_to_async`. When the stream opens, it calls `ChatRunService.snapshot`, which checks `can_read` once. Later reads skip that check and happen only on `run.finished` or after 5 s without output. Each read calls `serialize_outcome`, which also supplies the final saved result. |
 
-The default per-process limits are 100 HTTP followers, 128 Redis read connections
-and a separate 16-connection writer pool. The core frontend makes at most three
-automatic stream attachment attempts and checks durable status every five
-seconds. Focus/reopen can trigger another bounded attachment attempt. Lifecycle
-websocket messages carry identity/status only and are never an output transport.
+`async_to_sync` and `sync_to_async` bridge synchronous and async code within the
+current process. They do not enqueue Celery tasks. The journal's flushing and
+lease checks are asyncio tasks inside the existing Celery task.
 
-The browser retains up to 20 finished followers in addition to active runs.
-An adapter's `shouldRetainFollower` hook can retain a pending product handoff,
-such as Kuma onboarding, until the product consumes it. Logout closes followers
-and prevents their late responses from applying product effects.
+Refreshing opens a new HTTP follower with the last received cursor. It does not
+call `start_run` or enqueue another Celery task. Each `journal.emit_text` call
+supplies the whole answer so far; the journal turns it into deltas for Redis.
 
-## Verification
+Stop is a separate HTTP request: `POST /api/chat-runs/<id>/cancel/` calls
+`ChatRunService.request_cancel`, which checks `can_cancel` before calling
+`ChatRunHandler.request_cancel`. A queued run ends immediately. A running run
+gets a cancellation flag, which the worker observes through `keep_alive`.
 
-Shared engine tests live in `backend/tests/baserow/core/chat_runs`, and shared
-frontend tests in `web-frontend/test/unit/core/chatRuns`. Kuma has separate
-adapter and browser tests. For the opt-in Redis integration tests, point
-`BASEROW_TEST_CHAT_RUN_REDIS_URL` at an isolated supported Redis server. They use
-unique keys and remove them individually, including a 100-follower capacity and
-disconnect check. Never point fault-injection tests at a shared deployment.
+Some adapter hooks have more than one caller context. `on_run_not_started` can
+run in an HTTP request that cancels a queued run or fails to enqueue it, or in
+the `sweep_chat_runs` maintenance task. That task also calls `on_run_lost` for
+expired runs. `serialize_outcome` is used by both HTTP reads and worker
+completion. The `ChatRunType` docstrings describe each hook's callers.
+
+## Adding a product
+
+Register a `ChatRunType` in `chat_run_type_registry` during app startup:
+
+```python
+class NotesChatRunType(ChatRunType):
+    type = "notes"
+
+    def can_read(self, user, run):  # see output and status
+        return run.created_by_id == user.id
+
+    def can_cancel(self, user, run):  # press Stop
+        return run.created_by_id == user.id
+
+    def can_follow_chat(self, user, chat_id):  # subscribe to lifecycle updates
+        return NotesChat.objects.filter(id=chat_id, user=user).exists()
+
+    async def execute(self, run, journal):
+        text = ""
+        async for token in ask_model(run.context["prompt"]):
+            if journal.stop_requested.is_set():
+                return ChatRunOutcome(ChatRunStatus.CANCELLED, result=text)
+            text += token
+            journal.emit_text(text)
+        return ChatRunOutcome(ChatRunStatus.COMPLETED, result=text)
+
+    def persist_outcome(self, run, outcome):
+        message = NotesMessage.objects.create(chat_id=run.chat_id, text=outcome.result)
+        return {"id": message.id, "text": message.text}
+```
+
+The three access checks are separate on purpose: someone may be allowed to see
+a run but not stop it. `can_follow_chat` checks websocket subscriptions; HTTP
+output followers use `can_read`.
+
+For streaming, register the view's path with `register_async_stream_path` from
+`baserow.config.streaming`. The view returns an async `StreamingHttpResponse` over
+`follow_run(run, user, cursor)`. Check authentication, permissions and the cursor
+before returning HTTP 200. Once streaming starts, the status cannot change.
+
+On the frontend, register a `ChatRunType` from `chatRuns/chatRunType.js`. It
+opens the product's stream and turns its records into what the UI shows.
+
+## When things go wrong
+
+The engine never runs an answer twice. Tools may already have changed data, so a
+second run could repeat those changes.
+
+| What happens                         | Result                                                                                                               |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| Redis loses the output               | Followers can't replay. The browser uses the saved status and result instead. The worker carries on.                 |
+| The worker dies mid-answer           | The run is marked lost. `on_run_lost` gets the output Redis still has, if complete, so the product can save it.      |
+| The run never started                | `on_run_not_started` saves a result for it.                                                                          |
+| Old run data is about to be deleted  | `ensure_interruption_warning` must first store any "answer was interrupted" warning in the product's conversation.  |
+
+The buffer always keeps the output from the very start. If a run produces more
+output than the buffer allows, replay is turned off for that run. Trimming the
+start would rebuild a wrong answer in the browser.
+
+Every event has a cursor. If the buffer is lost and recreated, old cursors are
+rejected instead of silently skipping output. Events sent again during a replay
+have `replayed: true`, so the product must not repeat side effects for them, such
+as navigating the page.
+
+## How streaming responses are served
+
+Django's normal ASGI handler keeps a request-specific thread context until the
+response ends. A follower can last minutes, so it uses a separate path:
+
+```mermaid
+flowchart TD
+    A[Request arrives] --> B{Registered streaming URL?}
+    B -->|No| C[Existing HTTP application]
+    B -->|Yes| D[Read request body]
+    D --> E{Stream slot available?}
+    E -->|No| F[Return HTTP 503]
+    E -->|Yes| G[Django checks permissions and runs the view]
+    G --> H[Deliver output asynchronously]
+    H --> I[Finished or disconnected: clean up]
+```
+
+- The body is read using Django's normal upload handling before a slot is taken.
+  A slow upload never holds a slot.
+- `BASEROW_ASGI_HTTP_MAX_CONCURRENT_STREAMS` sets the slots per backend process.
+  Each follower uses one Redis connection while it waits, so the Redis read pool
+  has the same size. For example, 4 processes with 100 slots each can open 400
+  Redis read connections.
+- Followers don't count against `BASEROW_ASGI_HTTP_MAX_CONCURRENCY`, so long
+  answers never block normal requests.

@@ -1,10 +1,15 @@
 import asyncio
+from functools import partial
+from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
+from asgiref.sync import sync_to_async
 
 from baserow.core.chat_runs import buffer as buffer_module
 from baserow.core.chat_runs.buffer import ChatRunBuffer, ReplayUnavailable, parse_cursor
+from baserow.core.chat_runs.handler import ChatRunHandler
+from baserow.core.chat_runs.models import ChatRun
 
 
 @pytest.mark.asyncio
@@ -159,3 +164,64 @@ async def test_recovery_and_append_have_bounded_redis_time(monkeypatch, buffer_r
     monkeypatch.setattr(pipeline, "execute", hung)
     monkeypatch.setattr(buffer_redis, "pipeline", lambda **kwargs: pipeline)
     assert await asyncio.wait_for(writer.recover(), 0.1) is None
+
+
+@pytest.mark.asyncio
+async def test_follower_read_pool_fits_every_admitted_stream(settings):
+    settings.ASGI_HTTP_MAX_CONCURRENT_STREAMS = 7
+    buffer_module.set_buffer_redis(None)
+    client = await buffer_module.get_buffer_redis(blocking=True)
+    try:
+        assert client.connection_pool.max_connections == 7
+    finally:
+        await client.aclose()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("operation", ["publish", "publish_terminal", "recover"])
+async def test_request_buffer_bridge_keeps_active_follower_pool_open(
+    monkeypatch, mocker, operation
+):
+    buffer_module.set_buffer_redis(None)
+    follower = await buffer_module.get_buffer_redis(blocking=True)
+    bridge_clients = []
+    closed_clients = []
+    events = [{"kind": "run.created", "data": {}}]
+    original_close = buffer_module.Redis.aclose
+
+    async def close(client):
+        closed_clients.append(client)
+        await original_close(client)
+
+    async def append(buffer, records):
+        bridge_clients.append(await buffer_module.get_buffer_redis())
+
+    async def recover(buffer):
+        bridge_clients.append(await buffer_module.get_buffer_redis(blocking=True))
+        return events
+
+    # Real clients stay lazy: exercise pool ownership without Redis or the DB.
+    monkeypatch.setattr(buffer_module.Redis, "aclose", close)
+    monkeypatch.setattr(ChatRunBuffer, "append", append)
+    monkeypatch.setattr(ChatRunBuffer, "recover", recover)
+    mocker.patch.object(ChatRunBuffer, "finish", new_callable=AsyncMock)
+    mocker.patch("baserow.core.chat_runs.service.serialize_run", return_value={})
+    handler = ChatRunHandler()
+    run = ChatRun(id=uuid4())
+    if operation == "publish":
+        callback = partial(handler._publish, run, [("run.created", {})])
+    elif operation == "publish_terminal":
+        callback = partial(handler._publish_terminal, run)
+    else:
+        callback = partial(handler._recover_output, run.id)
+
+    try:
+        # Match the streaming router's synchronous view execution in HTTP.
+        result = await sync_to_async(callback, thread_sensitive=False)()
+        assert result == (events if operation == "recover" else None)
+        assert await buffer_module.get_buffer_redis(blocking=True) is follower
+        assert follower not in closed_clients
+        assert len(bridge_clients) == 1
+        assert bridge_clients[0] in closed_clients
+    finally:
+        await buffer_module.close_buffer_redis()

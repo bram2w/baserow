@@ -24,7 +24,6 @@ MAX_BUFFER_BYTES = 8 * 1024 * 1024
 MAX_BUFFER_EVENTS = 10000
 OPERATION_TIMEOUT_SECONDS = 1.0
 READ_BLOCK_MILLISECONDS = 5000
-FOLLOWER_POOL_CONNECTIONS = 128
 
 _pools: WeakKeyDictionary = WeakKeyDictionary()
 _read_pools: WeakKeyDictionary = WeakKeyDictionary()
@@ -139,7 +138,15 @@ def stream_id_key(stream_id: str) -> tuple[int, int]:
 
 
 async def get_buffer_redis(*, blocking: bool = False) -> Redis:
-    """Blocked followers cannot exhaust the writer/cache/lease connections."""
+    """Reuse this event loop's Redis client, with separate read and write pools.
+
+    ``blocking=True`` selects the follower pool: ``XREAD BLOCK`` holds a connection
+    while waiting for output. Those reads must not consume the short-write pool's
+    slots. Each pool has its own connection limit and socket timeout; async Redis
+    connections must also stay on the event loop that created them.
+
+    Cache clients have separate pools. Lease renewal uses PostgreSQL, not Redis.
+    """
 
     if _test_client is not None:
         return _test_client
@@ -161,7 +168,8 @@ async def get_buffer_redis(*, blocking: bool = False) -> Redis:
             pools[loop] = Redis.from_pool(
                 BlockingConnectionPool.from_url(
                     settings.REDIS_URL,
-                    max_connections=FOLLOWER_POOL_CONNECTIONS,
+                    # Each admitted HTTP follower holds at most one connection.
+                    max_connections=settings.ASGI_HTTP_MAX_CONCURRENT_STREAMS,
                     timeout=OPERATION_TIMEOUT_SECONDS,
                     **options,
                 )
@@ -179,10 +187,12 @@ def set_buffer_redis(client: Redis | None) -> None:
 
 
 async def close_buffer_redis() -> None:
-    """Release clients before a Celery/async_to_sync temporary loop is closed.
+    """Release clients before the caller's own temporary event loop is closed.
 
-    HTTP followers share a server loop and retain its pools. Injected test clients
-    are owned by their fixture, rather than by an individual publishing call.
+    Do not call on the shared HTTP server loop: it would close other followers'
+    connections too. Handler publication/recovery bridges own separate loops;
+    the Celery runner owns its task's loop. Injected test clients are owned by
+    their fixture, rather than by an individual publishing call.
     """
 
     loop = asyncio.get_running_loop()
@@ -195,6 +205,18 @@ async def close_buffer_redis() -> None:
 
 
 class ChatRunBuffer:
+    """Access one run's temporary Redis output from either HTTP or Celery.
+
+    In Celery, ``ChatRunJournal.flush`` calls ``append`` and ``publish_finished``
+    calls ``finish``. In the web process, ``follow_run`` calls ``read`` to wait for
+    events and ``recover`` to rebuild replay state. Each context creates its own
+    buffer instance for the same run ID; Redis is what connects them.
+
+    ``ChatRunHandler`` also publishes lifecycle events after database commits and
+    reads retained output during lost-run recovery. This class neither executes
+    the product adapter nor owns the durable run status.
+    """
+
     def __init__(self, run_id: UUID | str) -> None:
         run_id = UUID(str(run_id))
         self.meta_key = f"baserow:chat-runs:v1:{{{run_id}}}:meta"

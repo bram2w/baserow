@@ -15,17 +15,16 @@ from loguru import logger
 from baserow.core.models import Workspace
 
 from .constants import (
-    ERROR_INTERRUPTED,
-    ERROR_NOT_STARTED,
     LEASE_DURATION,
     MAX_ACTIVE_RUNS_PER_USER,
     NOT_STARTED_AFTER,
-    RUN_CREATED,
     RUN_RETENTION,
     SWEEP_BATCH_SIZE,
     SWEEP_INTERVAL,
     USER_RUNS_LOCK_NAMESPACE,
     WAITING_WARNING_AFTER,
+    ChatRunErrorCode,
+    ChatRunEventKind,
 )
 from .exceptions import ChatRunAlreadyActive, ChatRunDoesNotExist, ChatRunLimitReached
 from .models import ACTIVE_CHAT_RUN_STATUSES, ChatRun, ChatRunStatus
@@ -47,7 +46,18 @@ class PruneCursor:
 
 
 class ChatRunHandler:
-    """Primary-backed lifecycle; output never participates in a DB transaction."""
+    """Synchronous lifecycle operations shared by HTTP requests and Celery tasks.
+
+    Product code calls ``start_run`` while saving the user's message. Its commit
+    callbacks publish the initial event and enqueue work in that caller's process.
+    ``execute_chat_run`` then calls ``claim_run`` in a Celery worker; its runner
+    uses ``renew_lease`` and ``finish_run`` through synchronous database bridges.
+    HTTP reads/cancellation arrive through ``ChatRunService``. The separate sweep
+    and prune Celery tasks call the recovery and retention methods below.
+
+    Run state uses the primary database. Redis output is read/published outside
+    database transactions; this handler never executes the product's AI work.
+    """
 
     @property
     def runs(self):
@@ -103,10 +113,20 @@ class ChatRunHandler:
         context: dict[str, Any],
         created_event_data: dict[str, Any],
     ) -> ChatRun:
+        """Create a run in the product request's message-saving transaction.
+
+        After that transaction commits, callbacks in the request process publish
+        ``run.created`` and call ``execute_chat_run.delay``. The Celery worker
+        executes the run independently of this request's streaming response.
+        """
+
         run = self.create_run(run_type, chat_id, workspace, created_by, context)
         # Publication is best effort, and cannot prevent the enqueue callback.
         transaction.on_commit(
-            lambda: self._publish(run, [(RUN_CREATED, created_event_data)]), robust=True
+            lambda: self._publish(
+                run, [(ChatRunEventKind.RUN_CREATED, created_event_data)]
+            ),
+            robust=True,
         )
         notify_run_on_commit(run)
         transaction.on_commit(lambda: self._enqueue(run.id), robust=True)
@@ -122,7 +142,9 @@ class ChatRunHandler:
                 await close_buffer_redis()
 
         try:
-            async_to_sync(publish)()
+            # A request thread would otherwise reuse the HTTP loop and cleanup
+            # would close pools still serving other followers. Own this loop.
+            async_to_sync(publish, force_new_loop=True)()
         except Exception as exc:
             logger.warning(
                 "Chat run {} output unavailable ({})", run.id, type(exc).__name__
@@ -130,26 +152,28 @@ class ChatRunHandler:
 
     def _publish_terminal(self, run: ChatRun) -> None:
         from .buffer import ChatRunBuffer, close_buffer_redis
-        from .constants import RUN_FINISHED
         from .service import serialize_run
 
         async def publish():
             try:
                 buffer = ChatRunBuffer(run.id)
-                await buffer.append([(RUN_FINISHED, snapshot)])
+                await buffer.append([(ChatRunEventKind.RUN_FINISHED, snapshot)])
                 await buffer.finish()
             finally:
                 await close_buffer_redis()
 
         try:
             snapshot = serialize_run(run)
-            async_to_sync(publish)()
+            # As in _publish, cleanup must only close this call's own pools.
+            async_to_sync(publish, force_new_loop=True)()
         except Exception as exc:
             logger.warning(
                 "Terminal output unavailable for {} ({})", run.id, type(exc).__name__
             )
 
     def _enqueue(self, run_id: UUID) -> None:
+        """Send the task from ``start_run``'s commit callback; do not execute it."""
+
         from .tasks import execute_chat_run
 
         try:
@@ -188,6 +212,8 @@ class ChatRunHandler:
         return run
 
     def claim_run(self, run_id: UUID) -> ChatRun | None:
+        """Called by ``execute_chat_run`` before starting its async runner."""
+
         now = timezone.now()
         if not self.runs.filter(id=run_id, status=ChatRunStatus.QUEUED).update(
             status=ChatRunStatus.RUNNING,
@@ -201,6 +227,8 @@ class ChatRunHandler:
         return run
 
     def renew_lease(self, run_id: UUID) -> LeaseRenewal:
+        """Called through a sync bridge by the worker's journal keep-alive loop."""
+
         renewed = self.runs.filter(id=run_id, status=ChatRunStatus.RUNNING).update(
             lease_expires_at=timezone.now() + LEASE_DURATION
         )
@@ -214,6 +242,8 @@ class ChatRunHandler:
         return LeaseRenewal(bool(renewed), requested is not None)
 
     def request_cancel(self, run_id: UUID) -> ChatRunStatus:
+        """Called by the HTTP service; running workers observe Stop on renewal."""
+
         with transaction.atomic():
             run = self.runs.select_for_update().filter(id=run_id).first()
             if run is None:
@@ -245,7 +275,11 @@ class ChatRunHandler:
         error_code: str = "",
         message: dict | None = None,
     ) -> bool:
-        """Commit alongside product output; caller locks the run before product rows."""
+        """End a claimed run from the worker's synchronous finalization section.
+
+        Commit alongside product output; caller locks the run before product rows.
+        ``execute_chat_run`` also uses this when the adapter type is unavailable.
+        """
 
         status = ChatRunStatus(status)
         if status in ACTIVE_CHAT_RUN_STATUSES:
@@ -311,6 +345,8 @@ class ChatRunHandler:
         )
 
     def finalize_lost_runs(self) -> int:
+        """Called by ``sweep_chat_runs`` to end runs with expired worker leases."""
+
         now = timezone.now()
         ids = list(
             self.runs.filter(
@@ -337,7 +373,8 @@ class ChatRunHandler:
                 await close_buffer_redis()
 
         try:
-            return async_to_sync(recover)()
+            # As in _publish, cleanup must only close this call's own pools.
+            return async_to_sync(recover, force_new_loop=True)()
         except Exception as exc:
             logger.warning(
                 "Partial output unavailable for {} ({})", run_id, type(exc).__name__
@@ -363,12 +400,14 @@ class ChatRunHandler:
                 ChatRunStatus.CANCELLED
                 if run.cancel_requested_at
                 else ChatRunStatus.FAILED,
-                ERROR_INTERRUPTED,
+                ChatRunErrorCode.INTERRUPTED,
                 lambda kind: kind.on_run_lost(run, events),
             )
         return True
 
     def fail_not_started_run(self, run_id: UUID) -> bool:
+        """End queued work after enqueue failure or from the Celery sweeper."""
+
         with transaction.atomic():
             run = (
                 self.runs.select_for_update()
@@ -380,12 +419,14 @@ class ChatRunHandler:
             self._end_without_worker(
                 run,
                 ChatRunStatus.FAILED,
-                ERROR_NOT_STARTED,
+                ChatRunErrorCode.NOT_STARTED,
                 lambda kind: kind.on_run_not_started(run),
             )
         return True
 
     def fail_not_started_runs(self) -> int:
+        """Called by ``sweep_chat_runs`` for work left queued beyond its timeout."""
+
         ids = list(
             self.runs.filter(
                 status=ChatRunStatus.QUEUED,
@@ -414,6 +455,9 @@ class ChatRunHandler:
         self, before: datetime | None = None, after: PruneCursor | None = None
     ) -> PruneCursor | None:
         """Prune one bounded page, moving past warnings that must be retained.
+
+        Called by the ``prune_chat_runs`` Celery task. Product warning hooks run
+        synchronously in that task before the corresponding run is deleted.
 
         :param before: Fixed retention cutoff for this sweep and its continuations.
         :param after: Last inspected row, including one that could not be deleted.

@@ -8,12 +8,10 @@ from loguru import logger
 
 from .buffer import close_buffer_redis
 from .constants import (
-    ERROR_FAILED,
-    ERROR_PERSIST_FAILED,
     RUN_DEADLINE_SECONDS,
-    RUN_STARTED,
-    STOP_LOST,
-    STOP_TIMEOUT,
+    ChatRunErrorCode,
+    ChatRunEventKind,
+    ChatRunStopReason,
 )
 from .handler import ChatRunHandler
 from .journal import ChatRunJournal
@@ -28,22 +26,30 @@ class _RunEndedElsewhere(Exception):
 
 
 async def run_chat_run(run: ChatRun, run_type: ChatRunType) -> None:
+    """Run inside ``execute_chat_run`` via ``async_to_sync``, outside HTTP.
+
+    Await the adapter's ``execute`` while two local asyncio tasks flush output
+    and renew the lease/check Stop. These are coroutines in this Celery task,
+    not additional Celery jobs. Call synchronous ``_finish`` via ``sync_to_async``
+    to save the outcome, then publish completion only after its commit.
+    """
+
     journal = ChatRunJournal(run)
-    journal.emit(RUN_STARTED, flush_now=True)
+    journal.emit(ChatRunEventKind.RUN_STARTED, flush_now=True)
     background = [
         asyncio.create_task(journal.keep_flushing()),
         asyncio.create_task(journal.keep_alive()),
     ]
     deadline = asyncio.get_running_loop().call_later(
-        RUN_DEADLINE_SECONDS, journal.request_stop, STOP_TIMEOUT
+        RUN_DEADLINE_SECONDS, journal.request_stop, ChatRunStopReason.TIMEOUT
     )
     try:
         try:
             outcome = await run_type.execute(run, journal)
         except Exception as exc:
             logger.error("Chat run {} failed ({})", run.id, type(exc).__name__)
-            outcome = ChatRunOutcome(ChatRunStatus.FAILED, ERROR_FAILED)
-        if journal.stop_reason == STOP_LOST:
+            outcome = ChatRunOutcome(ChatRunStatus.FAILED, ChatRunErrorCode.FAILED)
+        if journal.stop_reason == ChatRunStopReason.LOST:
             return
         # The lease stays alive through final flush/persistence. Redis cannot
         # block control handling, and output failure cannot prevent final save.
@@ -64,6 +70,12 @@ async def run_chat_run(run: ChatRun, run_type: ChatRunType) -> None:
 def _finish(
     run_type: ChatRunType, run: ChatRun, outcome: ChatRunOutcome
 ) -> dict | None:
+    """Synchronous database section called by ``run_chat_run``'s sync bridge.
+
+    Still part of the same Celery execution task. Lock the run, call the adapter's
+    ``persist_outcome``, and call ``ChatRunHandler.finish_run`` in one transaction.
+    """
+
     handler = ChatRunHandler()
     try:
         with transaction.atomic():
@@ -87,7 +99,9 @@ def _finish(
     with transaction.atomic():
         if not handler.lock_running_run(run.id):
             return None
-        handler.finish_run(run.id, ChatRunStatus.FAILED, ERROR_PERSIST_FAILED)
+        handler.finish_run(
+            run.id, ChatRunStatus.FAILED, ChatRunErrorCode.PERSIST_FAILED
+        )
         failed = handler.get_run(run.id)
         try:
             with transaction.atomic():

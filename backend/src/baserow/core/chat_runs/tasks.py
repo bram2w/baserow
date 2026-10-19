@@ -14,12 +14,12 @@ from baserow.config.db_routers import set_db_alias
 
 from .constants import (
     CHAT_RUN_QUEUE,
-    ERROR_FAILED,
     PRUNE_INTERVAL,
     RUN_RETENTION,
     RUN_TIME_LIMIT_SECONDS,
     SWEEP_INTERVAL,
     WAITING_WARNING_AFTER,
+    ChatRunErrorCode,
 )
 from .handler import ChatRunHandler, PruneCursor
 from .models import ChatRunStatus
@@ -38,9 +38,13 @@ from .runner import run_chat_run
 )
 def execute_chat_run(self: Task, run_id: str) -> None:
     """
-    Executes one chat run. It is never retried, because a retry would repeat
-    the changes its tools already made. The soft limit equals the hard limit,
-    so the global soft limit never interrupts the run's own deadline.
+    Celery worker entry point, enqueued by ``ChatRunHandler.start_run`` on commit.
+
+    Claim the run synchronously, then use ``async_to_sync`` to run the async
+    ``run_chat_run`` runner. This happens independently of the HTTP follower.
+    It is never retried, because a retry would repeat the changes its tools
+    already made. The soft limit equals the hard limit, so the global soft limit
+    never interrupts the run's own deadline.
 
     :param run_id: The id of the queued run.
     """
@@ -56,7 +60,9 @@ def execute_chat_run(self: Task, run_id: str) -> None:
     except chat_run_type_registry.does_not_exist_exception_class:
         logger.error("The chat run {} has the unknown type {}", run.id, run.run_type)
         with transaction.atomic():
-            if handler.finish_run(run.id, ChatRunStatus.FAILED, ERROR_FAILED):
+            if handler.finish_run(
+                run.id, ChatRunStatus.FAILED, ChatRunErrorCode.FAILED
+            ):
                 ended = handler.get_run(run.id)
                 transaction.on_commit(
                     lambda: handler._publish_terminal(ended), robust=True
@@ -69,7 +75,10 @@ def execute_chat_run(self: Task, run_id: str) -> None:
 @app.task(bind=True, ignore_result=True)
 def sweep_chat_runs(self: Task) -> None:
     """
-    Ends runs whose worker died and runs no worker picked up in time.
+    Periodic Celery task calling the handler's synchronous recovery methods.
+
+    End runs whose worker died and runs no worker picked up in time. This task
+    does not rerun adapters' ``execute`` methods.
     """
 
     handler = ChatRunHandler()
@@ -93,7 +102,10 @@ def prune_chat_runs(
     after_run_id: str | None = None,
 ) -> None:
     """
-    Delete one page of old runs, then enqueue the next page of this finite sweep.
+    Periodic Celery task deleting one page through ``ChatRunHandler.prune``.
+
+    Enqueue the next page of this finite sweep if needed. Adapter warning hooks
+    run synchronously in this task before deletion.
 
     :param before: Fixed retention cutoff, as an ISO timestamp.
     :param after_finished_on: Last inspected finish timestamp, as ISO text.

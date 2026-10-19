@@ -12,12 +12,8 @@ from .buffer import ChatRunBuffer
 from .constants import (
     FLUSH_INTERVAL_SECONDS,
     LEASE_RENEW_INTERVAL_SECONDS,
-    PROGRESS,
-    RUN_CANCEL_REQUESTED,
-    RUN_FINISHED,
-    STOP_CANCELLED,
-    STOP_LOST,
-    TEXT_DELTA,
+    ChatRunEventKind,
+    ChatRunStopReason,
 )
 from .handler import ChatRunHandler
 from .models import ChatRun
@@ -38,25 +34,32 @@ def coalesce_events(events: list[PendingEvent]) -> list[PendingEvent]:
     """
 
     last_progress = max(
-        (index for index, (kind, _) in enumerate(events) if kind == PROGRESS),
+        (
+            index
+            for index, (kind, _) in enumerate(events)
+            if kind == ChatRunEventKind.PROGRESS
+        ),
         default=None,
     )
     merged: list[PendingEvent] = []
     for index, (kind, data) in enumerate(events):
-        if kind == PROGRESS and index != last_progress:
+        if kind == ChatRunEventKind.PROGRESS and index != last_progress:
             continue
         previous_index = len(merged) - 1
-        if previous_index >= 0 and merged[previous_index][0] == PROGRESS:
+        if (
+            previous_index >= 0
+            and merged[previous_index][0] == ChatRunEventKind.PROGRESS
+        ):
             previous_index -= 1
         previous = merged[previous_index] if previous_index >= 0 else None
         if (
-            kind == TEXT_DELTA
+            kind == ChatRunEventKind.TEXT_DELTA
             and previous is not None
-            and previous[0] == TEXT_DELTA
+            and previous[0] == ChatRunEventKind.TEXT_DELTA
             and previous[1]["segment"] == data["segment"]
         ):
             merged[previous_index] = (
-                TEXT_DELTA,
+                ChatRunEventKind.TEXT_DELTA,
                 {
                     **previous[1],
                     "text": previous[1]["text"] + data["text"],
@@ -68,7 +71,17 @@ def coalesce_events(events: list[PendingEvent]) -> list[PendingEvent]:
 
 
 class ChatRunJournal:
-    """Coalesced Redis output and independent durable lease/Stop polling.
+    """Collect a Celery worker's output and poll its durable lease/Stop state.
+
+    ``run_chat_run`` creates one journal in the Celery task's async loop and passes
+    it to ``ChatRunType.execute``. The adapter calls ``emit_text``/``emit``; the
+    runner's ``keep_flushing`` task calls ``flush`` to batch output through
+    ``ChatRunBuffer.append``. Tool threads can emit through the same journal.
+
+    A separate ``keep_alive`` task calls ``ChatRunHandler.renew_lease`` through a
+    sync bridge and sets ``stop_requested`` for the adapter to observe. After
+    saving the final outcome, the runner calls ``publish_finished``. HTTP followers
+    read the buffer independently and never call the journal.
 
     Output failure disables this writer instead of retaining an unbounded retry
     queue or cancelling execution. The product adapter holds the computed answer
@@ -79,7 +92,7 @@ class ChatRunJournal:
         self.run = run
         self.buffer = ChatRunBuffer(run.id)
         self.stop_requested = threading.Event()
-        self._stop_reason: str | None = None
+        self._stop_reason: ChatRunStopReason | None = None
         self._stopped = asyncio.Event()
         self._wake = asyncio.Event()
         self._flush_lock = asyncio.Lock()
@@ -99,7 +112,7 @@ class ChatRunJournal:
         self._thread_scheduled = False
 
     @property
-    def stop_reason(self) -> str | None:
+    def stop_reason(self) -> ChatRunStopReason | None:
         return self._stop_reason
 
     def emit(
@@ -119,13 +132,13 @@ class ChatRunJournal:
             self._add_text, text.replace("\x00", ""), variant, size=len(text.encode())
         )
 
-    def request_stop(self, reason: str) -> None:
+    def request_stop(self, reason: ChatRunStopReason) -> None:
         if self._stop_reason is None:
             self._stop_reason = reason
         self.stop_requested.set()
         self._stopped.set()
 
-    async def wait_for_stop(self) -> str:
+    async def wait_for_stop(self) -> ChatRunStopReason:
         await self._stopped.wait()
         return self._stop_reason
 
@@ -161,7 +174,7 @@ class ChatRunJournal:
     async def publish_finished(self, snapshot: dict[str, Any]) -> None:
         """Call only AFTER the final outcome and status transaction committed."""
 
-        self.emit(RUN_FINISHED, snapshot)
+        self.emit(ChatRunEventKind.RUN_FINISHED, snapshot)
         await self.flush()
         if not self.output_unavailable:
             try:
@@ -195,11 +208,11 @@ class ChatRunJournal:
                 )
                 continue
             if not renewal.alive:
-                self.request_stop(STOP_LOST)
+                self.request_stop(ChatRunStopReason.LOST)
                 return
             if renewal.cancel_requested and self._stop_reason is None:
-                self.emit(RUN_CANCEL_REQUESTED, flush_now=True)
-                self.request_stop(STOP_CANCELLED)
+                self.emit(ChatRunEventKind.RUN_CANCEL_REQUESTED, flush_now=True)
+                self.request_stop(ChatRunStopReason.CANCELLED)
 
     def _renew_lease(self):
         try:
@@ -266,11 +279,15 @@ class ChatRunJournal:
             delta = text[len(self._text) :]
             if delta:
                 self._add(
-                    TEXT_DELTA, {"segment": self._segment, "text": delta, **extra}
+                    ChatRunEventKind.TEXT_DELTA,
+                    {"segment": self._segment, "text": delta, **extra},
                 )
         else:
             self._segment += 1
-            self._add(TEXT_DELTA, {"segment": self._segment, "text": text, **extra})
+            self._add(
+                ChatRunEventKind.TEXT_DELTA,
+                {"segment": self._segment, "text": text, **extra},
+            )
         if not self.output_unavailable:
             self._text = text
             self._text_variant = variant
