@@ -33,9 +33,7 @@ from .errors import ERROR_WIDGET_DOES_NOT_EXIST
 class AppliedDashboardFilterSerializer(serializers.Serializer):
     filter_id = serializers.IntegerField(min_value=1)
     values = serializers.ListField(
-        child=serializers.CharField(
-            max_length=10000, trim_whitespace=False, allow_blank=True
-        ),
+        child=serializers.CharField(trim_whitespace=False, allow_blank=True),
     )
 
 

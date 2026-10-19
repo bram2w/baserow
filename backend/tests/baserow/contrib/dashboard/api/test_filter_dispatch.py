@@ -223,3 +223,31 @@ def test_filters_intersect_with_each_other_and_saved_view_and_source_filters(
     )
     assert response.status_code == 200, response.json()
     assert response.json() == {"result": "2"}
+
+
+@pytest.mark.django_db
+def test_dropdown_can_apply_and_check_a_long_stored_text_value(
+    api_client, filtered_dashboard
+):
+    user, token, widget, config, table, fields, rows = filtered_dashboard
+    value = "x" * 10001
+    RowHandler().update_rows(
+        user, table, [{"id": rows[0].id, fields[0].db_column: value}]
+    )
+    headers = {"HTTP_AUTHORIZATION": f"JWT {token}"}
+    response = api_client.post(
+        reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": widget.id}),
+        {"filters": [{"filter_id": config.id, "values": [value]}]},
+        format="json",
+        **headers,
+    )
+    assert response.status_code == 200, response.json()
+    assert response.json() == {"result": "1"}
+    options = api_client.post(
+        reverse("api:dashboard:filters:options", kwargs={"filter_id": config.id}),
+        {"selected": [value], "after": value},
+        format="json",
+        **headers,
+    )
+    assert options.status_code == 200, options.json()
+    assert options.json() == {"results": [], "next": None, "available": [value]}

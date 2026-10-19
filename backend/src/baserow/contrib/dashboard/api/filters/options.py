@@ -34,11 +34,11 @@ class DashboardFilterOptionsRequestSerializer(serializers.Serializer):
         max_length=10000,
     )
     after = serializers.CharField(
-        required=False, allow_null=True, trim_whitespace=False, max_length=10000
+        required=False, allow_null=True, trim_whitespace=False
     )
     limit = serializers.IntegerField(min_value=1, max_value=100, default=50)
     selected = serializers.ListField(
-        child=serializers.CharField(trim_whitespace=False, max_length=10000),
+        child=serializers.CharField(trim_whitespace=False),
         required=False,
         default=list,
     )
