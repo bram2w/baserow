@@ -23,7 +23,10 @@ describe('PublicDashboardAuth page', () => {
     await testApp.afterEach()
   })
 
-  async function mountPage(query = '') {
+  async function mountPage(query = '', { showLogo = true } = {}) {
+    testApp.mock
+      .onGet(`/dashboard/public/${SLUG}/auth/`)
+      .reply(200, { show_logo: showLogo })
     const page = await testApp.mount(PublicDashboardAuth, {
       route: `/public/dashboard/${SLUG}/auth${query}`,
     })
@@ -90,6 +93,32 @@ describe('PublicDashboardAuth page', () => {
     expect(push).not.toHaveBeenCalled()
     expect(store.getters['dashboardApplication/getPublicAuthToken']).toBe(null)
     expect(await getToken(nuxtApp, SLUG)).toBeFalsy()
+  })
+
+  test('shows the Baserow logo by default', async () => {
+    const { page } = await mountPage()
+
+    expect(page.find('.public-dashboard-auth__footer').exists()).toBe(true)
+  })
+
+  test('hides the Baserow logo when the owner hid it', async () => {
+    const { page } = await mountPage('', { showLogo: false })
+
+    expect(page.find('.public-dashboard-auth__footer').exists()).toBe(false)
+  })
+
+  test('shows the not found page for an unknown or private dashboard', async () => {
+    testApp.dontFailOnErrorResponses()
+    testApp.mock.onGet(`/dashboard/public/${SLUG}/auth/`).reply(404, {
+      error: 'ERROR_DASHBOARD_DOES_NOT_EXIST',
+      detail: 'The requested dashboard does not exist.',
+    })
+
+    await expect(
+      testApp.mount(PublicDashboardAuth, {
+        route: `/public/dashboard/${SLUG}/auth`,
+      })
+    ).rejects.toThrow('Dashboard not found.')
   })
 
   test('asks for a password before sending anything', async () => {

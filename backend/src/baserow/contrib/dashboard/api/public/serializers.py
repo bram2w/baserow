@@ -122,6 +122,19 @@ class PublicDashboardInfoSerializer(serializers.Serializer):
         ]
 
 
+class PublicDashboardAuthInfoSerializer(serializers.Serializer):
+    """
+    What the password page of a publicly shared dashboard needs before the
+    visitor has entered the password. Nothing about the dashboard itself is
+    revealed.
+    """
+
+    show_logo = serializers.BooleanField(
+        help_text="Indicates whether the Baserow logo must be shown on the "
+        "password page of the publicly shared dashboard."
+    )
+
+
 class PublicDashboardAuthRequestSerializer(serializers.Serializer):
     password = serializers.CharField()
 

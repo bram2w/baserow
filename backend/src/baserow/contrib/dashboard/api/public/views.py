@@ -42,6 +42,7 @@ from baserow.core.services.exceptions import (
 )
 
 from .serializers import (
+    PublicDashboardAuthInfoSerializer,
     PublicDashboardAuthRequestSerializer,
     PublicDashboardAuthResponseSerializer,
     PublicDashboardInfoSerializer,
@@ -110,10 +111,41 @@ class PublicDashboardAuthView(APIView):
     """
     Exchanges the password of a password protected public dashboard for a
     non-expiring token that must be sent in the
-    `PUBLIC_DASHBOARD_AUTHORIZATION_HEADER` of the other public endpoints.
+    `PUBLIC_DASHBOARD_AUTHORIZATION_HEADER` of the other public endpoints. Also
+    tells the password page what it may show before the password is known.
     """
 
     permission_classes = (AllowAny,)
+
+    @extend_schema(
+        parameters=[SLUG_PARAMETER],
+        tags=["Dashboard public"],
+        operation_id="get_public_dashboard_auth_info",
+        description=(
+            "Returns what the password page of a publicly shared dashboard needs "
+            "before the password is entered, currently whether the Baserow logo "
+            "must be shown. Nothing about the dashboard itself is revealed."
+        ),
+        request=None,
+        responses={
+            200: PublicDashboardAuthInfoSerializer,
+            404: get_error_schema(["ERROR_DASHBOARD_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            DashboardDoesNotExist: ERROR_DASHBOARD_DOES_NOT_EXIST,
+        }
+    )
+    def get(self, request: Request, slug: str) -> Response:
+        dashboard = DashboardHandler().get_public_dashboard_by_slug(
+            request.user, slug, raise_authorization_error=False
+        )
+        return Response(
+            PublicDashboardAuthInfoSerializer(
+                {"show_logo": dashboard.show_logo}
+            ).data
+        )
 
     @extend_schema(
         parameters=[SLUG_PARAMETER],
