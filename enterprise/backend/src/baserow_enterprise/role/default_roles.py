@@ -84,6 +84,14 @@ from baserow.contrib.dashboard.data_sources.operations import (
     ReadDashboardDataSourceOperationType,
     UpdateDashboardDataSourceOperationType,
 )
+from baserow.contrib.dashboard.filters.operations import (
+    CreateDashboardFilterOperationType,
+    DeleteDashboardFilterOperationType,
+    ListDashboardFiltersOperationType,
+    ReadDashboardFilterOperationType,
+    RestoreDashboardFilterOperationType,
+    UpdateDashboardFilterOperationType,
+)
 from baserow.contrib.dashboard.operations import UpdateDashboardSlugOperationType
 from baserow.contrib.dashboard.widgets.operations import (
     CreateWidgetOperationType,
@@ -433,6 +441,8 @@ default_roles[VIEWER_ROLE_UID].extend(
         ReadViewFilterGroupOperationType,
         ReadWidgetOperationType,
         ListWidgetsOperationType,
+        ListDashboardFiltersOperationType,
+        ReadDashboardFilterOperationType,
         ListDashboardDataSourcesOperationType,
         ReadDashboardDataSourceOperationType,
         ListRowsDatabaseTableOperationType,
@@ -600,6 +610,10 @@ default_roles[BUILDER_ROLE_UID].extend(
         ListPropertiesOperationType,
         GetIncludingPublicValuesOperationType,
         CreateWidgetOperationType,
+        CreateDashboardFilterOperationType,
+        DeleteDashboardFilterOperationType,
+        RestoreDashboardFilterOperationType,
+        UpdateDashboardFilterOperationType,
         UpdateWidgetOperationType,
         # A layout mutation can reposition every widget after a collision.
         UpdateWidgetLayoutOperationType,

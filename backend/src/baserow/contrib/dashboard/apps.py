@@ -22,6 +22,37 @@ class DashboardConfig(AppConfig):
 
         object_scope_type_registry.register(DashboardObjectScopeType())
 
+        from .filters.actions import (
+            CreateDashboardFilterActionType,
+            DeleteDashboardFilterActionType,
+            UpdateDashboardFilterActionType,
+        )
+        from .filters.object_scopes import DashboardFilterObjectScopeType
+        from .filters.operations import (
+            CreateDashboardFilterOperationType,
+            DeleteDashboardFilterOperationType,
+            ListDashboardFiltersOperationType,
+            ReadDashboardFilterOperationType,
+            RestoreDashboardFilterOperationType,
+            UpdateDashboardFilterOperationType,
+        )
+        from .filters.trash_types import DashboardFilterTrashableItemType
+
+        object_scope_type_registry.register(DashboardFilterObjectScopeType())
+        for operation in (
+            CreateDashboardFilterOperationType,
+            DeleteDashboardFilterOperationType,
+            ListDashboardFiltersOperationType,
+            ReadDashboardFilterOperationType,
+            RestoreDashboardFilterOperationType,
+            UpdateDashboardFilterOperationType,
+        ):
+            operation_type_registry.register(operation())
+        action_type_registry.register(CreateDashboardFilterActionType())
+        action_type_registry.register(UpdateDashboardFilterActionType())
+        action_type_registry.register(DeleteDashboardFilterActionType())
+        trash_item_type_registry.register(DashboardFilterTrashableItemType())
+
         from baserow.contrib.dashboard.last_viewed_types import (
             DashboardLastViewedItemType,
         )
