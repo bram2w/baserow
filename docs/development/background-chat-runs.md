@@ -61,10 +61,10 @@ stream lifetime, so incomplete anonymous requests cannot reserve slots indefinit
 Disconnect closes only the follower.
 
 Kuma preserves `POST /assistant/chat/<uuid>/messages/`, HTTP 200 and raw cumulative
-JSON records separated by `\n\n`. It adds `_run` metadata to records and exposes
-`X-Chat-Run-ID` through CORS. A resume-only POST carries `run_id`, optional
-`cursor` and `tab_id`; it cannot contain a prompt or UI context. GET remains JSON
-history with additive active/latest run metadata. Heartbeats are blank record
+JSON records separated by `\n\n`. It adds `_run` metadata to records, including
+the run ID in the first streamed record. A resume-only POST carries `run_id`,
+optional `cursor` and `tab_id`; it cannot contain a prompt or UI context. GET remains
+JSON history with additive active/latest run metadata. Heartbeats are blank record
 separators, not SSE comments.
 
 ## Output bounds and recovery
