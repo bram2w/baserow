@@ -231,6 +231,11 @@ import { notifyIf } from '@baserow/modules/core/utils/error'
 import ActiveUsers from '@baserow/modules/core/components/admin/dashboard/charts/ActiveUsers'
 import AdminDashboardService from '@baserow/modules/core/services/admin/dashboard'
 
+definePageMeta({
+  layout: 'app',
+  middleware: 'staff',
+})
+
 export default {
   components: { ActiveUsers },
   setup() {
@@ -325,11 +330,4 @@ export default {
     },
   },
 }
-</script>
-
-<script setup>
-definePageMeta({
-  layout: 'app',
-  middleware: 'staff',
-})
 </script>

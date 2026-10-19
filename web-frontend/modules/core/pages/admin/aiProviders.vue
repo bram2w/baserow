@@ -111,6 +111,11 @@ import AIProviderModelFormModal from '@baserow/modules/core/components/ai/AIProv
 import aiProviderModelUsage from '@baserow/modules/core/mixins/aiProviderModelUsage'
 import { aiProviderErrorMessage } from '@baserow/modules/core/utils/aiProvider'
 
+definePageMeta({
+  layout: 'app',
+  middleware: ['staff'],
+})
+
 export default {
   name: 'AdminAIProviders',
   components: {
@@ -367,11 +372,4 @@ export default {
     },
   },
 }
-</script>
-
-<script setup>
-definePageMeta({
-  layout: 'app',
-  middleware: ['staff'],
-})
 </script>

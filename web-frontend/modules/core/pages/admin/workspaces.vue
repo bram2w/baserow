@@ -7,6 +7,11 @@ import { useHead } from '#imports'
 import { useNuxtApp } from '#app'
 import WorkspacesAdminTable from '@baserow/modules/core/components/admin/workspaces/WorkspacesAdminTable'
 
+definePageMeta({
+  layout: 'app',
+  middleware: 'staff',
+})
+
 export default {
   components: { WorkspacesAdminTable },
   setup() {
@@ -14,11 +19,4 @@ export default {
     useHead({ title: $i18n.t('adminWorkspaces.title') })
   },
 }
-</script>
-
-<script setup>
-definePageMeta({
-  layout: 'app',
-  middleware: 'staff',
-})
 </script>

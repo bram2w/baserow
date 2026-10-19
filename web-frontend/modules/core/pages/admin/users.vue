@@ -6,6 +6,11 @@
 import { useHead } from '#imports'
 import UsersAdminTable from '@baserow/modules/core/components/admin/users/UsersAdminTable'
 
+definePageMeta({
+  layout: 'app',
+  middleware: 'staff',
+})
+
 export default {
   components: { UsersAdminTable },
   setup() {
@@ -13,11 +18,4 @@ export default {
     useHead({ title: $i18n.t('adminUsers.title') })
   },
 }
-</script>
-
-<script setup>
-definePageMeta({
-  layout: 'app',
-  middleware: 'staff',
-})
 </script>

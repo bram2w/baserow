@@ -6,6 +6,11 @@
 import { useHead } from '#imports'
 import ViewsAdminTable from '@baserow/modules/database/components/admin/views/ViewsAdminTable'
 
+definePageMeta({
+  layout: 'app',
+  middleware: 'staff',
+})
+
 export default {
   components: { ViewsAdminTable },
   setup() {
@@ -13,11 +18,4 @@ export default {
     useHead({ title: $i18n.t('viewsAdmin.title') })
   },
 }
-</script>
-
-<script setup>
-definePageMeta({
-  layout: 'app',
-  middleware: 'staff',
-})
 </script>
