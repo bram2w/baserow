@@ -20,6 +20,7 @@ from baserow.core.mcp.actions import (
     ConnectMCPOAuthClientActionType,
     DisconnectMCPOAuthClientActionType,
 )
+from baserow.core.mcp.constants import LEGACY_DEFAULT_TOOLS
 from baserow.core.mcp.exceptions import MCPEndpointDoesNotExist
 from baserow.core.mcp.handler import MCPEndpointHandler
 from baserow.core.mcp.models import MCPEndpoint
@@ -135,7 +136,11 @@ class MCPOAuthConsentView(APIView):
             )
         ]
         grants = {
-            str(endpoint.workspace_id): endpoint.allowed_tools
+            str(endpoint.workspace_id): (
+                endpoint.allowed_tools
+                if endpoint.allowed_tools is not None
+                else list(LEGACY_DEFAULT_TOOLS)
+            )
             for endpoint in MCPEndpoint.objects.filter(
                 user=request.user,
                 oauth_client_id=credentials["client_id"],
