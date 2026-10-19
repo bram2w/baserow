@@ -14,6 +14,7 @@ from .operations import (
     CreateDashboardFilterOperationType,
     DeleteDashboardFilterOperationType,
     ListDashboardFiltersOperationType,
+    ReadDashboardFilterOperationType,
     UpdateDashboardFilterOperationType,
 )
 from .signals import dashboard_filters_updated
@@ -22,6 +23,16 @@ from .signals import dashboard_filters_updated
 class DashboardFilterService:
     def __init__(self):
         self.handler = DashboardFilterHandler()
+
+    def get_filter(self, user, filter_id):
+        dashboard_filter = self.handler.get_filter(filter_id)
+        CoreHandler().check_permissions(
+            user,
+            ReadDashboardFilterOperationType.type,
+            workspace=dashboard_filter.dashboard.workspace,
+            context=dashboard_filter,
+        )
+        return dashboard_filter
 
     def get_filters(self, user, dashboard_id):
         dashboard = DashboardHandler().get_dashboard(dashboard_id)
