@@ -18,15 +18,15 @@ export class AgentApplicationType extends ApplicationType {
   }
 
   getName() {
-    return this.app.$i18n.t('agent.applicationName')
+    return this.app.$i18n.t('applicationType.agent')
   }
 
   getNamePlural() {
-    return this.app.$i18n.t('agent.applicationNamePlural')
+    return this.app.$i18n.t('applicationType.agents')
   }
 
   getDescription() {
-    return this.app.$i18n.t('agent.applicationDescription')
+    return this.app.$i18n.t('applicationType.agentDesc')
   }
 
   supportsTrash() {
