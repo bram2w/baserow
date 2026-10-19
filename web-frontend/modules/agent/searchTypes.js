@@ -14,34 +14,15 @@ export class AgentApplicationSearchType extends BaseSearchType {
     return isNaN(id) ? null : id
   }
 
-  _getNavigableApplication(result) {
-    const application = this.app.$store.getters['application/get'](
-      this._getApplicationId(result)
-    )
-    if (
-      application?.type !== this.type ||
-      !this.app.$registry.get('application', this.type).isVisible(application)
-    ) {
+  buildUrl(result) {
+    const agentId = this._getApplicationId(result)
+    if (!agentId) {
       return null
     }
-    return application
-  }
-
-  buildUrl(result) {
-    const application = this._getNavigableApplication(result)
-    return application
-      ? {
-          name: 'agent-application',
-          params: { agentId: application.id },
-        }
-      : null
+    return { name: 'agent-application', params: { agentId } }
   }
 
   isNavigable(result) {
-    return this._getNavigableApplication(result) !== null
-  }
-
-  focusInSidebar(result, context = null) {
-    return this.isNavigable(result) && super.focusInSidebar(result, context)
+    return this._getApplicationId(result) !== null
   }
 }
