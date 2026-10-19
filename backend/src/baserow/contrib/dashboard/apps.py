@@ -96,6 +96,14 @@ class DashboardConfig(AppConfig):
 
         page_registry.register(DashboardPageType())
 
+        from baserow.core.abuse_reports.registries import (
+            abuse_report_resource_type_registry,
+        )
+
+        from .abuse_reports import DashboardAbuseReportResourceType
+
+        abuse_report_resource_type_registry.register(DashboardAbuseReportResourceType())
+
         from baserow.core.registries import permission_manager_type_registry
 
         from .permission_manager import AllowIfTemplatePermissionManagerType

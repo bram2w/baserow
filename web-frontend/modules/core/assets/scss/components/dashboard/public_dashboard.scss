@@ -1,6 +1,7 @@
 /**
  Publicly shared dashboard page: no sidebar or app header, the dashboard card
- fills the page and the Baserow logo sits in its bottom left corner.
+ fills the page and the report abuse link and the Baserow logo sit in its bottom
+ left corner.
  */
 
 .public-dashboard {
@@ -31,6 +32,21 @@
 
 .public-dashboard__footer {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
   margin-top: 32px;
+}
+
+.public-dashboard__report-abuse {
+  @extend %ellipsis;
+
+  color: $palette-neutral-700;
+  font-size: 12px;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: none;
+    color: $palette-neutral-900;
+  }
 }

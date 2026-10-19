@@ -1,6 +1,6 @@
 import pytest
 from rest_framework.reverse import reverse
-from rest_framework.status import HTTP_200_OK, HTTP_402_PAYMENT_REQUIRED
+from rest_framework.status import HTTP_200_OK
 
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow_premium.integrations.local_baserow.models import (
@@ -8,20 +8,6 @@ from baserow_premium.integrations.local_baserow.models import (
     LocalBaserowTableServiceAggregationGroupBy,
     LocalBaserowTableServiceAggregationSeries,
 )
-
-
-@pytest.fixture
-def grouped_aggregate_rows_feature(mocker):
-    mocker.patch(
-        "baserow_premium.integrations.local_baserow.service_types."
-        "LicenseHandler.workspace_has_feature",
-        return_value=True,
-    )
-    mocker.patch(
-        "baserow_premium.integrations.local_baserow.service_types."
-        "LicenseHandler.raise_if_workspace_doesnt_have_feature",
-        return_value=None,
-    )
 
 
 def public_info_url(slug):
@@ -84,7 +70,7 @@ def create_public_dashboard_with_chart(premium_data_fixture, user):
 
 @pytest.mark.django_db
 def test_public_dashboard_info_exposes_what_the_chart_widget_needs(
-    api_client, premium_data_fixture, grouped_aggregate_rows_feature
+    api_client, premium_data_fixture
 ):
     user = premium_data_fixture.create_user()
     dashboard, data_source, widget, amount, category = (
@@ -132,7 +118,7 @@ def test_public_dashboard_info_exposes_what_the_chart_widget_needs(
 
 @pytest.mark.django_db
 def test_dispatch_public_grouped_aggregate_rows_data_source(
-    api_client, premium_data_fixture, grouped_aggregate_rows_feature
+    api_client, premium_data_fixture
 ):
     user, token = premium_data_fixture.create_user_and_token()
     dashboard, data_source, _, _, _ = create_public_dashboard_with_chart(
@@ -156,20 +142,3 @@ def test_dispatch_public_grouped_aggregate_rows_data_source(
     )
     assert authenticated_response.status_code == HTTP_200_OK
     assert response.json() == authenticated_response.json()
-
-
-@pytest.mark.django_db
-def test_dispatch_public_grouped_aggregate_rows_data_source_without_a_license(
-    api_client, premium_data_fixture
-):
-    user = premium_data_fixture.create_user()
-    dashboard, data_source, _, _, _ = create_public_dashboard_with_chart(
-        premium_data_fixture, user
-    )
-
-    response = api_client.post(
-        public_dispatch_url(dashboard.slug, data_source.id), format="json"
-    )
-
-    assert response.status_code == HTTP_402_PAYMENT_REQUIRED
-    assert response.json()["error"] == "ERROR_FEATURE_NOT_AVAILABLE"

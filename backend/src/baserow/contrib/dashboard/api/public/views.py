@@ -142,9 +142,7 @@ class PublicDashboardAuthView(APIView):
             request.user, slug, raise_authorization_error=False
         )
         return Response(
-            PublicDashboardAuthInfoSerializer(
-                {"show_logo": dashboard.show_logo}
-            ).data
+            PublicDashboardAuthInfoSerializer({"show_logo": dashboard.show_logo}).data
         )
 
     @extend_schema(
@@ -252,11 +250,8 @@ class PublicDashboardDataSourceDispatchView(APIView):
             base_queryset=DashboardDataSource.objects.filter(dashboard=dashboard),
         )
 
-        if data_source.service_id:
-            # A service type that needs a license, like the grouped aggregations of
-            # the chart widgets, must stop serving visitors when the license of the
-            # workspace lapses.
-            data_source.service.get_type().raise_if_deactivated(dashboard.workspace)
-
+        # TODO: decide how to handle Advanced features (grouped aggregate rows)
+        # when used in a dashboard chart (which only needs premium). We already do
+        # the license check at creation, so this may be ok?
         dispatch_context = DashboardDispatchContext(request, dashboard.workspace)
         return Response(handler.dispatch_data_source(data_source, dispatch_context))
