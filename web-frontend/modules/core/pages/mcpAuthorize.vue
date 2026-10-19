@@ -93,69 +93,12 @@
             />
           </Dropdown>
         </FormGroup>
-        <div class="mcp-authorize__section-head">
-          <span class="mcp-authorize__section-label">{{
-            $t('mcpAuthorize.tools')
-          }}</span>
-          <span class="mcp-authorize__links">
-            <button
-              type="button"
-              class="mcp-authorize__link"
-              data-test="mcp-authorize-select-all"
-              @click="setAll(true)"
-            >
-              {{ $t('mcpAuthorize.selectAll') }}
-            </button>
-            <span aria-hidden="true"> · </span>
-            <button
-              type="button"
-              class="mcp-authorize__link"
-              data-test="mcp-authorize-select-none"
-              @click="setAll(false)"
-            >
-              {{ $t('mcpAuthorize.selectNone') }}
-            </button>
-          </span>
-        </div>
-        <p v-if="!consent.tools.length" class="mcp-authorize__empty">
-          {{ $t('mcpAuthorize.noTools') }}
-        </p>
-        <div v-else class="mcp-authorize__tools">
-          <div
-            v-for="group in toolGroups"
-            :key="group.key"
-            :data-test="`mcp-authorize-tools-${group.key}`"
-          >
-            <div class="mcp-authorize__tool-group-title">
-              {{ $t(group.label) }}
-            </div>
-            <div
-              v-for="tool in group.tools"
-              :key="tool.name"
-              class="mcp-authorize__tool"
-            >
-              <Checkbox
-                v-model="ticked[tool.name]"
-                class="mcp-authorize__tool-checkbox"
-                :data-test="`mcp-authorize-tool-${tool.name}`"
-              >
-                {{ tool.title }}
-              </Checkbox>
-              <Badge
-                v-if="tool.destructive"
-                :color="isDelete(tool) ? 'red' : 'yellow'"
-                size="small"
-                class="mcp-authorize__tool-badge"
-                :data-test="`mcp-authorize-badge-${tool.name}`"
-                >{{
-                  isDelete(tool)
-                    ? $t('mcpAuthorize.deletes')
-                    : $t('mcpAuthorize.overwrites')
-                }}</Badge
-              >
-            </div>
-          </div>
-        </div>
+        <McpToolPicker
+          v-model="selectedTools"
+          :tools="consent.tools"
+          :groups="consent.groups || []"
+          :unavailable="unavailableTools"
+        />
         <div class="mcp-authorize__actions">
           <Button
             type="secondary"
@@ -182,10 +125,12 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
+import McpToolPicker from '@baserow/modules/core/components/mcp/McpToolPicker'
 import MCPOAuthService from '@baserow/modules/core/services/mcpOAuth'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import { authenticatedUnlessError } from '@baserow/modules/core/utils/mcpAuthorize'
+import { readOnlyToolNames } from '@baserow/modules/core/utils/mcpTools'
 
 definePageMeta({
   layout: 'login',
@@ -230,8 +175,8 @@ const encodedRequest = route.params.request || route.query.request
 const query = decodeRequest(encodedRequest)
 
 const workspaceId = ref(null)
-// Tool name -> whether the user leaves it ticked.
-const ticked = reactive({})
+// The tool names the user leaves ticked.
+const selectedTools = ref([])
 const loading = ref(false)
 const error = ref({ visible: false, title: '', message: '' })
 // The backend sends authorize errors here instead of to the client's redirect
@@ -309,13 +254,17 @@ function applyDefaults(value) {
 }
 
 // A workspace the client is already connected to starts from that grant's tools,
-// so reconnecting never widens access unnoticed. Otherwise only the read-only
-// tools are ticked, so changing data is opt-in.
+// so reconnecting never widens access unnoticed. Otherwise the "Read only"
+// preset, so changing data is opt-in.
 function tickFor(id, value = consent.value) {
-  const existing = value?.grants?.[id]
-  for (const tool of value?.tools || []) {
-    ticked[tool.name] = existing ? existing.includes(tool.name) : tool.read_only
+  // The watcher below can run before the data is stored.
+  if (!value) {
+    return
   }
+  const existing = value.grants?.[id]
+  selectedTools.value = existing
+    ? value.tools.map((t) => t.name).filter((name) => existing.includes(name))
+    : readOnlyToolNames(value.tools, value.groups || [])
 }
 
 watch(workspaceId, (id) => tickFor(id))
@@ -331,41 +280,20 @@ function databasesLabel(count) {
   return t('mcpAuthorize.databases', { count: count || 0 })
 }
 
-function isDelete(tool) {
-  return tool.name.startsWith('delete_')
-}
+// Tools a connection to the chosen workspace couldn't use.
+const unavailableTools = computed(
+  () =>
+    consent.value?.workspaces.find((w) => w.id === workspaceId.value)
+      ?.unavailable_tools || []
+)
 
-function setAll(value) {
-  for (const tool of consent.value?.tools || []) {
-    ticked[tool.name] = value
-  }
-}
-
-const toolGroups = computed(() => {
-  const tools = consent.value?.tools || []
-  return [
-    {
-      key: 'read',
-      label: 'mcpAuthorize.toolsRead',
-      tools: tools.filter((tool) => tool.read_only),
-    },
-    {
-      key: 'change',
-      label: 'mcpAuthorize.toolsChange',
-      tools: tools.filter((tool) => !tool.read_only),
-    },
-  ].filter((group) => group.tools.length)
-})
-
-// Ticked tool names, in the order the API listed them.
-const selectedTools = computed(() =>
-  (consent.value?.tools || [])
-    .map((tool) => tool.name)
-    .filter((name) => ticked[name])
+// Ticked tool names the workspace can use, in the order the API listed them.
+const toolsToGrant = computed(() =>
+  selectedTools.value.filter((name) => !unavailableTools.value.includes(name))
 )
 
 const canAllow = computed(
-  () => workspaceId.value !== null && selectedTools.value.length > 0
+  () => workspaceId.value !== null && toolsToGrant.value.length > 0
 )
 
 async function submit(allow) {
@@ -374,7 +302,7 @@ async function submit(allow) {
   const values = { query, allow }
   if (allow) {
     values.workspace_id = workspaceId.value
-    values.tools = selectedTools.value
+    values.tools = toolsToGrant.value
   }
   try {
     const { data } = await MCPOAuthService($client).submitConsent(values)
