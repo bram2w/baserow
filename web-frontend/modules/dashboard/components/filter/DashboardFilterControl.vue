@@ -63,6 +63,9 @@
     <Context
       ref="context"
       class="dashboard-filter__context"
+      :class="{
+        'dashboard-filter__context--dropdown': filter.mode === 'dropdown',
+      }"
       @shown="onShown"
       @hidden="onHidden"
     >
@@ -85,21 +88,37 @@
               v-for="value in displayedOptions"
               :key="value"
               class="dashboard-filter__choice"
+              :class="{ 'dashboard-filter__choice--single': !filter.multiple }"
             >
               <Checkbox
+                v-if="filter.multiple"
                 :model-value="draft.includes(value)"
                 @update:model-value="toggle(value, $event)"
               >
                 <span class="dashboard-filter__option-value">{{ value }}</span>
-                <span
-                  v-if="optionState.unavailable.includes(value)"
-                  v-tooltip.focus="$t('dashboardFilter.unavailableHelp')"
-                  class="dashboard-filter__unavailable"
-                  tabindex="0"
-                  :aria-label="$t('dashboardFilter.unavailableHelp')"
-                  >{{ $t('dashboardFilter.unavailable') }}</span
-                >
               </Checkbox>
+              <button
+                v-else
+                type="button"
+                class="dashboard-filter__single-choice"
+                :aria-pressed="draft.includes(value)"
+                @click="toggle(value, !draft.includes(value))"
+              >
+                <span class="dashboard-filter__option-value">{{ value }}</span>
+                <i
+                  v-if="draft.includes(value)"
+                  class="iconoir-check"
+                  aria-hidden="true"
+                ></i>
+              </button>
+              <span
+                v-if="optionState.unavailable.includes(value)"
+                v-tooltip.focus="$t('dashboardFilter.unavailableHelp')"
+                class="dashboard-filter__unavailable"
+                tabindex="0"
+                :aria-label="$t('dashboardFilter.unavailableHelp')"
+                >{{ $t('dashboardFilter.unavailable') }}</span
+              >
             </div>
             <div
               v-if="optionState.loading"

@@ -111,7 +111,8 @@ test('exposes the unavailable explanation on keyboard focus', async () => {
 test('a single-choice dropdown replaces the previous value', async () => {
   await render({ multiple: false })
   await wrapper.get('.dashboard-filter__trigger').trigger('click')
-  await wrapper.findAll('input[type="checkbox"]')[1].setValue(true)
+  expect(wrapper.find('input[type="checkbox"]').exists()).toBe(false)
+  await wrapper.findAll('.dashboard-filter__single-choice')[1].trigger('click')
   await wrapper.get('form').trigger('submit')
   expect(wrapper.emitted('apply')).toEqual([[['Sales']]])
 })
