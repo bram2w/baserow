@@ -98,7 +98,7 @@ export const filterActions = {
     for (const filter of data) commit('INVALIDATE_FILTER_OPTIONS', filter.id)
     return data
   },
-  async createFilter({ state, commit }, values) {
+  async createFilter({ state, commit, dispatch }, values) {
     const request = dashboardRequest(state)
     const { data } = await FilterService(this.$client).create(
       request.id,
@@ -108,6 +108,7 @@ export const filterActions = {
     commit('INVALIDATE_FILTER_FETCH')
     commit('UPSERT_FILTER', data)
     commit('SELECT_FILTER', data.id)
+    await dispatch('enterEditMode')
     return data
   },
   async updateFilter({ state, commit, dispatch }, { filterId, values }) {

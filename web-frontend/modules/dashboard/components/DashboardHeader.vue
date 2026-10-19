@@ -12,28 +12,27 @@
         :dashboard="dashboard"
         :store-prefix="storePrefix"
       />
-      <div v-else class="dashboard-app-header__done-editing">
-        <Button type="primary" @click="doneEditing">{{
-          $t('dashboardHeader.doneEditing')
-        }}</Button>
-        <CreateWidgetButton
-          v-if="canCreateWidget"
+      <div class="dashboard-app-header__actions">
+        <DashboardRefreshButton :store-prefix="storePrefix" />
+        <CreateDashboardElementButton
           :dashboard="dashboard"
-          :loading="isCreatingWidget"
+          :loading="isCreatingWidget || isCreatingFilter"
           @widget-variation-selected="
             $emit('widget-variation-selected', $event)
           "
+          @create-filter="$emit('create-filter')"
         />
-        <DashboardRefreshButton :store-prefix="storePrefix" />
+        <Button v-if="isEditMode" type="primary" @click="doneEditing">{{
+          $t('dashboardHeader.doneEditing')
+        }}</Button>
       </div>
-      <DashboardRefreshButton v-if="!isEditMode" :store-prefix="storePrefix" />
     </template>
   </header>
 </template>
 
 <script>
 import DashboardHeaderMenuItems from '@baserow/modules/dashboard/components/DashboardHeaderMenuItems'
-import CreateWidgetButton from '@baserow/modules/dashboard/components/CreateWidgetButton'
+import CreateDashboardElementButton from '@baserow/modules/dashboard/components/CreateDashboardElementButton'
 import DashboardRefreshButton from '@baserow/modules/dashboard/components/filter/DashboardRefreshButton'
 
 export default {
@@ -41,7 +40,7 @@ export default {
   components: {
     DashboardRefreshButton,
     DashboardHeaderMenuItems,
-    CreateWidgetButton,
+    CreateDashboardElementButton,
   },
   props: {
     dashboard: {
@@ -62,20 +61,17 @@ export default {
       required: false,
       default: false,
     },
+    isCreatingFilter: {
+      type: Boolean,
+      default: false,
+    },
   },
-  emits: ['widget-variation-selected'],
+  emits: ['widget-variation-selected', 'create-filter'],
   computed: {
     isEditMode() {
       return this.$store.getters[
         `${this.storePrefix}dashboardApplication/isEditMode`
       ]
-    },
-    canCreateWidget() {
-      return this.$hasPermission(
-        'dashboard.create_widget',
-        this.dashboard,
-        this.dashboard.workspace.id
-      )
     },
   },
   methods: {

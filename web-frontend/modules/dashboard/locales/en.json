@@ -7,6 +7,13 @@
     "dashboardHeader": {
         "doneEditing": "Done editing"
     },
+    "dashboardAddElement": {
+        "addNew": "Add new…",
+        "widget": "Widget",
+        "widgetDescription": "Visualize your data and metrics with charts, tables or graphs.",
+        "filter": "Filter",
+        "filterDescription": "Display content that applies to your conditions."
+    },
     "emptyDashboard": {
         "title": "This dashboard doesn't have any widgets",
         "subtitle": "Get started by adding one.",
@@ -71,7 +78,6 @@
         "apply": "Apply filter",
         "update": "Update filter",
         "clear": "Clear filter",
-        "add": "Add filter",
         "delete": "Delete filter",
         "settings": "Filter settings",
         "refresh": "Refresh",
