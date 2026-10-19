@@ -299,7 +299,6 @@ const { data: consent } = useAsyncData(
 // doesn't land on an empty one. Runs before the form is first rendered.
 function applyDefaults(value) {
   const workspaces = value?.workspaces || []
-  // A grant that allows every tool is `null`, so check the key.
   const grants = value?.grants || {}
   const preferred =
     workspaces.find((workspace) => Object.hasOwn(grants, workspace.id)) ||
@@ -310,16 +309,12 @@ function applyDefaults(value) {
 }
 
 // A workspace the client is already connected to starts from that grant's tools,
-// so reconnecting never widens access unnoticed. A grant of `null` allows every
-// tool. Otherwise only the read-only tools are ticked, so changing data is opt-in.
+// so reconnecting never widens access unnoticed. Otherwise only the read-only
+// tools are ticked, so changing data is opt-in.
 function tickFor(id, value = consent.value) {
-  const grants = value?.grants || {}
-  const granted = Object.hasOwn(grants, id)
-  const existing = grants[id]
+  const existing = value?.grants?.[id]
   for (const tool of value?.tools || []) {
-    ticked[tool.name] = granted
-      ? existing === null || existing.includes(tool.name)
-      : tool.read_only
+    ticked[tool.name] = existing ? existing.includes(tool.name) : tool.read_only
   }
 }
 
