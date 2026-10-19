@@ -30,10 +30,12 @@ from baserow.contrib.database.views.actions import (
 )
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.exceptions import PermissionException
+from baserow.core.mcp.groups import GROUP_DATABASE_READ
 from baserow.core.models import Workspace
 from baserow.core.service import CoreService
 from baserow_enterprise.assistant.deps import AssistantDeps, ResourceChanges
 from baserow_enterprise.assistant.prompts import MISSING_RECORDS_GUIDANCE
+from baserow_enterprise.assistant.tools.mcp_meta import mcp_tool
 from baserow_enterprise.assistant.tools.shared import (
     raise_if_permission_denied,
     require_payload,
@@ -350,6 +352,7 @@ def list_rows(
 # ---------------------------------------------------------------------------
 
 
+@mcp_tool(title="List views", group=GROUP_DATABASE_READ, read_only=True)
 def list_views(
     ctx: RunContext[AssistantDeps],
     table_id: Annotated[

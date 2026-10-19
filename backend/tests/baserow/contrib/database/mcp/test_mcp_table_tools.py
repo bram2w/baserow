@@ -60,7 +60,12 @@ def test_list_tools_returns_only_enabled_tools(data_fixture):
         async def inner():
             async with client_session(mcp._mcp_server) as client:
                 result = await client.list_tools()
-                names = {t.name for t in result.tools}
+                # Tools with a group come from the enterprise Kuma bridge.
+                names = {
+                    t.name
+                    for t in result.tools
+                    if mcp_tool_registry.get(t.name).group is None
+                }
                 assert names == ENABLED_TOOL_NAMES
                 assert not names & DISABLED_TOOL_NAMES
 

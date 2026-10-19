@@ -114,7 +114,7 @@ class BaserowMCPServer:
                 content=[TextContent(type="text", text="Endpoint not found.")],
                 isError=True,
             )
-        tool = mcp_tool_registry.get_allowed_tool(endpoint, name)
+        tool = await sync_to_async(mcp_tool_registry.get_allowed_tool)(endpoint, name)
         if not tool:
             return CallToolResult(
                 content=[TextContent(type="text", text=f"Tool '{name}' not found.")],

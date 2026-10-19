@@ -13,3 +13,7 @@ class MaximumUniqueEndpointTriesError(Exception):
     Raised when the maximum amount of tries has been exceeded when generating a
     unique MCP endpoint key.
     """
+
+
+class MCPToolInputError(Exception):
+    """A call the client can fix by changing its arguments."""

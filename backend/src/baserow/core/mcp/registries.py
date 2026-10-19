@@ -46,6 +46,18 @@ class MCPTool(Instance):
     open_world: bool = False
     """True when the tool reaches outside the endpoint's workspace."""
 
+    group: str | None = None
+    """The permission group the tool belongs to, see ``baserow.core.mcp.groups``."""
+
+    def is_available(self, endpoint: MCPEndpoint) -> bool:
+        """
+        Whether the endpoint can use this tool right now. An unavailable tool is
+        neither listed nor callable. This can query the database, so async code
+        must call it through ``sync_to_async``.
+        """
+
+        return True
+
     @property
     def name(self) -> str:
         """MCP tool name, derived from ``type``."""
@@ -141,18 +153,20 @@ class MCPToolRegistry(Registry[MCPTool]):
     def get_allowed_tools(self, endpoint: MCPEndpoint) -> List[MCPTool]:
         """
         Return the enabled tools the endpoint may use. ``allowed_tools = None``
-        allows every enabled tool.
+        allows every enabled tool. Tools that are not available to the endpoint
+        are left out. This can query the database, so async code must call it
+        through ``sync_to_async``.
         """
         tools = self.get_enabled_tools()
-        if endpoint.allowed_tools is None:
-            return tools
-        allowed = set(endpoint.allowed_tools)
-        return [tool for tool in tools if tool.name in allowed]
+        if endpoint.allowed_tools is not None:
+            allowed = set(endpoint.allowed_tools)
+            tools = [tool for tool in tools if tool.name in allowed]
+        return [tool for tool in tools if tool.is_available(endpoint)]
 
     async def list_all_tools(self, endpoint: MCPEndpoint) -> List["Tool"]:
         """Return the enabled tools the given endpoint is allowed to use."""
         all_tools: List["Tool"] = []
-        for mcp in self.get_allowed_tools(endpoint):
+        for mcp in await sync_to_async(self.get_allowed_tools)(endpoint):
             tools = await mcp.list(endpoint)
             all_tools.extend(tools)
         return all_tools
@@ -164,9 +178,11 @@ class MCPToolRegistry(Registry[MCPTool]):
     def get_allowed_tool(self, endpoint: MCPEndpoint, name: str) -> Optional[MCPTool]:
         """Return the tool called ``name`` if the endpoint may call it, or None."""
         tool = self.match_by_name(name)
-        if tool is None or tool not in self.get_allowed_tools(endpoint):
+        if tool is None or not tool.enabled:
             return None
-        return tool
+        if endpoint.allowed_tools is not None and name not in endpoint.allowed_tools:
+            return None
+        return tool if tool.is_available(endpoint) else None
 
 
 mcp_tool_registry = MCPToolRegistry()

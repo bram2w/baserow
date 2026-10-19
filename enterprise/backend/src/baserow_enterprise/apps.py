@@ -473,6 +473,13 @@ class BaserowEnterpriseConfig(AppConfig):
         assistant_tool_registry.register(AutomationToolType())
         assistant_tool_registry.register(BuilderToolType())
         assistant_tool_registry.register(SearchDocsToolType())
+
+        from baserow_enterprise.assistant.mcp.tools import (
+            register_assistant_mcp_tools,
+        )
+
+        register_assistant_mcp_tools()
+
         assistant_element_type_registry.register(TableAssistantElementType())
         assistant_element_type_registry.register(ButtonAssistantElementType())
         assistant_element_type_registry.register(LinkAssistantElementType())
