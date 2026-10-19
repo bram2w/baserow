@@ -39,12 +39,6 @@ class LeaseRenewal:
     cancel_requested: bool
 
 
-@dataclass(frozen=True)
-class PruneCursor:
-    finished_on: datetime
-    run_id: UUID
-
-
 class ChatRunHandler:
     """Synchronous lifecycle operations shared by HTTP requests and Celery tasks.
 
@@ -212,10 +206,18 @@ class ChatRunHandler:
         return run
 
     def claim_run(self, run_id: UUID) -> ChatRun | None:
-        """Called by ``execute_chat_run`` before starting its async runner."""
+        """Called by ``execute_chat_run`` before starting its async runner.
+
+        Overdue runs are left to the not-started sweep, so a worker returning
+        after an outage never answers a prompt the user gave up on.
+        """
 
         now = timezone.now()
-        if not self.runs.filter(id=run_id, status=ChatRunStatus.QUEUED).update(
+        if not self.runs.filter(
+            id=run_id,
+            status=ChatRunStatus.QUEUED,
+            created_on__gte=now - NOT_STARTED_AFTER,
+        ).update(
             status=ChatRunStatus.RUNNING,
             started_on=now,
             lease_expires_at=now + LEASE_DURATION,
@@ -348,13 +350,11 @@ class ChatRunHandler:
         """Called by ``sweep_chat_runs`` to end runs with expired worker leases."""
 
         now = timezone.now()
-        ids = list(
-            self.runs.filter(
-                status=ChatRunStatus.RUNNING, lease_expires_at__lt=now
-            ).values_list("id", flat=True)[:SWEEP_BATCH_SIZE]
-        )
+        run_ids = self.runs.filter(
+            status=ChatRunStatus.RUNNING, lease_expires_at__lt=now
+        ).values_list("id", flat=True)[:SWEEP_BATCH_SIZE]
         ended = 0
-        for run_id in ids:
+        for run_id in run_ids:
             try:
                 ended += self._finalize_lost_run(run_id, now)
             except Exception as exc:
@@ -451,57 +451,32 @@ class ChatRunHandler:
             created_on__gte=threshold - SWEEP_INTERVAL,
         ).count()
 
-    def prune(
-        self, before: datetime | None = None, after: PruneCursor | None = None
-    ) -> PruneCursor | None:
-        """Prune one bounded page, moving past warnings that must be retained.
+    def prune(self) -> bool:
+        """Delete one page of expired runs, warning once for incomplete ones.
 
         Called by the ``prune_chat_runs`` Celery task. Product warning hooks run
-        synchronously in that task before the corresponding run is deleted.
+        synchronously in that task, and the run is deleted even if its hook fails.
 
-        :param before: Fixed retention cutoff for this sweep and its continuations.
-        :param after: Last inspected row, including one that could not be deleted.
-        :return: A cursor for the next page, or None when the sweep is finished.
+        :return: Whether the page was full, so more expired runs may remain.
         """
 
-        candidates = self.runs.filter(
-            finished_on__lt=before or timezone.now() - RUN_RETENTION
+        page_ids = list(
+            self.runs.filter(finished_on__lt=timezone.now() - RUN_RETENTION)
+            .order_by("finished_on")
+            .values_list("id", flat=True)[:SWEEP_BATCH_SIZE]
         )
-        if after is not None:
-            candidates = candidates.filter(
-                Q(finished_on__gt=after.finished_on)
-                | Q(finished_on=after.finished_on, id__gt=after.run_id)
-            )
-        rows = list(
-            candidates.order_by("finished_on", "id").values_list("id", "finished_on")[
-                : SWEEP_BATCH_SIZE + 1
-            ]
-        )
-        for run_id, _ in rows[:SWEEP_BATCH_SIZE]:
+        page = self.runs.filter(id__in=page_ids)
+        started = Q(started_on__isnull=False)
+        for run in page.filter(started & ~Q(status=ChatRunStatus.COMPLETED)):
             try:
                 with transaction.atomic():
-                    # Completed rows need no output/context blobs to be deleted.
-                    # Another pruning task may already have deleted this row.
-                    run = (
-                        self.runs.select_for_update()
-                        .defer("outcome", "context")
-                        .filter(id=run_id)
-                        .first()
-                    )
-                    if run is None:
-                        continue
-                    if run.started_on and run.status != ChatRunStatus.COMPLETED:
-                        kind = chat_run_type_registry.get(run.run_type)
-                        if not kind.ensure_interruption_warning(run):
-                            continue
-                    run.delete()
+                    kind = chat_run_type_registry.get(run.run_type)
+                    kind.ensure_interruption_warning(run)
             except Exception as exc:
                 logger.error(
-                    "Could not safely prune chat run {} ({})",
-                    run_id,
+                    "Could not preserve the warning of chat run {} ({})",
+                    run.id,
                     type(exc).__name__,
                 )
-        if len(rows) > SWEEP_BATCH_SIZE:
-            run_id, finished_on = rows[SWEEP_BATCH_SIZE - 1]
-            return PruneCursor(finished_on, run_id)
-        return None
+        page.delete()
+        return len(page_ids) == SWEEP_BATCH_SIZE

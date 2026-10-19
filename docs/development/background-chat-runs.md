@@ -155,7 +155,8 @@ second run could repeat those changes.
 | Redis loses the output               | Followers can't replay. The browser uses the saved status and result instead. The worker carries on.                 |
 | The worker dies mid-answer           | The run is marked lost. `on_run_lost` gets the output Redis still has, if complete, so the product can save it.      |
 | The run never started                | `on_run_not_started` saves a result for it.                                                                          |
-| Old run data is about to be deleted  | `ensure_interruption_warning` must first store any "answer was interrupted" warning in the product's conversation.  |
+| Saving the answer failed             | `ensure_interruption_warning` stores an "answer was interrupted" warning in the product's conversation.             |
+| The run is 7 days old                | It is deleted. Incomplete runs first get one more `ensure_interruption_warning` call, which may fail.               |
 
 The buffer always keeps the output from the very start. If a run produces more
 output than the buffer allows, replay is turned off for that run. Trimming the

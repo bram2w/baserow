@@ -1,9 +1,6 @@
-from datetime import datetime
 from typing import Any
-from uuid import UUID
 
 from django.db import DEFAULT_DB_ALIAS, transaction
-from django.utils import timezone
 
 from asgiref.sync import async_to_sync
 from celery import Celery, Task
@@ -15,13 +12,12 @@ from baserow.config.db_routers import set_db_alias
 from .constants import (
     CHAT_RUN_QUEUE,
     PRUNE_INTERVAL,
-    RUN_RETENTION,
     RUN_TIME_LIMIT_SECONDS,
     SWEEP_INTERVAL,
     WAITING_WARNING_AFTER,
     ChatRunErrorCode,
 )
-from .handler import ChatRunHandler, PruneCursor
+from .handler import ChatRunHandler
 from .models import ChatRunStatus
 from .registries import chat_run_type_registry
 from .runner import run_chat_run
@@ -95,38 +91,16 @@ def sweep_chat_runs(self: Task) -> None:
 
 
 @app.task(bind=True, ignore_result=True)
-def prune_chat_runs(
-    self: Task,
-    before: str | None = None,
-    after_finished_on: str | None = None,
-    after_run_id: str | None = None,
-) -> None:
+def prune_chat_runs(self: Task) -> None:
     """
     Periodic Celery task deleting one page through ``ChatRunHandler.prune``.
 
-    Enqueue the next page of this finite sweep if needed. Adapter warning hooks
-    run synchronously in this task before deletion.
-
-    :param before: Fixed retention cutoff, as an ISO timestamp.
-    :param after_finished_on: Last inspected finish timestamp, as ISO text.
-    :param after_run_id: Last inspected run ID, to break timestamp ties.
+    Enqueue itself again while pages are full. Adapter warning hooks run
+    synchronously in this task before deletion.
     """
 
-    cutoff = (
-        datetime.fromisoformat(before) if before else timezone.now() - RUN_RETENTION
-    )
-    after = (
-        PruneCursor(datetime.fromisoformat(after_finished_on), UUID(after_run_id))
-        if after_finished_on is not None and after_run_id is not None
-        else None
-    )
-    next_page = ChatRunHandler().prune(before=cutoff, after=after)
-    if next_page is not None:
-        prune_chat_runs.delay(
-            before=cutoff.isoformat(),
-            after_finished_on=next_page.finished_on.isoformat(),
-            after_run_id=str(next_page.run_id),
-        )
+    if ChatRunHandler().prune():
+        prune_chat_runs.delay()
 
 
 @app.on_after_finalize.connect

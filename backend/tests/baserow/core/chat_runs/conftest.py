@@ -28,7 +28,6 @@ class FakeChatRunType(ChatRunType):
         self.lost_events = []
         self.allow_cancel = True
         self.allow_read = True
-        self.warnings_preserved = False
 
     def can_read(self, user, run):
         return self.allow_read and user.id == run.created_by_id
@@ -51,9 +50,6 @@ class FakeChatRunType(ChatRunType):
     def on_run_lost(self, run, events=None):
         self.lost_events.append(events)
         return {"content": "interrupted", "run_status": run.status}
-
-    def ensure_interruption_warning(self, run):
-        return self.warnings_preserved
 
 
 @pytest.fixture

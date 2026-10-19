@@ -119,18 +119,16 @@ class ChatRunType(Instance):
 
         return None
 
-    def ensure_interruption_warning(self, run: ChatRun) -> bool:
+    def ensure_interruption_warning(self, run: ChatRun) -> None:
         """Make sure the product shows that a started run did not complete.
 
-        The run is pruned only after this returns True, so its history can still
-        be rebuilt from it until then.
+        Called when saving the outcome failed, and once more before the run is
+        pruned. Pruning deletes the run even if this fails, so it must copy the
+        warning into the product. It can be called several times for one run.
 
         :param run: The started run that did not complete.
-        :return: Whether the product durably holds the warning.
-        :raises Exception: Any error is logged and the run is kept.
+        :raises Exception: Any error is logged; the run is still pruned.
         """
-
-        return False
 
 
 class ChatRunTypeRegistry(Registry[ChatRunType]):

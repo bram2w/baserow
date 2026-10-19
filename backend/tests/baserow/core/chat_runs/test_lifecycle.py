@@ -2,12 +2,17 @@ import threading
 from datetime import timedelta
 
 from django.db import IntegrityError, connection, transaction
+from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
 import pytest
 from loguru import logger
 
-from baserow.core.chat_runs.constants import MAX_ACTIVE_RUNS_PER_USER, RUN_RETENTION
+from baserow.core.chat_runs.constants import (
+    MAX_ACTIVE_RUNS_PER_USER,
+    NOT_STARTED_AFTER,
+    RUN_RETENTION,
+)
 from baserow.core.chat_runs.exceptions import ChatRunAlreadyActive, ChatRunLimitReached
 from baserow.core.chat_runs.handler import ChatRunHandler
 from baserow.core.chat_runs.models import ChatRun, ChatRunStatus
@@ -139,6 +144,18 @@ def test_queued_stop_is_terminal_and_cannot_be_claimed(create_run):
     assert ChatRunHandler().claim_run(run.id) is None
 
 
+def test_overdue_queued_run_is_never_claimed_and_the_sweeper_ends_it(create_run):
+    run = create_run()
+    ChatRun.objects.filter(id=run.id).update(
+        created_on=timezone.now() - NOT_STARTED_AFTER - timedelta(seconds=1)
+    )
+    handler = ChatRunHandler()
+    assert handler.claim_run(run.id) is None
+    assert handler.fail_not_started_runs() == 1
+    run.refresh_from_db()
+    assert (run.status, run.error_code) == ("failed", "not_started")
+
+
 def test_terminal_outcome_cannot_be_overwritten(create_run):
     run = create_run(claim=True)
     handler = ChatRunHandler()
@@ -207,56 +224,60 @@ def test_failing_recovery_hook_rolls_back_product_writes_but_ends_run(
     assert Workspace.objects.get(id=run.workspace_id).name == name
 
 
-def test_pruning_keeps_started_incomplete_turn_until_warning_is_preserved(
-    create_run, fake_run_type
+def test_pruning_warns_once_then_deletes_the_whole_page_in_one_statement(
+    create_run, data_fixture, fake_run_type
 ):
-    run = create_run(claim=True)
-    ChatRunHandler().finish_run(run.id, "failed", "persist_failed")
-    ChatRun.objects.filter(id=run.id).update(
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    handler = ChatRunHandler()
+    for chat_id in range(1, 5):
+        run = create_run(chat_id=chat_id, user=user, workspace=workspace, claim=True)
+        handler.finish_run(run.id, "completed" if chat_id == 1 else "failed")
+    handler.request_cancel(create_run(chat_id=5, user=user, workspace=workspace).id)
+    ChatRun.objects.update(
         finished_on=timezone.now() - RUN_RETENTION - timedelta(days=1)
     )
-    ChatRunHandler().prune()
-    assert ChatRun.objects.filter(id=run.id).exists()
-    fake_run_type.warnings_preserved = True
-    ChatRunHandler().prune()
-    assert not ChatRun.objects.filter(id=run.id).exists()
+    ChatRun.objects.filter(chat_id=4).update(run_type="removed")
+    recent = create_run(chat_id=6, user=user, workspace=workspace, claim=True)
+    handler.finish_run(recent.id, "completed")
+    warned = []
+
+    def warn(run):
+        warned.append(run.chat_id)
+        if run.chat_id == 3:
+            raise RuntimeError()
+
+    fake_run_type.ensure_interruption_warning = warn
+
+    with CaptureQueriesContext(connection) as queries:
+        assert handler.prune() is False
+
+    assert sorted(warned) == [2, 3]
+    assert list(ChatRun.objects.values_list("id", flat=True)) == [recent.id]
+    deletes = [q for q in queries.captured_queries if q["sql"].startswith("DELETE")]
+    assert len(deletes) == 1
 
 
-def test_pruning_continues_past_retained_rows_with_a_fixed_cutoff(
+def test_a_full_prune_page_enqueues_the_next_one(
     create_run, data_fixture, mocker, monkeypatch
 ):
     monkeypatch.setattr("baserow.core.chat_runs.handler.SWEEP_BATCH_SIZE", 2)
     enqueue = mocker.patch.object(prune_chat_runs, "delay")
     user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)
-    expired = timezone.now() - RUN_RETENTION - timedelta(days=1)
-    retained = []
-    for index in range(5):
-        run = create_run(chat_id=index, user=user, workspace=workspace, claim=True)
-        ChatRunHandler().finish_run(run.id, "failed" if index < 2 else "completed")
-        ChatRun.objects.filter(id=run.id).update(
-            finished_on=expired + timedelta(seconds=index >= 2)
-        )
-        if index < 2:
-            retained.append(run.id)
-    recent = create_run(chat_id=6, user=user, workspace=workspace, claim=True)
-    ChatRunHandler().finish_run(recent.id, "completed")
+    for chat_id in range(3):
+        run = create_run(chat_id=chat_id, user=user, workspace=workspace, claim=True)
+        ChatRunHandler().finish_run(run.id, "completed")
+    ChatRun.objects.update(
+        finished_on=timezone.now() - RUN_RETENTION - timedelta(days=1)
+    )
 
     prune_chat_runs()
-    enqueue.assert_called_once()
-    first_continuation = enqueue.call_args.kwargs
-    cutoff = first_continuation["before"]
-    calls = 1
-    while enqueue.called:
-        continuation = enqueue.call_args.kwargs
-        assert continuation["before"] == cutoff
-        enqueue.reset_mock()
-        prune_chat_runs(**continuation)
-        calls += 1
-        assert calls <= 3
-
-    assert calls == 3
-    assert set(ChatRun.objects.values_list("id", flat=True)) == {*retained, recent.id}
+    enqueue.assert_called_once_with()
+    enqueue.reset_mock()
+    prune_chat_runs()
+    enqueue.assert_not_called()
+    assert not ChatRun.objects.exists()
 
 
 @pytest.mark.django_db(transaction=True)

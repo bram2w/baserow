@@ -48,7 +48,7 @@ SWEEP_BATCH_SIZE = 100
 WAITING_WARNING_AFTER = timedelta(minutes=5)
 NOT_STARTED_AFTER = timedelta(minutes=60)
 PRUNE_INTERVAL = timedelta(hours=1)
-RUN_RETENTION = timedelta(days=30)
+RUN_RETENTION = timedelta(days=7)
 
 # Run creation.
 MAX_ACTIVE_RUNS_PER_USER = 2
