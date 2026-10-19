@@ -30,7 +30,12 @@ from baserow.contrib.database.rows.operations import ReadDatabaseRowOperationTyp
 from baserow.contrib.database.search.handler import SearchHandler
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.table.service import TableService
+from baserow.contrib.integrations.local_baserow.integration_types import (
+    LocalBaserowIntegrationType,
+)
 from baserow.core.app_auth_providers.handler import AppAuthProviderHandler
+from baserow.core.exceptions import PermissionException
 from baserow.core.formula.validator import ensure_string
 from baserow.core.handler import CoreHandler
 from baserow.core.trash.handler import TrashHandler
@@ -49,6 +54,7 @@ from baserow_enterprise.integrations.local_baserow.models import (
 class LocalBaserowUserSourceType(UserSourceType):
     type = "local_baserow"
     model_class = LocalBaserowUserSource
+    integration_type = LocalBaserowIntegrationType.type
     field_types_allowed_as_name = [
         EmailFieldType.type,
         TextFieldType.type,
@@ -147,8 +153,13 @@ class LocalBaserowUserSourceType(UserSourceType):
             table_id = values.pop("table_id")
             if table_id is not None:
                 try:
-                    table = TableHandler().get_table(table_id)
-                except TableDoesNotExist as exc:
+                    # `get_table` checks that `user` can read the table, so a user
+                    # source can't be pointed at a table the editor has no access to
+                    # (e.g. another workspace's, or one RBAC restricts). A missing
+                    # table and a forbidden one return the same error, so neither
+                    # reveals whether the table exists.
+                    table = TableService().get_table(user, table_id)
+                except (TableDoesNotExist, PermissionException) as exc:
                     raise RequestBodyValidationException(
                         {
                             "table_id": [

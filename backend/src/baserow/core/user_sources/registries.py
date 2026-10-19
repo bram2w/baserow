@@ -50,6 +50,10 @@ class UserSourceType(
     # When any of these properties are updated, the user count will be updated.
     properties_requiring_user_recount = []
 
+    # The integration type this user source reads its users through, or `None` if
+    # any type is accepted.
+    integration_type = None
+
     """
     An user_source type define a specific user_source with a given external service.
     """
@@ -93,17 +97,65 @@ class UserSourceType(
                     # integration is still trashed (a later undo step un-trashes it).
                     # Resolve it from the full set so the FK can still be set; the
                     # user source stays misconfigured until the integration is
-                    # restored. A genuinely non-existent id re-raises.
-                    integration = IntegrationHandler().get_integration(
-                        integration_id,
-                        base_queryset=Integration.objects_and_trash.all(),
-                        specific=False,
-                    )
+                    # restored. A genuinely non-existent id is refused.
+                    try:
+                        integration = IntegrationHandler().get_integration(
+                            integration_id,
+                            base_queryset=Integration.objects_and_trash.all(),
+                            specific=False,
+                        )
+                    except IntegrationDoesNotExist as exc:
+                        raise RequestBodyValidationException(
+                            {
+                                "integration_id": [
+                                    {
+                                        "detail": f"The integration with ID "
+                                        f"{integration_id} does not exist.",
+                                        "code": "invalid_integration",
+                                    }
+                                ]
+                            }
+                        ) from exc
                 values["integration"] = integration
             else:
                 values["integration"] = None
 
         return values
+
+    def check_integration(self, application, values: Dict[str, Any]):
+        """
+        Refuses an integration that belongs to another application, or that isn't of
+        the type this user source reads its users through. `prepare_values` has no
+        application on create, so this runs on the prepared values instead.
+
+        :param application: The application the user source belongs to.
+        :param values: The prepared values, as returned by `prepare_values`.
+        :raises RequestBodyValidationException: When the integration doesn't fit.
+        """
+
+        integration = values.get("integration")
+        if integration is None:
+            return
+
+        if integration.application_id != application.id:
+            detail = (
+                f"The integration with ID {integration.id} is not related to the "
+                f"given application {application.id}."
+            )
+        elif (
+            self.integration_type is not None
+            and integration.get_type().type != self.integration_type
+        ):
+            detail = (
+                f"The integration with ID {integration.id} is not a "
+                f"{self.integration_type} integration."
+            )
+        else:
+            return
+
+        raise RequestBodyValidationException(
+            {"integration_id": [{"detail": detail, "code": "invalid_integration"}]}
+        )
 
     def after_create(self, user, user_source, values):
         """
