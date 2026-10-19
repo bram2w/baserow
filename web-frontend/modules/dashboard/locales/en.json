@@ -15,6 +15,23 @@
   "dashboardHeaderMenuItems": {
     "editMode": "Edit mode"
   },
+  "shareDashboardLink": {
+    "shareDashboard": "Share dashboard",
+    "notSharedTitle": "You have not yet shared this dashboard",
+    "notSharedText": "Private shareable link allows anyone to see the data in this dashboard.",
+    "createPrivateLink": "Create a private link",
+    "sharedTitle": "This dashboard is currently shared via a private link",
+    "sharedDescription": "People who have the link can see the dashboard.",
+    "copyURL": "Copy URL",
+    "generateNewUrl": "Generate new URL",
+    "disableLink": "Disable shared link"
+  },
+  "dashboardRotateSlugModal": {
+    "title": "Refresh the URL of {dashboardName}?",
+    "refreshWarning": "After refreshing, a new URL will be generated and it will not be possible to access the dashboard via the old URL. Everyone that you have shared the URL with, won't be able to access the dashboard.",
+    "generateNewUrl": "Generate new URL",
+    "success": "Successfully generated new URL"
+  },
   "createWidgetModal": {
     "title": "Add new widget"
   },

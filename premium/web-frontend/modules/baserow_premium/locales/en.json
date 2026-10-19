@@ -303,6 +303,9 @@
     },
     "allowPublicExportLabel": "Allow export on shared view"
   },
+  "premiumDashboardShareOptions": {
+    "hideLogo": "Hide Baserow logo on shared dashboard"
+  },
   "viewsContext": {
     "personal": "Personal"
   },
