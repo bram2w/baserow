@@ -89,5 +89,5 @@ def test_workspace_search_finds_agents(data_fixture, api_client):
     assert (result["id"], result["type"], result["subtitle"]) == (
         agent.id,
         "agent",
-        "Agents",
+        "Agent",
     )

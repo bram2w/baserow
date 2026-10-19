@@ -4,6 +4,6 @@ from baserow.core.search.search_types import ApplicationSearchType
 
 class AgentSearchType(ApplicationSearchType):
     type = "agent"
-    name = "Agents"
+    name = "Agent"
     model_class = AgentApplication
     priority = 5
