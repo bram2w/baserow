@@ -147,7 +147,7 @@ function createClient() {
 async function mountRoute(
   client,
   targetType,
-  { agentsEnabled = false, captcha = false } = {}
+  { agentsEnabled = false, captcha = false, canInviteNewUsers = true } = {}
 ) {
   picker.removed = []
   picker.resets = 0
@@ -163,7 +163,8 @@ async function mountRoute(
       mocks: {
         $client: client,
         $featureFlagIsEnabled: () => agentsEnabled,
-        $hasPermission: () => true,
+        $hasPermission: (operation) =>
+          operation !== 'workspace.create_invitation' || canInviteNewUsers,
         $config: { public: { baserowEmbeddedShareUrl: 'http://localhost' } },
         $store: { getters: { 'auth/getUserId': 7 } },
         $registry: createRegistry(app),
@@ -176,9 +177,10 @@ async function mountRoute(
             'assignedKeys',
             'roles',
             'emailRoleUids',
+            'emailDisabledReason',
           ],
           template:
-            '<div class="picker">' +
+            '<div class="picker" :data-email-disabled-reason="emailDisabledReason">' +
             '{{ subjects["auth.User"].map((u) => u.name).join(",") }}</div>' +
             '<div class="picker-agents" ' +
             ':data-enabled="String(\'core.Agent\' in subjects)">' +
@@ -244,6 +246,21 @@ test('lists pending invitations first and tells the picker who already has a rol
     expect(wrapper.find('.access-roles').text()).toBe(
       'invitation:1=EDITOR/VIEWER,auth.User:8=EDITOR/VIEWER/NO_ACCESS'
     )
+  } finally {
+    wrapper.unmount()
+  }
+})
+
+test('explains why a scope admin cannot invite new people', async () => {
+  const wrapper = await mountRoute(createClient(), createTargetType(), {
+    canInviteNewUsers: false,
+  })
+  try {
+    expect(wrapper.text()).toContain('shareScope.workspaceInvitationRequired')
+    expect(
+      wrapper.find('.picker').attributes('data-email-disabled-reason')
+    ).toBe('shareScope.workspaceInvitationRequired')
+    expect(wrapper.find('.picker').text()).toBe('Mark Delgado,Jane Roe')
   } finally {
     wrapper.unmount()
   }

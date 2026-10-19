@@ -71,6 +71,44 @@ test('searches members and teams and offers an email for new people', async () =
   }
 })
 
+test('blocks new email invitations while still allowing existing members', async () => {
+  const wrapper = await mountInput({
+    emailDisabledReason: 'shareScope.workspaceInvitationRequired',
+  })
+  try {
+    const input = wrapper.find('input')
+    expect(input.attributes('placeholder')).toBe(
+      'shareScope.searchSubjectsPlaceholder: subjecttype.members, subjecttype.teams'
+    )
+    await input.setValue('Unknown member')
+    await input.trigger('focus')
+    expect(wrapper.find('.invite-input__empty').text()).toBe(
+      'shareScope.noSubjectResults: subjecttype.members or subjecttype.teams'
+    )
+    await input.setValue('new@x.com')
+    await input.trigger('focus')
+    expect(itemTitles(wrapper)).toEqual([])
+    expect(wrapper.find('.invite-input__empty').text()).toBe(
+      'shareScope.workspaceInvitationRequired'
+    )
+    await input.trigger('keydown', { key: 'Enter' })
+    expect(wrapper.find('.invite-input__chip--error').text()).toBe('new@x.com')
+    const button = wrapper.find('.invite-input__row button')
+    expect(button.attributes('disabled')).toBeDefined()
+    await button.trigger('click')
+    expect(wrapper.emitted('add')).toBeUndefined()
+
+    await input.setValue('mark@x.com')
+    await wrapper.find('.invite-input__item').trigger('click')
+    await button.trigger('click')
+    expect(wrapper.emitted('add')[0][0].map(({ key }) => key)).toEqual([
+      'auth.User:8',
+    ])
+  } finally {
+    wrapper.unmount()
+  }
+})
+
 test('lists an invited address and an assigned subject with the reason', async () => {
   const wrapper = await mountInput({
     assignedKeys: ['baserow_enterprise.Team:3'],

@@ -11,10 +11,15 @@
         :pending-emails="pendingEmails"
         :roles="assignableRoles"
         :email-role-uids="invitationRoleUids"
+        :email-disabled-reason="emailDisabledReason"
         :disabled="loading || adding"
         @add="add"
       />
+      <p v-if="emailDisabledReason" class="margin-top-1">
+        {{ emailDisabledReason }}
+      </p>
       <CaptchaWidget
+        v-if="canInviteNewUsers"
         ref="captchaWidget"
         class="margin-top-2"
         context="workspace_invitation"
@@ -124,6 +129,18 @@ export default {
     },
     invitationRoleUids() {
       return this.roles.map(({ uid }) => uid)
+    },
+    canInviteNewUsers() {
+      return this.$hasPermission(
+        'workspace.create_invitation',
+        this.workspace,
+        this.workspace.id
+      )
+    },
+    emailDisabledReason() {
+      return this.canInviteNewUsers
+        ? null
+        : this.$t('shareScope.workspaceInvitationRequired')
     },
     /**
      * The roles a member, team or agent can hold on the object, no access

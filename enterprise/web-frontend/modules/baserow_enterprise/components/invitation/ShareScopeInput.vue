@@ -6,6 +6,7 @@
     :options="options"
     :tabs="tabs"
     :email-role-uids="emailRoleUids"
+    :email-disabled-reason="emailDisabledReason"
     :placeholder="placeholder"
     :no-results-text="noResultsText"
     :disabled="disabled"
@@ -86,6 +87,11 @@ export default {
       required: false,
       default: null,
     },
+    emailDisabledReason: {
+      type: String,
+      required: false,
+      default: null,
+    },
     disabled: {
       type: Boolean,
       required: false,
@@ -100,11 +106,21 @@ export default {
       )
     },
     placeholder() {
+      if (this.emailDisabledReason) {
+        return this.$t('shareScope.searchSubjectsPlaceholder', {
+          subjects: this.formatTabNames('unit'),
+        })
+      }
       return this.$t('shareScope.searchPlaceholder', {
         subjects: this.formatTabNames('unit'),
       })
     },
     noResultsText() {
+      if (this.emailDisabledReason) {
+        return this.$t('shareScope.noSubjectResults', {
+          subjects: this.formatTabNames('disjunction'),
+        })
+      }
       return this.$t('shareScope.noResults', {
         subjects: this.formatTabNames('disjunction'),
       })

@@ -227,6 +227,15 @@ export default {
       required: false,
       default: null,
     },
+    /**
+     * Why new email invitations are unavailable, while existing subjects can
+     * still be picked. Null allows new email invitations.
+     */
+    emailDisabledReason: {
+      type: String,
+      required: false,
+      default: null,
+    },
     placeholder: {
       type: String,
       required: false,
@@ -260,6 +269,9 @@ export default {
       return this.placeholder ?? this.$t('inviteInput.placeholder')
     },
     noResultsTextOrDefault() {
+      if (this.emailDisabledReason && this.queryEmails.length > 0) {
+        return this.emailDisabledReason
+      }
       return this.noResultsText ?? this.$t('inviteInput.noResults')
     },
     allTabs() {
@@ -421,7 +433,11 @@ export default {
      * not, answers to.
      */
     newEmailOptionFor(email) {
-      if (!isValidEmail(email) || this.optionWithEmail(email)) {
+      if (
+        this.emailDisabledReason ||
+        !isValidEmail(email) ||
+        this.optionWithEmail(email)
+      ) {
         return null
       }
       return this.emailPick(email)
@@ -437,6 +453,9 @@ export default {
       }
       if (item.disabledReason) {
         return item.disabledReason
+      }
+      if (item.type === 'email' && this.emailDisabledReason) {
+        return this.emailDisabledReason
       }
       if (item.type === 'email' && !this.roleAllowsEmails) {
         return this.$t('inviteInput.roleNotForEmails', { role: this.roleName })
