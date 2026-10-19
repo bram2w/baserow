@@ -1447,6 +1447,11 @@
     "expiredTooltip": "This app's sign-in has ended. Sign in again from the app to use it.",
     "tools": "{count} tool | {count} tools",
     "connectedOn": "Connected {date}",
+    "toolsOff": "{count} tool turned off | {count} tools turned off",
+    "editTools": "Edit tools",
+    "editToolsTitle": "Tools for {client}",
+    "editToolsDescription": "Choose what it can do in {workspace}. The app gets the change on its next request, without signing in again.",
+    "saveTools": "Save",
     "disconnect": "Disconnect",
     "confirmDisconnect": "Click again to disconnect"
   },
