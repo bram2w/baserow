@@ -6,6 +6,9 @@ workspace, even when the endpoint's user can access that workspace too.
 import pytest
 from asgiref.sync import async_to_sync
 
+from baserow.contrib.automation.workflows.exceptions import (
+    AutomationWorkflowDoesNotExist,
+)
 from baserow.core.exceptions import ApplicationDoesNotExist
 from baserow.core.mcp.exceptions import MCPToolInputError
 from baserow.core.mcp.registries import mcp_tool_registry
@@ -86,6 +89,5 @@ def test_list_nodes_other_workspace(data_fixture, two_workspaces):
     user, mine, other, endpoint = two_workspaces
     automation = data_fixture.create_automation_application(user=user, workspace=other)
     workflow = data_fixture.create_automation_workflow(automation=automation)
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(AutomationWorkflowDoesNotExist):
         _call(endpoint, "list_nodes", {"workflow_id": workflow.id})
-    assert "Workflow not in workspace" in str(exc.value)
