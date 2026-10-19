@@ -1,7 +1,7 @@
 {
   "baserow_template_version": 1,
   "name": "Work Management Platform",
-  "description": "Manage teams, projects, milestones, tasks, messages and files in one place.",
+  "description": "Manage teams, projects, tasks, messages and files in one place.",
   "icon": "iconoir-network",
   "keywords": [
     "Project Management",
