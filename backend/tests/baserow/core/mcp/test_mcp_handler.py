@@ -8,6 +8,7 @@ from baserow.core.mcp.exceptions import (
     MaximumUniqueEndpointTriesError,
     MCPEndpointDoesNotBelongToUser,
     MCPEndpointDoesNotExist,
+    MCPToolsNotAvailable,
 )
 from baserow.core.mcp.handler import MCPEndpointHandler
 from baserow.core.mcp.models import MCPEndpoint
@@ -153,3 +154,25 @@ def test_delete_endpoint(data_fixture):
 
     assert MCPEndpoint.objects.all().count() == 1
     assert MCPEndpoint.objects.all().first().id == endpoint_2.id
+
+
+@pytest.mark.django_db
+def test_update_allowed_tools(data_fixture):
+    user = data_fixture.create_user()
+    other = data_fixture.create_user()
+    endpoint = data_fixture.create_mcp_endpoint(
+        user=user, allowed_tools=["list_tables"]
+    )
+    handler = MCPEndpointHandler()
+
+    with pytest.raises(MCPEndpointDoesNotBelongToUser):
+        handler.update_allowed_tools(other, endpoint, ["list_databases"])
+    with pytest.raises(MCPToolsNotAvailable) as error:
+        handler.update_allowed_tools(user, endpoint, ["list_databases", "nope"])
+    assert error.value.names == ["nope"]
+    endpoint.refresh_from_db()
+    assert endpoint.allowed_tools == ["list_tables"]
+
+    handler.update_allowed_tools(user, endpoint, ["list_tables", "list_databases"])
+    endpoint.refresh_from_db()
+    assert endpoint.allowed_tools == ["list_databases", "list_tables"]

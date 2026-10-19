@@ -30,6 +30,14 @@ class MaximumUniqueEndpointTriesError(Exception):
     """
 
 
+class MCPToolsNotAvailable(Exception):
+    """Raised when an endpoint is given tools it can't use."""
+
+    def __init__(self, names: list[str]):
+        self.names = names
+        super().__init__(f"Tools not available: {', '.join(names)}.")
+
+
 class MCPToolInputError(Exception):
     """A call the client can fix by changing its arguments."""
 

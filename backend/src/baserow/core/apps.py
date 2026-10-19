@@ -392,10 +392,12 @@ class CoreConfig(AppConfig):
             DeleteMCPEndpointActionType,
             DisconnectMCPOAuthClientActionType,
             UpdateMCPEndpointActionType,
+            UpdateMCPEndpointToolsActionType,
         )
 
         action_type_registry.register(CreateMCPEndpointActionType())
         action_type_registry.register(UpdateMCPEndpointActionType())
+        action_type_registry.register(UpdateMCPEndpointToolsActionType())
         action_type_registry.register(DeleteMCPEndpointActionType())
         action_type_registry.register(ConnectMCPOAuthClientActionType())
         action_type_registry.register(DisconnectMCPOAuthClientActionType())
