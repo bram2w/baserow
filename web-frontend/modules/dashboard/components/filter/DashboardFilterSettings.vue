@@ -110,7 +110,7 @@
       :aria-label="$t('dashboardFilter.confirmResetTitle')"
       @hidden="pendingFormat = null"
     >
-      <h2 class="box__head-title margin-bottom-4">
+      <h2 class="box__title">
         {{ $t('dashboardFilter.confirmResetTitle') }}
       </h2>
       <p>
