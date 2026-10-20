@@ -441,57 +441,6 @@ export class EqualViewFilterType extends SpecificFieldFilterType {
   }
 }
 
-export class TextIsAnyOfViewFilterType extends ViewFilterType {
-  static getType() {
-    return 'text_is_any_of'
-  }
-
-  getName() {
-    return this.app.$i18n.t('viewFilter.isAnyOf')
-  }
-
-  getExample() {
-    return 'France,Belgium'
-  }
-
-  getInputComponent() {
-    return ViewFilterTypeText
-  }
-
-  getCompatibleFieldTypes() {
-    return [
-      'text',
-      'long_text',
-      'url',
-      'email',
-      'phone_number',
-      FormulaFieldType.compatibleWithFormulaTypes('text', 'char', 'url'),
-    ]
-  }
-
-  matches(rowValue, filterValue) {
-    if (!filterValue) {
-      return null
-    }
-    // Keep the same single-record CSV grammar as the backend filter.
-    const pattern = /("(?:[^"]|"")*"|[^",\r\n]*)(?:,|$)/y
-    const values = []
-    let position = 0
-    while (position < filterValue.length) {
-      const match = pattern.exec(filterValue)
-      if (!match || pattern.lastIndex === position) {
-        return false
-      }
-      const cell = match[1].startsWith('"')
-        ? match[1].slice(1, -1).replaceAll('""', '"')
-        : match[1]
-      if (cell.trim()) values.push(cell)
-      position = pattern.lastIndex
-    }
-    return values.length ? values.includes(rowValue) : null
-  }
-}
-
 export class NotEqualViewFilterType extends SpecificFieldFilterType {
   static getType() {
     return 'not_equal'

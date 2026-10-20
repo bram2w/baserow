@@ -23,36 +23,6 @@ describe('View Filter Tests', () => {
     testApp.afterEach()
   })
 
-  test.each([
-    ['France,Belgique', 'France', true],
-    ['France,Belgique', 'Belgique', true],
-    ['France,Belgique', 'Suisse', false],
-    ['France,Belgique', 'france', false],
-    ['"Design, Europe",Marketing', 'Design, Europe', true],
-    ['"Design ""Europe""",Marketing', 'Design "Europe"', true],
-    ['Design\\Europe,Marketing', 'Design\\Europe', true],
-    ['" Design ",Marketing', ' Design ', true],
-    ['"Design\nEurope",Marketing', 'Design\nEurope', true],
-    ['', 'France', true],
-    ['"unterminated', 'France', false],
-    ['"France" ,Belgique', 'France', false],
-    ['France\n', 'France', false],
-    [',France,,', 'France', true],
-    [`${'A'.repeat(131073)}"`, 'France', false],
-  ])(
-    'Text is any of %s matches an edited value %s: %s',
-    async (value, editedValue, matches) => {
-      await thereIsATableWithRowAndFilter(
-        { name: 'Country', type: 'text', primary: true },
-        { id: 1, order: 0, field_1: 'France' },
-        { id: 1, view: 1, field: 1, type: 'text_is_any_of', value }
-      )
-      const row = store.getters['page/view/grid/getRow'](1)
-      await editFieldWithoutSavingNewValue(row, 'text', editedValue)
-      expect(row._.matchFilters).toBe(matches)
-    }
-  )
-
   test('When An Equals Filter is applied a string field correctly indicates if the row will continue to match after an edit', async () => {
     await thereIsATableWithRowAndFilter(
       {
