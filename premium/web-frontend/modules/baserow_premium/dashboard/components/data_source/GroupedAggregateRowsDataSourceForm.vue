@@ -194,6 +194,7 @@ export default {
         'table_id',
         'view_id',
         'filters',
+        'filter_groups',
         'filter_type',
         'aggregation_series',
         'aggregation_group_bys',
@@ -203,6 +204,7 @@ export default {
         table_id: null,
         view_id: null,
         filters: [],
+        filter_groups: [],
         filter_type: 'AND',
         aggregation_series: [],
         aggregation_group_bys: [],
@@ -227,6 +229,7 @@ export default {
           this.values.aggregation_group_bys = []
           this.values.aggregation_sorts = []
           this.values.filters = []
+          this.values.filter_groups = []
 
           // reset widget conf
           this.$emit('widget-values-changed', {
