@@ -8,10 +8,17 @@
       <RadioGroup
         :model-value="filter.option_type || 'manual'"
         :options="[
-          { label: $t('dashboardFilter.manualOptions'), value: 'manual' },
-          { label: $t('dashboardFilter.sourceOptions'), value: 'formulas' },
+          {
+            label: $t('dashboardFilter.manualOptions'),
+            value: 'manual',
+            disabled,
+          },
+          {
+            label: $t('dashboardFilter.sourceOptions'),
+            value: 'formulas',
+            disabled,
+          },
         ]"
-        :disabled="disabled"
         type="button"
         @update:model-value="$emit('save', { option_type: $event })"
       />
@@ -105,7 +112,7 @@ const props = defineProps({
 defineEmits(['save'])
 const options = ref([])
 watch(
-  () => [props.filter.id, props.filter.options],
+  [() => props.filter.id, () => JSON.stringify(props.filter.options || [])],
   () => {
     options.value = (props.filter.options || []).map((option) => ({
       ...option,

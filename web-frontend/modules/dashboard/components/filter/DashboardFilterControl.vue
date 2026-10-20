@@ -253,7 +253,10 @@ const changed = computed(
     JSON.stringify(normalizedDraft.value) !==
     JSON.stringify(props.appliedValues)
 )
-const optionLabel = (value) => props.optionState.labels?.[value] || value
+const optionLabel = (value) =>
+  Object.hasOwn(props.optionState.labels || {}, value)
+    ? props.optionState.labels[value]
+    : value
 const displayedOptions = computed(() => {
   const query = search.value.toLowerCase()
   return [...new Set([...props.optionState.results, ...draft.value])].filter(

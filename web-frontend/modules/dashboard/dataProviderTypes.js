@@ -6,6 +6,15 @@ export class DashboardFilterDataProviderType extends DataProviderType {
     return 'dashboard_filter'
   }
 
+  isValid(path) {
+    return (
+      path.length >= 1 &&
+      path.length <= 2 &&
+      /^[1-9][0-9]*$/.test(path[0]) &&
+      (path.length === 1 || path[1] === '*' || /^[0-9]+$/.test(path[1]))
+    )
+  }
+
   get name() {
     return this.app.$i18n.t('dashboardFilter.providerName')
   }
@@ -54,6 +63,10 @@ export class DashboardFilterDataProviderType extends DataProviderType {
 export class DashboardDataSourceDataProviderType extends DataProviderType {
   static getType() {
     return 'data_source'
+  }
+
+  isValid(path) {
+    return path.length >= 1 && /^[1-9][0-9]*$/.test(path[0])
   }
 
   get name() {

@@ -335,3 +335,31 @@ test('offers data source formulas instead of table field mappings', async () => 
   expect(wrapper.find('.dashboard-filter-table-field').exists()).toBe(false)
   expect(wrapper.findAll('.formula-input-field').length).toBe(2)
 })
+
+test('keeps unsaved options when an earlier label update finishes', async () => {
+  const wrapper = await render()
+  const filter = testApp.store.getters['dashboardApplication/getFilters'][0]
+  let finish
+  testApp.mock.onPatch('/dashboard/filters/5/').reply(
+    () =>
+      new Promise((resolve) => {
+        finish = resolve
+      })
+  )
+  const label = wrapper.get('.dashboard-filter-settings input')
+  await label.setValue('Department')
+  await label.trigger('blur')
+  await vi.waitFor(() => expect(finish).toBeTypeOf('function'))
+  await wrapper
+    .findAll('button')
+    .find((button) => button.text() === 'dashboardFilter.addOption')
+    .trigger('click')
+  await wrapper
+    .get('.dashboard-filter-settings__option input')
+    .setValue('Design')
+  finish([200, { ...filter, label: 'Department', options: [] }])
+  await flushPromises()
+  expect(
+    wrapper.get('.dashboard-filter-settings__option input').element.value
+  ).toBe('Design')
+})

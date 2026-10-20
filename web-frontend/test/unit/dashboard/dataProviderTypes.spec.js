@@ -47,3 +47,14 @@ test('renders a dashboard filter reference in the shared formula input', async (
   expect(wrapper.get('.get-formula-component').text()).toContain('Country')
   expect(wrapper.find('.formula-input-field--error').exists()).toBe(false)
 })
+
+test.each([
+  ['dashboard_filter', ['nope']],
+  ['dashboard_filter', ['0']],
+  ['dashboard_filter', ['1', 'extra']],
+  ['data_source', ['nope']],
+])('rejects invalid %s paths', (type, path) => {
+  expect(
+    testApp.nuxtApp.$registry.get('dashboardDataProvider', type).isValid(path)
+  ).toBe(false)
+})

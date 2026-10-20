@@ -294,3 +294,28 @@ test('displays and searches labels while applying the underlying value', async (
   await testApp.body.get('form').trigger('submit')
   expect(wrapper.emitted('apply').at(-1)).toEqual([['BE']])
 })
+
+test('keeps an unavailable option named like an object property readable', async () => {
+  await render({
+    appliedValues: ['constructor'],
+    unavailable: ['constructor'],
+    multiple: false,
+  })
+  await wrapper.setProps({
+    optionState: {
+      results: [],
+      labels: {},
+      unavailable: ['constructor'],
+      next: null,
+      loading: false,
+      error: false,
+    },
+  })
+  expect(wrapper.get('.dashboard-filter__value').text()).toBe('constructor')
+  await wrapper.get('.dropdown__selected').trigger('click')
+  await flushPromises()
+  await testApp.body.get('.select__search-input').setValue('constructor')
+  expect(testApp.body.get('.dashboard-filter__option-value').text()).toBe(
+    'constructor'
+  )
+})
