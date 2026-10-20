@@ -51,7 +51,7 @@ def test_output_failure_logs_only_run_identity_and_exception_class(
     assert private_error not in logged
 
 
-def test_one_active_run_per_conversation_in_database(create_run):
+def test_one_active_run_per_conversation_in_database(create_run, mocker):
     run = create_run()
     with pytest.raises(IntegrityError), transaction.atomic():
         ChatRun.objects.create(run_type="fake", chat_id=1, workspace=run.workspace)
@@ -62,6 +62,11 @@ def test_one_active_run_per_conversation_in_database(create_run):
     with pytest.raises(ChatRunAlreadyActive) as error:
         create_run()
     assert error.value.run_id == run.id
+    # Another user's concurrent send is not serialized by the per-user lock.
+    mocker.patch.object(ChatRunHandler, "_active_run_id", side_effect=[None, run.id])
+    with pytest.raises(ChatRunAlreadyActive):
+        create_run()
+    assert ChatRun.objects.filter(run_type="fake", status="queued").count() == 1
 
 
 def test_per_user_limit_and_userless_runs(create_run):
@@ -167,20 +172,28 @@ def test_terminal_outcome_cannot_be_overwritten(create_run):
 
 
 @pytest.mark.parametrize(
-    "redis_events",
-    [None, [{"kind": "text.delta", "data": {"text": "hi", "segment": 0}}]],
+    "redis_events,stopped",
+    [
+        (None, False),
+        ([{"kind": "text.delta", "data": {"text": "hi", "segment": 0}}], True),
+    ],
 )
 def test_expired_worker_ends_with_or_without_output(
-    create_run, fake_run_type, mocker, redis_events
+    create_run, fake_run_type, mocker, redis_events, stopped
 ):
     run = create_run(claim=True)
+    if stopped:
+        ChatRunHandler().request_cancel(run.id)
     ChatRun.objects.filter(id=run.id).update(
         lease_expires_at=timezone.now() - timedelta(seconds=1)
     )
     mocker.patch.object(ChatRunHandler, "_recover_output", return_value=redis_events)
     assert ChatRunHandler().finalize_lost_runs() == 1
     run.refresh_from_db()
-    assert (run.status, run.error_code) == ("failed", "interrupted")
+    assert (run.status, run.error_code) == (
+        "cancelled" if stopped else "failed",
+        "interrupted",
+    )
     assert fake_run_type.lost_events == [redis_events]
     assert fake_run_type.executed == 0
 

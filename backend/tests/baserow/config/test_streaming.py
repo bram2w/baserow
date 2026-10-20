@@ -69,7 +69,12 @@ async def test_http_stream_admission_does_not_hold_rest_capacity_or_thread_conte
     rejection = []
     await router(
         _scope(origin="https://frontend.example"),
-        AsyncMock(return_value={"type": "http.request", "body": b"{}"}),
+        AsyncMock(
+            side_effect=[
+                {"type": "http.request", "body": b"{}"},
+                {"type": "http.disconnect"},
+            ]
+        ),
         AsyncMock(side_effect=rejection.append),
     )
     assert rejection[0]["status"] == 503

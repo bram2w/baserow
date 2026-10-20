@@ -86,6 +86,7 @@ def test_read_permission_is_rechecked_after_revocation(create_run, fake_run_type
         ChatRunService().snapshot(run.created_by, run.id)
 
 
+@pytest.mark.django_db(transaction=True)
 def test_snapshot_and_cancel_pin_adapter_permission_queries_to_primary(
     create_run, fake_run_type
 ):

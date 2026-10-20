@@ -65,6 +65,8 @@ async def test_eviction_and_new_generation_never_silently_resume(buffer_redis):
     replacement = await new.append([("run.started", {})])
     with pytest.raises(ReplayUnavailable, match="generation"):
         await new.read(first[-1]["cursor"])
+    with pytest.raises(ReplayUnavailable, match="generation"):
+        await writer.append([("text.delta", {"segment": 0, "text": "tail"})])
     await writer.invalidate()
     assert (await new.read()).events == replacement
 
