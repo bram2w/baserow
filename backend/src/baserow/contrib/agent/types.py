@@ -7,7 +7,7 @@ AgentReadinessState = Literal["ready", "incomplete", "unavailable"]
 
 
 class AgentConfiguration(TypedDict):
-    state: AgentReadinessState
+    readiness: AgentReadinessState
     instructions: str
     provider_type: str | None
     model_identifier: str | None

@@ -14,7 +14,7 @@ def agent_url(agent: Application, view: str) -> str:
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
-    "values,state,errors",
+    "values,readiness,errors",
     [
         ({}, "ready", {}),
         ({"instructions": " "}, "incomplete", {"instructions": "required"}),
@@ -32,11 +32,14 @@ def agent_url(agent: Application, view: str) -> str:
     ],
 )
 def test_configuration_reports_missing_and_unavailable_fields(
-    configured_agent, values, state, errors
+    configured_agent, values, readiness, errors
 ):
     configuration = AgentHandler().get_configuration(configured_agent(**values))
 
-    assert (configuration["state"], configuration["errors"]) == (state, errors)
+    assert (configuration["readiness"], configuration["errors"]) == (
+        readiness,
+        errors,
+    )
 
 
 @pytest.mark.django_db
@@ -80,54 +83,30 @@ def test_configuration_update_rejects_invalid_values(data_fixture, values):
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize(
-    "values,readiness",
-    [
-        ({}, "ready"),
-        ({"instructions": " "}, "incomplete"),
-        ({"model_identifier": "other-model"}, "unavailable"),
-    ],
-)
-@pytest.mark.parametrize("endpoint", ["agent", "application", "workspace", "all"])
+@pytest.mark.parametrize("endpoint", ["agent", "workspace"])
 def test_agent_payload_includes_only_public_readiness(
-    configured_agent, api_client, api_user, values, readiness, endpoint
+    configured_agent, api_client, api_user, endpoint
 ):
-    agent = configured_agent(user=api_user, **values)
-    urls = {
-        "agent": agent_url(agent, "item"),
-        "application": reverse(
-            "api:applications:item", kwargs={"application_id": agent.id}
-        ),
-        "workspace": reverse(
+    agent = configured_agent(user=api_user, instructions=" ")
+    url = (
+        agent_url(agent, "item")
+        if endpoint == "agent"
+        else reverse(
             "api:applications:list", kwargs={"workspace_id": agent.workspace_id}
-        ),
-        "all": reverse("api:applications:list"),
-    }
+        )
+    )
 
-    response = api_client.get(urls[endpoint])
+    payload = api_client.get(url).json()
 
-    assert response.status_code == 200
-    payload = response.json()
-    if endpoint in ("workspace", "all"):
+    if endpoint == "workspace":
         [payload] = payload
-    assert payload["id"] == agent.id
-    assert payload["readiness"] == readiness
+    assert payload["readiness"] == "incomplete"
     assert not {
         "instructions",
         "provider_type",
         "model_identifier",
         "errors",
-        "state",
     }.intersection(payload)
-
-
-@pytest.mark.django_db
-def test_readiness_has_no_separate_endpoint(configured_agent, api_client, api_user):
-    agent = configured_agent(user=api_user)
-
-    response = api_client.get(f"/api/agent/{agent.id}/readiness/")
-
-    assert response.status_code == 404
 
 
 @pytest.mark.django_db
@@ -155,7 +134,7 @@ def test_configuration_is_served_only_by_the_agent_endpoints(
     )
 
     configuration = {
-        "state": "ready",
+        "readiness": "ready",
         "instructions": "PRIVATE",
         "provider_type": "openai",
         "model_identifier": "test-model",

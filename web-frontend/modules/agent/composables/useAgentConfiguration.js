@@ -185,7 +185,7 @@ export function useAgentConfiguration(agent) {
     ++readinessRequest
     readinessError.value = false
     // Keep only public metadata in the shared application store.
-    updateApplication({ readiness: data.state })
+    updateApplication({ readiness: data.readiness })
   }
 
   async function fetchConfiguration() {
@@ -343,13 +343,10 @@ export function useAgentConfiguration(agent) {
   }
 
   onMounted(() => refreshConfiguration({ refreshAgent: false }))
-  watch(
-    () => [agent.value?.id, store.state.auth.user?.id],
-    () => {
-      reset()
-      if (agent.value) refreshConfiguration({ refreshAgent: false })
-    }
-  )
+  watch([() => agent.value?.id, () => store.state.auth.user?.id], () => {
+    reset()
+    if (agent.value) refreshConfiguration({ refreshAgent: false })
+  })
   watch(
     () => agent.value?.name,
     (value) => (name.value = value ?? '')

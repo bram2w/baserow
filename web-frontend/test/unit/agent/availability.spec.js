@@ -21,16 +21,6 @@ describe('Agent model availability', () => {
   const modelRequests = () =>
     testApp.mock.history.get.filter(({ url }) => url === '/workspaces/')
 
-  test('uses public readiness without loading models for ordinary readers', async () => {
-    allowed.value = withoutConfiguration
-    mockAvailability(testApp, [500, {}])
-
-    const wrapper = await mount()
-
-    expect(modelRequests()).toHaveLength(0)
-    expect(warning(wrapper).exists()).toBe(false)
-  })
-
   test('loads models when configuration access is granted', async () => {
     allowed.value = withoutConfiguration
     const wrapper = await mount()

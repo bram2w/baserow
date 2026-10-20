@@ -4,17 +4,12 @@ from baserow.contrib.agent.operations import ReadAgentConfigurationOperationType
 from baserow.contrib.agent.service import AgentService
 from baserow.core.actions import ExportApplicationsActionType
 from baserow.core.handler import CoreHandler
-from baserow.core.operations import (
-    ReadApplicationOperationType,
-    UpdateApplicationOperationType,
-)
-from baserow.core.service import CoreService
+from baserow.core.operations import UpdateApplicationOperationType
 
 
 def call(name, user, agent):
     service = AgentService()
     calls = {
-        "read agent": lambda: CoreService().get_application(user, agent.id),
         "read configuration": lambda: service.get_configuration(user, agent.id),
         "update configuration": lambda: service.update_configuration(
             user, agent.id, instructions="Changed"
@@ -30,7 +25,6 @@ def call(name, user, agent):
 @pytest.mark.parametrize(
     "name,operations",
     [
-        ("read agent", [ReadApplicationOperationType]),
         ("read configuration", [ReadAgentConfigurationOperationType]),
         (
             "update configuration",

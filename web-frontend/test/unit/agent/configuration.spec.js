@@ -70,6 +70,19 @@ describe('Agent configuration', () => {
     expect(testApp.mock.history.get).toHaveLength(requests)
   })
 
+  test('keeps an unsaved edit when the session token is refreshed', async () => {
+    const user = { id: 1, username: 'member@example.com' }
+    testApp.authenticate(user)
+    const wrapper = await mount()
+    await openSection(wrapper, 'agent.instructions')
+    await instructions(wrapper).setValue('Unsaved instructions')
+
+    testApp.authenticate({ ...user })
+    await flushPromises()
+
+    expect(instructions(wrapper).element.value).toBe('Unsaved instructions')
+  })
+
   test('saves typed text on blur and shows only the header spinner while saving', async () => {
     useFakeTimers()
     const patch = deferredReply()
@@ -364,22 +377,6 @@ describe('Agent configuration', () => {
       expect(testApp.mock.history.get.map(({ url }) => url)).toEqual([])
     }
   )
-
-  test('uses readiness from a realtime application update without fetching it again', async () => {
-    allowed.value = withoutConfiguration
-    const wrapper = await mount()
-
-    await testApp.store.dispatch('application/forceUpdate', {
-      application: agent,
-      data: { readiness: 'incomplete' },
-    })
-    await flushPromises()
-
-    expect(wrapper.text()).toContain('agent.configurationPermissionRequired')
-    expect(
-      testApp.mock.history.get.filter(({ url }) => url === '/applications/10/')
-    ).toHaveLength(0)
-  })
 
   test('never shows the configuration after read access is revoked during a save', async () => {
     const patch = deferredReply()

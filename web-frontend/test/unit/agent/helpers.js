@@ -25,7 +25,7 @@ export const completeConfiguration = (extra = {}) => ({
   instructions: 'Be helpful.',
   provider_type: 'openai',
   model_identifier: 'model-one',
-  state: 'ready',
+  readiness: 'ready',
   errors: {},
   ...extra,
 })
@@ -33,14 +33,14 @@ export const completeConfiguration = (extra = {}) => ({
 export const incompleteConfiguration = (field) =>
   completeConfiguration({
     [field]: field === 'instructions' ? '' : null,
-    state: 'incomplete',
+    readiness: 'incomplete',
     errors: { [field]: 'required' },
   })
 
 export const unavailableModel = (model) =>
   completeConfiguration({
     model_identifier: model,
-    state: 'unavailable',
+    readiness: 'unavailable',
     errors: { model_identifier: 'unavailable' },
   })
 

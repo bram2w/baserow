@@ -44,7 +44,7 @@ class AgentHandler:
         :param agent: The Agent to read.
         :param provider_state: The AI provider state of the Agent's workspace, when
             the caller already loaded it.
-        :return: The configuration values, the readiness state and the error of
+        :return: The configuration values, the readiness and the error of
             each field that keeps the Agent from being ready.
         """
 
@@ -67,14 +67,14 @@ class AgentHandler:
                 errors["model_identifier"] = "unavailable"
 
         if "required" in errors.values():
-            state = "incomplete"
+            readiness = "incomplete"
         elif errors:
-            state = "unavailable"
+            readiness = "unavailable"
         else:
-            state = "ready"
+            readiness = "ready"
         return {
             **{field: getattr(agent, field) for field in self.configuration_fields},
-            "state": state,
+            "readiness": readiness,
             "errors": errors,
         }
 
