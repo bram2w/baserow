@@ -26,5 +26,11 @@ test.each([true, false])(
         )
         .map(({ uid }) => uid)
     ).toEqual([rbacEnabled ? 'VIEWER' : 'MEMBER'])
+    expect(
+      data.find(({ uid }) => uid === 'NO_ROLE_LOW_PRIORITY').invitationSubtitle
+    ).toBe('shareScope.pendingNoWorkspaceRole')
+    expect(
+      data.find(({ uid }) => uid === 'VIEWER').invitationSubtitle
+    ).toBeNull()
   }
 )

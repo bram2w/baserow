@@ -406,8 +406,7 @@
     "linkEmptyDescription": "You can create multiple links with different roles.",
     "pendingTitle": "Pending invitations",
     "pendingEmptyTitle": "No invitations are pending.",
-    "pendingEmptyDescription": "Invitations show up here until they are accepted.",
-    "pendingNoWorkspaceRole": "No workspace role"
+    "pendingEmptyDescription": "Invitations show up here until they are accepted."
   },
   "inviteInput": {
     "batchLimitExceeded": "You can invite up to {limit} email addresses at once. Remove extra addresses to continue.",

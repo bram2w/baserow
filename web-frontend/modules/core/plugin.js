@@ -151,10 +151,7 @@ import {
   RuntimeToDatetime,
 } from '@baserow/modules/core/runtimeFormulaTypes'
 
-import {
-  AdminRoleType,
-  MemberRoleType,
-} from '@baserow/modules/database/roleTypes'
+import { AdminRoleType, MemberRoleType } from '@baserow/modules/core/roleTypes'
 
 export default defineNuxtPlugin({
   name: 'core',

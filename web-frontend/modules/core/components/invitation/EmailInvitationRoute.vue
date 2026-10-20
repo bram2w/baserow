@@ -39,9 +39,6 @@ import error from '@baserow/modules/core/mixins/error'
 import WorkspaceService from '@baserow/modules/core/services/workspace'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 
-// The role uid of an invitation that only gives access to specific items.
-const NO_WORKSPACE_ROLE_UID = 'NO_ROLE_LOW_PRIORITY'
-
 /**
  * Invites people into the workspace by email. One input takes any number of
  * addresses, typed or pasted, and every address gets its own invitation with
@@ -106,9 +103,9 @@ export default {
           key: `invitation:${invitation.id}`,
           name: invitation.email,
           subtitle:
-            invitation.permissions === NO_WORKSPACE_ROLE_UID
-              ? this.$t('inviteModal.pendingNoWorkspaceRole')
-              : null,
+            this.workspace._.roles.find(
+              (role) => role.uid === invitation.permissions
+            )?.invitationSubtitle ?? null,
           icon: 'iconoir-mail',
           color: 'neutral',
           roleUid: invitation.permissions,

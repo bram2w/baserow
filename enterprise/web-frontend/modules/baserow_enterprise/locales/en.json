@@ -351,6 +351,7 @@
     "view": "View"
   },
   "shareScope": {
+    "pendingNoWorkspaceRole": "No workspace role",
     "searchPlaceholder": "Search {subjects}, or type an email",
     "searchSubjectsPlaceholder": "Search {subjects}",
     "workspaceInvitationRequired": "Inviting new people requires workspace invitation permission. You can still grant access to existing workspace members.",

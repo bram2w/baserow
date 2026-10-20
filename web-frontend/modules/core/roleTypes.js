@@ -28,6 +28,11 @@ class RoleType extends Registerable {
     return false
   }
 
+  // Optional explanation shown below pending invitations with this role.
+  getInvitationSubtitle(workspaceId) {
+    return null
+  }
+
   // Indicates whether the role should be visible in the list.
   isVisible(workspaceId) {
     return true

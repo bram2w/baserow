@@ -148,19 +148,34 @@ describe('InviteModal', () => {
     ])
   })
 
-  test('says a pending invitation without a workspace role has none', async () => {
+  test('shows pending invitation subtitles supplied by role metadata', async () => {
     mockServer.mock.onGet('/workspaces/invitations/workspace/1/').reply(200, [
       {
         id: 3,
         email: 'olga@x.com',
-        permissions: 'NO_ROLE_LOW_PRIORITY',
+        permissions: 'CUSTOM_ROLE',
       },
     ])
-    const wrapper = await mountAndShow()
+    const wrapper = await mountAndShow({
+      workspace: {
+        ...workspace,
+        _: {
+          roles: [
+            ...workspace._.roles,
+            {
+              uid: 'CUSTOM_ROLE',
+              name: 'Custom role',
+              isVisible: true,
+              invitationSubtitle: 'customRole.invitationSubtitle',
+            },
+          ],
+        },
+      },
+    })
     await flushPromises()
 
     expect(wrapper.find('.invite-list__subtitle').text()).toBe(
-      'inviteModal.pendingNoWorkspaceRole'
+      'customRole.invitationSubtitle'
     )
   })
 
