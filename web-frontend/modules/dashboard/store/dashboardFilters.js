@@ -1,10 +1,16 @@
 import FilterService from '@baserow/modules/dashboard/services/filter'
 import { shouldResetFilterValues } from '@baserow/modules/dashboard/utils/filter'
+import {
+  getSavedFilterValues,
+  saveFilterValues,
+} from '@baserow/modules/dashboard/utils/filterStorage'
 
 export const filterState = () => ({
   filters: [],
   selectedFilterId: null,
   appliedFilters: {},
+  filterValuesRestored: false,
+  filterValuesUserId: null,
   filterFetchGeneration: 0,
   filterMutationGenerations: {},
   filterOptionGenerations: {},
@@ -12,13 +18,28 @@ export const filterState = () => ({
   refreshing: false,
 })
 
-const dashboardRequest = (state) => ({
+const dashboardRequest = (state, rootGetters) => ({
   id: state.dashboardId,
   generation: state.dashboardGeneration,
+  userId: rootGetters['auth/getUserId'],
 })
-const isCurrent = (state, request) =>
+const isCurrent = (state, request, rootGetters) =>
   state.dashboardId === request.id &&
-  state.dashboardGeneration === request.generation
+  state.dashboardGeneration === request.generation &&
+  request.userId === rootGetters['auth/getUserId']
+const persistFilterValues = (state, rootGetters) => {
+  if (
+    !state.filterValuesRestored ||
+    state.filterValuesUserId !== rootGetters['auth/getUserId']
+  )
+    return
+  saveFilterValues(
+    state.filterValuesUserId,
+    state.dashboardId,
+    state.filters,
+    state.appliedFilters
+  )
+}
 const emptyOptions = () => ({
   results: [],
   next: null,
@@ -33,6 +54,13 @@ const emptyOptions = () => ({
 })
 
 export const filterMutations = {
+  RESTORE_FILTER_VALUES(state, { userId, selections }) {
+    for (const { filterId, values } of selections) {
+      state.appliedFilters[filterId] = values
+    }
+    state.filterValuesRestored = true
+    state.filterValuesUserId = userId
+  },
   INVALIDATE_FILTER_FETCH(state) {
     state.filterFetchGeneration += 1
   },
@@ -97,17 +125,24 @@ export const filterActions = {
   selectFilter({ commit }, filterId) {
     commit('SELECT_FILTER', filterId)
   },
-  async fetchFilters({ state, commit }) {
-    const request = dashboardRequest(state)
+  async fetchFilters({ state, commit, rootGetters }) {
+    const request = dashboardRequest(state, rootGetters)
     commit('INVALIDATE_FILTER_FETCH')
     const generation = state.filterFetchGeneration
     const { data } = await FilterService(this.$client).fetchAll(request.id)
     if (
-      !isCurrent(state, request) ||
+      !isCurrent(state, request, rootGetters) ||
       generation !== state.filterFetchGeneration
     )
       return
     commit('SET_FILTERS', data)
+    if (!state.filterValuesRestored) {
+      commit('RESTORE_FILTER_VALUES', {
+        userId: request.userId,
+        selections: getSavedFilterValues(request.userId, request.id, data),
+      })
+    }
+    persistFilterValues(state, rootGetters)
     for (const filter of data) {
       commit('INVALIDATE_FILTER_OPTIONS', filter.id)
       commit('SET_FILTER_OPTIONS', {
@@ -117,26 +152,29 @@ export const filterActions = {
     }
     return data
   },
-  async createFilter({ state, commit, dispatch }, values) {
-    const request = dashboardRequest(state)
+  async createFilter({ state, commit, dispatch, rootGetters }, values) {
+    const request = dashboardRequest(state, rootGetters)
     const { data } = await FilterService(this.$client).create(
       request.id,
       values
     )
-    if (!isCurrent(state, request)) return data
+    if (!isCurrent(state, request, rootGetters)) return data
     commit('INVALIDATE_FILTER_FETCH')
     commit('UPSERT_FILTER', data)
     commit('SELECT_FILTER', data.id)
     await dispatch('enterEditMode')
     return data
   },
-  async updateFilter({ state, commit, dispatch }, { filterId, values }) {
-    const request = dashboardRequest(state)
+  async updateFilter(
+    { state, commit, dispatch, rootGetters },
+    { filterId, values }
+  ) {
+    const request = dashboardRequest(state, rootGetters)
     commit('INVALIDATE_FILTER_MUTATION', filterId)
     const generation = state.filterMutationGenerations[filterId]
     const { data } = await FilterService(this.$client).update(filterId, values)
     if (
-      !isCurrent(state, request) ||
+      !isCurrent(state, request, rootGetters) ||
       generation !== state.filterMutationGenerations[filterId] ||
       !state.filters.some((filter) => filter.id === filterId)
     )
@@ -145,24 +183,29 @@ export const filterActions = {
     commit('INVALIDATE_FILTER_OPTIONS', filterId)
     commit('SET_FILTER_OPTIONS', { filterId, values: emptyOptions() })
     commit('UPSERT_FILTER', data)
+    persistFilterValues(state, rootGetters)
     await dispatch('refreshWidgets')
     return data
   },
-  async deleteFilter({ state, commit, dispatch }, filterId) {
-    const request = dashboardRequest(state)
+  async deleteFilter({ state, commit, dispatch, rootGetters }, filterId) {
+    const request = dashboardRequest(state, rootGetters)
     commit('INVALIDATE_FILTER_MUTATION', filterId)
     await FilterService(this.$client).delete(filterId)
-    if (!isCurrent(state, request)) return
+    if (!isCurrent(state, request, rootGetters)) return
     commit('INVALIDATE_FILTER_FETCH')
     commit('INVALIDATE_FILTER_OPTIONS', filterId)
     commit('DELETE_FILTER', filterId)
+    persistFilterValues(state, rootGetters)
     await dispatch('refreshWidgets')
   },
   async handleFiltersUpdated({ dispatch }) {
-    await dispatch('fetchFilters')
-    await dispatch('refreshWidgets')
+    const filters = await dispatch('fetchFilters')
+    if (filters !== undefined) await dispatch('refreshWidgets')
   },
-  async applyFilter({ state, commit, dispatch }, { filterId, values }) {
+  async applyFilter(
+    { state, commit, dispatch, rootGetters },
+    { filterId, values }
+  ) {
     const filter = state.filters.find((f) => f.id === filterId)
     if (!filter) return
     const normalized =
@@ -173,15 +216,16 @@ export const filterActions = {
       filterId,
       values: normalized.filter((value) => value !== ''),
     })
+    persistFilterValues(state, rootGetters)
     await dispatch('refreshWidgets')
   },
   async fetchFilterOptions(
-    { state, commit },
+    { state, commit, rootGetters },
     { filterId, search = '', more = false, selected, useCache = false } = {}
   ) {
     const filter = state.filters.find((f) => f.id === filterId)
     if (!filter || filter.mode !== 'dropdown') return
-    const request = dashboardRequest(state)
+    const request = dashboardRequest(state, rootGetters)
     const previous = state.filterOptions[filterId] ?? emptyOptions()
     if (useCache && !search && !more) {
       // Reopening must not restart an initial load or an explicit Refresh.
@@ -218,12 +262,12 @@ export const filterActions = {
     commit('INVALIDATE_FILTER_OPTIONS', filterId)
     const generation = state.filterOptionGenerations[filterId]
     const current = () =>
-      isCurrent(state, request) &&
+      isCurrent(state, request, rootGetters) &&
       generation === state.filterOptionGenerations[filterId] &&
       state.filters.some((f) => f.id === filterId)
     const cacheCurrent = () =>
       !search &&
-      isCurrent(state, request) &&
+      isCurrent(state, request, rootGetters) &&
       state.filters.some((f) => f.id === filterId) &&
       state.filterOptions[filterId]?.unfilteredGeneration === generation
     const displayCurrent = () =>
@@ -298,9 +342,9 @@ export const filterActions = {
       })
     }
   },
-  async refresh({ state, commit, dispatch }) {
+  async refresh({ state, commit, dispatch, rootGetters }) {
     if (state.refreshing) return
-    const request = dashboardRequest(state)
+    const request = dashboardRequest(state, rootGetters)
     commit('SET_REFRESHING', true)
     try {
       await Promise.allSettled([
@@ -310,7 +354,8 @@ export const filterActions = {
           .map((f) => dispatch('fetchFilterOptions', { filterId: f.id })),
       ])
     } finally {
-      if (isCurrent(state, request)) commit('SET_REFRESHING', false)
+      if (isCurrent(state, request, rootGetters))
+        commit('SET_REFRESHING', false)
     }
   },
 }

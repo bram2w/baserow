@@ -654,7 +654,10 @@ export const actions = {
       return
     }
 
-    await dispatch('fetchFilters')
+    let filters
+    do {
+      filters = await dispatch('fetchFilters')
+    } while (filters === undefined && isDashboardRequestCurrent(state, request))
     if (!isDashboardRequestCurrent(state, request)) return
 
     // Render widgets while their data sources are still loading.

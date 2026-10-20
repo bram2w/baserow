@@ -35,8 +35,10 @@ describe('dashboard text filters', () => {
   }
 
   beforeEach(async () => {
+    sessionStorage.clear()
     hasPermission.mockReturnValue(true)
     testApp = new TestApp()
+    testApp.authenticate({ id: 1 })
     store = testApp.store
     mock = testApp.mock
     mock.onGet('/dashboard/1/widgets/').reply(200, widgets)
@@ -54,7 +56,10 @@ describe('dashboard text filters', () => {
       forEditing: false,
     })
   })
-  afterEach(() => testApp.afterEach())
+  afterEach(async () => {
+    await testApp.afterEach()
+    sessionStorage.clear()
+  })
 
   async function renderFilters() {
     const wrapper = await testApp.mount(DashboardFilters, {
@@ -299,7 +304,7 @@ describe('dashboard text filters', () => {
     }
   )
 
-  test('keeps separate results for widgets sharing a source and preserves values on refresh', async () => {
+  test('keeps separate widget results and preserves applied values on refresh and reload', async () => {
     await store.dispatch('dashboardApplication/applyFilter', {
       filterId: 5,
       values: ['Design'],
@@ -324,9 +329,14 @@ describe('dashboard text filters', () => {
       dashboardId,
       forEditing: false,
     })
+    const { wrapper } = await renderFilters()
+    expect(wrapper.get('.dashboard-filter__value').text()).toBe('Design')
     expect(
-      store.getters['dashboardApplication/getAppliedFilterValues'](5)
-    ).toEqual([])
+      JSON.parse(
+        mock.history.post.filter(({ url }) => url.endsWith('/dispatch/')).at(-1)
+          .data
+      )
+    ).toEqual({ filters: [{ filter_id: 5, values: ['Design'] }] })
   })
 
   test('filters loaded pages locally and keeps the search when more choices load or refresh', async () => {
