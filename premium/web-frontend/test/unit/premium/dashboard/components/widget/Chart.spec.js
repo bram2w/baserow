@@ -145,6 +145,69 @@ describe('Premium dashboard Chart component', () => {
     }
   })
 
+  test.each(['BAR', 'LINE', 'PIE', 'DOUGHNUT'])(
+    'uses saved series colors for %s charts',
+    (type) => {
+      const source = dataSource({
+        aggregation_group_bys: [{ field_id: 11 }],
+        context_data: { fields: { field_11: { type: 'text' } } },
+      })
+      const seriesConfig = [
+        { series_id: 1, series_chart_type: type, series_color: '#aabbcc' },
+      ]
+      const data = chartData({
+        source,
+        seriesConfig,
+        data: { results: [{ field_11: 'Alpha', 'Amount sum': 5 }] },
+      })
+      if (['PIE', 'DOUGHNUT'].includes(type)) {
+        expect(data.datasets[0].backgroundColor).toEqual(['#aabbcc'])
+      } else {
+        expect(data.datasets[0].backgroundColor).toBe('#aabbcc')
+        expect(data.datasets[0].borderColor).toBe('#aabbcc')
+      }
+      source.aggregation_group_bys = []
+      const ungrouped = chartData({
+        source,
+        seriesConfig,
+        data: { results: [{ 'Amount sum': 5 }] },
+      })
+      expect(ungrouped.datasets[0].backgroundColor).toEqual(
+        ['PIE', 'DOUGHNUT'].includes(type) ? ['#aabbcc'] : '#aabbcc'
+      )
+    }
+  )
+
+  test.each(['PIE', 'DOUGHNUT'])(
+    'generates a shade per slice from a custom %s series color',
+    (type) => {
+      const source = dataSource({
+        aggregation_group_bys: [{ field_id: 11 }],
+        context_data: { fields: { field_11: { type: 'text' } } },
+      })
+      const colors = chartData({
+        source,
+        seriesConfig: [
+          { series_id: 1, series_chart_type: type, series_color: '#808080' },
+        ],
+        data: {
+          results: Array.from({ length: 12 }, (_, index) => ({
+            field_11: `Group ${index}`,
+            'Amount sum': index + 1,
+          })),
+        },
+      }).datasets[0].backgroundColor
+      expect(colors).toHaveLength(12)
+      expect(colors[0]).toBe('#808080')
+      expect(new Set(colors).size).toBe(12)
+      expect(colors.every((color) => /^#[0-9a-f]{6,8}$/i.test(color))).toBe(
+        true
+      )
+      expect(parseInt(colors[1].slice(1, 3), 16)).toBeLessThan(128)
+      expect(parseInt(colors[2].slice(1, 3), 16)).toBeGreaterThan(128)
+    }
+  )
+
   test('builds chart data from grouped aggregation results', async () => {
     const data = chartData({
       data: {

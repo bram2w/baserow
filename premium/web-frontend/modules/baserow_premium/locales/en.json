@@ -406,6 +406,8 @@
     "aggregationTypeLabel": "Summary",
     "deleteSeries": "Delete series",
     "chartType": "Chart type",
+    "seriesColor": "Color",
+    "automaticColor": "Use automatic color",
     "barChart": "Bar",
     "lineChart": "Line",
     "pieChart": "Pie",

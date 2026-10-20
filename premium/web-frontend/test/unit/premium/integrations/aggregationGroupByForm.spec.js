@@ -1,3 +1,4 @@
+import paletteColors from '@baserow/modules/core/assets/scss/colors.module.scss'
 import MockAdapter from 'axios-mock-adapter'
 import { flushPromises } from '@vue/test-utils'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
@@ -199,4 +200,42 @@ describe('Grouping mode persistence in data-source forms', () => {
       }
     }
   )
+})
+
+describe('Dashboard series colors', () => {
+  test('keeps the chart type when changing color and keeps color when changing type', async () => {
+    const { default: Form } =
+      await import('@baserow_premium/integrations/localBaserow/components/services/AggregationSeriesForm.vue')
+    const config = {
+      series_id: 1,
+      series_chart_type: 'LINE',
+      series_color: '#112233',
+    }
+    const wrapper = await mountSuspended(Form, {
+      props: {
+        tableFields: [{ id: 10, type: 'number', name: 'Amount' }],
+        aggregationSeries: [{ id: 1, field_id: 10, aggregation_type: 'sum' }],
+        seriesIndex: 0,
+        defaultValues: { id: 1, field_id: 10, aggregation_type: 'sum' },
+        widget: {
+          type: 'chart',
+          default_series_chart_type: 'BAR',
+          series_config: [config],
+        },
+      },
+    })
+    wrapper
+      .findComponent({ name: 'ColorSelectContext' })
+      .vm.$emit('selected', 'blue')
+    expect(wrapper.emitted('series-config-changed').at(-1)[0]).toEqual({
+      ...config,
+      series_color: paletteColors.blue,
+    })
+    wrapper.vm.seriesChartTypeChanged('BAR')
+    expect(wrapper.emitted('series-config-changed').at(-1)[0]).toEqual({
+      ...config,
+      series_chart_type: 'BAR',
+    })
+    wrapper.unmount()
+  })
 })

@@ -154,8 +154,9 @@ export default {
                         newLabel.text = dataset.label
                       }
                       newLabel.fillStyle =
-                        datasetColors[datasetIndex]?.[label.index % 10] ||
-                        label.fillStyle
+                        datasetColors[datasetIndex]?.[
+                          label.index % datasetColors[datasetIndex].length
+                        ] || label.fillStyle
                       newLabels.push(newLabel)
                     })
                     datasetIndex += 1

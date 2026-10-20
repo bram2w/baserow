@@ -8,6 +8,16 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
+            model_name="chartseriesconfig",
+            name="series_color",
+            field=models.CharField(max_length=9, null=True, blank=True),
+        ),
+        migrations.AddField(
+            model_name="piechartseriesconfig",
+            name="series_color",
+            field=models.CharField(max_length=9, null=True, blank=True),
+        ),
+        migrations.AddField(
             model_name="localbaserowgroupedaggregaterows",
             name="bucket_limit",
             field=models.PositiveIntegerField(
