@@ -145,7 +145,7 @@
 
 <script>
 import WorkspaceRoleSelector from '@baserow/modules/core/components/workspace/WorkspaceRoleSelector'
-import { isValidEmail } from '@baserow/modules/core/utils/string'
+import { isValidStrictEmail } from '@baserow/modules/core/utils/string'
 
 const TAB_ALL = 'all'
 // The reason a chip can't be submitted spans two lines, which the plain
@@ -365,8 +365,8 @@ export default {
     hasInvalidEmails() {
       return (
         this.selected.some(
-          (item) => item.type === 'email' && !isValidEmail(item.email)
-        ) || this.queryEmails.some((email) => !isValidEmail(email))
+          (item) => item.type === 'email' && !isValidStrictEmail(item.email)
+        ) || this.queryEmails.some((email) => !isValidStrictEmail(email))
       )
     },
   },
@@ -435,7 +435,7 @@ export default {
     newEmailOptionFor(email) {
       if (
         this.emailDisabledReason ||
-        !isValidEmail(email) ||
+        !isValidStrictEmail(email) ||
         this.optionWithEmail(email)
       ) {
         return null
@@ -448,7 +448,7 @@ export default {
      * soon as they are.
      */
     chipError(item) {
-      if (item.type === 'email' && !isValidEmail(item.email)) {
+      if (item.type === 'email' && !isValidStrictEmail(item.email)) {
         return this.$t('error.invalidEmail')
       }
       if (item.disabledReason) {

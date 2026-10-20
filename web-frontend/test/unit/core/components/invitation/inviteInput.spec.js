@@ -222,7 +222,14 @@ test('cannot submit when every chip is an error', async () => {
   }
 })
 
-test.each(['bad@@example.com', 'bad@example:com'])(
+test.each([
+  'bad@@example.com',
+  'bad@example:com',
+  'person@domain',
+  'person@example.c',
+  'person@-example.com',
+  'person..name@example.com',
+])(
   'keeps invalid pasted address %s visible and blocks the whole submission',
   async (invalidEmail) => {
     const wrapper = await mountInput()
@@ -261,40 +268,43 @@ test('blocks submission while an invalid address is still being typed', async ()
     const input = wrapper.find('input')
     const button = wrapper.find('.invite-input__row button')
     await paste(input, 'good@example.com')
-    await input.setValue('bad@@example.com')
+    await input.setValue('person@domain')
 
     expect(button.attributes('disabled')).toBeDefined()
     await button.trigger('click')
     expect(wrapper.emitted('add')).toBeUndefined()
 
     await input.trigger('keydown', { key: 'Enter' })
-    expect(errorChips(wrapper)).toEqual(['bad@@example.com'])
+    expect(errorChips(wrapper)).toEqual(['person@domain'])
     expect(button.attributes('disabled')).toBeDefined()
-    expect(chips(wrapper)).toEqual(['good@example.com', 'bad@@example.com'])
+    expect(chips(wrapper)).toEqual(['good@example.com', 'person@domain'])
   } finally {
     wrapper.unmount()
   }
 })
 
-test('preserves the existing email validator for addresses without a dotted domain', async () => {
-  const wrapper = await mountInput()
-  try {
-    const input = wrapper.find('input')
-    await input.setValue('person@domain')
-    await input.trigger('keydown', { key: 'Enter' })
+test.each(['person+tag@example.com', 'person@localhost', 'person@例子.测试'])(
+  'accepts valid invitation address %s',
+  async (email) => {
+    const wrapper = await mountInput()
+    try {
+      const input = wrapper.find('input')
+      await input.setValue(email)
+      await input.trigger('keydown', { key: 'Enter' })
 
-    expect(chips(wrapper)).toEqual(['person@domain'])
-    expect(errorChips(wrapper)).toEqual([])
-    const button = wrapper.find('.invite-input__row button')
-    expect(button.attributes('disabled')).toBeUndefined()
-    await button.trigger('click')
-    expect(wrapper.emitted('add')[0][0].map(({ email }) => email)).toEqual([
-      'person@domain',
-    ])
-  } finally {
-    wrapper.unmount()
+      expect(chips(wrapper)).toEqual([email])
+      expect(errorChips(wrapper)).toEqual([])
+      const button = wrapper.find('.invite-input__row button')
+      expect(button.attributes('disabled')).toBeUndefined()
+      await button.trigger('click')
+      expect(wrapper.emitted('add')[0][0].map(({ email }) => email)).toEqual([
+        email,
+      ])
+    } finally {
+      wrapper.unmount()
+    }
   }
-})
+)
 
 test('flags addresses while a role that cannot be used for invitations is chosen', async () => {
   const noAccess = {
