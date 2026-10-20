@@ -13,6 +13,7 @@
       @apply="apply(filter.id, $event)"
       @select="dispatch('selectFilter', filter.id)"
       @delete="remove(filter)"
+      @reset="notifyReset(filter)"
       @options="
         dispatch('fetchFilterOptions', { filterId: filter.id, ...$event })
       "
@@ -30,7 +31,7 @@ const props = defineProps({
   dashboard: { type: Object, required: true },
   storePrefix: { type: String, default: '' },
 })
-const { $store, $hasPermission } = useNuxtApp()
+const { $store, $hasPermission, $i18n } = useNuxtApp()
 const deleting = ref(false)
 const key = computed(() => `${props.storePrefix}dashboardApplication/`)
 const getter = (name) => $store.getters[key.value + name]
@@ -48,6 +49,17 @@ const canDelete = (filter) =>
   )
 function apply(filterId, values) {
   return dispatch('applyFilter', { filterId, values })
+}
+function notifyReset(filter) {
+  return $store.dispatch('toast/info', {
+    title: $i18n.t('dashboardFilter.resetTitle'),
+    message: $i18n.t(
+      filter.mode === 'input'
+        ? 'dashboardFilter.resetToInput'
+        : 'dashboardFilter.resetToSingle',
+      { filter: filter.label }
+    ),
+  })
 }
 async function remove(filter) {
   if (!editMode.value || !canDelete(filter) || deleting.value) return

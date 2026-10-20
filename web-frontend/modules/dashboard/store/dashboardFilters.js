@@ -1,4 +1,5 @@
 import FilterService from '@baserow/modules/dashboard/services/filter'
+import { shouldResetFilterValues } from '@baserow/modules/dashboard/utils/filter'
 
 export const filterState = () => ({
   filters: [],
@@ -46,15 +47,23 @@ export const filterMutations = {
       state.filterOptions[filterId].loading = false
   },
   SET_FILTERS(state, filters) {
+    const previous = new Map(state.filters.map((filter) => [filter.id, filter]))
     state.filters = filters
-    const ids = new Set(filters.map((f) => f.id))
+    const byId = new Map(filters.map((filter) => [filter.id, filter]))
     for (const id of Object.keys(state.appliedFilters)) {
-      if (!ids.has(Number(id))) delete state.appliedFilters[id]
+      const filterId = Number(id)
+      const filter = byId.get(filterId)
+      if (!filter || shouldResetFilterValues(previous.get(filterId), filter)) {
+        delete state.appliedFilters[id]
+      }
     }
-    if (!ids.has(state.selectedFilterId)) state.selectedFilterId = null
+    if (!byId.has(state.selectedFilterId)) state.selectedFilterId = null
   },
   UPSERT_FILTER(state, filter) {
     const index = state.filters.findIndex((f) => f.id === filter.id)
+    if (shouldResetFilterValues(state.filters[index], filter)) {
+      delete state.appliedFilters[filter.id]
+    }
     if (index === -1) state.filters.push(filter)
     else state.filters.splice(index, 1, filter)
     state.filters.sort((a, b) => a.id - b.id)

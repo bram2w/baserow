@@ -1,6 +1,7 @@
 import { flushPromises } from '@vue/test-utils'
 import { TestApp } from '@baserow/test/helpers/testApp'
 import DashboardFilters from '@baserow/modules/dashboard/components/filter/DashboardFilters'
+import Toasts from '@baserow/modules/core/components/toasts/Toasts'
 
 const { hasPermission } = vi.hoisted(() => ({ hasPermission: vi.fn() }))
 vi.mock('#app', async (importOriginal) => {
@@ -54,6 +55,204 @@ describe('dashboard text filters', () => {
     })
   })
   afterEach(() => testApp.afterEach())
+
+  async function renderFilters() {
+    const wrapper = await testApp.mount(DashboardFilters, {
+      global: { stubs: { Teleport: false } },
+      props: { dashboard: { id: dashboardId, workspace: { id: 1 } } },
+    })
+    const notifications = await testApp.mount(Toasts)
+    return { wrapper, notifications }
+  }
+
+  test.each([
+    ['updateFilter', { mode: 'input' }, ['Design', 'Sales'], 'resetToInput'],
+    ['updateFilter', { multiple: false }, ['Design'], 'resetToSingle'],
+    ['handleFiltersUpdated', { mode: 'input' }, ['Design'], 'resetToInput'],
+    [
+      'handleFiltersUpdated',
+      { multiple: false },
+      ['Design', 'Sales'],
+      'resetToSingle',
+    ],
+  ])(
+    '%s clears the selection for %j and explains it without clearing other filters',
+    async (action, changes, values, message) => {
+      const other = { ...filter, id: 6, label: 'Status' }
+      mock.onGet('/dashboard/1/filters/').reply(200, [filter, other])
+      await store.dispatch('dashboardApplication/fetchFilters')
+      await store.dispatch('dashboardApplication/applyFilter', {
+        filterId: 5,
+        values,
+      })
+      await store.dispatch('dashboardApplication/applyFilter', {
+        filterId: 6,
+        values: ['Open'],
+      })
+      const { wrapper, notifications } = await renderFilters()
+      const updated = { ...filter, ...changes }
+      mock.onPatch('/dashboard/filters/5/').reply(200, updated)
+      mock.onGet('/dashboard/1/filters/').reply(200, [updated, other])
+      await store.dispatch(`dashboardApplication/${action}`, {
+        filterId: 5,
+        values: changes,
+      })
+      await flushPromises()
+      expect(
+        wrapper.findAll('.dashboard-filter__value').map((value) => value.text())
+      ).toEqual(['dashboardFilter.choose', 'Open'])
+      expect(notifications.get('.toast__message').text()).toBe(
+        `dashboardFilter.${message}`
+      )
+      expect(
+        JSON.parse(
+          mock.history.post
+            .filter(({ url }) => url.endsWith('/dispatch/'))
+            .at(-1).data
+        )
+      ).toEqual({ filters: [{ filter_id: 6, values: ['Open'] }] })
+      await store.dispatch('dashboardApplication/handleFiltersUpdated')
+      await flushPromises()
+      expect(notifications.findAll('.toast')).toHaveLength(1)
+    }
+  )
+
+  test.each([
+    [{}, { label: 'Renamed' }],
+    [{}, { operator: 'contains' }],
+    [{}, { bindings: [{ table_id: 1, field_id: 21 }] }],
+    [{ mode: 'input' }, { mode: 'dropdown' }],
+    [{ multiple: false }, { multiple: true }],
+    [{}, { mode: 'dropdown', multiple: true }],
+  ])(
+    'preserves the selection for other configuration changes: %j → %j',
+    async (initial, changes) => {
+      const current = { ...filter, ...initial }
+      mock.onGet('/dashboard/1/filters/').reply(200, [current])
+      await store.dispatch('dashboardApplication/fetchFilters')
+      await store.dispatch('dashboardApplication/applyFilter', {
+        filterId: 5,
+        values: ['Design'],
+      })
+      const { wrapper, notifications } = await renderFilters()
+      mock
+        .onPatch('/dashboard/filters/5/')
+        .reply(200, { ...current, ...changes })
+      await store.dispatch('dashboardApplication/updateFilter', {
+        filterId: 5,
+        values: changes,
+      })
+      await flushPromises()
+      expect(wrapper.get('.dashboard-filter__value').text()).toBe('Design')
+      expect(notifications.find('.toast').exists()).toBe(false)
+    }
+  )
+
+  test('keeps selections while the configuration update is pending or fails', async () => {
+    testApp.dontFailOnErrorResponses()
+    await store.dispatch('dashboardApplication/applyFilter', {
+      filterId: 5,
+      values: ['Design'],
+    })
+    const { wrapper, notifications } = await renderFilters()
+    let finish
+    mock.onPatch('/dashboard/filters/5/').reply(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve
+        })
+    )
+    const update = store
+      .dispatch('dashboardApplication/updateFilter', {
+        filterId: 5,
+        values: { mode: 'input' },
+      })
+      .catch((error) => error)
+    await vi.waitFor(() => expect(finish).toBeTypeOf('function'))
+    expect(wrapper.get('.dashboard-filter__value').text()).toBe('Design')
+    expect(notifications.find('.toast').exists()).toBe(false)
+    finish([500])
+    expect(await update).toBeInstanceOf(Error)
+    await flushPromises()
+    expect(wrapper.get('.dashboard-filter__value').text()).toBe('Design')
+    expect(notifications.find('.toast').exists()).toBe(false)
+  })
+
+  test.each([
+    [{ mode: 'input' }, 'resetToInput'],
+    [{ multiple: false }, 'resetToSingle'],
+  ])(
+    'discards an open draft when another editor changes the filter to %j',
+    async (changes, message) => {
+      mock.onPost('/dashboard/filters/5/options/').reply(200, {
+        results: ['Design', 'Sales'],
+        next: null,
+        available: [],
+      })
+      const { wrapper, notifications } = await renderFilters()
+      await wrapper.get('.dropdown__selected').trigger('click')
+      await flushPromises()
+      await testApp.body.findAll('input[type="checkbox"]')[1].setValue(true)
+      mock
+        .onGet('/dashboard/1/filters/')
+        .reply(200, [{ ...filter, ...changes }])
+      await store.dispatch('dashboardApplication/handleFiltersUpdated')
+      await flushPromises()
+      expect(
+        wrapper.get('.dropdown__selected').attributes('aria-expanded')
+      ).toBe('false')
+      expect(notifications.get('.toast__message').text()).toBe(
+        `dashboardFilter.${message}`
+      )
+      await wrapper.get('.dropdown__selected').trigger('click')
+      await flushPromises()
+      if (changes.mode === 'input') {
+        expect(
+          testApp.body.get('.dashboard-filter__input input').element.value
+        ).toBe('')
+      } else {
+        expect(testApp.body.find('[aria-pressed="true"]').exists()).toBe(false)
+      }
+      expect(testApp.body.get('button[type="submit"]').element.disabled).toBe(
+        true
+      )
+    }
+  )
+
+  test('does not announce a reset when the filter has no selection or draft', async () => {
+    const { notifications } = await renderFilters()
+    mock
+      .onPatch('/dashboard/filters/5/')
+      .reply(200, { ...filter, mode: 'input' })
+    await store.dispatch('dashboardApplication/updateFilter', {
+      filterId: 5,
+      values: { mode: 'input' },
+    })
+    await flushPromises()
+    expect(notifications.find('.toast').exists()).toBe(false)
+  })
+
+  test('does not announce a reset after the selection was already cleared outside the picker', async () => {
+    await store.dispatch('dashboardApplication/applyFilter', {
+      filterId: 5,
+      values: ['Design'],
+    })
+    const { wrapper, notifications } = await renderFilters()
+    await wrapper.get('.dropdown__selected').trigger('click')
+    await flushPromises()
+    await testApp.body.get('form').trigger('keydown', { key: 'Escape' })
+    await wrapper.get('[aria-label="dashboardFilter.clear"]').trigger('click')
+    await flushPromises()
+    mock
+      .onPatch('/dashboard/filters/5/')
+      .reply(200, { ...filter, mode: 'input' })
+    await store.dispatch('dashboardApplication/updateFilter', {
+      filterId: 5,
+      values: { mode: 'input' },
+    })
+    await flushPromises()
+    expect(notifications.find('.toast').exists()).toBe(false)
+  })
 
   test.each([{ results: [] }, { results: ['Design'] }])(
     'reuses loaded options $results until Refresh while preserving selections',

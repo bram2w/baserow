@@ -211,7 +211,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import Dropdown from '@baserow/modules/core/components/Dropdown'
 import Checkbox from '@baserow/modules/core/components/Checkbox'
 import FormInput from '@baserow/modules/core/components/FormInput'
@@ -220,6 +220,7 @@ import Button from '@baserow/modules/core/components/Button'
 import ButtonIcon from '@baserow/modules/core/components/ButtonIcon'
 import SelectSearch from '@baserow/modules/core/components/SelectSearch'
 import Context from '@baserow/modules/core/components/Context'
+import { shouldResetFilterValues } from '@baserow/modules/dashboard/utils/filter'
 
 const props = defineProps({
   filter: { type: Object, required: true },
@@ -239,8 +240,9 @@ const props = defineProps({
   canDelete: Boolean,
   deleting: Boolean,
 })
-const emit = defineEmits(['apply', 'select', 'options', 'delete'])
+const emit = defineEmits(['apply', 'select', 'options', 'delete', 'reset'])
 const dropdown = ref(null)
+const pickerOpen = ref(false)
 const input = ref(null)
 const menu = ref(null)
 const menuTrigger = ref(null)
@@ -276,6 +278,20 @@ const requestOptions = (more = false, useCache = false) =>
     ...(useCache ? { useCache: true } : {}),
   })
 
+watch(
+  () => [props.filter, props.appliedValues],
+  ([filter], [previous, appliedValues]) => {
+    if (!shouldResetFilterValues(previous, filter)) return
+    const hadValues =
+      appliedValues.length ||
+      (pickerOpen.value && draft.value.some((value) => value !== ''))
+    draft.value = []
+    search.value = ''
+    dropdown.value?.hide()
+    if (hadValues) emit('reset')
+  }
+)
+
 function beforeShow() {
   if (props.editMode) {
     emit('select')
@@ -302,6 +318,7 @@ function remove() {
   emit('delete')
 }
 async function onShown() {
+  pickerOpen.value = true
   draft.value = [...props.appliedValues]
   search.value = ''
   if (props.filter.mode === 'dropdown') requestOptions(false, true)
@@ -309,6 +326,7 @@ async function onShown() {
   input.value?.focus()
 }
 function onHidden() {
+  pickerOpen.value = false
   draft.value = [...props.appliedValues]
 }
 function toggle(value, checked) {
