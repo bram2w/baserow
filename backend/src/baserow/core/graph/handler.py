@@ -279,47 +279,29 @@ class BaseGraphHandler(ABC):
             del point_info["children"]
 
     @abstractmethod
-    def get_point_map(self) -> Dict[int, GraphPoint]:
+    def get_all_points(self) -> Iterable[GraphPoint]:
         """
-        Must be implemented by child classes. This method should return an object
-        mapping, where the key is the graph point's ID, and the value is the model
-        instance.
+        Return all point instances belonging to this graph's container.
         """
         ...
 
-    def build_point_map(self, points: Iterable[GraphPoint]) -> Dict[int, GraphPoint]:
-        """
-        Builds the `{point_id: point}` mapping for the given points. The mapping is
-        reused for as long as the very same `points` object is passed again, which
-        is the case for a request-cached list of points. When that cache is
-        invalidated, a new list is passed and the mapping is rebuilt.
-
-        Without this, every `get_point` call rebuilds the mapping, which makes walks
-        such as `get_previous_positions` quadratic in the number of points.
-
-        :param points: The points of the graph, usually the cached list.
-        :return: The mapping of point ID to point.
-        """
-
-        memo = getattr(self, "_point_map_memo", None)
-        if memo is not None and memo[0] is points:
-            return memo[1]
-
-        point_map = {point.id: point for point in points}
-        # Keeping a reference to `points` guarantees the identity check above
-        # can't match a different object that reused the same memory address.
-        self._point_map_memo = (points, point_map)
-        return point_map
+    @classmethod
+    def generate_point_map_cache_key(cls, instance) -> str:
+        return f"graph_point_map_{instance._meta.label}_{instance.id}"
 
     def get_point(self, point_id: str | int) -> GraphPoint:
         """
         Given a graph point, return the corresponding model instance from the point map.
+        The map is cached locally and invalidated alongside the point collection.
 
         :param point_id: The ID of the graph point to retrieve.
         :return: The model instance corresponding to the given graph point ID.
         """
 
-        point_map = self.get_point_map()
+        point_map = local_cache.get(
+            self.generate_point_map_cache_key(self.instance),
+            lambda: {point.id: point for point in self.get_all_points()},
+        )
         try:
             return point_map[int(point_id)]
         except KeyError:

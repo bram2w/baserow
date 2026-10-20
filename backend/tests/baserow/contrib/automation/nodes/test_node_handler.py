@@ -25,6 +25,22 @@ def test_create_node(data_fixture):
 
 
 @pytest.mark.django_db
+def test_workflow_point_map_is_invalidated_after_node_creation(data_fixture):
+    user = data_fixture.create_user()
+    workflow = data_fixture.create_automation_workflow(create_trigger=False)
+    node_type = automation_node_type_registry.get("local_baserow_rows_created")
+
+    with local_cache.context():
+        graph = workflow.get_graph()
+        with pytest.raises(AutomationNodeDoesNotExist):
+            graph.get_point(0)
+        node = AutomationNodeHandler().create_node(
+            node_type, **node_type.prepare_values({"workflow": workflow}, user)
+        )
+        assert graph.get_point(node.id) == node
+
+
+@pytest.mark.django_db
 def test_get_nodes(data_fixture, django_assert_num_queries):
     workflow = data_fixture.create_automation_workflow()
     trigger = workflow.get_trigger()

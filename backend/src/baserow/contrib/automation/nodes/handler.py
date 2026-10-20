@@ -64,6 +64,7 @@ from baserow.core.formula.exceptions import (
 )
 from baserow.core.formula.registries import formula_runtime_function_registry
 from baserow.core.formula.validator import ensure_boolean
+from baserow.core.graph.handler import BaseGraphHandler
 from baserow.core.registries import ImportExportConfig
 from baserow.core.services.exceptions import (
     RuntimeDispatchException,
@@ -150,6 +151,7 @@ class AutomationNodeHandler:
 
         local_cache.delete(self._get_node_cache_key(workflow, True))
         local_cache.delete(self._get_node_cache_key(workflow, False))
+        local_cache.delete(BaseGraphHandler.generate_point_map_cache_key(workflow))
 
     def get_children(
         self, node: AutomationNode, first_only: bool = False
