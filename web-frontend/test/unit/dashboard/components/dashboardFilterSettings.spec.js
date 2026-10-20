@@ -128,13 +128,25 @@ function modalButton(label) {
 }
 
 test.each([
-  [{}, 'input', { mode: 'input' }],
-  [{ mode: 'input' }, 'dropdown', { mode: 'dropdown' }],
-  [{}, 'single', { multiple: false }],
-  [{ multiple: false }, 'multiple', { multiple: true }],
+  [{}, 'input', { mode: 'input' }, 'confirmInputTitle', 'confirmInput'],
+  [
+    { mode: 'input' },
+    'dropdown',
+    { mode: 'dropdown' },
+    'confirmDropdownTitle',
+    'confirmDropdown',
+  ],
+  [{}, 'single', { multiple: false }, 'confirmSingleTitle', 'confirmSingle'],
+  [
+    { multiple: false },
+    'multiple',
+    { multiple: true },
+    'confirmMultipleTitle',
+    'confirmMultiple',
+  ],
 ])(
   'clears values only after confirming the change from %j to %s',
-  async (configuration, target, changes) => {
+  async (configuration, target, changes, title, action) => {
     const wrapper = await render([], configuration)
     await testApp.store.dispatch('dashboardApplication/applyFilter', {
       filterId: 5,
@@ -146,12 +158,17 @@ test.each([
       .find((button) => button.text() === `dashboardFilter.${target}`)
       .trigger('click')
     expect(testApp.body.get('.modal__box').text()).toContain(
-      'dashboardFilter.confirmResetMessage'
+      configuration.mode === 'input'
+        ? 'dashboardFilter.confirmResetInputMessage'
+        : 'dashboardFilter.confirmResetMessage'
+    )
+    expect(testApp.body.get('.modal__box h2').text()).toBe(
+      `dashboardFilter.${title}`
     )
     expect(testApp.mock.history.patch).toHaveLength(0)
     expect(testApp.mock.history.post).toHaveLength(0)
     expect(wrapper.get('.dashboard-filter__value').text()).toBe('Design')
-    await modalButton('dashboardFilter.confirmReset').trigger('click')
+    await modalButton(`dashboardFilter.${action}`).trigger('click')
     await vi.waitFor(() => {
       expect(wrapper.get('.dashboard-filter__value').text()).toBe(
         'dashboardFilter.choose'
@@ -176,7 +193,7 @@ test('confirms format changes even with no values, but ignores the current forma
   expect(testApp.mock.history.patch).toHaveLength(0)
   await wrapper.findAll('.segment-control__button')[1].trigger('click')
   expect(testApp.body.find('.modal__box').exists()).toBe(true)
-  await modalButton('dashboardFilter.confirmReset').trigger('click')
+  await modalButton('dashboardFilter.confirmInput').trigger('click')
   await vi.waitFor(() =>
     expect(testApp.body.find('.modal__box').exists()).toBe(false)
   )
@@ -200,9 +217,9 @@ test('prevents duplicate saves and preserves values if the confirmed change fail
       })
   )
   await wrapper.findAll('.segment-control__button')[1].trigger('click')
-  await modalButton('dashboardFilter.confirmReset').trigger('click')
+  await modalButton('dashboardFilter.confirmInput').trigger('click')
   await vi.waitFor(() => expect(finish).toBeTypeOf('function'))
-  await modalButton('dashboardFilter.confirmReset').trigger('click')
+  await modalButton('dashboardFilter.confirmInput').trigger('click')
   expect(testApp.mock.history.patch).toHaveLength(1)
   expect(modalButton('action.cancel').element.disabled).toBe(true)
   expect(testApp.body.find('.modal__close').exists()).toBe(false)
@@ -211,7 +228,7 @@ test('prevents duplicate saves and preserves values if the confirmed change fail
   expect(wrapper.get('.dashboard-filter__value').text()).toBe('Design')
   finish([500])
   await vi.waitFor(() =>
-    expect(modalButton('dashboardFilter.confirmReset').element.disabled).toBe(
+    expect(modalButton('dashboardFilter.confirmInput').element.disabled).toBe(
       false
     )
   )

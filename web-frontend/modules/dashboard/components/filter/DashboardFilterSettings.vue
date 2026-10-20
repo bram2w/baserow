@@ -107,18 +107,20 @@
       :can-close="!savingFormat"
       role="dialog"
       aria-modal="true"
-      :aria-label="$t('dashboardFilter.confirmResetTitle')"
+      :aria-label="pendingFormatCopy.title"
       @hidden="pendingFormat = null"
     >
       <h2 class="box__title">
-        {{ $t('dashboardFilter.confirmResetTitle') }}
+        {{ pendingFormatCopy.title }}
       </h2>
       <p>
         {{
-          $t('dashboardFilter.confirmResetMessage', {
-            format: pendingFormatLabel,
-            filter: filter.label,
-          })
+          $t(
+            filter.mode === 'input'
+              ? 'dashboardFilter.confirmResetInputMessage'
+              : 'dashboardFilter.confirmResetMessage',
+            { filter: filter.label }
+          )
         }}
       </p>
       <div class="actions actions--right actions--gap margin-bottom-0">
@@ -135,7 +137,7 @@
           :disabled="savingFormat || !canEdit || !pendingFormat"
           @click="confirmFormatChange"
         >
-          {{ $t('dashboardFilter.confirmReset') }}
+          {{ pendingFormatCopy.action }}
         </Button>
       </div>
     </Modal>
@@ -160,12 +162,16 @@ const savingBinding = ref(false)
 const confirmation = ref(null)
 const pendingFormat = ref(null)
 const savingFormat = ref(false)
-const pendingFormatLabel = computed(() => {
-  if (!pendingFormat.value) return ''
+const pendingFormatCopy = computed(() => {
+  if (!pendingFormat.value) return { title: '', action: '' }
   const { mode, multiple } = pendingFormat.value
-  return $i18n.t(
-    `dashboardFilter.${mode ?? (multiple ? 'multiple' : 'single')}`
-  )
+  const target =
+    { dropdown: 'Dropdown', input: 'Input' }[mode] ??
+    (multiple ? 'Multiple' : 'Single')
+  return {
+    title: $i18n.t(`dashboardFilter.confirm${target}Title`),
+    action: $i18n.t(`dashboardFilter.confirm${target}`),
+  }
 })
 const prefix = computed(() => `${props.storePrefix}dashboardApplication/`)
 const tables = computed(() => {
