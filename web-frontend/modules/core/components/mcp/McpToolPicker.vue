@@ -108,7 +108,8 @@ const props = defineProps({
    */
   groups: { type: Array, required: true },
   /**
-   * Names of tools the connection can't use. They are hidden and never picked.
+   * Names of tools the connection can't use. They are hidden and never picked,
+   * but a hidden name already in the model value is kept.
    */
   unavailable: { type: Array, required: false, default: () => [] },
   /**
@@ -140,9 +141,13 @@ const AREA_LABELS = {
   docs: 'mcpToolPicker.areaDocs',
 }
 
+// The tools the user sees: a tool is only listed under one of the groups.
 const availableTools = computed(() => {
   const unavailable = new Set(props.unavailable)
-  return props.tools.filter((tool) => !unavailable.has(tool.name))
+  const listed = new Set(props.groups.map((group) => group.type))
+  return props.tools.filter(
+    (tool) => listed.has(tool.group) && !unavailable.has(tool.name)
+  )
 })
 
 const availableNames = computed(() =>
@@ -166,7 +171,9 @@ const areas = computed(() => {
     if (!area) {
       area = {
         key: group.area,
-        label: AREA_LABELS[group.area] ? t(AREA_LABELS[group.area]) : '',
+        label: AREA_LABELS[group.area]
+          ? t(AREA_LABELS[group.area])
+          : group.area,
         groups: [],
       }
       result.push(area)
@@ -183,16 +190,19 @@ const areas = computed(() => {
 })
 
 function isDelete(tool) {
-  return tool.name.startsWith('delete_')
+  return tool.name.startsWith('delete_') || tool.group.endsWith('_delete')
 }
 
-// Picked names, always in the order the API listed the tools.
+// Picked names, always in the order the API listed the tools. Hidden names in
+// the model value stay, so editing a connection doesn't drop a tool that is only
+// unavailable for now.
 function select(names) {
   const picked = new Set(names)
-  emit(
-    'update:modelValue',
-    availableNames.value.filter((name) => picked.has(name))
-  )
+  const shown = new Set(availableNames.value)
+  emit('update:modelValue', [
+    ...availableNames.value.filter((name) => picked.has(name)),
+    ...props.modelValue.filter((name) => !shown.has(name)),
+  ])
 }
 
 function toggle(names, value) {

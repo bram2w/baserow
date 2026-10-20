@@ -310,4 +310,73 @@ describe('McpOAuthConnections', () => {
       document.querySelector('[data-test="mcp-oauth-save-tools"]').disabled
     ).toBe(true)
   })
+
+  async function openEditTools(wrapper, id) {
+    await wrapper
+      .find(
+        `[data-test="mcp-oauth-connection-${id}"] [data-test="mcp-oauth-edit-tools"]`
+      )
+      .trigger('click')
+    await flushPromises()
+  }
+
+  const saveButton = () =>
+    document.querySelector('[data-test="mcp-oauth-save-tools"]')
+
+  test('editing keeps a granted tool the connection cannot use now', async () => {
+    const hidden = {
+      ...connections[1],
+      allowed_tools: ['list_tables', 'delete_rows'],
+    }
+    const wrapper = await mount({ ...enabled, connections: [hidden] })
+    testApp.mock
+      .onPatch('/mcp/oauth/connections/12/')
+      .reply(200, { ...hidden, allowed_tools: ['list_rows', 'delete_rows'] })
+    await openEditTools(wrapper, 12)
+    document
+      .querySelector('[data-test="mcp-tool-picker-tool-list_tables"] input')
+      .click()
+    await flushPromises()
+    document
+      .querySelector('[data-test="mcp-tool-picker-tool-list_rows"] input')
+      .click()
+    await flushPromises()
+    saveButton().click()
+    await flushPromises()
+    expect(testApp.mock.history.patch.map((r) => JSON.parse(r.data))).toEqual([
+      { allowed_tools: ['list_rows', 'delete_rows'] },
+    ])
+  })
+
+  test('save is disabled when only hidden tools are picked', async () => {
+    const hidden = {
+      ...connections[1],
+      allowed_tools: ['list_tables', 'delete_rows'],
+    }
+    const wrapper = await mount({ ...enabled, connections: [hidden] })
+    await openEditTools(wrapper, 12)
+    document.querySelector('[data-test="mcp-tool-picker-none"]').click()
+    await flushPromises()
+    expect(saveButton().disabled).toBe(true)
+  })
+
+  test('a slow save does not close the modal of another app', async () => {
+    const wrapper = await mount({ ...enabled, connections })
+    let respond = null
+    testApp.mock
+      .onPatch('/mcp/oauth/connections/11/')
+      .reply(() => new Promise((resolve) => (respond = resolve)))
+    await openEditTools(wrapper, 11)
+    saveButton().click()
+    await flushPromises()
+    wrapper.vm.toolsModal.hide()
+    await flushPromises()
+    await openEditTools(wrapper, 12)
+    expect(saveButton().disabled).toBe(false)
+
+    respond([200, connections[0]])
+    await flushPromises()
+    expect(saveButton()).not.toBeNull()
+    expect(saveButton().disabled).toBe(false)
+  })
 })

@@ -236,4 +236,89 @@ describe('McpToolPicker', () => {
       wrapper.find('[data-test="mcp-tool-picker-group-other"]').text()
     ).toContain('Other things')
   })
+
+  test('toggling keeps picked tools that are hidden', async () => {
+    const { wrapper, selected } = await mount({
+      unavailable: ['list_pages'],
+      modelValue: ['list_tables', 'list_pages'],
+    })
+    await toolCheckbox(wrapper, 'create_rows').setValue(true)
+    expect(selected()).toEqual(['list_tables', 'create_rows', 'list_pages'])
+  })
+
+  test('a tool outside the listed groups is never shown or picked', async () => {
+    const { wrapper, selected } = await mount({
+      tools: [
+        ...tools,
+        {
+          name: 'stray_tool',
+          title: 'Stray',
+          read_only: true,
+          destructive: false,
+          group: 'unknown',
+        },
+      ],
+    })
+    expect(toolCheckbox(wrapper, 'stray_tool').exists()).toBe(false)
+    await wrapper
+      .find('[data-test="mcp-tool-picker-full-access"]')
+      .trigger('click')
+    expect(selected()).toEqual(allTools)
+  })
+
+  test('the read only preset skips a write tool in a read group', async () => {
+    const { wrapper, selected } = await mount({
+      tools: [
+        ...tools,
+        {
+          name: 'quiet_write',
+          title: 'Quiet write',
+          read_only: false,
+          destructive: false,
+          group: 'database_read',
+        },
+      ],
+    })
+    await wrapper
+      .find('[data-test="mcp-tool-picker-read-only"]')
+      .trigger('click')
+    expect(selected()).toEqual(['list_tables', 'list_pages'])
+  })
+
+  test('a destructive tool in a delete group gets the Deletes badge', async () => {
+    const { wrapper } = await mount({
+      tools: [
+        ...tools,
+        {
+          name: 'remove_rows',
+          title: 'Remove rows',
+          read_only: false,
+          destructive: true,
+          group: 'database_delete',
+        },
+      ],
+    })
+    expect(
+      wrapper.find('[data-test="mcp-tool-picker-badge-remove_rows"]').text()
+    ).toBe('mcpToolPicker.deletes')
+  })
+
+  test('an area without a translation shows its key', async () => {
+    const { wrapper } = await mount({
+      groups: [...groups, { type: 'other', title: 'Other', area: 'extras' }],
+      tools: [
+        ...tools,
+        {
+          name: 'other_tool',
+          title: 'Other tool',
+          read_only: true,
+          destructive: false,
+          group: 'other',
+        },
+      ],
+    })
+    expect(
+      wrapper.find('[data-test="mcp-tool-picker-area-extras"]').text()
+    ).toContain('extras')
+  })
 })

@@ -162,8 +162,8 @@
           }}</Button>
           <Button
             type="primary"
-            :loading="savingTools"
-            :disabled="savingTools || !pickedTools.length"
+            :loading="savingTools === editing.id"
+            :disabled="savingTools === editing.id || !canSaveTools"
             data-test="mcp-oauth-save-tools"
             @click="saveTools"
             >{{ $t('mcpOAuthConnections.saveTools') }}</Button
@@ -175,7 +175,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import McpToolPicker from '@baserow/modules/core/components/mcp/McpToolPicker'
 import moment from '@baserow/modules/core/moment'
 import MCPOAuthService from '@baserow/modules/core/services/mcpOAuth'
@@ -197,7 +197,8 @@ const toolsModal = ref(null)
 // The connection whose tools are being edited.
 const editing = ref(null)
 const pickedTools = ref([])
-const savingTools = ref(false)
+// The id of the connection whose tools are being saved.
+const savingTools = ref(null)
 const confirming = ref(null)
 const disconnecting = ref(null)
 const copied = ref(null)
@@ -230,12 +231,27 @@ function connectedOn(created) {
   })
 }
 
+// The tools listed under a group, the only ones the user can pick.
+const listedTools = computed(() => {
+  const listed = new Set(groups.value.map((group) => group.type))
+  return tools.value.filter((tool) => listed.has(tool.group))
+})
+
+// Saving only hidden tools would leave the user with nothing to see or untick.
+const canSaveTools = computed(() => {
+  const unavailable = new Set(editing.value?.unavailable_tools || [])
+  return listedTools.value.some(
+    (tool) =>
+      !unavailable.has(tool.name) && pickedTools.value.includes(tool.name)
+  )
+})
+
 // Tools the connection could use but doesn't have. New tools are never turned on
 // for an existing connection, so this is where the user finds them.
 function toolsOff(connection) {
   const unavailable = new Set(connection.unavailable_tools || [])
   const allowed = new Set(connection.allowed_tools || [])
-  return tools.value.filter(
+  return listedTools.value.filter(
     (tool) => !unavailable.has(tool.name) && !allowed.has(tool.name)
   ).length
 }
@@ -249,20 +265,26 @@ function editTools(connection) {
 }
 
 async function saveTools() {
-  savingTools.value = true
+  const id = editing.value.id
+  savingTools.value = id
   try {
     const { data } = await MCPOAuthService($client).updateTools(
-      editing.value.id,
+      id,
       pickedTools.value
     )
     connections.value = connections.value.map((c) =>
       c.id === data.id ? data : c
     )
-    toolsModal.value.hide()
+    // The modal may have been closed, or opened for another app, meanwhile.
+    if (editing.value?.id === id) {
+      toolsModal.value.hide()
+    }
   } catch (error) {
     notifyIf(error)
   }
-  savingTools.value = false
+  if (savingTools.value === id) {
+    savingTools.value = null
+  }
 }
 
 function copyUrl() {
