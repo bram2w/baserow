@@ -82,7 +82,6 @@ class _OutputReader:
         self.high_water: tuple[int, int] | None = None
         self.baseline_needed = bool(cursor)
         self.waiting = False
-        self.unavailable_reported = False
 
     async def read(self) -> list[dict[str, Any]]:
         """Wait for new events, or only wait once the output can't be read."""
@@ -109,17 +108,12 @@ class _OutputReader:
         return _record("run.baseline", _fold(prefix), self.cursor, replayed=True)
 
     def unavailable(self, error: Exception) -> dict[str, Any] | None:
-        """Note that output failed, returning a notice the first time."""
+        """Retry an outage or a buffer not started yet, else stop with a notice."""
 
         reason = error.reason if isinstance(error, ReplayUnavailable) else "connection"
-        # Without a cursor, a missing or unreachable buffer may still start later.
-        self.waiting = self.cursor is not None or reason not in (
-            "missing",
-            "connection",
-        )
-        if self.unavailable_reported:
+        if reason == "connection" or (reason == "missing" and self.cursor is None):
             return None
-        self.unavailable_reported = True
+        self.waiting = True
         return _record(
             "run.replay_unavailable", {"reason": reason}, self.cursor, replayed=True
         )
@@ -183,8 +177,7 @@ async def follow_run(
             if baseline := await output.baseline():
                 yield baseline
         except OUTPUT_ERRORS as error:
-            if notice := output.unavailable(error):
-                yield notice
+            yield output.unavailable(error) or output.heartbeat()
             await asyncio.sleep(min(1.0, STATUS_INTERVAL_SECONDS))
             continue
         if not events:

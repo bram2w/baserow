@@ -7,7 +7,11 @@ from uuid import uuid4
 import pytest
 
 from baserow.core.chat_runs import stream
-from baserow.core.chat_runs.buffer import MAX_BUFFER_EVENTS, ChatRunBuffer
+from baserow.core.chat_runs.buffer import (
+    MAX_BUFFER_EVENTS,
+    ChatRunBuffer,
+    ReplayUnavailable,
+)
 from baserow.core.chat_runs.stream import follow_run
 
 
@@ -109,12 +113,42 @@ async def test_missing_replay_waits_for_durable_outcome_without_reexecuting(
             {"status": "completed", "message": {"id": 7, "content": "answer"}},
         ]
     )
-    records = [record async for record in follow_run(run, None, snapshot=snapshot)]
+    cursor = f"{uuid4().hex}:1-0"
+    records = [
+        record async for record in follow_run(run, None, cursor, snapshot=snapshot)
+    ]
     assert [record["kind"] for record in records] == [
         "run.replay_unavailable",
         "run.finished",
     ]
     assert records[-1]["data"]["message"]["id"] == 7
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "resume,error", [(False, ReplayUnavailable("missing")), (True, ConnectionError())]
+)
+async def test_transient_output_failure_is_retried_without_a_notice(
+    monkeypatch, resume, error
+):
+    monkeypatch.setattr(stream, "STATUS_INTERVAL_SECONDS", 0.01)
+    run = SimpleNamespace(id=uuid4())
+    started = await ChatRunBuffer(run.id).append([("run.started", {})])
+    await ChatRunBuffer(run.id).append([("text.delta", {"segment": 1, "text": "Hi"})])
+    read, failures = ChatRunBuffer.read, [error]
+
+    async def fail_once(self, *args, **kwargs):
+        if failures:
+            raise failures.pop()
+        return await read(self, *args, **kwargs)
+
+    monkeypatch.setattr(ChatRunBuffer, "read", fail_once)
+    cursor = started[-1]["cursor"] if resume else None
+    snapshot = AsyncMock(return_value={"status": "running"})
+    async with aclosing(follow_run(run, None, cursor, snapshot=snapshot)) as follower:
+        records = [await anext(follower) for _ in range(3)]
+    assert records[0]["kind"] == "run.heartbeat"
+    assert records[-1]["data"]["text"] == "Hi"
 
 
 @pytest.mark.asyncio
