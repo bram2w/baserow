@@ -32,7 +32,6 @@ class AgentApplicationSerializer(serializers.ModelSerializer):
 
 class AgentConfigurationSerializer(serializers.Serializer):
     state = serializers.ChoiceField(choices=["ready", "incomplete", "unavailable"])
-    name = serializers.CharField()
     instructions = serializers.CharField(allow_blank=True, trim_whitespace=False)
     provider_type = serializers.CharField(allow_null=True)
     model_identifier = serializers.CharField(allow_null=True)
@@ -42,18 +41,14 @@ class AgentConfigurationSerializer(serializers.Serializer):
 
 
 class AgentConfigurationUpdateSerializer(
-    UnknownFieldRaisesExceptionSerializerMixin, serializers.Serializer
+    UnknownFieldRaisesExceptionSerializerMixin, serializers.ModelSerializer
 ):
-    name = serializers.CharField(max_length=160, required=False)
-    instructions = serializers.CharField(
-        max_length=AGENT_TEXT_MAX_LENGTH,
-        allow_blank=True,
-        trim_whitespace=False,
-        required=False,
-    )
-    provider_type = serializers.CharField(
-        max_length=255, allow_blank=True, allow_null=True, required=False
-    )
-    model_identifier = serializers.CharField(
-        max_length=255, allow_blank=True, allow_null=True, required=False
-    )
+    class Meta:
+        model = AgentApplication
+        fields = ("instructions", "provider_type", "model_identifier")
+        extra_kwargs = {
+            "instructions": {
+                "max_length": AGENT_TEXT_MAX_LENGTH,
+                "trim_whitespace": False,
+            },
+        }

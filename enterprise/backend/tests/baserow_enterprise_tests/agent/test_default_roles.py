@@ -2,12 +2,12 @@ from django.urls import reverse
 
 import pytest
 
-from baserow.contrib.agent.operations import ReadAgentSettingsOperationType
+from baserow.contrib.agent.operations import ReadAgentConfigurationOperationType
 from baserow.core.handler import CoreHandler
 from baserow_enterprise.role.handler import RoleAssignmentHandler
 from baserow_enterprise.role.models import Role
 
-CONFIGURE = {ReadAgentSettingsOperationType.type}
+CONFIGURE = {ReadAgentConfigurationOperationType.type}
 
 
 @pytest.mark.django_db
@@ -50,7 +50,7 @@ def test_default_roles_grant_agent_operations(
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("can_read_agent", [True, False])
-def test_agent_readiness_follows_application_access_without_settings_access(
+def test_agent_readiness_follows_application_access_without_configuration_access(
     enterprise_data_fixture,
     enable_enterprise,
     synced_roles,

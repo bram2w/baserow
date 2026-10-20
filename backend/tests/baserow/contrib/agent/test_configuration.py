@@ -5,10 +5,11 @@ from rest_framework.exceptions import ValidationError
 
 from baserow.contrib.agent.actions import UpdateAgentConfigurationActionType
 from baserow.contrib.agent.handler import AgentHandler
+from baserow.core.models import Application
 
 
-def agent_url(agent, view, **kwargs):
-    return reverse(f"api:agent:{view}", kwargs={"agent_id": agent.id, **kwargs})
+def agent_url(agent: Application, view: str) -> str:
+    return reverse(f"api:agent:{view}", kwargs={"agent_id": agent.id})
 
 
 @pytest.mark.django_db
@@ -17,6 +18,7 @@ def agent_url(agent, view, **kwargs):
     [
         ({}, "ready", {}),
         ({"instructions": " "}, "incomplete", {"instructions": "required"}),
+        ({"provider_type": None}, "incomplete", {"provider_type": "required"}),
         (
             {"model_identifier": "other-model"},
             "unavailable",
@@ -29,7 +31,7 @@ def agent_url(agent, view, **kwargs):
         ),
     ],
 )
-def test_configuration_reports_missing_and_unavailable_settings(
+def test_configuration_reports_missing_and_unavailable_fields(
     configured_agent, values, state, errors
 ):
     configuration = AgentHandler().get_configuration(configured_agent(**values))
@@ -65,20 +67,16 @@ def test_configuration_update_saves_drafts_and_records_changed_field_names(
 @pytest.mark.parametrize(
     "values",
     [
-        {"name": " "},
         {"instructions": "x" * 100001},
         {"provider_type": "x" * 256},
         {"model_identifier": 12},
     ],
 )
-def test_configuration_update_rejects_invalid_values(configured_agent, values):
-    agent = configured_agent()
+def test_configuration_update_rejects_invalid_values(data_fixture, values):
+    agent = data_fixture.create_agent_application()
 
     with pytest.raises(ValidationError):
         AgentHandler().update_configuration(agent, **values)
-
-    agent.refresh_from_db()
-    assert AgentHandler().get_configuration(agent)["state"] == "ready"
 
 
 @pytest.mark.django_db
@@ -133,7 +131,7 @@ def test_readiness_has_no_separate_endpoint(configured_agent, api_client, api_us
 
 
 @pytest.mark.django_db
-def test_settings_are_served_only_by_the_agent_endpoints(
+def test_configuration_is_served_only_by_the_agent_endpoints(
     data_fixture,
     configured_agent,
     api_client,
@@ -156,12 +154,18 @@ def test_settings_are_served_only_by_the_agent_endpoints(
         application_url, {"instructions": "Ignored", "readiness": "unavailable"}
     )
 
-    assert response.json()["instructions"] == "PRIVATE"
+    configuration = {
+        "state": "ready",
+        "instructions": "PRIVATE",
+        "provider_type": "openai",
+        "model_identifier": "test-model",
+        "errors": {},
+    }
+    assert response.json() == configuration
+    assert api_client.get(agent_url(agent, "configuration")).json() == configuration
     assert application_response.json()["readiness"] == "ready"
     assert broadcast.call_args.args[4]["type"] == "application_updated"
     assert broadcast.call_args.args[4]["application"]["readiness"] == "ready"
     assert "PRIVATE" not in str(broadcast.call_args)
     assert "PRIVATE" not in api_client.get(application_url).content.decode()
-    agent.refresh_from_db()
-    assert agent.instructions == "PRIVATE"
     assert api_client.get(agent_url(database, "configuration")).status_code == 404

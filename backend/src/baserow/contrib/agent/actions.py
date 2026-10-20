@@ -11,8 +11,8 @@ from baserow.core.action.registries import (
 )
 from baserow.core.action.scopes import ApplicationActionScopeType
 
-from .models import AgentApplication
 from .service import AgentService
+from .types import AgentConfiguration
 
 
 class UpdateAgentConfigurationActionType(ActionType):
@@ -30,8 +30,17 @@ class UpdateAgentConfigurationActionType(ActionType):
 
     @classmethod
     @transaction.atomic
-    def do(cls, user: AbstractUser, agent_id: int, **values) -> AgentApplication:
-        """Record changed field names while keeping their values out of audit logs."""
+    def do(
+        cls, user: AbstractUser, agent_id: int, **values: str | None
+    ) -> AgentConfiguration:
+        """
+        Update the configuration and audit the changed field names, never values.
+
+        :param user: The user updating the configuration.
+        :param agent_id: The id of the Agent.
+        :param values: The configuration values to set, by field name.
+        :return: The resulting configuration.
+        """
 
         updated = AgentService().update_configuration(user, agent_id, **values)
         if updated.changed_fields:
@@ -41,7 +50,7 @@ class UpdateAgentConfigurationActionType(ActionType):
                 cls.scope(agent_id),
                 updated.agent.workspace,
             )
-        return updated.agent
+        return updated.configuration
 
     @classmethod
     def scope(cls, agent_id: int) -> ActionScopeStr:

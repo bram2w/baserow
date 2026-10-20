@@ -17,13 +17,18 @@ from baserow.core.exceptions import ApplicationDoesNotExist, UserNotInWorkspace
 from baserow.core.service import CoreService
 
 from ..actions import UpdateAgentConfigurationActionType
-from ..handler import AgentHandler
 from ..service import AgentService
 from .serializers import (
     AgentConfigurationSerializer,
     AgentConfigurationUpdateSerializer,
 )
 
+AGENT_ID_PATH_PARAMETER = OpenApiParameter(
+    name="agent_id",
+    location=OpenApiParameter.PATH,
+    type=OpenApiTypes.INT,
+    description="The id of the agent.",
+)
 AGENT_EXCEPTIONS = {ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST}
 READ_ERRORS = {
     401: get_error_schema(["ERROR_PERMISSION_DENIED"]),
@@ -33,14 +38,7 @@ READ_ERRORS = {
 
 class AgentApplicationView(APIView):
     @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name="agent_id",
-                location=OpenApiParameter.PATH,
-                type=OpenApiTypes.INT,
-                description="The id of the agent to open.",
-            )
-        ],
+        parameters=[AGENT_ID_PATH_PARAMETER],
         tags=["Agent applications"],
         operation_id="get_agent_application",
         description=(
@@ -78,19 +76,30 @@ class AgentApplicationView(APIView):
 
 class AgentConfigurationView(APIView):
     @extend_schema(
+        parameters=[AGENT_ID_PATH_PARAMETER],
         tags=["Agent applications"],
         operation_id="get_agent_configuration",
+        description=(
+            "Returns the instructions, provider and model of the agent, with its "
+            "readiness and the fields that are missing or no longer available."
+        ),
         responses={200: AgentConfigurationSerializer, **READ_ERRORS},
     )
     @map_exceptions(AGENT_EXCEPTIONS)
     def get(self, request: Request, agent_id: int) -> Response:
-        """Load settings only after the application-scoped Builder permission check."""
+        """Responds with the configuration if the user can read it."""
 
-        return Response(AgentService().get_configuration(request.user, agent_id))
+        configuration = AgentService().get_configuration(request.user, agent_id)
+        return Response(AgentConfigurationSerializer(configuration).data)
 
     @extend_schema(
+        parameters=[AGENT_ID_PATH_PARAMETER],
         tags=["Agent applications"],
         operation_id="update_agent_configuration",
+        description=(
+            "Updates the provided fields of the agent configuration and returns the "
+            "result. An incomplete configuration can be saved and finished later."
+        ),
         request=AgentConfigurationUpdateSerializer,
         responses={
             200: AgentConfigurationSerializer,
@@ -103,7 +112,9 @@ class AgentConfigurationView(APIView):
         AgentConfigurationUpdateSerializer, partial=True, return_validated=True
     )
     def patch(self, request: Request, agent_id: int, data: dict) -> Response:
-        """Save one partial draft and return the privileged validation envelope."""
+        """Updates the configuration if the user can both update and read it."""
 
-        agent = UpdateAgentConfigurationActionType.do(request.user, agent_id, **data)
-        return Response(AgentHandler().get_configuration(agent))
+        configuration = UpdateAgentConfigurationActionType.do(
+            request.user, agent_id, **data
+        )
+        return Response(AgentConfigurationSerializer(configuration).data)

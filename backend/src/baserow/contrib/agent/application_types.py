@@ -7,7 +7,7 @@ from django.db.transaction import Atomic
 from django.urls import URLResolver, include, path
 
 from baserow.contrib.agent.models import AgentApplication
-from baserow.contrib.agent.operations import ReadAgentSettingsOperationType
+from baserow.contrib.agent.operations import ReadAgentConfigurationOperationType
 from baserow.core.feature_flags import FF_AGENT_BUILDER, feature_flag_is_enabled
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Workspace
@@ -54,12 +54,12 @@ class AgentApplicationType(ApplicationType):
         storage: Storage | None = None,
         progress_builder: ChildProgressBuilder | None = None,
     ) -> dict:
-        """Package the settings, which only settings readers may export."""
+        """Package the configuration, which only configuration readers may export."""
 
         if import_export_config.exported_by is not None:
             CoreHandler().check_permissions(
                 import_export_config.exported_by,
-                ReadAgentSettingsOperationType.type,
+                ReadAgentConfigurationOperationType.type,
                 workspace=application.workspace,
                 context=application,
             )
@@ -83,7 +83,7 @@ class AgentApplicationType(ApplicationType):
         storage: Storage | None = None,
         progress_builder: ChildProgressBuilder | None = None,
     ) -> AgentApplication:
-        """Import the settings as an independent copy."""
+        """Import the configuration as an independent copy."""
 
         application = super().import_serialized(
             workspace,

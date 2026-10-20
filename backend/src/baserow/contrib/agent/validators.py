@@ -1,25 +1,26 @@
 from rest_framework.exceptions import ValidationError
 
+from .models import AgentApplication
+
 AGENT_TEXT_MAX_LENGTH = 100000
 
 
 def validate_configuration_values(values: dict) -> None:
-    """Allow incomplete drafts while rejecting invalid types or oversized fields."""
+    """
+    Check configuration value types and lengths, allowing blank drafts.
+
+    :param values: The configuration values to check, by field name.
+    :raises ValidationError: When a value is too long for its field or isn't a
+        string, unless it is None for a nullable field.
+    """
 
     for field, value in values.items():
-        if field in ("provider_type", "model_identifier") and value is None:
+        model_field = AgentApplication._meta.get_field(field)
+        if value is None and model_field.null:
             continue
         if not isinstance(value, str):
             raise ValidationError({field: "A valid string is required."})
-        if field == "name" and not value.strip():
-            raise ValidationError({field: "This field may not be blank."})
-        limit = (
-            AGENT_TEXT_MAX_LENGTH
-            if field == "instructions"
-            else 160
-            if field == "name"
-            else 255
-        )
+        limit = model_field.max_length or AGENT_TEXT_MAX_LENGTH
         if len(value) > limit:
             raise ValidationError(
                 {field: f"This field may not exceed {limit} characters."}

@@ -16,13 +16,13 @@ class AgentConfig(AppConfig):
         from .actions import UpdateAgentConfigurationActionType
         from .application_types import AgentApplicationType
         from .last_viewed_types import AgentLastViewedItemType
-        from .operations import ReadAgentSettingsOperationType
+        from .operations import ReadAgentConfigurationOperationType
         from .search_types import AgentSearchType
 
         application_type_registry.register(AgentApplicationType())
         workspace_search_registry.register(AgentSearchType())
         last_viewed_item_type_registry.register(AgentLastViewedItemType())
-        operation_type_registry.register(ReadAgentSettingsOperationType())
+        operation_type_registry.register(ReadAgentConfigurationOperationType())
         action_type_registry.register(UpdateAgentConfigurationActionType())
 
         import baserow.contrib.agent.receivers  # noqa: F401

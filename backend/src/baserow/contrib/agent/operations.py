@@ -1,5 +1,5 @@
 from baserow.core.operations import ApplicationOperationType
 
 
-class ReadAgentSettingsOperationType(ApplicationOperationType):
-    type = "agent_application.read_settings"
+class ReadAgentConfigurationOperationType(ApplicationOperationType):
+    type = "agent_application.read_configuration"

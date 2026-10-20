@@ -8,7 +8,6 @@ AgentReadinessState = Literal["ready", "incomplete", "unavailable"]
 
 class AgentConfiguration(TypedDict):
     state: AgentReadinessState
-    name: str
     instructions: str
     provider_type: str | None
     model_identifier: str | None
@@ -19,3 +18,4 @@ class AgentConfiguration(TypedDict):
 class AgentConfigurationUpdated:
     agent: AgentApplication
     changed_fields: list[str]
+    configuration: AgentConfiguration

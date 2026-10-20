@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
-from baserow.contrib.agent.operations import ReadAgentSettingsOperationType
+from baserow.contrib.agent.operations import ReadAgentConfigurationOperationType
 from baserow.contrib.automation.nodes.operations import (
     CreateAutomationNodeOperationType,
     DeleteAutomationNodeOperationType,
@@ -480,7 +480,7 @@ default_roles[EDITOR_ROLE_UID].extend(
 default_roles[BUILDER_ROLE_UID].extend(
     default_roles[EDITOR_ROLE_UID]
     + [
-        ReadAgentSettingsOperationType,
+        ReadAgentConfigurationOperationType,
         ListAgentsWorkspaceOperationType,
         CreatePageOperationType,
         DeletePageOperationType,
