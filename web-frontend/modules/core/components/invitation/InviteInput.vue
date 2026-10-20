@@ -1,11 +1,7 @@
 <template>
   <div class="invite-input">
     <div ref="row" class="invite-input__row">
-      <div
-        class="invite-input__field"
-        :class="{ 'invite-input__field--focused': open }"
-        @click="focus"
-      >
+      <div class="invite-input__field" @click="focus">
         <span
           v-for="item in selected"
           :key="item.key"

@@ -17,8 +17,8 @@
 
   @include rounded($rounded-md);
 
-  &.invite-input__field--focused {
-    border-color: $palette-neutral-900;
+  &:focus-within {
+    border-color: $palette-blue-500;
   }
 }
 
