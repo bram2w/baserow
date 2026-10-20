@@ -1,5 +1,10 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { Registerable } from '@baserow/modules/core/registry'
-import CloudflareTurnstileWidget from '@baserow/modules/core/components/auth/CloudflareTurnstileWidget'
+
+const CloudflareTurnstileWidget = lazyComponent(
+  () =>
+    import('@baserow/modules/core/components/auth/CloudflareTurnstileWidget')
+)
 
 /**
  * A captcha provider type defines how a specific captcha service is rendered

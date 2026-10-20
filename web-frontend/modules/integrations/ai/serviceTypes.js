@@ -1,12 +1,17 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import {
   ServiceType,
   WorkflowActionServiceTypeMixin,
 } from '@baserow/modules/core/serviceTypes'
 import { AIIntegrationType } from '@baserow/modules/integrations/ai/integrationTypes'
-import AIAgentServiceForm from '@baserow/modules/integrations/ai/components/services/AIAgentServiceForm'
 import { getEnabledModelsForAIProviderFeature } from '@baserow/modules/core/aiProviderModelFeatureTypes'
 import { AIAgentAIProviderModelFeatureType } from '@baserow/modules/integrations/ai/aiProviderModelFeatureTypes'
 import { getEffectiveAIAgentModels } from '@baserow/modules/integrations/ai/utils'
+
+const AIAgentServiceForm = lazyComponent(
+  () =>
+    import('@baserow/modules/integrations/ai/components/services/AIAgentServiceForm')
+)
 
 export class AIAgentServiceType extends WorkflowActionServiceTypeMixin(
   ServiceType

@@ -1,6 +1,6 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { UserSourceType } from '@baserow/modules/core/userSourceTypes'
 import { LocalBaserowIntegrationType } from '@baserow/modules/integrations/localBaserow/integrationTypes'
-import LocalBaserowUserSourceForm from '@baserow_enterprise/integrations/localBaserow/components/userSources/LocalBaserowUserSourceForm'
 import localBaserowIntegration from '@baserow/modules/integrations/localBaserow/assets/images/localBaserowIntegration.svg?url'
 import moment from '@baserow/modules/core/moment'
 
@@ -13,6 +13,11 @@ import {
   NumberFieldType,
   UUIDFieldType,
 } from '@baserow/modules/database/fieldTypes'
+
+const LocalBaserowUserSourceForm = lazyComponent(
+  () =>
+    import('@baserow_enterprise/integrations/localBaserow/components/userSources/LocalBaserowUserSourceForm')
+)
 
 export class LocalBaserowUserSourceType extends UserSourceType {
   static getType() {

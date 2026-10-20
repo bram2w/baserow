@@ -1,17 +1,35 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import {
   DataSyncType,
   PostgreSQLDataSyncType as BasePostgreSQLDataSyncType,
 } from '@baserow/modules/database/dataSyncTypes'
 
-import LocalBaserowTableDataSync from '@baserow_enterprise/components/dataSync/LocalBaserowTableDataSync'
 import EnterpriseFeatures from '@baserow_enterprise/features'
-import JiraIssuesDataSyncForm from '@baserow_enterprise/components/dataSync/JiraIssuesDataSyncForm'
-import GitHubIssuesDataSyncForm from '@baserow_enterprise/components/dataSync/GitHubIssuesDataSyncForm'
-import GitLabIssuesDataSyncForm from '@baserow_enterprise/components/dataSync/GitLabIssuesDataSyncForm'
-import HubspotContactsDataSyncForm from '@baserow_enterprise/components/dataSync/HubspotContactsDataSyncForm'
-import PaidFeaturesModal from '@baserow_premium/components/PaidFeaturesModal'
 import { DataSyncPaidFeature } from '@baserow_enterprise/paidFeatures'
 import { RealtimePushTwoWaySyncStrategyType } from '@baserow_enterprise/twoWaySyncStrategyTypes'
+
+const LocalBaserowTableDataSync = lazyComponent(
+  () =>
+    import('@baserow_enterprise/components/dataSync/LocalBaserowTableDataSync')
+)
+const JiraIssuesDataSyncForm = lazyComponent(
+  () => import('@baserow_enterprise/components/dataSync/JiraIssuesDataSyncForm')
+)
+const GitHubIssuesDataSyncForm = lazyComponent(
+  () =>
+    import('@baserow_enterprise/components/dataSync/GitHubIssuesDataSyncForm')
+)
+const GitLabIssuesDataSyncForm = lazyComponent(
+  () =>
+    import('@baserow_enterprise/components/dataSync/GitLabIssuesDataSyncForm')
+)
+const HubspotContactsDataSyncForm = lazyComponent(
+  () =>
+    import('@baserow_enterprise/components/dataSync/HubspotContactsDataSyncForm')
+)
+const PaidFeaturesModal = lazyComponent(
+  () => import('@baserow_premium/components/PaidFeaturesModal')
+)
 
 export class LocalBaserowTableDataSyncType extends DataSyncType {
   static getType() {

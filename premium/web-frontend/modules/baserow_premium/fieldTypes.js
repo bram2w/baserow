@@ -1,22 +1,43 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
+import RowCardFieldAI from '@baserow_premium/components/card/RowCardFieldAI'
 import {
   FieldType,
   FormulaFieldType,
 } from '@baserow/modules/database/fieldTypes'
 
-import GridViewFieldAI from '@baserow_premium/components/views/grid/fields/GridViewFieldAI'
-import FunctionalGridViewFieldAI from '@baserow_premium/components/views/grid/fields/FunctionalGridViewFieldAI'
-import RowEditFieldAI from '@baserow_premium/components/row/RowEditFieldAI'
-import RowCardFieldAI from '@baserow_premium/components/card/RowCardFieldAI'
-import FieldAISubForm from '@baserow_premium/components/field/FieldAISubForm'
-import FormulaFieldAI from '@baserow_premium/components/field/FormulaFieldAI'
-import GridViewFieldAIGenerateValuesContextItem from '@baserow_premium/components/views/grid/fields/GridViewFieldAIGenerateValuesContextItem'
 import PremiumFeatures from '@baserow_premium/features'
-import PaidFeaturesModal from '@baserow_premium/components/PaidFeaturesModal'
 import { AIPaidFeature } from '@baserow_premium/paidFeatures'
 import _ from 'lodash'
-import WorkspaceSettingsModal from '@baserow/modules/core/components/workspace/WorkspaceSettingsModal.vue'
 import { getEnabledModelsForAIProviderFeature } from '@baserow/modules/core/aiProviderModelFeatureTypes'
 import { TextAIFieldOutputType } from '@baserow_premium/aiFieldOutputTypes'
+
+const GridViewFieldAI = lazyComponent(
+  () => import('@baserow_premium/components/views/grid/fields/GridViewFieldAI')
+)
+const FunctionalGridViewFieldAI = lazyComponent(
+  () =>
+    import('@baserow_premium/components/views/grid/fields/FunctionalGridViewFieldAI')
+)
+const RowEditFieldAI = lazyComponent(
+  () => import('@baserow_premium/components/row/RowEditFieldAI')
+)
+const FieldAISubForm = lazyComponent(
+  () => import('@baserow_premium/components/field/FieldAISubForm')
+)
+const FormulaFieldAI = lazyComponent(
+  () => import('@baserow_premium/components/field/FormulaFieldAI')
+)
+const GridViewFieldAIGenerateValuesContextItem = lazyComponent(
+  () =>
+    import('@baserow_premium/components/views/grid/fields/GridViewFieldAIGenerateValuesContextItem')
+)
+const PaidFeaturesModal = lazyComponent(
+  () => import('@baserow_premium/components/PaidFeaturesModal')
+)
+const WorkspaceSettingsModal = lazyComponent(
+  () =>
+    import('@baserow/modules/core/components/workspace/WorkspaceSettingsModal.vue')
+)
 
 export class AIFieldType extends FieldType {
   static getType() {

@@ -1,5 +1,10 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { IntegrationType } from '@baserow/modules/core/integrationTypes'
-import SMTPForm from '@baserow/modules/integrations/core/components/integrations/SMTPForm'
+
+const SMTPForm = lazyComponent(
+  () =>
+    import('@baserow/modules/integrations/core/components/integrations/SMTPForm')
+)
 
 export class SMTPIntegrationType extends IntegrationType {
   static getType() {

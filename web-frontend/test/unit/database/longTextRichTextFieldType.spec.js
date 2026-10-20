@@ -1,3 +1,4 @@
+import { unwrapLazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { TestApp } from '@baserow/test/helpers/testApp'
 import GridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLongText'
 import GridViewFieldRichText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldRichText'
@@ -26,37 +27,45 @@ describe('LongTextFieldType rich text switching', () => {
   const plainField = { type: 'long_text', long_text_enable_rich_text: false }
 
   test('resolves the rich text components when the flag is enabled', () => {
-    expect(fieldType.getGridViewFieldComponent(richField)).toBe(
-      GridViewFieldRichText
+    expect(
+      unwrapLazyComponent(fieldType.getGridViewFieldComponent(richField))
+    ).toBe(GridViewFieldRichText)
+    expect(
+      unwrapLazyComponent(
+        fieldType.getFunctionalGridViewFieldComponent(richField)
+      )
+    ).toBe(FunctionalGridViewFieldRichText)
+    expect(
+      unwrapLazyComponent(fieldType.getRowEditFieldComponent(richField))
+    ).toBe(RowEditFieldRichText)
+    expect(unwrapLazyComponent(fieldType.getCardComponent(richField))).toBe(
+      RowCardFieldRichText
     )
-    expect(fieldType.getFunctionalGridViewFieldComponent(richField)).toBe(
-      FunctionalGridViewFieldRichText
-    )
-    expect(fieldType.getRowEditFieldComponent(richField)).toBe(
-      RowEditFieldRichText
-    )
-    expect(fieldType.getCardComponent(richField)).toBe(RowCardFieldRichText)
-    expect(fieldType.getRowHistoryEntryComponent(richField)).toBe(
-      RowHistoryFieldRichText
-    )
+    expect(
+      unwrapLazyComponent(fieldType.getRowHistoryEntryComponent(richField))
+    ).toBe(RowHistoryFieldRichText)
   })
 
   test('resolves the plain components when the flag is disabled', () => {
-    expect(fieldType.getGridViewFieldComponent(plainField)).toBe(
-      GridViewFieldLongText
-    )
-    expect(fieldType.getFunctionalGridViewFieldComponent(plainField)).toBe(
-      FunctionalGridViewFieldLongText
-    )
-    expect(fieldType.getRowEditFieldComponent(plainField)).toBe(
-      RowEditFieldLongText
-    )
+    expect(
+      unwrapLazyComponent(fieldType.getGridViewFieldComponent(plainField))
+    ).toBe(GridViewFieldLongText)
+    expect(
+      unwrapLazyComponent(
+        fieldType.getFunctionalGridViewFieldComponent(plainField)
+      )
+    ).toBe(FunctionalGridViewFieldLongText)
+    expect(
+      unwrapLazyComponent(fieldType.getRowEditFieldComponent(plainField))
+    ).toBe(RowEditFieldLongText)
   })
 
   test('forms reuse the rich row edit component', () => {
     const components = fieldType.getFormViewFieldComponents(richField)
     const defaultComponent = Object.values(components)[0]
-    expect(defaultComponent.component).toBe(RowEditFieldRichText)
+    expect(unwrapLazyComponent(defaultComponent.component)).toBe(
+      RowEditFieldRichText
+    )
   })
 
   test('forms do not offer image upload, which needs a signed in user', () => {

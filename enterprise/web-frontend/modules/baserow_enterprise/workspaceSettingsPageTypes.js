@@ -1,7 +1,11 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { WorkspaceSettingsPageType } from '@baserow/modules/core/workspaceSettingsPageTypes'
 import EnterpriseFeatures from '@baserow_enterprise/features'
-import PaidFeaturesModal from '@baserow_premium/components/PaidFeaturesModal'
 import { RBACPaidFeature } from '@baserow_enterprise/paidFeatures'
+
+const PaidFeaturesModal = lazyComponent(
+  () => import('@baserow_premium/components/PaidFeaturesModal')
+)
 
 export class TeamsWorkspaceSettingsPageType extends WorkspaceSettingsPageType {
   static getType() {

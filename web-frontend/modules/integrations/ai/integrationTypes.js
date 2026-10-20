@@ -1,5 +1,10 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { IntegrationType } from '@baserow/modules/core/integrationTypes'
-import AIForm from '@baserow/modules/integrations/ai/components/integrations/AIForm'
+
+const AIForm = lazyComponent(
+  () =>
+    import('@baserow/modules/integrations/ai/components/integrations/AIForm')
+)
 
 export class AIIntegrationType extends IntegrationType {
   static getType() {

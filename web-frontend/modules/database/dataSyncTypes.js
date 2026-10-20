@@ -1,7 +1,14 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { Registerable } from '@baserow/modules/core/registry'
 
-import ICalCalendarDataSync from '@baserow/modules/database/components/dataSync/ICalCalendarDataSync'
-import PostgreSQLDataSync from '@baserow/modules/database/components/dataSync/PostgreSQLDataSync'
+const ICalCalendarDataSync = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/dataSync/ICalCalendarDataSync')
+)
+const PostgreSQLDataSync = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/dataSync/PostgreSQLDataSync')
+)
 
 export class DataSyncType extends Registerable {
   /**

@@ -1,6 +1,14 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { Registerable } from '@baserow/modules/core/registry'
-import UploadFileUserFileUpload from '@baserow/modules/core/components/files/UploadFileUserFileUpload'
-import UploadViaURLUserFileUpload from '@baserow/modules/core/components/files/UploadViaURLUserFileUpload'
+
+const UploadFileUserFileUpload = lazyComponent(
+  () =>
+    import('@baserow/modules/core/components/files/UploadFileUserFileUpload')
+)
+const UploadViaURLUserFileUpload = lazyComponent(
+  () =>
+    import('@baserow/modules/core/components/files/UploadViaURLUserFileUpload')
+)
 
 /**
  * Upload file types will be added to the user files modal. Each upload should be able

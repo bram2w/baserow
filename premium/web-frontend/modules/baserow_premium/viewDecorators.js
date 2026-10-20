@@ -1,3 +1,4 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { ViewDecoratorType } from '@baserow/modules/database/viewDecorators'
 
 import {
@@ -10,11 +11,18 @@ import { CalendarViewType, KanbanViewType, TimelineViewType } from './viewTypes'
 import leftBorderDecoratorImage from '@baserow_premium/assets/images/leftBorderDecorator.svg?url'
 import backgroundDecoratorImage from '@baserow_premium/assets/images/backgroundDecorator.svg?url'
 
-import LeftBorderColorViewDecorator from '@baserow_premium/components/views/LeftBorderColorViewDecorator'
-import BackgroundColorViewDecorator from '@baserow_premium/components/views/BackgroundColorViewDecorator'
 import PremiumFeatures from '@baserow_premium/features'
-import PaidFeaturesModal from '@baserow_premium/components/PaidFeaturesModal'
 import { RowColoringPaidFeature } from '@baserow_premium/paidFeatures'
+
+const LeftBorderColorViewDecorator = lazyComponent(
+  () => import('@baserow_premium/components/views/LeftBorderColorViewDecorator')
+)
+const BackgroundColorViewDecorator = lazyComponent(
+  () => import('@baserow_premium/components/views/BackgroundColorViewDecorator')
+)
+const PaidFeaturesModal = lazyComponent(
+  () => import('@baserow_premium/components/PaidFeaturesModal')
+)
 
 export class LeftBorderColorViewDecoratorType extends ViewDecoratorType {
   static getType() {

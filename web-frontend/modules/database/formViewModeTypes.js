@@ -1,7 +1,14 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { Registerable } from '@baserow/modules/core/registry'
 
-import FormViewModePreviewForm from '@baserow/modules/database/components/view/form/FormViewModePreviewForm'
-import FormViewModeForm from '@baserow/modules/database/components/view/form/FormViewModeForm'
+const FormViewModePreviewForm = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/form/FormViewModePreviewForm')
+)
+const FormViewModeForm = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/form/FormViewModeForm')
+)
 
 export class FormViewModeType extends Registerable {
   constructor(...args) {

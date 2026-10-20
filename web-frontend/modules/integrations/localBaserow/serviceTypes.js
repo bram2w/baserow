@@ -1,3 +1,4 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import {
   ServiceType,
   DataSourceServiceTypeMixin,
@@ -5,18 +6,49 @@ import {
   TriggerServiceTypeMixin,
 } from '@baserow/modules/core/serviceTypes'
 import { LocalBaserowIntegrationType } from '@baserow/modules/integrations/localBaserow/integrationTypes'
-import LocalBaserowCreateRowsServiceForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowCreateRowsServiceForm'
-import LocalBaserowUpsertRowServiceForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowUpsertRowServiceForm'
-import LocalBaserowUpdateRowServiceForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowUpdateRowServiceForm'
-import LocalBaserowDeleteRowServiceForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowDeleteRowServiceForm'
 import { uuid } from '@baserow/modules/core/utils/string'
-import LocalBaserowAdhocHeader from '@baserow/modules/integrations/localBaserow/components/integrations/LocalBaserowAdhocHeader'
 import { DistributionViewAggregationType } from '@baserow/modules/database/viewAggregationTypes'
-import LocalBaserowSignalTriggerServiceForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowSignalTriggerServiceForm'
-import LocalBaserowFieldsUpdatedTriggerServiceForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowFieldsUpdatedTriggerServiceForm'
-import LocalBaserowGetRowForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowGetRowForm'
-import LocalBaserowListRowsForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowListRowsForm'
-import LocalBaserowAggregateRowsForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowAggregateRowsForm'
+
+const LocalBaserowCreateRowsServiceForm = lazyComponent(
+  () =>
+    import('@baserow/modules/integrations/localBaserow/components/services/LocalBaserowCreateRowsServiceForm')
+)
+const LocalBaserowUpsertRowServiceForm = lazyComponent(
+  () =>
+    import('@baserow/modules/integrations/localBaserow/components/services/LocalBaserowUpsertRowServiceForm')
+)
+const LocalBaserowUpdateRowServiceForm = lazyComponent(
+  () =>
+    import('@baserow/modules/integrations/localBaserow/components/services/LocalBaserowUpdateRowServiceForm')
+)
+const LocalBaserowDeleteRowServiceForm = lazyComponent(
+  () =>
+    import('@baserow/modules/integrations/localBaserow/components/services/LocalBaserowDeleteRowServiceForm')
+)
+const LocalBaserowAdhocHeader = lazyComponent(
+  () =>
+    import('@baserow/modules/integrations/localBaserow/components/integrations/LocalBaserowAdhocHeader')
+)
+const LocalBaserowSignalTriggerServiceForm = lazyComponent(
+  () =>
+    import('@baserow/modules/integrations/localBaserow/components/services/LocalBaserowSignalTriggerServiceForm')
+)
+const LocalBaserowFieldsUpdatedTriggerServiceForm = lazyComponent(
+  () =>
+    import('@baserow/modules/integrations/localBaserow/components/services/LocalBaserowFieldsUpdatedTriggerServiceForm')
+)
+const LocalBaserowGetRowForm = lazyComponent(
+  () =>
+    import('@baserow/modules/integrations/localBaserow/components/services/LocalBaserowGetRowForm')
+)
+const LocalBaserowListRowsForm = lazyComponent(
+  () =>
+    import('@baserow/modules/integrations/localBaserow/components/services/LocalBaserowListRowsForm')
+)
+const LocalBaserowAggregateRowsForm = lazyComponent(
+  () =>
+    import('@baserow/modules/integrations/localBaserow/components/services/LocalBaserowAggregateRowsForm')
+)
 
 export class LocalBaserowTableServiceType extends ServiceType {
   get integrationType() {

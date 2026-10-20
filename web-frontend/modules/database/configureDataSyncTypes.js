@@ -1,7 +1,18 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { Registerable } from '@baserow/modules/core/registry'
-import ConfigureDataSyncVisibleFields from '@baserow/modules/database/components/dataSync/ConfigureDataSyncVisibleFields'
-import ConfigureDataSyncSettings from '@baserow/modules/database/components/dataSync/ConfigureDataSyncSettings'
-import ConfigureDataSyncHistory from '@baserow/modules/database/components/dataSync/ConfigureDataSyncHistory'
+
+const ConfigureDataSyncVisibleFields = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/dataSync/ConfigureDataSyncVisibleFields')
+)
+const ConfigureDataSyncSettings = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/dataSync/ConfigureDataSyncSettings')
+)
+const ConfigureDataSyncHistory = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/dataSync/ConfigureDataSyncHistory')
+)
 
 export class ConfigureDataSyncType extends Registerable {
   get name() {

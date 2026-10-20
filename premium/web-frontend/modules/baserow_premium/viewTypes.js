@@ -1,23 +1,15 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import {
   BaseBufferedRowViewTypeMixin,
   ViewType,
 } from '@baserow/modules/database/viewTypes'
 import { SingleSelectFieldType } from '@baserow/modules/database/fieldTypes'
-import KanbanView from '@baserow_premium/components/views/kanban/KanbanView'
-import CalendarView from '@baserow_premium/components/views/calendar/CalendarView'
-import TimelineView from '@baserow_premium/components/views/timeline/TimelineView'
-import KanbanViewHeader from '@baserow_premium/components/views/kanban/KanbanViewHeader'
-import CalendarViewHeader from '@baserow_premium/components/views/calendar/CalendarViewHeader'
-import TimelineViewHeader from '@baserow_premium/components/views/timeline/TimelineViewHeader'
 import PremiumFeatures from '@baserow_premium/features'
-import PaidFeaturesModal from '@baserow_premium/components/PaidFeaturesModal'
 import {
   isAdhocFiltering,
   isAdhocSorting,
   maxPossibleOrderValue,
 } from '@baserow/modules/database/utils/view'
-import CalendarCreateIcalSharedViewLink from '@baserow_premium/components/views/calendar/CalendarCreateIcalSharedViewLink'
-import CalendarSharingIcalSlugSection from '@baserow_premium/components/views/calendar/CalendarSharingIcalSlugSection'
 import {
   getDateField,
   dateSettinsAreValid,
@@ -28,6 +20,36 @@ import {
   TimelineViewPaidFeature,
 } from '@baserow_premium/paidFeatures'
 import { waitFor } from '@baserow/modules/core/utils/queue'
+
+const KanbanView = lazyComponent(
+  () => import('@baserow_premium/components/views/kanban/KanbanView')
+)
+const CalendarView = lazyComponent(
+  () => import('@baserow_premium/components/views/calendar/CalendarView')
+)
+const TimelineView = lazyComponent(
+  () => import('@baserow_premium/components/views/timeline/TimelineView')
+)
+const KanbanViewHeader = lazyComponent(
+  () => import('@baserow_premium/components/views/kanban/KanbanViewHeader')
+)
+const CalendarViewHeader = lazyComponent(
+  () => import('@baserow_premium/components/views/calendar/CalendarViewHeader')
+)
+const TimelineViewHeader = lazyComponent(
+  () => import('@baserow_premium/components/views/timeline/TimelineViewHeader')
+)
+const PaidFeaturesModal = lazyComponent(
+  () => import('@baserow_premium/components/PaidFeaturesModal')
+)
+const CalendarCreateIcalSharedViewLink = lazyComponent(
+  () =>
+    import('@baserow_premium/components/views/calendar/CalendarCreateIcalSharedViewLink')
+)
+const CalendarSharingIcalSlugSection = lazyComponent(
+  () =>
+    import('@baserow_premium/components/views/calendar/CalendarSharingIcalSlugSection')
+)
 
 class PremiumViewType extends ViewType {
   getDeactivatedText() {

@@ -1,19 +1,13 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import {
   ElementType,
   FormElementType,
 } from '@baserow/modules/builder/elementTypes'
-import AuthFormElement from '@baserow_enterprise/builder/components/elements/AuthFormElement'
-import AuthFormElementForm from '@baserow_enterprise/builder/components/elements/AuthFormElementForm'
-import FileInputElement from '@baserow_enterprise/builder/components/elements/FileInputElement'
-import FileInputElementForm from '@baserow_enterprise/builder/components/elements/FileInputElementForm'
-import GraphElement from '@baserow_enterprise/builder/components/elements/GraphElement'
-import GraphElementForm from '@baserow_enterprise/builder/components/elements/GraphElementForm'
 import { uuid } from '@baserow/modules/core/utils/string'
 import {
   ensureArray,
   ensureString,
 } from '@baserow/modules/core/utils/validator'
-import PaidFeaturesModal from '@baserow_premium/components/PaidFeaturesModal'
 import {
   BuilderFileInputElementPaidFeature,
   BuilderGraphElementPaidFeature,
@@ -26,6 +20,33 @@ import elementImageFileInput from '@baserow_enterprise/assets/images/builder/ele
 import ChartBarWidgetSvg from '@baserow_premium/assets/images/chart_bar.svg?url'
 
 import EnterpriseFeaturesObject from '@baserow_enterprise/features'
+
+const AuthFormElement = lazyComponent(
+  () =>
+    import('@baserow_enterprise/builder/components/elements/AuthFormElement')
+)
+const AuthFormElementForm = lazyComponent(
+  () =>
+    import('@baserow_enterprise/builder/components/elements/AuthFormElementForm')
+)
+const FileInputElement = lazyComponent(
+  () =>
+    import('@baserow_enterprise/builder/components/elements/FileInputElement')
+)
+const FileInputElementForm = lazyComponent(
+  () =>
+    import('@baserow_enterprise/builder/components/elements/FileInputElementForm')
+)
+const GraphElement = lazyComponent(
+  () => import('@baserow_enterprise/builder/components/elements/GraphElement')
+)
+const GraphElementForm = lazyComponent(
+  () =>
+    import('@baserow_enterprise/builder/components/elements/GraphElementForm')
+)
+const PaidFeaturesModal = lazyComponent(
+  () => import('@baserow_premium/components/PaidFeaturesModal')
+)
 
 export class AuthFormElementType extends ElementType {
   static getType() {

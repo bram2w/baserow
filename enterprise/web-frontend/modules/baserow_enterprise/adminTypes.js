@@ -1,11 +1,15 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { AdminType } from '@baserow/modules/core/adminTypes'
 import EnterpriseFeatures from '@baserow_enterprise/features'
-import PaidFeaturesModal from '@baserow_premium/components/PaidFeaturesModal'
 import {
   AuditLogPaidFeature,
   DataScannerPaidFeature,
   SSOPaidFeature,
 } from '@baserow_enterprise/paidFeatures'
+
+const PaidFeaturesModal = lazyComponent(
+  () => import('@baserow_premium/components/PaidFeaturesModal')
+)
 
 class EnterpriseAdminType extends AdminType {
   getDeactivatedModal() {

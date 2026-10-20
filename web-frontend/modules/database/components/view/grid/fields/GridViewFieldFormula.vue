@@ -3,6 +3,7 @@
 </template>
 
 <script>
+import { unwrapLazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 export default {
   name: 'GridViewFieldFormula',
   inheritAttrs: false,
@@ -18,9 +19,11 @@ export default {
       }
     },
     component() {
-      return this.$registry
-        .get('formula_type', this.field.formula_type)
-        .getGridViewFieldComponent(this.field)
+      return unwrapLazyComponent(
+        this.$registry
+          .get('formula_type', this.field.formula_type)
+          .getGridViewFieldComponent(this.field)
+      )
     },
   },
 }

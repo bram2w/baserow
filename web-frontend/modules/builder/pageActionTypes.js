@@ -1,9 +1,14 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { Registerable } from '@baserow/modules/core/registry'
 
 import { compile } from 'path-to-regexp'
-import PublishActionModal from '@baserow/modules/builder/components/page/header/PublishActionModal'
 import { ensureString } from '@baserow/modules/core/utils/validator'
 import PublishedBuilderService from '@baserow/modules/builder/services/publishedBuilder'
+
+const PublishActionModal = lazyComponent(
+  () =>
+    import('@baserow/modules/builder/components/page/header/PublishActionModal')
+)
 
 export class PageActionType extends Registerable {
   get label() {

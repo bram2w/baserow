@@ -1,13 +1,27 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { Registerable } from '@baserow/modules/core/registry'
-import AirtableImportForm from '@baserow/modules/database/components/airtable/AirtableImportForm'
-import TemplateImportForm from '@baserow/modules/database/components/onboarding/TemplateImportForm'
-import TemplateOnboardingCancelModal from '@baserow/modules/database/components/onboarding/TemplateOnboardingCancelModal'
-import DatabaseTemplatePreview from '@baserow/modules/database/components/onboarding/DatabaseTemplatePreview'
 import { DatabaseOnboardingType } from '@baserow/modules/database/onboardingTypes'
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
 import AirtableService from '@baserow/modules/database/services/airtable'
 import TemplateService from '@baserow/modules/core/services/template'
 import { getAirtableJobErrorMessage } from '@baserow/modules/database/utils/airtableErrors'
+
+const AirtableImportForm = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/airtable/AirtableImportForm')
+)
+const TemplateImportForm = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/onboarding/TemplateImportForm')
+)
+const TemplateOnboardingCancelModal = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/onboarding/TemplateOnboardingCancelModal')
+)
+const DatabaseTemplatePreview = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/onboarding/DatabaseTemplatePreview')
+)
 
 /**
  * Base class for database onboarding step types. Each type represents a different

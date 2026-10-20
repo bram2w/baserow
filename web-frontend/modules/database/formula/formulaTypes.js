@@ -1,54 +1,11 @@
-import { Registerable } from '@baserow/modules/core/registry'
-import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
-import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
-import RowEditFieldNumber from '@baserow/modules/database/components/row/RowEditFieldNumber'
-import RowEditFieldDateReadOnly from '@baserow/modules/database/components/row/RowEditFieldDateReadOnly'
-import GridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLongText'
-import RowEditFieldBoolean from '@baserow/modules/database/components/row/RowEditFieldBoolean'
-import FunctionalGridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLongText'
-import FunctionalGridViewFieldText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldText'
-import FunctionalGridViewFieldBlank from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldBlank'
-import FunctionalGridViewFieldArray from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldArray'
-import FunctionalGridViewFieldButton from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldButton'
-import FunctionalGridViewFieldLinkURL from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLinkURL'
-import GridViewFieldArray from '@baserow/modules/database/components/view/grid/fields/GridViewFieldArray'
-import RowEditFieldSingleSelectReadOnly from '@baserow/modules/database/components/row/RowEditFieldSingleSelectReadOnly'
-import RowEditFieldMultipleSelectReadOnly from '@baserow/modules/database/components/row/RowEditFieldMultipleSelectReadOnly'
-import RowEditFieldMultipleCollaboratorsReadOnly from '@baserow/modules/database/components/row/RowEditFieldMultipleCollaboratorsReadOnly'
-import RowEditFieldArray from '@baserow/modules/database/components/row/RowEditFieldArray'
-import RowEditFieldLinkURL from '@baserow/modules/database/components/row/RowEditFieldLinkURL'
-import RowEditFieldButton from '@baserow/modules/database/components/row/RowEditFieldButton'
-import RowEditFieldDurationReadOnly from '@baserow/modules/database/components/row/RowEditFieldDurationReadOnly'
-import FunctionalFormulaArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaArrayItem'
-import FunctionalFormulaArrayDurationItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaArrayDurationItem'
-import FunctionalFormulaArrayNumberItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaArrayNumberItem'
-import FunctionalFormulaBooleanArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaBooleanArrayItem'
-import FunctionalFormulaDateArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaDateArrayItem'
-import FunctionalFormulaSingleSelectArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaSingleSelectArrayItem'
-import FunctionalFormulaMultipleSelectArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaMultipleSelectArrayItem'
-import FunctionalFormulaMultipleCollaboratorsArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaMultipleCollaboratorsArrayItem'
-import FunctionalFormulaLinkArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaLinkArrayItem'
-import FunctionalFormulaButtonArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaButtonArrayItem'
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import RowCardFieldArray from '@baserow/modules/database/components/card/RowCardFieldArray'
-import RowEditFieldBlank from '@baserow/modules/database/components/row/RowEditFieldBlank'
 import RowCardFieldBlank from '@baserow/modules/database/components/card/RowCardFieldBlank'
 import RowCardFieldLinkURL from '@baserow/modules/database/components/card/RowCardFieldLinkURL'
 import RowCardFieldButton from '@baserow/modules/database/components/card/RowCardFieldButton'
-import GridViewFieldButton from '@baserow/modules/database/components/view/grid/fields/GridViewFieldButton'
-import GridViewFieldLinkURL from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLinkURL'
-import GridViewFieldText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldText'
-import RowEditFieldFileReadOnly from '@baserow/modules/database/components/row/RowEditFieldFileReadOnly'
-import FunctionalGridViewSingleFile from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewSingleFile'
-import FunctionalFormulaFileArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaFileArrayItem'
-import SingleFileArrayModal from '@baserow/modules/database/components/view/grid/fields/SingleFileArrayModal'
-import GridViewSingleFile from '@baserow/modules/database/components/view/grid/fields/GridViewSingleFile'
-import RowEditSingleFileReadOnly from '@baserow/modules/database/components/row/RowEditSingleFileReadOnly'
 import RowCardFieldSingleFile from '@baserow/modules/database/components/card/RowCardFieldSingleFile'
-import RowEditFieldURL from '@baserow/modules/database/components/row/RowEditFieldURL'
-import FunctionalGridViewFieldURL from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldURL'
-import GridViewFieldURL from '@baserow/modules/database/components/view/grid/fields/GridViewFieldURL'
 import RowCardFieldURL from '@baserow/modules/database/components/card/RowCardFieldURL'
-import FunctionalFormulaURLArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaURLArrayItem'
+import { Registerable } from '@baserow/modules/core/registry'
 import { mix } from '@baserow/modules/core/mixins'
 import {
   hasEmptyValueFilterMixin,
@@ -66,16 +23,196 @@ import {
   hasMultipleSelectOptionIdEqualMixin,
 } from '@baserow/modules/database/arrayFilterMixins'
 import _ from 'lodash'
-import ViewFilterTypeBoolean from '@baserow/modules/database/components/view/ViewFilterTypeBoolean'
 import {
   genericHasAllValuesEqualFilter,
   genericHasValueContainsFilter,
   genericHasValueContainsWordFilter,
 } from '@baserow/modules/database/utils/fieldFilters'
-import ViewFilterTypeDuration from '@baserow/modules/database/components/view/ViewFilterTypeDuration'
-import ViewFilterTypeMultipleSelectOptions from '@baserow/modules/database/components/view/ViewFilterTypeMultipleSelectOptions'
 import { DEFAULT_SORT_TYPE_KEY } from '@baserow/modules/database/constants'
-import ViewFilterTypeCollaborators from '@baserow/modules/database/components/view/ViewFilterTypeCollaborators'
+
+const RowEditFieldText = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowEditFieldText')
+)
+const RowEditFieldLongText = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowEditFieldLongText')
+)
+const RowEditFieldNumber = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowEditFieldNumber')
+)
+const RowEditFieldDateReadOnly = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/row/RowEditFieldDateReadOnly')
+)
+const GridViewFieldLongText = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldLongText')
+)
+const RowEditFieldBoolean = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowEditFieldBoolean')
+)
+const FunctionalGridViewFieldLongText = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLongText')
+)
+const FunctionalGridViewFieldText = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldText')
+)
+const FunctionalGridViewFieldBlank = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldBlank')
+)
+const FunctionalGridViewFieldArray = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldArray')
+)
+const FunctionalGridViewFieldButton = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldButton')
+)
+const FunctionalGridViewFieldLinkURL = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLinkURL')
+)
+const GridViewFieldArray = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldArray')
+)
+const RowEditFieldSingleSelectReadOnly = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/row/RowEditFieldSingleSelectReadOnly')
+)
+const RowEditFieldMultipleSelectReadOnly = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/row/RowEditFieldMultipleSelectReadOnly')
+)
+const RowEditFieldMultipleCollaboratorsReadOnly = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/row/RowEditFieldMultipleCollaboratorsReadOnly')
+)
+const RowEditFieldArray = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowEditFieldArray')
+)
+const RowEditFieldLinkURL = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowEditFieldLinkURL')
+)
+const RowEditFieldButton = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowEditFieldButton')
+)
+const RowEditFieldDurationReadOnly = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/row/RowEditFieldDurationReadOnly')
+)
+const FunctionalFormulaArrayItem = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/formula/array/FunctionalFormulaArrayItem')
+)
+const FunctionalFormulaArrayDurationItem = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/formula/array/FunctionalFormulaArrayDurationItem')
+)
+const FunctionalFormulaArrayNumberItem = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/formula/array/FunctionalFormulaArrayNumberItem')
+)
+const FunctionalFormulaBooleanArrayItem = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/formula/array/FunctionalFormulaBooleanArrayItem')
+)
+const FunctionalFormulaDateArrayItem = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/formula/array/FunctionalFormulaDateArrayItem')
+)
+const FunctionalFormulaSingleSelectArrayItem = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/formula/array/FunctionalFormulaSingleSelectArrayItem')
+)
+const FunctionalFormulaMultipleSelectArrayItem = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/formula/array/FunctionalFormulaMultipleSelectArrayItem')
+)
+const FunctionalFormulaMultipleCollaboratorsArrayItem = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/formula/array/FunctionalFormulaMultipleCollaboratorsArrayItem')
+)
+const FunctionalFormulaLinkArrayItem = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/formula/array/FunctionalFormulaLinkArrayItem')
+)
+const FunctionalFormulaButtonArrayItem = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/formula/array/FunctionalFormulaButtonArrayItem')
+)
+const RowEditFieldBlank = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowEditFieldBlank')
+)
+const GridViewFieldButton = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldButton')
+)
+const GridViewFieldLinkURL = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldLinkURL')
+)
+const GridViewFieldText = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldText')
+)
+const RowEditFieldFileReadOnly = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/row/RowEditFieldFileReadOnly')
+)
+const FunctionalGridViewSingleFile = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewSingleFile')
+)
+const FunctionalFormulaFileArrayItem = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/formula/array/FunctionalFormulaFileArrayItem')
+)
+const SingleFileArrayModal = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/SingleFileArrayModal')
+)
+const GridViewSingleFile = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewSingleFile')
+)
+const RowEditSingleFileReadOnly = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/row/RowEditSingleFileReadOnly')
+)
+const RowEditFieldURL = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowEditFieldURL')
+)
+const FunctionalGridViewFieldURL = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldURL')
+)
+const GridViewFieldURL = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldURL')
+)
+const FunctionalFormulaURLArrayItem = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/formula/array/FunctionalFormulaURLArrayItem')
+)
+const ViewFilterTypeBoolean = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/ViewFilterTypeBoolean')
+)
+const ViewFilterTypeDuration = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/ViewFilterTypeDuration')
+)
+const ViewFilterTypeMultipleSelectOptions = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/ViewFilterTypeMultipleSelectOptions')
+)
+const ViewFilterTypeCollaborators = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/ViewFilterTypeCollaborators')
+)
 
 export class BaserowFormulaTypeDefinition extends Registerable {
   getIconClass() {

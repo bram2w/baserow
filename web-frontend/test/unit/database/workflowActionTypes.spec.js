@@ -1,3 +1,4 @@
+import { unwrapLazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { vi } from 'vitest'
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
@@ -187,7 +188,7 @@ describe('OpenUrlWorkflowActionType', () => {
     })
 
   test('it renders its own form, not a service one', () => {
-    expect(actionType.form).toBe(OpenUrlWorkflowActionForm)
+    expect(unwrapLazyComponent(actionType.form)).toBe(OpenUrlWorkflowActionForm)
     expect(actionType.icon).toBe('iconoir-link')
     expect(actionType.label).toBeTruthy()
   })

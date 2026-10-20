@@ -1,8 +1,18 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { BaserowPlugin } from '@baserow/modules/core/plugins'
-import Impersonate from '@baserow_premium/components/sidebar/Impersonate'
-import HighestLicenseTypeBadge from '@baserow_premium/components/sidebar/HighestLicenseTypeBadge'
-import PremiumViewOptions from '@baserow_premium/components/views/PremiumViewOptions'
-import PublicViewExportMenuItem from '@baserow_premium/components/views/PublicViewExportMenuItem'
+
+const Impersonate = lazyComponent(
+  () => import('@baserow_premium/components/sidebar/Impersonate')
+)
+const HighestLicenseTypeBadge = lazyComponent(
+  () => import('@baserow_premium/components/sidebar/HighestLicenseTypeBadge')
+)
+const PremiumViewOptions = lazyComponent(
+  () => import('@baserow_premium/components/views/PremiumViewOptions')
+)
+const PublicViewExportMenuItem = lazyComponent(
+  () => import('@baserow_premium/components/views/PublicViewExportMenuItem')
+)
 
 export class PremiumPlugin extends BaserowPlugin {
   static getType() {

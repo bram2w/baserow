@@ -1,3 +1,25 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
+import RowCardFieldBoolean from '@baserow/modules/database/components/card/RowCardFieldBoolean'
+import RowCardFieldDate from '@baserow/modules/database/components/card/RowCardFieldDate'
+import RowCardFieldDuration from '@baserow/modules/database/components/card/RowCardFieldDuration'
+import RowCardFieldEmail from '@baserow/modules/database/components/card/RowCardFieldEmail'
+import RowCardFieldFile from '@baserow/modules/database/components/card/RowCardFieldFile'
+import RowCardFieldFormula from '@baserow/modules/database/components/card/RowCardFieldFormula'
+import RowCardFieldLinkRow from '@baserow/modules/database/components/card/RowCardFieldLinkRow'
+import RowCardFieldMultipleSelect from '@baserow/modules/database/components/card/RowCardFieldMultipleSelect'
+import RowCardFieldNumber from '@baserow/modules/database/components/card/RowCardFieldNumber'
+import RowCardFieldRating from '@baserow/modules/database/components/card/RowCardFieldRating'
+import RowCardFieldPhoneNumber from '@baserow/modules/database/components/card/RowCardFieldPhoneNumber'
+import RowCardFieldSingleSelect from '@baserow/modules/database/components/card/RowCardFieldSingleSelect'
+import RowCardFieldText from '@baserow/modules/database/components/card/RowCardFieldText'
+import RowCardFieldURL from '@baserow/modules/database/components/card/RowCardFieldURL'
+import RowCardFieldMultipleCollaborators from '@baserow/modules/database/components/card/RowCardFieldMultipleCollaborators'
+import RowCardFieldUUID from '@baserow/modules/database/components/card/RowCardFieldUUID'
+import RowCardFieldAutonumber from '@baserow/modules/database/components/card/RowCardFieldAutonumber'
+import RowCardFieldLastModifiedBy from '@baserow/modules/database/components/card/RowCardFieldLastModifiedBy'
+import RowCardFieldPassword from '@baserow/modules/database/components/card/RowCardFieldPassword'
+import RowCardFieldFormViewEditRow from '@baserow/modules/database/components/card/RowCardFieldFormViewEditRow'
+import RowCardFieldButtonField from '@baserow/modules/database/components/card/RowCardFieldButtonField'
 import BigNumber from 'bignumber.js'
 import {
   DURATION_FORMATS,
@@ -35,131 +57,6 @@ import {
   plainTextToMarkdown,
   richMarkdownToPlainText,
 } from '@baserow/modules/core/editor/richTextClipboard'
-import FieldNumberSubForm from '@baserow/modules/database/components/field/FieldNumberSubForm'
-import FieldAutonumberSubForm from '@baserow/modules/database/components/field/FieldAutonumberSubForm'
-import FieldDurationSubForm from '@baserow/modules/database/components/field/FieldDurationSubForm'
-import FieldRatingSubForm from '@baserow/modules/database/components/field/FieldRatingSubForm'
-import FieldTextSubForm from '@baserow/modules/database/components/field/FieldTextSubForm'
-import FieldLongTextSubForm from '@baserow/modules/database/components/field/FieldLongTextSubForm'
-import FieldDateSubForm from '@baserow/modules/database/components/field/FieldDateSubForm'
-import FieldLinkRowSubForm from '@baserow/modules/database/components/field/FieldLinkRowSubForm'
-import FieldMultipleSelectOptionsSubForm from '@baserow/modules/database/components/field/FieldMultipleSelectOptionsSubForm'
-import FieldSingleSelectOptionsSubForm from '@baserow/modules/database/components/field/FieldSingleSelectOptionsSubForm'
-import FieldCollaboratorSubForm from '@baserow/modules/database/components/field/FieldCollaboratorSubForm'
-import FieldPasswordSubForm from '@baserow/modules/database/components/field/FieldPasswordSubForm'
-import FieldBooleanSubForm from '@baserow/modules/database/components/field/FieldBooleanSubForm'
-
-import GridViewFieldText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldText'
-import GridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLongText'
-import GridViewFieldRichText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldRichText'
-import GridViewFieldURL from '@baserow/modules/database/components/view/grid/fields/GridViewFieldURL'
-import GridViewFieldEmail from '@baserow/modules/database/components/view/grid/fields/GridViewFieldEmail'
-import GridViewFieldLinkRow from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLinkRow'
-import GridViewFieldNumber from '@baserow/modules/database/components/view/grid/fields/GridViewFieldNumber'
-import GridViewFieldRating from '@baserow/modules/database/components/view/grid/fields/GridViewFieldRating'
-import GridViewFieldBoolean from '@baserow/modules/database/components/view/grid/fields/GridViewFieldBoolean'
-import GridViewFieldDate from '@baserow/modules/database/components/view/grid/fields/GridViewFieldDate'
-import GridViewFieldDateReadOnly from '@baserow/modules/database/components/view/grid/fields/GridViewFieldDateReadOnly'
-import GridViewFieldFile from '@baserow/modules/database/components/view/grid/fields/GridViewFieldFile'
-import GridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/fields/GridViewFieldSingleSelect'
-import GridViewFieldMultipleSelect from '@baserow/modules/database/components/view/grid/fields/GridViewFieldMultipleSelect'
-import GridViewFieldPhoneNumber from '@baserow/modules/database/components/view/grid/fields/GridViewFieldPhoneNumber'
-import GridViewFieldDuration from '@baserow/modules/database/components/view/grid/fields/GridViewFieldDuration'
-import GridViewFieldMultipleCollaborators from '@baserow/modules/database/components/view/grid/fields/GridViewFieldMultipleCollaborators'
-import GridViewFieldUUID from '@baserow/modules/database/components/view/grid/fields/GridViewFieldUUID'
-import GridViewFieldAutonumber from '@baserow/modules/database/components/view/grid/fields/GridViewFieldAutonumber'
-import GridViewFieldLastModifiedBy from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLastModifiedBy'
-import GridViewFieldPassword from '@baserow/modules/database/components/view/grid/fields/GridViewFieldPassword'
-import GridViewFieldFormViewEditRow from '@baserow/modules/database/components/view/grid/fields/GridViewFieldFormViewEditRow'
-
-import FunctionalGridViewFieldText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldText'
-import FunctionalGridViewFieldDuration from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldDuration'
-import FunctionalGridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLongText'
-import FunctionalGridViewFieldRichText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldRichText'
-import FunctionalGridViewFieldLinkRow from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLinkRow'
-import FunctionalGridViewFieldNumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldNumber'
-import FunctionalGridViewFieldRating from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldRating'
-import FunctionalGridViewFieldBoolean from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldBoolean'
-import FunctionalGridViewFieldDate from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldDate'
-import FunctionalGridViewFieldFile from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldFile'
-import FunctionalGridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldSingleSelect'
-import FunctionalGridViewFieldMultipleSelect from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldMultipleSelect'
-import FunctionalGridViewFieldFormula from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldFormula'
-import FunctionalGridViewFieldMultipleCollaborators from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldMultipleCollaborators'
-import FunctionalGridViewFieldURL from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldURL'
-import FunctionalGridViewFieldUUID from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldUUID'
-import FunctionalGridViewFieldAutonumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldAutonumber'
-import FunctionalGridViewFieldLastModifiedBy from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLastModifiedBy'
-import FunctionalGridVIewFieldPassword from '@baserow/modules/database/components/view/grid/fields/FunctionalGridVIewFieldPassword.vue'
-import FunctionalGridViewFieldFormViewEditRow from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldFormViewEditRow'
-
-import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
-import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
-import RowEditFieldRichText from '@baserow/modules/database/components/row/RowEditFieldRichText'
-import RowEditFieldURL from '@baserow/modules/database/components/row/RowEditFieldURL'
-import RowEditFieldEmail from '@baserow/modules/database/components/row/RowEditFieldEmail'
-import RowEditFieldLinkRow from '@baserow/modules/database/components/row/RowEditFieldLinkRow'
-import RowEditFieldNumber from '@baserow/modules/database/components/row/RowEditFieldNumber'
-import RowEditFieldDuration from '@baserow/modules/database/components/row/RowEditFieldDuration'
-import RowEditFieldRating from '@baserow/modules/database/components/row/RowEditFieldRating'
-import RowEditFieldBoolean from '@baserow/modules/database/components/row/RowEditFieldBoolean'
-import RowEditFieldDate from '@baserow/modules/database/components/row/RowEditFieldDate'
-import RowEditFieldDateReadOnly from '@baserow/modules/database/components/row/RowEditFieldDateReadOnly'
-import RowEditFieldFile from '@baserow/modules/database/components/row/RowEditFieldFile'
-import RowEditFieldSingleSelect from '@baserow/modules/database/components/row/RowEditFieldSingleSelect'
-import RowEditFieldMultipleSelect from '@baserow/modules/database/components/row/RowEditFieldMultipleSelect'
-import RowEditFieldPhoneNumber from '@baserow/modules/database/components/row/RowEditFieldPhoneNumber'
-import RowEditFieldMultipleCollaborators from '@baserow/modules/database/components/row/RowEditFieldMultipleCollaborators'
-import RowEditFieldUUID from '@baserow/modules/database/components/row/RowEditFieldUUID'
-import RowEditFieldAutonumber from '@baserow/modules/database/components/row/RowEditFieldAutonumber'
-import RowEditFieldLastModifiedBy from '@baserow/modules/database/components/row/RowEditFieldLastModifiedBy'
-import RowEditFieldPassword from '@baserow/modules/database/components/row/RowEditFieldPassword'
-import RowEditFieldFormViewEditRow from '@baserow/modules/database/components/row/RowEditFieldFormViewEditRow'
-
-import RowCardFieldBoolean from '@baserow/modules/database/components/card/RowCardFieldBoolean'
-import RowCardFieldDate from '@baserow/modules/database/components/card/RowCardFieldDate'
-import RowCardFieldDuration from '@baserow/modules/database/components/card/RowCardFieldDuration'
-import RowCardFieldEmail from '@baserow/modules/database/components/card/RowCardFieldEmail'
-import RowCardFieldFile from '@baserow/modules/database/components/card/RowCardFieldFile'
-import RowCardFieldFormula from '@baserow/modules/database/components/card/RowCardFieldFormula'
-import RowCardFieldLinkRow from '@baserow/modules/database/components/card/RowCardFieldLinkRow'
-import GridViewGroupValueBoolean from '@baserow/modules/database/components/view/grid/GridViewGroupValueBoolean'
-import GridViewGroupValueLinkRow from '@baserow/modules/database/components/view/grid/GridViewGroupValueLinkRow'
-import GridViewGroupValueMultipleCollaborators from '@baserow/modules/database/components/view/grid/GridViewGroupValueMultipleCollaborators'
-import GridViewGroupValueMultipleSelect from '@baserow/modules/database/components/view/grid/GridViewGroupValueMultipleSelect'
-import RowCardFieldMultipleSelect from '@baserow/modules/database/components/card/RowCardFieldMultipleSelect'
-import RowCardFieldNumber from '@baserow/modules/database/components/card/RowCardFieldNumber'
-import RowCardFieldRating from '@baserow/modules/database/components/card/RowCardFieldRating'
-import RowCardFieldPhoneNumber from '@baserow/modules/database/components/card/RowCardFieldPhoneNumber'
-import RowCardFieldSingleSelect from '@baserow/modules/database/components/card/RowCardFieldSingleSelect'
-import RowCardFieldText from '@baserow/modules/database/components/card/RowCardFieldText'
-import RowCardFieldRichText from '@baserow/modules/database/components/card/RowCardFieldRichText'
-import RowCardFieldURL from '@baserow/modules/database/components/card/RowCardFieldURL'
-import RowCardFieldMultipleCollaborators from '@baserow/modules/database/components/card/RowCardFieldMultipleCollaborators'
-import RowCardFieldUUID from '@baserow/modules/database/components/card/RowCardFieldUUID'
-import RowCardFieldAutonumber from '@baserow/modules/database/components/card/RowCardFieldAutonumber'
-import RowCardFieldLastModifiedBy from '@baserow/modules/database/components/card/RowCardFieldLastModifiedBy'
-import RowCardFieldPassword from '@baserow/modules/database/components/card/RowCardFieldPassword'
-import RowCardFieldFormViewEditRow from '@baserow/modules/database/components/card/RowCardFieldFormViewEditRow'
-
-import RowHistoryFieldText from '@baserow/modules/database/components/row/RowHistoryFieldText'
-import RowHistoryFieldRichText from '@baserow/modules/database/components/row/RowHistoryFieldRichText'
-import RowHistoryFieldDate from '@baserow/modules/database/components/row/RowHistoryFieldDate'
-import RowHistoryFieldNumber from '@baserow/modules/database/components/row/RowHistoryFieldNumber'
-import RowHistoryFieldDuration from '@baserow/modules/database/components/row/RowHistoryFieldDuration'
-import RowHistoryFieldMultipleCollaborators from '@baserow/modules/database/components/row/RowHistoryFieldMultipleCollaborators'
-import RowHistoryFieldFile from '@baserow/modules/database/components/row/RowHistoryFieldFile'
-import RowHistoryFieldMultipleSelect from '@baserow/modules/database/components/row/RowHistoryFieldMultipleSelect'
-import RowHistoryFieldSingleSelect from '@baserow/modules/database/components/row/RowHistoryFieldSingleSelect'
-import RowHistoryFieldBoolean from '@baserow/modules/database/components/row/RowHistoryFieldBoolean'
-import RowHistoryFieldLinkRow from '@baserow/modules/database/components/row/RowHistoryFieldLinkRow'
-import RowHistoryFieldPassword from '@baserow/modules/database/components/row/RowHistoryFieldPassword'
-
-import FormViewFieldLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldLinkRow'
-import FormViewFieldMultipleLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldMultipleLinkRow'
-import FormViewFieldMultipleSelectCheckboxes from '@baserow/modules/database/components/view/form/FormViewFieldMultipleSelectCheckboxes'
-import FormViewFieldMultipleCollaboratorsCheckboxes from '@baserow/modules/database/components/view/form/FormViewFieldMultipleCollaboratorsCheckboxes'
-import FormViewFieldSingleSelectRadios from '@baserow/modules/database/components/view/form/FormViewFieldSingleSelectRadios'
 
 import {
   getDateMomentFormat,
@@ -173,12 +70,6 @@ import {
   genericHasValueEqualFilter,
   genericStartsWithFilter,
 } from '@baserow/modules/database/utils/fieldFilters'
-import GridViewFieldFormula from '@baserow/modules/database/components/view/grid/fields/GridViewFieldFormula'
-import FieldFormulaSubForm from '@baserow/modules/database/components/field/FieldFormulaSubForm'
-import FieldLookupSubForm from '@baserow/modules/database/components/field/FieldLookupSubForm'
-import FieldCountSubForm from '@baserow/modules/database/components/field/FieldCountSubForm'
-import FieldRollupSubForm from '@baserow/modules/database/components/field/FieldRollupSubForm'
-import RowEditFieldFormula from '@baserow/modules/database/components/row/RowEditFieldFormula'
 import {
   DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY,
   DEFAULT_SORT_TYPE_KEY,
@@ -189,15 +80,430 @@ import FormService from '@baserow/modules/database/services/view/form'
 import { UploadFileUserFileUploadType } from '@baserow/modules/core/userFileUploadTypes'
 import _ from 'lodash'
 import { trueValues } from '@baserow/modules/core/utils/constants'
-import ViewFilterTypeNumber from '@baserow/modules/database/components/view/ViewFilterTypeNumber.vue'
-import ViewFilterTypeDuration from '@baserow/modules/database/components/view/ViewFilterTypeDuration.vue'
-import FormViewFieldOptionsAllowedSelectOptions from '@baserow/modules/database/components/view/form/FormViewFieldOptionsAllowedSelectOptions'
-import FieldFormViewEditRowSubForm from '@baserow/modules/database/components/field/FieldFormViewEditRowSubForm'
-import FieldButtonSubForm from '@baserow/modules/database/components/field/FieldButtonSubForm'
-import GridViewFieldButtonField from '@baserow/modules/database/components/view/grid/fields/GridViewFieldButtonField'
-import FunctionalGridViewFieldButtonField from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldButtonField'
-import RowEditFieldButtonField from '@baserow/modules/database/components/row/RowEditFieldButtonField'
-import RowCardFieldButtonField from '@baserow/modules/database/components/card/RowCardFieldButtonField'
+
+const RowCardFieldRichText = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/card/RowCardFieldRichText'),
+  { height: 32 }
+)
+const FieldNumberSubForm = lazyComponent(
+  () => import('@baserow/modules/database/components/field/FieldNumberSubForm')
+)
+const FieldAutonumberSubForm = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/field/FieldAutonumberSubForm')
+)
+const FieldDurationSubForm = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/field/FieldDurationSubForm')
+)
+const FieldRatingSubForm = lazyComponent(
+  () => import('@baserow/modules/database/components/field/FieldRatingSubForm')
+)
+const FieldTextSubForm = lazyComponent(
+  () => import('@baserow/modules/database/components/field/FieldTextSubForm')
+)
+const FieldLongTextSubForm = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/field/FieldLongTextSubForm')
+)
+const FieldDateSubForm = lazyComponent(
+  () => import('@baserow/modules/database/components/field/FieldDateSubForm')
+)
+const FieldLinkRowSubForm = lazyComponent(
+  () => import('@baserow/modules/database/components/field/FieldLinkRowSubForm')
+)
+const FieldMultipleSelectOptionsSubForm = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/field/FieldMultipleSelectOptionsSubForm')
+)
+const FieldSingleSelectOptionsSubForm = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/field/FieldSingleSelectOptionsSubForm')
+)
+const FieldCollaboratorSubForm = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/field/FieldCollaboratorSubForm')
+)
+const FieldPasswordSubForm = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/field/FieldPasswordSubForm')
+)
+const FieldBooleanSubForm = lazyComponent(
+  () => import('@baserow/modules/database/components/field/FieldBooleanSubForm')
+)
+const GridViewFieldText = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldText')
+)
+const GridViewFieldLongText = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldLongText')
+)
+const GridViewFieldRichText = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldRichText')
+)
+const GridViewFieldURL = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldURL')
+)
+const GridViewFieldEmail = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldEmail')
+)
+const GridViewFieldLinkRow = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldLinkRow')
+)
+const GridViewFieldNumber = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldNumber')
+)
+const GridViewFieldRating = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldRating')
+)
+const GridViewFieldBoolean = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldBoolean')
+)
+const GridViewFieldDate = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldDate')
+)
+const GridViewFieldDateReadOnly = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldDateReadOnly')
+)
+const GridViewFieldFile = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldFile')
+)
+const GridViewFieldSingleSelect = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldSingleSelect')
+)
+const GridViewFieldMultipleSelect = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldMultipleSelect')
+)
+const GridViewFieldPhoneNumber = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldPhoneNumber')
+)
+const GridViewFieldDuration = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldDuration')
+)
+const GridViewFieldMultipleCollaborators = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldMultipleCollaborators')
+)
+const GridViewFieldUUID = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldUUID')
+)
+const GridViewFieldAutonumber = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldAutonumber')
+)
+const GridViewFieldLastModifiedBy = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldLastModifiedBy')
+)
+const GridViewFieldPassword = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldPassword')
+)
+const GridViewFieldFormViewEditRow = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldFormViewEditRow')
+)
+const FunctionalGridViewFieldText = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldText')
+)
+const FunctionalGridViewFieldDuration = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldDuration')
+)
+const FunctionalGridViewFieldLongText = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLongText')
+)
+const FunctionalGridViewFieldRichText = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldRichText')
+)
+const FunctionalGridViewFieldLinkRow = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLinkRow')
+)
+const FunctionalGridViewFieldNumber = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldNumber')
+)
+const FunctionalGridViewFieldRating = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldRating')
+)
+const FunctionalGridViewFieldBoolean = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldBoolean')
+)
+const FunctionalGridViewFieldDate = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldDate')
+)
+const FunctionalGridViewFieldFile = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldFile')
+)
+const FunctionalGridViewFieldSingleSelect = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldSingleSelect')
+)
+const FunctionalGridViewFieldMultipleSelect = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldMultipleSelect')
+)
+const FunctionalGridViewFieldFormula = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldFormula')
+)
+const FunctionalGridViewFieldMultipleCollaborators = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldMultipleCollaborators')
+)
+const FunctionalGridViewFieldURL = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldURL')
+)
+const FunctionalGridViewFieldUUID = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldUUID')
+)
+const FunctionalGridViewFieldAutonumber = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldAutonumber')
+)
+const FunctionalGridViewFieldLastModifiedBy = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLastModifiedBy')
+)
+const FunctionalGridVIewFieldPassword = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridVIewFieldPassword.vue')
+)
+const FunctionalGridViewFieldFormViewEditRow = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldFormViewEditRow')
+)
+const RowEditFieldText = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowEditFieldText')
+)
+const RowEditFieldLongText = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowEditFieldLongText')
+)
+const RowEditFieldRichText = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowEditFieldRichText')
+)
+const RowEditFieldURL = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowEditFieldURL')
+)
+const RowEditFieldEmail = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowEditFieldEmail')
+)
+const RowEditFieldLinkRow = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowEditFieldLinkRow')
+)
+const RowEditFieldNumber = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowEditFieldNumber')
+)
+const RowEditFieldDuration = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowEditFieldDuration')
+)
+const RowEditFieldRating = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowEditFieldRating')
+)
+const RowEditFieldBoolean = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowEditFieldBoolean')
+)
+const RowEditFieldDate = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowEditFieldDate')
+)
+const RowEditFieldDateReadOnly = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/row/RowEditFieldDateReadOnly')
+)
+const RowEditFieldFile = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowEditFieldFile')
+)
+const RowEditFieldSingleSelect = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/row/RowEditFieldSingleSelect')
+)
+const RowEditFieldMultipleSelect = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/row/RowEditFieldMultipleSelect')
+)
+const RowEditFieldPhoneNumber = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/row/RowEditFieldPhoneNumber')
+)
+const RowEditFieldMultipleCollaborators = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/row/RowEditFieldMultipleCollaborators')
+)
+const RowEditFieldUUID = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowEditFieldUUID')
+)
+const RowEditFieldAutonumber = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/row/RowEditFieldAutonumber')
+)
+const RowEditFieldLastModifiedBy = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/row/RowEditFieldLastModifiedBy')
+)
+const RowEditFieldPassword = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowEditFieldPassword')
+)
+const RowEditFieldFormViewEditRow = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/row/RowEditFieldFormViewEditRow')
+)
+const GridViewGroupValueBoolean = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/GridViewGroupValueBoolean')
+)
+const GridViewGroupValueLinkRow = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/GridViewGroupValueLinkRow')
+)
+const GridViewGroupValueMultipleCollaborators = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/GridViewGroupValueMultipleCollaborators')
+)
+const GridViewGroupValueMultipleSelect = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/GridViewGroupValueMultipleSelect')
+)
+const RowHistoryFieldText = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowHistoryFieldText')
+)
+const RowHistoryFieldRichText = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/row/RowHistoryFieldRichText')
+)
+const RowHistoryFieldDate = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowHistoryFieldDate')
+)
+const RowHistoryFieldNumber = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowHistoryFieldNumber')
+)
+const RowHistoryFieldDuration = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/row/RowHistoryFieldDuration')
+)
+const RowHistoryFieldMultipleCollaborators = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/row/RowHistoryFieldMultipleCollaborators')
+)
+const RowHistoryFieldFile = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowHistoryFieldFile')
+)
+const RowHistoryFieldMultipleSelect = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/row/RowHistoryFieldMultipleSelect')
+)
+const RowHistoryFieldSingleSelect = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/row/RowHistoryFieldSingleSelect')
+)
+const RowHistoryFieldBoolean = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/row/RowHistoryFieldBoolean')
+)
+const RowHistoryFieldLinkRow = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/row/RowHistoryFieldLinkRow')
+)
+const RowHistoryFieldPassword = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/row/RowHistoryFieldPassword')
+)
+const FormViewFieldLinkRow = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/form/FormViewFieldLinkRow')
+)
+const FormViewFieldMultipleLinkRow = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/form/FormViewFieldMultipleLinkRow')
+)
+const FormViewFieldMultipleSelectCheckboxes = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/form/FormViewFieldMultipleSelectCheckboxes')
+)
+const FormViewFieldMultipleCollaboratorsCheckboxes = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/form/FormViewFieldMultipleCollaboratorsCheckboxes')
+)
+const FormViewFieldSingleSelectRadios = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/form/FormViewFieldSingleSelectRadios')
+)
+const GridViewFieldFormula = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldFormula')
+)
+const FieldFormulaSubForm = lazyComponent(
+  () => import('@baserow/modules/database/components/field/FieldFormulaSubForm')
+)
+const FieldLookupSubForm = lazyComponent(
+  () => import('@baserow/modules/database/components/field/FieldLookupSubForm')
+)
+const FieldCountSubForm = lazyComponent(
+  () => import('@baserow/modules/database/components/field/FieldCountSubForm')
+)
+const FieldRollupSubForm = lazyComponent(
+  () => import('@baserow/modules/database/components/field/FieldRollupSubForm')
+)
+const RowEditFieldFormula = lazyComponent(
+  () => import('@baserow/modules/database/components/row/RowEditFieldFormula')
+)
+const ViewFilterTypeNumber = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/ViewFilterTypeNumber.vue')
+)
+const ViewFilterTypeDuration = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/ViewFilterTypeDuration.vue')
+)
+const FormViewFieldOptionsAllowedSelectOptions = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/form/FormViewFieldOptionsAllowedSelectOptions')
+)
+const FieldFormViewEditRowSubForm = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/field/FieldFormViewEditRowSubForm')
+)
+const FieldButtonSubForm = lazyComponent(
+  () => import('@baserow/modules/database/components/field/FieldButtonSubForm')
+)
+const GridViewFieldButtonField = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/GridViewFieldButtonField')
+)
+const FunctionalGridViewFieldButtonField = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldButtonField')
+)
+const RowEditFieldButtonField = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/row/RowEditFieldButtonField')
+)
 
 export class FieldType extends Registerable {
   /**

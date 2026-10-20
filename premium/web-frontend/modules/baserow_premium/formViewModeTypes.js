@@ -1,9 +1,18 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { FormViewModeType } from '@baserow/modules/database/formViewModeTypes'
-import FormViewModeSurvey from '@baserow_premium/components/views/form/FormViewModeSurvey'
-import FormViewModePreviewSurvey from '@baserow_premium/components/views/form/FormViewModePreviewSurvey'
 import PremiumFeatures from '@baserow_premium/features'
-import PaidFeaturesModal from '@baserow_premium/components/PaidFeaturesModal'
 import { FormSurveyModePaidFeature } from '@baserow_premium/paidFeatures'
+
+const FormViewModeSurvey = lazyComponent(
+  () => import('@baserow_premium/components/views/form/FormViewModeSurvey')
+)
+const FormViewModePreviewSurvey = lazyComponent(
+  () =>
+    import('@baserow_premium/components/views/form/FormViewModePreviewSurvey')
+)
+const PaidFeaturesModal = lazyComponent(
+  () => import('@baserow_premium/components/PaidFeaturesModal')
+)
 
 export class FormViewSurveyModeType extends FormViewModeType {
   static getType() {

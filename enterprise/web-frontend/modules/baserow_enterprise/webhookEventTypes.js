@@ -1,10 +1,14 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import {
   WebhookEventType,
   viewExample,
 } from '@baserow/modules/database/webhookEventTypes'
 import EnterpriseFeatures from '@baserow_enterprise/features'
-import PaidFeaturesModal from '@baserow_premium/components/PaidFeaturesModal'
 import { AdvancedWebhooksPaidFeature } from '@baserow_enterprise/paidFeatures'
+
+const PaidFeaturesModal = lazyComponent(
+  () => import('@baserow_premium/components/PaidFeaturesModal')
+)
 
 class EnterpriseWebhookEventType extends WebhookEventType {
   getDeactivatedText() {

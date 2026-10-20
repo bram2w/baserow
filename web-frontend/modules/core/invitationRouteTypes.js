@@ -1,7 +1,15 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { Registerable } from '@baserow/modules/core/registry'
 import { FF_RBAC_IMPROVEMENTS } from '@baserow/modules/core/plugins/featureFlags'
-import EmailInvitationRoute from '@baserow/modules/core/components/invitation/EmailInvitationRoute'
-import LinkInvitationRoute from '@baserow/modules/core/components/invitation/LinkInvitationRoute'
+
+const EmailInvitationRoute = lazyComponent(
+  () =>
+    import('@baserow/modules/core/components/invitation/EmailInvitationRoute')
+)
+const LinkInvitationRoute = lazyComponent(
+  () =>
+    import('@baserow/modules/core/components/invitation/LinkInvitationRoute')
+)
 
 /**
  * An invitation route is one way of inviting people into a workspace. Every

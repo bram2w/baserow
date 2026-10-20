@@ -1,3 +1,4 @@
+import { unwrapLazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { TestApp } from '@baserow/test/helpers/testApp'
 import TemplateOnboardingCancelModal from '@baserow/modules/database/components/onboarding/TemplateOnboardingCancelModal'
 
@@ -23,7 +24,9 @@ describe('TemplateDatabaseOnboardingStepType.getCancelModal', () => {
 
     const modal = await stepType.getCancelModal()
 
-    expect(modal.component).toBe(TemplateOnboardingCancelModal)
+    expect(unwrapLazyComponent(modal.component)).toBe(
+      TemplateOnboardingCancelModal
+    )
     expect(modal.props.categories).toHaveLength(1)
     expect(modal.props.databaseStepType).toBe('template')
   })

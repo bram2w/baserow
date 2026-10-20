@@ -68,6 +68,7 @@
 </template>
 
 <script>
+import { unwrapLazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import GridViewFocusBadge from '@baserow/modules/database/components/view/grid/GridViewFocusBadge'
 import { activeFocusEntry } from '@baserow/modules/database/utils/presenceFocusEntries'
 
@@ -184,14 +185,18 @@ export default {
   },
   methods: {
     getFunctionalComponent() {
-      return this.$registry
-        .get('field', this.field.type)
-        .getFunctionalGridViewFieldComponent(this.field)
+      return unwrapLazyComponent(
+        this.$registry
+          .get('field', this.field.type)
+          .getFunctionalGridViewFieldComponent(this.field)
+      )
     },
     getComponent() {
-      return this.$registry
-        .get('field', this.field.type)
-        .getGridViewFieldComponent(this.field)
+      return unwrapLazyComponent(
+        this.$registry
+          .get('field', this.field.type)
+          .getGridViewFieldComponent(this.field)
+      )
     },
     /**
      * Called by functional field components to select this cell.

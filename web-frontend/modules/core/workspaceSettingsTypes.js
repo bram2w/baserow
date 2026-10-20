@@ -1,5 +1,10 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { SettingsType } from '@baserow/modules/core/settingsTypes'
-import AIProviderWorkspaceSettings from '@baserow/modules/core/components/workspace/AIProviderWorkspaceSettings'
+
+const AIProviderWorkspaceSettings = lazyComponent(
+  () =>
+    import('@baserow/modules/core/components/workspace/AIProviderWorkspaceSettings')
+)
 
 export class GenerativeAIWorkspaceSettingsType extends SettingsType {
   static getType() {

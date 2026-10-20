@@ -9,6 +9,7 @@
   <div v-else class="grid-view__cell cell-error">Unknown Field Type</div>
 </template>
 <script>
+import { unwrapLazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import FunctionalGridViewFieldBoolean from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldBoolean'
 import FunctionalGridViewFieldDate from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldDate'
 import FunctionalGridViewFieldNumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldNumber'
@@ -47,7 +48,9 @@ export default {
         'formula_type',
         this.field.formula_type
       )
-      return formulaType.getFunctionalGridViewFieldComponent()
+      return unwrapLazyComponent(
+        formulaType.getFunctionalGridViewFieldComponent()
+      )
     },
   },
 }

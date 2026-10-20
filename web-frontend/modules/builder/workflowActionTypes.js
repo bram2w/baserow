@@ -1,8 +1,5 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { WorkflowActionType } from '@baserow/modules/core/workflowActionTypes'
-import NotificationWorkflowActionForm from '@baserow/modules/builder/components/workflowAction/NotificationWorkflowActionForm.vue'
-import OpenPageWorkflowActionForm from '@baserow/modules/builder/components/workflowAction/OpenPageWorkflowActionForm'
-import WorkflowActionWithService from '@baserow/modules/builder/components/workflowAction/WorkflowActionWithService.vue'
-import RefreshDataSourceWorkflowActionForm from '@baserow/modules/builder/components/workflowAction/RefreshDataSourceWorkflowActionForm.vue'
 import {
   CoreCSVFileReaderServiceType,
   CoreHTTPRequestServiceType,
@@ -24,6 +21,23 @@ import { ensureString } from '@baserow/modules/core/utils/validator'
 import { pathParametersInError } from '@baserow/modules/builder/utils/params'
 import { handleDispatchError } from '@baserow/modules/builder/utils/error'
 import { SlackWriteMessageServiceType } from '@baserow/modules/integrations/slack/serviceTypes'
+
+const NotificationWorkflowActionForm = lazyComponent(
+  () =>
+    import('@baserow/modules/builder/components/workflowAction/NotificationWorkflowActionForm.vue')
+)
+const OpenPageWorkflowActionForm = lazyComponent(
+  () =>
+    import('@baserow/modules/builder/components/workflowAction/OpenPageWorkflowActionForm')
+)
+const WorkflowActionWithService = lazyComponent(
+  () =>
+    import('@baserow/modules/builder/components/workflowAction/WorkflowActionWithService.vue')
+)
+const RefreshDataSourceWorkflowActionForm = lazyComponent(
+  () =>
+    import('@baserow/modules/builder/components/workflowAction/RefreshDataSourceWorkflowActionForm.vue')
+)
 
 export class NotificationWorkflowActionType extends WorkflowActionType {
   static getType() {

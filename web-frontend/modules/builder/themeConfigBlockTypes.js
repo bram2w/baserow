@@ -1,12 +1,5 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { Registerable } from '@baserow/modules/core/registry'
-import ColorThemeConfigBlock from '@baserow/modules/builder/components/theme/ColorThemeConfigBlock'
-import TypographyThemeConfigBlock from '@baserow/modules/builder/components/theme/TypographyThemeConfigBlock'
-import ButtonThemeConfigBlock from '@baserow/modules/builder/components/theme/ButtonThemeConfigBlock'
-import LinkThemeConfigBlock from '@baserow/modules/builder/components/theme/LinkThemeConfigBlock'
-import ImageThemeConfigBlock from '@baserow/modules/builder/components/theme/ImageThemeConfigBlock'
-import PageThemeConfigBlock from '@baserow/modules/builder/components/theme/PageThemeConfigBlock'
-import InputThemeConfigBlock from '@baserow/modules/builder/components/theme/InputThemeConfigBlock'
-import TableThemeConfigBlock from '@baserow/modules/builder/components/theme/TableThemeConfigBlock'
 import { FONT_WEIGHTS } from '@baserow/modules/builder/fontWeights'
 import {
   resolveColor,
@@ -19,6 +12,37 @@ import {
   BACKGROUND_MODES,
 } from '@baserow/modules/builder/enums'
 import get from 'lodash/get'
+
+const ColorThemeConfigBlock = lazyComponent(
+  () =>
+    import('@baserow/modules/builder/components/theme/ColorThemeConfigBlock')
+)
+const TypographyThemeConfigBlock = lazyComponent(
+  () =>
+    import('@baserow/modules/builder/components/theme/TypographyThemeConfigBlock')
+)
+const ButtonThemeConfigBlock = lazyComponent(
+  () =>
+    import('@baserow/modules/builder/components/theme/ButtonThemeConfigBlock')
+)
+const LinkThemeConfigBlock = lazyComponent(
+  () => import('@baserow/modules/builder/components/theme/LinkThemeConfigBlock')
+)
+const ImageThemeConfigBlock = lazyComponent(
+  () =>
+    import('@baserow/modules/builder/components/theme/ImageThemeConfigBlock')
+)
+const PageThemeConfigBlock = lazyComponent(
+  () => import('@baserow/modules/builder/components/theme/PageThemeConfigBlock')
+)
+const InputThemeConfigBlock = lazyComponent(
+  () =>
+    import('@baserow/modules/builder/components/theme/InputThemeConfigBlock')
+)
+const TableThemeConfigBlock = lazyComponent(
+  () =>
+    import('@baserow/modules/builder/components/theme/TableThemeConfigBlock')
+)
 
 /**
  * Helper class to construct easily style objects.

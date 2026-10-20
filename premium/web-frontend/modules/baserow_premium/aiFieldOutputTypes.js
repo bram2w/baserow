@@ -1,11 +1,18 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { Registerable } from '@baserow/modules/core/registry'
 
 import {
   LongTextFieldType,
   SingleSelectFieldType,
 } from '@baserow/modules/database/fieldTypes'
-import FieldSelectOptionsSubForm from '@baserow/modules/database/components/field/FieldSelectOptionsSubForm.vue'
-import FieldAIRichTextSubForm from '@baserow_premium/components/field/FieldAIRichTextSubForm'
+
+const FieldSelectOptionsSubForm = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/field/FieldSelectOptionsSubForm.vue')
+)
+const FieldAIRichTextSubForm = lazyComponent(
+  () => import('@baserow_premium/components/field/FieldAIRichTextSubForm')
+)
 export class AIFieldOutputType extends Registerable {
   /**
    * A human readable name of the AI output type. This will be shown in in the dropdown
