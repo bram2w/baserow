@@ -129,6 +129,8 @@ def test_get_public_dashboard_info(api_client, data_fixture):
     assert public_data_source["type"] == "local_baserow_aggregate_rows"
     assert "result" in public_data_source["schema"]["properties"]
     assert public_data_source["context_data"]["field"]["name"] == "Amount"
+    # The summary widget formats the result with the aggregation type.
+    assert public_data_source["aggregation_type"] == "sum"
 
 
 @pytest.mark.django_db
@@ -158,7 +160,8 @@ def test_get_public_dashboard_info_never_exposes_the_sharing_or_service_config(
     assert dashboard.public_password not in response.content.decode()
 
     public_data_source = response_json["data_sources"][0]
-    # `table_id` is part of the public contract of every table service type, the
+    # `table_id` is part of the public contract of every table service type and
+    # the summary widget needs the `aggregation_type` to format the result, the
     # rest of the service configuration must stay private.
     assert set(public_data_source.keys()) == {
         "id",
@@ -167,12 +170,12 @@ def test_get_public_dashboard_info_never_exposes_the_sharing_or_service_config(
         "schema",
         "context_data",
         "table_id",
+        "aggregation_type",
     }
     for private_key in (
         "integration_id",
         "view_id",
         "field_id",
-        "aggregation_type",
         "filters",
         "filter_type",
         "search_query",

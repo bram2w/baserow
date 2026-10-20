@@ -1470,6 +1470,13 @@ class LocalBaserowAggregateRowsUserServiceType(
         ) + ["field_id", "aggregation_type"]
 
     @property
+    def public_serializer_field_names(self):
+        # Visitors of a publicly shared dashboard need the aggregation type to
+        # format the result. The field is part of the context data already, the
+        # view, filters and search query stay private.
+        return super().public_serializer_field_names + ["aggregation_type"]
+
+    @property
     def serializer_field_overrides(self):
         return {
             **super().serializer_field_overrides,
