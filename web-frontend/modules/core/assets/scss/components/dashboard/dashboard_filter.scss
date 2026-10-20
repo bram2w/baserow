@@ -154,22 +154,20 @@
   border-top: 1px solid $palette-neutral-200;
 }
 
-.dashboard-filter-settings__separator {
-  height: 1px;
-  margin: 20px 0;
-  background: $palette-neutral-200;
-}
-
 .dashboard-filter-settings__help,
 .dashboard-filter-bindings__help {
-  margin: 8px 0 20px;
+  margin: 4px 0 8px;
   color: $palette-neutral-900;
   font-size: 12px;
   line-height: 20px;
 }
 
 .dashboard-filter-bindings {
-  padding-top: 20px;
-  margin-top: 20px;
+  padding: 16px 0 0;
+  margin: 16px 0;
   border-top: 1px solid $palette-neutral-200;
+
+  .form-section__title {
+    margin: 0;
+  }
 }

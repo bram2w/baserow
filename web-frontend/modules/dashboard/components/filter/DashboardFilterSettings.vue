@@ -47,7 +47,27 @@
         />
       </Dropdown>
     </FormGroup>
-    <div class="dashboard-filter-settings__separator"></div>
+    <FormSection
+      :title="$t('dashboardFilter.tableFields')"
+      class="dashboard-filter-bindings"
+    >
+      <p class="dashboard-filter-settings__help">
+        {{ $t('dashboardFilter.bindingHelp') }}
+      </p>
+      <DashboardFilterTableField
+        v-for="table in tables"
+        :key="table.id"
+        :table="table"
+        :binding="
+          filter.bindings.find((binding) => binding.table_id === table.id)
+        "
+        :disabled="!canEdit || savingBinding"
+        @select="bindTable(table.id, $event)"
+      />
+      <p v-if="!tables.length" class="dashboard-filter-bindings__help">
+        {{ $t('dashboardFilter.noTables') }}
+      </p>
+    </FormSection>
     <FormGroup
       :label="$t('dashboardFilter.mode')"
       small-label
@@ -81,27 +101,6 @@
         @update:active-index="save({ multiple: $event === 0 })"
       />
     </FormGroup>
-    <FormSection
-      :title="$t('dashboardFilter.tableFields')"
-      class="dashboard-filter-bindings"
-    >
-      <p class="dashboard-filter-settings__help">
-        {{ $t('dashboardFilter.bindingHelp') }}
-      </p>
-      <DashboardFilterTableField
-        v-for="table in tables"
-        :key="table.id"
-        :table="table"
-        :binding="
-          filter.bindings.find((binding) => binding.table_id === table.id)
-        "
-        :disabled="!canEdit || savingBinding"
-        @select="bindTable(table.id, $event)"
-      />
-      <p v-if="!tables.length" class="dashboard-filter-bindings__help">
-        {{ $t('dashboardFilter.noTables') }}
-      </p>
-    </FormSection>
   </div>
 </template>
 

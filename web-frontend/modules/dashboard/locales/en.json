@@ -88,7 +88,7 @@
         "more": "Load more",
         "unavailable": "No longer available",
         "unavailableHelp": "This value is no longer present in the available data. It remains applied until you remove it.",
-        "bindingHelp": "Choose a field for each table. This filter applies to all widgets using these tables, including new widgets.",
+        "bindingHelp": "Choose which fields to filter across your dashboard.",
         "tableFields": "Fields to filter",
         "chooseField": "Choose a field",
         "missingFieldHelp": "Choose a field to filter all widgets using this table.",
