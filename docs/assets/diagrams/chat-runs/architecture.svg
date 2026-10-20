@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="720" height="728" viewBox="0 0 720 728" role="img" aria-labelledby="title description">
   <title id="title">Background chat run architecture</title>
-  <desc id="description">The client and AI provider are outside the Baserow system boundary. The HTTP streaming endpoint, served through ASGI, Celery, Redis and Postgres are inside. For a new run, the endpoint commits the run in Postgres and enqueues Celery after commit. The worker streams AI output into Redis. The endpoint waits asynchronously for Redis output and sends it to the client in the HTTP streaming response. Products may start and follow a run in one HTTP request or in separate requests. Final output is committed to Postgres before completion is published. Refresh follows the same run by cursor without creating a new task.</desc>
+  <desc id="description">The client and AI provider are outside the Baserow system boundary. The HTTP streaming endpoint, served through ASGI, Celery, Redis and Postgres are inside. For a new run, the endpoint commits the run in Postgres and enqueues Celery after commit. The worker writes output events into Redis. The endpoint waits asynchronously for Redis output events and sends them to the client in the HTTP streaming response. Products may start and follow a run in one HTTP request or in separate requests. Final output is committed to Postgres before completion is published. Refresh replays the retained output and reconnect resumes by cursor, without creating a new task.</desc>
   <defs>
     <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb"/></marker>
     <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#059669"/></marker>
@@ -58,7 +58,7 @@
     <path d="M280 442 C280 426 440 426 440 442 V530 C440 546 280 546 280 530 Z" fill="#ecfdf5" stroke="#34d399" stroke-width="1.6"/>
     <path d="M280 442 C280 458 440 458 440 442" fill="none" stroke="#34d399" stroke-width="1.6"/>
     <text x="360" y="480" text-anchor="middle" font-size="20" font-weight="600">Redis Stream</text>
-    <text x="360" y="504" text-anchor="middle" font-size="17">Token buffer</text>
+    <text x="360" y="504" text-anchor="middle" font-size="17">Output buffer</text>
     <text x="360" y="526" text-anchor="middle" font-size="17">Replay</text>
   </g>
   <g text-anchor="middle">
@@ -78,12 +78,12 @@
     <text x="658" y="298" font-size="18">Tokens</text>
     <rect class="label-bg" x="290" y="337" width="140" height="52" rx="8"/>
     <text x="360" y="358" font-size="18">Wait / read</text>
-    <text x="360" y="380" font-size="17">token batches</text>
-    <text x="490" y="484" font-size="17">Tokens +</text>
-    <text x="490" y="505" font-size="17">finished</text>
+    <text x="360" y="380" font-size="17">output events</text>
+    <text x="490" y="484" font-size="17">Output</text>
+    <text x="490" y="505" font-size="17">events</text>
     <text x="360" y="592" font-size="18" fill="#7c3aed">Final output at run end</text>
-    <text x="360" y="650" font-size="17" class="caption">Finished is published after the final database commit.</text>
-    <text x="360" y="678" font-size="17" class="caption">Refresh follows the same run by cursor. No new task.</text>
+    <text x="360" y="650" font-size="17" class="caption">Completion is published after the final database commit.</text>
+    <text x="360" y="678" font-size="17" class="caption">Refresh replays, reconnect resumes by cursor. No new task.</text>
   </g>
   </g>
 </svg>

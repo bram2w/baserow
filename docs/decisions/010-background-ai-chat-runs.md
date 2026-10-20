@@ -52,16 +52,19 @@ of the initiating request and any followers. Product adapters supply execution,
 tools, permissions and conversation history.
 Disconnecting a follower never cancels the run; Stop is a separate operation.
 
-Keep one active run per conversation, per-user limits, execution deadlines,
-atomic claims and terminal transitions, and the `chat_run` queue on the existing
-export worker. The run engine never restarts failed or interrupted runs or
+Enforce one active run per conversation, per-user limits, execution deadlines,
+a not-started timeout for queued runs no worker picks up, atomic claims and
+terminal transitions. Runs use a dedicated `chat_run` Celery queue consumed by
+the existing export worker, so no new service is needed. The run engine never
+restarts failed or interrupted runs or
 replays their tool effects. Provider-request and validation retries within a
 live run remain product behavior. Stop is run-scoped and finishes after active
 tools drain; committed changes remain.
 
 ### 2. Stream and replay over HTTP
 
-Deliver ordered run output through an authenticated HTTP stream. A follower
+Deliver a run's ordered output events (text, progress, status and completion)
+through an authenticated HTTP stream. A follower
 attaches to an existing run by identity and, when available, its last consumed
 cursor. Following or reconnecting never creates another message, resubmits a
 prompt or enqueues work.
@@ -73,7 +76,7 @@ run lifecycle, output buffer and replay semantics.
 
 [![Background chat run architecture](../assets/diagrams/chat-runs/architecture.png)](../assets/diagrams/chat-runs/architecture.svg)
 
-Coalesce output into ordered batches in a per-run Redis Stream. Use
+Store output events in a per-run Redis Stream, coalescing text between writes. Use
 `XREAD BLOCK` after the last consumed ID for both replay and waiting, without
 consumer groups: every follower needs all events. Use a stable protocol namespace
 across application versions. Exclude credentials, execution context and raw tool
@@ -90,9 +93,10 @@ are not the replay source.
 
 Bound buffer size, retention, pending worker output and reconnect attempts.
 Active buffers renew for longer than the execution deadline; finished buffers
-expire after a reconnect window. Never trim a reconstructable prefix without a
-matching Redis-only state baseline. Missing history requires explicit recovery,
-not silent application of an incomplete suffix.
+expire after a reconnect window. Never trim a buffer: at its size bound, stop
+publishing and mark replay unavailable, while the run continues and saves its
+final answer. Missing history requires explicit recovery, not silent
+application of an incomplete suffix.
 
 A healthy claimed worker continues through output-buffer failure and saves its
 final answer from memory. Lease renewal, Stop and deadlines do not wait for Redis
@@ -106,15 +110,16 @@ followers with a separate capacity limit and bounded Redis read pool. Long
 streams must not occupy ordinary REST admission slots or retain a database
 connection or request thread while waiting. Apply authentication, permissions
 and CORS explicitly, check read access when a stream opens or reconnects, send
-compatible heartbeats and release blocked reads on disconnect. Read permission
-does not grant Stop; a run identifier alone grants no access.
+compatible heartbeats and release blocked reads on disconnect. Stop has its own
+adapter permission check, separate from read (for Kuma, the chat's owner); a run
+identifier alone grants no access.
 
 ### 4. Keep lifecycle and final outcomes in Postgres
 
 Postgres owns creation, active-run constraints, claims, leases, Stop and terminal
 status. Read new runs and recovery outcomes from the primary. Save the answer,
 model history and terminal status together at run end, then publish completion.
-There is no Postgres token-event table or periodic output snapshot, including at
+There is no Postgres output-event table or periodic output snapshot, including at
 tool boundaries. Human messages, liveness and tool effects retain their durable
 writes; tool changes and the generated answer are separate transactions.
 
@@ -133,6 +138,11 @@ are authoritative: late output or a stale worker cannot overwrite the winner.
 | Worker dies and Redis history is missing                       | Save an interrupted outcome; the entire partial answer may be lost.                                             |
 | Final outcome committed, Redis completion missing              | Recover the committed outcome from Postgres.                                                                    |
 | Final persistence fails                                        | Do not report completion. Record the failure when possible and preserve an interrupted/unavailable-result turn. |
+| Queued run never starts, e.g. lost from the broker             | End it as not started after the not-started timeout; it may report that nothing was done.                       |
+
+A periodic sweep ends runs whose lease expired and queued runs past the
+not-started timeout, whether or not anyone follows them. Until then, the
+conversation's active run blocks a new one.
 
 Recovery reads any usable Redis prefix with a bounded read outside the database
 transaction. It then locks and rechecks status and lease expiry before ending
@@ -140,25 +150,24 @@ the run: a worker may have renewed or finished meanwhile. Missing output cannot
 prevent an expired run from ending, and a prefix-less suffix is not a usable
 partial answer.
 
-Every started run without a durable complete result must leave or reconstruct
-an interruption warning for the next model request: changes may already exist.
-Try once more to preserve that warning before pruning run metadata after a
-failed product persistence hook; pruning does not wait for it to succeed, so
-run metadata never accumulates. Only work that provably never started may
-report that nothing was done. Persistence retries may save an already-computed
-outcome, but cannot repeat model calls or tool effects.
+For every started run without a durable complete result, make a best effort to
+leave or reconstruct an interruption warning for the next model request: changes
+may already exist. If saving it fails, pruning tries once more and then deletes
+the run metadata anyway, so metadata never accumulates. Only work that provably
+never started may report that nothing was done. Persistence retries may save an
+already-computed outcome, but cannot repeat model calls or tool effects.
 
 ### Decision factors
 
 - **Low latency and less database work.** Redis's in-memory appends suit frequent,
-  temporary output. Keeping token batches out of Postgres reduces inserts, WAL,
+  temporary output. Keeping output events out of Postgres reduces inserts, WAL,
   index maintenance and cleanup; output is saved durably once at run end.
 - **HTTP fits the interaction.** AI text providers commonly stream HTTP responses.
   Run output flows from server to client, while starting work and Stop use
-  ordinary requests. Token delivery adds no output traffic to websocket queues.
+  ordinary requests. Output events add no traffic to websocket queues.
 - **Existing client compatibility.** Kuma can adopt the shared capability while
-  retaining its current endpoint and response format through its adapter,
-  improving execution and recovery without a client migration.
+  retaining its current endpoint and response format through its adapter. Its
+  client changes are additive: resume and run-scoped Stop.
 - **Execution survives the viewer.** Independent workers and replay let users
   refresh or return to existing work without repeating model calls or changes.
 - **Shared infrastructure and behavior.** Existing Redis, Celery and ASGI support
@@ -173,8 +182,8 @@ outcome, but cannot repeat model calls or tool effects.
 | Option                                       | Why not                                                                                                                                   |
 | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | Keep execution inside the message request    | Work remains tied to the response, with no independent run to follow after refresh.                                                       |
-| Store token events in Postgres               | Adds per-batch writes, WAL, indexes and cleanup for temporary output that Redis can buffer.                                               |
-| Stream tokens through websockets/Channels    | Adds a separate output protocol and token traffic to channel queues; channel delivery alone cannot provide replay.                        |
+| Store output events in Postgres              | Adds per-batch writes, WAL, indexes and cleanup for temporary output that Redis can buffer.                                               |
+| Stream output through websockets/Channels    | Adds a separate output protocol and output traffic to channel queues; channel delivery alone cannot provide replay.                       |
 | Use Channels wakeups followed by Redis reads | Can reduce blocked-reader pressure at high follower counts, but adds another queue and recovery path. Revisit if measurements justify it. |
 
 ## Consequences
@@ -182,15 +191,18 @@ outcome, but cannot repeat model calls or tool effects.
 - Clients can disconnect and return to the same run while work continues. Kuma
   gains a more reliable UX; the agent builder and other features can use the
   same execution, streaming and recovery behavior through their adapters.
-- Postgres avoids token-event storage and retains authoritative run state and
+- Postgres stores no output events and retains authoritative run state and
   final conversation history. Redis consumes bounded memory, and each blocked
   follower consumes a connection; capacity and retention need sizing.
 - Exact replay depends on retained Redis history. Combined worker and replay
-  loss can lose all partial output, while committed tool changes remain. The UI
-  and future model context must explain interrupted or unavailable results.
+  loss can lose all partial output, while committed tool changes remain. If the
+  final save and the pruning retry both fail, a chat resumed after pruning loses
+  the note that changes may already exist. The UI and future model context must
+  explain interrupted or unavailable results.
 - Failed or interrupted runs are not restarted automatically. A Redis outage
-  may lose queued Celery work, which ends through the not-started timeout. An interrupted worker
-  is not resumable, and shutdown grace can interrupt a long run.
+  may lose queued Celery work, which ends through the not-started timeout. An
+  interrupted worker is not resumable, and shutdown grace can interrupt a long
+  run.
 - Deployment must route streaming endpoints to ASGI and forward response chunks
   without proxy buffering, with suitable idle timeouts, follower admission limits
   and bounded reconnects. Redis persistence, failover and eviction policies must
