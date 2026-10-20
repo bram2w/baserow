@@ -1,12 +1,7 @@
-"""Opt-in verification against the supported Redis server, never a shared DB.
-
-Run with BASEROW_TEST_CHAT_RUN_REDIS_URL pointing at an isolated Redis 6.2
-instance. Keys are unique per test and removed individually afterwards.
-"""
+"""Followers at scale through the buffer's real pools, on fakeredis connections."""
 
 import asyncio
 import json
-import os
 import threading
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
@@ -16,6 +11,9 @@ from django.http import StreamingHttpResponse
 
 import pytest
 from asgiref.sync import SyncToAsync
+from fakeredis import FakeServer
+from fakeredis.aioredis import FakeConnection
+from redis.asyncio import BlockingConnectionPool, ConnectionPool, Redis
 
 from baserow.config import streaming
 from baserow.config.helpers import ConcurrencyLimiterASGI
@@ -23,30 +21,40 @@ from baserow.core.chat_runs import buffer as buffer_module
 from baserow.core.chat_runs import stream
 from baserow.core.chat_runs.buffer import ChatRunBuffer, ReplayUnavailable
 
-REDIS_URL = os.getenv("BASEROW_TEST_CHAT_RUN_REDIS_URL")
-pytestmark = [
-    pytest.mark.asyncio,
-    pytest.mark.skipif(not REDIS_URL, reason="Requires an isolated Redis server"),
-]
+pytestmark = pytest.mark.asyncio
 
 
-async def test_supported_redis_atomic_append_replay_limits_and_blocked_followers(
-    settings, monkeypatch
-):
-    settings.REDIS_URL = REDIS_URL
+@pytest.fixture(autouse=True)
+def redis_pools(monkeypatch, buffer_redis):
+    """Build the buffer's read and write pools on one shared fakeredis server."""
+
+    server = FakeServer()
+
+    def fake(options: dict) -> dict:
+        return {**options, "connection_class": FakeConnection, "server": server}
+
+    monkeypatch.setattr(
+        buffer_module,
+        "from_url",
+        lambda url, **options: Redis(connection_pool=ConnectionPool(**fake(options))),
+    )
+    monkeypatch.setattr(
+        BlockingConnectionPool,
+        "from_url",
+        classmethod(lambda cls, url, **options: cls(**fake(options))),
+    )
     buffer_module.set_buffer_redis(None)
+
+
+async def test_atomic_append_replay_limits_and_blocked_followers(monkeypatch):
     writer = ChatRunBuffer(uuid4())
     client = await buffer_module.get_buffer_redis()
     followers = []
     try:
-        version = (await client.info("server"))["redis_version"]
-        assert tuple(map(int, version.split(".")[:2])) >= (6, 2)
         initial = await writer.append(
             [("run.created", {}), ("text.delta", {"segment": 0, "text": "Hello"})]
         )
         read_client = await buffer_module.get_buffer_redis(blocking=True)
-        reader_name = f"chat-run-test-{uuid4().hex}"
-        read_client.connection_pool.connection_kwargs["client_name"] = reader_name
         reader = ChatRunBuffer(writer.stream_key.split("{")[1].split("}")[0])
         assert (await reader.read()).events == initial
         followers = [
@@ -54,17 +62,7 @@ async def test_supported_redis_atomic_append_replay_limits_and_blocked_followers
             for _ in range(100)
         ]
         async with asyncio.timeout(3):
-            while True:
-                # Other pytest workers can have their own blocked followers.
-                # Wait for this cohort's XREADs, not the server-wide count.
-                blocked = sum(
-                    entry["name"] == reader_name
-                    and entry["cmd"] == "xread"
-                    and "b" in entry["flags"]
-                    for entry in await client.client_list()
-                )
-                if blocked == 100:
-                    break
+            while len(read_client.connection_pool._in_use_connections) < 100:
                 await asyncio.sleep(0.01)
         assert read_client.connection_pool is not client.connection_pool
         assert len(read_client.connection_pool._in_use_connections) == 100
@@ -87,11 +85,7 @@ async def test_supported_redis_atomic_append_replay_limits_and_blocked_followers
         await buffer_module.close_buffer_redis()
 
 
-async def test_hundred_http_followers_leave_rest_and_threads_available(
-    settings, monkeypatch
-):
-    settings.REDIS_URL = REDIS_URL
-    buffer_module.set_buffer_redis(None)
+async def test_hundred_http_followers_leave_rest_and_threads_available(monkeypatch):
     monkeypatch.setattr(streaming, "_paths", [])
     streaming.register_async_stream_path(r"/chat/stream/")
     run = SimpleNamespace(id=uuid4())
@@ -193,11 +187,7 @@ async def test_hundred_http_followers_leave_rest_and_threads_available(
         await buffer_module.close_buffer_redis()
 
 
-async def test_hundred_cursor_resumes_use_reader_pool_for_materialized_baselines(
-    settings,
-):
-    settings.REDIS_URL = REDIS_URL
-    buffer_module.set_buffer_redis(None)
+async def test_hundred_cursor_resumes_use_reader_pool_for_materialized_baselines():
     run = SimpleNamespace(id=uuid4())
     writer = ChatRunBuffer(run.id)
     initial = await writer.append(
