@@ -3318,36 +3318,6 @@
     argparse "~1.0.9"
     string-argv "~0.3.1"
 
-"@sentry-internal/browser-utils@10.47.0":
-  version "10.47.0"
-  resolved "https://registry.yarnpkg.com/@sentry-internal/browser-utils/-/browser-utils-10.47.0.tgz#452320155e241c4fec44bccfe698effb453d31b4"
-  integrity sha512-bVFRAeJWMBcBCvJKIFCMJ1/yQToL4vPGqfmlnDZeypcxkqUDKQ/Y3ziLHXoDL2sx0lagcgU2vH1QhCQ67Aujjw==
-  dependencies:
-    "@sentry/core" "10.47.0"
-
-"@sentry-internal/feedback@10.47.0":
-  version "10.47.0"
-  resolved "https://registry.yarnpkg.com/@sentry-internal/feedback/-/feedback-10.47.0.tgz#2a847b821f60802c4ed3d0da980ef57f593afb26"
-  integrity sha512-pdvMmi4dQpX5S/vAAzrhHPIw3T3HjUgDNgUiCBrlp7N9/6zGO2gNPhUnNekP+CjgI/z0rvf49RLqlDenpNrMOg==
-  dependencies:
-    "@sentry/core" "10.47.0"
-
-"@sentry-internal/replay-canvas@10.47.0":
-  version "10.47.0"
-  resolved "https://registry.yarnpkg.com/@sentry-internal/replay-canvas/-/replay-canvas-10.47.0.tgz#157256195f71592cd462fe5a57e71ddbd66e9cff"
-  integrity sha512-A5OY8friSe6g8WAK4L8IeOPiEd9D3Ps40DzRH5j2f6SUja0t90mKMvHRcRf8zq0d4BkdB+JM7tjOkwxpuv8heA==
-  dependencies:
-    "@sentry-internal/replay" "10.47.0"
-    "@sentry/core" "10.47.0"
-
-"@sentry-internal/replay@10.47.0":
-  version "10.47.0"
-  resolved "https://registry.yarnpkg.com/@sentry-internal/replay/-/replay-10.47.0.tgz#33bb78457ee9731056d2b5a4805328e922b28886"
-  integrity sha512-ScdovxP7hJxgMt70+7hFvwT02GIaIUAxdEM/YPsayZBeCoAukPW8WiwztJfoKtsfPyKJ5A6f0H3PIxTPcA9Row==
-  dependencies:
-    "@sentry-internal/browser-utils" "10.47.0"
-    "@sentry/core" "10.47.0"
-
 "@sentry/browser-utils@10.69.0":
   version "10.69.0"
   resolved "https://registry.yarnpkg.com/@sentry/browser-utils/-/browser-utils-10.69.0.tgz#448fe7237bb5e9ee27e6b875a56cfd47360888ee"
@@ -3355,17 +3325,6 @@
   dependencies:
     "@sentry/conventions" "^0.16.0"
     "@sentry/core" "10.69.0"
-
-"@sentry/browser@10.47.0":
-  version "10.47.0"
-  resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-10.47.0.tgz#286f5051ca82706c03e7a499b9464453225f3648"
-  integrity sha512-rC0agZdxKA5XWfL4VwPOr/rJMogXDqZgnVzr93YWpFn9DMZT/7LzxSJVPIJwRUjx3bFEby3PcTa3YaX7pxm1AA==
-  dependencies:
-    "@sentry-internal/browser-utils" "10.47.0"
-    "@sentry-internal/feedback" "10.47.0"
-    "@sentry-internal/replay" "10.47.0"
-    "@sentry-internal/replay-canvas" "10.47.0"
-    "@sentry/core" "10.47.0"
 
 "@sentry/browser@10.69.0":
   version "10.69.0"
@@ -3466,11 +3425,6 @@
   version "0.16.0"
   resolved "https://registry.yarnpkg.com/@sentry/conventions/-/conventions-0.16.0.tgz#3b58d15714cf44dca1518496c00749eec5525009"
   integrity sha512-fO9PLmHdVURcSPUpWCItWAtgKiMwGdJHbovoSEyLplX5sxs2ugvI4CBPTrkkgqhObnZOD0CnWBKDzSVQYBKEyQ==
-
-"@sentry/core@10.47.0":
-  version "10.47.0"
-  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-10.47.0.tgz#175d1865f0d762ebe7be3b2a6ec3ece4e5a76a5a"
-  integrity sha512-nsYRAx3EWezDut+Zl+UwwP07thh9uY7CfSAi2whTdcJl5hu1nSp2z8bba7Vq/MGbNLnazkd3A+GITBEML924JA==
 
 "@sentry/core@10.69.0":
   version "10.69.0"
@@ -3576,14 +3530,6 @@
   integrity sha512-fFJgCxs5hDyAm9BbZJ+LbA+LK2tjX5OoD0v0ARU4StR6KQmGUduoPs69yJ9AfqZ0om3Rlp5JDliiwFcNkasORA==
   dependencies:
     "@sentry/bundler-plugins" "^10.64.0"
-
-"@sentry/vue@10.47.0":
-  version "10.47.0"
-  resolved "https://registry.yarnpkg.com/@sentry/vue/-/vue-10.47.0.tgz#4d6a644a4fd7f67c8ce3b6ba8782b0ac063e5df4"
-  integrity sha512-zIscc2e1d70yGK4qi4nqBy87TaQBKy0aXza+PtxI9qUWelF4bw0SJoVSglbISw+eOO4y0CBxZVRibLuj0Kv1pw==
-  dependencies:
-    "@sentry/browser" "10.47.0"
-    "@sentry/core" "10.47.0"
 
 "@sentry/vue@10.69.0":
   version "10.69.0"
@@ -8332,11 +8278,6 @@ locate-path@^8.0.0:
   integrity sha512-XT9ewWAC43tiAV7xDAPflMkG0qOPn2QjHqlgX8FOqmWa/rxnyYDulF9T0F7tRy1u+TVTmK/M//6VIOye+2zDXg==
   dependencies:
     p-locate "^6.0.0"
-
-lodash.debounce@^4.0.8:
-  version "4.0.8"
-  resolved "https://registry.yarnpkg.com/lodash.debounce/-/lodash.debounce-4.0.8.tgz#82d79bff30a67c4005ffd5e2515300ad9ca4d7af"
-  integrity sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow==
 
 lodash.defaults@^4.2.0:
   version "4.2.0"
