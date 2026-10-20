@@ -1,6 +1,6 @@
 import {
   DashboardFilterDataProviderType,
-  DashboardDataSourceDataProviderType,
+  DashboardTableDataProviderType,
 } from '@baserow/modules/dashboard/dataProviderTypes'
 import { DashboardSearchType } from '@baserow/modules/dashboard/searchTypes'
 import { searchTypeRegistry } from '@baserow/modules/core/search/types/registry'
@@ -34,7 +34,7 @@ export default defineNuxtPlugin({
     )
     $registry.register(
       'dashboardDataProvider',
-      new DashboardDataSourceDataProviderType(context)
+      new DashboardTableDataProviderType(context)
     )
     $registry.registerNamespace('dashboardWidget')
     $registry.register('application', new DashboardApplicationType(context))

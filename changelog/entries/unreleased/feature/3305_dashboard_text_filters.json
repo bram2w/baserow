@@ -1,6 +1,6 @@
 {
     "type": "feature",
-    "message": "Added dashboard text filters that can be used in data source conditions, with input controls and dropdowns offering manual or data source options.",
+    "message": "Added dashboard text filters that can be used in data source conditions, with input controls and dropdown options drawn from the tables used by widgets.",
     "issue_origin": "github",
     "issue_number": 3305,
     "domain": "dashboard",

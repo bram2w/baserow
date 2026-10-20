@@ -54,15 +54,23 @@ export const registerRealtimeEvents = (realtime) => {
     }
   })
   realtime.registerEvent('data_source_updated', async ({ store }, data) => {
-    if (
-      data.dashboard_id === store.getters['dashboardApplication/getDashboardId']
-    ) {
+    const dashboardId = data.dashboard_id
+    if (dashboardId === store.getters['dashboardApplication/getDashboardId']) {
       await store
         .dispatch(
           'dashboardApplication/handleDataSourceUpdated',
           data.data_source
         )
         .catch(() => {})
+      if (
+        dashboardId === store.getters['dashboardApplication/getDashboardId']
+      ) {
+        // Table schemas depend on this user's access and are omitted from broadcasts.
+        await store.dispatch(
+          'dashboardApplication/fetchNewDataSources',
+          dashboardId
+        )
+      }
     }
   })
 }

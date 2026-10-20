@@ -60,71 +60,54 @@ export class DashboardFilterDataProviderType extends DataProviderType {
   }
 }
 
-export class DashboardDataSourceDataProviderType extends DataProviderType {
+export class DashboardTableDataProviderType extends DataProviderType {
   static getType() {
-    return 'data_source'
+    return 'table'
   }
 
   isValid(path) {
-    return path.length >= 1 && /^[1-9][0-9]*$/.test(path[0])
+    return (
+      path.length >= 1 &&
+      /^[1-9][0-9]*$/.test(path[0]) &&
+      (path.length === 1 || path[1] === '*' || /^[0-9]+$/.test(path[1])) &&
+      (path.length < 3 ||
+        path[2] === 'id' ||
+        /^field_[1-9][0-9]*$/.test(path[2]))
+    )
   }
 
   get name() {
     return this.app.$i18n.t('dataProviderType.dataSource')
   }
 
-  getDataContent({ storePrefix = '' }) {
+  getDataContent() {
+    // Table values are resolved by the backend when loading filter options.
+    return {}
+  }
+
+  getDataChunk(context, path) {
+    return getValueAtPath(this.getDataContent(context), path)
+  }
+
+  getDataSchema({ storePrefix = '' }) {
     const getters = this.app.$store.getters
     const prefix = `${storePrefix}dashboardApplication/`
-    return Object.fromEntries(
-      getters[prefix + 'getDataSources'].map((source) => {
-        const widget = getters[prefix + 'getWidgets'].find(
-          (item) => item.data_source_id === source.id
-        )
-        const content = widget
-          ? getters[prefix + 'getDataForWidget'](widget.id)
-          : null
-        const service = source.type
-          ? this.app.$registry.get('service', source.type)
-          : null
-        return [source.id, service?.returnsList ? content?.results : content]
-      })
+    const sourceIds = new Set(
+      getters[prefix + 'getWidgets'].map((widget) => widget.data_source_id)
     )
-  }
-
-  getDataChunk(context, [sourceId, ...rest]) {
-    const source = this.app.$store.getters[
-      `${context.storePrefix || ''}dashboardApplication/getDataSourceById`
-    ](Number(sourceId))
-    if (!source?.type) return null
-    const service = this.app.$registry.get('service', source.type)
-    const path = service.returnsList
-      ? rest.length >= 2
-        ? [rest[0], ...service.prepareValuePath(source, rest.slice(1))]
-        : rest
-      : service.prepareValuePath(source, rest)
-    return getValueAtPath(this.getDataContent(context)[sourceId], path)
-  }
-
-  getDataSchema({ storePrefix = '', dataSource }) {
-    const sources =
-      this.app.$store.getters[
-        `${storePrefix}dashboardApplication/getDataSources`
-      ]
-    return {
-      type: 'object',
-      properties: Object.fromEntries(
-        sources
-          .filter((source) => source.type && source.id !== dataSource?.id)
-          .flatMap((source, index) => {
-            const schema = this.app.$registry
-              .get('service', source.type)
-              .getDataSchema(source)
-            return schema
-              ? [[source.id, { ...schema, title: source.name, order: index }]]
-              : []
-          })
-      ),
+    const properties = {}
+    for (const source of getters[prefix + 'getDataSources']) {
+      if (
+        sourceIds.has(source.id) &&
+        source.table_schema &&
+        !Object.hasOwn(properties, source.table_id)
+      ) {
+        properties[source.table_id] = {
+          ...source.table_schema,
+          order: Object.keys(properties).length,
+        }
+      }
     }
+    return { type: 'object', properties }
   }
 }

@@ -18,8 +18,6 @@ async function render(bindings = [], configuration = {}) {
     type: 'text',
     mode: 'dropdown',
     multiple: true,
-    option_type: 'manual',
-    options: [],
     ...configuration,
   }
   const widgets = [
@@ -304,62 +302,10 @@ test('cleans up the open confirmation when the filter is removed remotely', asyn
   expect(testApp.mock.history.patch).toHaveLength(0)
 })
 
-test('saves manual option labels and values without table mappings', async () => {
+test('offers only table formulas for option labels and values', async () => {
   const wrapper = await render()
-  expect(wrapper.find('.dashboard-filter-table-field').exists()).toBe(false)
-  expect(wrapper.text()).toContain('dashboardFilter.providerHelp')
-  await wrapper
-    .findAll('button')
-    .find((button) => button.text() === 'dashboardFilter.addOption')
-    .trigger('click')
-  const row = wrapper.get('.dashboard-filter-settings__option')
-  await row.findAll('input')[0].setValue('Design team')
-  await row.findAll('input')[1].setValue('design')
-  await wrapper
-    .findAll('button')
-    .find((button) => button.text() === 'action.save')
-    .trigger('click')
-  await flushPromises()
-  expect(JSON.parse(testApp.mock.history.patch.at(-1).data)).toEqual({
-    options: [{ name: 'Design team', value: 'design' }],
-  })
-})
-
-test('offers data source formulas instead of table field mappings', async () => {
-  const wrapper = await render([], {
-    option_type: 'formulas',
-    formula_name: {},
-    formula_value: {},
-  })
   expect(wrapper.text()).toContain('dashboardFilter.sourceOptionsHelp')
-  expect(wrapper.find('.dashboard-filter-table-field').exists()).toBe(false)
-  expect(wrapper.findAll('.formula-input-field').length).toBe(2)
-})
-
-test('keeps unsaved options when an earlier label update finishes', async () => {
-  const wrapper = await render()
-  const filter = testApp.store.getters['dashboardApplication/getFilters'][0]
-  let finish
-  testApp.mock.onPatch('/dashboard/filters/5/').reply(
-    () =>
-      new Promise((resolve) => {
-        finish = resolve
-      })
-  )
-  const label = wrapper.get('.dashboard-filter-settings input')
-  await label.setValue('Department')
-  await label.trigger('blur')
-  await vi.waitFor(() => expect(finish).toBeTypeOf('function'))
-  await wrapper
-    .findAll('button')
-    .find((button) => button.text() === 'dashboardFilter.addOption')
-    .trigger('click')
-  await wrapper
-    .get('.dashboard-filter-settings__option input')
-    .setValue('Design')
-  finish([200, { ...filter, label: 'Department', options: [] }])
-  await flushPromises()
-  expect(
-    wrapper.get('.dashboard-filter-settings__option input').element.value
-  ).toBe('Design')
+  expect(wrapper.findAll('.formula-input-field')).toHaveLength(2)
+  expect(wrapper.text()).not.toContain('dashboardFilter.manualOptions')
+  expect(wrapper.text()).not.toContain('dashboardFilter.addOption')
 })

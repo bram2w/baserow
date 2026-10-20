@@ -153,11 +153,3 @@
   font-size: 12px;
   line-height: 20px;
 }
-
-.dashboard-filter-settings__option {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-  align-items: end;
-  gap: 8px;
-  margin-bottom: 12px;
-}

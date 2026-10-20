@@ -52,9 +52,46 @@ test.each([
   ['dashboard_filter', ['nope']],
   ['dashboard_filter', ['0']],
   ['dashboard_filter', ['1', 'extra']],
-  ['data_source', ['nope']],
+  ['table', ['nope']],
+  ['table', ['1', 'result']],
+  ['table', ['1', '*', 'field_0']],
 ])('rejects invalid %s paths', (type, path) => {
   expect(
     testApp.nuxtApp.$registry.get('dashboardDataProvider', type).isValid(path)
   ).toBe(false)
+})
+
+test('explores each widget table once, including fields unused by its aggregation', () => {
+  const store = testApp.store
+  const schema = {
+    title: 'Orders',
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        field_11: { type: 'string', title: 'Country' },
+        field_12: { type: 'number', title: 'Amount' },
+      },
+    },
+  }
+  store.commit('dashboardApplication/SET_WIDGETS', [
+    { id: 1, data_source_id: 21 },
+    { id: 2, data_source_id: 22 },
+  ])
+  store.commit('dashboardApplication/SET_DATA_SOURCES', [
+    { id: 21, table_id: 10, table_schema: schema },
+    { id: 22, table_id: 10, table_schema: schema },
+    { id: 23, table_id: 20, table_schema: { ...schema, title: 'Unused' } },
+  ])
+  const provider = testApp.nuxtApp.$registry.get(
+    'dashboardDataProvider',
+    'table'
+  )
+  expect(provider.getDataSchema({})).toEqual({
+    type: 'object',
+    properties: { 10: { ...schema, order: 0 } },
+  })
+  expect(
+    provider.getDataSchema({ storePrefix: 'template/' }).properties
+  ).toEqual({})
 })

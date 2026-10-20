@@ -110,14 +110,9 @@
     "providerName": "Dashboard filters",
     "providerHelp": "Use this filter’s value in your data source conditions.",
     "options": "Options",
-    "manualOptions": "Manual",
-    "sourceOptions": "Data source",
     "optionLabel": "Label",
     "optionValue": "Value",
-    "removeOption": "Remove option",
-    "addOption": "Add option",
-    "optionsInvalid": "Give each option a label and a unique value.",
-    "sourceOptionsHelp": "Choose a list from a dashboard source for the labels and values."
+    "sourceOptionsHelp": "Choose fields from a table used by your widgets to fill the list."
   },
   "shareDashboardLink": {
     "shareDashboard": "Share dashboard",

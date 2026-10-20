@@ -143,7 +143,7 @@ const pendingFormatCopy = computed(() => {
   }
 })
 provide('formulaComponent', DashboardFormulaInput)
-provide('dataProvidersAllowed', ['data_source'])
+provide('dataProvidersAllowed', ['table'])
 provide(
   'dashboardApplicationContext',
   computed(() => ({
