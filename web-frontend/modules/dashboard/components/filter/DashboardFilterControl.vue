@@ -224,7 +224,7 @@ const changed = computed(
     JSON.stringify(props.appliedValues)
 )
 const displayedOptions = computed(() => [
-  ...new Set([...draft.value, ...props.optionState.results]),
+  ...new Set([...props.optionState.results, ...draft.value]),
 ])
 const hasUnavailable = computed(() =>
   props.appliedValues.some((value) =>

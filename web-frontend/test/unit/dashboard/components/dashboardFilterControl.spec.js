@@ -47,6 +47,56 @@ test('discards unapplied dropdown changes on close and restores applied choices'
   expect(wrapper.emitted('options')).toHaveLength(2)
 })
 
+test.each([true, false])(
+  'keeps choices in their original order when selecting and deselecting (multiple: %s)',
+  async (multiple) => {
+    await render({ multiple, appliedValues: [] })
+    await wrapper.get('.dropdown__selected').trigger('click')
+    await flushPromises()
+    const choices = () =>
+      testApp.body
+        .findAll('.dashboard-filter__option-value')
+        .map((choice) => choice.text())
+    const toggleSales = async (checked) => {
+      if (multiple) {
+        await testApp.body
+          .findAll('input[type="checkbox"]')[1]
+          .setValue(checked)
+      } else {
+        await testApp.body
+          .findAll('.dashboard-filter__single-choice')[1]
+          .trigger('click')
+      }
+    }
+    expect(choices()).toEqual(['Design', 'Sales'])
+    await toggleSales(true)
+    expect(choices()).toEqual(['Design', 'Sales'])
+    await toggleSales(false)
+    expect(choices()).toEqual(['Design', 'Sales'])
+    expect(wrapper.emitted('apply')).toBeUndefined()
+  }
+)
+
+test('keeps a selected value missing from the loaded choices visible and removable', async () => {
+  await render({
+    appliedValues: ['Archived', 'Sales'],
+    unavailable: ['Archived'],
+  })
+  await wrapper.get('.dropdown__selected').trigger('click')
+  await flushPromises()
+  expect(
+    testApp.body
+      .findAll('.dashboard-filter__option-value')
+      .map((choice) => choice.text())
+  ).toEqual(['Design', 'Sales', 'Archived'])
+  const boxes = testApp.body.findAll('input[type="checkbox"]')
+  expect(boxes[1].element.checked).toBe(true)
+  expect(boxes[2].element.checked).toBe(true)
+  await boxes[2].setValue(false)
+  await testApp.body.get('form').trigger('submit')
+  expect(wrapper.emitted('apply')).toEqual([[['Sales']]])
+})
+
 test('applies a cleared draft only after Update is pressed', async () => {
   await render()
   await wrapper.get('.dropdown__selected').trigger('click')
