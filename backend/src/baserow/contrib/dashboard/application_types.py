@@ -124,7 +124,11 @@ class DashboardApplicationType(ApplicationType):
 
         serialized_data_sources = [
             DashboardDataSourceHandler().export_data_source(
-                data_source, files_zip=files_zip, storage=storage, cache=self.cache
+                data_source,
+                import_export_config=import_export_config,
+                files_zip=files_zip,
+                storage=storage,
+                cache=self.cache,
             )
             for data_source in data_sources
         ]

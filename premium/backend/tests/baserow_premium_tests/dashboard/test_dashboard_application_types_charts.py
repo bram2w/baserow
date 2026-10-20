@@ -69,7 +69,11 @@ def test_dashboard_export_serialized_with_chart_widget(premium_data_fixture):
     )
 
     serialized = DashboardApplicationType().export_serialized(
-        dashboard, ImportExportConfig(include_permission_data=True)
+        dashboard,
+        ImportExportConfig(
+            include_permission_data=True,
+            exclude_sensitive_data=False,
+        ),
     )
 
     serialized = json.loads(json.dumps(serialized))
@@ -331,7 +335,11 @@ def test_dashboard_export_serialized_with_chart_widget_config(premium_data_fixtu
     )
 
     serialized = DashboardApplicationType().export_serialized(
-        dashboard, ImportExportConfig(include_permission_data=True)
+        dashboard,
+        ImportExportConfig(
+            include_permission_data=True,
+            exclude_sensitive_data=False,
+        ),
     )
 
     serialized = json.loads(json.dumps(serialized))
@@ -575,7 +583,11 @@ def test_dashboard_export_serialized_with_default_chart_type(premium_data_fixtur
     service.save()
 
     serialized = DashboardApplicationType().export_serialized(
-        dashboard, ImportExportConfig(include_permission_data=True)
+        dashboard,
+        ImportExportConfig(
+            include_permission_data=True,
+            exclude_sensitive_data=False,
+        ),
     )
 
     serialized = json.loads(json.dumps(serialized))

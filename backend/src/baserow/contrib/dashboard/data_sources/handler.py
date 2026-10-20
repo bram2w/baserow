@@ -15,6 +15,7 @@ from baserow.contrib.dashboard.data_sources.models import DashboardDataSource
 from baserow.contrib.dashboard.models import Dashboard
 from baserow.core.integrations.models import Integration
 from baserow.core.integrations.registries import integration_type_registry
+from baserow.core.registries import ImportExportConfig
 from baserow.core.services.handler import ServiceHandler
 from baserow.core.services.models import Service
 from baserow.core.services.registries import ServiceType, service_type_registry
@@ -315,6 +316,7 @@ class DashboardDataSourceHandler:
     def export_data_source(
         self,
         data_source: DashboardDataSource,
+        import_export_config: ImportExportConfig | None = None,
         files_zip: ExportZipFile | None = None,
         storage: Storage | None = None,
         cache: dict[str, any] | None = None,
@@ -333,7 +335,11 @@ class DashboardDataSourceHandler:
 
         if data_source.service:
             serialized_service = ServiceHandler().export_service(
-                data_source.service, files_zip=files_zip, storage=storage, cache=cache
+                data_source.service,
+                import_export_config=import_export_config,
+                files_zip=files_zip,
+                storage=storage,
+                cache=cache,
             )
 
         return DashboardDataSourceDict(
