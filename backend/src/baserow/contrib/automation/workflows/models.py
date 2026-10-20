@@ -19,6 +19,7 @@ from baserow.core.mixins import (
     OrderableMixin,
     TrashableModelMixin,
 )
+from baserow.core.services.deferred_deletion import deferred_service_deletion_context
 from baserow.core.subjects import UserSubjectType
 
 if TYPE_CHECKING:
@@ -112,6 +113,10 @@ class AutomationWorkflow(
 
     def get_parent(self):
         return self.automation
+
+    def delete(self, *args, **kwargs):
+        with deferred_service_deletion_context():
+            return super().delete(*args, **kwargs)
 
     @classmethod
     def get_last_order(cls, automation: "Automation"):

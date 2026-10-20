@@ -588,7 +588,7 @@ def _assert_services_deleted(service_ids):
 
 
 @pytest.mark.django_db
-def test_delete_published_builder_deletes_all_services_in_one_pass(
+def test_deleting_builder_deletes_all_services_in_one_pass(
     data_fixture, django_capture_on_commit_callbacks
 ):
     def delete_and_count_queries(builder):
@@ -596,7 +596,7 @@ def test_delete_published_builder_deletes_all_services_in_one_pass(
             CaptureQueriesContext(connection) as ctx,
             django_capture_on_commit_callbacks(execute=True),
         ):
-            DomainHandler().delete_published_builder(builder)
+            builder.delete()
         return len(ctx.captured_queries)
 
     small_builder, small_service_ids, small_actions = _create_builder_with_services(
@@ -624,18 +624,15 @@ def test_delete_published_builder_deletes_all_services_in_one_pass(
 
 
 @pytest.mark.django_db
-def test_delete_published_builder_refuses_a_workspace_builder(data_fixture):
+def test_deleting_workspace_builder_deletes_all_services(data_fixture):
     builder, service_ids, _ = _create_builder_with_services(
         data_fixture, 1, builder=data_fixture.create_builder_application()
     )
 
-    with pytest.raises(ValueError):
-        DomainHandler().delete_published_builder(builder)
+    builder.delete()
 
-    assert Builder.objects.filter(id=builder.id).exists()
-    assert Service.objects_and_trash.filter(id__in=service_ids).count() == len(
-        service_ids
-    )
+    assert not Builder.objects.filter(id=builder.id).exists()
+    _assert_services_deleted(service_ids)
 
 
 @pytest.mark.django_db

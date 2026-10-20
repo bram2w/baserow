@@ -5,6 +5,10 @@ from baserow.contrib.builder.workflow_actions.models import (
     BuilderWorkflowAction,
     BuilderWorkflowServiceAction,
 )
+from baserow.core.services.deferred_deletion import (
+    defer_service_deletion,
+    is_service_deletion_deferred,
+)
 from baserow.core.services.models import Service
 
 
@@ -14,6 +18,10 @@ def before_permanently_deleted(sender, instance, **kwargs):
     """
 
     if not issubclass(instance.specific_class, BuilderWorkflowServiceAction):
+        return
+
+    if is_service_deletion_deferred():
+        defer_service_deletion(instance.specific.service_id)
         return
 
     service_id = instance.specific.service_id

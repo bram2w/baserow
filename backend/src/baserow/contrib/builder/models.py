@@ -12,6 +12,7 @@ from baserow.contrib.builder.theme.models import (
     TypographyThemeConfigBlock,
 )
 from baserow.core.models import Application, UserFile
+from baserow.core.services.deferred_deletion import deferred_service_deletion_context
 
 __all__ = [
     "Builder",
@@ -120,6 +121,10 @@ class Builder(Application):
 
             # Create the shared page
             PageHandler().create_shared_page(self)
+
+    def delete(self, *args, **kwargs):
+        with deferred_service_deletion_context():
+            return super().delete(*args, **kwargs)
 
     def get_parent(self):
         # If we had select related workspace we want to keep it
