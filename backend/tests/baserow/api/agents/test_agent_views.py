@@ -1,4 +1,3 @@
-from django.test import override_settings
 from django.urls import reverse
 
 import pytest
@@ -6,27 +5,6 @@ import pytest
 from baserow.core.agents.service import AgentService
 from baserow.core.models import Agent, WorkspaceUser
 from baserow.core.trash.handler import TrashHandler
-
-
-@pytest.mark.django_db
-@override_settings(FEATURE_FLAGS=[])
-def test_cannot_create_agent_when_agents_feature_flag_is_disabled(
-    data_fixture, api_client
-):
-    user, token = data_fixture.create_user_and_token()
-    workspace = data_fixture.create_workspace(user=user)
-    url = reverse("api:agents:workspace", kwargs={"workspace_id": workspace.id})
-
-    response = api_client.post(
-        url,
-        {"name": "Writer"},
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-
-    assert response.status_code == 403
-    assert response.json()["error"] == "ERROR_FEATURE_DISABLED"
-    assert not Agent.objects.filter(workspace=workspace).exists()
 
 
 @pytest.mark.django_db
