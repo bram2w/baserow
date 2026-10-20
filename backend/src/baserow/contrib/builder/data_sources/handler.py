@@ -17,6 +17,7 @@ from baserow.contrib.builder.types import DataSourceDict
 from baserow.core.cache import local_cache
 from baserow.core.integrations.models import Integration
 from baserow.core.integrations.registries import integration_type_registry
+from baserow.core.registries import ImportExportConfig
 from baserow.core.services.exceptions import (
     ServiceImproperlyConfiguredDispatchException,
 )
@@ -611,6 +612,7 @@ class DataSourceHandler:
     def export_data_source(
         self,
         data_source: DataSource,
+        import_export_config: Optional[ImportExportConfig] = None,
         files_zip: Optional[ExportZipFile] = None,
         storage: Optional[Storage] = None,
         cache: Optional[Dict[str, any]] = None,
@@ -628,7 +630,11 @@ class DataSourceHandler:
 
         if data_source.service:
             serialized_service = ServiceHandler().export_service(
-                data_source.service, files_zip=files_zip, storage=storage, cache=cache
+                data_source.service,
+                import_export_config=import_export_config,
+                files_zip=files_zip,
+                storage=storage,
+                cache=cache,
             )
 
         return DataSourceDict(

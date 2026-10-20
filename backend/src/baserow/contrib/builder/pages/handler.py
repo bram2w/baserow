@@ -562,6 +562,7 @@ class PageHandler:
     def export_page(
         self,
         page: Page,
+        import_export_config: Optional[ImportExportConfig] = None,
         files_zip: Optional[ExportZipFile] = None,
         storage: Optional[Storage] = None,
         cache: Optional[Dict[str, any]] = None,
@@ -586,7 +587,11 @@ class PageHandler:
         # Get serialized versions of all workflow actions of the current page
         serialized_workflow_actions = [
             BuilderWorkflowActionHandler().export_workflow_action(
-                wa, files_zip=files_zip, storage=storage, cache=cache
+                wa,
+                import_export_config=import_export_config,
+                files_zip=files_zip,
+                storage=storage,
+                cache=cache,
             )
             for wa in BuilderWorkflowActionHandler().get_workflow_actions(page=page)
         ]
@@ -594,7 +599,11 @@ class PageHandler:
         # Get serialized version of all data_sources for the current page
         serialized_data_sources = [
             DataSourceHandler().export_data_source(
-                ds, files_zip=files_zip, storage=storage, cache=cache
+                ds,
+                import_export_config=import_export_config,
+                files_zip=files_zip,
+                storage=storage,
+                cache=cache,
             )
             for ds in DataSourceHandler().get_data_sources(page=page)
         ]

@@ -225,6 +225,7 @@ class BuilderApplicationType(ApplicationType):
         serialized_user_sources = [
             UserSourceHandler().export_user_source(
                 us,
+                import_export_config=import_export_config,
                 files_zip=files_zip,
                 storage=storage,
                 cache=self.cache,
@@ -242,6 +243,7 @@ class BuilderApplicationType(ApplicationType):
         serialized_pages = [
             PageHandler().export_page(
                 p,
+                import_export_config=import_export_config,
                 files_zip=files_zip,
                 storage=storage,
                 cache=self.cache,
@@ -274,6 +276,7 @@ class BuilderApplicationType(ApplicationType):
         if builder.login_page:
             serialized_login_page = PageHandler().export_page(
                 builder.login_page,
+                import_export_config=import_export_config,
                 files_zip=files_zip,
                 storage=storage,
                 cache=self.cache,
