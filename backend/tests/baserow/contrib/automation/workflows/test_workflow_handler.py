@@ -39,6 +39,11 @@ from baserow.contrib.automation.workflows.exceptions import (
     AutomationWorkflowTooManyErrors,
 )
 from baserow.contrib.automation.workflows.handler import AutomationWorkflowHandler
+from baserow.contrib.integrations.core.models import (
+    HTTPFormData,
+    HTTPHeader,
+    HTTPQueryParam,
+)
 from baserow.core.action.handler import ActionHandler
 from baserow.core.cache import global_cache, local_cache
 from baserow.core.models import Agent
@@ -172,6 +177,62 @@ def test_export_workflow_with_manual_trigger(data_fixture):
 
     assert exported_workflow["nodes"][0]["type"] == CoreManualTriggerNodeType.type
     assert exported_workflow["nodes"][0]["service"]["type"] == "manual"
+
+
+@pytest.mark.django_db
+def test_export_workflow_passes_sensitive_data_config_to_node_service(data_fixture):
+    workflow = data_fixture.create_automation_workflow(create_trigger=False)
+    node = data_fixture.create_automation_node(
+        workflow=workflow,
+        type="http_request",
+        service_kwargs={
+            "url": "https://example.com/endpoint",
+            "body_content": "secret",
+        },
+    )
+    HTTPHeader.objects.create(
+        service=node.service,
+        key="Authorization",
+        value="Bearer secret",
+    )
+    HTTPQueryParam.objects.create(
+        service=node.service,
+        key="api_key",
+        value="secret",
+    )
+    HTTPFormData.objects.create(
+        service=node.service,
+        key="token",
+        value="secret",
+    )
+
+    sanitized_export = AutomationWorkflowHandler().export_workflow(
+        workflow,
+        import_export_config=ImportExportConfig(
+            include_permission_data=False,
+            exclude_sensitive_data=True,
+        ),
+    )
+    normal_export = AutomationWorkflowHandler().export_workflow(
+        workflow,
+        import_export_config=ImportExportConfig(
+            include_permission_data=False,
+            exclude_sensitive_data=False,
+        ),
+    )
+
+    sanitized_service = sanitized_export["nodes"][0]["service"]
+    normal_service = normal_export["nodes"][0]["service"]
+
+    assert sanitized_service["url"] == normal_service["url"]
+    assert sanitized_service["headers"] is None
+    assert sanitized_service["query_params"] is None
+    assert sanitized_service["form_data"] is None
+    assert sanitized_service["body_content"] is None
+    assert normal_service["headers"]
+    assert normal_service["query_params"]
+    assert normal_service["form_data"]
+    assert normal_service["body_content"] == node.service.body_content
 
 
 @pytest.mark.django_db

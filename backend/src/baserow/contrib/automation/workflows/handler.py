@@ -457,7 +457,11 @@ class AutomationWorkflowHandler:
 
         serialized_nodes = [
             AutomationNodeHandler().export_node(
-                n, files_zip=files_zip, storage=storage, cache=cache
+                n,
+                import_export_config=import_export_config,
+                files_zip=files_zip,
+                storage=storage,
+                cache=cache,
             )
             for n in AutomationNodeHandler().get_nodes(workflow=workflow)
         ]
