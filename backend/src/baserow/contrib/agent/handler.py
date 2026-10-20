@@ -21,8 +21,12 @@ class AgentHandler:
 
         queryset = AgentApplication.objects.filter(workspace__isnull=False)
         if for_update:
-            # The parent row holds the name, which configuration updates also write.
-            queryset = queryset.select_for_update(of=("self", "application_ptr"))
+            # Lock the parent first to match normal application updates.
+            CoreHandler().get_application(
+                agent_id,
+                base_queryset=queryset.select_for_update(of=("application_ptr",)),
+            )
+            queryset = queryset.select_for_update(of=("self",))
         return CoreHandler().get_application(agent_id, base_queryset=queryset)
 
     def get_configuration(self, agent: AgentApplication) -> AgentConfiguration:
