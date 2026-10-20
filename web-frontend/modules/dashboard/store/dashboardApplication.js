@@ -30,7 +30,7 @@ export const state = () => ({
   integrations: [],
   // A cache for data that has been
   // returned as a result of dispatching
-  // a widget. A source may be shared by widgets with different filter bindings.
+  // a widget. Source conditions resolve the current dashboard filter values.
   data: {},
   // Set while a publicly shared dashboard is shown. Its data sources are then
   // dispatched through the public endpoint of the slug, with the token of a
@@ -1031,6 +1031,7 @@ export const getters = {
   getSelectedWidget(state) {
     return state.widgets.find((widget) => widget.id === state.selectedWidgetId)
   },
+  getDataSources: (state) => state.dataSources,
   getDataSourceById: (state, getters) => (dataSourceId) => {
     return state.dataSources.find(
       (dataSource) => dataSource.id === dataSourceId

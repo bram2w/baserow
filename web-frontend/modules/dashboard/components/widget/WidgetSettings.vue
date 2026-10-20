@@ -17,6 +17,7 @@
 
 <script>
 import _ from 'lodash'
+import { computed } from 'vue'
 import DashboardFormulaInput from '@baserow/modules/dashboard/components/DashboardFormulaInput'
 import WidgetSettingsBaseForm from '@baserow/modules/dashboard/components/widget/WidgetSettingsBaseForm'
 import { notifyIf } from '@baserow/modules/core/utils/error'
@@ -27,7 +28,11 @@ export default {
   provide() {
     return {
       formulaComponent: DashboardFormulaInput,
-      dataProvidersAllowed: [],
+      dataProvidersAllowed: ['dashboard_filter'],
+      dashboardApplicationContext: computed(() => ({
+        dashboard: this.dashboard,
+        storePrefix: this.storePrefix,
+      })),
     }
   },
   props: {

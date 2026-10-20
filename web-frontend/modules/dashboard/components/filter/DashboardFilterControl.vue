@@ -24,7 +24,8 @@
               ? $t('dashboardFilter.selections', {
                   count: appliedValues.length,
                 })
-              : appliedValues[0] || $t('dashboardFilter.choose')
+              : (appliedValues[0] && optionLabel(appliedValues[0])) ||
+                $t('dashboardFilter.choose')
           }}</span
         >
         <i
@@ -73,9 +74,6 @@
                 v-model="search"
                 :aria-label="$t('action.search')"
               />
-              <div class="dashboard-filter__operator">
-                {{ $t(`dashboardFilter.${filter.operator}`) }}...
-              </div>
               <div class="dashboard-filter__choices">
                 <div
                   v-for="value in displayedOptions"
@@ -91,7 +89,7 @@
                     @update:model-value="toggle(value, $event)"
                   >
                     <span class="dashboard-filter__option-value">{{
-                      value
+                      optionLabel(value)
                     }}</span>
                   </Checkbox>
                   <Button
@@ -105,7 +103,7 @@
                     @click="toggle(value, !draft.includes(value))"
                   >
                     <span class="dashboard-filter__option-value">{{
-                      value
+                      optionLabel(value)
                     }}</span>
                   </Button>
                   <span
@@ -156,11 +154,7 @@
               </div>
             </template>
             <div v-else class="dashboard-filter__input">
-              <FormGroup
-                :label="`${$t(`dashboardFilter.${filter.operator}`)}...`"
-                small-label
-                required
-              >
+              <FormGroup :label="filter.label" small-label required>
                 <FormInput
                   ref="input"
                   :model-value="draft[0] || ''"
@@ -259,10 +253,13 @@ const changed = computed(
     JSON.stringify(normalizedDraft.value) !==
     JSON.stringify(props.appliedValues)
 )
+const optionLabel = (value) => props.optionState.labels?.[value] || value
 const displayedOptions = computed(() => {
   const query = search.value.toLowerCase()
   return [...new Set([...props.optionState.results, ...draft.value])].filter(
-    (value) => value.toLowerCase().includes(query)
+    (value) =>
+      value.toLowerCase().includes(query) ||
+      optionLabel(value).toLowerCase().includes(query)
   )
 })
 const hasUnavailable = computed(() =>

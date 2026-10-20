@@ -65,13 +65,6 @@
   width: 235px;
 }
 
-.dashboard-filter__operator {
-  padding: 12px 12px 4px;
-  color: $palette-neutral-900;
-  font-size: 11px;
-  line-height: 16px;
-}
-
 .dashboard-filter__choices {
   max-height: 300px;
   overflow-y: auto;
@@ -154,20 +147,17 @@
   border-top: 1px solid $palette-neutral-200;
 }
 
-.dashboard-filter-settings__help,
-.dashboard-filter-bindings__help {
+.dashboard-filter-settings__help {
   margin: 4px 0 8px;
   color: $palette-neutral-900;
   font-size: 12px;
   line-height: 20px;
 }
 
-.dashboard-filter-bindings {
-  padding: 16px 0 0;
-  margin: 16px 0;
-  border-top: 1px solid $palette-neutral-200;
-
-  .form-section__title {
-    margin: 0;
-  }
+.dashboard-filter-settings__option {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px;
+  margin-bottom: 12px;
 }

@@ -272,3 +272,25 @@ test('filters loaded choices immediately without requesting options or losing se
   expect(testApp.body.get('input[type="checkbox"]').element.checked).toBe(true)
   expect(wrapper.emitted('options')).toHaveLength(1)
 })
+
+test('displays and searches labels while applying the underlying value', async () => {
+  await render({ appliedValues: ['FR'], multiple: false })
+  await wrapper.setProps({
+    optionState: {
+      results: ['FR', 'BE'],
+      labels: { FR: 'France', BE: 'Belgium' },
+      unavailable: [],
+      next: null,
+      loading: false,
+      error: false,
+    },
+  })
+  expect(wrapper.get('.dashboard-filter__value').text()).toBe('France')
+  await wrapper.get('.dropdown__selected').trigger('click')
+  await flushPromises()
+  await testApp.body.get('.select__search-input').setValue('belg')
+  expect(testApp.body.findAll('.dashboard-filter__choice')).toHaveLength(1)
+  await testApp.body.get('.dashboard-filter__single-choice').trigger('click')
+  await testApp.body.get('form').trigger('submit')
+  expect(wrapper.emitted('apply').at(-1)).toEqual([['BE']])
+})

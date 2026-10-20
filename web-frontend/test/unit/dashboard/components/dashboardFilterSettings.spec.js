@@ -16,10 +16,10 @@ async function render(bindings = [], configuration = {}) {
     dashboard_id: 1,
     label: 'Team',
     type: 'text',
-    operator: 'equal',
     mode: 'dropdown',
     multiple: true,
-    bindings,
+    option_type: 'manual',
+    options: [],
     ...configuration,
   }
   const widgets = [
@@ -304,59 +304,34 @@ test('cleans up the open confirmation when the filter is removed remotely', asyn
   expect(testApp.mock.history.patch).toHaveLength(0)
 })
 
-test('configures one field per table in global settings and keeps other table mappings', async () => {
+test('saves manual option labels and values without table mappings', async () => {
   const wrapper = await render()
-  const rows = wrapper.findAll('.dashboard-filter-table-field')
-  expect(rows).toHaveLength(2)
-  expect(rows[0].text()).toContain('Projects')
-  expect(rows[1].text()).toContain('Tasks')
-  await rows[0].get('.dropdown__selected').trigger('click')
-  const team = rows[0]
-    .findAll('.select__item-link')
-    .find((item) => item.text().includes('Team'))
-  expect(rows[0].text()).not.toContain('Budget')
-  await team.trigger('click')
-  await flushPromises()
-  expect(JSON.parse(testApp.mock.history.patch.at(-1).data)).toEqual({
-    bindings: [{ table_id: 20, field_id: 21 }],
-  })
-  await rows[1].get('.dropdown__selected').trigger('click')
-  await rows[1]
-    .findAll('.select__item-link')
-    .find((item) => item.text().includes('Department'))
+  expect(wrapper.find('.dashboard-filter-table-field').exists()).toBe(false)
+  expect(wrapper.text()).toContain('dashboardFilter.providerHelp')
+  await wrapper
+    .findAll('button')
+    .find((button) => button.text() === 'dashboardFilter.addOption')
+    .trigger('click')
+  const row = wrapper.get('.dashboard-filter-settings__option')
+  await row.findAll('input')[0].setValue('Design team')
+  await row.findAll('input')[1].setValue('design')
+  await wrapper
+    .findAll('button')
+    .find((button) => button.text() === 'action.save')
     .trigger('click')
   await flushPromises()
   expect(JSON.parse(testApp.mock.history.patch.at(-1).data)).toEqual({
-    bindings: [
-      { table_id: 20, field_id: 21 },
-      { table_id: 30, field_id: 31 },
-    ],
+    options: [{ name: 'Design team', value: 'design' }],
   })
-  expect(
-    testApp.mock.history.get.filter(
-      ({ url }) => url === '/database/fields/table/20/'
-    )
-  ).toHaveLength(1)
 })
 
-test('shows a deleted mapped field as unavailable in global settings', async () => {
-  const wrapper = await render([{ table_id: 20, field_id: null }])
-  const row = wrapper.get('.dashboard-filter-table-field')
-  expect(row.get('.dropdown__selected-text').text()).toBe(
-    'dashboardFilter.invalidField'
-  )
-  expect(row.text()).toContain('dashboardFilter.invalidFieldHelp')
-})
-
-test('keeps a saved table field repairable after its last widget is removed', async () => {
-  const wrapper = await render([{ table_id: 20, field_id: null }])
-  testApp.mock
-    .onGet('/dashboard/1/widgets/')
-    .reply(200, [{ id: 4, data_source_id: 12, type: 'summary' }])
-  await testApp.store.dispatch('dashboardApplication/fetchWidgets', 1)
-  await flushPromises()
-  const rows = wrapper.findAll('.dashboard-filter-table-field')
-  expect(rows).toHaveLength(2)
-  const projects = rows.find((row) => row.text().includes('Projects'))
-  expect(projects.text()).toContain('dashboardFilter.invalidFieldHelp')
+test('offers data source formulas instead of table field mappings', async () => {
+  const wrapper = await render([], {
+    option_type: 'formulas',
+    formula_name: {},
+    formula_value: {},
+  })
+  expect(wrapper.text()).toContain('dashboardFilter.sourceOptionsHelp')
+  expect(wrapper.find('.dashboard-filter-table-field').exists()).toBe(false)
+  expect(wrapper.findAll('.formula-input-field').length).toBe(2)
 })

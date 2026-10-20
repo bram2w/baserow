@@ -42,6 +42,7 @@ const persistFilterValues = (state, rootGetters) => {
 }
 const emptyOptions = () => ({
   results: [],
+  labels: {},
   next: null,
   unavailable: [],
   availabilityGeneration: 0,
@@ -303,6 +304,7 @@ export const filterActions = {
       const results = more
         ? [...new Set([...previous.results, ...data.results])]
         : data.results
+      const labels = { ...(more ? previous.labels : {}), ...data.labels }
       const availabilityCurrent =
         generation > state.filterOptions[filterId].availabilityGeneration
       commit('SET_FILTER_OPTIONS', {
@@ -310,7 +312,7 @@ export const filterActions = {
         values: {
           ...(cacheCurrent()
             ? {
-                unfilteredOptions: { results, next: data.next },
+                unfilteredOptions: { results, labels, next: data.next },
                 unfilteredLoading: false,
               }
             : {}),
@@ -325,6 +327,7 @@ export const filterActions = {
           ...(displayCurrent()
             ? {
                 results,
+                labels,
                 next: data.next,
                 loading: false,
                 error: false,
