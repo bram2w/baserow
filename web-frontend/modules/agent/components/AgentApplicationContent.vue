@@ -112,8 +112,8 @@ const warningFields = computed(() => Object.keys(state.fieldErrors))
 const hasLoadError = computed(
   () =>
     state.readinessError ||
-    state.availabilityError ||
-    (state.canReadSettings && state.configurationLoadError)
+    (state.canReadSettings &&
+      (state.availabilityError || state.configurationLoadError))
 )
 const showConfigurationWarning = computed(() =>
   Boolean(

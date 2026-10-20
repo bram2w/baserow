@@ -127,7 +127,7 @@ export function useAgentConfiguration(agent) {
   }
 
   async function fetchAvailability() {
-    if (!agent.value) return
+    if (!canReadSettings.value) return
     const currentScope = scope
     const workspaceId = agent.value.workspace.id
     const request = ++availabilityRequest
@@ -360,8 +360,12 @@ export function useAgentConfiguration(agent) {
   )
   watch(canReadSettings, (allowed) => {
     if (allowed) {
+      fetchAvailability()
       fetchConfiguration()
     } else {
+      ++availabilityRequest
+      availabilityLoading.value = false
+      availabilityError.value = false
       clearSettings()
       fetchReadiness()
     }
