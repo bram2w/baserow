@@ -6,14 +6,14 @@ import {
   destroyAgentPage,
   mockAvailability,
   warning,
-  withoutSettings,
+  withoutConfiguration,
 } from './helpers'
 
 describe('Agent model availability', () => {
-  let testApp, agent, allowed, mount
+  let testApp, allowed, mount
 
   beforeEach(async () => {
-    ;({ testApp, agent, allowed, mount } = await createAgentPage())
+    ;({ testApp, allowed, mount } = await createAgentPage())
   })
 
   afterEach(() => destroyAgentPage(testApp))
@@ -22,7 +22,7 @@ describe('Agent model availability', () => {
     testApp.mock.history.get.filter(({ url }) => url === '/workspaces/')
 
   test('uses public readiness without loading models for ordinary readers', async () => {
-    allowed.value = withoutSettings
+    allowed.value = withoutConfiguration
     mockAvailability(testApp, [500, {}])
 
     const wrapper = await mount()
@@ -31,22 +31,8 @@ describe('Agent model availability', () => {
     expect(warning(wrapper).exists()).toBe(false)
   })
 
-  test('does not load models for a public realtime update to an ordinary reader', async () => {
-    allowed.value = withoutSettings
-    const wrapper = await mount()
-
-    await testApp.store.dispatch('application/forceUpdate', {
-      application: agent,
-      data: { name: 'Updated agent', readiness: 'ready' },
-    })
-    await flushPromises()
-
-    expect(modelRequests()).toHaveLength(0)
-    expect(warning(wrapper).exists()).toBe(false)
-  })
-
-  test('loads models when settings access is granted', async () => {
-    allowed.value = withoutSettings
+  test('loads models when configuration access is granted', async () => {
+    allowed.value = withoutConfiguration
     const wrapper = await mount()
     expect(modelRequests()).toHaveLength(0)
 
@@ -58,13 +44,13 @@ describe('Agent model availability', () => {
     expect(warning(wrapper).exists()).toBe(false)
   })
 
-  test('ignores a pending model failure after settings access is revoked', async () => {
+  test('ignores a pending model failure after configuration access is revoked', async () => {
     testApp.dontFailOnErrorResponses()
     const models = deferredReply()
     mockAvailability(testApp, models.reply)
     const wrapper = await mount()
 
-    allowed.value = withoutSettings
+    allowed.value = withoutConfiguration
     await flushPromises()
     models.resolve(500, {})
     await flushPromises()

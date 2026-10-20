@@ -17,6 +17,9 @@
   display: flex;
   align-items: stretch;
   overflow: hidden;
+
+  // The layout follows this column, which the assistant panel can narrow.
+  container-type: inline-size;
 }
 
 .agent-chat {
@@ -89,10 +92,6 @@
 }
 
 .agent-chat__warning-link {
-  border: 0;
-  padding: 0;
-  margin-right: 12px;
-  background: transparent;
   color: $palette-neutral-900;
   cursor: pointer;
   text-decoration: underline;
@@ -254,20 +253,21 @@
   color: $palette-neutral-600;
 }
 
-.agent-application button {
+.agent-configuration__icon-button,
+.agent-configuration__section {
   &:focus-visible {
     outline: 2px solid $palette-blue-500;
     outline-offset: -2px;
   }
 }
 
-@media (max-width: 1140px) {
+@container (max-width: 900px) {
   .agent-configuration {
     flex-basis: 300px;
   }
 }
 
-@media (max-width: 1000px) {
+@container (max-width: 760px) {
   .agent-configuration {
     position: absolute;
     top: 0;

@@ -1,27 +1,26 @@
-import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useStore } from 'vuex'
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router'
 import { useNuxtApp } from '#app'
 import { getEnabledModelsForAIProviderFeature } from '@baserow/modules/core/aiProviderModelFeatureTypes'
+import { notifyIf } from '@baserow/modules/core/utils/error'
+import ApplicationService from '@baserow/modules/core/services/application'
 import AgentApplicationService from '@baserow/modules/agent/services/agentApplication'
 import { selectAgentApplication } from '@baserow/modules/agent/middleware/selectAgentApplication'
-import ApplicationService from '@baserow/modules/core/services/application'
 
 const CONFIGURATION_FIELDS = [
-  'name',
   'instructions',
   'provider_type',
   'model_identifier',
 ]
 
 const emptyConfiguration = () => ({
-  name: '',
   instructions: '',
   provider_type: null,
   model_identifier: null,
 })
 
-/** Page-local Agent settings, kept out of the shared application store. */
+/** Page-local Agent configuration, kept out of the shared application store. */
 export function useAgentConfiguration(agent) {
   const store = useStore()
   const { $client, $hasPermission } = useNuxtApp()
@@ -33,32 +32,35 @@ export function useAgentConfiguration(agent) {
       $hasPermission(operation, agent.value, agent.value.workspace.id)
     )
 
-  const canReadSettings = computed(() =>
-    permission('agent_application.read_settings')
+  const canReadConfiguration = computed(() =>
+    permission('agent_application.read_configuration')
   )
-  const canUpdateSettings = computed(() => permission('application.update'))
+  const canUpdateConfiguration = computed(
+    () => canReadConfiguration.value && permission('application.update')
+  )
 
+  const name = ref(agent.value?.name ?? '')
   const readiness = computed(() => agent.value?.readiness ?? null)
-  const readinessLoading = ref(false)
   const readinessError = ref(false)
-  const availabilityLoading = ref(false)
+  // The first load starts on mount, so the server renders the same pending state.
+  const availabilityLoading = ref(canReadConfiguration.value)
   const availabilityError = ref(false)
   const configuration = reactive(emptyConfiguration())
   const savedConfiguration = ref(null)
   const configurationErrors = ref({})
-  const configurationLoading = ref(false)
+  const configurationLoading = ref(canReadConfiguration.value)
   const configurationLoadError = ref(false)
-  const pendingSettings = reactive({})
-  const savingSettings = ref(false)
-  const settingsSaveError = ref(false)
+  const pendingConfiguration = reactive({})
+  const savingConfiguration = ref(false)
+  const configurationSaveError = ref(false)
 
   let scope = 0
   let readinessRequest = 0
   let availabilityRequest = 0
   let configurationRequest = 0
   let refreshPending = false
-  let inFlightSettings = {}
-  let settingsSavePromise = null
+  let inFlightConfiguration = {}
+  let configurationSavePromise = null
 
   const workspace = computed(() =>
     agent.value
@@ -68,12 +70,12 @@ export function useAgentConfiguration(agent) {
   const enabledModels = computed(() =>
     getEnabledModelsForAIProviderFeature(workspace.value, 'ai_agent')
   )
-  const hasPendingSettings = computed(
-    () => Object.keys(pendingSettings).length > 0
+  const hasPendingConfiguration = computed(
+    () => Object.keys(pendingConfiguration).length > 0
   )
   const fieldErrors = computed(() => {
     const saved = savedConfiguration.value
-    if (!canReadSettings.value || !saved) return {}
+    if (!canReadConfiguration.value || !saved) return {}
 
     const errors = {}
     for (const field of CONFIGURATION_FIELDS) {
@@ -112,30 +114,44 @@ export function useAgentConfiguration(agent) {
     })
   }
 
+  async function renameAgent() {
+    const trimmed = name.value.trim()
+    if (!trimmed || trimmed === agent.value.name) {
+      name.value = agent.value.name
+      return
+    }
+    try {
+      await store.dispatch('application/update', {
+        application: agent.value,
+        values: { name: trimmed },
+      })
+    } catch (error) {
+      name.value = agent.value.name
+      notifyIf(error, 'application')
+    }
+  }
+
   async function fetchAgentReadiness() {
     if (!agent.value) return
     const currentScope = scope
     const agentId = agent.value.id
     const request = ++readinessRequest
-    readinessLoading.value = true
     readinessError.value = false
     try {
       // Use the ordinary application read so agent_loaded stays once per visit.
       const { data } = await applicationService.get(agentId)
-      if (!scopeIsCurrent(currentScope) || request !== readinessRequest) return
-      await updateApplication({ name: data.name, readiness: data.readiness })
-    } catch {
-      if (!scopeIsCurrent(currentScope) || request !== readinessRequest) return
-      readinessError.value = true
-    } finally {
       if (scopeIsCurrent(currentScope) && request === readinessRequest) {
-        readinessLoading.value = false
+        await updateApplication({ name: data.name, readiness: data.readiness })
+      }
+    } catch {
+      if (scopeIsCurrent(currentScope) && request === readinessRequest) {
+        readinessError.value = true
       }
     }
   }
 
   async function fetchAvailability() {
-    if (!canReadSettings.value) return
+    if (!canReadConfiguration.value) return
     const currentScope = scope
     const workspaceId = agent.value.workspace.id
     const request = ++availabilityRequest
@@ -154,28 +170,27 @@ export function useAgentConfiguration(agent) {
     }
   }
 
-  function applyConfiguration(data, preserveDraft = false) {
+  function applyConfiguration(data) {
     const saved = Object.fromEntries(
       CONFIGURATION_FIELDS.map((field) => [field, data[field]])
     )
     savedConfiguration.value = saved
     for (const field of CONFIGURATION_FIELDS) {
-      if (!preserveDraft || !(field in pendingSettings)) {
-        configuration[field] = saved[field]
+      if (!(field in pendingConfiguration)) configuration[field] = saved[field]
+      if (configuration[field] === saved[field]) {
+        delete pendingConfiguration[field]
       }
-      if (configuration[field] === saved[field]) delete pendingSettings[field]
     }
     configurationErrors.value = data.errors || {}
     ++readinessRequest
-    readinessLoading.value = false
     readinessError.value = false
     // Keep only public metadata in the shared application store.
     updateApplication({ readiness: data.state })
   }
 
   async function fetchConfiguration() {
-    if (!canReadSettings.value) return
-    if (hasPendingSettings.value || savingSettings.value) {
+    if (!canReadConfiguration.value) return
+    if (hasPendingConfiguration.value || savingConfiguration.value) {
       refreshPending = true
       return
     }
@@ -187,13 +202,12 @@ export function useAgentConfiguration(agent) {
     try {
       const { data } = await service.getConfiguration(agentId)
       if (
-        !scopeIsCurrent(currentScope) ||
-        request !== configurationRequest ||
-        !canReadSettings.value
+        scopeIsCurrent(currentScope) &&
+        request === configurationRequest &&
+        canReadConfiguration.value
       ) {
-        return
+        applyConfiguration(data)
       }
-      applyConfiguration(data, true)
     } catch {
       if (scopeIsCurrent(currentScope) && request === configurationRequest) {
         configurationLoadError.value = true
@@ -206,7 +220,7 @@ export function useAgentConfiguration(agent) {
   }
 
   function updateConfiguration(values) {
-    if (!canReadSettings.value || !canUpdateSettings.value) return
+    if (!canUpdateConfiguration.value) return
     for (const [field, value] of Object.entries(values)) {
       if (!CONFIGURATION_FIELDS.includes(field)) continue
       const normalized =
@@ -216,68 +230,58 @@ export function useAgentConfiguration(agent) {
       configuration[field] = normalized
       if (
         savedConfiguration.value?.[field] === normalized &&
-        !(field in inFlightSettings)
+        !(field in inFlightConfiguration)
       ) {
-        delete pendingSettings[field]
+        delete pendingConfiguration[field]
       } else {
-        pendingSettings[field] = normalized
+        pendingConfiguration[field] = normalized
       }
     }
-    settingsSaveError.value = false
+    configurationSaveError.value = false
   }
 
-  function saveSettings() {
+  function saveConfiguration() {
     // A blur during a save commits its edit once that save finishes.
-    if (savingSettings.value) return settingsSavePromise.then(saveSettings)
-    if (
-      !canReadSettings.value ||
-      !canUpdateSettings.value ||
-      !hasPendingSettings.value
-    ) {
+    if (savingConfiguration.value) {
+      return configurationSavePromise.then(saveConfiguration)
+    }
+    if (!canUpdateConfiguration.value || !hasPendingConfiguration.value) {
       return false
     }
     const currentScope = scope
-    const application = agent.value
-    const agentId = application.id
-    const values = { ...pendingSettings }
-    if ('name' in values && !values.name.trim()) {
-      // A blank name can't be saved, so the last saved one comes back.
-      configuration.name = savedConfiguration.value.name
-      delete pendingSettings.name
-      delete values.name
-    }
-    if (!Object.keys(values).length) return false
-    savingSettings.value = true
-    inFlightSettings = values
-    settingsSaveError.value = false
+    const agentId = agent.value.id
+    const values = { ...pendingConfiguration }
+    savingConfiguration.value = true
+    inFlightConfiguration = values
+    configurationSaveError.value = false
     ++configurationRequest
-    settingsSavePromise = (async () => {
+    configurationSavePromise = (async () => {
       try {
         const { data } = await service.updateConfiguration(agentId, values)
-        if (!scopeIsCurrent(currentScope) || !canReadSettings.value) return
-        for (const field of Object.keys(values)) {
-          if (configuration[field] === values[field])
-            delete pendingSettings[field]
+        if (!scopeIsCurrent(currentScope) || !canReadConfiguration.value) {
+          return false
         }
-        applyConfiguration(data, true)
-        await updateApplication({ name: data.name })
+        for (const field of Object.keys(values)) {
+          if (configuration[field] === values[field]) {
+            delete pendingConfiguration[field]
+          }
+        }
+        applyConfiguration(data)
         return true
       } catch {
-        if (scopeIsCurrent(currentScope) && canReadSettings.value) {
-          settingsSaveError.value = true
+        if (scopeIsCurrent(currentScope) && canReadConfiguration.value) {
+          configurationSaveError.value = true
         }
         return false
       } finally {
         if (scopeIsCurrent(currentScope)) {
-          if (!canReadSettings.value) {
-            fetchAgentReadiness()
-          }
-          savingSettings.value = false
-          inFlightSettings = {}
+          if (!canReadConfiguration.value) fetchAgentReadiness()
+          savingConfiguration.value = false
+          inFlightConfiguration = {}
           if (
             refreshPending &&
-            !hasPendingSettings.value &&
-            !settingsSaveError.value
+            !hasPendingConfiguration.value &&
+            !configurationSaveError.value
           ) {
             refreshPending = false
             refreshConfiguration()
@@ -285,21 +289,21 @@ export function useAgentConfiguration(agent) {
         }
       }
     })()
-    return settingsSavePromise
+    return configurationSavePromise
   }
 
-  async function flushSettings() {
+  async function flushConfiguration() {
     const currentScope = scope
-    while (scopeIsCurrent(currentScope) && hasPendingSettings.value) {
-      const saved = await saveSettings()
-      if (!saved || settingsSaveError.value) break
+    while (scopeIsCurrent(currentScope) && hasPendingConfiguration.value) {
+      const saved = await saveConfiguration()
+      if (!saved || configurationSaveError.value) break
     }
-    return !scopeIsCurrent(currentScope) || !hasPendingSettings.value
+    return !scopeIsCurrent(currentScope) || !hasPendingConfiguration.value
   }
 
-  onBeforeRouteLeave(flushSettings)
+  onBeforeRouteLeave(flushConfiguration)
   onBeforeRouteUpdate(async (to, from) => {
-    if (await flushSettings()) return true
+    if (await flushConfiguration()) return true
     // Page middleware selects the next Agent before update guards run.
     await selectAgentApplication(useNuxtApp(), from)
     return false
@@ -313,39 +317,42 @@ export function useAgentConfiguration(agent) {
     ])
   }
 
-  function clearSettings() {
+  function clearConfiguration() {
     ++configurationRequest
     Object.assign(configuration, emptyConfiguration())
     savedConfiguration.value = null
     configurationErrors.value = {}
     configurationLoading.value = false
-    Object.keys(pendingSettings).forEach(
-      (field) => delete pendingSettings[field]
+    Object.keys(pendingConfiguration).forEach(
+      (field) => delete pendingConfiguration[field]
     )
-    settingsSaveError.value = false
+    configurationSaveError.value = false
   }
 
   function reset() {
     ++scope
-    clearSettings()
-    readinessLoading.value = false
+    clearConfiguration()
     readinessError.value = false
     availabilityLoading.value = false
     availabilityError.value = false
     configurationLoadError.value = false
-    savingSettings.value = false
-    inFlightSettings = {}
-    settingsSavePromise = null
+    savingConfiguration.value = false
+    inFlightConfiguration = {}
+    configurationSavePromise = null
     refreshPending = false
   }
 
+  onMounted(() => refreshConfiguration({ refreshAgent: false }))
   watch(
     () => [agent.value?.id, store.state.auth.user?.id],
     () => {
       reset()
       if (agent.value) refreshConfiguration({ refreshAgent: false })
-    },
-    { immediate: true }
+    }
+  )
+  watch(
+    () => agent.value?.name,
+    (value) => (name.value = value ?? '')
   )
   watch(
     () => JSON.stringify(enabledModels.value),
@@ -354,7 +361,7 @@ export function useAgentConfiguration(agent) {
       fetchConfiguration()
     }
   )
-  watch(canReadSettings, (allowed) => {
+  watch(canReadConfiguration, (allowed) => {
     if (allowed) {
       fetchAvailability()
       fetchConfiguration()
@@ -362,17 +369,17 @@ export function useAgentConfiguration(agent) {
       ++availabilityRequest
       availabilityLoading.value = false
       availabilityError.value = false
-      clearSettings()
+      clearConfiguration()
       fetchAgentReadiness()
     }
   })
   onBeforeUnmount(reset)
 
   return {
-    canReadSettings,
-    canUpdateSettings,
+    canReadConfiguration,
+    canUpdateConfiguration,
+    name,
     readiness,
-    readinessLoading,
     readinessError,
     availabilityLoading,
     availabilityError,
@@ -381,11 +388,11 @@ export function useAgentConfiguration(agent) {
     fieldErrors,
     configurationLoading,
     configurationLoadError,
-    hasPendingSettings,
-    savingSettings,
-    settingsSaveError,
+    savingConfiguration,
+    configurationSaveError,
+    renameAgent,
     updateConfiguration,
-    saveSettings,
+    saveConfiguration,
     refreshConfiguration,
   }
 }

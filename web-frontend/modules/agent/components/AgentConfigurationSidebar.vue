@@ -81,7 +81,7 @@
           <i
             class="agent-configuration__section-caret"
             :class="
-              errors.name || errors.provider_type || errors.model_identifier
+              errors.provider_type || errors.model_identifier
                 ? 'iconoir-warning-circle'
                 : 'iconoir-nav-arrow-right'
             "
@@ -117,19 +117,18 @@
           <template v-else>
             <FormGroup
               :label="$t('agent.name')"
-              :error="Boolean(errors.name)"
-              :error-message="errorMessage('name')"
+              :error="!name.trim()"
+              :error-message="name.trim() ? '' : $t('error.requiredField')"
               small-label
               required
             >
               <FormInput
-                ref="nameInput"
-                :model-value="configuration.name"
-                :error="Boolean(errors.name)"
+                :model-value="name"
+                :error="!name.trim()"
                 :disabled="!editable"
                 :maxlength="160"
-                @update:model-value="$emit('change', { name: $event })"
-                @blur="$emit('flush')"
+                @update:model-value="$emit('update:name', $event)"
+                @blur="$emit('rename')"
               />
             </FormGroup>
             <FormGroup
@@ -211,6 +210,7 @@ import { computed, nextTick, ref } from 'vue'
 import ReadOnlyForm from '@baserow/modules/core/components/ReadOnlyForm'
 
 const props = defineProps({
+  name: { type: String, required: true },
   configuration: { type: Object, required: true },
   errors: { type: Object, required: true },
   enabledModels: { type: Object, required: true },
@@ -221,10 +221,16 @@ const props = defineProps({
   saving: Boolean,
   saveError: Boolean,
 })
-const emit = defineEmits(['close', 'change', 'flush', 'reload'])
+const emit = defineEmits([
+  'close',
+  'update:name',
+  'rename',
+  'change',
+  'flush',
+  'reload',
+])
 const { $registry, $i18n } = useNuxtApp()
 const section = ref(null)
-const nameInput = ref(null)
 const instructionsInput = ref(null)
 const providerInput = ref(null)
 const modelInput = ref(null)
@@ -258,11 +264,15 @@ const models = computed(() =>
     ]),
   ].filter(Boolean)
 )
+const unavailableMessages = {
+  provider_type: 'agent.providerUnavailable',
+  model_identifier: 'agent.modelUnavailable',
+}
 const errorMessage = (field) => {
   if (!props.errors[field]) return ''
   return $i18n.t(
     props.errors[field] === 'unavailable'
-      ? 'agent.modelUnavailable'
+      ? unavailableMessages[field]
       : 'error.requiredField'
   )
 }
@@ -279,7 +289,6 @@ async function focusField(field) {
   section.value = field === 'instructions' ? 'instructions' : 'settings'
   await nextTick()
   const input = {
-    name: nameInput,
     instructions: instructionsInput,
     provider_type: providerInput,
     model_identifier: modelInput,

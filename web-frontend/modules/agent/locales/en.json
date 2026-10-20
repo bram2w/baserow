@@ -16,6 +16,7 @@
     "completeConfiguration": "Save the required settings before writing a message.",
     "configurationPermissionRequired": "You don’t have permission to edit this agent’s configuration. Ask your workspace administrator to give you permission or complete the configuration for you.",
     "modelUnavailable": "The selected model is unavailable. Choose an available model.",
+    "providerUnavailable": "The selected AI provider is unavailable. Choose another provider.",
     "saving": "Saving changes…",
     "configurationLoadError": "The agent configuration could not be loaded.",
     "configurationSaveError": "Changes could not be saved.",

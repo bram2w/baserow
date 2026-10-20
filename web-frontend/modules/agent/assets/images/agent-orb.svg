@@ -1,5 +1,5 @@
 <svg width="112" height="120" viewBox="0 0 112 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-<foreignObject x="5" y="-3" width="102" height="102"><div xmlns="http://www.w3.org/1999/xhtml" style="backdrop-filter:blur(1.5px);clip-path:url(#bgblur_0_283_160233_clip_path);height:100%;width:100%"></div></foreignObject><g data-figma-bg-blur-radius="3">
+<g>
 <rect x="8" width="96" height="96" rx="48" fill="url(#paint0_linear_283_160233)" fill-opacity="0.04"/>
 <rect x="9" y="1" width="94" height="94" rx="47" stroke="url(#paint1_linear_283_160233)" stroke-opacity="0.32" stroke-width="2"/>
 </g>
@@ -17,8 +17,7 @@
 <path d="M56 17C73.1208 17 87 30.8792 87 48C87 65.1208 73.1208 79 56 79C38.8792 79 25 65.1208 25 48C25 30.8792 38.8792 17 56 17Z" stroke="url(#paint4_linear_283_160233)" stroke-opacity="0.48" stroke-width="2"/>
 </g>
 <defs>
-<clipPath id="bgblur_0_283_160233_clip_path" transform="translate(-5 3)"><rect x="8" width="96" height="96" rx="48"/>
-</clipPath><filter id="filter1_d_283_160233" x="0" y="8" width="112" height="112" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<filter id="filter1_d_283_160233" x="0" y="8" width="112" height="112" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
 <feFlood flood-opacity="0" result="BackgroundImageFix"/>
 <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
 <feOffset dy="16"/>

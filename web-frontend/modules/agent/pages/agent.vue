@@ -21,23 +21,18 @@ definePageMeta({
 })
 
 const { $store, $client } = useNuxtApp()
-const route = useRoute()
+const agentId = Number(useRoute().params.agentId)
 const agent = computed(() => {
-  const selected = $store.getters['application/get'](
-    Number(route.params.agentId)
-  )
-  return selected?.type === 'agent' ? selected : null
+  const application = $store.getters['application/get'](agentId)
+  return application?.type === 'agent' ? application : null
 })
 useHead(() => ({ title: agent.value?.name }))
 
-// Read once: the next route selects its application before this page unmounts.
-const application = agent.value
-const agentId = application.id
 await usePageAsyncData(`agent-${agentId}`, async () => {
   try {
     const { data } = await AgentApplicationService($client).get(agentId)
     await $store.dispatch('application/forceUpdate', {
-      application,
+      application: agent.value,
       data: { name: data.name, readiness: data.readiness },
     })
     return true

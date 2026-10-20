@@ -22,7 +22,6 @@ export const agentData = {
 }
 
 export const completeConfiguration = (extra = {}) => ({
-  name: 'Support agent',
   instructions: 'Be helpful.',
   provider_type: 'openai',
   model_identifier: 'model-one',
@@ -33,7 +32,7 @@ export const completeConfiguration = (extra = {}) => ({
 
 export const incompleteConfiguration = (field) =>
   completeConfiguration({
-    [field]: ['name', 'instructions'].includes(field) ? '' : null,
+    [field]: field === 'instructions' ? '' : null,
     state: 'incomplete',
     errors: { [field]: 'required' },
   })
@@ -56,11 +55,13 @@ export const deferredReply = () => {
   }
 }
 
-export const withoutSettings = (operation) =>
-  !['agent_application.read_settings', 'application.update'].includes(operation)
+export const withoutConfiguration = (operation) =>
+  !['agent_application.read_configuration', 'application.update'].includes(
+    operation
+  )
 
 // One handler per route, because axios-mock-adapter matches an earlier reply first.
-export function respond(handler, ...responses) {
+function respond(handler, ...responses) {
   const queue = [...responses]
   handler.reply((config) => {
     const response = queue.length > 1 ? queue.shift() : queue[0]
@@ -73,6 +74,9 @@ export function respond(handler, ...responses) {
 export const mockAgent = (testApp, ...responses) =>
   respond(testApp.mock.onGet('/applications/10/'), ...responses)
 
+export const mockRename = (testApp, ...responses) =>
+  respond(testApp.mock.onPatch('/applications/10/'), ...responses)
+
 export const mockConfiguration = (testApp, ...responses) =>
   respond(testApp.mock.onGet('/agent/10/configuration/'), ...responses)
 
@@ -83,22 +87,9 @@ export const mockAvailability = (testApp, ...responses) =>
   respond(testApp.mock.onGet('/workspaces/'), ...responses)
 
 export const savedValues = (testApp) =>
-  testApp.mock.history.patch.map(({ data }) => JSON.parse(data))
-
-export function mountAgentContent(testApp, agent, allowed, provide = {}) {
-  // Nuxt's $hasPermission is a non-configurable getter, so override a child.
-  const permissionApp = Object.create(testApp.nuxtApp)
-  Object.defineProperty(permissionApp, '$hasPermission', {
-    value: (operation) => allowed.value(operation),
-  })
-  return testApp.mount(AgentApplicationContent, {
-    props: { agent },
-    global: {
-      provide,
-      plugins: [{ install: (app) => (app.$nuxt = permissionApp) }],
-    },
-  })
-}
+  testApp.mock.history.patch
+    .filter(({ url }) => url === '/agent/10/configuration/')
+    .map(({ data }) => JSON.parse(data))
 
 export async function createAgentPage() {
   const testApp = new TestApp()
@@ -111,11 +102,26 @@ export async function createAgentPage() {
   mockAvailability(testApp, [workspace])
   mockAgent(testApp, agentData)
   mockConfiguration(testApp, completeConfiguration())
+  // Nuxt's $hasPermission is a non-configurable getter, so override a child.
+  const permissionApp = Object.create(testApp.nuxtApp)
+  Object.defineProperty(permissionApp, '$hasPermission', {
+    value: (operation) => allowed.value(operation),
+  })
+  const route = { leaveGuards: new Set(), updateGuards: new Set() }
   return {
     testApp,
     agent,
     allowed,
-    mount: (provide) => mountAgentContent(testApp, agent, allowed, provide),
+    mount: () =>
+      testApp.mount(AgentApplicationContent, {
+        props: { agent },
+        global: {
+          provide: { [matchedRouteKey]: ref(route) },
+          plugins: [{ install: (app) => (app.$nuxt = permissionApp) }],
+        },
+      }),
+    leave: () => [...route.leaveGuards][0](),
+    update: (to, from) => [...route.updateGuards][0](to, from),
   }
 }
 
@@ -124,16 +130,6 @@ export async function destroyAgentPage(testApp) {
   vi.restoreAllMocks()
   vi.clearAllTimers()
   vi.useRealTimers()
-}
-
-export async function mountWithRouteGuards(mount) {
-  const record = { leaveGuards: new Set(), updateGuards: new Set() }
-  const wrapper = await mount({ [matchedRouteKey]: ref(record) })
-  return {
-    wrapper,
-    leave: () => [...record.leaveGuards][0](),
-    update: (to, from) => [...record.updateGuards][0](to, from),
-  }
 }
 
 export const useFakeTimers = () =>
@@ -159,8 +155,21 @@ export async function editInstructions(wrapper, value) {
   await flushPromises()
 }
 
-export const dropdowns = (wrapper) =>
-  wrapper.findAll('.agent-configuration .dropdown')
+const field = (wrapper, label) =>
+  wrapper
+    .findAll('.agent-configuration__body .control')
+    .find((control) => control.get('.control__label').text().includes(label))
+
+export const nameInput = (wrapper) => field(wrapper, 'agent.name').get('input')
+
+export const providerDropdown = (wrapper) =>
+  field(wrapper, 'agent.provider').get('.dropdown')
+
+export const modelDropdown = (wrapper) =>
+  field(wrapper, 'agent.model').get('.dropdown')
+
+export const modelError = (wrapper) =>
+  field(wrapper, 'agent.model').find('.control__messages--error')
 
 export async function choose(dropdown, text) {
   await dropdown.get('.dropdown__selected').trigger('click')
@@ -169,8 +178,3 @@ export async function choose(dropdown, text) {
     .find((item) => item.text().includes(text))
     .trigger('click')
 }
-
-export const fieldError = (wrapper, index) =>
-  wrapper
-    .findAll('.agent-configuration__body .control')
-    [index].find('.control__messages--error')

@@ -3,10 +3,9 @@
     <header class="layout__col-2-1 header agent-application__header">
       <div class="agent-application__header-name">{{ agent.name }}</div>
       <ButtonIcon
-        v-if="state.canReadSettings"
+        v-if="state.canReadConfiguration"
         icon="iconoir-settings"
         :active="configurationOpen"
-        class="agent-application__configuration-toggle"
         :aria-label="$t('agent.configuration')"
         :title="$t('agent.configuration')"
         :aria-expanded="configurationOpen"
@@ -36,56 +35,52 @@
           >
             <template #title>{{ $t(warningTitle) }}</template>
             <p>{{ $t(warningMessage) }}</p>
-            <template #actions>
-              <template
-                v-if="
-                  state.canReadSettings &&
-                  state.canUpdateSettings &&
-                  warningFields.length
-                "
-              >
-                <button
-                  v-for="field in warningFields"
-                  :key="field"
-                  class="agent-chat__warning-link"
-                  @click="focusConfiguration(field)"
-                >
-                  {{ $t(fieldLabels[field]) }}
-                </button>
-              </template>
+            <template v-if="warningAction" #actions>
               <Button
-                v-else-if="hasLoadError"
+                v-if="warningAction === 'reload'"
                 type="secondary"
                 size="small"
                 @click="state.refreshConfiguration"
                 >{{ $t('action.retry') }}</Button
               >
               <Button
-                v-else-if="state.canUpdateSettings && state.settingsSaveError"
+                v-else-if="warningAction === 'save'"
                 type="secondary"
                 size="small"
-                @click="state.saveSettings"
+                @click="state.saveConfiguration"
                 >{{ $t('action.retry') }}</Button
               >
+              <template v-else>
+                <button
+                  v-for="field in warningFields"
+                  :key="field"
+                  class="alert__actions-button-text alert__actions-button-text--normal agent-chat__warning-link"
+                  @click="focusConfiguration(field)"
+                >
+                  {{ $t(fieldLabels[field]) }}
+                </button>
+              </template>
             </template>
           </Alert>
         </div>
       </main>
       <AgentConfigurationSidebar
-        v-if="state.canReadSettings && configurationOpen"
+        v-if="state.canReadConfiguration && configurationOpen"
         ref="configurationSidebar"
+        v-model:name="state.name"
         :configuration="state.configuration"
         :errors="state.fieldErrors"
         :enabled-models="state.enabledModels"
-        :editable="state.canUpdateSettings"
+        :editable="state.canUpdateConfiguration"
         :loading="state.configurationLoading"
         :load-error="state.configurationLoadError"
         :availability-loading="state.availabilityLoading"
-        :saving="state.savingSettings"
-        :save-error="state.settingsSaveError"
+        :saving="state.savingConfiguration"
+        :save-error="state.configurationSaveError"
         @close="configurationOpen = false"
+        @rename="state.renameAgent"
         @change="state.updateConfiguration"
-        @flush="state.saveSettings"
+        @flush="state.saveConfiguration"
         @reload="state.refreshConfiguration"
       />
     </div>
@@ -103,7 +98,6 @@ const state = reactive(useAgentConfiguration(toRef(props, 'agent')))
 const configurationOpen = ref(true)
 const configurationSidebar = ref(null)
 const fieldLabels = {
-  name: 'agent.name',
   instructions: 'agent.instructions',
   provider_type: 'agent.provider',
   model_identifier: 'agent.model',
@@ -112,29 +106,35 @@ const warningFields = computed(() => Object.keys(state.fieldErrors))
 const hasLoadError = computed(
   () =>
     state.readinessError ||
-    (state.canReadSettings &&
+    (state.canReadConfiguration &&
       (state.availabilityError || state.configurationLoadError))
 )
 const showConfigurationWarning = computed(() =>
   Boolean(
     hasLoadError.value ||
-    (state.canReadSettings &&
-      (state.settingsSaveError ||
+    (state.canReadConfiguration &&
+      (state.configurationSaveError ||
         (!state.configurationLoading && warningFields.value.length))) ||
     ['incomplete', 'unavailable'].includes(state.readiness)
   )
 )
+const warningAction = computed(() => {
+  if (hasLoadError.value) return 'reload'
+  if (!state.canUpdateConfiguration) return null
+  if (warningFields.value.length) return 'fields'
+  return state.configurationSaveError ? 'save' : null
+})
 const warningTitle = computed(() =>
   hasLoadError.value
     ? 'agent.readinessLoadError'
-    : state.settingsSaveError
+    : state.configurationSaveError
       ? 'agent.configurationSaveError'
       : 'agent.configurationRequired'
 )
 const warningMessage = computed(() =>
   hasLoadError.value
     ? 'agent.readinessRetry'
-    : state.canReadSettings && state.canUpdateSettings
+    : state.canUpdateConfiguration
       ? state.readiness === 'unavailable' ||
         state.fieldErrors.model_identifier === 'unavailable'
         ? 'agent.modelUnavailable'
