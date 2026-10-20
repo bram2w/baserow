@@ -6,6 +6,7 @@ import IntegrationService from '@baserow/modules/core/services/integration'
 import { getToken, setToken } from '@baserow/modules/core/utils/auth'
 import { ConcurrentPriorityTaskQueue } from '@baserow/modules/core/utils/queue'
 import debounce from 'lodash/debounce'
+import { filterHasOptions } from '@baserow/modules/dashboard/utils/filter'
 import {
   filterState,
   filterActions,
@@ -670,14 +671,12 @@ export const actions = {
       while (isDashboardRequestCurrent(state, request)) {
         const generation = state.filterFetchGeneration
         await Promise.all(
-          state.filters
-            .filter((filter) => filter.mode === 'dropdown')
-            .map((filter) =>
-              dispatch('fetchFilterOptions', {
-                filterId: filter.id,
-                useCache: true,
-              })
-            )
+          state.filters.filter(filterHasOptions).map((filter) =>
+            dispatch('fetchFilterOptions', {
+              filterId: filter.id,
+              useCache: true,
+            })
+          )
         )
         if (!isDashboardRequestCurrent(state, request)) return
         if (generation === state.filterFetchGeneration) {

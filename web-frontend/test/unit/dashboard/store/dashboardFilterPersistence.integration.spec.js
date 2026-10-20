@@ -79,6 +79,25 @@ describe('dashboard filter persistence', () => {
     sessionStorage.clear()
   })
 
+  test('restores an active empty check without preloading choices', async () => {
+    filters = [{ ...filter, operator: 'empty' }]
+    await load()
+    await store.dispatch('dashboardApplication/applyFilter', {
+      filterId: 5,
+      values: ['true'],
+    })
+    const wrapper = await reload()
+    expect(wrapper.get('.dashboard-filter__value').text()).toBe(
+      'dashboardFilter.active'
+    )
+    expect(mock.history.post.some(({ url }) => url.endsWith('/options/'))).toBe(
+      false
+    )
+    expect(JSON.parse(mock.history.post[0].data)).toEqual({
+      filters: [{ filter_id: 5, values: ['true'] }],
+    })
+  })
+
   test.each([
     [{}, [' Design ', 'Sales'], [' Design ', 'Sales']],
     [{ multiple: false }, ['Design'], ['Design']],

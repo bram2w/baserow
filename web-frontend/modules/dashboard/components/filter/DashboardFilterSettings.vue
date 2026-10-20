@@ -29,6 +29,26 @@
       /></Dropdown>
     </FormGroup>
     <FormGroup
+      :label="$t('dashboardFilter.operator')"
+      small-label
+      required
+      class="margin-bottom-2"
+    >
+      <Dropdown
+        :model-value="filter.operator || 'equal'"
+        :disabled="!canEdit || savingFormat"
+        @update:model-value="changeOperator"
+      >
+        <DropdownItem
+          v-for="operator in operators"
+          :key="operator.type"
+          :value="operator.type"
+          :name="operator.getName()"
+        />
+      </Dropdown>
+    </FormGroup>
+    <FormGroup
+      v-if="filterHasValue(filter)"
       :label="$t('dashboardFilter.mode')"
       small-label
       required
@@ -46,7 +66,7 @@
       />
     </FormGroup>
     <FormGroup
-      v-if="filter.mode === 'dropdown'"
+      v-if="filterHasOptions(filter)"
       :label="$t('dashboardFilter.usersCanPick')"
       small-label
       required
@@ -65,7 +85,7 @@
       {{ $t('dashboardFilter.providerHelp') }}
     </p>
     <DashboardFilterOptionsForm
-      v-if="filter.mode === 'dropdown'"
+      v-if="filterHasOptions(filter)"
       :filter="filter"
       :disabled="!canEdit"
       @save="save"
@@ -118,7 +138,11 @@ import { computed, onBeforeUnmount, provide, ref, watch } from 'vue'
 import { useNuxtApp } from '#app'
 import DashboardFilterOptionsForm from '@baserow/modules/dashboard/components/filter/DashboardFilterOptionsForm'
 import DashboardFormulaInput from '@baserow/modules/dashboard/components/DashboardFormulaInput'
-import { shouldResetFilterValues } from '@baserow/modules/dashboard/utils/filter'
+import {
+  filterHasOptions,
+  filterHasValue,
+  shouldResetFilterValues,
+} from '@baserow/modules/dashboard/utils/filter'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 
 const props = defineProps({
@@ -126,15 +150,22 @@ const props = defineProps({
   dashboard: { type: Object, required: true },
   storePrefix: { type: String, default: '' },
 })
-const { $store, $hasPermission, $i18n } = useNuxtApp()
+const { $store, $hasPermission, $i18n, $registry } = useNuxtApp()
+const operators = computed(() =>
+  Object.values($registry.getAll('viewFilter')).filter(
+    (operator) =>
+      !operator.isDeprecated() && operator.fieldIsCompatible({ type: 'text' })
+  )
+)
 const label = ref(props.filter.label)
 const confirmation = ref(null)
 const pendingFormat = ref(null)
 const savingFormat = ref(false)
 const pendingFormatCopy = computed(() => {
   if (!pendingFormat.value) return { title: '', action: '' }
-  const { mode, multiple } = pendingFormat.value
+  const { mode, multiple, operator } = pendingFormat.value
   const target =
+    (operator ? 'Operator' : null) ??
     { dropdown: 'Dropdown', input: 'Input' }[mode] ??
     (multiple ? 'Multiple' : 'Single')
   return {
@@ -170,6 +201,7 @@ watch(
     () => props.filter.id,
     () => props.filter.mode,
     () => props.filter.multiple,
+    () => props.filter.operator,
   ],
   () => confirmation.value?.hide()
 )
@@ -184,6 +216,15 @@ function requestFormatChange(values) {
     return
   pendingFormat.value = values
   confirmation.value.show()
+}
+function changeOperator(operator) {
+  if (operator === props.filter.operator) return
+  const values = { operator }
+  if (shouldResetFilterValues(props.filter, { ...props.filter, ...values })) {
+    requestFormatChange(values)
+  } else {
+    save(values)
+  }
 }
 async function confirmFormatChange() {
   if (!canEdit.value || savingFormat.value || !pendingFormat.value) return

@@ -16,6 +16,7 @@ async function render(bindings = [], configuration = {}) {
     dashboard_id: 1,
     label: 'Team',
     type: 'text',
+    operator: 'equal',
     mode: 'dropdown',
     multiple: true,
     ...configuration,
@@ -308,4 +309,52 @@ test('offers only table formulas for option labels and values', async () => {
   expect(wrapper.findAll('.formula-input-field')).toHaveLength(2)
   expect(wrapper.text()).not.toContain('dashboardFilter.manualOptions')
   expect(wrapper.text()).not.toContain('dashboardFilter.addOption')
+})
+
+test('saves the shared operator without clearing selected values', async () => {
+  const wrapper = await render()
+  await testApp.store.dispatch('dashboardApplication/applyFilter', {
+    filterId: 5,
+    values: ['Design'],
+  })
+  await wrapper
+    .findAll('.dashboard-filter-settings .dropdown__selected')[1]
+    .trigger('click')
+  const items = testApp.body.findAll('.select__item-link')
+  expect(items.some((item) => item.text() === 'viewFilter.startsWith')).toBe(
+    true
+  )
+  expect(items.some((item) => item.text() === 'viewFilter.isAnyOf')).toBe(false)
+  await items
+    .find((item) => item.text() === 'viewFilter.isNot')
+    .trigger('click')
+  await flushPromises()
+  expect(JSON.parse(testApp.mock.history.patch.at(-1).data)).toEqual({
+    operator: 'not_equal',
+  })
+  expect(wrapper.get('.dashboard-filter__value').text()).toBe('Design')
+  expect(testApp.body.find('.modal__box').exists()).toBe(false)
+})
+
+test('confirms resetting values before switching to an empty check', async () => {
+  const wrapper = await render()
+  await testApp.store.dispatch('dashboardApplication/applyFilter', {
+    filterId: 5,
+    values: ['Design'],
+  })
+  await wrapper
+    .findAll('.dashboard-filter-settings .dropdown__selected')[1]
+    .trigger('click')
+  await testApp.body
+    .findAll('.select__item-link')
+    .find((item) => item.text() === 'viewFilter.isEmpty')
+    .trigger('click')
+  expect(testApp.mock.history.patch).toHaveLength(0)
+  await modalButton('dashboardFilter.confirmOperator').trigger('click')
+  await flushPromises()
+  expect(wrapper.get('.dashboard-filter__value').text()).toBe(
+    'dashboardFilter.inactive'
+  )
+  expect(wrapper.find('.segment-control').exists()).toBe(false)
+  expect(wrapper.find('.formula-input-field').exists()).toBe(false)
 })

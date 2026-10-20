@@ -20,12 +20,18 @@
           class="dropdown__selected-text dashboard-filter__value"
           :class="{ 'dropdown__selected-placeholder': !appliedValues.length }"
           >{{
-            appliedValues.length > 1
-              ? $t('dashboardFilter.selections', {
-                  count: appliedValues.length,
-                })
-              : (appliedValues[0] && optionLabel(appliedValues[0])) ||
-                $t('dashboardFilter.choose')
+            !filterHasValue(filter)
+              ? $t(
+                  appliedValues.length
+                    ? 'dashboardFilter.active'
+                    : 'dashboardFilter.inactive'
+                )
+              : appliedValues.length > 1
+                ? $t('dashboardFilter.selections', {
+                    count: appliedValues.length,
+                  })
+                : (appliedValues[0] && optionLabel(appliedValues[0])) ||
+                  $t('dashboardFilter.choose')
           }}</span
         >
         <i
@@ -69,7 +75,15 @@
           }"
         >
           <form @submit.prevent="apply">
-            <template v-if="filter.mode === 'dropdown'">
+            <div v-if="!filterHasValue(filter)" class="dashboard-filter__input">
+              <Checkbox
+                :model-value="draft.length > 0"
+                @update:model-value="draft = $event ? ['true'] : []"
+              >
+                {{ operatorName }}
+              </Checkbox>
+            </div>
+            <template v-else-if="filter.mode === 'dropdown'">
               <SelectSearch
                 v-model="search"
                 :aria-label="$t('action.search')"
@@ -157,6 +171,11 @@
               <FormGroup :label="filter.label" small-label required>
                 <FormInput
                   ref="input"
+                  :type="
+                    filter.operator === 'length_is_lower_than'
+                      ? 'number'
+                      : 'text'
+                  "
                   :model-value="draft[0] || ''"
                   :placeholder="$t('dashboardFilter.inputPlaceholder')"
                   :maxlength="10000"
@@ -214,7 +233,12 @@ import Button from '@baserow/modules/core/components/Button'
 import ButtonIcon from '@baserow/modules/core/components/ButtonIcon'
 import SelectSearch from '@baserow/modules/core/components/SelectSearch'
 import Context from '@baserow/modules/core/components/Context'
-import { shouldResetFilterValues } from '@baserow/modules/dashboard/utils/filter'
+import { useNuxtApp } from '#app'
+import {
+  filterHasOptions,
+  filterHasValue,
+  shouldResetFilterValues,
+} from '@baserow/modules/dashboard/utils/filter'
 
 const props = defineProps({
   filter: { type: Object, required: true },
@@ -235,6 +259,10 @@ const props = defineProps({
   deleting: Boolean,
 })
 const emit = defineEmits(['apply', 'select', 'options', 'delete'])
+const { $registry } = useNuxtApp()
+const operatorName = computed(() =>
+  $registry.get('viewFilter', props.filter.operator || 'equal').getName()
+)
 const dropdown = ref(null)
 const input = ref(null)
 const menu = ref(null)
@@ -265,10 +293,12 @@ const displayedOptions = computed(() => {
       optionLabel(value).toLowerCase().includes(query)
   )
 })
-const hasUnavailable = computed(() =>
-  props.appliedValues.some((value) =>
-    props.optionState.unavailable.includes(value)
-  )
+const hasUnavailable = computed(
+  () =>
+    filterHasOptions(props.filter) &&
+    props.appliedValues.some((value) =>
+      props.optionState.unavailable.includes(value)
+    )
 )
 const requestOptions = (more = false, useCache = false) =>
   emit('options', {
@@ -315,7 +345,7 @@ function remove() {
 async function onShown() {
   draft.value = [...props.appliedValues]
   search.value = ''
-  if (props.filter.mode === 'dropdown') requestOptions(false, true)
+  if (filterHasOptions(props.filter)) requestOptions(false, true)
   await nextTick()
   input.value?.focus()
 }

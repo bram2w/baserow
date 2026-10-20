@@ -38,10 +38,11 @@ export function saveFilterValues(userId, dashboardId, filters, appliedFilters) {
   try {
     const selections = filters
       .filter((filter) => appliedFilters[filter.id]?.length)
-      .map(({ id, mode, multiple }) => ({
+      .map(({ id, mode, multiple, operator }) => ({
         id,
         mode,
         multiple,
+        operator,
         values: appliedFilters[id],
       }))
     const key = storageKey(userId, dashboardId)

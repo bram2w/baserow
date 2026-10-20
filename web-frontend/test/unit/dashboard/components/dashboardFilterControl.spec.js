@@ -9,6 +9,7 @@ beforeEach(() => {
 afterEach(() => testApp.afterEach())
 async function render({
   mode = 'dropdown',
+  operator = 'equal',
   appliedValues = ['Design'],
   multiple = true,
   unavailable = [],
@@ -18,7 +19,7 @@ async function render({
   wrapper = await testApp.mount(DashboardFilterControl, {
     global: { stubs: { Teleport: false } },
     props: {
-      filter: { id: 1, label: 'Team', operator: 'equal', mode, multiple },
+      filter: { id: 1, label: 'Team', operator, mode, multiple },
       appliedValues,
       editMode,
       canDelete,
@@ -33,6 +34,23 @@ async function render({
   })
   return wrapper
 }
+
+test.each(['empty', 'not_empty'])(
+  'activates %s without loading choices',
+  async (operator) => {
+    await render({ operator, appliedValues: [] })
+    expect(wrapper.get('.dashboard-filter__value').text()).toBe(
+      'dashboardFilter.inactive'
+    )
+    await wrapper.get('.dropdown__selected').trigger('click')
+    await flushPromises()
+    expect(wrapper.emitted('options')).toBeUndefined()
+    expect(testApp.body.find('.select__search').exists()).toBe(false)
+    await testApp.body.get('input[type="checkbox"]').setValue(true)
+    await testApp.body.get('form').trigger('submit')
+    expect(wrapper.emitted('apply')).toEqual([[['true']]])
+  }
+)
 
 test('discards unapplied dropdown changes on close and restores applied choices', async () => {
   await render()

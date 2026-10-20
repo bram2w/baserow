@@ -1,5 +1,8 @@
 import FilterService from '@baserow/modules/dashboard/services/filter'
-import { shouldResetFilterValues } from '@baserow/modules/dashboard/utils/filter'
+import {
+  filterHasOptions,
+  shouldResetFilterValues,
+} from '@baserow/modules/dashboard/utils/filter'
 import {
   getSavedFilterValues,
   saveFilterValues,
@@ -225,7 +228,7 @@ export const filterActions = {
     { filterId, search = '', more = false, selected, useCache = false } = {}
   ) {
     const filter = state.filters.find((f) => f.id === filterId)
-    if (!filter || filter.mode !== 'dropdown') return
+    if (!filter || !filterHasOptions(filter)) return
     const request = dashboardRequest(state, rootGetters)
     const previous = state.filterOptions[filterId] ?? emptyOptions()
     if (useCache && !search && !more) {
@@ -355,7 +358,7 @@ export const filterActions = {
       await Promise.allSettled([
         dispatch('refreshWidgets'),
         ...state.filters
-          .filter((f) => f.mode === 'dropdown')
+          .filter(filterHasOptions)
           .map((f) => dispatch('fetchFilterOptions', { filterId: f.id })),
       ])
     } finally {
