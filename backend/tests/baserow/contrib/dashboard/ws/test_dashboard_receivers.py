@@ -136,4 +136,5 @@ def test_dashboard_data_source_updated_ws_receiver(
     assert args[0][1]["data_source"]["view_id"] is None
     assert args[0][1]["data_source"]["field_id"] == field.id
     assert args[0][1]["data_source"]["aggregation_type"] == "sum"
+    assert args[0][1]["data_source"]["table_schema"] is None
     assert args[0][2] == "test_websocket_id"

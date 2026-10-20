@@ -38,6 +38,7 @@ class DashboardFilter(
     )
     mode = models.CharField(max_length=32, choices=Mode.choices, default=Mode.DROPDOWN)
     multiple = models.BooleanField(default=False)
+    # TODO ZDM: remove these unused manual-option fields in the next version.
     option_type = models.CharField(
         max_length=32,
         choices=OptionType.choices,

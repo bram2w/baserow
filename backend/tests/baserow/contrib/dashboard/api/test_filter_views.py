@@ -21,7 +21,10 @@ def test_create_filter_and_read_its_configuration(api_client, data_fixture):
         {
             "label": "Team",
             "type": "text",
-            "options": [{"name": "Design", "value": "design"}],
+            "formula_value": {
+                "formula": "get('table.1.*.field_1')",
+                "mode": "advanced",
+            },
             "mode": "dropdown",
             "multiple": True,
         },
@@ -33,7 +36,8 @@ def test_create_filter_and_read_its_configuration(api_client, data_fixture):
     created = response.json()
     assert created["label"] == "Team"
     assert created["dashboard_id"] == dashboard.id
-    assert created["options"] == [{"name": "Design", "value": "design"}]
+    assert created["formula_value"]["formula"] == "get('table.1.*.field_1')"
+    assert "options" not in created and "option_type" not in created
     assert created["multiple"] is True
     assert "value" not in created
     assert api_client.get(url, **headers).json() == [created]
@@ -59,14 +63,17 @@ def test_filter_configuration_can_be_updated_deleted_and_undone(
         item_url,
         {
             "label": "Department",
-            "options": [{"name": "Marketing", "value": "marketing"}],
+            "formula_value": {
+                "formula": "get('table.2.*.field_2')",
+                "mode": "advanced",
+            },
         },
         format="json",
         **headers,
     )
     assert response.status_code == 200
     assert response.json()["label"] == "Department"
-    assert response.json()["options"] == [{"name": "Marketing", "value": "marketing"}]
+    assert response.json()["formula_value"]["formula"] == "get('table.2.*.field_2')"
     assert api_client.delete(item_url, **headers).status_code == 204
     assert api_client.get(url, **headers).json() == []
 
@@ -101,9 +108,7 @@ def test_filters_are_private_to_the_dashboard_workspace(api_client, data_fixture
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize(
-    "values", [{"type": "number"}, {"option_type": "unknown"}, {"mode": "select"}]
-)
+@pytest.mark.parametrize("values", [{"type": "number"}, {"mode": "select"}])
 def test_filter_rejects_unsupported_configuration(api_client, data_fixture, values):
     user, token = data_fixture.create_user_and_token()
     dashboard = data_fixture.create_dashboard_application(user=user)
@@ -119,28 +124,6 @@ def test_filter_rejects_unsupported_configuration(api_client, data_fixture, valu
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
-    "options",
-    [
-        [{"name": "Design", "value": ""}],
-        [{"name": "Design", "value": " "}],
-        [{"name": "", "value": "design"}],
-        [{"name": "Design", "value": "team"}, {"name": "Marketing", "value": "team"}],
-    ],
-)
-def test_options_reject_empty_or_duplicate_values(api_client, data_fixture, options):
-    user, token = data_fixture.create_user_and_token()
-    dashboard = data_fixture.create_dashboard_application(user=user)
-    response = api_client.post(
-        reverse("api:dashboard:filters:list", kwargs={"dashboard_id": dashboard.id}),
-        {"label": "Team", "options": options},
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-    assert response.status_code == 400
-
-
-@pytest.mark.django_db
-@pytest.mark.parametrize(
     "path",
     [
         "dashboard_filter.nope",
@@ -148,6 +131,10 @@ def test_options_reject_empty_or_duplicate_values(api_client, data_fixture, opti
         "dashboard_filter.1.extra",
         "data_source.nope",
         "data_source.0",
+        "table.0",
+        "table.nope",
+        "table.1.result",
+        "table.1.*.field_0",
     ],
 )
 def test_reject_invalid_provider_paths(api_client, data_fixture, path):

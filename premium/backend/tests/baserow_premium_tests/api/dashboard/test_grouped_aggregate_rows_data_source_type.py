@@ -143,6 +143,7 @@ def test_grouped_aggregate_rows_get_dashboard_data_sources(
         "name": "Name 1",
         "order": "1.00000000000000000000",
         "schema": AnyDict(),
+        "table_schema": AnyDict(),
         "table_id": table.id,
         "type": "local_baserow_grouped_aggregate_rows",
         "view_id": None,
@@ -162,6 +163,7 @@ def test_grouped_aggregate_rows_get_dashboard_data_sources(
         "name": "Name 2",
         "order": "2.00000000000000000000",
         "schema": None,
+        "table_schema": None,
         "search_query": BaserowFormulaObject(
             formula="",
             version=BASEROW_FORMULA_VERSION_INITIAL,

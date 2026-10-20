@@ -70,6 +70,62 @@ class DashboardFilterDataProviderType(DataProviderType):
         return [str(mapped_id), *rest]
 
 
+class DashboardTableDataProviderType(DataProviderType):
+    type = "table"
+
+    def is_valid(self, path):
+        if not (
+            path
+            and re.fullmatch(r"[1-9][0-9]*", path[0])
+            and (len(path) == 1 or path[1] == "*" or re.fullmatch(r"[0-9]+", path[1]))
+            and (
+                len(path) < 3
+                or path[2] == "id"
+                or re.fullmatch(r"field_[1-9][0-9]*", path[2])
+            )
+        ):
+            raise BaserowFormulaSyntaxError("The table reference is invalid.")
+
+    def get_data_chunk(self, dispatch_context, path):
+        from baserow.contrib.dashboard.data_sources.records import (
+            DashboardTableRecordsService,
+        )
+
+        self.is_valid(path)
+        if dispatch_context.dashboard is None:
+            raise InvalidRuntimeFormula("The table reference is invalid.")
+        table_id = int(path[0])
+        field_name = path[2] if len(path) > 2 else None
+        cache_key = ("dashboard_table_records", table_id, field_name)
+        if cache_key not in dispatch_context.cache:
+            dispatch_context.cache[cache_key] = (
+                DashboardTableRecordsService().get_records(
+                    dispatch_context.request.user,
+                    dispatch_context.dashboard,
+                    table_id,
+                    field_name,
+                )
+            )
+        records = dispatch_context.cache[cache_key]
+        if len(path) > 1 and path[1] == "*":
+            # Keep empty cells so independently projected labels and values still
+            # refer to the same rows.
+            return [get_value_at_path(record, path[2:]) for record in records]
+        return get_value_at_path(records, path[1:])
+
+    def import_path(self, path, id_mapping, **kwargs):
+        from baserow.contrib.integrations.local_baserow.service_types import (
+            LocalBaserowListRowsUserServiceType,
+        )
+
+        table_id, *rest = path
+        mapped_id = id_mapping.get("database_tables", {}).get(int(table_id), table_id)
+        return [
+            str(mapped_id),
+            *LocalBaserowListRowsUserServiceType().import_path(rest, id_mapping),
+        ]
+
+
 class DashboardDataSourceDataProviderType(DataProviderType):
     type = "data_source"
 
@@ -132,4 +188,5 @@ class DashboardDataSourceDataProviderType(DataProviderType):
 
 dashboard_data_provider_type_registry = DataProviderTypeRegistry()
 dashboard_data_provider_type_registry.register(DashboardFilterDataProviderType())
+dashboard_data_provider_type_registry.register(DashboardTableDataProviderType())
 dashboard_data_provider_type_registry.register(DashboardDataSourceDataProviderType())

@@ -25,38 +25,34 @@ class DashboardFilterOptionsService:
         selected=None,
     ):
         configuration = DashboardFilterService().get_filter(user, filter_id)
-        options = configuration.options
-        if configuration.option_type == configuration.OptionType.FORMULAS:
-            context = DashboardDispatchContext(
-                request,
-                workspace=configuration.dashboard.workspace,
-                dashboard=configuration.dashboard,
-            )
-            try:
-                names, option_values = (
-                    ensure_array(
-                        resolve_formula(
-                            formula, formula_runtime_function_registry, context
-                        )
-                    )
-                    for formula in (
-                        configuration.formula_name,
-                        configuration.formula_value,
-                    )
+        context = DashboardDispatchContext(
+            request,
+            workspace=configuration.dashboard.workspace,
+            dashboard=configuration.dashboard,
+        )
+        try:
+            names, option_values = (
+                ensure_array(
+                    resolve_formula(formula, formula_runtime_function_registry, context)
                 )
-                options = [
-                    {
-                        "value": ensure_string(value),
-                        "name": ensure_string(names[index])
-                        if index < len(names)
-                        else ensure_string(value),
-                    }
-                    for index, value in enumerate(option_values)
-                ]
-            except (BaserowFormulaException, ValidationError) as exc:
-                raise ServiceImproperlyConfiguredDispatchException(
-                    "The option formulas could not be resolved."
-                ) from exc
+                for formula in (
+                    configuration.formula_name,
+                    configuration.formula_value,
+                )
+            )
+            options = [
+                {
+                    "value": ensure_string(value),
+                    "name": ensure_string(names[index])
+                    if index < len(names)
+                    else ensure_string(value),
+                }
+                for index, value in enumerate(option_values)
+            ]
+        except (BaserowFormulaException, ValidationError) as exc:
+            raise ServiceImproperlyConfiguredDispatchException(
+                "The option formulas could not be resolved."
+            ) from exc
         labels = {}
         for option in options:
             if option["value"].strip():
@@ -72,9 +68,11 @@ class DashboardFilterOptionsService:
                 values = values[values.index(after) + 1 :]
             except ValueError:
                 values = []
+        page = values[:limit]
+        available = [value for value in (selected or []) if value in labels]
         return {
-            "results": values[:limit],
-            "labels": labels,
+            "results": page,
+            "labels": {value: labels[value] for value in [*page, *available]},
             "next": values[limit - 1] if len(values) > limit else None,
-            "available": [value for value in (selected or []) if value in labels],
+            "available": available,
         }

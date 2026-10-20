@@ -90,47 +90,7 @@ def test_sources_reference_one_dashboard_filter_without_table_bindings(
 
 
 @pytest.mark.django_db
-def test_manual_options_have_independent_labels_and_values(api_client, data_fixture):
-    user, token = data_fixture.create_user_and_token()
-    dashboard = data_fixture.create_dashboard_application(user=user)
-    headers = {"HTTP_AUTHORIZATION": f"JWT {token}"}
-    response = api_client.post(
-        reverse("api:dashboard:filters:list", kwargs={"dashboard_id": dashboard.id}),
-        {
-            "label": "Country",
-            "option_type": "manual",
-            "options": [
-                {"name": "France", "value": "FR"},
-                {"name": "Belgium", "value": "BE"},
-            ],
-        },
-        format="json",
-        **headers,
-    )
-    assert response.status_code == 200, response.json()
-    saved = response.json()
-    assert saved["options"] == [
-        {"name": "France", "value": "FR"},
-        {"name": "Belgium", "value": "BE"},
-    ]
-    assert "bindings" not in saved and "operator" not in saved
-    response = api_client.post(
-        reverse("api:dashboard:filters:options", kwargs={"filter_id": saved["id"]}),
-        {"limit": 1, "selected": ["BE", "DE"]},
-        format="json",
-        **headers,
-    )
-    assert response.status_code == 200, response.json()
-    assert response.json() == {
-        "results": ["FR"],
-        "labels": {"FR": "France", "BE": "Belgium"},
-        "next": "FR",
-        "available": ["BE"],
-    }
-
-
-@pytest.mark.django_db
-def test_option_formulas_read_source_data_without_filtering_its_table(
+def test_option_formulas_read_widget_table_rows_without_its_aggregation_or_filters(
     api_client, data_fixture
 ):
     user, token = data_fixture.create_user_and_token()
@@ -143,24 +103,29 @@ def test_option_formulas_read_source_data_without_filtering_its_table(
         columns=[("Country", "text"), ("Code", "text")],
         rows=[["France", "FR"], ["Belgium", "BE"]],
     )
-    source = data_fixture.create_dashboard_data_source(
+    source = data_fixture.create_dashboard_local_baserow_aggregate_rows_data_source(
         dashboard=dashboard,
-        service=data_fixture.create_local_baserow_list_rows_service(
-            integration=integration, table=table
-        ),
+        integration=integration,
+        table=table,
+    )
+    data_fixture.create_summary_widget(dashboard=dashboard, data_source=source)
+    data_fixture.create_local_baserow_table_service_filter(
+        service=source.service,
+        field=fields[0],
+        type="equal",
+        value={"formula": "France", "mode": "raw"},
     )
     headers = {"HTTP_AUTHORIZATION": f"JWT {token}"}
     response = api_client.post(
         reverse("api:dashboard:filters:list", kwargs={"dashboard_id": dashboard.id}),
         {
             "label": "Country",
-            "option_type": "formulas",
             "formula_name": {
-                "formula": f"get('data_source.{source.id}.*.{fields[0].db_column}')",
+                "formula": f"get('table.{table.id}.*.{fields[0].db_column}')",
                 "mode": "advanced",
             },
             "formula_value": {
-                "formula": f"get('data_source.{source.id}.*.{fields[1].db_column}')",
+                "formula": f"get('table.{table.id}.*.{fields[1].db_column}')",
                 "mode": "advanced",
             },
         },

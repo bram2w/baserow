@@ -60,7 +60,7 @@ class DashboardFilterOptionsView(APIView):
         operation_id="list_dashboard_filter_options",
         request=DashboardFilterOptionsRequestSerializer,
         responses={200: DashboardFilterOptionsResponseSerializer},
-        description="List manual or formula-based options. Selected-value availability is independent of search and pagination.",
+        description="Resolve options from table data using the configured formulas. Selected-value availability is independent of search and pagination.",
     )
     @transaction.atomic
     @map_exceptions(

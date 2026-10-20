@@ -10,8 +10,6 @@ class DashboardFilterHandler:
         "type",
         "mode",
         "multiple",
-        "option_type",
-        "options",
         "formula_name",
         "formula_value",
     )
