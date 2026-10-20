@@ -1003,3 +1003,118 @@ def test_get_user_source_users_missing_application(
         )
 
     assert response.status_code == HTTP_404_NOT_FOUND
+
+
+def _create_mismatched_integration(data_fixture, kind, user, application):
+    """
+    Returns an integration a `local_baserow` user source in `application` must
+    refuse: one of another type, or one belonging to another builder.
+    """
+
+    if kind == "other_type":
+        return data_fixture.create_smtp_integration(application=application)
+    if kind == "other_builder":
+        other_builder = data_fixture.create_builder_application(
+            workspace=application.workspace
+        )
+        return data_fixture.create_local_baserow_integration(
+            application=other_builder, authorized_user=user
+        )
+    # A builder in a workspace the user isn't a member of.
+    return data_fixture.create_local_baserow_integration()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("kind", ["other_type", "other_builder", "other_workspace"])
+def test_create_user_source_rejects_mismatched_integration(
+    api_client, data_fixture, kind
+):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_builder_application(workspace=workspace)
+    integration = _create_mismatched_integration(data_fixture, kind, user, application)
+
+    url = reverse("api:user_sources:list", kwargs={"application_id": application.id})
+    response = api_client.post(
+        url,
+        {"type": "local_baserow", "name": "test", "integration_id": integration.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"]["integration_id"][0]["code"] == (
+        "invalid_integration"
+    )
+    assert not UserSource.objects.filter(application=application).exists()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("kind", ["other_type", "other_builder", "other_workspace"])
+def test_update_user_source_rejects_mismatched_integration(
+    api_client, data_fixture, kind
+):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_builder_application(workspace=workspace)
+    integration = data_fixture.create_local_baserow_integration(
+        application=application, authorized_user=user
+    )
+    user_source = data_fixture.create_user_source_with_first_type(
+        application=application, integration=integration
+    )
+    other_integration = _create_mismatched_integration(
+        data_fixture, kind, user, application
+    )
+
+    url = reverse("api:user_sources:item", kwargs={"user_source_id": user_source.id})
+    response = api_client.patch(
+        url,
+        {"integration_id": other_integration.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"]["integration_id"][0]["code"] == (
+        "invalid_integration"
+    )
+    user_source.refresh_from_db()
+    assert user_source.integration_id == integration.id
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("operation", ["create", "update"])
+def test_user_source_rejects_unknown_integration(api_client, data_fixture, operation):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_builder_application(workspace=workspace)
+
+    if operation == "create":
+        response = api_client.post(
+            reverse("api:user_sources:list", kwargs={"application_id": application.id}),
+            {"type": "local_baserow", "name": "test", "integration_id": 999999},
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+    else:
+        user_source = data_fixture.create_user_source_with_first_type(
+            application=application
+        )
+        response = api_client.patch(
+            reverse("api:user_sources:item", kwargs={"user_source_id": user_source.id}),
+            {"integration_id": 999999},
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"]["integration_id"][0]["code"] == (
+        "invalid_integration"
+    )

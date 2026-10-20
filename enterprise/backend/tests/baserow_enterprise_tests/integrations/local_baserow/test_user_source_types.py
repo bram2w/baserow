@@ -510,6 +510,66 @@ def test_create_user_source_table_from_other_workspace(api_client, data_fixture)
 
 
 @pytest.mark.django_db
+def test_create_user_source_table_restricted_in_same_workspace(
+    api_client, data_fixture, synced_roles
+):
+    """
+    A builder editor who, through RBAC, has no access to a table in their own
+    workspace cannot point a user source at it. The table being in the same
+    workspace as the integration is not enough; the editor must be able to read
+    it. A forbidden table is reported the same as a missing one.
+    """
+
+    from baserow_enterprise.role.handler import RoleAssignmentHandler
+    from baserow_enterprise.role.models import Role
+
+    admin = data_fixture.create_user()
+    editor, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(users=[admin, editor])
+    application = data_fixture.create_builder_application(workspace=workspace)
+    integration = data_fixture.create_local_baserow_integration(
+        application=application, user=editor
+    )
+
+    # The admin owns a table the editor must not see.
+    database = data_fixture.create_database_application(workspace=workspace)
+    table, fields, rows = data_fixture.build_table(
+        user=admin,
+        database=database,
+        columns=[("Email", "text"), ("Name", "text")],
+        rows=[["secret@victim.io", "Secret"]],
+    )
+
+    RoleAssignmentHandler().assign_role(
+        subject=editor, workspace=workspace, role=Role.objects.get(uid="BUILDER")
+    )
+    RoleAssignmentHandler().assign_role(
+        subject=editor,
+        workspace=workspace,
+        role=Role.objects.get(uid="NO_ACCESS"),
+        scope=database,
+    )
+
+    url = reverse("api:user_sources:list", kwargs={"application_id": application.id})
+    response = api_client.post(
+        url,
+        {
+            "type": "local_baserow",
+            "name": "test",
+            "integration_id": integration.id,
+            "table_id": table.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response.json()["detail"]["table_id"][0]["code"] == "invalid_table"
+    assert not LocalBaserowUserSource.objects.filter(application=application).exists()
+
+
+@pytest.mark.django_db
 def test_create_local_baserow_user_source_w_a_missing_table(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace(user=user)

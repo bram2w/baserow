@@ -1,0 +1,6 @@
+{
+  "agent": {
+    "createApplication": "Create agent",
+    "emptyDescription": "This agent is empty. It cannot perform tasks yet."
+  }
+}
