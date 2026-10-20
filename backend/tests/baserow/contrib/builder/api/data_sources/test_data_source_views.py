@@ -1148,6 +1148,61 @@ def test_dispatch_data_source(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize(
+    "formula,mode",
+    [("France,Belgique", "raw"), ("to_array('France,Belgique')", "advanced")],
+)
+def test_dispatch_text_is_any_of_with_other_source_conditions(
+    api_client, data_fixture, formula, mode
+):
+    user, token = data_fixture.create_user_and_token()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[("Country", "text"), ("Amount", "number")],
+        rows=[["France", 100], ["France", 300], ["Belgique", 200], ["Suisse", 150]],
+    )
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user, page=page, integration=integration, table=table
+    )
+    headers = {"HTTP_AUTHORIZATION": f"JWT {token}"}
+    response = api_client.patch(
+        reverse("api:builder:data_source:item", kwargs={"data_source_id": source.id}),
+        {
+            "filters": [
+                {
+                    "field": fields[0].id,
+                    "type": "text_is_any_of",
+                    "value": {"formula": formula, "mode": mode},
+                },
+                {
+                    "field": fields[1].id,
+                    "type": "lower_than",
+                    "value": {"formula": "250", "mode": "raw"},
+                },
+            ]
+        },
+        format="json",
+        **headers,
+    )
+    assert response.status_code == 200, response.json()
+    response = api_client.post(
+        reverse(
+            "api:builder:data_source:dispatch", kwargs={"data_source_id": source.id}
+        ),
+        {},
+        format="json",
+        **headers,
+    )
+    assert response.status_code == 200, response.json()
+    assert [row["id"] for row in response.json()["results"]] == [rows[0].id, rows[2].id]
+
+
+@pytest.mark.django_db
 def test_dispatch_data_source_with_refinements_referencing_trashed_field(
     api_client, data_fixture
 ):

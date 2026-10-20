@@ -72,7 +72,88 @@ def test_source_condition_uses_builder_filter_semantics(
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("operator", ["equal", "not_equal", "contains", "contains_not"])
+@pytest.mark.parametrize(
+    "values,expected",
+    [
+        (["Design", "Marketing"], "5"),
+        (["Design"], "1"),
+        (["Design", "Design"], "1"),
+        ([], "21"),
+        (["Unknown"], None),
+    ],
+)
+def test_multiple_dropdown_can_match_any_selected_text(
+    api_client, filtered_dashboard, values, expected
+):
+    user, token, widget, selection, condition = filtered_dashboard
+    DashboardFilterService().update_filter(
+        user, selection.id, mode="dropdown", multiple=True
+    )
+    response = api_client.patch(
+        reverse(
+            "api:dashboard:data_sources:item",
+            kwargs={"data_source_id": widget.specific.data_source_id},
+        ),
+        {
+            "filters": [
+                {
+                    "field": condition.field_id,
+                    "type": "text_is_any_of",
+                    "value": condition.value,
+                }
+            ]
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == 200, response.json()
+    response = api_client.post(
+        reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": widget.id}),
+        {"filters": [{"filter_id": selection.id, "values": values}]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == 200, response.json()
+    assert response.json() == {"result": expected}
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "option",
+    [
+        "Design, Europe",
+        'Design "Europe"',
+        "Design\\Europe",
+        " Design ",
+        "Design\nEurope",
+    ],
+)
+def test_multiple_text_condition_preserves_each_selected_value(
+    api_client, filtered_dashboard, option
+):
+    user, token, widget, selection, condition = filtered_dashboard
+    DashboardFilterService().update_filter(
+        user, selection.id, mode="dropdown", multiple=True
+    )
+    condition.type = "text_is_any_of"
+    condition.save()
+    field_name = condition.field.db_column
+    model = condition.field.table.get_model()
+    model.objects.filter(**{field_name: "Design"}).update(**{field_name: option})
+    response = api_client.post(
+        reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": widget.id}),
+        {"filters": [{"filter_id": selection.id, "values": [option, "Marketing"]}]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == 200, response.json()
+    assert response.json() == {"result": "5"}
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "operator", ["equal", "not_equal", "contains", "contains_not", "text_is_any_of"]
+)
 def test_deleting_dashboard_filter_restores_unfiltered_widget_data(
     api_client, filtered_dashboard, operator
 ):

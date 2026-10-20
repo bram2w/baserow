@@ -1,8 +1,11 @@
+import csv
 import datetime as datetime_module
+import re
 import zoneinfo
 from collections import defaultdict
 from datetime import date, datetime, timedelta
 from enum import Enum
+from io import StringIO
 from types import MappingProxyType
 from typing import Any, Dict, NamedTuple, Optional, Tuple, Union
 
@@ -134,6 +137,55 @@ class EqualViewFilterType(ViewFilterType):
 
 class NotEqualViewFilterType(NotViewFilterTypeMixin, EqualViewFilterType):
     type = "not_equal"
+
+
+class TextIsAnyOfViewFilterType(ViewFilterType):
+    """Match any exact text value in a comma-separated list, with CSV quoting."""
+
+    type = "text_is_any_of"
+    # A single CSV record, also parsed by the frontend TextIsAnyOfViewFilterType.
+    # Matching tokens avoids csv.reader's global limit on long-text cell sizes.
+    value_pattern = re.compile(r'("(?:[^"]|"")*"|[^",\r\n]*)(?:,|$)')
+    compatible_field_types = [
+        TextFieldType.type,
+        LongTextFieldType.type,
+        URLFieldType.type,
+        EmailFieldType.type,
+        PhoneNumberFieldType.type,
+        FormulaFieldType.compatible_with_formula_types(
+            BaserowFormulaTextType.type,
+            BaserowFormulaCharType.type,
+            BaserowFormulaURLType.type,
+        ),
+    ]
+
+    def prepare_runtime_value(self, value):
+        if not isinstance(value, list):
+            return super().prepare_runtime_value(value)
+        # Preserve each selected value, including commas, quotes and whitespace.
+        serialize = super().prepare_runtime_value
+        output = StringIO()
+        csv.writer(output, quoting=csv.QUOTE_ALL).writerow(
+            [serialize(item) for item in value]
+        )
+        return output.getvalue().removesuffix("\r\n")
+
+    def get_filter(self, field_name, value, model_field, field):
+        if not value:
+            return Q()
+        values = []
+        position = 0
+        while position < len(value):
+            match = self.value_pattern.match(value, position)
+            if match is None or match.end() == position:
+                return self.default_filter_on_exception()
+            cell = match[1]
+            if cell.startswith('"'):
+                cell = cell[1:-1].replace('""', '"')
+            if cell.strip():
+                values.append(cell)
+            position = match.end()
+        return Q(**{f"{field_name}__in": values}) if values else Q()
 
 
 class FilenameContainsViewFilterType(ViewFilterType):

@@ -508,11 +508,13 @@ class DatabaseConfig(AppConfig):
             SingleSelectIsNoneOfViewFilterType,
             SingleSelectNotEqualViewFilterType,
             StartsWithViewFilterType,
+            TextIsAnyOfViewFilterType,
             UserIsNotViewFilterType,
             UserIsViewFilterType,
         )
 
         view_filter_type_registry.register(EqualViewFilterType())
+        view_filter_type_registry.register(TextIsAnyOfViewFilterType())
         view_filter_type_registry.register(NotEqualViewFilterType())
         view_filter_type_registry.register(FilenameContainsViewFilterType())
         (view_filter_type_registry.register(FilesLowerThanViewFilterType()),)

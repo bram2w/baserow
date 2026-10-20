@@ -9,7 +9,6 @@ from baserow.contrib.database.fields.field_filters import (
 from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.core.formula import resolve_formula
 from baserow.core.formula.registries import formula_runtime_function_registry
-from baserow.core.formula.validator import ensure_string
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.services.exceptions import (
     ServiceImproperlyConfiguredDispatchException,
@@ -55,7 +54,7 @@ class LocalBaserowServiceGroupedFiltersAdapter(GroupedFiltersAdapter):
         view_filter_type = view_filter_type_registry.get(service_filter.type)
 
         try:
-            resolved_value = ensure_string(
+            resolved_value = view_filter_type.prepare_runtime_value(
                 resolve_formula(
                     service_filter.value,
                     formula_runtime_function_registry,

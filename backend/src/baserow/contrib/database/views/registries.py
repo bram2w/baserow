@@ -1197,6 +1197,13 @@ class ViewFilterType(Instance):
 
         return django_models.Q(pk__in=[])
 
+    def prepare_runtime_value(self, value: Any) -> str:
+        """Convert a resolved service formula into this filter's string format."""
+
+        from baserow.core.formula.validator import ensure_string
+
+        return ensure_string(value)
+
     def get_filter(self, field_name, value, model_field, field) -> OptionallyAnnotatedQ:
         """
         Should return either a Q object or and AnnotatedQ containing the requested
