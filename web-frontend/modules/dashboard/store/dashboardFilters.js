@@ -257,6 +257,8 @@ export const filterActions = {
         })
         return
       }
+      // Keep a failed preload visible; Retry and Refresh explicitly retry it.
+      if (previous.error) return
     }
     if (more && (previous.loading || previous.next === null)) return
     commit('INVALIDATE_FILTER_OPTIONS', filterId)

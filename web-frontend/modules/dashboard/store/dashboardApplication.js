@@ -654,21 +654,51 @@ export const actions = {
       return
     }
 
-    let filters
-    do {
-      filters = await dispatch('fetchFilters')
-    } while (filters === undefined && isDashboardRequestCurrent(state, request))
+    const fetchCurrentFilters = async () => {
+      let filters
+      do {
+        filters = await dispatch('fetchFilters')
+      } while (
+        filters === undefined &&
+        isDashboardRequestCurrent(state, request)
+      )
+    }
+    await fetchCurrentFilters()
     if (!isDashboardRequestCurrent(state, request)) return
 
-    // Render widgets while their data sources are still loading.
-    commit('SET_LOADING', false)
-    let dataSources
-    do {
-      dataSources = await dispatch('fetchNewDataSources', dashboardId)
-    } while (
-      dataSources === undefined &&
-      isDashboardRequestCurrent(state, request)
-    )
+    const loadOptions = async () => {
+      while (isDashboardRequestCurrent(state, request)) {
+        const generation = state.filterFetchGeneration
+        await Promise.all(
+          state.filters
+            .filter((filter) => filter.mode === 'dropdown')
+            .map((filter) =>
+              dispatch('fetchFilterOptions', {
+                filterId: filter.id,
+                useCache: true,
+              })
+            )
+        )
+        if (!isDashboardRequestCurrent(state, request)) return
+        if (generation === state.filterFetchGeneration) {
+          // Choices are ready at first click; widgets can still finish loading.
+          commit('SET_LOADING', false)
+          return
+        }
+        // A concurrent configuration change invalidated the choices.
+        await fetchCurrentFilters()
+      }
+    }
+    const loadDataSources = async () => {
+      let dataSources
+      do {
+        dataSources = await dispatch('fetchNewDataSources', dashboardId)
+      } while (
+        dataSources === undefined &&
+        isDashboardRequestCurrent(state, request)
+      )
+    }
+    await Promise.all([loadOptions(), loadDataSources()])
     if (!isDashboardRequestCurrent(state, request)) {
       return
     }

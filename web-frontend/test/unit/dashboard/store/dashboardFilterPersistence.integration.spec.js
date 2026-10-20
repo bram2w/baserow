@@ -43,7 +43,7 @@ describe('dashboard filter persistence', () => {
         .onPost(`/dashboard/widgets/${dashboardId}/dispatch/`)
         .reply(200, { result: 10 })
     }
-    mock.onPost('/dashboard/filters/5/options/').reply(200, {
+    mock.onPost(/\/dashboard\/filters\/[56]\/options\//).reply(200, {
       results: ['Design', 'Sales'],
       next: null,
       available: ['Design', 'Sales'],
@@ -103,6 +103,13 @@ describe('dashboard filter persistence', () => {
       expect(JSON.parse(requests[0].data)).toEqual({
         filters: [{ filter_id: 5, values: expected }],
       })
+      expect(
+        mock.history.post
+          .filter(({ url }) => url.endsWith('/options/'))
+          .map(({ data }) => JSON.parse(data))
+      ).toEqual(
+        config.mode === 'input' ? [] : [{ search: '', selected: expected }]
+      )
     }
   )
 
@@ -307,7 +314,11 @@ describe('dashboard filter persistence', () => {
       expect(wrapper.get('.dashboard-filter__value').text()).toBe(
         'dashboardFilter.choose'
       )
-      expect(JSON.parse(mock.history.post[0].data)).toEqual({ filters: [] })
+      expect(
+        JSON.parse(
+          mock.history.post.find(({ url }) => url.endsWith('/dispatch/')).data
+        )
+      ).toEqual({ filters: [] })
     }
   )
 

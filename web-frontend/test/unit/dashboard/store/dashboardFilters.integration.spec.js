@@ -55,6 +55,10 @@ describe('dashboard text filters', () => {
       dashboardId,
       forEditing: false,
     })
+    // These cases start after a configuration refresh invalidates the cache.
+    // Initial preloading is covered in dashboardFilterPreload.integration.spec.
+    await store.dispatch('dashboardApplication/fetchFilters')
+    mock.resetHistory()
   })
   afterEach(async () => {
     await testApp.afterEach()
