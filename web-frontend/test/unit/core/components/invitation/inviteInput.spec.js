@@ -46,7 +46,7 @@ const pickable = {
   color: 'blue',
 }
 
-async function mountInput(props = {}) {
+async function mountInput(props = {}, batchLimit) {
   return await mountSuspended(InviteInput, {
     props: {
       workspace,
@@ -55,6 +55,13 @@ async function mountInput(props = {}) {
       ...props,
     },
     global: {
+      mocks: {
+        $config: { public: { baserowInvitationBatchLimit: batchLimit } },
+        $t: (key, params) =>
+          key === 'inviteInput.batchLimitExceeded'
+            ? `${key}: ${params.limit}`
+            : key,
+      },
       stubs: {
         WorkspaceRoleSelector: { template: '<div class="role"></div>' },
       },
@@ -83,6 +90,64 @@ function resultsOpen(wrapper) {
 function paste(input, text) {
   return input.trigger('paste', { clipboardData: { getData: () => text } })
 }
+
+test('limits a pasted batch to five new email addresses by default', async () => {
+  const wrapper = await mountInput()
+  try {
+    const input = wrapper.find('input')
+    const button = wrapper.find('.invite-input__row button')
+    await paste(
+      input,
+      'one@x.com two@x.com three@x.com four@x.com five@x.com six@x.com'
+    )
+
+    expect(chips(wrapper)).toHaveLength(6)
+    expect(wrapper.find('[role="alert"]').text()).toBe(
+      'inviteInput.batchLimitExceeded: 5'
+    )
+    expect(button.attributes('disabled')).toBeDefined()
+    await button.trigger('click')
+    expect(wrapper.emitted('add')).toBeUndefined()
+
+    await wrapper.findAll('.invite-input__chip-remove')[5].trigger('click')
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+    expect(button.attributes('disabled')).toBeUndefined()
+    await button.trigger('click')
+    expect(wrapper.emitted('add')[0][0]).toHaveLength(5)
+  } finally {
+    wrapper.unmount()
+  }
+})
+
+test('uses the configured limit for picked and typed emails without counting existing subjects or duplicates', async () => {
+  const wrapper = await mountInput({ options: [pickable] }, '2')
+  try {
+    const input = wrapper.find('input')
+    const button = wrapper.find('.invite-input__row button')
+    await paste(input, 'one@x.com two@x.com foo@bar.com')
+    await input.setValue('ONE@x.com')
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+    expect(button.attributes('disabled')).toBeUndefined()
+
+    await input.setValue('three@x.com')
+    expect(wrapper.find('[role="alert"]').text()).toBe(
+      'inviteInput.batchLimitExceeded: 2'
+    )
+    expect(button.attributes('disabled')).toBeDefined()
+    await button.trigger('click')
+    expect(wrapper.emitted('add')).toBeUndefined()
+
+    await input.setValue('')
+    await button.trigger('click')
+    expect(wrapper.emitted('add')[0][0].map(({ key }) => key)).toEqual([
+      'email:one@x.com',
+      'email:two@x.com',
+      'auth.User:9',
+    ])
+  } finally {
+    wrapper.unmount()
+  }
+})
 
 test('only takes email addresses when there is nothing to pick', async () => {
   const wrapper = await mountInput()

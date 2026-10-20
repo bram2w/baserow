@@ -1,5 +1,10 @@
 <template>
   <div class="invite-input">
+    <p v-if="batchLimitExceeded" class="invite-input__batch-error" role="alert">
+      {{
+        $t('inviteInput.batchLimitExceeded', { limit: invitationBatchLimit })
+      }}
+    </p>
     <div ref="row" class="invite-input__row">
       <div class="invite-input__field" @click="focus">
         <span
@@ -38,7 +43,12 @@
       />
       <Button
         type="primary"
-        :disabled="validSelected.length === 0 || hasInvalidEmails || disabled"
+        :disabled="
+          validSelected.length === 0 ||
+          hasInvalidEmails ||
+          batchLimitExceeded ||
+          disabled
+        "
         @click="submit"
       >
         <slot
@@ -261,6 +271,26 @@ export default {
     }
   },
   computed: {
+    invitationBatchLimit() {
+      const limit = Number(this.$config.public.baserowInvitationBatchLimit)
+      return Number.isInteger(limit) && limit > 0 ? limit : 5
+    },
+    /**
+     * Count distinct new addresses, including those still being typed. Known
+     * subjects and pending invitations are not new email invitations.
+     */
+    batchLimitExceeded() {
+      const emails = [
+        ...this.selected
+          .filter((item) => item.type === 'email')
+          .map(({ email }) => email),
+        ...this.queryEmails,
+      ].filter((email) => !this.optionWithEmail(email))
+      return (
+        new Set(emails.map((email) => email.toLowerCase())).size >
+        this.invitationBatchLimit
+      )
+    },
     placeholderText() {
       return this.placeholder ?? this.$t('inviteInput.placeholder')
     },
@@ -526,6 +556,7 @@ export default {
       if (
         this.validSelected.length === 0 ||
         this.hasInvalidEmails ||
+        this.batchLimitExceeded ||
         this.disabled
       ) {
         return

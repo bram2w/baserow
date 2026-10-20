@@ -59,6 +59,7 @@ export default defineNuxtModule({
         publicBackendUrl: 'http://localhost:8000',
         publicWebFrontendUrl: 'http://localhost:3000',
         initialTableDataLimit: null,
+        baserowInvitationBatchLimit: 5,
         hoursUntilTrashPermanentlyDeleted: 24 * 3,
         disableAnonymousPublicViewWsConnections: '',
         baserowMaxImportFileSizeMb: 512,

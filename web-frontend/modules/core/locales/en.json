@@ -410,6 +410,7 @@
     "pendingNoWorkspaceRole": "No workspace role"
   },
   "inviteInput": {
+    "batchLimitExceeded": "You can invite up to {limit} email addresses at once. Remove extra addresses to continue.",
     "placeholder": "Type or paste email addresses",
     "invite": "Invite",
     "inviteAs": "Invite {count} as {role}",
