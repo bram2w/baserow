@@ -91,9 +91,27 @@ function getGroupByValue({
     return $t('chart.other')
   }
 
+  if (value === null || value === undefined) {
+    return $t('chart.empty')
+  }
+
   if ($registry.exists('chartFieldFormatting', fieldType)) {
     const fieldFormatter = $registry.get('chartFieldFormatting', fieldType)
     return fieldFormatter.formatGroupByFieldValue(serializedField, value)
+  }
+
+  if (
+    $registry.get('field', fieldType).isEmptyForGrouping(serializedField, value)
+  ) {
+    return $t('chart.empty')
+  }
+
+  if (
+    Array.isArray(value) &&
+    ['link_row', 'multiple_collaborators'].includes(fieldType)
+  ) {
+    const serviceType = getServiceType({ dataSource, $registry })
+    return serviceType.getRecordName(dataSource, item)
   }
 
   if (value === true) {

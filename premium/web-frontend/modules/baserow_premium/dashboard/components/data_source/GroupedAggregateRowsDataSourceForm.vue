@@ -109,6 +109,7 @@
       :values="values"
       :table-fields="tableFields"
       :group-count-override="values.aggregation_group_bys.length"
+      :group-title-override="groupTitleOverride"
       :sort-count-override="values.aggregation_sorts.length"
       show-filter
       show-group
@@ -119,6 +120,7 @@
           :aggregation-group-bys="values.aggregation_group_bys"
           :table-fields="tableFields"
           @value-changed="onGroupByUpdated($event)"
+          @mode-changed="onGroupByModeUpdated($event)"
         >
         </AggregationGroupByForm>
       </template>
@@ -213,6 +215,18 @@ export default {
     }
   },
   computed: {
+    groupTitleOverride() {
+      const groupBy = this.values.aggregation_group_bys[0]
+      if (!groupBy) return null
+      const field = this.tableFields.find(
+        (field) => field.id === groupBy.field_id
+      )
+      const name = field
+        ? field.name
+        : this.$t('aggregationGroupByForm.groupByRowId')
+      return this.$t('aggregationGroupByForm.groupedByField', { field: name })
+    },
+
     computedTableId: {
       get() {
         return this.v$.values.table_id.$model
@@ -437,6 +451,13 @@ export default {
       updatedAggregationSeries[index] = aggregationSeriesValues
       this.$emit('values-changed', {
         aggregation_series: updatedAggregationSeries,
+      })
+    },
+    onGroupByModeUpdated(mode) {
+      this.$emit('values-changed', {
+        aggregation_group_bys: this.values.aggregation_group_bys.map(
+          (groupBy) => ({ ...groupBy, mode })
+        ),
       })
     },
     onGroupByUpdated(groupBy) {

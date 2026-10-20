@@ -43,6 +43,7 @@
       :values="values"
       :table-fields="tableFields"
       :group-count-override="values.aggregation_group_bys.length"
+      :group-title-override="groupTitleOverride"
       :sort-count-override="values.aggregation_sorts.length"
       show-filter
       show-group
@@ -53,6 +54,7 @@
           :aggregation-group-bys="values.aggregation_group_bys"
           :table-fields="tableFields"
           @value-changed="onGroupByUpdated($event)"
+          @mode-changed="onGroupByModeUpdated($event)"
         />
       </template>
       <template #sort-form>
@@ -113,6 +115,18 @@ export default {
     }
   },
   computed: {
+    groupTitleOverride() {
+      const groupBy = this.values.aggregation_group_bys[0]
+      if (!groupBy) return null
+      const field = this.tableFields.find(
+        (field) => field.id === groupBy.field_id
+      )
+      const name = field
+        ? field.name
+        : this.$t('aggregationGroupByForm.groupByRowId')
+      return this.$t('aggregationGroupByForm.groupedByField', { field: name })
+    },
+
     primaryTableField() {
       return this.tableFields.find((item) => item.primary === true)
     },
@@ -226,6 +240,11 @@ export default {
       }
       this.values.aggregation_series.splice(index, 1, cleaned)
       this.removeInvalidSorts()
+    },
+    onGroupByModeUpdated(mode) {
+      this.values.aggregation_group_bys = this.values.aggregation_group_bys.map(
+        (groupBy) => ({ ...groupBy, mode })
+      )
     },
     onGroupByUpdated(groupBy) {
       const aggregationGroupBys = []

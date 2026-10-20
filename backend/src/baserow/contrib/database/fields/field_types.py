@@ -2164,23 +2164,49 @@ class DateFieldType(FieldType):
             value = value.replace(second=0, microsecond=0)
         return value
 
+    def get_group_by_expression(self, field, field_name, base_queryset):
+        """Use the same minute precision for date-time groups on every surface."""
+        # Ignore seconds and microseconds so grouped-data keys match the per-row
+        # metadata and drilling into a group matches its rows. Gate on the field,
+        # not a concrete value: grouped-data queries build this expression without
+        # one. Date-only fields have no time component to truncate.
+        if field.date_include_time:
+            return DateTrunc(
+                "minute", field_name, output_field=models.DateTimeField(null=True)
+            )
+        return super().get_group_by_expression(field, field_name, base_queryset)
+
+    def get_group_by_order(
+        self,
+        field,
+        field_name,
+        order_direction,
+        sort_type,
+        table_model=None,
+        group_by_expression=None,
+    ):
+        """
+        Sort on the normalized group key, never the original timestamp.
+
+        Database grouping shadows the field column with its normalized expression.
+        Other callers can supply their own normalized expression explicitly.
+        """
+        expression = (
+            group_by_expression if group_by_expression is not None else F(field_name)
+        )
+        order = (
+            expression.asc(nulls_first=True)
+            if order_direction == "ASC"
+            else expression.desc(nulls_last=True)
+        )
+        return OptionallyAnnotatedOrderBy(order=order)
+
     def get_group_by_field_filters_and_annotations(
         self, field, field_name, base_queryset, value, cte, rows
     ):
-        filters = {field_name: value}
-        annotations = {}
-
-        # Shadow the column with a minute-truncated annotation so seconds and
-        # microseconds are ignored when grouping. Gate on the field, not the value,
-        # so the grouped-data query (which builds the shadow without a concrete
-        # value) truncates group keys the same way the per-row metadata query does;
-        # otherwise datetime groups key on the raw timestamp and drilling into them
-        # matches no rows. Date-only fields have no time component to truncate.
-        if field.date_include_time:
-            annotations[field_name] = DateTrunc(
-                "minute", field_name, output_field=models.DateTimeField(null=True)
-            )
-        return filters, annotations
+        return {field_name: value}, {
+            field_name: self.get_group_by_expression(field, field_name, base_queryset)
+        }
 
 
 class CreatedOnLastModifiedBaseFieldType(ReadOnlyFieldType, DateFieldType):
@@ -7857,6 +7883,12 @@ class MultipleCollaboratorsFieldType(
         if len(export_value) == 0:
             return ""
         return ", ".join(export_value)
+
+    def get_group_by_label(self, value, field_object):
+        """Use collaborator names without exposing email addresses in group labels."""
+        if hasattr(value, "all"):
+            value = value.all()
+        return ", ".join(user.first_name for user in (value or []))
 
     def serialize_metadata_for_row_history(
         self,
