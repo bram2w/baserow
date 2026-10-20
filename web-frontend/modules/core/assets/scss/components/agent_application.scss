@@ -454,3 +454,14 @@
     padding: 0 16px 16px;
   }
 }
+
+@container (max-width: 480px) {
+  .agent-conversations {
+    flex: 0 1 160px;
+    min-width: 0;
+  }
+
+  .agent-chat {
+    min-width: 0;
+  }
+}

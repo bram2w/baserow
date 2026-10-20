@@ -126,7 +126,9 @@
           </Alert>
           <Alert
             v-if="state.currentDraft?.error"
+            id="agent-chat-send-error"
             type="error"
+            role="alert"
             class="margin-bottom-2"
           >
             {{
@@ -147,6 +149,9 @@
               :readonly="Boolean(state.currentDraft?.submission)"
               :placeholder="$t('agent.messagePlaceholder')"
               :aria-label="$t('agent.messagePlaceholder')"
+              :aria-describedby="
+                state.currentDraft?.error ? 'agent-chat-send-error' : undefined
+              "
               auto-expandable
               :min-rows="1"
               :max-rows="6"

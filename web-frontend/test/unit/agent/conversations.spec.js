@@ -48,8 +48,8 @@ describe('Agent conversations', () => {
     mockConversations(
       testApp,
       page([
-        conversation('thread-a', 'Thread A'),
-        conversation('thread-b', 'Thread B'),
+        conversation('conversation-a', 'Conversation A'),
+        conversation('conversation-b', 'Conversation B'),
       ])
     )
 
@@ -103,6 +103,38 @@ describe('Agent conversations', () => {
     await flushPromises()
 
     expect(sentBodies(testApp).map(({ content }) => content)).toEqual(['Hello'])
+  })
+
+  test('keeps the unsent draft when the session token is refreshed', async () => {
+    const user = { id: 1, username: 'member@example.com' }
+    testApp.authenticate(user)
+    const wrapper = await mount()
+    await composer(wrapper).setValue('Unsent draft')
+
+    testApp.authenticate({ ...user })
+    await flushPromises()
+
+    expect(composer(wrapper).element.value).toBe('Unsent draft')
+  })
+
+  test('lets a rejected message be edited and sent with new IDs', async () => {
+    testApp.dontFailOnErrorResponses()
+    mockStartConversation(
+      testApp,
+      [400, { error: 'ERROR_REQUEST_BODY_VALIDATION' }],
+      acceptConversation
+    )
+    const wrapper = await mount()
+    await sendMessage(wrapper, 'Rejected')
+
+    expect(composer(wrapper).element.readOnly).toBe(false)
+    await composer(wrapper).setValue('Accepted')
+    await send(wrapper).trigger('click')
+    await flushPromises()
+
+    const [rejected, accepted] = sentBodies(testApp)
+    expect(accepted.content).toBe('Accepted')
+    expect(accepted.message_uuid).not.toBe(rejected.message_uuid)
   })
 
   test('retries a failed first message with the same content and IDs', async () => {
@@ -174,11 +206,14 @@ describe('Agent conversations', () => {
   test('shows a Viewer their history without a composer', async () => {
     allowed.value = (operation) =>
       withoutConfiguration(operation) && !operation.includes('create')
-    mockConversations(testApp, page([conversation('thread-a', 'Thread A')]))
-    mockMessages(testApp, 'thread-a', page([message('a1', 'Earlier')]))
+    mockConversations(
+      testApp,
+      page([conversation('conversation-a', 'Conversation A')])
+    )
+    mockMessages(testApp, 'conversation-a', page([message('a1', 'Earlier')]))
     const wrapper = await mount()
 
-    await selectConversation(wrapper, 'Thread A')
+    await selectConversation(wrapper, 'Conversation A')
 
     expect(messages(wrapper)).toEqual(['Earlier'])
     expect(composerExists(wrapper)).toBe(false)
@@ -187,15 +222,18 @@ describe('Agent conversations', () => {
   })
 
   test('keeps history and the hidden draft until an incomplete configuration is repaired', async () => {
-    mockConversations(testApp, page([conversation('thread-a', 'Thread A')]))
-    mockMessages(testApp, 'thread-a', page([message('a1', 'Earlier')]))
+    mockConversations(
+      testApp,
+      page([conversation('conversation-a', 'Conversation A')])
+    )
+    mockMessages(testApp, 'conversation-a', page([message('a1', 'Earlier')]))
     mockSaves(
       testApp,
       incompleteConfiguration('instructions'),
       completeConfiguration()
     )
     const wrapper = await mount()
-    await selectConversation(wrapper, 'Thread A')
+    await selectConversation(wrapper, 'Conversation A')
     await composer(wrapper).setValue('Keep my unsent message')
     await openSection(wrapper, 'agent.instructions')
 
@@ -211,12 +249,15 @@ describe('Agent conversations', () => {
   test('lets a member continue a conversation without permission to start one', async () => {
     allowed.value = (operation) =>
       operation !== 'agent_application.create_conversation'
-    mockConversations(testApp, page([conversation('thread-a', 'Thread A')]))
-    mockMessages(testApp, 'thread-a', page([message('a1', 'Earlier')]))
+    mockConversations(
+      testApp,
+      page([conversation('conversation-a', 'Conversation A')])
+    )
+    mockMessages(testApp, 'conversation-a', page([message('a1', 'Earlier')]))
     const wrapper = await mount()
     expect(composerExists(wrapper)).toBe(false)
 
-    await selectConversation(wrapper, 'Thread A')
+    await selectConversation(wrapper, 'Conversation A')
 
     expect(composerExists(wrapper)).toBe(true)
   })
@@ -238,26 +279,26 @@ describe('Agent conversations', () => {
 
   test('keeps drafts per conversation and a late send in its own conversation', async () => {
     twoConversations()
-    mockMessages(testApp, 'thread-a', page([message('a1', 'Existing A')]))
-    mockMessages(testApp, 'thread-b', page([message('b1', 'Existing B')]))
+    mockMessages(testApp, 'conversation-a', page([message('a1', 'Existing A')]))
+    mockMessages(testApp, 'conversation-b', page([message('b1', 'Existing B')]))
     const write = deferredReply()
-    mockSendMessage(testApp, 'thread-a', write.reply)
+    mockSendMessage(testApp, 'conversation-a', write.reply)
     const wrapper = await mount()
-    await selectConversation(wrapper, 'Thread A')
+    await selectConversation(wrapper, 'Conversation A')
     await sendMessage(wrapper, 'New A')
-    await selectConversation(wrapper, 'Thread B')
+    await selectConversation(wrapper, 'Conversation B')
     await composer(wrapper).setValue('Draft B')
 
     write.resolve(200, {
-      conversation: conversation('thread-a', 'Thread A'),
+      conversation: conversation('conversation-a', 'Conversation A'),
       message: message(sentBodies(testApp)[0].uuid, 'New A'),
     })
     await flushPromises()
     expect(messages(wrapper)).toEqual(['Existing B'])
-    await selectConversation(wrapper, 'Thread A')
+    await selectConversation(wrapper, 'Conversation A')
     expect(messages(wrapper)).toEqual(['Existing A', 'New A'])
     expect(composer(wrapper).element.value).toBe('')
-    await selectConversation(wrapper, 'Thread B')
+    await selectConversation(wrapper, 'Conversation B')
 
     expect(composer(wrapper).element.value).toBe('Draft B')
   })
@@ -268,19 +309,19 @@ describe('Agent conversations', () => {
       testApp,
       page(
         [
-          conversation('thread-new', 'Newest'),
-          conversation('thread-a', 'Thread A'),
+          conversation('conversation-new', 'Newest'),
+          conversation('conversation-a', 'Conversation A'),
         ],
         'next'
       ),
       page([
-        conversation('thread-a', 'Thread A'),
-        conversation('thread-b', 'Thread B'),
+        conversation('conversation-a', 'Conversation A'),
+        conversation('conversation-b', 'Conversation B'),
       ])
     )
     mockMessages(
       testApp,
-      'thread-a',
+      'conversation-a',
       [500, {}],
       page([message('a2', 'Newer A')], 'next'),
       [500, {}],
@@ -291,10 +332,10 @@ describe('Agent conversations', () => {
     await flushPromises()
     expect(conversationTitles(wrapper)).toEqual([
       'Newest',
-      'Thread A',
-      'Thread B',
+      'Conversation A',
+      'Conversation B',
     ])
-    await selectConversation(wrapper, 'Thread A')
+    await selectConversation(wrapper, 'Conversation A')
     await composer(wrapper).setValue('Hello')
     expect(send(wrapper).element.disabled).toBe(true)
     await wrapper.get('.agent-chat__history .alert button').trigger('click')
@@ -318,13 +359,17 @@ describe('Agent conversations', () => {
       const older = deferredReply()
       mockMessages(
         testApp,
-        'thread-a',
+        'conversation-a',
         page([message('a2', 'Newer A')], 'next'),
         older.reply
       )
-      mockMessages(testApp, 'thread-b', page([message('b1', 'Current B')]))
+      mockMessages(
+        testApp,
+        'conversation-b',
+        page([message('b1', 'Current B')])
+      )
       const wrapper = await mount()
-      await selectConversation(wrapper, 'Thread A')
+      await selectConversation(wrapper, 'Conversation A')
       const history = wrapper.get('.agent-chat__history').element
       let scrollHeight = 1000
       let scrollTop = 400
@@ -339,12 +384,12 @@ describe('Agent conversations', () => {
       await flushPromises()
       if (selection !== 'same') {
         scrollHeight = 600
-        await selectConversation(wrapper, 'Thread B')
+        await selectConversation(wrapper, 'Conversation B')
         history.scrollTop = 200
       }
       if (selection === 'back') {
         scrollHeight = 1000
-        await selectConversation(wrapper, 'Thread A')
+        await selectConversation(wrapper, 'Conversation A')
         history.scrollTop = 300
       }
 
@@ -395,7 +440,9 @@ describe('Agent conversations', () => {
 
     list.resolve(
       200,
-      page([conversation('older-thread', 'Existing', '2026-10-13T10:00:00Z')])
+      page([
+        conversation('older-conversation', 'Existing', '2026-10-13T10:00:00Z'),
+      ])
     )
     await flushPromises()
 
@@ -408,13 +455,24 @@ describe('Agent conversations', () => {
   })
 
   test('moves a conversation to the top after sending in it', async () => {
-    const old = conversation('thread-a', 'Thread A', '2026-10-12T10:00:00Z')
+    const old = conversation(
+      'conversation-a',
+      'Conversation A',
+      '2026-10-12T10:00:00Z'
+    )
     mockConversations(
       testApp,
-      page([conversation('thread-b', 'Thread B', '2026-10-13T10:00:00Z'), old])
+      page([
+        conversation(
+          'conversation-b',
+          'Conversation B',
+          '2026-10-13T10:00:00Z'
+        ),
+        old,
+      ])
     )
-    mockMessages(testApp, 'thread-a', page([]))
-    mockSendMessage(testApp, 'thread-a', ({ data }) => [
+    mockMessages(testApp, 'conversation-a', page([]))
+    mockSendMessage(testApp, 'conversation-a', ({ data }) => [
       200,
       {
         conversation: { ...old, updated_on: '2026-10-14T10:00:00Z' },
@@ -422,10 +480,13 @@ describe('Agent conversations', () => {
       },
     ])
     const wrapper = await mount()
-    await selectConversation(wrapper, 'Thread A')
+    await selectConversation(wrapper, 'Conversation A')
 
     await sendMessage(wrapper, 'Update older conversation')
 
-    expect(conversationTitles(wrapper)).toEqual(['Thread A', 'Thread B'])
+    expect(conversationTitles(wrapper)).toEqual([
+      'Conversation A',
+      'Conversation B',
+    ])
   })
 })

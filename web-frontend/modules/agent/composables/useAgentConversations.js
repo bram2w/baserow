@@ -8,6 +8,11 @@ const uniqueBy = (items, key) => [
   ...new Map(items.map((item) => [item[key], item])).values(),
 ]
 
+const REJECTED_MESSAGE_ERRORS = [
+  'ERROR_AGENT_NOT_READY',
+  'ERROR_REQUEST_BODY_VALIDATION',
+]
+
 /** Page-local private conversations, gated by the Agent configuration. */
 export function useAgentConversations(agent, configuration) {
   const store = useStore()
@@ -273,6 +278,8 @@ export function useAgentConversations(agent, configuration) {
       const code = error.response?.data?.error
       draft.error =
         code === 'ERROR_AGENT_MESSAGE_CONFLICT' ? 'conflict' : 'failed'
+      // The server rejected the message outright, so it can be edited and resent.
+      if (REJECTED_MESSAGE_ERRORS.includes(code)) draft.submission = null
       if (code === 'ERROR_AGENT_NOT_READY') {
         await configuration.refreshConfiguration()
       }
@@ -303,14 +310,11 @@ export function useAgentConversations(agent, configuration) {
 
   createLocalConversation()
   onMounted(() => fetchConversations())
-  watch(
-    () => [agent.value?.id, store.state.auth.user?.id],
-    () => {
-      reset()
-      createLocalConversation()
-      fetchConversations()
-    }
-  )
+  watch([() => agent.value?.id, () => store.state.auth.user?.id], () => {
+    reset()
+    createLocalConversation()
+    fetchConversations()
+  })
   watch(canReadConversations, (allowed) => {
     if (allowed) fetchConversations()
     else clearConversations()

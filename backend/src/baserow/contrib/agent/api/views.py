@@ -192,6 +192,10 @@ class AgentConversationsView(APIView):
     @extend_schema(
         tags=["Agent applications"],
         operation_id="list_agent_conversations",
+        description=(
+            "Lists the authenticated user's own conversations with the agent, most "
+            "recently active first."
+        ),
         parameters=[
             AGENT_ID_PATH_PARAMETER,
             OpenApiParameter("page", OpenApiTypes.INT, default=1),
@@ -221,6 +225,12 @@ class AgentConversationsView(APIView):
     @extend_schema(
         tags=["Agent applications"],
         operation_id="create_agent_conversation",
+        description=(
+            "Starts a private conversation with its first message. The conversation "
+            "and message uuids identify the request, so a retry returns the already "
+            "accepted message, and reusing a uuid with different content is "
+            "rejected."
+        ),
         request=AgentConversationCreateSerializer,
         responses={200: AgentMessageCreatedSerializer, **CONVERSATION_WRITE_ERRORS},
     )
@@ -237,6 +247,10 @@ class AgentMessagesView(APIView):
     @extend_schema(
         tags=["Agent applications"],
         operation_id="list_agent_messages",
+        description=(
+            "Lists the messages of one of the authenticated user's conversations, "
+            "newest page first, each page in chronological order."
+        ),
         parameters=[
             AGENT_ID_PATH_PARAMETER,
             OpenApiParameter("page", OpenApiTypes.INT, default=1),
@@ -268,6 +282,11 @@ class AgentMessagesView(APIView):
     @extend_schema(
         tags=["Agent applications"],
         operation_id="create_agent_message",
+        description=(
+            "Adds a message to one of the authenticated user's conversations. The "
+            "message uuid identifies the request, so a retry returns the already "
+            "accepted message, and reusing it with different content is rejected."
+        ),
         request=AgentMessageCreateSerializer,
         responses={200: AgentMessageCreatedSerializer, **CONVERSATION_WRITE_ERRORS},
     )

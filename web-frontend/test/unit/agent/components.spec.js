@@ -47,7 +47,7 @@ describe('Agent components', () => {
     await wrapper.setProps({
       error: false,
       loading: true,
-      items: [{ uuid: 'thread', title: 'My conversation' }],
+      items: [{ uuid: 'conversation', title: 'My conversation' }],
     })
 
     expect(wrapper.get('.agent-conversations__item').text()).toBe(
