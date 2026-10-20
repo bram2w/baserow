@@ -8,9 +8,13 @@
     ></SkeletonBlock>
     <template v-else>
       <div class="dashboard-app-header__mode">
-        <Button v-if="isEditMode" type="primary" @click="doneEditing">{{
-          $t('dashboardHeader.doneEditing')
-        }}</Button>
+        <Button
+          v-if="isEditMode"
+          type="primary"
+          icon="iconoir-check"
+          @click="doneEditing"
+          >{{ $t('dashboardHeader.doneEditing') }}</Button
+        >
         <DashboardHeaderMenuItems
           v-else
           :dashboard="dashboard"
