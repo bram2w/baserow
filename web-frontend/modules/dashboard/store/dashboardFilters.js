@@ -22,9 +22,13 @@ const emptyOptions = () => ({
   results: [],
   next: null,
   unavailable: [],
+  availabilityGeneration: 0,
   loading: false,
   error: false,
   search: '',
+  unfilteredOptions: null,
+  unfilteredGeneration: null,
+  unfilteredLoading: false,
 })
 
 export const filterMutations = {
@@ -95,7 +99,13 @@ export const filterActions = {
     )
       return
     commit('SET_FILTERS', data)
-    for (const filter of data) commit('INVALIDATE_FILTER_OPTIONS', filter.id)
+    for (const filter of data) {
+      commit('INVALIDATE_FILTER_OPTIONS', filter.id)
+      commit('SET_FILTER_OPTIONS', {
+        filterId: filter.id,
+        values: emptyOptions(),
+      })
+    }
     return data
   },
   async createFilter({ state, commit, dispatch }, values) {
@@ -124,6 +134,7 @@ export const filterActions = {
       return
     commit('INVALIDATE_FILTER_FETCH')
     commit('INVALIDATE_FILTER_OPTIONS', filterId)
+    commit('SET_FILTER_OPTIONS', { filterId, values: emptyOptions() })
     commit('UPSERT_FILTER', data)
     await dispatch('refreshWidgets')
     return data
@@ -157,12 +168,43 @@ export const filterActions = {
   },
   async fetchFilterOptions(
     { state, commit },
-    { filterId, search = '', more = false, selected } = {}
+    { filterId, search = '', more = false, selected, useCache = false } = {}
   ) {
     const filter = state.filters.find((f) => f.id === filterId)
     if (!filter || filter.mode !== 'dropdown') return
     const request = dashboardRequest(state)
     const previous = state.filterOptions[filterId] ?? emptyOptions()
+    if (useCache && !search && !more) {
+      // Reopening must not restart an initial load or an explicit Refresh.
+      if (previous.unfilteredLoading) {
+        if (previous.search !== '') {
+          commit('INVALIDATE_FILTER_OPTIONS', filterId)
+          commit('SET_FILTER_OPTIONS', {
+            filterId,
+            values: {
+              ...(previous.unfilteredOptions ?? { results: [], next: null }),
+              search: '',
+              loading: true,
+              error: false,
+            },
+          })
+        }
+        return
+      }
+      if (previous.unfilteredOptions) {
+        commit('INVALIDATE_FILTER_OPTIONS', filterId)
+        commit('SET_FILTER_OPTIONS', {
+          filterId,
+          values: {
+            ...previous.unfilteredOptions,
+            search: '',
+            loading: false,
+            error: false,
+          },
+        })
+        return
+      }
+    }
     if (more && (previous.loading || previous.next === null)) return
     commit('INVALIDATE_FILTER_OPTIONS', filterId)
     const generation = state.filterOptionGenerations[filterId]
@@ -170,6 +212,14 @@ export const filterActions = {
       isCurrent(state, request) &&
       generation === state.filterOptionGenerations[filterId] &&
       state.filters.some((f) => f.id === filterId)
+    const cacheCurrent = () =>
+      !search &&
+      isCurrent(state, request) &&
+      state.filters.some((f) => f.id === filterId) &&
+      state.filterOptions[filterId]?.unfilteredGeneration === generation
+    const displayCurrent = () =>
+      current() ||
+      (cacheCurrent() && state.filterOptions[filterId].search === '')
     const requestedValues = [
       ...new Set(selected ?? state.appliedFilters[filterId] ?? []),
     ]
@@ -180,6 +230,10 @@ export const filterActions = {
         error: false,
         search,
         ...(more ? {} : { results: [], next: null }),
+        ...(!search && !more ? { unfilteredOptions: null } : {}),
+        ...(!search
+          ? { unfilteredGeneration: generation, unfilteredLoading: true }
+          : {}),
       },
     })
     try {
@@ -188,27 +242,50 @@ export const filterActions = {
         selected: requestedValues,
         ...(more ? { after: previous.next } : {}),
       })
-      if (!current()) return
+      // An intervening search can replace the visible query while Refresh
+      // still fills the unfiltered cache. Configuration resets invalidate both.
+      if (!current() && !cacheCurrent()) return
+      const results = more
+        ? [...new Set([...previous.results, ...data.results])]
+        : data.results
+      const availabilityCurrent =
+        generation > state.filterOptions[filterId].availabilityGeneration
       commit('SET_FILTER_OPTIONS', {
         filterId,
         values: {
-          results: more
-            ? [...new Set([...previous.results, ...data.results])]
-            : data.results,
-          next: data.next,
-          unavailable: requestedValues.filter(
-            (value) => !data.available.includes(value)
-          ),
-          loading: false,
-          error: false,
+          ...(cacheCurrent()
+            ? {
+                unfilteredOptions: { results, next: data.next },
+                unfilteredLoading: false,
+              }
+            : {}),
+          ...(availabilityCurrent
+            ? {
+                unavailable: requestedValues.filter(
+                  (value) => !data.available.includes(value)
+                ),
+                availabilityGeneration: generation,
+              }
+            : {}),
+          ...(displayCurrent()
+            ? {
+                results,
+                next: data.next,
+                loading: false,
+                error: false,
+              }
+            : {}),
         },
       })
     } catch (error) {
-      if (!current()) return
+      if (!current() && !cacheCurrent()) return
       // A failed request never establishes that a selected value disappeared.
       commit('SET_FILTER_OPTIONS', {
         filterId,
-        values: { loading: false, error: true },
+        values: {
+          ...(cacheCurrent() ? { unfilteredLoading: false } : {}),
+          ...(displayCurrent() ? { loading: false, error: true } : {}),
+        },
       })
     }
   },

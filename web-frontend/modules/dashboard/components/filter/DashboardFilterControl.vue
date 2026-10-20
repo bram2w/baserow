@@ -181,7 +181,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import debounce from 'lodash/debounce'
 import Dropdown from '@baserow/modules/core/components/Dropdown'
 import Checkbox from '@baserow/modules/core/components/Checkbox'
@@ -231,15 +231,22 @@ const hasUnavailable = computed(() =>
     props.optionState.unavailable.includes(value)
   )
 )
-const requestOptions = (more = false) =>
+const requestOptions = (more = false, useCache = false) =>
   emit('options', {
     search: search.value,
     more,
     selected: [...new Set([...props.appliedValues, ...draft.value])],
+    ...(useCache ? { useCache: true } : {}),
   })
 const searchOptions = debounce(() => {
-  if (opened.value) requestOptions()
+  if (opened.value) requestOptions(false, !search.value)
 }, 250)
+watch(
+  () => props.optionState.search,
+  (value) => {
+    search.value = value ?? ''
+  }
+)
 
 function beforeShow() {
   if (props.editMode) {
@@ -251,7 +258,7 @@ async function onShown() {
   opened.value = true
   draft.value = [...props.appliedValues]
   search.value = ''
-  if (props.filter.mode === 'dropdown') requestOptions()
+  if (props.filter.mode === 'dropdown') requestOptions(false, true)
   await nextTick()
   input.value?.focus()
 }
