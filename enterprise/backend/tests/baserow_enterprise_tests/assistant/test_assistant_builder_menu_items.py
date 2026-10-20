@@ -476,7 +476,7 @@ def test_the_update_helper_saves_nothing_itself_when_a_menu_change_is_refused(
     )
 
     with pytest.raises(ToolInputError, match="not in this menu"):
-        helpers.update_element(site.user, site.ctx.deps.workspace, update)
+        helpers.update_element(site.user, site.container.page, update)
 
     assert Element.objects.get(id=site.container.id).specific.share_type == "all"
     assert _tree(site.menu) == SEEDED_TREE

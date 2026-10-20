@@ -426,7 +426,6 @@ def update_data_source(
     """
 
     user = ctx.deps.user
-    workspace = ctx.deps.workspace
     tool_helpers = ctx.deps.tool_helpers
 
     page = helpers.get_page(user, ctx.deps.workspace, page_id)
@@ -435,7 +434,7 @@ def update_data_source(
     )
 
     with transaction.atomic():
-        orm_ds, ds_type = helpers.update_data_source(user, data_source, workspace)
+        orm_ds, ds_type = helpers.update_data_source(user, page, data_source)
 
     # Handle formula generation for $formula: fields (separate transaction)
     formulas = data_source.get_formulas_to_update(orm_ds, None)
@@ -879,7 +878,7 @@ def update_element(
     )
 
     with transaction.atomic():
-        outcome = helpers.update_element(user, ctx.deps.workspace, element)
+        outcome = helpers.update_element(user, page, element)
     orm_element, element_type = outcome.element, outcome.element_type
 
     # Handle formula generation for $formula: fields (separate transaction)
@@ -964,15 +963,13 @@ def update_element_style(
     user = ctx.deps.user
     tool_helpers = ctx.deps.tool_helpers
 
-    helpers.get_page(user, ctx.deps.workspace, page_id)
+    page = helpers.get_page(user, ctx.deps.workspace, page_id)
     tool_helpers.update_status(
         _("Styling element %(id)d...") % {"id": style.element_id}
     )
 
     with transaction.atomic():
-        element, element_type = helpers.update_element_style(
-            user, ctx.deps.workspace, style
-        )
+        element, element_type = helpers.update_element_style(user, page, style)
 
     # Report which fields were explicitly set (not inherited from existing styles)
     updated_fields = list(style.to_update_kwargs(element_type, {}).keys())
@@ -1046,7 +1043,7 @@ def move_elements(
         tool_helpers.raise_if_cancelled()
         try:
             with transaction.atomic():
-                element = helpers.move_element(user, ctx.deps.workspace, element_move)
+                element = helpers.move_element(user, page, element_move)
             moved.append(
                 {
                     "element_id": element.id,

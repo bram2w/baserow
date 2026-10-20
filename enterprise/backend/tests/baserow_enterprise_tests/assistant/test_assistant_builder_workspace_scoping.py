@@ -1,8 +1,10 @@
 """
-Kuma's builder tools only reach objects in the chat's workspace. An ID from another
-workspace the user belongs to gets the same error as a missing one, and nothing
-changes.
+Kuma's builder tools only reach objects in the chat's workspace, and only the
+elements and data sources of the page a tool works on or of its builder's shared
+page. Any other ID gets the same error as a missing one, and nothing changes.
 """
+
+from typing import Any
 
 from django.db import transaction
 
@@ -10,9 +12,15 @@ import pytest
 
 from baserow.contrib.builder.data_sources.models import DataSource
 from baserow.contrib.builder.elements.models import Element
+from baserow.contrib.builder.pages.models import Page
+from baserow.contrib.builder.workflow_actions.models import BuilderWorkflowAction
+from baserow.core.exceptions import PermissionDenied
+from baserow.core.trash.handler import TrashHandler
 from baserow_enterprise.assistant.tools.builder import helpers
 from baserow_enterprise.assistant.tools.builder.types import (
+    ActionCreate,
     DataSourceUpdate,
+    ElementItemCreate,
     ElementMove,
     ElementStyleUpdate,
     ElementUpdate,
@@ -27,7 +35,8 @@ def two_workspaces(data_fixture):
     other = data_fixture.create_workspace(user=user)
     builder = data_fixture.create_builder_application(workspace=other)
     page = data_fixture.create_builder_page(builder=builder)
-    heading = data_fixture.create_builder_heading_element(page=page)
+    heading = data_fixture.create_builder_heading_element(page=page, value="'Title'")
+    data_fixture.create_builder_heading_element(page=page)
     button = data_fixture.create_builder_button_element(page=page)
     action = data_fixture.create_notification_workflow_action(
         page=page, element=button, event="click"
@@ -35,52 +44,258 @@ def two_workspaces(data_fixture):
     data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
         page=page, name="Original"
     )
-    return user, here, other, page, heading, action, data_source
+    here_page = data_fixture.create_builder_page(
+        builder=data_fixture.create_builder_application(workspace=here)
+    )
+    here_button = data_fixture.create_builder_button_element(page=here_page)
+    return {
+        "user": user,
+        "here": here,
+        "other": other,
+        "page": page,
+        "heading": heading,
+        "action": action,
+        "data_source": data_source,
+        "here_page": here_page,
+        "here_button": here_button,
+    }
+
+
+def _snapshot(element: Element) -> dict[str, Any]:
+    element = Element.objects.get(id=element.id).specific
+    return {
+        "value": element.value,
+        "styles": element.styles,
+        "page_graph": Page.objects.get(id=element.page_id).graph,
+    }
 
 
 @pytest.mark.django_db
 def test_page_from_other_workspace_is_not_found(two_workspaces):
-    user, here, other, page, *_ = two_workspaces
+    w = two_workspaces
 
-    with pytest.raises(ToolInputError, match=f"Page with ID {page.id} not found"):
-        helpers.get_page(user, here, page.id)
-    assert helpers.get_page(user, other, page.id) == page
+    with pytest.raises(ToolInputError, match=f"Page with ID {w['page'].id} not found"):
+        helpers.get_page(w["user"], w["here"], w["page"].id)
+    assert helpers.get_page(w["user"], w["other"], w["page"].id) == w["page"]
+
+
+@pytest.mark.django_db
+def test_page_of_trashed_builder_is_not_found(two_workspaces):
+    w = two_workspaces
+    builder = w["page"].builder
+    TrashHandler.trash(w["user"], w["other"], builder, builder)
+
+    with pytest.raises(ToolInputError, match=f"Page with ID {w['page'].id} not found"):
+        helpers.get_page(w["user"], w["other"], w["page"].id)
 
 
 @pytest.mark.django_db
 def test_element_from_other_workspace_is_not_changed(two_workspaces):
-    user, here, _, _, heading, *_ = two_workspaces
-    before = Element.objects.get(id=heading.id).specific.styles
+    w = two_workspaces
+    user, heading, here_page = w["user"], w["heading"], w["here_page"]
+    before = _snapshot(heading)
 
     with transaction.atomic():
         with pytest.raises(ToolInputError, match="not found"):
-            helpers.update_element(user, here, ElementUpdate(element_id=heading.id))
-        with pytest.raises(ToolInputError, match="not found"):
-            helpers.update_element_style(
-                user, here, ElementStyleUpdate(element_id=heading.id, reset=True)
+            helpers.update_element(
+                user, here_page, ElementUpdate(element_id=heading.id, value="Changed")
             )
         with pytest.raises(ToolInputError, match="not found"):
-            helpers.move_element(user, here, ElementMove(element_id=heading.id))
+            helpers.update_element_style(
+                user,
+                here_page,
+                ElementStyleUpdate(element_id=heading.id, padding=40),
+            )
+        with pytest.raises(ToolInputError, match="not found"):
+            helpers.move_element(user, here_page, ElementMove(element_id=heading.id))
 
-    assert Element.objects.get(id=heading.id).specific.styles == before
+    assert _snapshot(heading) == before
+
+
+@pytest.mark.django_db
+def test_element_on_another_page_of_the_workspace_is_not_changed(
+    data_fixture, two_workspaces
+):
+    w = two_workspaces
+    user, heading = w["user"], w["heading"]
+    sibling_page = data_fixture.create_builder_page(builder=w["page"].builder)
+    before = _snapshot(heading)
+
+    with pytest.raises(ToolInputError, match="not found"):
+        helpers.update_element(
+            user, sibling_page, ElementUpdate(element_id=heading.id, value="Changed")
+        )
+
+    assert _snapshot(heading) == before
+
+
+@pytest.mark.django_db
+def test_element_on_the_shared_page_is_reachable_from_a_page(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    page = data_fixture.create_builder_page(
+        builder=data_fixture.create_builder_application(workspace=workspace)
+    )
+    shared_heading = data_fixture.create_builder_heading_element(
+        page=page.builder.shared_page, value="'Title'"
+    )
+
+    helpers.update_element(
+        user, page, ElementUpdate(element_id=shared_heading.id, value="Changed")
+    )
+
+    assert Element.objects.get(id=shared_heading.id).specific.value["formula"] == (
+        "'Changed'"
+    )
+
+
+@pytest.mark.django_db
+def test_create_element_rejects_ids_from_other_workspace(data_fixture, two_workspaces):
+    w = two_workspaces
+    user, here_page = w["user"], w["here_page"]
+    count = Element.objects.filter(page=here_page).count()
+
+    with pytest.raises(ToolInputError, match="Before element"):
+        helpers.create_element(
+            user,
+            here_page,
+            ElementItemCreate(ref="h", type="heading", value="Hi"),
+            {},
+            {},
+            before_id=w["heading"].id,
+        )
+    with pytest.raises(ToolInputError, match="Data source"):
+        helpers.create_element(
+            user,
+            here_page,
+            ElementItemCreate(
+                ref="t", type="table", data_source=w["data_source"].id, fields=[]
+            ),
+            {},
+            {},
+        )
+    with pytest.raises(ToolInputError, match=f"Page with ID {w['page'].id}"):
+        helpers.create_element(
+            user,
+            here_page,
+            ElementItemCreate(
+                ref="l",
+                type="link",
+                value="Go",
+                navigation_type="page",
+                navigate_to_page_id=w["page"].id,
+            ),
+            {},
+            {},
+        )
+
+    assert Element.objects.filter(page=here_page).count() == count
 
 
 @pytest.mark.django_db
 def test_data_source_from_other_workspace_is_not_changed(two_workspaces):
-    user, here, other, *_, data_source = two_workspaces
+    w = two_workspaces
+    user, data_source = w["user"], w["data_source"]
     update = DataSourceUpdate(data_source_id=data_source.id, name="Changed")
 
     with pytest.raises(ToolInputError, match="not found"):
-        helpers.update_data_source(user, update, here)
+        helpers.update_data_source(user, w["here_page"], update)
     assert DataSource.objects.get(id=data_source.id).name == "Original"
 
-    helpers.update_data_source(user, update, other)
+    helpers.update_data_source(user, w["page"], update)
     assert DataSource.objects.get(id=data_source.id).name == "Changed"
 
 
 @pytest.mark.django_db
 def test_action_from_other_workspace_is_not_found(two_workspaces):
-    user, here, *_, action, _ = two_workspaces
+    w = two_workspaces
+    action = w["action"]
 
     with pytest.raises(ToolInputError, match=f"Action with ID {action.id} not found"):
-        helpers.add_field_mapping_to_action(user, here, action.id, 1, "'x'")
+        helpers.add_field_mapping_to_action(w["user"], w["here"], action.id, 1, "'x'")
+
+
+@pytest.mark.django_db
+def test_field_mapping_reaches_an_action_without_element(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    page = data_fixture.create_builder_page(
+        builder=data_fixture.create_builder_application(workspace=workspace)
+    )
+    database = data_fixture.create_database_application(workspace=workspace)
+    table, fields, _ = data_fixture.build_table(
+        user=user, columns=[("Name", "text")], rows=[["a"]], database=database
+    )
+    action = data_fixture.create_local_baserow_create_row_workflow_action(
+        page=page, element=None, event="click", user=user
+    )
+    action.service.table = table
+    action.service.save()
+
+    result = helpers.add_field_mapping_to_action(
+        user, workspace, action.id, fields[0].id, "'x'"
+    )
+
+    assert result["status"] == "created"
+
+
+@pytest.mark.django_db
+def test_create_action_rejects_ids_from_other_workspace(two_workspaces):
+    w = two_workspaces
+    user, here_page, here_button = w["user"], w["here_page"], w["here_button"]
+
+    with pytest.raises(ToolInputError, match="Data source"):
+        helpers.create_workflow_action(
+            user,
+            here_page,
+            ActionCreate(
+                type="refresh_data_source",
+                element=here_button.id,
+                data_source=w["data_source"].id,
+            ),
+            {},
+            {},
+        )
+    with pytest.raises(ToolInputError, match=f"Page with ID {w['page'].id}"):
+        helpers.create_workflow_action(
+            user,
+            here_page,
+            ActionCreate(
+                type="open_page",
+                element=here_button.id,
+                navigate_to_page_id=w["page"].id,
+            ),
+            {},
+            {},
+        )
+
+    assert not BuilderWorkflowAction.objects.filter(page=here_page).exists()
+
+
+@pytest.mark.django_db
+def test_no_op_updates_still_check_permissions(
+    data_fixture, enterprise_data_fixture, enable_enterprise, synced_roles
+):
+    workspace = data_fixture.create_workspace()
+    page = data_fixture.create_builder_page(
+        builder=data_fixture.create_builder_application(workspace=workspace)
+    )
+    heading = data_fixture.create_builder_heading_element(page=page)
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        page=page
+    )
+    user = enterprise_data_fixture.create_user()
+    enterprise_data_fixture.create_user_workspace(
+        user=user, workspace=workspace, permissions="NO_ACCESS"
+    )
+
+    with pytest.raises(PermissionDenied):
+        helpers.update_data_source(
+            user, page, DataSourceUpdate(data_source_id=data_source.id)
+        )
+    with pytest.raises(PermissionDenied):
+        helpers.update_element_style(
+            user, page, ElementStyleUpdate(element_id=heading.id)
+        )
+    with transaction.atomic(), pytest.raises(PermissionDenied):
+        helpers.move_element(user, page, ElementMove(element_id=heading.id))
