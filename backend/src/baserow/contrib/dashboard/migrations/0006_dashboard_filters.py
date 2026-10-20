@@ -4,6 +4,7 @@ import django.db.models.deletion
 from django.db import migrations, models
 
 import baserow.core.fields
+import baserow.core.formula.field
 
 
 class Migration(migrations.Migration):
@@ -57,6 +58,24 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 ("multiple", models.BooleanField(default=False)),
+                (
+                    "option_type",
+                    models.CharField(
+                        choices=[("manual", "Manual"), ("formulas", "Data source")],
+                        default="manual",
+                        db_default="manual",
+                        max_length=32,
+                    ),
+                ),
+                ("options", models.JSONField(default=list, db_default=[])),
+                (
+                    "formula_name",
+                    baserow.core.formula.field.FormulaField(db_default=""),
+                ),
+                (
+                    "formula_value",
+                    baserow.core.formula.field.FormulaField(db_default=""),
+                ),
                 (
                     "dashboard",
                     models.ForeignKey(

@@ -49,7 +49,7 @@ class DispatchWidgetView(APIView):
         operation_id="dispatch_dashboard_widget",
         request=DispatchWidgetSerializer,
         responses={200: serializers.DictField()},
-        description="Calculate a widget with private applied filter values. Field bindings and operators come from its saved configuration.",
+        description="Calculate a widget using private filter values referenced by its data source formulas.",
     )
     @transaction.atomic
     @map_exceptions(

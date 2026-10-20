@@ -3,23 +3,16 @@ from django.urls import reverse
 import pytest
 
 from baserow.contrib.dashboard.filters.service import DashboardFilterService
-from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.rows.handler import RowHandler
+from baserow.core.formula.types import BaserowFormulaObject
 
 
 @pytest.fixture
 def filtered_dashboard(data_fixture):
     user, token = data_fixture.create_user_and_token()
-    table, fields, rows = data_fixture.build_table(
+    table, fields, _ = data_fixture.build_table(
         user=user,
         columns=[("Team", "text"), ("Amount", "number")],
-        rows=[
-            ["Design", 1],
-            ["design", 2],
-            ["Marketing", 4],
-            [" Design ", 8],
-            ["", 16],
-        ],
+        rows=[["Design", 1], ["Marketing", 4], ["", 16]],
     )
     dashboard = data_fixture.create_dashboard_application(user=user)
     integration = data_fixture.create_local_baserow_integration(
@@ -33,42 +26,40 @@ def filtered_dashboard(data_fixture):
         aggregation_type="sum",
     )
     widget = data_fixture.create_summary_widget(dashboard=dashboard, data_source=source)
-    filter_config = DashboardFilterService().create_filter(
-        user,
-        dashboard.id,
-        label="Team",
-        multiple=True,
-        bindings=[{"table_id": table.id, "field_id": fields[0].id}],
+    selection = DashboardFilterService().create_filter(
+        user, dashboard.id, label="Team", mode="input"
     )
-    return user, token, widget, filter_config, table, fields, rows
+    condition = data_fixture.create_local_baserow_table_service_filter(
+        service=source.service,
+        field=fields[0],
+        type="equal",
+        value=BaserowFormulaObject.create(f"get('dashboard_filter.{selection.id}')"),
+    )
+    return user, token, widget, selection, condition
 
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
-    "operator,mode,values,expected",
+    "operator,values,expected",
     [
-        ("equal", "dropdown", ["Design"], "1"),
-        ("equal", "dropdown", [" Design "], "8"),
-        ("equal", "input", [" Design "], "1"),
-        ("equal", "input", ["  "], "31"),
-        ("equal", "dropdown", ["Design", "Marketing"], "5"),
-        ("not_equal", "dropdown", ["Design", "Marketing"], "26"),
-        ("contains", "dropdown", ["DESIGN"], "11"),
-        ("contains_not", "dropdown", ["DESIGN"], "20"),
-        ("equal", "dropdown", [], "31"),
-        ("equal", "dropdown", ["Design"] + [f"Other {i}" for i in range(100)], "1"),
+        ("equal", ["Design"], "1"),
+        ("equal", [" Design "], "1"),
+        ("equal", ["  "], "21"),
+        ("equal", [], "21"),
+        ("not_equal", ["Design"], "20"),
+        ("contains", ["DESIGN"], "1"),
+        ("contains_not", ["DESIGN"], "20"),
     ],
 )
-def test_dispatch_applies_saved_filter_before_aggregation(
-    api_client, filtered_dashboard, operator, mode, values, expected
+def test_source_condition_uses_builder_filter_semantics(
+    api_client, filtered_dashboard, operator, values, expected
 ):
-    user, token, widget, filter_config, *_ = filtered_dashboard
-    DashboardFilterService().update_filter(
-        user, filter_config.id, operator=operator, mode=mode
-    )
+    _, token, widget, selection, condition = filtered_dashboard
+    condition.type = operator
+    condition.save()
     response = api_client.post(
         reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": widget.id}),
-        {"filters": [{"filter_id": filter_config.id, "values": values}]},
+        {"filters": [{"filter_id": selection.id, "values": values}]},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -77,317 +68,63 @@ def test_dispatch_applies_saved_filter_before_aggregation(
 
 
 @pytest.mark.django_db
-def test_global_filter_applies_to_widgets_added_after_configuration(
+@pytest.mark.parametrize("invalid", ["deleted", "other_dashboard"])
+def test_source_cannot_read_an_unavailable_filter(
+    api_client, data_fixture, filtered_dashboard, invalid
+):
+    user, token, widget, selection, condition = filtered_dashboard
+    if invalid == "deleted":
+        DashboardFilterService().delete_filter(user, selection.id)
+    else:
+        other = data_fixture.create_dashboard_application(
+            user=user, workspace=widget.dashboard.workspace
+        )
+        selection.dashboard = other
+        selection.save()
+    response = api_client.post(
+        reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": widget.id}),
+        {"filters": [{"filter_id": selection.id, "values": ["Design"]}]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == 400, response.json()
+
+
+@pytest.mark.django_db
+def test_multiple_values_are_available_to_source_formulas(
+    api_client, filtered_dashboard
+):
+    user, token, widget, selection, condition = filtered_dashboard
+    DashboardFilterService().update_filter(
+        user, selection.id, mode="dropdown", multiple=True
+    )
+    condition.value = BaserowFormulaObject.create(
+        f"get('dashboard_filter.{selection.id}.1')"
+    )
+    condition.save()
+    response = api_client.post(
+        reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": widget.id}),
+        {"filters": [{"filter_id": selection.id, "values": ["Design", "Marketing"]}]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == 200, response.json()
+    assert response.json() == {"result": "4"}
+
+
+@pytest.mark.django_db
+def test_widgets_sharing_a_source_share_its_filter_conditions(
     api_client, data_fixture, filtered_dashboard
 ):
-    user, token, widget, filter_config, *_ = filtered_dashboard
-    unbound = data_fixture.create_summary_widget(
+    _, token, widget, selection, _ = filtered_dashboard
+    shared = data_fixture.create_summary_widget(
         dashboard=widget.dashboard, data_source=widget.data_source
     )
     response = api_client.post(
-        reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": unbound.id}),
-        {"filters": [{"filter_id": filter_config.id, "values": ["Design"]}]},
+        reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": shared.id}),
+        {"filters": [{"filter_id": selection.id, "values": ["Design"]}]},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
-    assert response.status_code == 200, response.json()
-    assert response.json() == {"result": "1"}
-
-
-@pytest.mark.django_db
-def test_broken_binding_fails_but_deleted_filter_is_ignored(
-    api_client, filtered_dashboard
-):
-    user, token, widget, filter_config, _, fields, _ = filtered_dashboard
-    fields[0].trashed = True
-    fields[0].save()
-    url = reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": widget.id})
-    headers = {"HTTP_AUTHORIZATION": f"JWT {token}"}
-    response = api_client.post(
-        url,
-        {"filters": [{"filter_id": filter_config.id, "values": ["Design"]}]},
-        format="json",
-        **headers,
-    )
-    assert response.status_code == 400
-    DashboardFilterService().delete_filter(user, filter_config.id)
-    response = api_client.post(
-        url,
-        {"filters": [{"filter_id": filter_config.id, "values": ["Design"]}]},
-        format="json",
-        **headers,
-    )
-    assert response.status_code == 200, response.json()
-    assert response.json() == {"result": "31"}
-
-
-@pytest.mark.django_db
-@pytest.mark.parametrize(
-    "field_kind", ["single_select", "formula_select", "formula_text"]
-)
-@pytest.mark.parametrize(
-    "operator,expected",
-    [("equal", "1"), ("not_equal", "6"), ("contains", "3"), ("contains_not", "4")],
-)
-def test_filter_compares_select_labels_and_scalar_formulas(
-    api_client, data_fixture, filtered_dashboard, field_kind, operator, expected
-):
-    user, token, widget, filter_config, table, fields, _ = filtered_dashboard
-    field = fields[0]
-    if field_kind != "formula_text":
-        field = data_fixture.create_single_select_field(table=table, name="Select team")
-        design = data_fixture.create_select_option(
-            field=field, value="Design", color="blue"
-        )
-        lower = data_fixture.create_select_option(
-            field=field, value="design", color="red"
-        )
-        model = table.get_model()
-        model.objects.all().delete()
-        RowHandler().create_rows(
-            user,
-            table,
-            [
-                {field.db_column: design.id, fields[1].db_column: 1},
-                {field.db_column: lower.id, fields[1].db_column: 2},
-                {fields[1].db_column: 4},
-            ],
-        )
-    else:
-        model = table.get_model()
-        model.objects.all().delete()
-        RowHandler().create_rows(
-            user,
-            table,
-            [
-                {field.db_column: "Design", fields[1].db_column: 1},
-                {field.db_column: "design", fields[1].db_column: 2},
-                {fields[1].db_column: 4},
-            ],
-        )
-    if field_kind.startswith("formula"):
-        field = FieldHandler().create_field(
-            user,
-            table,
-            "formula",
-            name="Team formula",
-            formula=f"field('{field.name}')",
-        )
-    DashboardFilterService().update_filter(
-        user,
-        filter_config.id,
-        operator=operator,
-        bindings=[{"table_id": table.id, "field_id": field.id}],
-    )
-    response = api_client.post(
-        reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": widget.id}),
-        {"filters": [{"filter_id": filter_config.id, "values": ["Design"]}]},
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-    assert response.status_code == 200, response.json()
-    assert response.json() == {"result": expected}
-
-
-@pytest.mark.django_db
-def test_filters_intersect_with_each_other_and_saved_view_and_source_filters(
-    api_client, data_fixture, filtered_dashboard
-):
-    user, token, widget, filter_config, table, fields, _ = filtered_dashboard
-    view = data_fixture.create_grid_view(table=table)
-    data_fixture.create_view_filter(
-        view=view, field=fields[1], type="higher_than", value="1"
-    )
-    service = widget.data_source.service.specific
-    service.view = view
-    service.save()
-    data_fixture.create_local_baserow_table_service_filter(
-        service=service, field=fields[1], type="lower_than", value="10"
-    )
-    other = DashboardFilterService().create_filter(
-        user,
-        widget.dashboard_id,
-        label="Contains",
-        operator="contains",
-        mode="input",
-        bindings=[{"table_id": table.id, "field_id": fields[0].id}],
-    )
-    response = api_client.post(
-        reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": widget.id}),
-        {
-            "filters": [
-                {
-                    "filter_id": filter_config.id,
-                    "values": ["Design", "design", "Marketing"],
-                },
-                {"filter_id": other.id, "values": ["design"]},
-            ]
-        },
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-    assert response.status_code == 200, response.json()
-    assert response.json() == {"result": "2"}
-
-
-@pytest.mark.django_db
-def test_dropdown_can_apply_and_check_a_long_stored_text_value(
-    api_client, filtered_dashboard
-):
-    user, token, widget, config, table, fields, rows = filtered_dashboard
-    value = "x" * 10001
-    RowHandler().update_rows(
-        user, table, [{"id": rows[0].id, fields[0].db_column: value}]
-    )
-    headers = {"HTTP_AUTHORIZATION": f"JWT {token}"}
-    response = api_client.post(
-        reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": widget.id}),
-        {"filters": [{"filter_id": config.id, "values": [value]}]},
-        format="json",
-        **headers,
-    )
-    assert response.status_code == 200, response.json()
-    assert response.json() == {"result": "1"}
-    options = api_client.post(
-        reverse("api:dashboard:filters:options", kwargs={"filter_id": config.id}),
-        {"selected": [value], "after": value},
-        format="json",
-        **headers,
-    )
-    assert options.status_code == 200, options.json()
-    assert options.json() == {"results": [], "next": None, "available": [value]}
-
-
-@pytest.mark.django_db
-def test_global_filter_keeps_each_widgets_source_restrictions(
-    api_client, data_fixture, filtered_dashboard
-):
-    user, token, widget, config, table, fields, _ = filtered_dashboard
-    view = data_fixture.create_grid_view(table=table)
-    data_fixture.create_view_filter(
-        view=view, field=fields[1], type="higher_than", value="1"
-    )
-    source = data_fixture.create_dashboard_local_baserow_aggregate_rows_data_source(
-        dashboard=widget.dashboard,
-        integration=widget.data_source.service.integration,
-        table=table,
-        view=view,
-        field=fields[1],
-        aggregation_type="sum",
-    )
-    restricted = data_fixture.create_summary_widget(
-        dashboard=widget.dashboard, data_source=source
-    )
-    for target, expected in [(widget, "3"), (restricted, "2")]:
-        response = api_client.post(
-            reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": target.id}),
-            {"filters": [{"filter_id": config.id, "values": ["Design", "design"]}]},
-            format="json",
-            HTTP_AUTHORIZATION=f"JWT {token}",
-        )
-        assert response.status_code == 200, response.json()
-        assert response.json() == {"result": expected}
-
-
-@pytest.mark.django_db
-def test_new_table_requires_global_mapping_then_all_its_widgets_are_filtered(
-    api_client, data_fixture, filtered_dashboard
-):
-    user, token, widget, config, first_table, first_fields, _ = filtered_dashboard
-    table, fields, _ = data_fixture.build_table(
-        user=user,
-        columns=[("Department", "text"), ("Cost", "number")],
-        rows=[["Design", 100], ["Sales", 200]],
-    )
-    source = data_fixture.create_dashboard_local_baserow_aggregate_rows_data_source(
-        dashboard=widget.dashboard,
-        integration=widget.data_source.service.integration,
-        table=table,
-        field=fields[1],
-        aggregation_type="sum",
-    )
-    new_widget = data_fixture.create_summary_widget(
-        dashboard=widget.dashboard, data_source=source
-    )
-    url = reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": new_widget.id})
-    headers = {"HTTP_AUTHORIZATION": f"JWT {token}"}
-    values = {"filters": [{"filter_id": config.id, "values": ["Design"]}]}
-    assert api_client.post(url, values, format="json", **headers).status_code == 400
-    response = api_client.patch(
-        reverse("api:dashboard:filters:item", kwargs={"filter_id": config.id}),
-        {
-            "bindings": [
-                {"table_id": first_table.id, "field_id": first_fields[0].id},
-                {"table_id": table.id, "field_id": fields[0].id},
-            ]
-        },
-        format="json",
-        **headers,
-    )
-    assert response.status_code == 200, response.json()
-    assert api_client.post(url, values, format="json", **headers).json() == {
-        "result": "100"
-    }
-    second = data_fixture.create_summary_widget(
-        dashboard=widget.dashboard, data_source=source
-    )
-    url = reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": second.id})
-    assert api_client.post(url, values, format="json", **headers).json() == {
-        "result": "100"
-    }
-
-
-@pytest.mark.django_db
-@pytest.mark.parametrize(
-    "binding_state", ["missing", "null", "trashed", "incompatible"]
-)
-@pytest.mark.parametrize("values", [None, [], ["   "]])
-def test_inactive_filter_does_not_block_widgets_with_incomplete_configuration(
-    api_client, filtered_dashboard, binding_state, values
-):
-    user, token, widget, config, _, fields, _ = filtered_dashboard
-    DashboardFilterService().update_filter(user, config.id, mode="input")
-    if binding_state == "missing":
-        config.bindings.all().delete()
-    elif binding_state == "null":
-        config.bindings.update(field=None)
-    elif binding_state == "trashed":
-        fields[0].trashed = True
-        fields[0].save()
-    else:
-        config.bindings.update(field=fields[1])
-    url = reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": widget.id})
-    headers = {"HTTP_AUTHORIZATION": f"JWT {token}"}
-    payload = (
-        {}
-        if values is None
-        else {"filters": [{"filter_id": config.id, "values": values}]}
-    )
-    response = api_client.post(url, payload, format="json", **headers)
-    assert response.status_code == 200, response.json()
-    assert response.json() == {"result": "31"}
-    response = api_client.post(
-        url,
-        {"filters": [{"filter_id": config.id, "values": ["Design"]}]},
-        format="json",
-        **headers,
-    )
-    assert response.status_code == 400
-
-
-@pytest.mark.django_db
-def test_new_unconfigured_filter_does_not_disable_another_active_filter(
-    api_client, filtered_dashboard
-):
-    user, token, widget, config, *_ = filtered_dashboard
-    DashboardFilterService().create_filter(
-        user, widget.dashboard_id, label="New filter"
-    )
-    response = api_client.post(
-        reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": widget.id}),
-        {"filters": [{"filter_id": config.id, "values": ["Design"]}]},
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-    assert response.status_code == 200, response.json()
+    assert response.status_code == 200
     assert response.json() == {"result": "1"}

@@ -1,5 +1,6 @@
 from django.db import models
 
+from baserow.core.formula.field import FormulaField
 from baserow.core.mixins import (
     CreatedAndUpdatedOnMixin,
     HierarchicalModelMixin,
@@ -22,16 +23,30 @@ class DashboardFilter(
         DROPDOWN = "dropdown", "Dropdown"
         INPUT = "input", "Input"
 
+    class OptionType(models.TextChoices):
+        MANUAL = "manual", "Manual"
+        FORMULAS = "formulas", "Data source"
+
     dashboard = models.ForeignKey(
         "dashboard.Dashboard", on_delete=models.CASCADE, related_name="filters"
     )
     label = models.CharField(max_length=255)
     type = models.CharField(max_length=32, choices=[("text", "Text")], default="text")
+    # TODO ZDM: remove this unused field in the next version.
     operator = models.CharField(
         max_length=32, choices=Operator.choices, default=Operator.EQUAL
     )
     mode = models.CharField(max_length=32, choices=Mode.choices, default=Mode.DROPDOWN)
     multiple = models.BooleanField(default=False)
+    option_type = models.CharField(
+        max_length=32,
+        choices=OptionType.choices,
+        default=OptionType.MANUAL,
+        db_default=OptionType.MANUAL,
+    )
+    options = models.JSONField(default=list, db_default=[])
+    formula_name = FormulaField(db_default="")
+    formula_value = FormulaField(db_default="")
 
     class Meta:
         ordering = ("id",)
@@ -41,7 +56,9 @@ class DashboardFilter(
 
 
 class DashboardFilterBinding(models.Model):
-    """An explicit association, retained as broken if its field is deleted."""
+    """Legacy configuration retained while upgrading existing dashboards."""
+
+    # TODO ZDM: remove this unused model in the next version.
 
     filter = models.ForeignKey(
         DashboardFilter, on_delete=models.CASCADE, related_name="bindings"

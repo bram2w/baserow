@@ -603,7 +603,7 @@ def test_dispatch_data_source_improperly_configured(api_client, data_fixture):
         ("raw", "20", HTTP_200_OK),
         ("simple", "20", HTTP_200_OK),
         ("advanced", "10 + 10", HTTP_200_OK),
-        ("advanced", "get('data_source.1')", HTTP_400_BAD_REQUEST),
+        ("advanced", "get('unknown_provider.1')", HTTP_400_BAD_REQUEST),
         ("advanced", "add(10)", HTTP_400_BAD_REQUEST),
     ],
 )

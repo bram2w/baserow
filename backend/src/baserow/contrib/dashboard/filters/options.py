@@ -1,20 +1,16 @@
+from django.core.exceptions import ValidationError
+
 from baserow.contrib.dashboard.data_sources.dispatch_context import (
     DashboardDispatchContext,
 )
-from baserow.contrib.dashboard.data_sources.operations import (
-    DispatchDashboardDataSourceOperationType,
+from baserow.contrib.dashboard.filters.service import DashboardFilterService
+from baserow.core.formula import resolve_formula
+from baserow.core.formula.exceptions import InvalidRuntimeFormula
+from baserow.core.formula.registries import formula_runtime_function_registry
+from baserow.core.formula.validator import ensure_array, ensure_string
+from baserow.core.services.exceptions import (
+    ServiceImproperlyConfiguredDispatchException,
 )
-from baserow.contrib.dashboard.widgets.service import WidgetService
-from baserow.contrib.integrations.local_baserow.service_types import (
-    LocalBaserowTableServiceType,
-)
-from baserow.core.handler import CoreHandler
-from baserow.core.services.registries import service_type_registry
-
-from .exceptions import DashboardFilterInvalidBinding
-from .handler import DashboardFilterHandler
-from .runtime import get_binding_field
-from .service import DashboardFilterService
 
 
 class DashboardFilterOptionsService:
@@ -30,46 +26,56 @@ class DashboardFilterOptionsService:
         selected=None,
     ):
         configuration = DashboardFilterService().get_filter(user, filter_id)
-        widgets = WidgetService().get_widgets(user, configuration.dashboard_id)
-        bindings = {
-            binding.table_id: binding
-            for binding in configuration.bindings.select_related("field")
-        }
-        context = DashboardDispatchContext(request, configuration.dashboard.workspace)
-        querysets = []
-        visited_sources = set()
-        for widget in widgets:
-            source = getattr(widget, "data_source", None)
-            if source is None or source.trashed or source.service is None:
-                raise DashboardFilterInvalidBinding(
-                    "The widget has no usable data source."
-                )
-            service = source.service.specific
-            service_type = service_type_registry.get_by_model(service)
-            if not isinstance(service_type, LocalBaserowTableServiceType):
-                raise DashboardFilterInvalidBinding(
-                    "This data source does not support text filter options."
-                )
-            table_id = getattr(service, "table_id", None)
-            if table_id is None:
-                # A widget without a selected table cannot contribute any options yet.
-                continue
-            CoreHandler().check_permissions(
-                user,
-                DispatchDashboardDataSourceOperationType.type,
+        options = configuration.options
+        if configuration.option_type == configuration.OptionType.FORMULAS:
+            context = DashboardDispatchContext(
+                request,
                 workspace=configuration.dashboard.workspace,
-                context=source,
+                dashboard=configuration.dashboard,
             )
-            field = get_binding_field(bindings.get(table_id), service)
-            source_key = (service.id, field.id)
-            if source_key in visited_sources:
-                continue
-            visited_sources.add(source_key)
-            # Validate the source and resolve it with its integration identity. Build
-            # the same restricted queryset as dispatch, without dynamic selections.
-            service_type.resolve_service_formulas(service, context)
-            queryset = service_type.build_queryset(service, service.table, context)
-            querysets.append((queryset, field))
-        return DashboardFilterHandler().get_options(
-            querysets, search=search, after=after, limit=limit, selected=selected
-        )
+            try:
+                names, option_values = (
+                    ensure_array(
+                        resolve_formula(
+                            formula, formula_runtime_function_registry, context
+                        )
+                    )
+                    for formula in (
+                        configuration.formula_name,
+                        configuration.formula_value,
+                    )
+                )
+                options = [
+                    {
+                        "value": ensure_string(value),
+                        "name": ensure_string(names[index])
+                        if index < len(names)
+                        else ensure_string(value),
+                    }
+                    for index, value in enumerate(option_values)
+                ]
+            except (InvalidRuntimeFormula, ValidationError) as exc:
+                raise ServiceImproperlyConfiguredDispatchException(
+                    "The option formulas could not be resolved."
+                ) from exc
+        labels = {}
+        for option in options:
+            if option["value"].strip():
+                labels.setdefault(option["value"], option["name"] or option["value"])
+        values = [
+            value
+            for value, label in labels.items()
+            if search.casefold() in label.casefold()
+            or search.casefold() in value.casefold()
+        ]
+        if after is not None:
+            try:
+                values = values[values.index(after) + 1 :]
+            except ValueError:
+                values = []
+        return {
+            "results": values[:limit],
+            "labels": labels,
+            "next": values[limit - 1] if len(values) > limit else None,
+            "available": [value for value in (selected or []) if value in labels],
+        }

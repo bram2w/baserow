@@ -250,7 +250,7 @@ class DispatchDashboardDataSourceView(APIView):
         data_source_service = DashboardDataSourceService()
         data_source = data_source_service.handler.get_data_source(data_source_id)
         dispatch_context = DashboardDispatchContext(
-            request, data_source.dashboard.workspace
+            request, data_source.dashboard.workspace, dashboard=data_source.dashboard
         )
         response = data_source_service.dispatch_data_source(
             request.user, data_source_id, dispatch_context

@@ -12,7 +12,6 @@ from baserow.contrib.dashboard.api.data_sources.errors import (
 )
 from baserow.contrib.dashboard.filters.exceptions import (
     DashboardFilterDoesNotExist,
-    DashboardFilterInvalidBinding,
 )
 from baserow.contrib.dashboard.filters.options import DashboardFilterOptionsService
 from baserow.core.services.exceptions import (
@@ -21,7 +20,6 @@ from baserow.core.services.exceptions import (
 
 from .errors import (
     ERROR_DASHBOARD_FILTER_DOES_NOT_EXIST,
-    ERROR_DASHBOARD_FILTER_INVALID_BINDING,
 )
 
 
@@ -46,6 +44,7 @@ class DashboardFilterOptionsRequestSerializer(serializers.Serializer):
 
 class DashboardFilterOptionsResponseSerializer(serializers.Serializer):
     results = serializers.ListField(child=serializers.CharField())
+    labels = serializers.DictField(child=serializers.CharField())
     next = serializers.CharField(allow_null=True)
     available = serializers.ListField(child=serializers.CharField())
 
@@ -58,13 +57,12 @@ class DashboardFilterOptionsView(APIView):
         operation_id="list_dashboard_filter_options",
         request=DashboardFilterOptionsRequestSerializer,
         responses={200: DashboardFilterOptionsResponseSerializer},
-        description="List distinct values from the filter's source restrictions. Selected-value availability is independent of search and pagination.",
+        description="List manual or formula-based options. Selected-value availability is independent of search and pagination.",
     )
     @transaction.atomic
     @map_exceptions(
         {
             DashboardFilterDoesNotExist: ERROR_DASHBOARD_FILTER_DOES_NOT_EXIST,
-            DashboardFilterInvalidBinding: ERROR_DASHBOARD_FILTER_INVALID_BINDING,
             ServiceImproperlyConfiguredDispatchException: ERROR_DASHBOARD_DATA_SOURCE_IMPROPERLY_CONFIGURED,
         }
     )

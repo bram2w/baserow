@@ -5,11 +5,12 @@ import pytest
 from baserow.contrib.dashboard.application_types import DashboardApplicationType
 from baserow.contrib.dashboard.filters.service import DashboardFilterService
 from baserow.contrib.dashboard.widgets.service import WidgetService
+from baserow.core.formula.types import BaserowFormulaObject
 from baserow.core.registries import ImportExportConfig
 
 
 @pytest.mark.django_db
-def test_dashboard_export_import_preserves_filters_and_remaps_bindings(data_fixture):
+def test_dashboard_copy_remaps_filter_and_source_formulas(data_fixture):
     user = data_fixture.create_user()
     dashboard = data_fixture.create_dashboard_application(user=user)
     table = data_fixture.create_database_table(user=user)
@@ -18,40 +19,44 @@ def test_dashboard_export_import_preserves_filters_and_remaps_bindings(data_fixt
         dashboard=dashboard, table=table
     )
     widget = data_fixture.create_summary_widget(dashboard=dashboard, data_source=source)
-    DashboardFilterService().create_filter(
+    selection = DashboardFilterService().create_filter(
         user,
         dashboard.id,
         label="Team",
-        bindings=[{"table_id": table.id, "field_id": field.id}],
+        option_type="formulas",
+        options=[{"name": "Design", "value": "design"}],
+        formula_name=BaserowFormulaObject.create(
+            f"get('data_source.{source.id}.result')"
+        ),
+        formula_value=BaserowFormulaObject.create(
+            f"get('data_source.{source.id}.result')"
+        ),
+    )
+    data_fixture.create_local_baserow_table_service_filter(
+        service=source.service,
+        field=field,
+        type="equal",
+        value=BaserowFormulaObject.create(f"get('dashboard_filter.{selection.id}')"),
     )
     application_type = DashboardApplicationType()
     config = ImportExportConfig(include_permission_data=True, is_duplicate=True)
     exported = application_type.export_serialized(dashboard, config)
-    assert exported["filters"][0]["label"] == "Team"
-
+    assert "bindings" not in exported["filters"][0]
     mapping = {}
     imported = application_type.import_serialized(
         dashboard.workspace, deepcopy(exported), config, mapping
     )
-    imported_widget = WidgetService().get_widgets(user, imported.id)[0]
-    imported_filter = DashboardFilterService().get_filters(user, imported.id)[0]
-    assert imported_filter.label == "Team"
-    assert list(imported_filter.bindings.values("table_id", "field_id")) == [
-        {"table_id": table.id, "field_id": field.id}
-    ]
-    assert imported_widget.id != widget.id
-
-    replacement_table = data_fixture.create_database_table(user=user)
-    replacement = data_fixture.create_text_field(table=replacement_table)
-    mapped = application_type.import_serialized(
-        dashboard.workspace,
-        deepcopy(exported),
-        config,
-        {
-            "database_tables": {table.id: replacement_table.id},
-            "database_fields": {field.id: replacement.id},
-        },
+    copied_widget = WidgetService().get_widgets(user, imported.id)[0]
+    copied_filter = DashboardFilterService().get_filters(user, imported.id)[0]
+    assert copied_widget.id != widget.id
+    assert copied_filter.options == selection.options
+    assert (
+        copied_filter.formula_name["formula"]
+        == f"get('data_source.{copied_widget.data_source_id}.result')"
     )
-    assert application_type.export_serialized(mapped, config)["filters"][0][
-        "bindings"
-    ] == [{"table_id": replacement_table.id, "field_id": replacement.id}]
+    assert (
+        copied_widget.data_source.service.specific.service_filters.get().value[
+            "formula"
+        ]
+        == f"get('dashboard_filter.{copied_filter.id}')"
+    )

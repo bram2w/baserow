@@ -104,14 +104,12 @@ class UpdateDashboardFilterActionType(UndoableActionType):
     @classmethod
     def undo(cls, user, params, action_to_undo):
         DashboardFilterService().update_filter(
-            user, params.filter_id, restore_bindings=True, **params.previous
+            user, params.filter_id, **params.previous
         )
 
     @classmethod
     def redo(cls, user, params, action_to_redo):
-        DashboardFilterService().update_filter(
-            user, params.filter_id, restore_bindings=True, **params.updated
-        )
+        DashboardFilterService().update_filter(user, params.filter_id, **params.updated)
 
 
 class DeleteDashboardFilterActionType(UndoableActionType):

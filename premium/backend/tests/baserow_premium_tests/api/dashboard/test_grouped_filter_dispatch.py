@@ -3,6 +3,7 @@ from django.urls import reverse
 import pytest
 
 from baserow.contrib.dashboard.filters.service import DashboardFilterService
+from baserow.core.formula.types import BaserowFormulaObject
 from baserow_premium.integrations.local_baserow.models import (
     LocalBaserowTableServiceAggregationGroupBy,
     LocalBaserowTableServiceAggregationSeries,
@@ -43,7 +44,12 @@ def test_text_filter_is_applied_before_grouped_aggregation(
         user,
         dashboard.id,
         label="Team",
-        bindings=[{"table_id": table.id, "field_id": fields[0].id}],
+    )
+    fixture.create_local_baserow_table_service_filter(
+        service=source.service,
+        field=fields[0],
+        type="equal",
+        value=BaserowFormulaObject.create(f"get('dashboard_filter.{config.id}')"),
     )
     response = api_client.post(
         reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": widget.id}),

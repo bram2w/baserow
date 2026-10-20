@@ -20,13 +20,11 @@ from baserow.contrib.dashboard.filters.actions import (
 )
 from baserow.contrib.dashboard.filters.exceptions import (
     DashboardFilterDoesNotExist,
-    DashboardFilterInvalidBinding,
 )
 from baserow.contrib.dashboard.filters.service import DashboardFilterService
 
 from .errors import (
     ERROR_DASHBOARD_FILTER_DOES_NOT_EXIST,
-    ERROR_DASHBOARD_FILTER_INVALID_BINDING,
 )
 from .serializers import DashboardFilterSerializer
 
@@ -46,7 +44,6 @@ class DashboardFiltersView(APIView):
     @map_exceptions(
         {
             DashboardDoesNotExist: ERROR_DASHBOARD_DOES_NOT_EXIST,
-            DashboardFilterInvalidBinding: ERROR_DASHBOARD_FILTER_INVALID_BINDING,
         }
     )
     def get(self, request, dashboard_id):
@@ -72,7 +69,6 @@ class DashboardFiltersView(APIView):
     @map_exceptions(
         {
             DashboardDoesNotExist: ERROR_DASHBOARD_DOES_NOT_EXIST,
-            DashboardFilterInvalidBinding: ERROR_DASHBOARD_FILTER_INVALID_BINDING,
         }
     )
     @validate_body(DashboardFilterSerializer, return_validated=True)
@@ -104,7 +100,6 @@ class DashboardFilterView(APIView):
     @map_exceptions(
         {
             DashboardFilterDoesNotExist: ERROR_DASHBOARD_FILTER_DOES_NOT_EXIST,
-            DashboardFilterInvalidBinding: ERROR_DASHBOARD_FILTER_INVALID_BINDING,
         }
     )
     @validate_body(DashboardFilterSerializer, partial=True, return_validated=True)
