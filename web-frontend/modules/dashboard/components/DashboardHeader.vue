@@ -7,11 +7,16 @@
       height="12px"
     ></SkeletonBlock>
     <template v-else>
-      <DashboardHeaderMenuItems
-        v-if="!isEditMode"
-        :dashboard="dashboard"
-        :store-prefix="storePrefix"
-      />
+      <div class="dashboard-app-header__mode">
+        <Button v-if="isEditMode" type="primary" @click="doneEditing">{{
+          $t('dashboardHeader.doneEditing')
+        }}</Button>
+        <DashboardHeaderMenuItems
+          v-else
+          :dashboard="dashboard"
+          :store-prefix="storePrefix"
+        />
+      </div>
       <div class="dashboard-app-header__actions">
         <DashboardRefreshButton :store-prefix="storePrefix" />
         <CreateDashboardElementButton
@@ -22,9 +27,6 @@
           "
           @create-filter="$emit('create-filter')"
         />
-        <Button v-if="isEditMode" type="primary" @click="doneEditing">{{
-          $t('dashboardHeader.doneEditing')
-        }}</Button>
       </div>
     </template>
   </header>
