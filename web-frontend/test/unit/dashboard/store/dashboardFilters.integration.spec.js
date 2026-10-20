@@ -2,6 +2,19 @@ import { flushPromises } from '@vue/test-utils'
 import { TestApp } from '@baserow/test/helpers/testApp'
 import DashboardFilters from '@baserow/modules/dashboard/components/filter/DashboardFilters'
 
+const { hasPermission } = vi.hoisted(() => ({ hasPermission: vi.fn() }))
+vi.mock('#app', async (importOriginal) => {
+  const original = await importOriginal()
+  return {
+    ...original,
+    useNuxtApp: (...args) =>
+      new Proxy(original.useNuxtApp(...args), {
+        get: (app, key) =>
+          key === '$hasPermission' ? hasPermission : app[key],
+      }),
+  }
+})
+
 describe('dashboard text filters', () => {
   let store, mock, testApp
   const dashboardId = 1
@@ -21,6 +34,7 @@ describe('dashboard text filters', () => {
   }
 
   beforeEach(async () => {
+    hasPermission.mockReturnValue(true)
     testApp = new TestApp()
     store = testApp.store
     mock = testApp.mock
@@ -131,7 +145,7 @@ describe('dashboard text filters', () => {
     })
     const wrapper = await testApp.mount(DashboardFilters, {
       global: { stubs: { Teleport: false } },
-      props: { dashboard: { id: dashboardId } },
+      props: { dashboard: { id: dashboardId, workspace: { id: 1 } } },
     })
     const open = async () => {
       await wrapper.get('.dropdown__selected').trigger('click')
@@ -185,6 +199,75 @@ describe('dashboard text filters', () => {
     expect(choices()).toEqual(['Support', 'Transport'])
     expect(testApp.body.find('[role="status"]').exists()).toBe(false)
     expect(optionRequests()).toHaveLength(4)
+  })
+
+  test('deletes a filter through its menu and prevents duplicate deletion while pending', async () => {
+    let finishDelete
+    mock.onDelete('/dashboard/filters/5/').reply(
+      () =>
+        new Promise((resolve) => {
+          finishDelete = resolve
+        })
+    )
+    await store.dispatch('dashboardApplication/enterEditMode')
+    const wrapper = await testApp.mount(DashboardFilters, {
+      global: { stubs: { Teleport: false } },
+      props: { dashboard: { id: dashboardId, workspace: { id: 1 } } },
+    })
+    const trigger = wrapper.get('[aria-label="dashboardFilter.actions"]')
+    await trigger.trigger('click')
+    await flushPromises()
+    await testApp.body.get('.context__menu-item-link--delete').trigger('click')
+    await flushPromises()
+    expect(mock.history.delete).toHaveLength(1)
+    expect(trigger.element.disabled).toBe(true)
+    expect(wrapper.find('.dashboard-filter').exists()).toBe(true)
+    finishDelete([204])
+    await flushPromises()
+    expect(wrapper.find('.dashboard-filter').exists()).toBe(false)
+  })
+
+  test('keeps a filter and allows retrying when deletion fails', async () => {
+    testApp.dontFailOnErrorResponses()
+    mock.onDelete('/dashboard/filters/5/').replyOnce(500)
+    mock.onDelete('/dashboard/filters/5/').reply(204)
+    await store.dispatch('dashboardApplication/enterEditMode')
+    const wrapper = await testApp.mount(DashboardFilters, {
+      global: { stubs: { Teleport: false } },
+      props: { dashboard: { id: dashboardId, workspace: { id: 1 } } },
+    })
+    const trigger = wrapper.get('[aria-label="dashboardFilter.actions"]')
+    await trigger.trigger('click')
+    await flushPromises()
+    await testApp.body.get('.context__menu-item-link--delete').trigger('click')
+    await flushPromises()
+    expect(wrapper.find('.dashboard-filter').exists()).toBe(true)
+    expect(trigger.element.disabled).toBe(false)
+    await trigger.trigger('click')
+    await flushPromises()
+    await testApp.body.get('.context__menu-item-link--delete').trigger('click')
+    await flushPromises()
+    expect(wrapper.find('.dashboard-filter').exists()).toBe(false)
+    expect(mock.history.delete).toHaveLength(2)
+  })
+
+  test('hides the filter menu when deletion is not permitted', async () => {
+    hasPermission.mockImplementation(
+      (operation) => operation !== 'dashboard.filter.delete'
+    )
+    await store.dispatch('dashboardApplication/enterEditMode')
+    const wrapper = await testApp.mount(DashboardFilters, {
+      props: { dashboard: { id: dashboardId, workspace: { id: 1 } } },
+    })
+    expect(
+      wrapper.find('[aria-label="dashboardFilter.actions"]').exists()
+    ).toBe(false)
+    expect(hasPermission).toHaveBeenCalledWith(
+      'dashboard.filter.delete',
+      filter,
+      1
+    )
+    expect(mock.history.delete).toHaveLength(0)
   })
 
   test('reopening does not restart an initial load or an explicit Refresh', async () => {

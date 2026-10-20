@@ -42,6 +42,20 @@
   outline-offset: 2px;
 }
 
+.dashboard-filter__menu-option {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 1px solid $palette-blue-500;
+    outline-offset: -1px;
+  }
+}
+
 .dashboard-filter__context {
   width: 256px;
   max-width: calc(100vw - 24px);

@@ -33,15 +33,22 @@
           :aria-label="$t('dashboardFilter.unavailable')"
         />
       </template>
-      <template v-if="editMode || appliedValues.length" #suffix>
+      <template
+        v-if="(editMode && canDelete) || (!editMode && appliedValues.length)"
+        #suffix
+      >
         <ButtonIcon
           v-if="editMode"
+          ref="menuTrigger"
           class="dashboard-filter__action"
           type="secondary"
           size="small"
           icon="iconoir-more-vert"
-          :aria-label="$t('dashboardFilter.settings')"
-          @click="$emit('select')"
+          :aria-label="$t('dashboardFilter.actions')"
+          :aria-expanded="menuOpen"
+          :disabled="deleting"
+          :loading="deleting"
+          @click.stop="toggleMenu"
         />
         <ButtonIcon
           v-else
@@ -176,6 +183,30 @@
         </div>
       </template>
     </Dropdown>
+    <Context
+      v-if="editMode && canDelete"
+      ref="menu"
+      overflow-scroll
+      max-height-if-outside-viewport
+      @shown="focusDelete"
+      @hidden="menuOpen = false"
+      @keydown.esc.prevent.stop="closeMenu"
+    >
+      <ul class="context__menu">
+        <li class="context__menu-item">
+          <button
+            ref="deleteOption"
+            type="button"
+            class="context__menu-item-link context__menu-item-link--delete dashboard-filter__menu-option"
+            :disabled="deleting"
+            @click="remove"
+          >
+            <i class="context__menu-item-icon iconoir-bin" />
+            {{ $t('dashboardFilter.delete') }}
+          </button>
+        </li>
+      </ul>
+    </Context>
   </FormGroup>
 </template>
 
@@ -188,6 +219,7 @@ import FormGroup from '@baserow/modules/core/components/FormGroup'
 import Button from '@baserow/modules/core/components/Button'
 import ButtonIcon from '@baserow/modules/core/components/ButtonIcon'
 import SelectSearch from '@baserow/modules/core/components/SelectSearch'
+import Context from '@baserow/modules/core/components/Context'
 
 const props = defineProps({
   filter: { type: Object, required: true },
@@ -204,10 +236,16 @@ const props = defineProps({
   },
   editMode: Boolean,
   selected: Boolean,
+  canDelete: Boolean,
+  deleting: Boolean,
 })
-const emit = defineEmits(['apply', 'select', 'options'])
+const emit = defineEmits(['apply', 'select', 'options', 'delete'])
 const dropdown = ref(null)
 const input = ref(null)
+const menu = ref(null)
+const menuTrigger = ref(null)
+const deleteOption = ref(null)
+const menuOpen = ref(false)
 const draft = ref([])
 const search = ref('')
 const normalizedDraft = computed(() =>
@@ -243,6 +281,25 @@ function beforeShow() {
     emit('select')
     return false
   }
+}
+function toggleMenu(event) {
+  if (!props.deleting) {
+    menu.value.toggle(event.currentTarget, 'bottom', 'right', 8, -8)
+  }
+}
+async function focusDelete() {
+  menuOpen.value = true
+  await nextTick()
+  deleteOption.value?.focus()
+}
+function closeMenu() {
+  menu.value.hide()
+  menuTrigger.value?.$el.focus()
+}
+function remove() {
+  if (!props.editMode || !props.canDelete || props.deleting) return
+  closeMenu()
+  emit('delete')
 }
 async function onShown() {
   draft.value = [...props.appliedValues]

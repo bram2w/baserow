@@ -13,6 +13,7 @@ async function render({
   multiple = true,
   unavailable = [],
   editMode = false,
+  canDelete = true,
 } = {}) {
   wrapper = await testApp.mount(DashboardFilterControl, {
     global: { stubs: { Teleport: false } },
@@ -20,6 +21,7 @@ async function render({
       filter: { id: 1, label: 'Team', operator: 'equal', mode, multiple },
       appliedValues,
       editMode,
+      canDelete,
       optionState: {
         results: ['Design', 'Sales'],
         unavailable,
@@ -200,17 +202,52 @@ test('clears the applied selection without opening the picker', async () => {
 
 test('selects the filter settings in edit mode without opening the picker', async () => {
   await render({ editMode: true })
-  await wrapper.get('[aria-label="dashboardFilter.settings"]').trigger('click')
-  await flushPromises()
-  expect(wrapper.emitted('select')).toHaveLength(1)
   await wrapper.get('.dropdown__selected').trigger('click')
   await flushPromises()
-  expect(wrapper.emitted('select')).toHaveLength(2)
+  expect(wrapper.emitted('select')).toHaveLength(1)
   expect(wrapper.emitted('options')).toBeUndefined()
   expect(wrapper.get('.dropdown__selected').attributes('aria-expanded')).toBe(
     'false'
   )
 })
+
+test('opens the deletion menu from the dots without selecting the filter or opening its choices', async () => {
+  await render({ editMode: true })
+  const trigger = wrapper.get('[aria-label="dashboardFilter.actions"]')
+  await trigger.trigger('click')
+  await flushPromises()
+  expect(wrapper.emitted('select')).toBeUndefined()
+  expect(wrapper.emitted('options')).toBeUndefined()
+  const remove = testApp.body.get('.context__menu-item-link--delete')
+  expect(remove.text()).toBe('dashboardFilter.delete')
+  expect(document.activeElement).toBe(remove.element)
+  await remove.trigger('keydown', { key: 'Escape' })
+  await flushPromises()
+  expect(trigger.attributes('aria-expanded')).toBe('false')
+  expect(document.activeElement).toBe(trigger.element)
+  expect(wrapper.emitted('delete')).toBeUndefined()
+  await trigger.trigger('click')
+  await flushPromises()
+  await testApp.body.get('.context__menu-item-link--delete').trigger('click')
+  expect(wrapper.emitted('delete')).toEqual([[]])
+  expect(trigger.attributes('aria-expanded')).toBe('false')
+})
+
+test.each([
+  { editMode: false, canDelete: true },
+  { editMode: true, canDelete: false },
+])(
+  'hides deletion outside edit mode or without permission: %j',
+  async (props) => {
+    await render(props)
+    expect(
+      wrapper.find('[aria-label="dashboardFilter.actions"]').exists()
+    ).toBe(false)
+    expect(testApp.body.find('.context__menu-item-link--delete').exists()).toBe(
+      false
+    )
+  }
+)
 
 test('filters loaded choices immediately without requesting options or losing selections', async () => {
   await render()

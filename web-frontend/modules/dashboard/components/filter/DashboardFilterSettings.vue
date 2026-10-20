@@ -102,15 +102,6 @@
         {{ $t('dashboardFilter.noTables') }}
       </p>
     </FormSection>
-    <Button
-      v-if="canDelete"
-      type="secondary"
-      :loading="deleting"
-      :disabled="deleting"
-      icon="iconoir-bin"
-      @click="remove"
-      >{{ $t('dashboardFilter.delete') }}</Button
-    >
   </div>
 </template>
 
@@ -127,7 +118,6 @@ const props = defineProps({
 })
 const { $store, $hasPermission, $i18n } = useNuxtApp()
 const label = ref(props.filter.label)
-const deleting = ref(false)
 const savingBinding = ref(false)
 const prefix = computed(() => `${props.storePrefix}dashboardApplication/`)
 const tables = computed(() => {
@@ -182,13 +172,6 @@ const canEdit = computed(() =>
     props.dashboard.workspace.id
   )
 )
-const canDelete = computed(() =>
-  $hasPermission(
-    'dashboard.filter.delete',
-    props.filter,
-    props.dashboard.workspace.id
-  )
-)
 watch(
   () => [props.filter.id, props.filter.label],
   () => {
@@ -210,18 +193,5 @@ async function save(values) {
 function saveLabel() {
   if (label.value?.trim() && label.value !== props.filter.label)
     return save({ label: label.value })
-}
-async function remove() {
-  deleting.value = true
-  try {
-    await $store.dispatch(
-      `${props.storePrefix}dashboardApplication/deleteFilter`,
-      props.filter.id
-    )
-  } catch (error) {
-    notifyIf(error, 'dashboard')
-  } finally {
-    deleting.value = false
-  }
 }
 </script>

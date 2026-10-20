@@ -79,6 +79,7 @@
         "update": "Update filter",
         "clear": "Clear filter",
         "delete": "Delete filter",
+        "actions": "Filter actions",
         "settings": "Filter settings",
         "refresh": "Refresh",
         "loading": "Loading choices...",
