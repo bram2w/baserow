@@ -111,22 +111,17 @@ def get_builder(
         )
 
 
-def get_page(user: AbstractUser, workspace: Workspace, page_id: int) -> Page:
+def get_page(user: AbstractUser, page_id: int) -> Page:
     """
-    Get a page with permission check, limited to the given workspace.
+    Get a page with permission check.
 
     :param user: The acting user.
-    :param workspace: The workspace the page's builder must belong to.
     :param page_id: The ID of the page to fetch.
     :returns: The matching page.
-    :raises ToolInputError: When the page is missing, in another workspace, or
-        not accessible.
+    :raises ToolInputError: When the page is missing or not accessible.
     """
 
     try:
-        PageHandler().get_page(
-            page_id, base_queryset=Page.objects.filter(builder__workspace=workspace)
-        )
         return PageService().get_page(user, page_id)
     except Exception as exc:
         raise_if_permission_denied(exc)
@@ -237,7 +232,6 @@ def create_page(user: AbstractUser, builder: Builder, page_create: PageCreate) -
 
 def update_page(
     user: AbstractUser,
-    workspace: Workspace,
     page_update: PageUpdate,
 ) -> Page:
     """
@@ -248,7 +242,7 @@ def update_page(
 
     from baserow.contrib.builder.pages.service import PageService
 
-    page = get_page(user, workspace, page_update.page_id)
+    page = get_page(user, page_update.page_id)
     kwargs = page_update.to_update_kwargs()
     if kwargs:
         PageService().update_page(user, page, **kwargs)

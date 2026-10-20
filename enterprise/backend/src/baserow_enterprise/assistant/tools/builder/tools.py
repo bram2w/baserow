@@ -16,14 +16,12 @@ from pydantic_ai.toolsets import FunctionToolset
 
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.core.exceptions import PermissionException
-from baserow.core.mcp.groups import GROUP_BUILDER_READ
 from baserow_enterprise.assistant.deps import AssistantDeps
 from baserow_enterprise.assistant.tools.builder.themes import (
     THEME_CATALOG,
     ThemeName,
     apply_theme,
 )
-from baserow_enterprise.assistant.tools.mcp_meta import mcp_tool
 from baserow_enterprise.assistant.tools.shared import (
     permission_denied_result,
     raise_if_permission_denied,
@@ -88,7 +86,6 @@ def _get_data_source_refs(tool_helpers, page_id: int) -> dict[str, int]:
 # ---------------------------------------------------------------------------
 
 
-@mcp_tool(title="List pages", group=GROUP_BUILDER_READ, read_only=True)
 def list_pages(
     ctx: RunContext[AssistantDeps],
     application_id: Annotated[int, Field(description="The builder application ID.")],
@@ -262,7 +259,7 @@ def update_page(
 
     tool_helpers.update_status(_("Updating page %(id)d...") % {"id": page.page_id})
 
-    updated_page = helpers.update_page(user, ctx.deps.workspace, page)
+    updated_page = helpers.update_page(user, page)
     page_item = PageItem.from_orm(updated_page)
 
     return {
@@ -277,7 +274,6 @@ def update_page(
 # ---------------------------------------------------------------------------
 
 
-@mcp_tool(title="List data sources", group=GROUP_BUILDER_READ, read_only=True)
 def list_data_sources(
     ctx: RunContext[AssistantDeps],
     page_id: Annotated[int, Field(description="The page ID.")],
@@ -296,7 +292,7 @@ def list_data_sources(
     user = ctx.deps.user
     tool_helpers = ctx.deps.tool_helpers
 
-    page = helpers.get_page(user, ctx.deps.workspace, page_id)
+    page = helpers.get_page(user, page_id)
     tool_helpers.update_status(
         _("Listing data sources on %(name)s...") % {"name": page.name}
     )
@@ -343,7 +339,7 @@ def create_data_sources(
 
     require_payload("create_data_sources", "data_sources", data_sources)
 
-    page = helpers.get_page(user, ctx.deps.workspace, page_id)
+    page = helpers.get_page(user, page_id)
     integration = helpers.get_local_baserow_integration(user, page.builder)
 
     existing_ds = helpers.list_data_sources(user, page)
@@ -433,7 +429,7 @@ def update_data_source(
     workspace = ctx.deps.workspace
     tool_helpers = ctx.deps.tool_helpers
 
-    page = helpers.get_page(user, ctx.deps.workspace, page_id)
+    page = helpers.get_page(user, page_id)
     tool_helpers.update_status(
         _("Updating data source %(id)d...") % {"id": data_source.data_source_id}
     )
@@ -462,7 +458,6 @@ def update_data_source(
 # ---------------------------------------------------------------------------
 
 
-@mcp_tool(title="List elements", group=GROUP_BUILDER_READ, read_only=True)
 def list_elements(
     ctx: RunContext[AssistantDeps],
     page_id: Annotated[int, Field(description="The page ID.")],
@@ -484,7 +479,7 @@ def list_elements(
     user = ctx.deps.user
     tool_helpers = ctx.deps.tool_helpers
 
-    page = helpers.get_page(user, ctx.deps.workspace, page_id)
+    page = helpers.get_page(user, page_id)
     tool_helpers.update_status(
         _("Listing elements on %(name)s...") % {"name": page.name}
     )
@@ -504,7 +499,7 @@ def _create_elements_internal(
     user = ctx.deps.user
     tool_helpers = ctx.deps.tool_helpers
 
-    page = helpers.get_page(user, ctx.deps.workspace, page_id)
+    page = helpers.get_page(user, page_id)
     shared_page = PageHandler().get_shared_page(page.builder)
 
     tool_helpers.update_status(
@@ -878,7 +873,7 @@ def update_element(
     user = ctx.deps.user
     tool_helpers = ctx.deps.tool_helpers
 
-    page = helpers.get_page(user, ctx.deps.workspace, page_id)
+    page = helpers.get_page(user, page_id)
     tool_helpers.update_status(
         _("Updating element %(id)d...") % {"id": element.element_id}
     )
@@ -969,7 +964,7 @@ def update_element_style(
     user = ctx.deps.user
     tool_helpers = ctx.deps.tool_helpers
 
-    helpers.get_page(user, ctx.deps.workspace, page_id)
+    helpers.get_page(user, page_id)
     tool_helpers.update_status(
         _("Styling element %(id)d...") % {"id": style.element_id}
     )
@@ -1036,7 +1031,7 @@ def move_elements(
     if not moves:
         return {"moved_elements": []}
 
-    page = helpers.get_page(user, ctx.deps.workspace, page_id)
+    page = helpers.get_page(user, page_id)
     tool_helpers.update_status(
         _("Moving %(count)d elements on %(name)s...")
         % {"count": len(moves), "name": page.name}
@@ -1076,7 +1071,6 @@ def move_elements(
 # ---------------------------------------------------------------------------
 
 
-@mcp_tool(title="List page actions", group=GROUP_BUILDER_READ, read_only=True)
 def list_actions(
     ctx: RunContext[AssistantDeps],
     page_id: Annotated[int, Field(description="The page ID.")],
@@ -1095,7 +1089,7 @@ def list_actions(
     user = ctx.deps.user
     tool_helpers = ctx.deps.tool_helpers
 
-    page = helpers.get_page(user, ctx.deps.workspace, page_id)
+    page = helpers.get_page(user, page_id)
     tool_helpers.update_status(
         _("Listing actions on %(name)s...") % {"name": page.name}
     )
@@ -1147,7 +1141,7 @@ def create_actions(
 
     require_payload("create_actions", "actions", actions)
 
-    page = helpers.get_page(user, ctx.deps.workspace, page_id)
+    page = helpers.get_page(user, page_id)
     integration = helpers.get_local_baserow_integration(user, page.builder)
 
     el_refs = _get_element_refs(tool_helpers, page_id)
@@ -1518,7 +1512,7 @@ def setup_page(
             "use `navigate` instead."
         )
 
-    page = helpers.get_page(user, ctx.deps.workspace, page_id)
+    page = helpers.get_page(user, page_id)
     shared_page = PageHandler().get_shared_page(page.builder)
     integration = helpers.get_local_baserow_integration(user, page.builder)
 

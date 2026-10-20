@@ -12,9 +12,7 @@ from baserow.contrib.automation.models import Automation
 from baserow.contrib.automation.workflows.models import AutomationWorkflow
 from baserow.contrib.automation.workflows.service import AutomationWorkflowService
 from baserow.core.exceptions import PermissionException
-from baserow.core.mcp.groups import GROUP_AUTOMATION_READ
 from baserow_enterprise.assistant.deps import AssistantDeps
-from baserow_enterprise.assistant.tools.mcp_meta import mcp_tool
 from baserow_enterprise.assistant.tools.shared import (
     raise_if_permission_denied,
     require_payload,
@@ -28,7 +26,6 @@ if TYPE_CHECKING:
     from baserow_enterprise.assistant.deps import ToolHelpers
 
 
-@mcp_tool(title="List workflows", group=GROUP_AUTOMATION_READ, read_only=True)
 def list_workflows(
     ctx: RunContext[AssistantDeps],
     automation_id: Annotated[
@@ -61,7 +58,6 @@ def list_workflows(
     }
 
 
-@mcp_tool(title="List workflow nodes", group=GROUP_AUTOMATION_READ, read_only=True)
 def list_nodes(
     ctx: RunContext[AssistantDeps],
     workflow_id: Annotated[

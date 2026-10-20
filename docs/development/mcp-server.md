@@ -21,6 +21,7 @@ ActionTypes → Django ORM
 
 - **MCPTool** (`registries.py`) — Base class for all tools. Subclasses define a `type`, a Pydantic `input_schema`, and implement `_sync_call()`. Tools with `enabled = False` are registered but hidden from MCP clients.
 - **Services layer** (`services.py`) — Workspace-scoped database operations. Shared by both MCP tools and the enterprise AI assistant.
+- **Shared tools** (`baserow/core/tools/`, `baserow/contrib/database/tools/`) — Tool functions that MCP, Kuma and the Agent Builder all call. A shared tool takes a `ToolContext` (user, workspace, status callback) plus arguments annotated with `Annotated[..., Field(description=...)]`, and knows nothing about the client. `FunctionMCPTool` builds its MCP input schema from the signature and its description from the docstring; MCP-only metadata (title, group, read-only) is set where it is registered, for example `contrib/database/mcp/views/tools.py`. Kuma wraps the same function in its own tool, which adds Kuma's argument (`thought`) and guidance.
 - **Action types** — All mutations go through Baserow's action-type layer, so operations are undoable and audit-logged.
 - **Workspace isolation** — Every service function enforces workspace-scoped access. Tools cannot touch data outside the endpoint's workspace.
 - **SSE transport** (`backend/src/baserow/core/mcp/sse.py`) — `DjangoChannelsSseServerTransport` serves the legacy `GET /mcp/{key}/sse` stream and `POST /mcp/messages/`.
@@ -28,10 +29,10 @@ ActionTypes → Django ORM
 
 ## Endpoint model
 
-An `MCPEndpoint` links a user to one workspace and to the tools they allowed (`allowed_tools`). Null allows only the original database tools in `LEGACY_DEFAULT_TOOLS`, so endpoints created before a tool existed don't gain it. There are two kinds:
+An `MCPEndpoint` links a user to one workspace and to the tools they allowed (`allowed_tools`, a list of tool names). Tools added later stay off until the user turns them on. Endpoints created before tool lists existed were given the original database tools in `LEGACY_DEFAULT_TOOLS`, and a null list still means that list. There are two kinds:
 
 - **OAuth grants**: created when a client signs in through the consent page (see [OAuth sign-in](#oauth-sign-in)). The client calls `POST /mcp` with an access token. They are listed, and can be disconnected, on the **OAuth** tab of **My settings > MCP server**.
-- **Endpoint keys**: a 32-character secret key, created under **My settings > MCP server** (on the **Endpoint** tab when OAuth is on). Keys have a null `allowed_tools`, so they allow the `LEGACY_DEFAULT_TOOLS`. Older clients use it in the SSE URL, `GET /mcp/{key}/sse`. `POST /mcp` also accepts it as `Authorization: Bearer <key>`.
+- **Endpoint keys**: a 32-character secret key, created under **My settings > MCP server** (on the **Endpoint** tab when OAuth is on). A new key gets every read-only tool plus the `LEGACY_DEFAULT_TOOLS`. Its tools can be changed with `PATCH` on the endpoint, like an OAuth connection's. Older clients use it in the SSE URL, `GET /mcp/{key}/sse`. `POST /mcp` also accepts it as `Authorization: Bearer <key>`.
 
 Users install the client side, the MCP server config plus a skill, from [baserow/baserow-mcp](https://github.com/baserow/baserow-mcp). Its README has the setup steps for each agent.
 
@@ -97,7 +98,7 @@ OpenAI verifies the domain of a submitted ChatGPT app by fetching `/.well-known/
 
 ## Tools
 
-Some tools are currently disabled (`enabled = False`) and hidden from MCP clients. The consent page does not list them. Kuma tools are the enterprise AI assistant's own tools, exposed over MCP with `@mcp_tool`. A Kuma tool is only listed and callable when its tool type's `can_use` allows the endpoint's user and workspace.
+Some tools are currently disabled (`enabled = False`) and hidden from MCP clients. The consent page does not list them.
 
 | Tool | Status | Description |
 |---|---|---|
@@ -108,13 +109,7 @@ Some tools are currently disabled (`enabled = False`) and hidden from MCP client
 | `create_rows` | enabled | Create one or more rows using field names |
 | `update_rows` | enabled | Update rows by ID using field names |
 | `delete_rows` | enabled | Delete rows by ID |
-| `list_views` | enabled | List the views of a table (Kuma tool) |
-| `list_pages` | enabled | List the pages of an application builder (Kuma tool) |
-| `list_elements` | enabled | List the elements on a page (Kuma tool) |
-| `list_data_sources` | enabled | List the data sources of a page (Kuma tool) |
-| `list_actions` | enabled | List the actions on a page (Kuma tool) |
-| `list_workflows` | enabled | List the workflows of an automation (Kuma tool) |
-| `list_nodes` | enabled | List the nodes of a workflow (Kuma tool) |
+| `list_views` | enabled | List the views of a table (shared with Kuma) |
 | `create_database` | disabled | Create a new database |
 | `create_table` | disabled | Create a table with optional initial fields |
 | `update_table` | disabled | Rename a table |

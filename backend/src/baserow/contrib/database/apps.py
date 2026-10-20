@@ -1251,6 +1251,7 @@ class DatabaseConfig(AppConfig):
             ListTablesMcpTool,
             UpdateTableMcpTool,
         )
+        from baserow.contrib.database.mcp.views.tools import ListViewsMcpTool
         from baserow.core.mcp.groups import (
             DatabaseDeleteMCPToolGroup,
             DatabaseEditMCPToolGroup,
@@ -1269,6 +1270,7 @@ class DatabaseConfig(AppConfig):
         mcp_tool_registry.register(CreateRowsMcpTool())
         mcp_tool_registry.register(UpdateRowsMcpTool())
         mcp_tool_registry.register(DeleteRowsMcpTool())
+        mcp_tool_registry.register(ListViewsMcpTool())
         # Disabled (enabled=False) until users can control tool
         # availability through the UI.
         mcp_tool_registry.register(CreateDatabaseMcpTool())

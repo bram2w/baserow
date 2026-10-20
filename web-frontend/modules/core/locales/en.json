@@ -30,17 +30,9 @@
     "deletes": "Deletes",
     "overwrites": "Overwrites",
     "areaDatabase": "Databases",
-    "areaBuilder": "Applications",
-    "areaAutomation": "Automations",
-    "areaDocs": "Help",
     "databaseRead": "Read tables and rows",
     "databaseEdit": "Create and change",
-    "databaseDelete": "Delete",
-    "builderRead": "Read pages and elements",
-    "builderEdit": "Create and change",
-    "automationRead": "Read workflows",
-    "automationEdit": "Create and change",
-    "docs": "Search the Baserow docs"
+    "databaseDelete": "Delete"
   },
   "paginator": {
     "page": "Page",

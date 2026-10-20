@@ -473,26 +473,6 @@ class BaserowEnterpriseConfig(AppConfig):
         assistant_tool_registry.register(AutomationToolType())
         assistant_tool_registry.register(BuilderToolType())
         assistant_tool_registry.register(SearchDocsToolType())
-
-        from baserow.core.mcp.groups import mcp_tool_group_registry
-        from baserow_enterprise.assistant.mcp.groups import (
-            AutomationEditMCPToolGroup,
-            AutomationReadMCPToolGroup,
-            BuilderEditMCPToolGroup,
-            BuilderReadMCPToolGroup,
-            DocsMCPToolGroup,
-        )
-        from baserow_enterprise.assistant.mcp.tools import (
-            register_assistant_mcp_tools,
-        )
-
-        mcp_tool_group_registry.register(BuilderReadMCPToolGroup())
-        mcp_tool_group_registry.register(BuilderEditMCPToolGroup())
-        mcp_tool_group_registry.register(AutomationReadMCPToolGroup())
-        mcp_tool_group_registry.register(AutomationEditMCPToolGroup())
-        mcp_tool_group_registry.register(DocsMCPToolGroup())
-        register_assistant_mcp_tools()
-
         assistant_element_type_registry.register(TableAssistantElementType())
         assistant_element_type_registry.register(ButtonAssistantElementType())
         assistant_element_type_registry.register(LinkAssistantElementType())

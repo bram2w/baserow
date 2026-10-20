@@ -13,7 +13,6 @@ from django.utils.translation import gettext as _
 from baserow.contrib.automation.models import Automation
 from baserow.contrib.automation.nodes.registries import automation_node_type_registry
 from baserow.contrib.automation.nodes.service import AutomationNodeService
-from baserow.contrib.automation.workflows.handler import AutomationWorkflowHandler
 from baserow.contrib.automation.workflows.models import AutomationWorkflow
 from baserow.contrib.automation.workflows.service import AutomationWorkflowService
 from baserow.core.models import Workspace
@@ -43,15 +42,9 @@ def get_workflow(
 ) -> AutomationWorkflow:
     """Fetch a workflow with a workspace-level permission check."""
 
-    # Scope to the workspace first, so a workflow elsewhere is indistinguishable from a
-    # missing one, even for a user whose role there denies read access.
-    AutomationWorkflowHandler().get_workflow(
-        workflow_id,
-        base_queryset=AutomationWorkflow.objects.filter(
-            automation__workspace=workspace
-        ),
-    )
     workflow = AutomationWorkflowService().get_workflow(user, workflow_id)
+    if workflow.automation.workspace_id != workspace.id:
+        raise ValueError("Workflow not in workspace")
     return workflow
 
 

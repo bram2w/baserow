@@ -5,16 +5,8 @@ from baserow.core.registry import Instance, Registry
 GROUP_DATABASE_READ = "database_read"
 GROUP_DATABASE_EDIT = "database_edit"
 GROUP_DATABASE_DELETE = "database_delete"
-GROUP_BUILDER_READ = "builder_read"
-GROUP_BUILDER_EDIT = "builder_edit"
-GROUP_AUTOMATION_READ = "automation_read"
-GROUP_AUTOMATION_EDIT = "automation_edit"
-GROUP_DOCS = "docs"
 
 AREA_DATABASE = "database"
-AREA_BUILDER = "builder"
-AREA_AUTOMATION = "automation"
-AREA_DOCS = "docs"
 
 
 class MCPToolGroup(Instance):

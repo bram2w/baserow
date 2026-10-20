@@ -12,6 +12,7 @@ EXPECTED = {
     "create_rows": (False, False),
     "update_rows": (False, True),
     "delete_rows": (False, True),
+    "list_views": (True, False),
     # Disabled tools, annotated so they are ready when enabled.
     "create_database": (False, False),
     "create_table": (False, False),
@@ -25,7 +26,7 @@ EXPECTED = {
 
 @pytest.mark.django_db
 def test_enabled_tools_have_annotations(data_fixture):
-    endpoint = data_fixture.create_mcp_endpoint()
+    endpoint = data_fixture.create_mcp_endpoint(allowed_tools=list(EXPECTED))
     tools = {
         t.name: t for t in async_to_sync(mcp_tool_registry.list_all_tools)(endpoint)
     }
@@ -42,13 +43,7 @@ def test_enabled_tools_have_annotations(data_fixture):
 @pytest.mark.django_db
 def test_all_registered_tools_are_annotated(data_fixture):
     endpoint = data_fixture.create_mcp_endpoint()
-    # The enterprise Kuma bridge registers more tools, tested there.
-    core_names = {
-        name
-        for name, tool in mcp_tool_registry.registry.items()
-        if type(tool).__module__.startswith("baserow.contrib.database")
-    }
-    assert core_names == set(EXPECTED)
+    assert set(mcp_tool_registry.registry) == set(EXPECTED)
     for name, (read_only, destructive) in EXPECTED.items():
         tool = async_to_sync(mcp_tool_registry.get(name).list)(endpoint)[0]
         assert tool.annotations.title
