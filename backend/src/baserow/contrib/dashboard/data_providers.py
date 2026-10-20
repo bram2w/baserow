@@ -35,7 +35,17 @@ class DashboardFilterDataProviderType(DataProviderType):
             }
         configuration = dispatch_context.cache[cache_key].get(path[0])
         if configuration is None:
-            raise InvalidRuntimeFormula("The dashboard filter no longer exists.")
+            if (
+                DashboardFilter.objects_and_trash.filter(id=path[0])
+                .exclude(dashboard=dispatch_context.dashboard)
+                .exists()
+            ):
+                raise InvalidRuntimeFormula(
+                    "The dashboard filter belongs to another dashboard."
+                )
+            # A removed control has no value, just like an unselected control.
+            # Keep its source formula intact so restoring the control reconnects it.
+            return None
 
         selections = {
             str(selection["filter_id"]): selection["values"]
