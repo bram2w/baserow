@@ -58,6 +58,7 @@ import {
 } from '@baserow/modules/database/fieldTypes'
 import {
   EqualViewFilterType,
+  TextIsAnyOfViewFilterType,
   NotEqualViewFilterType,
   ContainsViewFilterType,
   FilenameContainsViewFilterType,
@@ -485,6 +486,7 @@ export default defineNuxtPlugin({
       new DefaultRowValuesCopyOptionType(context)
     )
     $registry.register('viewFilter', new EqualViewFilterType(context))
+    $registry.register('viewFilter', new TextIsAnyOfViewFilterType(context))
     $registry.register('viewFilter', new NotEqualViewFilterType(context))
     $registry.register(
       'viewFilter',

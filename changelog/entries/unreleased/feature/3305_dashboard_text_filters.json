@@ -4,6 +4,8 @@
     "issue_origin": "github",
     "issue_number": 3305,
     "domain": "dashboard",
-    "bullet_points": [],
+    "bullet_points": [
+        "Added an 'is any of' text condition for database views and data sources, including dashboard dropdowns with multiple selections."
+    ],
     "created_at": "2026-10-19"
 }
