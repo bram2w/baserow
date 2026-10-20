@@ -127,6 +127,7 @@ def test_new_page_check_tolerates_repaired_argument_root(data_fixture):
 def _update_menu(scenario: EvalScenario, **changes: Any) -> None:
     helpers.update_element(
         scenario.user,
+        scenario.refs["menu"].page.builder.workspace,
         ElementUpdate(element_id=scenario.refs["menu"].id, **changes),
     )
 

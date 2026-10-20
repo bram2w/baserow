@@ -259,7 +259,7 @@ def update_page(
 
     tool_helpers.update_status(_("Updating page %(id)d...") % {"id": page.page_id})
 
-    updated_page = helpers.update_page(user, page)
+    updated_page = helpers.update_page(user, ctx.deps.workspace, page)
     page_item = PageItem.from_orm(updated_page)
 
     return {
@@ -292,7 +292,7 @@ def list_data_sources(
     user = ctx.deps.user
     tool_helpers = ctx.deps.tool_helpers
 
-    page = helpers.get_page(user, page_id)
+    page = helpers.get_page(user, ctx.deps.workspace, page_id)
     tool_helpers.update_status(
         _("Listing data sources on %(name)s...") % {"name": page.name}
     )
@@ -339,7 +339,7 @@ def create_data_sources(
 
     require_payload("create_data_sources", "data_sources", data_sources)
 
-    page = helpers.get_page(user, page_id)
+    page = helpers.get_page(user, ctx.deps.workspace, page_id)
     integration = helpers.get_local_baserow_integration(user, page.builder)
 
     existing_ds = helpers.list_data_sources(user, page)
@@ -429,7 +429,7 @@ def update_data_source(
     workspace = ctx.deps.workspace
     tool_helpers = ctx.deps.tool_helpers
 
-    page = helpers.get_page(user, page_id)
+    page = helpers.get_page(user, ctx.deps.workspace, page_id)
     tool_helpers.update_status(
         _("Updating data source %(id)d...") % {"id": data_source.data_source_id}
     )
@@ -479,7 +479,7 @@ def list_elements(
     user = ctx.deps.user
     tool_helpers = ctx.deps.tool_helpers
 
-    page = helpers.get_page(user, page_id)
+    page = helpers.get_page(user, ctx.deps.workspace, page_id)
     tool_helpers.update_status(
         _("Listing elements on %(name)s...") % {"name": page.name}
     )
@@ -499,7 +499,7 @@ def _create_elements_internal(
     user = ctx.deps.user
     tool_helpers = ctx.deps.tool_helpers
 
-    page = helpers.get_page(user, page_id)
+    page = helpers.get_page(user, ctx.deps.workspace, page_id)
     shared_page = PageHandler().get_shared_page(page.builder)
 
     tool_helpers.update_status(
@@ -873,13 +873,13 @@ def update_element(
     user = ctx.deps.user
     tool_helpers = ctx.deps.tool_helpers
 
-    page = helpers.get_page(user, page_id)
+    page = helpers.get_page(user, ctx.deps.workspace, page_id)
     tool_helpers.update_status(
         _("Updating element %(id)d...") % {"id": element.element_id}
     )
 
     with transaction.atomic():
-        outcome = helpers.update_element(user, element)
+        outcome = helpers.update_element(user, ctx.deps.workspace, element)
     orm_element, element_type = outcome.element, outcome.element_type
 
     # Handle formula generation for $formula: fields (separate transaction)
@@ -964,13 +964,15 @@ def update_element_style(
     user = ctx.deps.user
     tool_helpers = ctx.deps.tool_helpers
 
-    helpers.get_page(user, page_id)
+    helpers.get_page(user, ctx.deps.workspace, page_id)
     tool_helpers.update_status(
         _("Styling element %(id)d...") % {"id": style.element_id}
     )
 
     with transaction.atomic():
-        element, element_type = helpers.update_element_style(user, style)
+        element, element_type = helpers.update_element_style(
+            user, ctx.deps.workspace, style
+        )
 
     # Report which fields were explicitly set (not inherited from existing styles)
     updated_fields = list(style.to_update_kwargs(element_type, {}).keys())
@@ -1031,7 +1033,7 @@ def move_elements(
     if not moves:
         return {"moved_elements": []}
 
-    page = helpers.get_page(user, page_id)
+    page = helpers.get_page(user, ctx.deps.workspace, page_id)
     tool_helpers.update_status(
         _("Moving %(count)d elements on %(name)s...")
         % {"count": len(moves), "name": page.name}
@@ -1044,7 +1046,7 @@ def move_elements(
         tool_helpers.raise_if_cancelled()
         try:
             with transaction.atomic():
-                element = helpers.move_element(user, element_move)
+                element = helpers.move_element(user, ctx.deps.workspace, element_move)
             moved.append(
                 {
                     "element_id": element.id,
@@ -1089,7 +1091,7 @@ def list_actions(
     user = ctx.deps.user
     tool_helpers = ctx.deps.tool_helpers
 
-    page = helpers.get_page(user, page_id)
+    page = helpers.get_page(user, ctx.deps.workspace, page_id)
     tool_helpers.update_status(
         _("Listing actions on %(name)s...") % {"name": page.name}
     )
@@ -1141,7 +1143,7 @@ def create_actions(
 
     require_payload("create_actions", "actions", actions)
 
-    page = helpers.get_page(user, page_id)
+    page = helpers.get_page(user, ctx.deps.workspace, page_id)
     integration = helpers.get_local_baserow_integration(user, page.builder)
 
     el_refs = _get_element_refs(tool_helpers, page_id)
@@ -1213,7 +1215,7 @@ def add_action_field_mapping(
     )
 
     return helpers.add_field_mapping_to_action(
-        ctx.deps.user, action_id, field_id, value_formula
+        ctx.deps.user, ctx.deps.workspace, action_id, field_id, value_formula
     )
 
 
@@ -1512,7 +1514,7 @@ def setup_page(
             "use `navigate` instead."
         )
 
-    page = helpers.get_page(user, page_id)
+    page = helpers.get_page(user, ctx.deps.workspace, page_id)
     shared_page = PageHandler().get_shared_page(page.builder)
     integration = helpers.get_local_baserow_integration(user, page.builder)
 
