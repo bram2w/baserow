@@ -116,14 +116,15 @@ describe('dashboard text filters', () => {
     ).toEqual([])
   })
 
-  test('reopens the picker and clears a search using the already loaded pages', async () => {
+  test('filters loaded pages locally and keeps the search when more choices load or refresh', async () => {
     mock.onPost('/dashboard/filters/5/options/').reply(({ data }) => {
-      const { search, after } = JSON.parse(data)
+      const { after } = JSON.parse(data)
       return [
         200,
         {
-          results: search || after ? ['Sales'] : ['Design'],
-          next: search ? null : after ? 'Sales' : 'Design',
+          results:
+            after === 'Sales' ? ['Support'] : after ? ['Sales'] : ['Design'],
+          next: after === 'Sales' ? null : after ? 'Sales' : 'Design',
           available: [],
         },
       ]
@@ -137,14 +138,7 @@ describe('dashboard text filters', () => {
       await flushPromises()
     }
     const search = async (value) => {
-      vi.useFakeTimers()
-      try {
-        await testApp.body.get('input[type="text"]').setValue(value)
-        await vi.advanceTimersByTimeAsync(250)
-      } finally {
-        vi.useRealTimers()
-      }
-      await flushPromises()
+      await testApp.body.get('input[type="text"]').setValue(value)
     }
     const choices = () =>
       testApp.body
@@ -154,15 +148,19 @@ describe('dashboard text filters', () => {
       mock.history.post.filter(({ url }) => url.endsWith('/options/'))
 
     await open()
+    await search('sAL')
+    expect(choices()).toEqual([])
+    expect(optionRequests()).toHaveLength(1)
     await testApp.body.get('.dashboard-filter__more').trigger('click')
     await flushPromises()
-    expect(choices()).toEqual(['Design', 'Sales'])
-    expect(JSON.parse(optionRequests()[1].data).after).toBe('Design')
-    await search('Sales')
     expect(choices()).toEqual(['Sales'])
+    expect(JSON.parse(optionRequests()[1].data)).toMatchObject({
+      after: 'Design',
+      search: '',
+    })
     await search('')
     expect(choices()).toEqual(['Design', 'Sales'])
-    expect(optionRequests()).toHaveLength(3)
+    expect(optionRequests()).toHaveLength(2)
 
     await search('Sales')
     await testApp.body.get('form').trigger('keydown', { key: 'Escape' })
@@ -170,10 +168,23 @@ describe('dashboard text filters', () => {
     expect(testApp.body.get('input[type="text"]').element.value).toBe('')
     expect(choices()).toEqual(['Design', 'Sales'])
     expect(testApp.body.find('[role="status"]').exists()).toBe(false)
-    expect(optionRequests()).toHaveLength(4)
+    expect(optionRequests()).toHaveLength(2)
     await testApp.body.get('.dashboard-filter__more').trigger('click')
     await flushPromises()
-    expect(JSON.parse(optionRequests()[4].data).after).toBe('Sales')
+    expect(JSON.parse(optionRequests()[2].data).after).toBe('Sales')
+    await search('port')
+    expect(choices()).toEqual(['Support'])
+    mock.onPost('/dashboard/filters/5/options/').reply(200, {
+      results: ['Support', 'Transport'],
+      next: null,
+      available: [],
+    })
+    await store.dispatch('dashboardApplication/refresh')
+    await flushPromises()
+    expect(testApp.body.get('input[type="text"]').element.value).toBe('port')
+    expect(choices()).toEqual(['Support', 'Transport'])
+    expect(testApp.body.find('[role="status"]').exists()).toBe(false)
+    expect(optionRequests()).toHaveLength(4)
   })
 
   test('reopening does not restart an initial load or an explicit Refresh', async () => {

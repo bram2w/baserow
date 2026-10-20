@@ -212,22 +212,26 @@ test('selects the filter settings in edit mode without opening the picker', asyn
   )
 })
 
-test('searches server options without applying or losing the current selection', async () => {
+test('filters loaded choices immediately without requesting options or losing selections', async () => {
   await render()
   await wrapper.get('.dropdown__selected').trigger('click')
   await flushPromises()
-  vi.useFakeTimers()
-  try {
-    await testApp.body.get('input[type="text"]').setValue('Sales')
-    await vi.advanceTimersByTimeAsync(250)
-    expect(wrapper.emitted('options').at(-1)).toEqual([
-      { search: 'Sales', more: false, selected: ['Design'] },
-    ])
-    expect(wrapper.emitted('apply')).toBeUndefined()
-    expect(testApp.body.get('input[type="checkbox"]').element.checked).toBe(
-      true
-    )
-  } finally {
-    vi.useRealTimers()
-  }
+  const choices = () =>
+    testApp.body
+      .findAll('.dashboard-filter__option-value')
+      .map((choice) => choice.text())
+  const search = testApp.body.get('input[type="text"]')
+  await search.setValue('sAL')
+  expect(choices()).toEqual(['Sales'])
+  expect(testApp.body.find('[role="status"]').exists()).toBe(false)
+  expect(wrapper.emitted('options')).toHaveLength(1)
+  expect(wrapper.emitted('apply')).toBeUndefined()
+
+  await search.setValue('missing')
+  expect(choices()).toEqual([])
+  expect(testApp.body.text()).toContain('dashboardFilter.noOptions')
+  await search.setValue('')
+  expect(choices()).toEqual(['Design', 'Sales'])
+  expect(testApp.body.get('input[type="checkbox"]').element.checked).toBe(true)
+  expect(wrapper.emitted('options')).toHaveLength(1)
 })

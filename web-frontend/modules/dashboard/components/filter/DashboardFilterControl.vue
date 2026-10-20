@@ -65,7 +65,6 @@
               <SelectSearch
                 v-model="search"
                 :aria-label="$t('action.search')"
-                @update:model-value="searchOptions"
               />
               <div class="dashboard-filter__operator">
                 {{ $t(`dashboardFilter.${filter.operator}`) }}...
@@ -181,8 +180,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
-import debounce from 'lodash/debounce'
+import { computed, nextTick, ref } from 'vue'
 import Dropdown from '@baserow/modules/core/components/Dropdown'
 import Checkbox from '@baserow/modules/core/components/Checkbox'
 import FormInput from '@baserow/modules/core/components/FormInput'
@@ -210,7 +208,6 @@ const props = defineProps({
 const emit = defineEmits(['apply', 'select', 'options'])
 const dropdown = ref(null)
 const input = ref(null)
-const opened = ref(false)
 const draft = ref([])
 const search = ref('')
 const normalizedDraft = computed(() =>
@@ -223,9 +220,12 @@ const changed = computed(
     JSON.stringify(normalizedDraft.value) !==
     JSON.stringify(props.appliedValues)
 )
-const displayedOptions = computed(() => [
-  ...new Set([...props.optionState.results, ...draft.value]),
-])
+const displayedOptions = computed(() => {
+  const query = search.value.toLowerCase()
+  return [...new Set([...props.optionState.results, ...draft.value])].filter(
+    (value) => value.toLowerCase().includes(query)
+  )
+})
 const hasUnavailable = computed(() =>
   props.appliedValues.some((value) =>
     props.optionState.unavailable.includes(value)
@@ -233,20 +233,10 @@ const hasUnavailable = computed(() =>
 )
 const requestOptions = (more = false, useCache = false) =>
   emit('options', {
-    search: search.value,
     more,
     selected: [...new Set([...props.appliedValues, ...draft.value])],
     ...(useCache ? { useCache: true } : {}),
   })
-const searchOptions = debounce(() => {
-  if (opened.value) requestOptions(false, !search.value)
-}, 250)
-watch(
-  () => props.optionState.search,
-  (value) => {
-    search.value = value ?? ''
-  }
-)
 
 function beforeShow() {
   if (props.editMode) {
@@ -255,7 +245,6 @@ function beforeShow() {
   }
 }
 async function onShown() {
-  opened.value = true
   draft.value = [...props.appliedValues]
   search.value = ''
   if (props.filter.mode === 'dropdown') requestOptions(false, true)
@@ -263,8 +252,6 @@ async function onShown() {
   input.value?.focus()
 }
 function onHidden() {
-  opened.value = false
-  searchOptions.cancel()
   draft.value = [...props.appliedValues]
 }
 function toggle(value, checked) {
@@ -282,5 +269,4 @@ function apply() {
 function close() {
   dropdown.value.close()
 }
-onBeforeUnmount(() => searchOptions.cancel())
 </script>
