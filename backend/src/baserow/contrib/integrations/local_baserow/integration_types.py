@@ -95,7 +95,12 @@ class LocalBaserowIntegrationType(IntegrationType):
             has_existing_authorization = instance is not None and (
                 instance.authorized_subject_type and instance.authorized_subject_id
             )
-            if authorization_not_updated and has_existing_authorization:
+            if has_existing_authorization and (
+                authorization_not_updated or instance.authorized_subject is None
+            ):
+                # An unavailable subject must not silently grant the editor's authority.
+                values.pop("authorized_subject_id", None)
+                values.pop("authorized_subject_type", None)
                 return super().prepare_values(
                     values, user, application=application, instance=instance
                 )
