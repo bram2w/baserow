@@ -71,12 +71,18 @@ describe('MCP authorize page', () => {
     await testApp.afterEach()
   })
 
+  // Nuxt's prefetch scheduler resolves each navigation against `location.href`.
+  function stubLocation() {
+    const assign = vi.fn()
+    vi.stubGlobal('location', { href: window.location.href, assign })
+    return assign
+  }
+
   async function mountWithConsent() {
     testApp.mock
       .onGet('/mcp/oauth/consent/', { params: { query } })
       .reply(200, consent)
-    const assign = vi.fn()
-    vi.stubGlobal('location', { assign })
+    const assign = stubLocation()
     const wrapper = await testApp.mount(MCPAuthorize, { route })
     await flushPromises()
     return { wrapper, assign }
@@ -151,7 +157,7 @@ describe('MCP authorize page', () => {
     testApp.mock
       .onGet('/mcp/oauth/consent/', { params: { query } })
       .reply(200, consent)
-    vi.stubGlobal('location', { assign: vi.fn() })
+    stubLocation()
     const wrapper = await testApp.mount(MCPAuthorize, { route, ...withParams })
     await flushPromises()
     // Any host can publish a metadata document with any name, so the host
@@ -169,7 +175,7 @@ describe('MCP authorize page', () => {
     testApp.mock
       .onGet('/mcp/oauth/consent/', { params: { query } })
       .reply(200, { ...consent, verified: false, verified_host: null })
-    vi.stubGlobal('location', { assign: vi.fn() })
+    stubLocation()
     const wrapper = await testApp.mount(MCPAuthorize, { route, ...withParams })
     await flushPromises()
 
@@ -187,7 +193,7 @@ describe('MCP authorize page', () => {
         verified_host: null,
         registration_source: 'dcr',
       })
-    vi.stubGlobal('location', { assign: vi.fn() })
+    stubLocation()
     const wrapper = await testApp.mount(MCPAuthorize, { route, ...withParams })
     await flushPromises()
 
@@ -280,8 +286,7 @@ describe('MCP authorize page', () => {
           database_count: 0,
         })),
       })
-    const assign = vi.fn()
-    vi.stubGlobal('location', { assign })
+    const assign = stubLocation()
     const wrapper = await testApp.mount(MCPAuthorize, { route })
     await flushPromises()
     await wrapper.find('[data-test="mcp-authorize-allow"]').trigger('click')
@@ -341,7 +346,7 @@ describe('MCP authorize page', () => {
     testApp.mock
       .onGet('/mcp/oauth/consent/', { params: { query } })
       .reply(200, { ...consent, grants: { 2: ['list_tables'] } })
-    vi.stubGlobal('location', { assign: vi.fn() })
+    stubLocation()
     const wrapper = await testApp.mount(MCPAuthorize, { route })
     await flushPromises()
 
@@ -355,7 +360,7 @@ describe('MCP authorize page', () => {
     testApp.mock
       .onGet('/mcp/oauth/consent/', { params: { query } })
       .reply(200, { ...consent, grants: { 2: null } })
-    vi.stubGlobal('location', { assign: vi.fn() })
+    stubLocation()
     const wrapper = await testApp.mount(MCPAuthorize, { route })
     await flushPromises()
 
@@ -382,8 +387,7 @@ describe('MCP authorize page', () => {
           tools,
         })
         .reply(200, { redirect_url: 'https://claude.ai/cb?code=g' })
-      const assign = vi.fn()
-      vi.stubGlobal('location', { assign })
+      const assign = stubLocation()
       const wrapper = await testApp.mount(MCPAuthorize, { route })
       await flushPromises()
 
@@ -397,7 +401,7 @@ describe('MCP authorize page', () => {
     testApp.mock
       .onGet('/mcp/oauth/consent/', { params: { query } })
       .reply(200, { ...consent, loopback_only: true })
-    vi.stubGlobal('location', { assign: vi.fn() })
+    stubLocation()
     const wrapper = await testApp.mount(MCPAuthorize, { route })
     await flushPromises()
 
@@ -410,7 +414,7 @@ describe('MCP authorize page', () => {
     testApp.mock
       .onGet('/mcp/oauth/consent/', { params: { query } })
       .reply(200, { ...consent, workspaces: [] })
-    vi.stubGlobal('location', { assign: vi.fn() })
+    stubLocation()
     const wrapper = await testApp.mount(MCPAuthorize, { route })
     await flushPromises()
 
@@ -429,8 +433,7 @@ describe('MCP authorize page', () => {
     testApp.mock
       .onPost('/mcp/oauth/consent/', { query, allow: false })
       .reply(200, { redirect_url: 'https://claude.ai/cb?error=access_denied' })
-    const assign = vi.fn()
-    vi.stubGlobal('location', { assign })
+    const assign = stubLocation()
 
     const wrapper = await testApp.mount(MCPAuthorize, { route })
     await wrapper.find('[data-test="mcp-authorize-deny"]').trigger('click')
