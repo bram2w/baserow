@@ -39,6 +39,26 @@
         />
       </Dropdown>
     </FormGroup>
+    <FormGroup
+      v-if="aggregationGroupBy !== 'none'"
+      :label="$t('aggregationGroupByForm.bucketLimit')"
+      class="margin-top-2"
+    >
+      <FormInput
+        :model-value="bucketLimit ?? ''"
+        type="number"
+        :min="1"
+        :max="maxBucketLimit"
+        :placeholder="String(maxBucketLimit)"
+        :error="v$.bucketLimit.$error"
+        @update:model-value="
+          $emit('bucket-limit-changed', $event === '' ? null : Number($event))
+        "
+      />
+      <template #helper>{{
+        $t('aggregationGroupByForm.bucketLimitHelp', { max: maxBucketLimit })
+      }}</template>
+    </FormGroup>
   </FormSection>
 </template>
 
@@ -47,8 +67,9 @@ import { useVuelidate } from '@vuelidate/core'
 
 export default {
   name: 'AggregationGroupByForm',
-  emits: ['value-changed', 'mode-changed'],
+  emits: ['value-changed', 'mode-changed', 'bucket-limit-changed'],
   props: {
+    bucketLimit: { type: Number, default: null },
     tableFields: {
       type: Array,
       required: true,
@@ -68,6 +89,11 @@ export default {
     }
   },
   computed: {
+    maxBucketLimit() {
+      return Number(
+        this.$config.public.baserowPremiumGroupedAggregateServiceMaxAggBuckets
+      )
+    },
     isMultipleValueRelation() {
       return ['link_row', 'multiple_collaborators', 'multiple_select'].includes(
         this.tableFields.find((field) => field.id === this.aggregationGroupBy)
@@ -113,6 +139,13 @@ export default {
   },
   validations() {
     return {
+      bucketLimit: {
+        validLimit: (value) =>
+          value === null ||
+          (Number.isInteger(value) &&
+            value >= 1 &&
+            value <= this.maxBucketLimit),
+      },
       aggregationGroupBy: {
         isValidGroupBy: (value) => {
           const validGroupByValues = this.groupByOptions.map(

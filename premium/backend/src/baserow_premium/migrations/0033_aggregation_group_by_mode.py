@@ -8,6 +8,15 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
+            model_name="localbaserowgroupedaggregaterows",
+            name="bucket_limit",
+            field=models.PositiveIntegerField(
+                null=True,
+                blank=True,
+                help_text="Maximum result buckets, including Other. Null uses the server maximum.",
+            ),
+        ),
+        migrations.AddField(
             model_name="localbaserowtableserviceaggregationgroupby",
             name="mode",
             field=models.CharField(

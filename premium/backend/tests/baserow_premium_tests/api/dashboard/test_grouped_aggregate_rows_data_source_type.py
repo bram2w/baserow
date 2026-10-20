@@ -82,6 +82,7 @@ def test_grouped_aggregate_rows_get_dashboard_data_sources(
     assert response.status_code == HTTP_200_OK
     assert len(response_json) == 2
     assert response_json[0] == {
+        "bucket_limit": None,
         "aggregation_group_bys": [
             {
                 "field_id": field_3.id,

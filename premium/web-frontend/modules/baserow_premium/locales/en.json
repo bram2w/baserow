@@ -417,6 +417,8 @@
     "groupByNone": "None",
     "groupByRowId": "Row Id",
     "groupedByField": "Grouped by {field}",
+    "bucketLimit": "Maximum buckets",
+    "bucketLimitHelp": "Includes the Other bucket. Leave empty to use the server maximum ({max}).",
     "modeLabel": "Group multiple selections",
     "completeSelection": "Complete selection",
     "eachOption": "Each selected option"

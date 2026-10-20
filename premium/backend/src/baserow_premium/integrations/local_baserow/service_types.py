@@ -5,6 +5,7 @@ from typing import Any
 from django.conf import settings
 from django.db.models import F, Min, Q
 
+from rest_framework import serializers
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from baserow.contrib.database.api.fields.serializers import (
@@ -457,6 +458,7 @@ class LocalBaserowGroupedAggregateRowsUserServiceType(
         return (
             super().allowed_fields
             + LocalBaserowTableServiceFilterableMixin.mixin_allowed_fields
+            + ["bucket_limit"]
         )
 
     @property
@@ -464,13 +466,24 @@ class LocalBaserowGroupedAggregateRowsUserServiceType(
         return (
             super().serializer_field_names
             + LocalBaserowTableServiceFilterableMixin.mixin_serializer_field_names
-        ) + ["aggregation_series", "aggregation_group_bys", "aggregation_sorts"]
+        ) + [
+            "aggregation_series",
+            "aggregation_group_bys",
+            "aggregation_sorts",
+            "bucket_limit",
+        ]
 
     @property
     def serializer_field_overrides(self):
         return {
             **super().serializer_field_overrides,
             **LocalBaserowTableServiceFilterableMixin.mixin_serializer_field_overrides,
+            "bucket_limit": serializers.IntegerField(
+                required=False,
+                allow_null=True,
+                min_value=1,
+                max_value=settings.BASEROW_PREMIUM_GROUPED_AGGREGATE_SERVICE_MAX_AGG_BUCKETS,
+            ),
             "aggregation_series": LocalBaserowTableServiceAggregationSeriesSerializer(
                 many=True, source="service_aggregation_series", required=False
             ),
@@ -499,10 +512,19 @@ class LocalBaserowGroupedAggregateRowsUserServiceType(
             "aggregation_group_bys": overrides["aggregation_group_bys"],
         }
 
+    def prepare_values(self, values, user, instance=None):
+        """Validate a configured bucket limit against the current server maximum."""
+        if "bucket_limit" in values:
+            values["bucket_limit"] = self.serializer_field_overrides[
+                "bucket_limit"
+            ].run_validation(values["bucket_limit"])
+        return super().prepare_values(values, user, instance)
+
     class SerializedDict(
         LocalBaserowViewServiceType.SerializedDict,
         LocalBaserowTableServiceFilterableMixin.SerializedDict,
     ):
+        bucket_limit: int | None
         service_aggregation_series: list[ServiceAggregationSeriesDict]
         service_aggregation_group_bys: list[ServiceAggregationGroupByDict]
         service_aggregation_sorts: list[ServiceAggregationSortByDict]
@@ -1021,6 +1043,11 @@ class LocalBaserowGroupedAggregateRowsUserServiceType(
         :return: Aggregation results.
         """
 
+        bucket_limit = min(
+            service.bucket_limit
+            or settings.BASEROW_PREMIUM_GROUPED_AGGREGATE_SERVICE_MAX_AGG_BUCKETS,
+            settings.BASEROW_PREMIUM_GROUPED_AGGREGATE_SERVICE_MAX_AGG_BUCKETS,
+        )
         table = service.table
         model = self.get_table_model(service)
         queryset = self.build_queryset(service, table, dispatch_context, model=model)
@@ -1288,9 +1315,7 @@ class LocalBaserowGroupedAggregateRowsUserServiceType(
         if len(group_by_values) > 0:
             queryset = queryset.annotate(**combined_agg_dict)
             queryset = queryset.order_by(*sorts)
-            queryset = queryset[
-                : settings.BASEROW_PREMIUM_GROUPED_AGGREGATE_SERVICE_MAX_AGG_BUCKETS + 1
-            ]
+            queryset = queryset[: bucket_limit + 1]
             raw_results = list(queryset)
             if normalized_field is not None:
                 for result in raw_results:
@@ -1299,21 +1324,12 @@ class LocalBaserowGroupedAggregateRowsUserServiceType(
 
             results = [process_individual_result(result) for result in raw_results]
             buckets_count = len(raw_results)
-            if (
-                buckets_count
-                > settings.BASEROW_PREMIUM_GROUPED_AGGREGATE_SERVICE_MAX_AGG_BUCKETS
-            ):
+            if buckets_count > bucket_limit:
                 # The number of buckets don't fit in the limit
                 # so we will aggregate all the other buckets into one
                 bucket_db_column = group_by_values[0]
-                raw_results = raw_results[
-                    : settings.BASEROW_PREMIUM_GROUPED_AGGREGATE_SERVICE_MAX_AGG_BUCKETS
-                    - 1
-                ]
-                results = results[
-                    : settings.BASEROW_PREMIUM_GROUPED_AGGREGATE_SERVICE_MAX_AGG_BUCKETS
-                    - 1
-                ]
+                raw_results = raw_results[: bucket_limit - 1]
+                results = results[: bucket_limit - 1]
                 buckets_taken = [result[bucket_db_column] for result in raw_results]
                 taken_filter = Q(
                     **{

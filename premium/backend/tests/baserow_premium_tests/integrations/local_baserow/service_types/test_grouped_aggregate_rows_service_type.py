@@ -2901,7 +2901,7 @@ def test_grouped_aggregate_rows_multiple_select_modes(
     data_fixture, settings, mode, bucket_limit, primary
 ):
     """Merge equal selections or shared options, including overlapping overflow buckets."""
-    settings.BASEROW_PREMIUM_GROUPED_AGGREGATE_SERVICE_MAX_AGG_BUCKETS = bucket_limit
+    settings.BASEROW_PREMIUM_GROUPED_AGGREGATE_SERVICE_MAX_AGG_BUCKETS = 100
     user = data_fixture.create_user()
     dashboard = data_fixture.create_dashboard_application(user=user)
     table = data_fixture.create_database_table(user=user)
@@ -2916,7 +2916,10 @@ def test_grouped_aggregate_rows_multiple_select_modes(
         application=dashboard, user=user
     )
     service = data_fixture.create_service(
-        LocalBaserowGroupedAggregateRows, integration=integration, table=table
+        LocalBaserowGroupedAggregateRows,
+        integration=integration,
+        table=table,
+        bucket_limit=bucket_limit,
     )
     LocalBaserowTableServiceAggregationSeries.objects.create(
         service=service, field=amount, aggregation_type="sum", order=1
@@ -4976,6 +4979,7 @@ def test_grouped_aggregate_rows_service_export_serialized(
     )
 
     assert result == {
+        "bucket_limit": None,
         "filter_type": "AND",
         "filters": [],
         "filter_groups": [],
@@ -5054,6 +5058,7 @@ def test_grouped_aggregate_rows_service_import_serialized(data_fixture, mode):
     }
     if mode is not None:
         serialized_service["service_aggregation_group_bys"][0]["mode"] = mode
+    serialized_service["bucket_limit"] = 7
     id_mapping = {}
 
     instance = LocalBaserowGroupedAggregateRowsUserServiceType().import_serialized(
@@ -5063,6 +5068,7 @@ def test_grouped_aggregate_rows_service_import_serialized(data_fixture, mode):
         import_formula=Mock(),
     )
 
+    assert instance.bucket_limit == 7
     assert instance.service_aggregation_group_bys.get().mode == (mode or "complete")
     assert instance.content_type == ContentType.objects.get_for_model(
         LocalBaserowGroupedAggregateRows
@@ -5244,14 +5250,66 @@ def test_grouped_aggregate_rows_serializes_trashed_configured_fields(data_fixtur
     ).data["trashed"]
 
 
+@pytest.mark.parametrize("value", [0, -1, 11, 1.5, "invalid"])
+def test_grouped_aggregate_rows_invalid_bucket_limit(settings, value):
+    settings.BASEROW_PREMIUM_GROUPED_AGGREGATE_SERVICE_MAX_AGG_BUCKETS = 10
+    service_type = service_type_registry.get("local_baserow_grouped_aggregate_rows")
+    serializer_field = service_type.serializer_field_overrides["bucket_limit"]
+    with pytest.raises(ValidationError):
+        serializer_field.run_validation(value)
+
+
+@pytest.mark.parametrize("value", [None, 1, 10])
+def test_grouped_aggregate_rows_valid_bucket_limit(settings, value):
+    settings.BASEROW_PREMIUM_GROUPED_AGGREGATE_SERVICE_MAX_AGG_BUCKETS = 10
+    service_type = service_type_registry.get("local_baserow_grouped_aggregate_rows")
+    assert (
+        service_type.serializer_field_overrides["bucket_limit"].run_validation(value)
+        == value
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "saved_limit,server_limit,expected_count",
+    [(2, 10, 2), (10, 2, 2), (None, 3, 3), (1, 10, 1)],
+)
+def test_grouped_aggregate_bucket_limit_dispatch(
+    data_fixture, settings, saved_limit, server_limit, expected_count
+):
+    """Saved limits, defaults and lowered server caps bound the entire response."""
+    settings.BASEROW_PREMIUM_GROUPED_AGGREGATE_SERVICE_MAX_AGG_BUCKETS = server_limit
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_number_field(table=table, name="Amount")
+    service = data_fixture.create_service(
+        LocalBaserowGroupedAggregateRows,
+        table=table,
+        bucket_limit=saved_limit,
+        integration_args={"user": user},
+    )
+    LocalBaserowTableServiceAggregationSeries.objects.create(
+        service=service, field=field, aggregation_type="sum", order=0
+    )
+    LocalBaserowTableServiceAggregationGroupBy.objects.create(
+        service=service, field=field, order=0
+    )
+    RowHandler().create_rows(
+        user, table, rows_values=[{field.db_column: value} for value in [1, 2, 3, 4]]
+    )
+    result = ServiceHandler().dispatch_service(service, FakeDispatchContext()).data
+    assert len(result["results"]) == expected_count
+    assert any(row["id"] == "OTHER_VALUES" for row in result["results"])
+    assert sum(row["Amount sum"] for row in result["results"]) == 10
+
+
 @pytest.mark.django_db
 @pytest.mark.parametrize("direction", ["ASC", "DESC"])
 @pytest.mark.parametrize("bucket_limit", [2, 10])
 def test_grouped_datetime_sort_preserves_minute_totals(
-    data_fixture, settings, direction, bucket_limit
+    data_fixture, direction, bucket_limit
 ):
     """Sorting must not split normalized minutes or drop rows from overflow."""
-    settings.BASEROW_PREMIUM_GROUPED_AGGREGATE_SERVICE_MAX_AGG_BUCKETS = bucket_limit
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     amount = data_fixture.create_number_field(table=table, name="Amount")
@@ -5261,6 +5319,7 @@ def test_grouped_datetime_sort_preserves_minute_totals(
     service = data_fixture.create_service(
         LocalBaserowGroupedAggregateRows,
         table=table,
+        bucket_limit=bucket_limit,
         integration_args={"user": user},
     )
     LocalBaserowTableServiceAggregationSeries.objects.create(

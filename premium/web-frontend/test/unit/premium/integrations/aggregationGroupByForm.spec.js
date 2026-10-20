@@ -78,6 +78,31 @@ describe('Multiple-select aggregation grouping', () => {
   })
 })
 
+describe('Bucket limit validation', () => {
+  test.each([null, 1, 10, 0, 11, 1.5])(
+    'validates limit %s',
+    async (bucketLimit) => {
+      const wrapper = await mountSuspended(AggregationGroupByForm, {
+        props: {
+          tableFields: [{ id: 1, name: 'Tags', type: 'multiple_select' }],
+          aggregationGroupBys: [{ field_id: 1 }],
+          bucketLimit,
+        },
+        global: { stubs: dropdownStubs },
+      })
+      expect(wrapper.vm.v$.bucketLimit.$invalid).toBe(
+        bucketLimit !== null &&
+          (!Number.isInteger(bucketLimit) ||
+            bucketLimit < 1 ||
+            bucketLimit > 10)
+      )
+      await wrapper.get('input[type="number"]').setValue('3')
+      expect(wrapper.emitted('bucket-limit-changed').at(-1)).toEqual([3])
+      wrapper.unmount()
+    }
+  )
+})
+
 describe('Grouping mode persistence in data-source forms', () => {
   let wrapper
   let mock
@@ -164,6 +189,13 @@ describe('Grouping mode persistence in data-source forms', () => {
         expect(
           wrapper.emitted('change').at(-1)[0].aggregation_group_bys
         ).toEqual([{ field_id: 1, mode: 'individual' }])
+      }
+      await groupForm.get('input[type="number"]').setValue('3')
+      if (surface === 'builder') {
+        await wrapper.get('[data-test=save]').trigger('click')
+        expect(wrapper.emitted('save').at(-1)[0].bucket_limit).toBe(3)
+      } else {
+        expect(wrapper.emitted('change').at(-1)[0].bucket_limit).toBe(3)
       }
     }
   )

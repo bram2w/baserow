@@ -15,7 +15,11 @@ class LocalBaserowGroupedAggregateRows(
     service configuration data.
     """
 
-    ...
+    bucket_limit = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Maximum result buckets, including Other. Null uses the server maximum.",
+    )
 
 
 class LocalBaserowTableServiceAggregationSeries(models.Model):

@@ -52,9 +52,11 @@
       <template #group-form>
         <AggregationGroupByForm
           :aggregation-group-bys="values.aggregation_group_bys"
+          :bucket-limit="values.bucket_limit"
           :table-fields="tableFields"
           @value-changed="onGroupByUpdated($event)"
           @mode-changed="onGroupByModeUpdated($event)"
+          @bucket-limit-changed="onBucketLimitUpdated($event)"
         />
       </template>
       <template #sort-form>
@@ -100,6 +102,7 @@ export default {
         'aggregation_series',
         'aggregation_group_bys',
         'aggregation_sorts',
+        'bucket_limit',
       ],
       values: {
         table_id: null,
@@ -111,6 +114,7 @@ export default {
         aggregation_series: [],
         aggregation_group_bys: [],
         aggregation_sorts: [],
+        bucket_limit: null,
       },
     }
   },
@@ -179,6 +183,10 @@ export default {
     },
   },
   methods: {
+    onBucketLimitUpdated(bucketLimit) {
+      this.values.bucket_limit = bucketLimit
+    },
+
     /**
      * Child forms update values through their events. Keep series values nested
      * and only serialize service fields, so a series ID cannot replace a source ID.

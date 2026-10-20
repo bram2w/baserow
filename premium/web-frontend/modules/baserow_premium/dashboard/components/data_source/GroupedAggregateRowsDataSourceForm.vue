@@ -118,9 +118,11 @@
       <template #group-form>
         <AggregationGroupByForm
           :aggregation-group-bys="values.aggregation_group_bys"
+          :bucket-limit="values.bucket_limit"
           :table-fields="tableFields"
           @value-changed="onGroupByUpdated($event)"
           @mode-changed="onGroupByModeUpdated($event)"
+          @bucket-limit-changed="onBucketLimitUpdated($event)"
         >
         </AggregationGroupByForm>
       </template>
@@ -200,6 +202,7 @@ export default {
         'aggregation_series',
         'aggregation_group_bys',
         'aggregation_sorts',
+        'bucket_limit',
       ],
       values: {
         table_id: null,
@@ -209,6 +212,7 @@ export default {
         aggregation_series: [],
         aggregation_group_bys: [],
         aggregation_sorts: [],
+        bucket_limit: null,
       },
       tableLoading: false,
       skipFirstValuesEmit: true,
@@ -375,6 +379,10 @@ export default {
     }
   },
   methods: {
+    onBucketLimitUpdated(bucketLimit) {
+      this.$emit('values-changed', { bucket_limit: bucketLimit })
+    },
+
     /* Overrides the method in the tableFields mixin */
     getTableId() {
       return this.values.table_id
