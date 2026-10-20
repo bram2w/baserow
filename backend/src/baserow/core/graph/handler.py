@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Type
 
 from django.db import models, transaction
 
@@ -279,26 +279,33 @@ class BaseGraphHandler(ABC):
             del point_info["children"]
 
     @abstractmethod
-    def get_point_map(self) -> Dict[int, GraphPoint]:
+    def get_all_points(self) -> Iterable[GraphPoint]:
         """
-        Must be implemented by child classes. This method should return an object
-        mapping, where the key is the graph point's ID, and the value is the model
-        instance.
+        Return all point instances belonging to this graph's container.
         """
         ...
+
+    @classmethod
+    def generate_point_map_cache_key(cls, instance) -> str:
+        return f"graph_point_map_{instance._meta.label}_{instance.id}"
 
     def get_point(self, point_id: str | int) -> GraphPoint:
         """
         Given a graph point, return the corresponding model instance from the point map.
+        The map is cached locally and invalidated alongside the point collection.
 
         :param point_id: The ID of the graph point to retrieve.
         :return: The model instance corresponding to the given graph point ID.
         """
 
-        if int(point_id) not in self.get_point_map():
-            raise self.does_not_exist_exception(point_id)
-
-        return self.get_point_map()[int(point_id)]
+        point_map = local_cache.get(
+            self.generate_point_map_cache_key(self.instance),
+            lambda: {point.id: point for point in self.get_all_points()},
+        )
+        try:
+            return point_map[int(point_id)]
+        except KeyError:
+            raise self.does_not_exist_exception(point_id) from None
 
     def get_point_at_position(
         self,
