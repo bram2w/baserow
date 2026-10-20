@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from baserow.contrib.dashboard.filters.models import DashboardFilter
+from baserow.contrib.dashboard.filters.operators import get_text_filter_operators
 from baserow.core.formula.serializers import FormulaSerializerField
 
 
@@ -16,6 +17,9 @@ class DashboardFilterSerializer(serializers.ModelSerializer):
             "application_type", DashboardApplicationType
         )
         super().__init__(*args, **kwargs)
+        self.fields["operator"] = serializers.ChoiceField(
+            choices=list(get_text_filter_operators()), required=False
+        )
 
     class Meta:
         model = DashboardFilter
@@ -24,6 +28,7 @@ class DashboardFilterSerializer(serializers.ModelSerializer):
             "dashboard_id",
             "label",
             "type",
+            "operator",
             "mode",
             "multiple",
             "formula_name",

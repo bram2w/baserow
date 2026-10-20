@@ -53,14 +53,21 @@ def filtered_dashboard(data_fixture):
         ("not_equal", ["Design"], "20"),
         ("contains", ["DESIGN"], "1"),
         ("contains_not", ["DESIGN"], "20"),
+        ("starts_with", ["Des"], "1"),
+        ("contains_word", ["Design"], "1"),
+        ("doesnt_contain_word", ["Design"], "20"),
+        ("length_is_lower_than", ["7"], "17"),
+        ("empty", ["true"], "16"),
+        ("not_empty", ["true"], "5"),
+        ("empty", [], "21"),
+        ("not_empty", [], "21"),
     ],
 )
-def test_source_condition_uses_builder_filter_semantics(
+def test_dashboard_control_uses_builder_filter_operators(
     api_client, filtered_dashboard, operator, values, expected
 ):
-    _, token, widget, selection, condition = filtered_dashboard
-    condition.type = operator
-    condition.save()
+    user, token, widget, selection, condition = filtered_dashboard
+    DashboardFilterService().update_filter(user, selection.id, operator=operator)
     response = api_client.post(
         reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": widget.id}),
         {"filters": [{"filter_id": selection.id, "values": values}]},
@@ -72,13 +79,14 @@ def test_source_condition_uses_builder_filter_semantics(
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("operator", ["equal", "not_equal", "contains", "contains_not"])
+@pytest.mark.parametrize(
+    "operator", ["equal", "not_equal", "contains", "contains_not", "empty", "not_empty"]
+)
 def test_deleting_dashboard_filter_restores_unfiltered_widget_data(
     api_client, filtered_dashboard, operator
 ):
-    _, token, widget, selection, condition = filtered_dashboard
-    condition.type = operator
-    condition.save()
+    user, token, widget, selection, condition = filtered_dashboard
+    DashboardFilterService().update_filter(user, selection.id, operator=operator)
     headers = {"HTTP_AUTHORIZATION": f"JWT {token}"}
     response = api_client.delete(
         reverse("api:dashboard:filters:item", kwargs={"filter_id": selection.id}),
@@ -268,4 +276,115 @@ def test_widgets_sharing_a_source_share_its_filter_conditions(
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == 200
+    assert response.json() == {"result": "1"}
+
+
+@pytest.mark.django_db
+def test_dashboard_operator_controls_multiple_values(api_client, filtered_dashboard):
+    _, token, widget, selection, _ = filtered_dashboard
+    headers = {"HTTP_AUTHORIZATION": f"JWT {token}"}
+    item_url = reverse("api:dashboard:filters:item", kwargs={"filter_id": selection.id})
+    response = api_client.patch(
+        item_url,
+        {"mode": "dropdown", "multiple": True, "operator": "equal"},
+        format="json",
+        **headers,
+    )
+    assert response.status_code == 200
+    dispatch_url = reverse(
+        "api:dashboard:widgets:dispatch", kwargs={"widget_id": widget.id}
+    )
+    data = {"filters": [{"filter_id": selection.id, "values": ["Design", "Marketing"]}]}
+    assert api_client.post(dispatch_url, data, format="json", **headers).json() == {
+        "result": "5"
+    }
+    response = api_client.patch(
+        item_url, {"operator": "not_equal"}, format="json", **headers
+    )
+    assert response.status_code == 200
+    assert api_client.post(dispatch_url, data, format="json", **headers).json() == {
+        "result": "16"
+    }
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "operator,values,expected",
+    [
+        ("equal", ["Design", "Marketing"], "5"),
+        ("not_equal", ["Design", "Marketing"], "16"),
+        ("contains", ["DES", "MARK"], "5"),
+        ("contains_not", ["DES", "MARK"], "16"),
+        ("contains_word", ["Design", "Marketing"], "5"),
+        ("doesnt_contain_word", ["Design", "Marketing"], "16"),
+        ("starts_with", ["Des", "Mar"], "5"),
+        ("length_is_lower_than", ["2", "7"], "17"),
+        ("not_equal", [], "21"),
+        ("not_equal", [" ", ""], "21"),
+        ("equal", ["Design,Marketing"], None),
+    ],
+)
+def test_multiple_dashboard_values_are_individual_operands(
+    api_client, filtered_dashboard, operator, values, expected
+):
+    user, token, widget, selection, _ = filtered_dashboard
+    DashboardFilterService().update_filter(
+        user, selection.id, mode="dropdown", multiple=True, operator=operator
+    )
+    response = api_client.post(
+        reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": widget.id}),
+        {"filters": [{"filter_id": selection.id, "values": values}]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == 200, response.json()
+    assert response.json() == {"result": expected}
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "expression",
+    [
+        "get('dashboard_filter.{id}')",
+        ' GET("dashboard_filter.{id}") ',
+        "get( 'dashboard_filter.{id}' )",
+        "get(('dashboard_filter.{id}'))",
+        "(get('dashboard_filter.{id}'))",
+        "get('dashboard_filter.{id}.*')",
+    ],
+)
+def test_dashboard_operator_overrides_only_direct_references(
+    api_client, filtered_dashboard, expression
+):
+    user, token, widget, selection, condition = filtered_dashboard
+    DashboardFilterService().update_filter(
+        user, selection.id, mode="dropdown", multiple=True, operator="not_equal"
+    )
+    condition.value = BaserowFormulaObject.create(expression.format(id=selection.id))
+    condition.save()
+    response = api_client.post(
+        reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": widget.id}),
+        {"filters": [{"filter_id": selection.id, "values": ["Design"]}]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == 200, response.json()
+    assert response.json() == {"result": "20"}
+
+
+@pytest.mark.django_db
+def test_calculated_conditions_keep_their_own_operator(api_client, filtered_dashboard):
+    user, token, widget, selection, condition = filtered_dashboard
+    DashboardFilterService().update_filter(user, selection.id, operator="not_equal")
+    condition.value = BaserowFormulaObject.create(
+        f"concat(get('dashboard_filter.{selection.id}'), '')"
+    )
+    condition.save()
+    response = api_client.post(
+        reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": widget.id}),
+        {"filters": [{"filter_id": selection.id, "values": ["Design"]}]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == 200, response.json()
     assert response.json() == {"result": "1"}

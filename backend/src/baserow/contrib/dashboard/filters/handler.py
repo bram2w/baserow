@@ -2,12 +2,14 @@ from baserow.core.utils import extract_allowed
 
 from .exceptions import DashboardFilterDoesNotExist
 from .models import DashboardFilter
+from .operators import get_text_filter_operators
 
 
 class DashboardFilterHandler:
     allowed_fields = (
         "label",
         "type",
+        "operator",
         "mode",
         "multiple",
         "formula_name",
@@ -31,6 +33,7 @@ class DashboardFilterHandler:
         return DashboardFilter.objects.filter(dashboard=dashboard)
 
     def create_filter(self, dashboard, **values):
+        self.validate_operator(values)
         dashboard_filter = DashboardFilter.objects.create(
             dashboard=dashboard, **extract_allowed(values, self.allowed_fields)
         )
@@ -40,12 +43,20 @@ class DashboardFilterHandler:
         dashboard_filter.delete()
 
     def update_filter(self, dashboard_filter, **values):
+        self.validate_operator(values)
         values = extract_allowed(values, self.allowed_fields)
         previous = {key: getattr(dashboard_filter, key) for key in values}
         for key, value in values.items():
             setattr(dashboard_filter, key, value)
         dashboard_filter.save()
         return previous, values
+
+    def validate_operator(self, values):
+        if (
+            "operator" in values
+            and values["operator"] not in get_text_filter_operators()
+        ):
+            raise ValueError("The operator is not compatible with text filters.")
 
     def export_filter(self, dashboard_filter):
         return {

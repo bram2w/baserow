@@ -39,12 +39,6 @@ class Migration(migrations.Migration):
                 (
                     "operator",
                     models.CharField(
-                        choices=[
-                            ("equal", "Is"),
-                            ("not_equal", "Is not"),
-                            ("contains", "Contains"),
-                            ("contains_not", "Does not contain"),
-                        ],
                         default="equal",
                         max_length=32,
                     ),

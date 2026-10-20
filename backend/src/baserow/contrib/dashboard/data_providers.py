@@ -22,29 +22,8 @@ class DashboardFilterDataProviderType(DataProviderType):
 
     def get_data_chunk(self, dispatch_context, path):
         self.is_valid(path)
-        if dispatch_context.dashboard is None:
-            raise InvalidRuntimeFormula("The dashboard filter reference is invalid.")
-
-        cache_key = ("dashboard_filters", dispatch_context.dashboard.id)
-        if cache_key not in dispatch_context.cache:
-            dispatch_context.cache[cache_key] = {
-                str(item.id): item
-                for item in DashboardFilter.objects.filter(
-                    dashboard=dispatch_context.dashboard
-                )
-            }
-        configuration = dispatch_context.cache[cache_key].get(path[0])
+        configuration = self.get_configuration(dispatch_context, path[0])
         if configuration is None:
-            if (
-                DashboardFilter.objects_and_trash.filter(id=path[0])
-                .exclude(dashboard=dispatch_context.dashboard)
-                .exists()
-            ):
-                raise InvalidRuntimeFormula(
-                    "The dashboard filter belongs to another dashboard."
-                )
-            # A removed control has no value, just like an unselected control.
-            # Keep its source formula intact so restoring the control reconnects it.
             return None
 
         selections = {
@@ -61,6 +40,34 @@ class DashboardFilterDataProviderType(DataProviderType):
             else next(iter(values), "")
         )
         return get_value_at_path(value, path[1:])
+
+    def get_configuration(self, dispatch_context, filter_id):
+        if dispatch_context.dashboard is None:
+            raise InvalidRuntimeFormula("The dashboard filter reference is invalid.")
+
+        cache_key = ("dashboard_filters", dispatch_context.dashboard.id)
+        if cache_key not in dispatch_context.cache:
+            dispatch_context.cache[cache_key] = {
+                str(item.id): item
+                for item in DashboardFilter.objects.filter(
+                    dashboard=dispatch_context.dashboard
+                )
+            }
+        configuration = dispatch_context.cache[cache_key].get(filter_id)
+        if configuration is None:
+            if (
+                DashboardFilter.objects_and_trash.filter(id=filter_id)
+                .exclude(dashboard=dispatch_context.dashboard)
+                .exists()
+            ):
+                raise InvalidRuntimeFormula(
+                    "The dashboard filter belongs to another dashboard."
+                )
+            # A removed control has no value, just like an unselected control.
+            # Keep its source formula intact so restoring the control reconnects it.
+            return None
+
+        return configuration
 
     def import_path(self, path, id_mapping, **kwargs):
         filter_id, *rest = path

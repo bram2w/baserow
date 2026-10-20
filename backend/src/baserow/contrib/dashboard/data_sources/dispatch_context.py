@@ -45,3 +45,8 @@ class DashboardDispatchContext(DispatchContext):
         self.dashboard = dashboard or (widget.dashboard if widget else None)
 
         super().__init__(workspace)
+
+    def get_service_filter_q(self, service_filter, model):
+        from baserow.contrib.dashboard.filters.runtime import get_dashboard_filter_q
+
+        return get_dashboard_filter_q(service_filter, model, self)

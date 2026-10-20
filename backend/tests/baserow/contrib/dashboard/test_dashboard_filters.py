@@ -24,6 +24,7 @@ def test_dashboard_copy_remaps_filter_and_source_formulas(data_fixture, copy_tab
         user,
         dashboard.id,
         label="Team",
+        operator="starts_with",
         formula_name=BaserowFormulaObject.create(
             f"get('table.{table.id}.*.{field.db_column}')"
         ),
@@ -56,6 +57,7 @@ def test_dashboard_copy_remaps_filter_and_source_formulas(data_fixture, copy_tab
     copied_widget = WidgetService().get_widgets(user, imported.id)[0]
     copied_filter = DashboardFilterService().get_filters(user, imported.id)[0]
     assert copied_widget.id != widget.id
+    assert copied_filter.operator == "starts_with"
     assert (
         copied_filter.formula_name["formula"]
         == f"get('table.{expected_table.id}.*.{expected_field.db_column}')"

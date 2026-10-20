@@ -13,12 +13,6 @@ class DashboardFilter(
 ):
     """Shared configuration; applied values belong to the visitor's current tab."""
 
-    class Operator(models.TextChoices):
-        EQUAL = "equal", "Is"
-        NOT_EQUAL = "not_equal", "Is not"
-        CONTAINS = "contains", "Contains"
-        CONTAINS_NOT = "contains_not", "Does not contain"
-
     class Mode(models.TextChoices):
         DROPDOWN = "dropdown", "Dropdown"
         INPUT = "input", "Input"
@@ -32,10 +26,7 @@ class DashboardFilter(
     )
     label = models.CharField(max_length=255)
     type = models.CharField(max_length=32, choices=[("text", "Text")], default="text")
-    # TODO ZDM: remove this unused field in the next version.
-    operator = models.CharField(
-        max_length=32, choices=Operator.choices, default=Operator.EQUAL
-    )
+    operator = models.CharField(max_length=32, default="equal")
     mode = models.CharField(max_length=32, choices=Mode.choices, default=Mode.DROPDOWN)
     multiple = models.BooleanField(default=False)
     # TODO ZDM: remove these unused manual-option fields in the next version.

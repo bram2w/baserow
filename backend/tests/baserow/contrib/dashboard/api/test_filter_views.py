@@ -21,6 +21,7 @@ def test_create_filter_and_read_its_configuration(api_client, data_fixture):
         {
             "label": "Team",
             "type": "text",
+            "operator": "contains_word",
             "formula_value": {
                 "formula": "get('table.1.*.field_1')",
                 "mode": "advanced",
@@ -35,6 +36,7 @@ def test_create_filter_and_read_its_configuration(api_client, data_fixture):
     assert response.status_code == 200
     created = response.json()
     assert created["label"] == "Team"
+    assert created["operator"] == "contains_word"
     assert created["dashboard_id"] == dashboard.id
     assert created["formula_value"]["formula"] == "get('table.1.*.field_1')"
     assert "options" not in created and "option_type" not in created
@@ -63,6 +65,7 @@ def test_filter_configuration_can_be_updated_deleted_and_undone(
         item_url,
         {
             "label": "Department",
+            "operator": "starts_with",
             "formula_value": {
                 "formula": "get('table.2.*.field_2')",
                 "mode": "advanced",
@@ -73,6 +76,7 @@ def test_filter_configuration_can_be_updated_deleted_and_undone(
     )
     assert response.status_code == 200
     assert response.json()["label"] == "Department"
+    assert response.json()["operator"] == "starts_with"
     assert response.json()["formula_value"]["formula"] == "get('table.2.*.field_2')"
     assert api_client.delete(item_url, **headers).status_code == 204
     assert api_client.get(url, **headers).json() == []
@@ -108,7 +112,16 @@ def test_filters_are_private_to_the_dashboard_workspace(api_client, data_fixture
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("values", [{"type": "number"}, {"mode": "select"}])
+@pytest.mark.parametrize(
+    "values",
+    [
+        {"type": "number"},
+        {"mode": "select"},
+        {"operator": "higher_than"},
+        {"operator": "text_is_any_of"},
+        {"operator": "missing"},
+    ],
+)
 def test_filter_rejects_unsupported_configuration(api_client, data_fixture, values):
     user, token = data_fixture.create_user_and_token()
     dashboard = data_fixture.create_dashboard_application(user=user)
