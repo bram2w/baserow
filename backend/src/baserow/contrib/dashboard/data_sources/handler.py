@@ -371,18 +371,20 @@ class DashboardDataSourceHandler:
         :return: the new data source instance.
         """
 
-        if "dashboard_data_sources" not in id_mapping:
-            id_mapping["dashboard_data_sources"] = {}
-
         service = None
         serialized_service = serialized_data_source.get("service", None)
         if serialized_service:
             integration = None
             integration_id = serialized_service.pop("integration_id", None)
             if integration_id:
-                integration_id = id_mapping["integrations"].get(integration_id)
-                if integration_id:
-                    integration = Integration.objects.get(id=integration_id)
+                integration_id = id_mapping["integrations"].get(integration_id, None)
+                try:
+                    integration = Integration.objects_and_trash.get(id=integration_id)
+                except Integration.DoesNotExist:
+                    integration = None
+                else:
+                    if integration.application_id != dashboard.id:
+                        integration = None
 
             service = ServiceHandler().import_service(
                 integration,

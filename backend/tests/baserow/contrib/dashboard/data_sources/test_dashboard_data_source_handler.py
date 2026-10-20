@@ -24,6 +24,7 @@ from baserow.core.services.exceptions import (
 from baserow.core.services.handler import ServiceHandler
 from baserow.core.services.models import Service
 from baserow.core.services.registries import service_type_registry
+from baserow.core.utils import MirrorDict
 
 
 @pytest.mark.django_db
@@ -98,10 +99,41 @@ def test_import_data_source_drops_unmapped_integration(data_fixture):
     imported_data_source = DashboardDataSourceHandler().import_data_source(
         target_dashboard,
         deepcopy(serialized_data_source),
-        {"integrations": {}},
+        {"integrations": {}, "dashboard_data_sources": {}},
     )
 
     assert imported_data_source.service.integration_id is None
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("preserve_integrations", [False, True])
+def test_import_data_source_same_dashboard_integration_mapping(
+    data_fixture, preserve_integrations
+):
+    dashboard = data_fixture.create_dashboard_application()
+    data_source = (
+        data_fixture.create_dashboard_local_baserow_aggregate_rows_data_source(
+            dashboard=dashboard
+        )
+    )
+
+    serialized_data_source = DashboardDataSourceHandler().export_data_source(
+        data_source
+    )
+    serialized_data_source["name"] = "Copied data source"
+
+    imported_data_source = DashboardDataSourceHandler().import_data_source(
+        dashboard,
+        deepcopy(serialized_data_source),
+        {
+            "integrations": MirrorDict() if preserve_integrations else {},
+            "dashboard_data_sources": {},
+        },
+    )
+
+    assert imported_data_source.service.integration_id == (
+        data_source.service.integration_id if preserve_integrations else None
+    )
 
 
 @pytest.mark.django_db

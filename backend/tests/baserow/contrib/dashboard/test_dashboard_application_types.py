@@ -293,6 +293,31 @@ def test_dashboard_import_serialized(data_fixture):
 
 
 @pytest.mark.django_db()
+def test_dashboard_import_without_integrations_clears_service_reference(data_fixture):
+    source = data_fixture.create_dashboard_application()
+    source_data_source = (
+        data_fixture.create_dashboard_local_baserow_aggregate_rows_data_source(
+            dashboard=source
+        )
+    )
+    config = ImportExportConfig(include_permission_data=False)
+    serialized = DashboardApplicationType().export_serialized(source, config)
+    serialized["integrations"] = []
+    id_mapping = {}
+
+    imported_dashboard = DashboardApplicationType().import_serialized(
+        source.workspace, serialized, config, id_mapping
+    )
+
+    imported_data_source = DashboardDataSource.objects.get(dashboard=imported_dashboard)
+    assert imported_data_source.service.integration_id is None
+    assert (
+        id_mapping["dashboard_data_sources"][source_data_source.id]
+        == imported_data_source.id
+    )
+
+
+@pytest.mark.django_db()
 def test_dashboard_import_serialized_with_legacy_widgets(data_fixture):
     user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)
