@@ -103,6 +103,33 @@ def test_update_local_baserow_integration_keeps_existing_authorization(data_fixt
 
 
 @pytest.mark.django_db
+def test_update_local_baserow_integration_reauthorizes_with_current_user(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    application = data_fixture.create_builder_application(user=user)
+    agent = Agent.objects.create(
+        workspace=application.workspace, name="Writer", role_uid="ADMIN"
+    )
+    integration = data_fixture.create_local_baserow_integration(
+        application=application, authorized_agent=agent
+    )
+
+    updated_integration = (
+        IntegrationService()
+        .update_integration(
+            user,
+            integration,
+            authorized_subject_type=None,
+            authorized_subject_id=None,
+        )
+        .integration
+    )
+
+    assert updated_integration.authorized_subject == user
+
+
+@pytest.mark.django_db
 def test_update_local_baserow_integration_does_not_reauthorize_a_trashed_agent(
     data_fixture,
 ):

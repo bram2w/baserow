@@ -88,11 +88,17 @@ class LocalBaserowIntegrationType(IntegrationType):
         subject_id = values.get("authorized_subject_id")
         subject_type_name = values.get("authorized_subject_type")
         if subject_id is None and subject_type_name is None:
+            authorization_not_updated = not {
+                "authorized_subject_id",
+                "authorized_subject_type",
+            }.intersection(values)
             has_existing_authorization = instance is not None and (
                 instance.authorized_subject_type and instance.authorized_subject_id
             )
-            if has_existing_authorization:
-                # A missing selection must not silently grant the editor's authority.
+            if has_existing_authorization and (
+                authorization_not_updated or instance.authorized_subject is None
+            ):
+                # An unavailable subject must not silently grant the editor's authority.
                 values.pop("authorized_subject_id", None)
                 values.pop("authorized_subject_type", None)
                 return super().prepare_values(
