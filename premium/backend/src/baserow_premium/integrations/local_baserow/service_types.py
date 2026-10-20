@@ -351,6 +351,19 @@ class LocalBaserowGroupedAggregateRowsUserServiceType(
             },
         }
 
+    def import_path(self, path, id_mapping):
+        if len(path) < 2:
+            return path
+        row, property_name, *rest = path
+        match = re.fullmatch(r"field_([0-9]+)(.*)", property_name)
+        if not match:
+            return path
+        field_id, suffix = match.groups()
+        mapped_id = id_mapping.get("database_fields", {}).get(int(field_id))
+        if mapped_id is None:
+            return path
+        return [row, f"field_{mapped_id}{suffix}", *rest]
+
     def prepare_value_path(self, service: Service, path: list[str]):
         if len(path) < 1:
             return path

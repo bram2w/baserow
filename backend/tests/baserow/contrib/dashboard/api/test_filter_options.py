@@ -54,7 +54,9 @@ def test_options_require_dashboard_permission(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("invalid", ["deleted", "other_dashboard", "recursive"])
+@pytest.mark.parametrize(
+    "invalid", ["deleted", "other_dashboard", "missing_service", "recursive"]
+)
 def test_options_report_broken_source_instead_of_empty_choices(
     api_client, data_fixture, invalid
 ):
@@ -77,6 +79,9 @@ def test_options_report_broken_source_instead_of_empty_choices(
     )
     if invalid == "deleted":
         source.delete()
+    elif invalid == "missing_service":
+        source.service = None
+        source.save()
     elif invalid == "other_dashboard":
         source.dashboard = data_fixture.create_dashboard_application(
             user=user, workspace=dashboard.workspace

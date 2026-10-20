@@ -137,3 +137,29 @@ def test_options_reject_empty_or_duplicate_values(api_client, data_fixture, opti
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == 400
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "path",
+    [
+        "dashboard_filter.nope",
+        "dashboard_filter.0",
+        "dashboard_filter.1.extra",
+        "data_source.nope",
+        "data_source.0",
+    ],
+)
+def test_reject_invalid_provider_paths(api_client, data_fixture, path):
+    user, token = data_fixture.create_user_and_token()
+    dashboard = data_fixture.create_dashboard_application(user=user)
+    response = api_client.post(
+        reverse("api:dashboard:filters:list", kwargs={"dashboard_id": dashboard.id}),
+        {
+            "label": "Team",
+            "formula_value": {"formula": f"get('{path}')", "mode": "advanced"},
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == 400, response.json()

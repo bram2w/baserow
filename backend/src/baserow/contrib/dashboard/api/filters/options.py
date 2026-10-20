@@ -10,6 +10,9 @@ from baserow.api.decorators import map_exceptions, validate_body
 from baserow.contrib.dashboard.api.data_sources.errors import (
     ERROR_DASHBOARD_DATA_SOURCE_IMPROPERLY_CONFIGURED,
 )
+from baserow.contrib.dashboard.data_sources.exceptions import (
+    DashboardDataSourceImproperlyConfigured,
+)
 from baserow.contrib.dashboard.filters.exceptions import (
     DashboardFilterDoesNotExist,
 )
@@ -63,6 +66,7 @@ class DashboardFilterOptionsView(APIView):
     @map_exceptions(
         {
             DashboardFilterDoesNotExist: ERROR_DASHBOARD_FILTER_DOES_NOT_EXIST,
+            DashboardDataSourceImproperlyConfigured: ERROR_DASHBOARD_DATA_SOURCE_IMPROPERLY_CONFIGURED,
             ServiceImproperlyConfiguredDispatchException: ERROR_DASHBOARD_DATA_SOURCE_IMPROPERLY_CONFIGURED,
         }
     )

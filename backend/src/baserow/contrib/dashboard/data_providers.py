@@ -1,5 +1,8 @@
+import re
+
 from baserow.contrib.dashboard.filters.models import DashboardFilter
 from baserow.core.formula.exceptions import InvalidRuntimeFormula
+from baserow.core.formula.parser.exceptions import BaserowFormulaSyntaxError
 from baserow.core.formula.registries import DataProviderType, DataProviderTypeRegistry
 from baserow.core.utils import get_value_at_path
 
@@ -8,15 +11,18 @@ class DashboardFilterDataProviderType(DataProviderType):
     type = "dashboard_filter"
 
     def is_valid(self, path):
-        return (
+        if not (
             1 <= len(path) <= 2
-            and path[0].isdigit()
-            and int(path[0]) > 0
-            and (len(path) == 1 or path[1] == "*" or path[1].isdigit())
-        )
+            and re.fullmatch(r"[1-9][0-9]*", path[0])
+            and (len(path) == 1 or path[1] == "*" or re.fullmatch(r"[0-9]+", path[1]))
+        ):
+            raise BaserowFormulaSyntaxError(
+                "The dashboard filter reference is invalid."
+            )
 
     def get_data_chunk(self, dispatch_context, path):
-        if not self.is_valid(path) or dispatch_context.dashboard is None:
+        self.is_valid(path)
+        if dispatch_context.dashboard is None:
             raise InvalidRuntimeFormula("The dashboard filter reference is invalid.")
 
         cache_key = ("dashboard_filters", dispatch_context.dashboard.id)
@@ -58,7 +64,8 @@ class DashboardDataSourceDataProviderType(DataProviderType):
     type = "data_source"
 
     def is_valid(self, path):
-        return bool(path) and path[0].isdigit() and int(path[0]) > 0
+        if not path or not re.fullmatch(r"[1-9][0-9]*", path[0]):
+            raise BaserowFormulaSyntaxError("The data source reference is invalid.")
 
     def get_data_chunk(self, dispatch_context, path):
         from baserow.contrib.dashboard.data_sources.exceptions import (
@@ -68,7 +75,8 @@ class DashboardDataSourceDataProviderType(DataProviderType):
             DashboardDataSourceService,
         )
 
-        if not self.is_valid(path) or dispatch_context.dashboard is None:
+        self.is_valid(path)
+        if dispatch_context.dashboard is None:
             raise InvalidRuntimeFormula("The data source reference is invalid.")
         service = DashboardDataSourceService()
         try:

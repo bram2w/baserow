@@ -4,8 +4,7 @@ from baserow.contrib.dashboard.data_sources.dispatch_context import (
     DashboardDispatchContext,
 )
 from baserow.contrib.dashboard.filters.service import DashboardFilterService
-from baserow.core.formula import resolve_formula
-from baserow.core.formula.exceptions import InvalidRuntimeFormula
+from baserow.core.formula import BaserowFormulaException, resolve_formula
 from baserow.core.formula.registries import formula_runtime_function_registry
 from baserow.core.formula.validator import ensure_array, ensure_string
 from baserow.core.services.exceptions import (
@@ -54,7 +53,7 @@ class DashboardFilterOptionsService:
                     }
                     for index, value in enumerate(option_values)
                 ]
-            except (InvalidRuntimeFormula, ValidationError) as exc:
+            except (BaserowFormulaException, ValidationError) as exc:
                 raise ServiceImproperlyConfiguredDispatchException(
                     "The option formulas could not be resolved."
                 ) from exc
