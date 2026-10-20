@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import Annotated, Any
 
 from django.utils.translation import gettext as _
@@ -6,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_serializer
 
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.views.handler import ViewHandler
-from baserow.contrib.database.views.models import View
+from baserow.contrib.database.views.models import FormView, View
 from baserow.contrib.database.views.registries import view_type_registry
 from baserow.core.tools import ToolContext
 
@@ -21,17 +22,35 @@ class FormFieldOption(BaseModel):
     order: int = Field(..., description="Sort order.")
 
 
+def _form_field_option(fo) -> FormFieldOption:
+    return FormFieldOption(
+        field_id=fo.field_id,
+        name=fo.name,
+        description=fo.description,
+        required=fo.required,
+        order=fo.order,
+    )
+
+
 def _form_field_options_from_orm(orm_view):
-    return [
-        FormFieldOption(
-            field_id=fo.field_id,
-            name=fo.name,
-            description=fo.description,
-            required=fo.required,
-            order=fo.order,
-        )
-        for fo in orm_view.active_field_options.all()
-    ]
+    return [_form_field_option(fo) for fo in orm_view.active_field_options.all()]
+
+
+def _form_field_options_by_view(views: list[View]) -> dict[int, list]:
+    """The active field options of the form views among ``views``, in one query."""
+
+    form_ids = [view.id for view in views if isinstance(view, FormView)]
+    if not form_ids:
+        return {}
+    by_view = defaultdict(list)
+    options = (
+        FormView.active_field_options_in(views[0].table.database.workspace)
+        .filter(form_view_id__in=form_ids)
+        .order_by("order")
+    )
+    for fo in options:
+        by_view[fo.form_view_id].append(_form_field_option(fo))
+    return by_view
 
 
 _FROM_DJANGO_ORM: dict[str, Any] = {
@@ -42,11 +61,6 @@ _FROM_DJANGO_ORM: dict[str, Any] = {
     "timeline": lambda v: {
         "start_date_field_id": v.start_date_field_id,
         "end_date_field_id": v.end_date_field_id,
-    },
-    "form": lambda v: {
-        "title": v.title,
-        "description": v.description,
-        "field_options": _form_field_options_from_orm(v),
     },
 }
 
@@ -77,7 +91,14 @@ class ViewItem(BaseModel):
         return {k: v for k, v in handler(self).items() if v is not None}
 
     @classmethod
-    def from_django_orm(cls, orm_view: View) -> "ViewItem":
+    def from_django_orm(
+        cls, orm_view: View, form_field_options: list | None = None
+    ) -> "ViewItem":
+        """
+        :param form_field_options: The field options of a form view, when the caller
+            loaded them for several views at once. Otherwise they are queried.
+        """
+
         view_type = view_type_registry.get_by_model(orm_view).type
         kwargs: dict[str, Any] = {
             "id": orm_view.id,
@@ -88,6 +109,14 @@ class ViewItem(BaseModel):
         builder = _FROM_DJANGO_ORM.get(view_type)
         if builder:
             kwargs.update(builder(orm_view))
+        if view_type == "form":
+            if form_field_options is None:
+                form_field_options = _form_field_options_from_orm(orm_view)
+            kwargs.update(
+                title=orm_view.title,
+                description=orm_view.description,
+                field_options=form_field_options,
+            )
         return cls(**kwargs)
 
 
@@ -118,4 +147,11 @@ def list_views(
         limit=100,
         prefetch_field_options=False,
     )
-    return {"views": [ViewItem.from_django_orm(view).model_dump() for view in views]}
+    views = list(views)
+    form_options = _form_field_options_by_view(views)
+    return {
+        "views": [
+            ViewItem.from_django_orm(view, form_options.get(view.id, [])).model_dump()
+            for view in views
+        ]
+    }

@@ -16,7 +16,6 @@ describe('McpOAuthConnections', () => {
       workspace_name: 'Sales',
       allowed_tools: ['list_tables', 'list_rows'],
       tool_count: 2,
-      unavailable_tools: [],
       created: '2026-10-06T10:00:00Z',
     },
     {
@@ -28,7 +27,6 @@ describe('McpOAuthConnections', () => {
       workspace_name: 'Ops',
       allowed_tools: ['list_tables'],
       tool_count: 1,
-      unavailable_tools: ['delete_rows'],
       created: '2026-10-05T10:00:00Z',
     },
   ]
@@ -222,20 +220,24 @@ describe('McpOAuthConnections', () => {
       wrapper.find(
         `[data-test="mcp-oauth-connection-${id}"] [data-test="mcp-oauth-tools-off"]`
       )
-    // 11 has 2 of 4 on. 12 has 1 on and can't use delete_rows.
+    // 11 has 2 of 4 on, 12 has 1.
     expect(hint(11).text()).toContain('"count":2')
-    expect(hint(12).text()).toContain('"count":2')
+    expect(hint(12).text()).toContain('"count":3')
     testApp.mock.resetHandlers()
   })
 
-  test('no hint when every usable tool is on', async () => {
+  test('no hint when every tool is on', async () => {
     const wrapper = await mount({
       ...enabled,
       connections: [
         {
           ...connections[0],
-          allowed_tools: ['list_tables', 'list_rows', 'create_rows'],
-          unavailable_tools: ['delete_rows'],
+          allowed_tools: [
+            'list_tables',
+            'list_rows',
+            'create_rows',
+            'delete_rows',
+          ],
         },
       ],
     })
@@ -280,22 +282,6 @@ describe('McpOAuthConnections', () => {
     ).toEqual(['list_tables', 'list_rows', 'create_rows'])
   })
 
-  test('the tools modal hides tools the connection cannot use', async () => {
-    const wrapper = await mount({ ...enabled, connections })
-    await wrapper
-      .find(
-        '[data-test="mcp-oauth-connection-12"] [data-test="mcp-oauth-edit-tools"]'
-      )
-      .trigger('click')
-    await flushPromises()
-    expect(
-      document.querySelector('[data-test="mcp-tool-picker-tool-delete_rows"]')
-    ).toBeNull()
-    expect(
-      document.querySelector('[data-test="mcp-tool-picker-tool-create_rows"]')
-    ).not.toBeNull()
-  })
-
   test('save is disabled with no tool picked', async () => {
     const wrapper = await mount({ ...enabled, connections })
     await wrapper
@@ -322,43 +308,6 @@ describe('McpOAuthConnections', () => {
 
   const saveButton = () =>
     document.querySelector('[data-test="mcp-oauth-save-tools"]')
-
-  test('editing keeps a granted tool the connection cannot use now', async () => {
-    const hidden = {
-      ...connections[1],
-      allowed_tools: ['list_tables', 'delete_rows'],
-    }
-    const wrapper = await mount({ ...enabled, connections: [hidden] })
-    testApp.mock
-      .onPatch('/mcp/oauth/connections/12/')
-      .reply(200, { ...hidden, allowed_tools: ['list_rows', 'delete_rows'] })
-    await openEditTools(wrapper, 12)
-    document
-      .querySelector('[data-test="mcp-tool-picker-tool-list_tables"] input')
-      .click()
-    await flushPromises()
-    document
-      .querySelector('[data-test="mcp-tool-picker-tool-list_rows"] input')
-      .click()
-    await flushPromises()
-    saveButton().click()
-    await flushPromises()
-    expect(testApp.mock.history.patch.map((r) => JSON.parse(r.data))).toEqual([
-      { allowed_tools: ['list_rows', 'delete_rows'] },
-    ])
-  })
-
-  test('save is disabled when only hidden tools are picked', async () => {
-    const hidden = {
-      ...connections[1],
-      allowed_tools: ['list_tables', 'delete_rows'],
-    }
-    const wrapper = await mount({ ...enabled, connections: [hidden] })
-    await openEditTools(wrapper, 12)
-    document.querySelector('[data-test="mcp-tool-picker-none"]').click()
-    await flushPromises()
-    expect(saveButton().disabled).toBe(true)
-  })
 
   test('a slow save does not close the modal of another app', async () => {
     const wrapper = await mount({ ...enabled, connections })

@@ -97,7 +97,6 @@
           v-model="selectedTools"
           :tools="consent.tools"
           :groups="consent.groups || []"
-          :unavailable="unavailableTools"
         />
         <div class="mcp-authorize__actions">
           <Button
@@ -130,7 +129,10 @@ import McpToolPicker from '@baserow/modules/core/components/mcp/McpToolPicker'
 import MCPOAuthService from '@baserow/modules/core/services/mcpOAuth'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import { authenticatedUnlessError } from '@baserow/modules/core/utils/mcpAuthorize'
-import { readOnlyToolNames } from '@baserow/modules/core/utils/mcpTools'
+import {
+  grantedToolNames,
+  readOnlyToolNames,
+} from '@baserow/modules/core/utils/mcpTools'
 
 definePageMeta({
   layout: 'login',
@@ -263,7 +265,7 @@ function tickFor(id, value = consent.value) {
   }
   const existing = value.grants?.[id]
   selectedTools.value = existing
-    ? value.tools.map((t) => t.name).filter((name) => existing.includes(name))
+    ? grantedToolNames(value.tools, existing)
     : readOnlyToolNames(value.tools, value.groups || [])
 }
 
@@ -280,20 +282,8 @@ function databasesLabel(count) {
   return t('mcpAuthorize.databases', { count: count || 0 })
 }
 
-// Tools a connection to the chosen workspace couldn't use.
-const unavailableTools = computed(
-  () =>
-    consent.value?.workspaces.find((w) => w.id === workspaceId.value)
-      ?.unavailable_tools || []
-)
-
-// Ticked tool names the workspace can use, in the order the API listed them.
-const toolsToGrant = computed(() =>
-  selectedTools.value.filter((name) => !unavailableTools.value.includes(name))
-)
-
 const canAllow = computed(
-  () => workspaceId.value !== null && toolsToGrant.value.length > 0
+  () => workspaceId.value !== null && selectedTools.value.length > 0
 )
 
 async function submit(allow) {
@@ -302,7 +292,7 @@ async function submit(allow) {
   const values = { query, allow }
   if (allow) {
     values.workspace_id = workspaceId.value
-    values.tools = toolsToGrant.value
+    values.tools = selectedTools.value
   }
   try {
     const { data } = await MCPOAuthService($client).submitConsent(values)

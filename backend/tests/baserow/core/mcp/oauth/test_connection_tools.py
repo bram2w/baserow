@@ -48,22 +48,20 @@ def done_actions():
 
 
 @pytest.fixture
-def limited_tool():
-    """A read tool that no endpoint can use."""
+def disabled_tool():
+    """A read tool that is registered but disabled."""
 
-    class Limited(MCPTool):
-        """Never available."""
+    class Disabled(MCPTool):
+        """Disabled."""
 
-        type = "limited_test_tool"
+        type = "disabled_test_tool"
         group = GROUP_DATABASE_READ
         read_only = True
+        enabled = False
 
-        def is_available(self, endpoint):
-            return False
-
-    mcp_tool_registry.register(Limited())
-    yield "limited_test_tool"
-    mcp_tool_registry.unregister("limited_test_tool")
+    mcp_tool_registry.register(Disabled())
+    yield "disabled_test_tool"
+    mcp_tool_registry.unregister("disabled_test_tool")
 
 
 @pytest.mark.django_db(transaction=True)
@@ -124,8 +122,8 @@ def test_change_tools_rejects_invalid_lists(client, api_client, data_fixture, to
 
 
 @pytest.mark.django_db
-def test_change_tools_rejects_a_tool_the_endpoint_cannot_use(
-    client, api_client, data_fixture, limited_tool
+def test_change_tools_rejects_a_disabled_tool(
+    client, api_client, data_fixture, disabled_tool
 ):
     user, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace(user=user)
@@ -133,7 +131,7 @@ def test_change_tools_rejects_a_tool_the_endpoint_cannot_use(
         "endpoint_id"
     ]
 
-    response = _patch(api_client, token, endpoint_id, [limited_tool])
+    response = _patch(api_client, token, endpoint_id, [disabled_tool])
 
     assert response.status_code == 400
     assert response.json()["error"] == "ERROR_MCP_TOOLS_NOT_AVAILABLE"
@@ -195,7 +193,7 @@ def test_change_tools_needs_the_update_permission(client, api_client, data_fixtu
 
 @pytest.mark.django_db
 def test_list_connections_returns_the_tools_to_pick_from(
-    client, api_client, data_fixture, limited_tool
+    client, api_client, data_fixture, disabled_tool
 ):
     user, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace(user=user)
@@ -214,8 +212,9 @@ def test_list_connections_returns_the_tools_to_pick_from(
         for group in mcp_tool_group_registry.get_ordered()
         if group.type in listed
     ]
+    assert disabled_tool not in [tool["name"] for tool in data["tools"]]
     (connection,) = data["connections"]
-    assert connection["unavailable_tools"] == [limited_tool]
+    assert connection["tool_count"] == 1
 
 
 @pytest.mark.django_db
@@ -263,8 +262,8 @@ def test_endpoint_key_lists_its_tools(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_change_tools_keeps_a_stored_tool_the_endpoint_cannot_use(
-    client, api_client, data_fixture, limited_tool
+def test_change_tools_keeps_a_stored_disabled_tool(
+    client, api_client, data_fixture, disabled_tool
 ):
     user, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace(user=user)
@@ -272,18 +271,17 @@ def test_change_tools_keeps_a_stored_tool_the_endpoint_cannot_use(
         "endpoint_id"
     ]
     MCPEndpoint.objects.filter(id=endpoint_id).update(
-        allowed_tools=["list_tables", limited_tool]
+        allowed_tools=["list_tables", disabled_tool]
     )
 
-    response = _patch(
-        api_client, token, endpoint_id, [limited_tool, "list_tables", "list_databases"]
-    )
+    # Settings doesn't list disabled tools, so it never sends them.
+    response = _patch(api_client, token, endpoint_id, ["list_tables", "list_databases"])
 
     assert response.status_code == 200, response.content
     assert MCPEndpoint.objects.get(id=endpoint_id).allowed_tools == [
         "list_databases",
         "list_tables",
-        limited_tool,
+        disabled_tool,
     ]
     assert response.json()["tool_count"] == 2
 
@@ -304,8 +302,8 @@ def test_removing_tools_needs_no_permission(client, api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_consent_rejects_a_tool_the_workspace_cannot_use(
-    client, api_client, data_fixture, limited_tool
+def test_consent_rejects_a_disabled_tool(
+    client, api_client, data_fixture, disabled_tool
 ):
     user, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace(user=user)
@@ -317,37 +315,16 @@ def test_consent_rejects_a_tool_the_workspace_cannot_use(
             "query": authorize_query(cimd_client(client), challenge),
             "allow": True,
             "workspace_id": workspace.id,
-            "tools": ["list_tables", limited_tool],
+            "tools": ["list_tables", disabled_tool],
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
 
     assert response.status_code == 400
-    assert response.json()["error"] == "ERROR_MCP_TOOLS_NOT_AVAILABLE"
+    # The serializer only accepts enabled tool names.
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
     assert not MCPEndpoint.objects.filter(user=user).exists()
-
-
-@pytest.mark.django_db
-def test_list_connections_checks_each_tool_once_per_connection(
-    client, api_client, data_fixture
-):
-    user, token = data_fixture.create_user_and_token()
-    workspace = data_fixture.create_workspace(user=user)
-    obtain_tokens(client, api_client, token, workspace, ["list_tables"])
-    checked = []
-    original = mcp_tool_registry.is_available
-
-    def is_available(tool, endpoint):
-        checked.append(tool.name)
-        return original(tool, endpoint)
-
-    with patch.object(mcp_tool_registry, "is_available", is_available):
-        api_client.get(
-            reverse("api:mcp:oauth_connections"), HTTP_AUTHORIZATION=f"JWT {token}"
-        )
-
-    assert sorted(checked) == sorted(enabled_tool_names())
 
 
 @pytest.mark.django_db

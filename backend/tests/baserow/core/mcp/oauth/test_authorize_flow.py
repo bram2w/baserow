@@ -267,13 +267,11 @@ def test_consent_get_lists_workspaces_and_enabled_tools(
             "id": workspace_1.id,
             "name": "One",
             "database_count": 2,
-            "unavailable_tools": [],
         },
         {
             "id": workspace_2.id,
             "name": "Two",
             "database_count": 0,
-            "unavailable_tools": [],
         },
     ]
     tools = {tool["name"]: tool for tool in data["tools"]}

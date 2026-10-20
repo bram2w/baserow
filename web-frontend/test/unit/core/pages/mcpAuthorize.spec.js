@@ -14,8 +14,8 @@ describe('MCP authorize page', () => {
     verified: true,
     verified_host: 'claude.ai',
     workspaces: [
-      { id: 1, name: 'W', database_count: 0, unavailable_tools: [] },
-      { id: 2, name: 'Other', database_count: 3, unavailable_tools: [] },
+      { id: 1, name: 'W', database_count: 0 },
+      { id: 2, name: 'Other', database_count: 3 },
     ],
     tools: [
       {
@@ -268,39 +268,6 @@ describe('MCP authorize page', () => {
       (name) => toolCheckbox(wrapper, name).element.checked
     )
     expect(checked).toEqual(['list_tables'])
-  })
-
-  test('tools a workspace cannot use are hidden and never sent', async () => {
-    testApp.mock
-      .onGet('/mcp/oauth/consent/', { params: { query } })
-      .reply(200, {
-        ...consent,
-        workspaces: [
-          { id: 2, name: 'Other', database_count: 3, unavailable_tools: [] },
-          {
-            id: 3,
-            name: 'Limited',
-            database_count: 0,
-            unavailable_tools: ['create_rows'],
-          },
-        ],
-        grants: { 3: ['list_tables', 'create_rows'] },
-      })
-    testApp.mock
-      .onPost('/mcp/oauth/consent/', {
-        query,
-        allow: true,
-        workspace_id: 3,
-        tools: ['list_tables'],
-      })
-      .reply(200, { redirect_url: 'https://claude.ai/cb?code=u' })
-    const assign = stubLocation()
-    const wrapper = await testApp.mount(MCPAuthorize, { route })
-    await flushPromises()
-    expect(toolCheckbox(wrapper, 'create_rows').exists()).toBe(false)
-    await wrapper.find('[data-test="mcp-authorize-allow"]').trigger('click')
-    await flushPromises()
-    expect(assign).toHaveBeenCalledWith('https://claude.ai/cb?code=u')
   })
 
   test('none and full access toggle every tool', async () => {

@@ -531,7 +531,7 @@ def _validate_rows(model, rows: list[dict], update: bool = False) -> list[dict]:
         get_row_serializer_class,
     )
 
-    _map_user_field_names(model, rows)
+    _check_field_names(model, rows)
     extra = {"include_id": True, "required_fields": ["id"]} if update else {}
     row_serializer = get_row_serializer_class(model, user_field_names=True, **extra)
     try:
@@ -549,32 +549,20 @@ def _validate_rows(model, rows: list[dict], update: bool = False) -> list[dict]:
     return data["items"]
 
 
-def _map_user_field_names(model, rows: list[dict]) -> list[dict]:
+def _check_field_names(model, rows: list[dict]):
     """
-    Convert user field names to internal column names.
-
-    e.g. ``{"Name": "John"}`` → ``{"field_1": "John"}``.
+    Checks that every key of every row is ``id`` or a user field name.
 
     :raises MCPToolInputError: if a field name is not recognised.
     """
-    name_to_col = {
-        info["field"].name: info["name"] for info in model._field_objects.values()
-    }
-    result = []
+
+    names = [info["field"].name for info in model._field_objects.values()]
     for row in rows:
-        converted: dict[str, Any] = {}
-        for key, value in row.items():
-            if key == "id":
-                converted["id"] = value
-            elif key in name_to_col:
-                converted[name_to_col[key]] = value
-            else:
-                available = list(name_to_col.keys())
+        for key in row:
+            if key != "id" and key not in names:
                 raise MCPToolInputError(
-                    f"Unknown field name '{key}'. Available fields: {available}"
+                    f"Unknown field name '{key}'. Available fields: {names}"
                 )
-        result.append(converted)
-    return result
 
 
 @input_errors()

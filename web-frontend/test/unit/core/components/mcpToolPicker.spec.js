@@ -203,18 +203,6 @@ describe('McpToolPicker', () => {
     expect(badge('create_rows').exists()).toBe(false)
   })
 
-  test('unavailable tools are hidden and never picked', async () => {
-    const { wrapper, selected } = await mount({ unavailable: ['list_pages'] })
-    expect(toolCheckbox(wrapper, 'list_pages').exists()).toBe(false)
-    expect(
-      wrapper.find('[data-test="mcp-tool-picker-area-builder"]').exists()
-    ).toBe(false)
-    await wrapper
-      .find('[data-test="mcp-tool-picker-full-access"]')
-      .trigger('click')
-    expect(selected()).not.toContain('list_pages')
-  })
-
   test('a group without a translation shows its API title', async () => {
     const { wrapper } = await mount({
       groups: [
@@ -235,15 +223,6 @@ describe('McpToolPicker', () => {
     expect(
       wrapper.find('[data-test="mcp-tool-picker-group-other"]').text()
     ).toContain('Other things')
-  })
-
-  test('toggling keeps picked tools that are hidden', async () => {
-    const { wrapper, selected } = await mount({
-      unavailable: ['list_pages'],
-      modelValue: ['list_tables', 'list_pages'],
-    })
-    await toolCheckbox(wrapper, 'create_rows').setValue(true)
-    expect(selected()).toEqual(['list_tables', 'create_rows', 'list_pages'])
   })
 
   test('a tool outside the listed groups is never shown or picked', async () => {

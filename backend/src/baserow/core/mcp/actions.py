@@ -146,7 +146,7 @@ class UpdateMCPEndpointToolsActionType(ActionType):
                 workspace.name,
                 original,
                 endpoint.allowed_tools,
-                len(endpoint.allowed_tools),
+                len(mcp_tool_registry.get_allowed_tools(endpoint)),
             ),
             cls.scope(workspace.id),
             workspace,
@@ -264,7 +264,7 @@ class ConnectMCPOAuthClientActionType(OAuthClientAnalyticsMixin, ActionType):
             name,
             workspace.id,
             workspace.name,
-            allowed_tools,
+            endpoint.allowed_tools,
             len(mcp_tool_registry.get_allowed_tools(endpoint)),
             not created,
         )

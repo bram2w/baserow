@@ -150,12 +150,7 @@
             })
           }}
         </p>
-        <McpToolPicker
-          v-model="pickedTools"
-          :tools="tools"
-          :groups="groups"
-          :unavailable="editing.unavailable_tools"
-        />
+        <McpToolPicker v-model="pickedTools" :tools="tools" :groups="groups" />
         <div class="mcp-oauth-connections__modal-actions">
           <Button type="secondary" @click="toolsModal.hide()">{{
             $t('action.cancel')
@@ -163,7 +158,7 @@
           <Button
             type="primary"
             :loading="savingTools === editing.id"
-            :disabled="savingTools === editing.id || !canSaveTools"
+            :disabled="savingTools === editing.id || !pickedTools.length"
             data-test="mcp-oauth-save-tools"
             @click="saveTools"
             >{{ $t('mcpOAuthConnections.saveTools') }}</Button
@@ -180,6 +175,10 @@ import McpToolPicker from '@baserow/modules/core/components/mcp/McpToolPicker'
 import moment from '@baserow/modules/core/moment'
 import MCPOAuthService from '@baserow/modules/core/services/mcpOAuth'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import {
+  grantedToolNames,
+  listedTools,
+} from '@baserow/modules/core/utils/mcpTools'
 import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
 
 const emit = defineEmits(['loaded'])
@@ -231,36 +230,21 @@ function connectedOn(created) {
   })
 }
 
-// The tools listed under a group, the only ones the user can pick.
-const listedTools = computed(() => {
-  const listed = new Set(groups.value.map((group) => group.type))
-  return tools.value.filter((tool) => listed.has(tool.group))
-})
-
-// Saving only hidden tools would leave the user with nothing to see or untick.
-const canSaveTools = computed(() => {
-  const unavailable = new Set(editing.value?.unavailable_tools || [])
-  return listedTools.value.some(
-    (tool) =>
-      !unavailable.has(tool.name) && pickedTools.value.includes(tool.name)
-  )
-})
+const pickableTools = computed(() => listedTools(tools.value, groups.value))
 
 // Tools the connection could use but doesn't have. New tools are never turned on
 // for an existing connection, so this is where the user finds them.
 function toolsOff(connection) {
-  const unavailable = new Set(connection.unavailable_tools || [])
   const allowed = new Set(connection.allowed_tools || [])
-  return listedTools.value.filter(
-    (tool) => !unavailable.has(tool.name) && !allowed.has(tool.name)
-  ).length
+  return pickableTools.value.filter((tool) => !allowed.has(tool.name)).length
 }
 
 function editTools(connection) {
   editing.value = connection
-  pickedTools.value = tools.value
-    .map((tool) => tool.name)
-    .filter((name) => (connection.allowed_tools || []).includes(name))
+  pickedTools.value = grantedToolNames(
+    tools.value,
+    connection.allowed_tools || []
+  )
   toolsModal.value.show()
 }
 

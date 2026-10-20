@@ -134,20 +134,6 @@ def _serialize_groups(tools) -> list[dict]:
     ]
 
 
-def _unavailable_tools(tools, user, workspace) -> list[str]:
-    """Names of the tools a connection to the workspace couldn't use."""
-
-    return _unavailable_for(tools, MCPEndpoint(user=user, workspace=workspace))
-
-
-def _unavailable_for(tools, endpoint) -> list[str]:
-    return [
-        tool.name
-        for tool in tools
-        if not mcp_tool_registry.is_available(tool, endpoint)
-    ]
-
-
 class MCPOAuthConsentView(APIView):
     permission_classes = (IsAuthenticated,)
     throttle_classes = (*APIView.throttle_classes, MCPOAuthConsentRateThrottle)
@@ -203,9 +189,6 @@ class MCPOAuthConsentView(APIView):
                         "id": wu.workspace_id,
                         "name": wu.workspace.name,
                         "database_count": database_counts.get(wu.workspace_id, 0),
-                        "unavailable_tools": _unavailable_tools(
-                            tools, request.user, wu.workspace
-                        ),
                     }
                     for wu in workspace_users
                 ],
@@ -260,25 +243,15 @@ class MCPOAuthConsentView(APIView):
         return Response({"redirect_url": redirect_url})
 
 
-def _serialize_connection(endpoint, application, tools, expired: bool) -> dict:
-    allowed = mcp_tool_registry.get_allowed_names(endpoint)
-    unavailable = _unavailable_for(tools, endpoint)
+def _serialize_connection(endpoint, application, expired: bool) -> dict:
     return {
         "id": endpoint.id,
         "client_name": (application and application.name) or endpoint.name,
         **_verification(application),
         "workspace_id": endpoint.workspace_id,
         "workspace_name": endpoint.workspace.name,
-        "allowed_tools": allowed,
-        # The tools the client gets, like `get_allowed_tools`.
-        "tool_count": len(
-            [
-                tool
-                for tool in tools
-                if tool.name in allowed and tool.name not in unavailable
-            ]
-        ),
-        "unavailable_tools": unavailable,
+        "allowed_tools": mcp_tool_registry.get_allowed_names(endpoint),
+        "tool_count": len(mcp_tool_registry.get_allowed_tools(endpoint)),
         "created": endpoint.created,
         # The app has to sign in again before it can use the grant.
         "expired": expired,
@@ -322,7 +295,6 @@ class MCPOAuthConnectionsView(APIView):
                     _serialize_connection(
                         endpoint,
                         applications.get(endpoint.oauth_client_id),
-                        tools,
                         expired=endpoint.id not in live,
                     )
                     for endpoint in endpoints
@@ -368,7 +340,6 @@ class MCPOAuthConnectionView(APIView):
             _serialize_connection(
                 endpoint,
                 application,
-                mcp_tool_registry.get_enabled_tools(),
                 expired=endpoint.id not in live,
             )
         )

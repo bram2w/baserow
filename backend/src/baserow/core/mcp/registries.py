@@ -13,7 +13,6 @@ from typing import (
 )
 
 from asgiref.sync import sync_to_async
-from loguru import logger
 from pydantic import BaseModel, ConfigDict, ValidationError, create_model
 
 from baserow.core.mcp.constants import LEGACY_DEFAULT_TOOLS
@@ -62,15 +61,6 @@ class MCPTool(Instance):
 
     group: str | None = None
     """The permission group the tool belongs to, see ``baserow.core.mcp.groups``."""
-
-    def is_available(self, endpoint: MCPEndpoint) -> bool:
-        """
-        Whether the endpoint can use this tool right now. An unavailable tool is
-        neither listed nor callable. This can query the database, so async code
-        must call it through ``sync_to_async``.
-        """
-
-        return True
 
     @property
     def name(self) -> str:
@@ -229,29 +219,13 @@ class MCPToolRegistry(Registry[MCPTool]):
             return list(LEGACY_DEFAULT_TOOLS)
         return list(endpoint.allowed_tools)
 
-    @staticmethod
-    def is_available(tool: MCPTool, endpoint: MCPEndpoint) -> bool:
-        """``tool.is_available``, where a failing check counts as unavailable."""
-
-        # A failing check hides the tool instead of failing the whole request, and
-        # its error must not reach the client.
-        try:
-            return tool.is_available(endpoint)
-        except Exception:
-            logger.exception("MCP tool '{}' availability check failed", tool.name)
-            return False
-
     def get_allowed_tools(self, endpoint: MCPEndpoint) -> List[MCPTool]:
         """
         Return the enabled tools the endpoint may use. ``allowed_tools = None``
-        allows the ``LEGACY_DEFAULT_TOOLS`` that are enabled. Tools that are not
-        available to the endpoint are left out. This can query the database, so
-        async code must call it through ``sync_to_async``.
+        allows the ``LEGACY_DEFAULT_TOOLS`` that are enabled.
         """
-        tools = self.get_enabled_tools()
         allowed = set(self.get_allowed_names(endpoint))
-        tools = [tool for tool in tools if tool.name in allowed]
-        return [tool for tool in tools if self.is_available(tool, endpoint)]
+        return [tool for tool in self.get_enabled_tools() if tool.name in allowed]
 
     async def list_all_tools(self, endpoint: MCPEndpoint) -> List["Tool"]:
         """Return the enabled tools the given endpoint is allowed to use."""
@@ -272,7 +246,7 @@ class MCPToolRegistry(Registry[MCPTool]):
             return None
         if name not in self.get_allowed_names(endpoint):
             return None
-        return tool if self.is_available(tool, endpoint) else None
+        return tool
 
 
 mcp_tool_registry = MCPToolRegistry()

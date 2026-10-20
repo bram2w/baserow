@@ -10,7 +10,7 @@ from baserow.core.mcp.groups import (
     MCPToolGroupRegistry,
     mcp_tool_group_registry,
 )
-from baserow.core.mcp.registries import MCPTool, mcp_tool_registry
+from baserow.core.mcp.registries import mcp_tool_registry
 from tests.baserow.core.mcp.oauth.helpers import (
     authorize_query,
     cimd_client,
@@ -105,32 +105,3 @@ def test_consent_returns_the_groups_of_the_listed_tools_in_order(
     types = [group["type"] for group in data["groups"]]
     assert types.index(GROUP_DATABASE_READ) < types.index(GROUP_DATABASE_EDIT)
     assert types.index(GROUP_DATABASE_EDIT) < types.index(GROUP_DATABASE_DELETE)
-
-
-@pytest.mark.django_db
-def test_consent_lists_tools_unavailable_per_workspace(
-    client, api_client, data_fixture
-):
-    user, token = data_fixture.create_user_and_token()
-    allowed = data_fixture.create_workspace(user=user)
-    blocked = data_fixture.create_workspace(user=user)
-
-    class Limited(MCPTool):
-        """Only available in one workspace."""
-
-        type = "limited_test_tool"
-        group = GROUP_DATABASE_READ
-        read_only = True
-
-        def is_available(self, endpoint):
-            return endpoint.workspace_id == allowed.id
-
-    mcp_tool_registry.register(Limited())
-    try:
-        data = _consent(client, api_client, token)
-    finally:
-        mcp_tool_registry.unregister("limited_test_tool")
-
-    unavailable = {w["id"]: w["unavailable_tools"] for w in data["workspaces"]}
-    assert unavailable == {allowed.id: [], blocked.id: ["limited_test_tool"]}
-    assert "limited_test_tool" in [tool["name"] for tool in data["tools"]]

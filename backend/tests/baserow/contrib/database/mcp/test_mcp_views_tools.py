@@ -108,3 +108,37 @@ def test_shared_list_views_reports_status(data_fixture):
 
     assert result == {"views": []}
     assert statuses == ["Listing views in Tasks..."]
+
+
+@pytest.mark.django_db
+def test_shared_list_views_loads_form_options_in_one_query(data_fixture):
+    from django.db import connection
+    from django.test.utils import CaptureQueriesContext
+
+    from baserow.contrib.database.tools.views import ViewItem
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+    field = data_fixture.create_text_field(table=table, name="Name", primary=True)
+    ctx = ToolContext(user, workspace)
+
+    def count_queries():
+        with CaptureQueriesContext(connection) as queries:
+            result = list_views(ctx, table.id)
+        return len(queries), result
+
+    form = data_fixture.create_form_view(table=table)
+    data_fixture.create_form_view_field_option(form, field, enabled=True)
+    count_queries()  # Warms the caches the first call fills.
+    one_form, _ = count_queries()
+    for _ in range(3):
+        other = data_fixture.create_form_view(table=table)
+        data_fixture.create_form_view_field_option(other, field, enabled=True)
+    four_forms, result = count_queries()
+
+    assert four_forms == one_form
+    first = next(v for v in result["views"] if v["id"] == form.id)
+    assert first == ViewItem.from_django_orm(form).model_dump()
+    assert [o["field_id"] for o in first["field_options"]] == [field.id]

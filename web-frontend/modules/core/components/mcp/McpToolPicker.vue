@@ -94,7 +94,10 @@
 
 <script setup>
 import { computed } from 'vue'
-import { readOnlyToolNames } from '@baserow/modules/core/utils/mcpTools'
+import {
+  listedTools,
+  readOnlyToolNames,
+} from '@baserow/modules/core/utils/mcpTools'
 
 const props = defineProps({
   /**
@@ -107,11 +110,6 @@ const props = defineProps({
    * `read_only_preset`.
    */
   groups: { type: Array, required: true },
-  /**
-   * Names of tools the connection can't use. They are hidden and never picked,
-   * but a hidden name already in the model value is kept.
-   */
-  unavailable: { type: Array, required: false, default: () => [] },
   /**
    * The picked tool names.
    */
@@ -134,13 +132,7 @@ const AREA_LABELS = {
 }
 
 // The tools the user sees: a tool is only listed under one of the groups.
-const availableTools = computed(() => {
-  const unavailable = new Set(props.unavailable)
-  const listed = new Set(props.groups.map((group) => group.type))
-  return props.tools.filter(
-    (tool) => listed.has(tool.group) && !unavailable.has(tool.name)
-  )
-})
+const availableTools = computed(() => listedTools(props.tools, props.groups))
 
 const availableNames = computed(() =>
   availableTools.value.map((tool) => tool.name)
@@ -185,16 +177,13 @@ function isDelete(tool) {
   return tool.name.startsWith('delete_') || tool.group.endsWith('_delete')
 }
 
-// Picked names, always in the order the API listed the tools. Hidden names in
-// the model value stay, so editing a connection doesn't drop a tool that is only
-// unavailable for now.
+// Picked names, always in the order the API listed the tools.
 function select(names) {
   const picked = new Set(names)
-  const shown = new Set(availableNames.value)
-  emit('update:modelValue', [
-    ...availableNames.value.filter((name) => picked.has(name)),
-    ...props.modelValue.filter((name) => !shown.has(name)),
-  ])
+  emit(
+    'update:modelValue',
+    availableNames.value.filter((name) => picked.has(name))
+  )
 }
 
 function toggle(names, value) {
