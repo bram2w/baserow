@@ -149,6 +149,71 @@ test('uses the configured limit for picked and typed emails without counting exi
   }
 })
 
+test.each([
+  {
+    name: 'custom role declared as the invitation default',
+    availableRoles: [
+      { uid: 'CUSTOM_READER', isDefaultForInvitations: true },
+      { uid: 'OTHER_ROLE' },
+    ],
+    expectedRole: 'CUSTOM_READER',
+  },
+  {
+    name: 'RBAC workspace',
+    availableRoles: [
+      { uid: 'ADMIN' },
+      { uid: 'BUILDER' },
+      { uid: 'EDITOR' },
+      { uid: 'COMMENTER' },
+      { uid: 'VIEWER', isDefaultForInvitations: true },
+      { uid: 'NO_ACCESS' },
+      { uid: 'NO_ROLE_LOW_PRIORITY' },
+    ],
+    expectedRole: 'VIEWER',
+  },
+  {
+    name: 'basic workspace with inactive RBAC roles',
+    availableRoles: [
+      { uid: 'ADMIN' },
+      { uid: 'MEMBER', isDefaultForInvitations: true },
+      { uid: 'VIEWER', isDeactivated: true, isDefaultForInvitations: true },
+      { uid: 'NO_ACCESS', isDeactivated: true },
+    ],
+    expectedRole: 'MEMBER',
+  },
+  {
+    name: 'target where Viewer cannot be used for invitations',
+    availableRoles: [
+      { uid: 'EDITOR' },
+      { uid: 'VIEWER', isDefaultForInvitations: true },
+    ],
+    emailRoleUids: ['EDITOR'],
+    expectedRole: 'EDITOR',
+  },
+])(
+  'chooses the default invitation role for $name',
+  async ({ availableRoles, emailRoleUids = null, expectedRole }) => {
+    const wrapper = await mountInput({
+      roles: availableRoles.map((role) => ({
+        name: role.uid,
+        isVisible: true,
+        ...role,
+      })),
+      emailRoleUids,
+    })
+    try {
+      const input = wrapper.find('input')
+      await input.setValue('new@example.com')
+      await input.trigger('keydown', { key: 'Enter' })
+      await wrapper.find('.invite-input__row button').trigger('click')
+
+      expect(wrapper.emitted('add')[0][1]).toBe(expectedRole)
+    } finally {
+      wrapper.unmount()
+    }
+  }
+)
+
 test('only takes email addresses when there is nothing to pick', async () => {
   const wrapper = await mountInput()
   try {

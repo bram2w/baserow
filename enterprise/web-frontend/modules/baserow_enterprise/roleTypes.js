@@ -153,6 +153,10 @@ export class EnterpriseCommenterRoleType extends MemberRoleType {
 }
 
 export class EnterpriseViewerRoleType extends MemberRoleType {
+  getIsDefaultForInvitations(workspaceId) {
+    return true
+  }
+
   static getType() {
     return 'viewer'
   }

@@ -10,6 +10,9 @@ export default (client, $hasFeature, $registry) => {
           isBillable: role.getIsBillable(),
           isVisible: role.isVisible(workspace.id),
           isDeactivated: role.isDeactivated(workspace.id),
+          isDefaultForInvitations: role.getIsDefaultForInvitations(
+            workspace.id
+          ),
           allowedScopeTypes: role.allowedScopeTypes,
           allowedSubjectTypes: role.allowedSubjectTypes,
         })),

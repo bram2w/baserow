@@ -421,8 +421,8 @@ export default {
   },
   methods: {
     /**
-     * The last active role is the one with the least access, the safest
-     * default, as long as an address can be invited with it.
+     * Prefer the default declared by an active invitation role. When none is
+     * available, fall back to the last active invitation role.
      */
     initialRoleUid(roles) {
       const active = roles.filter(
@@ -430,7 +430,11 @@ export default {
           !role.isDeactivated &&
           (this.emailRoleUids === null || this.emailRoleUids.includes(role.uid))
       )
-      return active.length > 0 ? active[active.length - 1].uid : null
+      return (
+        active.find((role) => role.isDefaultForInvitations)?.uid ??
+        active[active.length - 1]?.uid ??
+        null
+      )
     },
     focus() {
       this.$refs.input.focus()

@@ -23,6 +23,11 @@ class RoleType extends Registerable {
     return false
   }
 
+  // Whether this role should be selected initially when inviting someone.
+  getIsDefaultForInvitations(workspaceId) {
+    return false
+  }
+
   // Indicates whether the role should be visible in the list.
   isVisible(workspaceId) {
     return true
@@ -70,6 +75,11 @@ export class AdminRoleType extends RoleType {
 }
 
 export class MemberRoleType extends RoleType {
+  getIsDefaultForInvitations(workspaceId) {
+    // Subclasses representing different roles must opt into being the default.
+    return this.type === MemberRoleType.getType()
+  }
+
   static getType() {
     return 'member'
   }
