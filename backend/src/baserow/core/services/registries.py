@@ -100,9 +100,13 @@ class ServiceType(
     # used across modules.
     dispatch_types: List[DispatchTypes] = []
 
-    # By default all service data should be hidden
+    # By default all service data should be hidden. The serializer mixins are
+    # excluded as well because the filterable and sortable mixins add the service
+    # `filters`, `filter_groups` and `sortings` in `to_representation`, regardless
+    # of the field names.
     public_serializer_field_names = []
     public_serializer_field_overrides = {}
+    public_serializer_mixins = []
 
     def is_deactivated(self, workspace: Workspace) -> bool:
         """Return whether this service type is unavailable in the workspace."""
