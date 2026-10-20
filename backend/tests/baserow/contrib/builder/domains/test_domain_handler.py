@@ -1,5 +1,12 @@
+from time import perf_counter
+
+from django.core.files.storage import FileSystemStorage
+from django.db import connection, transaction
+from django.test.utils import CaptureQueriesContext
+
 import pytest
 
+from baserow.contrib.builder.data_sources.models import DataSource
 from baserow.contrib.builder.domains.domain_types import CustomDomainType
 from baserow.contrib.builder.domains.exceptions import (
     DomainDoesNotExist,
@@ -16,8 +23,9 @@ from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.builder.workflow_actions.models import BuilderWorkflowAction
 from baserow.core.cache import global_cache
+from baserow.core.handler import CoreHandler
 from baserow.core.integrations.exceptions import IntegrationImproperlyConfigured
-from baserow.core.models import Agent
+from baserow.core.models import Agent, Template
 from baserow.core.user_sources.constants import DEFAULT_USER_ROLE_PREFIX
 from baserow.core.utils import Progress
 
@@ -248,6 +256,64 @@ def test_domain_publishing(data_fixture):
     assert global_cache.get(builder_by_domain_cache_key, default="after") == "after"
 
     assert Builder.objects.count() == 2
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.disabled_in_ci
+# Run manually with:
+# just b test tests/baserow/contrib/builder/domains/test_domain_handler.py \
+#     -s --run-disabled-in-ci
+def test_republishing_work_management_platform_performance(
+    data_fixture, django_capture_on_commit_callbacks, profiler, tmpdir
+):
+    """Reports the elapsed time and query count of a Work Management republish."""
+
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    core_handler = CoreHandler()
+    core_handler.sync_templates(storage=storage, pattern="work-management-platform")
+
+    workspace_user = data_fixture.create_user_workspace()
+    template = Template.objects.get(name="Work Management Platform")
+    with transaction.atomic():
+        applications, _ = core_handler.install_template(
+            workspace_user.user,
+            workspace_user.workspace,
+            template,
+            storage=storage,
+        )
+
+    builder = next(
+        application for application in applications if isinstance(application, Builder)
+    )
+    assert Page.objects.filter(builder=builder).count() == 18
+    assert DataSource.objects.filter(page__builder=builder).count() == 53
+    assert BuilderWorkflowAction.objects.filter(page__builder=builder).count() == 66
+
+    domain = data_fixture.create_builder_custom_domain(
+        builder=builder, domain_name="work-management.test"
+    )
+    with (
+        transaction.atomic(),
+        django_capture_on_commit_callbacks(execute=True),
+    ):
+        DomainHandler().publish(domain)
+    domain.refresh_from_db()
+
+    with profiler(
+        print_result=False,
+        html_report_name="builder_work_management_platform_republish",
+    ):
+        started_at = perf_counter()
+        with (
+            CaptureQueriesContext(connection) as captured_queries,
+            django_capture_on_commit_callbacks(execute=True),
+            transaction.atomic(),
+        ):
+            DomainHandler().publish(domain)
+        elapsed_seconds = perf_counter() - started_at
+
+    print(f"Work Management Platform republish time: {elapsed_seconds:.3f}s")
+    print(f"Work Management Platform republish queries: {len(captured_queries)}")
 
 
 @pytest.mark.django_db
