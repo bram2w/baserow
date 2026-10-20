@@ -219,6 +219,7 @@ class MCPOAuthConsentView(APIView):
         {
             WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
             UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+            MCPToolsNotAvailable: ERROR_MCP_TOOLS_NOT_AVAILABLE,
         }
     )
     @validate_body(ConsentSerializer)
@@ -260,15 +261,24 @@ class MCPOAuthConsentView(APIView):
 
 
 def _serialize_connection(endpoint, application, tools, expired: bool) -> dict:
+    allowed = mcp_tool_registry.get_allowed_names(endpoint)
+    unavailable = _unavailable_for(tools, endpoint)
     return {
         "id": endpoint.id,
         "client_name": (application and application.name) or endpoint.name,
         **_verification(application),
         "workspace_id": endpoint.workspace_id,
         "workspace_name": endpoint.workspace.name,
-        "allowed_tools": mcp_tool_registry.get_allowed_names(endpoint),
-        "tool_count": len(mcp_tool_registry.get_allowed_tools(endpoint)),
-        "unavailable_tools": _unavailable_for(tools, endpoint),
+        "allowed_tools": allowed,
+        # The tools the client gets, like `get_allowed_tools`.
+        "tool_count": len(
+            [
+                tool
+                for tool in tools
+                if tool.name in allowed and tool.name not in unavailable
+            ]
+        ),
+        "unavailable_tools": unavailable,
         "created": endpoint.created,
         # The app has to sign in again before it can use the grant.
         "expired": expired,
@@ -295,7 +305,7 @@ class MCPOAuthConnectionsView(APIView):
                 user=request.user,
                 oauth_client_id__isnull=False,
                 workspace__workspaceuser__user=request.user,
-            ).select_related("workspace")
+            ).select_related("workspace", "user")
         )
         Application = get_application_model()
         applications = Application.objects.in_bulk(

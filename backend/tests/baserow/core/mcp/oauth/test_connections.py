@@ -211,13 +211,11 @@ def test_tool_count_ignores_disabled_tools(client, api_client, data_fixture):
 
     user, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace(user=user)
-    MCPEndpointHandler().grant_oauth_client(
-        user,
-        workspace,
-        cimd_client(client),
-        "c",
-        ["list_tables", "no_longer_registered"],
+    endpoint, _ = MCPEndpointHandler().grant_oauth_client(
+        user, workspace, cimd_client(client), "c", ["list_tables"]
     )
+    endpoint.allowed_tools = ["list_tables", "no_longer_registered"]
+    endpoint.save()
 
     response = api_client.get(reverse(LIST_URL), HTTP_AUTHORIZATION=f"JWT {token}")
 

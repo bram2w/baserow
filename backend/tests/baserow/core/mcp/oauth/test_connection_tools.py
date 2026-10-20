@@ -12,7 +12,13 @@ from baserow.core.mcp.groups import GROUP_DATABASE_READ, mcp_tool_group_registry
 from baserow.core.mcp.models import MCPEndpoint
 from baserow.core.mcp.operations import UpdateMCPEndpointOperationType
 from baserow.core.mcp.registries import MCPTool, mcp_tool_registry
-from tests.baserow.core.mcp.oauth.helpers import enabled_tool_names, obtain_tokens
+from tests.baserow.core.mcp.oauth.helpers import (
+    authorize_query,
+    cimd_client,
+    enabled_tool_names,
+    obtain_tokens,
+    pkce_pair,
+)
 from tests.baserow.core.mcp.test_mcp_streamable_http import LIST, _call, _post
 
 
@@ -254,3 +260,107 @@ def test_endpoint_key_lists_its_tools(api_client, data_fixture):
     )
 
     assert response.json()["allowed_tools"] == LEGACY_DEFAULT_TOOLS
+
+
+@pytest.mark.django_db
+def test_change_tools_keeps_a_stored_tool_the_endpoint_cannot_use(
+    client, api_client, data_fixture, limited_tool
+):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    endpoint_id = obtain_tokens(client, api_client, token, workspace, ["list_tables"])[
+        "endpoint_id"
+    ]
+    MCPEndpoint.objects.filter(id=endpoint_id).update(
+        allowed_tools=["list_tables", limited_tool]
+    )
+
+    response = _patch(
+        api_client, token, endpoint_id, [limited_tool, "list_tables", "list_databases"]
+    )
+
+    assert response.status_code == 200, response.content
+    assert MCPEndpoint.objects.get(id=endpoint_id).allowed_tools == [
+        "list_databases",
+        "list_tables",
+        limited_tool,
+    ]
+    assert response.json()["tool_count"] == 2
+
+
+@pytest.mark.django_db
+def test_removing_tools_needs_no_permission(client, api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    endpoint_id = obtain_tokens(
+        client, api_client, token, workspace, ["list_databases", "list_tables"]
+    )["endpoint_id"]
+
+    with patch.object(CoreHandler, "check_permissions", side_effect=PermissionDenied):
+        response = _patch(api_client, token, endpoint_id, ["list_tables"])
+
+    assert response.status_code == 200, response.content
+    assert MCPEndpoint.objects.get(id=endpoint_id).allowed_tools == ["list_tables"]
+
+
+@pytest.mark.django_db
+def test_consent_rejects_a_tool_the_workspace_cannot_use(
+    client, api_client, data_fixture, limited_tool
+):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    _, challenge = pkce_pair()
+
+    response = api_client.post(
+        reverse("api:mcp:oauth_consent"),
+        {
+            "query": authorize_query(cimd_client(client), challenge),
+            "allow": True,
+            "workspace_id": workspace.id,
+            "tools": ["list_tables", limited_tool],
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == 400
+    assert response.json()["error"] == "ERROR_MCP_TOOLS_NOT_AVAILABLE"
+    assert not MCPEndpoint.objects.filter(user=user).exists()
+
+
+@pytest.mark.django_db
+def test_list_connections_checks_each_tool_once_per_connection(
+    client, api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    obtain_tokens(client, api_client, token, workspace, ["list_tables"])
+    checked = []
+    original = mcp_tool_registry.is_available
+
+    def is_available(tool, endpoint):
+        checked.append(tool.name)
+        return original(tool, endpoint)
+
+    with patch.object(mcp_tool_registry, "is_available", is_available):
+        api_client.get(
+            reverse("api:mcp:oauth_connections"), HTTP_AUTHORIZATION=f"JWT {token}"
+        )
+
+    assert sorted(checked) == sorted(enabled_tool_names())
+
+
+@pytest.mark.django_db
+def test_endpoint_key_patch_without_changes_is_rejected(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    endpoint = data_fixture.create_mcp_endpoint(user=user)
+
+    response = api_client.patch(
+        reverse("api:mcp:endpoint", kwargs={"endpoint_id": endpoint.id}),
+        {"allowed_tool": ["list_tables"]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == 400
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"

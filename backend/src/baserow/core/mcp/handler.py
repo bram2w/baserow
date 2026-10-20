@@ -158,6 +158,8 @@ class MCPEndpointHandler:
         :param client_id: The OAuth client id.
         :param name: The client name, stored as the grant name.
         :param allowed_tools: The tool names the client may use.
+        :raises MCPToolsNotAvailable: When a name isn't an enabled tool the client
+            can use in the workspace.
         :return: The created or updated grant, and whether it was created.
         """
 
@@ -172,6 +174,9 @@ class MCPEndpointHandler:
             CreateMCPEndpointOperationType.type,
             workspace=workspace,
             context=workspace,
+        )
+        allowed_tools = self._check_tools(
+            MCPEndpoint(user=user, workspace=workspace), allowed_tools
         )
         # get_or_create retries the lookup when a parallel consent created the row
         # first, so the unique constraint never surfaces as an error.
@@ -233,11 +238,15 @@ class MCPEndpointHandler:
         Replaces the tools an endpoint key or OAuth grant may use. Takes effect on
         the next MCP request, so a connected app doesn't need to sign in again.
 
+        Removing tools needs no permission, like disconnecting an app. Names the
+        endpoint already has are kept even when the endpoint can't use them right
+        now, so a list read from the API can be sent back.
+
         :param user: The user on whose behalf the tools are changed.
         :param endpoint: The endpoint or grant to change.
         :param names: The tool names the endpoint may use from now on.
         :raises MCPEndpointDoesNotBelongToUser: When the endpoint isn't the user's.
-        :raises MCPToolsNotAvailable: When a name isn't an enabled tool the
+        :raises MCPToolsNotAvailable: When a new name isn't an enabled tool the
             endpoint can use.
         :return: The updated endpoint.
         """
@@ -247,27 +256,45 @@ class MCPEndpointHandler:
                 "The user is not authorized to update the endpoint."
             )
 
-        CoreHandler().check_permissions(
-            user,
-            UpdateMCPEndpointOperationType.type,
-            workspace=endpoint.workspace,
-            context=endpoint,
-        )
+        stored = mcp_tool_registry.get_allowed_names(endpoint)
+        if set(names) - set(stored):
+            CoreHandler().check_permissions(
+                user,
+                UpdateMCPEndpointOperationType.type,
+                workspace=endpoint.workspace,
+                context=endpoint,
+            )
 
-        usable = [
+        endpoint.allowed_tools = self._check_tools(endpoint, names, kept=stored)
+        endpoint.save(update_fields=["allowed_tools"])
+        return endpoint
+
+    def _check_tools(
+        self, endpoint: MCPEndpoint, names: list[str], kept: list[str] = ()
+    ) -> list[str]:
+        """
+        Returns the names in registry order, so the result doesn't depend on the
+        request's order. Names in `kept` come last when they aren't enabled.
+
+        :raises MCPToolsNotAvailable: When a name isn't in `kept` and isn't an
+            enabled tool the endpoint can use.
+        """
+
+        requested = set(names)
+        enabled = mcp_tool_registry.get_enabled_tools()
+        # Only new names are checked, because a check can query the database.
+        usable = {
             tool.name
-            for tool in mcp_tool_registry.get_enabled_tools()
-            if mcp_tool_registry.is_available(tool, endpoint)
-        ]
-        unknown = sorted(set(names) - set(usable))
+            for tool in enabled
+            if tool.name in requested - set(kept)
+            and mcp_tool_registry.is_available(tool, endpoint)
+        }
+        unknown = sorted(requested - usable - set(kept))
         if unknown:
             raise MCPToolsNotAvailable(unknown)
 
-        # Stored in registry order so the result doesn't depend on the request's.
-        requested = set(names)
-        endpoint.allowed_tools = [name for name in usable if name in requested]
-        endpoint.save(update_fields=["allowed_tools"])
-        return endpoint
+        ordered = [tool.name for tool in enabled if tool.name in requested]
+        return ordered + [name for name in kept if name in requested - set(ordered)]
 
     def delete_endpoint(self, user: AbstractUser, endpoint: MCPEndpoint):
         """

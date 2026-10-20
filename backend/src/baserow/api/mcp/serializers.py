@@ -72,6 +72,13 @@ class UpdateMCPEndpointSerializer(serializers.ModelSerializer):
         fields = ("name", "allowed_tools")
         extra_kwargs = {"name": {"required": False}}
 
+    def validate(self, data):
+        if not data:
+            raise serializers.ValidationError(
+                "Provide the name or allowed_tools to change."
+            )
+        return data
+
 
 class UpdateAllowedToolsSerializer(serializers.Serializer):
     allowed_tools = AllowedToolsField()
