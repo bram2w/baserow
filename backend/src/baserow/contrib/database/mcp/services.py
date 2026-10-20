@@ -8,12 +8,12 @@ so callers never need to worry about permissions or cross-workspace access.
 """
 
 from contextlib import contextmanager
-from typing import Any, Callable
+from typing import Any
 
 from django.contrib.auth.models import AbstractUser
 from django.db import transaction
 
-from baserow.api.utils import _search_up_class_hierarchy_for_mapping
+from baserow.api.utils import apply_exception_mapping
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
@@ -21,7 +21,7 @@ from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
 from baserow.core.db import specific_iterator
 from baserow.core.handler import CoreHandler
-from baserow.core.mcp.exceptions import MCPToolInputError
+from baserow.core.mcp.exceptions import MCPToolInputError, flatten_error_detail
 from baserow.core.models import Workspace
 
 # ---------------------------------------------------------------------------
@@ -29,59 +29,59 @@ from baserow.core.models import Workspace
 # ---------------------------------------------------------------------------
 
 
-def _user_error_messages() -> dict[type[Exception], str | Callable[[Exception], str]]:
+def _user_error_mapping() -> dict[type[Exception], Any]:
     """
-    Baserow exceptions that a client causes with its input, with the message to give
-    it, or a function that builds the message from the exception. Most of them carry
-    no message of their own.
+    Baserow exceptions that a client causes with its input, mapped to the REST API's
+    error, so REST and MCP give the same message.
     """
 
+    from baserow.contrib.database.api.fields import errors as fe
+    from baserow.contrib.database.api.rows import errors as re
     from baserow.contrib.database.fields import exceptions as f
     from baserow.contrib.database.rows import exceptions as r
 
     return {
-        f.FieldWithSameNameAlreadyExists: "A field with this name already exists in "
-        "the table.",
-        f.ReservedBaserowFieldNameException: "This field name is reserved. Choose "
-        "another name.",
-        f.InvalidBaserowFieldName: "The field name is empty or invalid.",
-        f.MaxFieldNameLengthExceeded: "The field name is too long.",
-        f.MaxFieldLimitExceeded: "The table has reached the maximum number of fields.",
-        f.CannotCreateFieldType: "This field type cannot be created.",
-        f.CannotChangeFieldType: "The field type cannot be changed this way.",
-        f.IncompatibleField: "The field is not compatible with this operation.",
-        f.IncompatiblePrimaryFieldTypeError: "This field type cannot be the primary "
-        "field.",
-        f.LinkRowTableNotProvided: "A link_row field needs a link_row_table_id.",
-        f.LinkRowTableNotInSameDatabase: "The linked table must be in the same "
-        "database.",
-        f.SelfReferencingLinkRowCannotHaveRelatedField: "A link to the same table "
-        "cannot have a related field.",
-        f.FieldNotInTable: "The field does not belong to this table.",
-        f.FieldIsAlreadyPrimary: "The field is already the primary field.",
-        f.CannotDeletePrimaryField: "The primary field cannot be deleted.",
-        f.SelectOptionDoesNotBelongToField: "The select option does not belong to "
-        "this field.",
-        f.InvalidFieldConstraint: "The field constraint is invalid.",
-        f.InvalidDefaultValueFunction: "The default value function is invalid.",
-        f.PrimaryFieldAlreadyExists: "The table already has a primary field.",
-        f.DbIndexNotSupportedError: lambda exc: (
-            f"The field type {exc.field_type} does not support database indexes."
+        f.FieldWithSameNameAlreadyExists: fe.ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS,
+        f.ReservedBaserowFieldNameException: fe.ERROR_RESERVED_BASEROW_FIELD_NAME,
+        f.InvalidBaserowFieldName: fe.ERROR_INVALID_BASEROW_FIELD_NAME,
+        f.MaxFieldNameLengthExceeded: fe.ERROR_MAX_FIELD_NAME_LENGTH_EXCEEDED,
+        f.MaxFieldLimitExceeded: fe.ERROR_MAX_FIELD_COUNT_EXCEEDED,
+        f.CannotCreateFieldType: fe.ERROR_CANNOT_CREATE_FIELD_TYPE,
+        f.CannotChangeFieldType: fe.ERROR_CANNOT_CHANGE_FIELD_TYPE,
+        f.IncompatibleField: fe.ERROR_INCOMPATIBLE_FIELD_TYPE,
+        f.IncompatiblePrimaryFieldTypeError: fe.ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE,
+        f.LinkRowTableNotProvided: fe.ERROR_LINK_ROW_TABLE_NOT_PROVIDED,
+        f.LinkRowTableNotInSameDatabase: fe.ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE,
+        f.SelfReferencingLinkRowCannotHaveRelatedField: (
+            fe.ERROR_SELF_REFERENCING_LINK_ROW_CANNOT_HAVE_RELATED_FIELD
         ),
-        f.FieldConstraintDoesNotSupportDefaultValueError: "This constraint cannot be "
-        "set while the field has a default value.",
-        f.FieldDataConstraintException: "The values violate a field constraint, "
-        "for example a duplicate value in a field that must be unique.",
-        r.CannotCreateRowsInTable: lambda exc: (
-            str(exc) or "Rows cannot be created in this table."
+        f.FieldNotInTable: fe.ERROR_FIELD_NOT_IN_TABLE,
+        f.FieldIsAlreadyPrimary: fe.ERROR_FIELD_IS_ALREADY_PRIMARY,
+        f.CannotDeletePrimaryField: fe.ERROR_CANNOT_DELETE_PRIMARY_FIELD,
+        f.PrimaryFieldAlreadyExists: fe.ERROR_PRIMARY_FIELD_ALREADY_EXISTS,
+        f.SelectOptionDoesNotBelongToField: (
+            fe.ERROR_SELECT_OPTION_DOES_NOT_BELONG_TO_FIELD
         ),
-        r.CannotDeleteRowsInTable: lambda exc: (
-            str(exc) or "Rows cannot be deleted in this table."
+        f.InvalidFieldConstraint: fe.ERROR_INVALID_FIELD_CONSTRAINT,
+        f.InvalidDefaultValueFunction: fe.ERROR_INVALID_DEFAULT_VALUE_FUNCTION,
+        f.DbIndexNotSupportedError: fe.ERROR_DB_INDEX_NOT_SUPPORTED,
+        f.FieldConstraintDoesNotSupportDefaultValueError: (
+            fe.ERROR_FIELD_CONSTRAINT_DOES_NOT_SUPPORT_DEFAULT_VALUE
         ),
-        r.RowIdsNotUnique: lambda exc: (
-            "The row ids are not unique: " + ", ".join(str(i) for i in exc.ids) + "."
-        ),
+        f.FieldDataConstraintException: fe.ERROR_FIELD_DATA_CONSTRAINT,
+        r.CannotCreateRowsInTable: re.ERROR_CANNOT_CREATE_ROWS_IN_TABLE,
+        r.CannotDeleteRowsInTable: re.ERROR_CANNOT_DELETE_ROWS_IN_TABLE,
+        r.RowIdsNotUnique: re.ERROR_ROW_IDS_NOT_UNIQUE,
     }
+
+
+def _user_error_message(exc: Exception) -> str | None:
+    """The REST API's message for a client error, or None for other exceptions."""
+
+    _, error, detail = apply_exception_mapping(_user_error_mapping(), exc)
+    if error is None:
+        return None
+    return detail or str(exc) or error.removeprefix("ERROR_").replace("_", " ").lower()
 
 
 def _formula_error_types() -> tuple[type[Exception], ...]:
@@ -97,7 +97,10 @@ def input_errors():
     ``MCPToolInputError`` so the client gets a readable message.
     """
 
-    from baserow.contrib.database.rows.exceptions import RowDoesNotExist
+    from baserow.contrib.database.rows.exceptions import (
+        FieldsNotWritable,
+        RowDoesNotExist,
+    )
 
     try:
         yield
@@ -106,12 +109,15 @@ def input_errors():
         raise MCPToolInputError(f"Rows not found in this table: {ids}.") from exc
     except _formula_error_types() as exc:
         raise MCPToolInputError(f"Invalid formula: {exc}") from exc
+    except FieldsNotWritable as exc:
+        names = ", ".join(field.name for field in exc.fields)
+        raise MCPToolInputError(
+            f"You don't have permission to change these fields: {names}."
+        ) from exc
     except Exception as exc:
-        message = _search_up_class_hierarchy_for_mapping(exc, _user_error_messages())
+        message = _user_error_message(exc)
         if message is None:
             raise
-        if callable(message):
-            message = message(exc)
         raise MCPToolInputError(message) from exc
 
 
@@ -509,6 +515,40 @@ def list_rows(
     return {"count": count, "results": list(data)}
 
 
+def _validate_rows(model, rows: list[dict], update: bool = False) -> list[dict]:
+    """
+    Validates rows keyed by user field names with the REST API's row serializer, so
+    a value the API would refuse gets the same message.
+
+    :returns: The validated rows, keyed by internal column names.
+    :raises MCPToolInputError: if a value is invalid.
+    """
+
+    from baserow.api.exceptions import RequestBodyValidationException
+    from baserow.api.utils import validate_data
+    from baserow.contrib.database.api.rows.serializers import (
+        get_batch_row_serializer_class,
+        get_row_serializer_class,
+    )
+
+    _map_user_field_names(model, rows)
+    extra = {"include_id": True, "required_fields": ["id"]} if update else {}
+    row_serializer = get_row_serializer_class(model, user_field_names=True, **extra)
+    try:
+        data = validate_data(
+            get_batch_row_serializer_class(row_serializer),
+            {"items": rows},
+            partial=True,
+            return_validated=True,
+        )
+    except RequestBodyValidationException as exc:
+        detail = exc.detail["detail"]
+        detail = detail.get("items", detail) if isinstance(detail, dict) else detail
+        problems = flatten_error_detail(detail, "rows")
+        raise MCPToolInputError("Invalid value. " + "; ".join(problems)) from exc
+    return data["items"]
+
+
 def _map_user_field_names(model, rows: list[dict]) -> list[dict]:
     """
     Convert user field names to internal column names.
@@ -554,7 +594,7 @@ def create_rows(
 
     table = get_table(user, workspace, table_id)
     model = table.get_model()
-    rows_values = _map_user_field_names(model, rows)
+    rows_values = _validate_rows(model, rows)
     with transaction.atomic():
         created = CreateRowsActionType.do(user, table, rows_values, model=model)
     return list(serialize_rows_for_response(created, model, user_field_names=True))
@@ -578,7 +618,7 @@ def update_rows(
 
     table = get_table(user, workspace, table_id)
     model = table.get_model()
-    rows_values = _map_user_field_names(model, rows)
+    rows_values = _validate_rows(model, rows, update=True)
     with transaction.atomic():
         result = UpdateRowsActionType.do(user, table, rows_values, model=model)
     return list(

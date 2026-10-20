@@ -74,7 +74,7 @@ def _is_error_leaf(detail) -> bool:
     return isinstance(detail, dict) and set(detail) == {"error", "code"}
 
 
-def _flatten_detail(detail, prefix: str = "") -> list[str]:
+def flatten_error_detail(detail, prefix: str = "") -> list[str]:
     """Flattens nested DRF error details into ``name: message`` strings."""
 
     if _is_error_leaf(detail):
@@ -83,7 +83,7 @@ def _flatten_detail(detail, prefix: str = "") -> list[str]:
         messages = []
         for key, value in detail.items():
             child = f"{prefix}.{key}" if prefix else str(key)
-            messages.extend(_flatten_detail(value, child))
+            messages.extend(flatten_error_detail(value, child))
         return messages
     if isinstance(detail, (list, tuple)):
         messages = []
@@ -93,7 +93,7 @@ def _flatten_detail(detail, prefix: str = "") -> list[str]:
                 if _is_error_leaf(value) or not isinstance(value, (dict, list, tuple))
                 else (f"{prefix}.{index}" if prefix else str(index))
             )
-            messages.extend(_flatten_detail(value, child))
+            messages.extend(flatten_error_detail(value, child))
         return messages
     return [f"{prefix}: {detail}" if prefix else str(detail)]
 
@@ -118,9 +118,9 @@ def to_mcp_error(exc: Exception) -> str | None:
     if isinstance(exc, DjangoValidationError):
         return "Invalid value. " + " ".join(exc.messages)
     if isinstance(exc, RequestBodyValidationException):
-        return "Invalid value. " + "; ".join(_flatten_detail(exc.detail["detail"]))
+        return "Invalid value. " + "; ".join(flatten_error_detail(exc.detail["detail"]))
     if isinstance(exc, DRFValidationError):
-        return "Invalid value. " + "; ".join(_flatten_detail(exc.detail))
+        return "Invalid value. " + "; ".join(flatten_error_detail(exc.detail))
     # Before the generic rule. `Registry.get` passes the client's type name and a
     # message, while `Registry.get_by_model` passes only a message for a server bug.
     if isinstance(exc, InstanceTypeDoesNotExist):

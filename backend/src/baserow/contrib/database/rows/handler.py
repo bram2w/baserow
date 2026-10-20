@@ -93,7 +93,12 @@ from baserow.core.utils import Progress, get_non_unique_values, grouper
 
 from .constants import ROW_IMPORT_CREATION, ROW_IMPORT_VALIDATION
 from .error_report import RowErrorReport
-from .exceptions import InvalidRowLength, RowDoesNotExist, RowIdsNotUnique
+from .exceptions import (
+    FieldsNotWritable,
+    InvalidRowLength,
+    RowDoesNotExist,
+    RowIdsNotUnique,
+)
 from .operations import (
     DeleteDatabaseRowOperationType,
     MoveRowDatabaseRowOperationType,
@@ -2234,9 +2239,7 @@ class RowHandler:
         ]
         unwritable_fields = self._get_unwritable_fields(user, model, fields)
         if unwritable_fields and raise_if_not_permitted:
-            raise PermissionDenied(
-                f"You don't have permission to update the following fields: {', '.join([f.name for f in unwritable_fields])}"
-            )
+            raise FieldsNotWritable(unwritable_fields)
         return unwritable_fields
 
     def _get_unwritable_fields(

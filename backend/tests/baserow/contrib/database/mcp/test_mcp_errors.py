@@ -115,7 +115,9 @@ def test_duplicate_field_name(table_setup, caplog, error_records):
         {"table_id": table.id, "fields": [{"name": "Name", "type": "text"}]},
     )
 
-    _assert_readable_error(result, caplog, error_records, "already exists")
+    _assert_readable_error(
+        result, caplog, error_records, "two fields with the same name"
+    )
 
 
 @pytest.mark.django_db
@@ -199,13 +201,15 @@ def test_duplicate_value_in_unique_field(table_setup, caplog, error_records):
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
-    "tool,arguments",
+    "tool,arguments,expected",
     [
-        ("create_rows", lambda row: {"rows": [{"Name": "A"}]}),
-        ("delete_rows", lambda row: {"row_ids": [row.id]}),
+        ("create_rows", lambda row: {"rows": [{"Name": "A"}]}, "create a row"),
+        ("delete_rows", lambda row: {"row_ids": [row.id]}, "delete a row"),
     ],
 )
-def test_data_synced_table(table_setup, caplog, error_records, tool, arguments):
+def test_data_synced_table(
+    table_setup, caplog, error_records, tool, arguments, expected
+):
     data_fixture, endpoint, table = table_setup
     data_fixture.create_text_field(table=table, name="Name", primary=True)
     row = table.get_model().objects.create()
@@ -213,7 +217,7 @@ def test_data_synced_table(table_setup, caplog, error_records, tool, arguments):
 
     result = _call(endpoint, tool, {"table_id": table.id, **arguments(row)})
 
-    _assert_readable_error(result, caplog, error_records, "data sync")
+    _assert_readable_error(result, caplog, error_records, "not possible", expected)
 
 
 def test_input_errors_maps_subclasses():
@@ -257,3 +261,55 @@ def test_to_mcp_error_hides_server_bugs():
     assert to_mcp_error(by_model.value) is None
     assert to_mcp_error(by_type.value) == "'nonsense' is not a valid type."
     assert to_mcp_error(User.profile.RelatedObjectDoesNotExist()) is None
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "make_field,value",
+    [
+        (lambda f, t: f.create_multiple_collaborators_field(table=t, name="V"), ["b"]),
+        (lambda f, t: f.create_number_field(table=t, name="V"), "1e60"),
+    ],
+)
+def test_invalid_row_value_names_the_field(
+    table_setup, caplog, error_records, make_field, value
+):
+    data_fixture, endpoint, table = table_setup
+    data_fixture.create_text_field(table=table, name="Name", primary=True)
+    make_field(data_fixture, table)
+
+    result = _call(
+        endpoint, "create_rows", {"table_id": table.id, "rows": [{"V": value}]}
+    )
+
+    _assert_readable_error(result, caplog, error_records, "Invalid value", "rows.0.V")
+
+
+def test_input_errors_uses_the_rest_api_message():
+    from baserow.contrib.database.fields.exceptions import MaxFieldNameLengthExceeded
+    from baserow.contrib.database.mcp.services import input_errors
+    from baserow.core.mcp.exceptions import MCPToolInputError
+
+    with pytest.raises(MCPToolInputError, match="longer than 255 characters"):
+        with input_errors():
+            raise MaxFieldNameLengthExceeded(255)
+
+
+def test_input_errors_names_the_fields_the_user_cannot_change():
+    from types import SimpleNamespace
+
+    from baserow.contrib.database.mcp.services import input_errors
+    from baserow.contrib.database.rows.exceptions import FieldsNotWritable
+    from baserow.core.exceptions import PermissionDenied
+    from baserow.core.mcp.exceptions import MCPToolInputError
+
+    exc = FieldsNotWritable(
+        [SimpleNamespace(name="Secret"), SimpleNamespace(name="Pay")]
+    )
+    assert isinstance(exc, PermissionDenied)
+    # REST keeps its message.
+    assert "update the following fields: Secret, Pay" in str(exc)
+
+    with pytest.raises(MCPToolInputError, match="change these fields: Secret, Pay."):
+        with input_errors():
+            raise exc
