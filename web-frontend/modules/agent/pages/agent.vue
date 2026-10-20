@@ -31,10 +31,15 @@ const agent = computed(() => {
 useHead(() => ({ title: agent.value?.name }))
 
 // Read once: the next route selects its application before this page unmounts.
-const agentId = agent.value.id
+const application = agent.value
+const agentId = application.id
 await usePageAsyncData(`agent-${agentId}`, async () => {
   try {
-    await AgentApplicationService($client).get(agentId)
+    const { data } = await AgentApplicationService($client).get(agentId)
+    await $store.dispatch('application/forceUpdate', {
+      application,
+      data: { name: data.name, readiness: data.readiness },
+    })
     return true
   } catch (error) {
     if (!error.response) {

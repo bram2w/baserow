@@ -82,6 +82,57 @@ def test_configuration_update_rejects_invalid_values(configured_agent, values):
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize(
+    "values,readiness",
+    [
+        ({}, "ready"),
+        ({"instructions": " "}, "incomplete"),
+        ({"model_identifier": "other-model"}, "unavailable"),
+    ],
+)
+@pytest.mark.parametrize("endpoint", ["agent", "application", "workspace", "all"])
+def test_agent_payload_includes_only_public_readiness(
+    configured_agent, api_client, api_user, values, readiness, endpoint
+):
+    agent = configured_agent(user=api_user, **values)
+    urls = {
+        "agent": agent_url(agent, "item"),
+        "application": reverse(
+            "api:applications:item", kwargs={"application_id": agent.id}
+        ),
+        "workspace": reverse(
+            "api:applications:list", kwargs={"workspace_id": agent.workspace_id}
+        ),
+        "all": reverse("api:applications:list"),
+    }
+
+    response = api_client.get(urls[endpoint])
+
+    assert response.status_code == 200
+    payload = response.json()
+    if endpoint in ("workspace", "all"):
+        [payload] = payload
+    assert payload["id"] == agent.id
+    assert payload["readiness"] == readiness
+    assert not {
+        "instructions",
+        "provider_type",
+        "model_identifier",
+        "errors",
+        "state",
+    }.intersection(payload)
+
+
+@pytest.mark.django_db
+def test_readiness_has_no_separate_endpoint(configured_agent, api_client, api_user):
+    agent = configured_agent(user=api_user)
+
+    response = api_client.get(f"/api/agent/{agent.id}/readiness/")
+
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
 def test_settings_are_served_only_by_the_agent_endpoints(
     data_fixture,
     configured_agent,
@@ -101,11 +152,14 @@ def test_settings_are_served_only_by_the_agent_endpoints(
         response = api_client.patch(
             agent_url(agent, "configuration"), {"instructions": "PRIVATE"}
         )
-    api_client.patch(application_url, {"instructions": "Ignored"})
+    application_response = api_client.patch(
+        application_url, {"instructions": "Ignored", "readiness": "unavailable"}
+    )
 
     assert response.json()["instructions"] == "PRIVATE"
-    assert api_client.get(agent_url(agent, "readiness")).json() == {"state": "ready"}
+    assert application_response.json()["readiness"] == "ready"
     assert broadcast.call_args.args[4]["type"] == "application_updated"
+    assert broadcast.call_args.args[4]["application"]["readiness"] == "ready"
     assert "PRIVATE" not in str(broadcast.call_args)
     assert "PRIVATE" not in api_client.get(application_url).content.decode()
     agent.refresh_from_db()

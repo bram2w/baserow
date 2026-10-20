@@ -22,7 +22,6 @@ from ..service import AgentService
 from .serializers import (
     AgentConfigurationSerializer,
     AgentConfigurationUpdateSerializer,
-    AgentReadinessSerializer,
 )
 
 AGENT_EXCEPTIONS = {ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST}
@@ -44,7 +43,10 @@ class AgentApplicationView(APIView):
         ],
         tags=["Agent applications"],
         operation_id="get_agent_application",
-        description="Returns the agent and records that the user opened it.",
+        description=(
+            "Returns the agent, including its readiness, and records that the user "
+            "opened it."
+        ),
         responses={
             200: PolymorphicApplicationResponseSerializer,
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
@@ -72,19 +74,6 @@ class AgentApplicationView(APIView):
                 agent, context={"request": request}
             ).data
         )
-
-
-class AgentReadinessView(APIView):
-    @extend_schema(
-        tags=["Agent applications"],
-        operation_id="get_agent_readiness",
-        responses={200: AgentReadinessSerializer, **READ_ERRORS},
-    )
-    @map_exceptions(AGENT_EXCEPTIONS)
-    def get(self, request: Request, agent_id: int) -> Response:
-        """Expose a coarse state without disclosing configuration values."""
-
-        return Response(AgentService().get_readiness(request.user, agent_id))
 
 
 class AgentConfigurationView(APIView):

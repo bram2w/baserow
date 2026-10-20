@@ -1,4 +1,5 @@
 from baserow.core.ai_provider.constants import AI_PROVIDER_FEATURE_AI_AGENT
+from baserow.core.ai_provider.resolution import ScopedAIProviderState
 from baserow.core.generative_ai.registries import generative_ai_model_type_registry
 from baserow.core.handler import CoreHandler
 from baserow.core.utils import extract_allowed
@@ -29,7 +30,11 @@ class AgentHandler:
             queryset = queryset.select_for_update(of=("self",))
         return CoreHandler().get_application(agent_id, base_queryset=queryset)
 
-    def get_configuration(self, agent: AgentApplication) -> AgentConfiguration:
+    def get_configuration(
+        self,
+        agent: AgentApplication,
+        provider_state: ScopedAIProviderState | None = None,
+    ) -> AgentConfiguration:
         """Resolve draft completeness and current eligible models without execution."""
 
         errors = {}
@@ -38,7 +43,9 @@ class AgentHandler:
                 errors[field] = "required"
 
         models = generative_ai_model_type_registry.get_enabled_models_per_type(
-            agent.workspace, feature_type=AI_PROVIDER_FEATURE_AI_AGENT
+            agent.workspace,
+            feature_type=AI_PROVIDER_FEATURE_AI_AGENT,
+            state=provider_state,
         )
         if agent.provider_type:
             if agent.provider_type not in models:

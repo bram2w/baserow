@@ -13,6 +13,7 @@ describe('Agent page', () => {
       id: 10,
       name: 'Agent',
       type: 'agent',
+      readiness: 'ready',
       workspace: { id: 1 },
     })
   })
@@ -21,10 +22,16 @@ describe('Agent page', () => {
     await testApp.afterEach()
   })
 
-  test('loads the agent once so the visit is recorded', async () => {
-    testApp.mock.onGet('/agent/10/').reply(200, {})
+  test('loads the agent once and uses its returned public data', async () => {
+    testApp.mock.onGet('/agent/10/').reply(200, {
+      id: 10,
+      type: 'agent',
+      name: 'Loaded agent',
+      readiness: 'incomplete',
+      workspace: { id: 1 },
+    })
 
-    await testApp.mount(AgentPage, {
+    const wrapper = await testApp.mount(AgentPage, {
       global: { provide: { [PageRouteSymbol]: { params: { agentId: '10' } } } },
     })
     await flushPromises()
@@ -32,5 +39,17 @@ describe('Agent page', () => {
     expect(
       testApp.mock.history.get.filter(({ url }) => url === '/agent/10/')
     ).toHaveLength(1)
+    expect(wrapper.get('.agent-application__header-name').text()).toBe(
+      'Loaded agent'
+    )
+    expect(testApp.store.getters['application/get'](10).readiness).toBe(
+      'incomplete'
+    )
+    expect(
+      testApp.mock.history.get.some(({ url }) => url.includes('/readiness/'))
+    ).toBe(false)
+    expect(
+      testApp.mock.history.get.some(({ url }) => url === '/applications/10/')
+    ).toBe(false)
   })
 })

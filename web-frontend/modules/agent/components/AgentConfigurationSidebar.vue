@@ -178,9 +178,7 @@
                 "
                 :placeholder="$t('action.makeChoice')"
                 fixed-items
-                @update:model-value="
-                  $emit('change', { model_identifier: $event })
-                "
+                @update:model-value="changeModel"
               >
                 <DropdownItem
                   v-for="model in models"
@@ -268,8 +266,15 @@ const errorMessage = (field) => {
       : 'error.requiredField'
   )
 }
-const changeProvider = (providerType) =>
+function changeProvider(providerType) {
+  if (providerType === props.configuration.provider_type) return
   emit('change', { provider_type: providerType, model_identifier: null })
+  emit('flush')
+}
+function changeModel(model) {
+  emit('change', { model_identifier: model })
+  emit('flush')
+}
 async function focusField(field) {
   section.value = field === 'instructions' ? 'instructions' : 'settings'
   await nextTick()

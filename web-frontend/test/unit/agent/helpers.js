@@ -17,6 +17,7 @@ export const agentData = {
   id: 10,
   name: 'Support agent',
   type: 'agent',
+  readiness: 'ready',
   workspace: { id: 1 },
 }
 
@@ -69,8 +70,8 @@ export function respond(handler, ...responses) {
   })
 }
 
-export const mockReadiness = (testApp, ...responses) =>
-  respond(testApp.mock.onGet('/agent/10/readiness/'), ...responses)
+export const mockAgent = (testApp, ...responses) =>
+  respond(testApp.mock.onGet('/applications/10/'), ...responses)
 
 export const mockConfiguration = (testApp, ...responses) =>
   respond(testApp.mock.onGet('/agent/10/configuration/'), ...responses)
@@ -105,10 +106,10 @@ export async function createAgentPage() {
   await testApp.store.dispatch('workspace/forceCreate', clone(workspace))
   const agent = await testApp.store.dispatch(
     'application/forceCreate',
-    agentData
+    clone(agentData)
   )
   mockAvailability(testApp, [workspace])
-  mockReadiness(testApp, { state: 'ready' })
+  mockAgent(testApp, agentData)
   mockConfiguration(testApp, completeConfiguration())
   return {
     testApp,
@@ -125,29 +126,18 @@ export async function destroyAgentPage(testApp) {
   vi.useRealTimers()
 }
 
-export async function mountWithLeaveGuard(mount) {
+export async function mountWithRouteGuards(mount) {
   const record = { leaveGuards: new Set(), updateGuards: new Set() }
   const wrapper = await mount({ [matchedRouteKey]: ref(record) })
-  return { wrapper, leave: () => [...record.leaveGuards][0]() }
+  return {
+    wrapper,
+    leave: () => [...record.leaveGuards][0](),
+    update: (to, from) => [...record.updateGuards][0](to, from),
+  }
 }
 
 export const useFakeTimers = () =>
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] })
-
-export async function debounce() {
-  await vi.advanceTimersByTimeAsync(400)
-  await flushPromises()
-}
-
-export async function refreshAvailabilityTwice(testApp, agent) {
-  for (let index = 0; index < 2; index++) {
-    await testApp.store.dispatch('application/forceUpdate', {
-      application: agent,
-      data: { name: agent.name },
-    })
-    await flushPromises()
-  }
-}
 
 export const warning = (wrapper) => wrapper.find('.agent-chat__warning')
 

@@ -6,11 +6,8 @@ from .models import AgentApplication
 AgentReadinessState = Literal["ready", "incomplete", "unavailable"]
 
 
-class AgentReadiness(TypedDict):
+class AgentConfiguration(TypedDict):
     state: AgentReadinessState
-
-
-class AgentConfiguration(AgentReadiness):
     name: str
     instructions: str
     provider_type: str | None

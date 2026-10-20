@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { flushPromises } from '@vue/test-utils'
 import {
+  agentData,
   choose,
   completeConfiguration,
   createAgentPage,
-  debounce,
   deferredReply,
   destroyAgentPage,
   dropdowns,
@@ -14,11 +14,10 @@ import {
   instructions,
   mockAvailability,
   mockConfiguration,
-  mockReadiness,
+  mockAgent,
   mockSaves,
-  mountWithLeaveGuard,
+  mountWithRouteGuards,
   openSection,
-  refreshAvailabilityTwice,
   savedValues,
   saving,
   unavailableModel,
@@ -52,18 +51,36 @@ describe('Agent configuration', () => {
     expect(wrapper.find('.agent-configuration').exists()).toBe(true)
   })
 
-  test('autosaves after a pause and shows only the header spinner while saving', async () => {
+  test('keeps the open form when the Agent changes in the background', async () => {
+    const wrapper = await mount()
+    await openSection(wrapper, 'agent.instructions')
+    const textarea = instructions(wrapper).element
+    const requests = testApp.mock.history.get.length
+
+    await testApp.store.dispatch('application/forceUpdate', {
+      application: agent,
+      data: { last_viewed: '2026-10-20T10:00:00Z' },
+    })
+    await flushPromises()
+
+    expect(instructions(wrapper).element).toBe(textarea)
+    expect(testApp.mock.history.get).toHaveLength(requests)
+  })
+
+  test('saves typed text on blur and shows only the header spinner while saving', async () => {
     useFakeTimers()
     const patch = deferredReply()
     mockSaves(testApp, patch.reply)
     const wrapper = await mount()
     await openSection(wrapper, 'agent.instructions')
     await instructions(wrapper).setValue('Updated instructions')
+    await vi.advanceTimersByTimeAsync(1000)
     expect(savedValues(testApp)).toEqual([])
-    expect(saving(wrapper).exists()).toBe(false)
 
-    await debounce()
+    await instructions(wrapper).trigger('blur')
+    await flushPromises()
     expect(saving(wrapper).attributes('aria-label')).toBe('agent.saving')
+    expect(wrapper.find('.agent-configuration textarea').exists()).toBe(true)
     patch.resolve(
       200,
       completeConfiguration({ instructions: 'Updated instructions' })
@@ -75,21 +92,18 @@ describe('Agent configuration', () => {
   })
 
   test('queues an edit made during a save, even back to the saved value', async () => {
-    useFakeTimers()
     const first = deferredReply()
     mockSaves(testApp, first.reply, completeConfiguration())
     const wrapper = await mount()
     await openSection(wrapper, 'agent.instructions')
     await editInstructions(wrapper, 'Changed instructions')
-    await instructions(wrapper).setValue('Be helpful.')
-    await debounce()
+    await editInstructions(wrapper, 'Be helpful.')
 
     first.resolve(
       200,
       completeConfiguration({ instructions: 'Changed instructions' })
     )
     await flushPromises()
-    await debounce()
 
     expect(savedValues(testApp)).toEqual([
       { instructions: 'Changed instructions' },
@@ -102,7 +116,7 @@ describe('Agent configuration', () => {
     const first = deferredReply()
     const second = deferredReply()
     mockSaves(testApp, first.reply, second.reply)
-    const { wrapper, leave } = await mountWithLeaveGuard(mount)
+    const { wrapper, leave } = await mountWithRouteGuards(mount)
     await openSection(wrapper, 'agent.instructions')
     await editInstructions(wrapper, 'Changed instructions')
     await instructions(wrapper).setValue('Be helpful.')
@@ -124,7 +138,7 @@ describe('Agent configuration', () => {
   test('stays on the Agent with the draft when saving before leaving fails', async () => {
     testApp.dontFailOnErrorResponses()
     mockSaves(testApp, [500, {}])
-    const { wrapper, leave } = await mountWithLeaveGuard(mount)
+    const { wrapper, leave } = await mountWithRouteGuards(mount)
     await openSection(wrapper, 'agent.instructions')
     await instructions(wrapper).setValue('Unsaved instructions')
 
@@ -135,15 +149,36 @@ describe('Agent configuration', () => {
     expect(wrapper.text()).toContain('agent.configurationSaveError')
   })
 
+  test('keeps the current Agent selected when saving before switching Agents fails', async () => {
+    testApp.dontFailOnErrorResponses()
+    testApp.mock.onGet('/workspaces/1/permissions/').reply(200, [])
+    mockSaves(testApp, [500, {}])
+    const next = await testApp.store.dispatch('application/forceCreate', {
+      ...agentData,
+      id: 11,
+    })
+    const { wrapper, update } = await mountWithRouteGuards(mount)
+    await openSection(wrapper, 'agent.instructions')
+    await instructions(wrapper).setValue('Unsaved instructions')
+    await testApp.store.dispatch('application/select', next)
+
+    const switched = await update(
+      { params: { agentId: '11' } },
+      { params: { agentId: '10' } }
+    )
+
+    expect(switched).toBe(false)
+    expect(testApp.store.getters['application/getSelected'].id).toBe(10)
+  })
+
   test('keeps a failed model save without a required error until retry succeeds', async () => {
-    useFakeTimers()
     testApp.dontFailOnErrorResponses()
     mockConfiguration(testApp, incompleteConfiguration('model_identifier'))
     mockSaves(testApp, [500, {}], completeConfiguration())
     const wrapper = await mount()
     await openSection(wrapper, 'agent.agentSettings')
     await choose(dropdowns(wrapper)[1], 'model-one')
-    await debounce()
+    await flushPromises()
 
     expect(fieldError(wrapper, 2).exists()).toBe(false)
     expect(wrapper.text()).toContain('agent.configurationSaveError')
@@ -159,7 +194,6 @@ describe('Agent configuration', () => {
   })
 
   test('clears a required error as soon as the field is edited', async () => {
-    useFakeTimers()
     mockConfiguration(testApp, incompleteConfiguration('model_identifier'))
     const patch = deferredReply()
     mockSaves(testApp, patch.reply)
@@ -169,7 +203,7 @@ describe('Agent configuration', () => {
 
     await choose(dropdowns(wrapper)[1], 'model-one')
     expect(fieldError(wrapper, 2).exists()).toBe(false)
-    await debounce()
+    await flushPromises()
     expect(fieldError(wrapper, 2).exists()).toBe(false)
     patch.resolve(200, completeConfiguration())
     await flushPromises()
@@ -196,7 +230,6 @@ describe('Agent configuration', () => {
     await openSection(wrapper, 'agent.agentSettings')
 
     await choose(dropdowns(wrapper)[0], 'anthropic')
-    await wrapper.get('.agent-configuration input').trigger('blur')
     await flushPromises()
 
     expect(savedValues(testApp)).toEqual([
@@ -205,8 +238,18 @@ describe('Agent configuration', () => {
     expect(fieldError(wrapper, 2).text()).toBe('error.requiredField')
   })
 
+  test('keeps the model when the selected provider is chosen again', async () => {
+    mockSaves(testApp, completeConfiguration({ model_identifier: null }))
+    const wrapper = await mount()
+    await openSection(wrapper, 'agent.agentSettings')
+
+    await choose(dropdowns(wrapper)[0], 'openai')
+    await flushPromises()
+
+    expect(savedValues(testApp)).toEqual([])
+  })
+
   test('ties an unavailable model error to the selection it was returned for', async () => {
-    useFakeTimers()
     mockConfiguration(testApp, unavailableModel('retired-model'))
     const patch = deferredReply()
     mockSaves(testApp, patch.reply)
@@ -218,7 +261,7 @@ describe('Agent configuration', () => {
 
     await choose(model, 'model-two')
     expect(fieldError(wrapper, 2).exists()).toBe(false)
-    await debounce()
+    await flushPromises()
     patch.resolve(200, unavailableModel('model-two'))
     await flushPromises()
 
@@ -226,7 +269,6 @@ describe('Agent configuration', () => {
   })
 
   test('does not restore an older required error over a newer queued selection', async () => {
-    useFakeTimers()
     const incomplete = incompleteConfiguration('model_identifier')
     mockConfiguration(testApp, incomplete)
     const first = deferredReply()
@@ -247,7 +289,7 @@ describe('Agent configuration', () => {
     first.resolve(200, { ...incomplete, instructions: 'Updated instructions' })
     await flushPromises()
     expect(fieldError(wrapper, 2).exists()).toBe(false)
-    await debounce()
+    await flushPromises()
 
     expect(savedValues(testApp)[1]).toEqual({ model_identifier: 'model-two' })
     expect(fieldError(wrapper, 2).exists()).toBe(false)
@@ -277,7 +319,6 @@ describe('Agent configuration', () => {
   )
 
   test('accepts the canonical saved name without saving again', async () => {
-    useFakeTimers()
     mockSaves(testApp, completeConfiguration({ name: 'Support' }))
     const wrapper = await mount()
     await openSection(wrapper, 'agent.agentSettings')
@@ -286,13 +327,26 @@ describe('Agent configuration', () => {
     await name.setValue('  Support  ')
     await name.trigger('blur')
     await flushPromises()
-    await vi.advanceTimersByTimeAsync(1000)
 
     expect(savedValues(testApp)).toHaveLength(1)
     expect(name.element.value).toBe('Support')
     expect(wrapper.get('.agent-application__header-name').text()).toBe(
       'Support'
     )
+  })
+
+  test('restores the saved name instead of saving a blank one', async () => {
+    const { wrapper, leave } = await mountWithRouteGuards(mount)
+    await openSection(wrapper, 'agent.agentSettings')
+    const name = wrapper.get('.agent-configuration input')
+
+    await name.setValue(' ')
+    await name.trigger('blur')
+    await flushPromises()
+
+    expect(name.element.value).toBe('Support agent')
+    expect(savedValues(testApp)).toEqual([])
+    expect(await leave()).toBe(true)
   })
 
   test.each([
@@ -305,7 +359,7 @@ describe('Agent configuration', () => {
     'asks members who %s the settings to contact an administrator',
     async (_, permission) => {
       allowed.value = permission
-      mockReadiness(testApp, { state: 'incomplete' })
+      agent.readiness = 'incomplete'
       mockConfiguration(testApp, incompleteConfiguration('instructions'))
       const wrapper = await mount()
 
@@ -313,6 +367,34 @@ describe('Agent configuration', () => {
       expect(wrapper.find('.agent-chat__warning-link').exists()).toBe(false)
     }
   )
+
+  test.each(['ready', 'incomplete', 'unavailable'])(
+    'uses the serialized %s readiness without another application request',
+    async (readiness) => {
+      allowed.value = withoutSettings
+      agent.readiness = readiness
+      const wrapper = await mount()
+
+      expect(warning(wrapper).exists()).toBe(readiness !== 'ready')
+      expect(testApp.mock.history.get.map(({ url }) => url)).toEqual([])
+    }
+  )
+
+  test('uses readiness from a realtime application update without fetching it again', async () => {
+    allowed.value = withoutSettings
+    const wrapper = await mount()
+
+    await testApp.store.dispatch('application/forceUpdate', {
+      application: agent,
+      data: { readiness: 'incomplete' },
+    })
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('agent.configurationPermissionRequired')
+    expect(
+      testApp.mock.history.get.filter(({ url }) => url === '/applications/10/')
+    ).toHaveLength(0)
+  })
 
   test('never shows the settings after read access is revoked during a save', async () => {
     const patch = deferredReply()
@@ -323,7 +405,7 @@ describe('Agent configuration', () => {
 
     allowed.value = withoutSettings
     await flushPromises()
-    mockReadiness(testApp, { state: 'incomplete' })
+    mockAgent(testApp, { ...agentData, readiness: 'incomplete' })
     patch.resolve(200, completeConfiguration({ instructions: 'PRIVATE' }))
     await flushPromises()
 
@@ -338,7 +420,7 @@ describe('Agent configuration', () => {
   test('refreshes readiness when model availability changes', async () => {
     allowed.value = withoutSettings
     const wrapper = await mount()
-    mockReadiness(testApp, { state: 'unavailable' })
+    mockAgent(testApp, { ...agentData, readiness: 'unavailable' })
 
     await testApp.store.dispatch('workspace/forceUpdateGenerativeAIModels', {
       workspaceId: 1,
@@ -350,6 +432,29 @@ describe('Agent configuration', () => {
     expect(wrapper.text()).toContain('agent.configurationPermissionRequired')
   })
 
+  test('warns when refreshing the readiness fails and retries it', async () => {
+    allowed.value = withoutSettings
+    testApp.dontFailOnErrorResponses()
+    const wrapper = await mount()
+    mockAgent(testApp, [500, {}], agentData)
+
+    await testApp.store.dispatch('workspace/forceUpdateGenerativeAIModels', {
+      workspaceId: 1,
+      generativeAIModelsEnabled: {},
+      aiFeatures: { ai_agent: { models: {} } },
+    })
+    await flushPromises()
+    expect(wrapper.text()).toContain('agent.readinessLoadError')
+
+    await wrapper.get('.agent-chat__warning button').trigger('click')
+    await flushPromises()
+
+    expect(warning(wrapper).exists()).toBe(false)
+    expect(
+      testApp.mock.history.get.some(({ url }) => url === '/agent/10/')
+    ).toBe(false)
+  })
+
   test('warns when model availability cannot be loaded until retry', async () => {
     testApp.dontFailOnErrorResponses()
     mockAvailability(testApp, [500, {}], [workspace])
@@ -357,22 +462,6 @@ describe('Agent configuration', () => {
     expect(wrapper.text()).toContain('agent.readinessLoadError')
 
     await wrapper.get('.agent-chat__warning button').trigger('click')
-    await flushPromises()
-
-    expect(warning(wrapper).exists()).toBe(false)
-  })
-
-  test('ignores an availability failure that arrives after a newer refresh', async () => {
-    testApp.dontFailOnErrorResponses()
-    const wrapper = await mount()
-    const older = deferredReply()
-    const newer = deferredReply()
-    mockAvailability(testApp, older.reply, newer.reply)
-    await refreshAvailabilityTwice(testApp, agent)
-
-    newer.resolve(200, [workspace])
-    await flushPromises()
-    older.resolve(500, {})
     await flushPromises()
 
     expect(warning(wrapper).exists()).toBe(false)

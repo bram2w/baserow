@@ -2,16 +2,13 @@ from django.contrib.auth.models import AbstractUser
 from django.db import transaction
 
 from baserow.core.handler import CoreHandler
-from baserow.core.operations import (
-    ReadApplicationOperationType,
-    UpdateApplicationOperationType,
-)
+from baserow.core.operations import UpdateApplicationOperationType
 from baserow.core.signals import application_updated
 
 from .handler import AgentHandler
 from .models import AgentApplication
 from .operations import ReadAgentSettingsOperationType
-from .types import AgentConfiguration, AgentConfigurationUpdated, AgentReadiness
+from .types import AgentConfiguration, AgentConfigurationUpdated
 
 
 class AgentService:
@@ -33,14 +30,6 @@ class AgentService:
         )
         return agent
 
-    def get_readiness(self, user: AbstractUser, agent_id: int) -> AgentReadiness:
-        """Expose only coarse readiness to ordinary application readers."""
-
-        agent = self._get_authorized_agent(
-            user, agent_id, ReadApplicationOperationType.type
-        )
-        return {"state": self.handler.get_configuration(agent)["state"]}
-
     def get_configuration(
         self, user: AbstractUser, agent_id: int
     ) -> AgentConfiguration:
@@ -55,13 +44,13 @@ class AgentService:
     def update_configuration(
         self, user: AbstractUser, agent_id: int, **values
     ) -> AgentConfigurationUpdated:
-        """Save an authorized partial draft and emit a name-only application update."""
+        """Save an authorized partial draft and emit a public application update."""
 
         agent = self._get_authorized_agent(
             user, agent_id, UpdateApplicationOperationType.type, for_update=True
         )
         updated = self.handler.update_configuration(agent, **values)
         if updated.changed_fields:
-            # The existing serializer deliberately carries only public name metadata.
+            # Application responses expose name and readiness without private settings.
             application_updated.send(self, application=agent, user=user)
         return updated

@@ -333,6 +333,13 @@ def test_list_all_applications_queries_do_not_increase_with_workspaces(
 
         data_fixture.create_dashboard_application(workspace=workspace)
         data_fixture.create_dashboard_application(workspace=workspace)
+        data_fixture.create_agent_application(
+            workspace=workspace,
+            name="Researcher",
+            instructions="Help with research.",
+            provider_type="openai",
+            model_identifier="unavailable-model",
+        )
 
         automation = data_fixture.create_automation_application(workspace=workspace)
         workflow_1 = data_fixture.create_automation_workflow(automation=automation)
@@ -373,6 +380,9 @@ def test_list_all_applications_queries_do_not_increase_with_workspaces(
         response_json = _get_apps()
 
     assert len(captured_2.captured_queries) == len(captured_1.captured_queries)
+    assert [app["readiness"] for app in response_json if app["type"] == "agent"] == [
+        "unavailable"
+    ] * 4
 
     # The applications must be ordered by workspace id first, then by order and
     # id, like listing the workspaces sorted by id one by one.

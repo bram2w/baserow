@@ -15,11 +15,16 @@ from baserow.core.registries import ApplicationType, ImportExportConfig
 from baserow.core.storage import ExportZipFile
 from baserow.core.utils import ChildProgressBuilder
 
+from .api.serializers import AgentApplicationSerializer
+
 
 class AgentApplicationType(ApplicationType):
     type = "agent"
     model_class = AgentApplication
-    serializer_field_names = ["name"]
+    serializer_field_names = ["name", "readiness"]
+    serializer_mixins = [AgentApplicationSerializer]
+    request_serializer_field_names = ["name"]
+    request_serializer_mixins = []
 
     def get_api_urls(self) -> list[URLResolver]:
         from .api import urls as api_urls
