@@ -1,3 +1,4 @@
+from copy import deepcopy
 from unittest.mock import patch
 
 from django.db import DatabaseError, connections, transaction
@@ -53,7 +54,9 @@ def test_get_data_source_does_not_exist(data_fixture):
 
 @pytest.mark.django_db
 def test_export_data_source_passes_config_to_service(data_fixture):
-    data_source = data_fixture.create_dashboard_local_baserow_aggregate_rows_data_source()
+    data_source = (
+        data_fixture.create_dashboard_local_baserow_aggregate_rows_data_source()
+    )
     config = ImportExportConfig(
         include_permission_data=False,
         exclude_sensitive_data=True,
@@ -76,6 +79,29 @@ def test_export_data_source_passes_config_to_service(data_fixture):
         storage=None,
         cache=None,
     )
+
+
+@pytest.mark.django_db
+def test_import_data_source_drops_unmapped_integration(data_fixture):
+    source_dashboard = data_fixture.create_dashboard_application()
+    source_data_source = (
+        data_fixture.create_dashboard_local_baserow_aggregate_rows_data_source(
+            dashboard=source_dashboard
+        )
+    )
+    target_dashboard = data_fixture.create_dashboard_application()
+
+    serialized_data_source = DashboardDataSourceHandler().export_data_source(
+        source_data_source
+    )
+
+    imported_data_source = DashboardDataSourceHandler().import_data_source(
+        target_dashboard,
+        deepcopy(serialized_data_source),
+        {"integrations": {}},
+    )
+
+    assert imported_data_source.service.integration_id is None
 
 
 @pytest.mark.django_db

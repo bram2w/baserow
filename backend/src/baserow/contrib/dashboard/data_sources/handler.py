@@ -380,10 +380,9 @@ class DashboardDataSourceHandler:
             integration = None
             integration_id = serialized_service.pop("integration_id", None)
             if integration_id:
-                integration_id = id_mapping["integrations"].get(
-                    integration_id, integration_id
-                )
-                integration = Integration.objects.get(id=integration_id)
+                integration_id = id_mapping["integrations"].get(integration_id)
+                if integration_id:
+                    integration = Integration.objects.get(id=integration_id)
 
             service = ServiceHandler().import_service(
                 integration,
