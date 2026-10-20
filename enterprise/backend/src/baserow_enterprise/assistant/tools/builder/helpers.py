@@ -40,6 +40,7 @@ from baserow.contrib.builder.pages.operations import ReadPageOperationType
 from baserow.contrib.builder.pages.service import PageService
 from baserow.contrib.builder.workflow_actions.models import BuilderWorkflowAction
 from baserow.contrib.builder.workflow_actions.operations import (
+    ReadBuilderWorkflowActionOperationType,
     UpdateBuilderWorkflowActionOperationType,
 )
 from baserow.contrib.builder.workflow_actions.registries import (
@@ -462,10 +463,13 @@ def create_element(
         # Check if the parent element lives on the shared page
         try:
             parent_el = ElementHandler().get_element(parent, base_queryset=elements)
-            if parent_el.page.shared:
-                use_shared_page = True
-        except Exception:
-            pass
+        except ElementDoesNotExist:
+            raise ToolInputError(
+                f"Parent element with ID {parent} not found on this page. "
+                "Use list_elements to find valid element IDs. No changes were applied."
+            )
+        if parent_el.page.shared:
+            use_shared_page = True
 
     target_page = page.builder.shared_page if use_shared_page else page
     if use_shared_page:
@@ -1074,12 +1078,13 @@ def add_field_mapping_to_action(
             f"Action with ID {action_id} not found in this workspace. "
             "Use list_actions to find valid action IDs."
         )
-    CoreHandler().check_permissions(
-        user,
-        UpdateBuilderWorkflowActionOperationType.type,
-        workspace=workspace,
-        context=action,
-    )
+    for operation_type in (
+        ReadBuilderWorkflowActionOperationType,
+        UpdateBuilderWorkflowActionOperationType,
+    ):
+        CoreHandler().check_permissions(
+            user, operation_type.type, workspace=workspace, context=action
+        )
     action_type = action.get_type().type
 
     if action_type not in ("create_row", "update_row"):

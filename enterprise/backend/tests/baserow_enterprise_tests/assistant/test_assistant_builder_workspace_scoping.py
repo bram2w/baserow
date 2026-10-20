@@ -24,6 +24,7 @@ from baserow_enterprise.assistant.tools.builder.types import (
     ElementMove,
     ElementStyleUpdate,
     ElementUpdate,
+    PageUpdate,
 )
 from baserow_enterprise.assistant.tools.shared import ToolInputError
 
@@ -38,6 +39,7 @@ def two_workspaces(data_fixture):
     heading = data_fixture.create_builder_heading_element(page=page, value="'Title'")
     data_fixture.create_builder_heading_element(page=page)
     button = data_fixture.create_builder_button_element(page=page)
+    column = data_fixture.create_builder_column_element(page=page, column_amount=2)
     action = data_fixture.create_notification_workflow_action(
         page=page, element=button, event="click"
     )
@@ -55,6 +57,7 @@ def two_workspaces(data_fixture):
         "page": page,
         "heading": heading,
         "action": action,
+        "column": column,
         "data_source": data_source,
         "here_page": here_page,
         "here_button": here_button,
@@ -87,6 +90,19 @@ def test_page_of_trashed_builder_is_not_found(two_workspaces):
 
     with pytest.raises(ToolInputError, match=f"Page with ID {w['page'].id} not found"):
         helpers.get_page(w["user"], w["other"], w["page"].id)
+
+
+@pytest.mark.django_db
+def test_page_from_other_workspace_is_not_updated(two_workspaces):
+    w = two_workspaces
+    page = w["page"]
+
+    with pytest.raises(ToolInputError, match=f"Page with ID {page.id} not found"):
+        helpers.update_page(
+            w["user"], w["here"], PageUpdate(page_id=page.id, name="Changed")
+        )
+
+    assert Page.objects.get(id=page.id).name == page.name
 
 
 @pytest.mark.django_db
@@ -155,6 +171,16 @@ def test_create_element_rejects_ids_from_other_workspace(data_fixture, two_works
     user, here_page = w["user"], w["here_page"]
     count = Element.objects.filter(page=here_page).count()
 
+    with pytest.raises(ToolInputError, match="Parent element"):
+        helpers.create_element(
+            user,
+            here_page,
+            ElementItemCreate(
+                ref="h", type="heading", value="Hi", parent_element=w["column"].id
+            ),
+            {},
+            {},
+        )
     with pytest.raises(ToolInputError, match="Before element"):
         helpers.create_element(
             user,
