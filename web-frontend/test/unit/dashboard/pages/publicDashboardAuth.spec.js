@@ -1,5 +1,6 @@
 import { flushPromises } from '@vue/test-utils'
 import { vi } from 'vitest'
+import { clearError, useError } from '#app'
 
 import { TestApp } from '@baserow/test/helpers/testApp'
 import { getToken, unsetToken } from '@baserow/modules/core/utils/auth'
@@ -19,6 +20,10 @@ describe('PublicDashboardAuth page', () => {
   })
 
   afterEach(async () => {
+    // The router is shared by every test in this file, so a spy on it must not
+    // keep the calls of the previous test.
+    vi.restoreAllMocks()
+    await clearError()
     await unsetToken(nuxtApp, SLUG)
     await testApp.afterEach()
   })
@@ -114,11 +119,18 @@ describe('PublicDashboardAuth page', () => {
       detail: 'The requested dashboard does not exist.',
     })
 
-    await expect(
-      testApp.mount(PublicDashboardAuth, {
+    // The page hands the fatal error to Nuxt, which renders its error page
+    // instead of the password page. The error page isn't part of the test, so
+    // the mount itself doesn't succeed.
+    await testApp
+      .mount(PublicDashboardAuth, {
         route: `/public/dashboard/${SLUG}/auth`,
       })
-    ).rejects.toThrow('Dashboard not found.')
+      .catch(() => {})
+
+    const error = useError()
+    expect(error.value?.statusCode).toBe(404)
+    expect(error.value?.message).toBe('Dashboard not found.')
   })
 
   test('asks for a password before sending anything', async () => {

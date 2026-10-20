@@ -1,4 +1,4 @@
-import { flushPromises } from '@vue/test-utils'
+import { DOMWrapper, flushPromises } from '@vue/test-utils'
 import { vi } from 'vitest'
 
 import { TestApp } from '@baserow/test/helpers/testApp'
@@ -50,11 +50,24 @@ describe('ShareDashboardLink', () => {
   async function openContext(dashboard) {
     const wrapper = await testApp.mount(ShareDashboardLink, {
       props: { dashboard },
+      // The context and the modals teleport their content into the body. The
+      // globally stubbed teleport remounts that content on every re-render of
+      // the context, which also replaces the element its click outside handler
+      // watches, so a click inside the context would close it.
+      global: { stubs: { Teleport: false } },
     })
     await wrapper.find('.header__filter-link').trigger('click')
     const context = wrapper.findComponent(Context)
-    expect(context.isVisible()).toBe(true)
-    return { wrapper, context }
+    expect(context.vm.isOpen()).toBe(true)
+    return { wrapper, context: teleported(context) }
+  }
+
+  /**
+   * The content of a context or modal lives in the body, outside of the
+   * component's own element.
+   */
+  function teleported(component) {
+    return new DOMWrapper(component.vm.getTeleportedElement())
   }
 
   function findButtonByText(wrapper, text) {
@@ -162,7 +175,7 @@ describe('ShareDashboardLink', () => {
       .at(1)
       .trigger('click')
 
-    const modal = wrapper.findComponent(DashboardRotateSlugModal)
+    const modal = teleported(wrapper.findComponent(DashboardRotateSlugModal))
     expect(modal.text()).toContain('dashboardRotateSlugModal.title')
     expect(store.getters['application/get'](DASHBOARD_ID).slug).toBe(
       'dashboard-slug'
@@ -200,7 +213,7 @@ describe('ShareDashboardLink', () => {
       .at(1)
       .trigger('click')
 
-    const modal = wrapper.findComponent(DashboardRotateSlugModal)
+    const modal = teleported(wrapper.findComponent(DashboardRotateSlugModal))
     await findButtonByText(modal, 'action.cancel').trigger('click')
     await flushPromises()
 
@@ -232,7 +245,9 @@ describe('ShareDashboardLink', () => {
 
     await option.find('.switch').trigger('click')
 
-    const modal = wrapper.findComponent(DashboardEnablePasswordModal)
+    const modal = teleported(
+      wrapper.findComponent(DashboardEnablePasswordModal)
+    )
     expect(modal.text()).toContain('dashboardEnablePasswordModal.title')
 
     await modal.find('input').setValue('secret-password')
@@ -256,7 +271,9 @@ describe('ShareDashboardLink', () => {
     const { wrapper, context } = await openContext(dashboard)
     await findPasswordOption(context).find('.switch').trigger('click')
 
-    const modal = wrapper.findComponent(DashboardEnablePasswordModal)
+    const modal = teleported(
+      wrapper.findComponent(DashboardEnablePasswordModal)
+    )
     await modal.find('input').setValue('short')
     await modal.find('form').trigger('submit')
     await flushPromises()
@@ -289,7 +306,9 @@ describe('ShareDashboardLink', () => {
       .find('.dashboard-sharing__option-change-password')
       .trigger('click')
 
-    const modal = wrapper.findComponent(DashboardEnablePasswordModal)
+    const modal = teleported(
+      wrapper.findComponent(DashboardEnablePasswordModal)
+    )
     expect(modal.text()).toContain('dashboardEnablePasswordModal.changeTitle')
 
     await modal.find('input').setValue('another-password')
@@ -322,7 +341,9 @@ describe('ShareDashboardLink', () => {
 
     await option.find('.switch').trigger('click')
 
-    const modal = wrapper.findComponent(DashboardDisablePasswordModal)
+    const modal = teleported(
+      wrapper.findComponent(DashboardDisablePasswordModal)
+    )
     expect(modal.text()).toContain('dashboardDisablePasswordModal.title')
 
     await findButtonByText(
@@ -348,7 +369,9 @@ describe('ShareDashboardLink', () => {
     const { wrapper, context } = await openContext(dashboard)
     await findPasswordOption(context).find('.switch').trigger('click')
 
-    const modal = wrapper.findComponent(DashboardDisablePasswordModal)
+    const modal = teleported(
+      wrapper.findComponent(DashboardDisablePasswordModal)
+    )
     await findButtonByText(modal, 'action.cancel').trigger('click')
     await flushPromises()
 
