@@ -75,20 +75,30 @@ describe('dashboard text filters', () => {
   }
 
   test.each([
-    ['updateFilter', { mode: 'input' }, ['Design', 'Sales'], 'resetToInput'],
-    ['updateFilter', { multiple: false }, ['Design'], 'resetToSingle'],
-    ['handleFiltersUpdated', { mode: 'input' }, ['Design'], 'resetToInput'],
+    ['updateFilter', {}, { mode: 'input' }, ['Design', 'Sales']],
+    ['updateFilter', {}, { multiple: false }, ['Design']],
+    ['updateFilter', { mode: 'input' }, { mode: 'dropdown' }, ['Design']],
+    ['updateFilter', { multiple: false }, { multiple: true }, ['Design']],
+    ['handleFiltersUpdated', {}, { mode: 'input' }, ['Design']],
+    ['handleFiltersUpdated', {}, { multiple: false }, ['Design', 'Sales']],
+    [
+      'handleFiltersUpdated',
+      { mode: 'input' },
+      { mode: 'dropdown' },
+      ['Design'],
+    ],
     [
       'handleFiltersUpdated',
       { multiple: false },
-      ['Design', 'Sales'],
-      'resetToSingle',
+      { multiple: true },
+      ['Design'],
     ],
   ])(
-    '%s clears the selection for %j and explains it without clearing other filters',
-    async (action, changes, values, message) => {
+    '%s clears the selection for %j → %j without a reset toast or clearing other filters',
+    async (action, initial, changes, values) => {
+      const current = { ...filter, ...initial }
       const other = { ...filter, id: 6, label: 'Status' }
-      mock.onGet('/dashboard/1/filters/').reply(200, [filter, other])
+      mock.onGet('/dashboard/1/filters/').reply(200, [current, other])
       await store.dispatch('dashboardApplication/fetchFilters')
       await store.dispatch('dashboardApplication/applyFilter', {
         filterId: 5,
@@ -99,7 +109,7 @@ describe('dashboard text filters', () => {
         values: ['Open'],
       })
       const { wrapper, notifications } = await renderFilters()
-      const updated = { ...filter, ...changes }
+      const updated = { ...current, ...changes }
       mock.onPatch('/dashboard/filters/5/').reply(200, updated)
       mock.onGet('/dashboard/1/filters/').reply(200, [updated, other])
       await store.dispatch(`dashboardApplication/${action}`, {
@@ -110,9 +120,7 @@ describe('dashboard text filters', () => {
       expect(
         wrapper.findAll('.dashboard-filter__value').map((value) => value.text())
       ).toEqual(['dashboardFilter.choose', 'Open'])
-      expect(notifications.get('.toast__message').text()).toBe(
-        `dashboardFilter.${message}`
-      )
+      expect(notifications.find('.toast').exists()).toBe(false)
       expect(
         JSON.parse(
           mock.history.post
@@ -122,7 +130,7 @@ describe('dashboard text filters', () => {
       ).toEqual({ filters: [{ filter_id: 6, values: ['Open'] }] })
       await store.dispatch('dashboardApplication/handleFiltersUpdated')
       await flushPromises()
-      expect(notifications.findAll('.toast')).toHaveLength(1)
+      expect(notifications.find('.toast').exists()).toBe(false)
     }
   )
 
@@ -130,8 +138,6 @@ describe('dashboard text filters', () => {
     [{}, { label: 'Renamed' }],
     [{}, { operator: 'contains' }],
     [{}, { bindings: [{ table_id: 1, field_id: 21 }] }],
-    [{ mode: 'input' }, { mode: 'dropdown' }],
-    [{ multiple: false }, { multiple: true }],
     [{}, { mode: 'dropdown', multiple: true }],
   ])(
     'preserves the selection for other configuration changes: %j → %j',
@@ -187,12 +193,9 @@ describe('dashboard text filters', () => {
     expect(notifications.find('.toast').exists()).toBe(false)
   })
 
-  test.each([
-    [{ mode: 'input' }, 'resetToInput'],
-    [{ multiple: false }, 'resetToSingle'],
-  ])(
+  test.each([{ mode: 'input' }, { multiple: false }])(
     'discards an open draft when another editor changes the filter to %j',
-    async (changes, message) => {
+    async (changes) => {
       mock.onPost('/dashboard/filters/5/options/').reply(200, {
         results: ['Design', 'Sales'],
         next: null,
@@ -210,9 +213,7 @@ describe('dashboard text filters', () => {
       expect(
         wrapper.get('.dropdown__selected').attributes('aria-expanded')
       ).toBe('false')
-      expect(notifications.get('.toast__message').text()).toBe(
-        `dashboardFilter.${message}`
-      )
+      expect(notifications.find('.toast').exists()).toBe(false)
       await wrapper.get('.dropdown__selected').trigger('click')
       await flushPromises()
       if (changes.mode === 'input') {

@@ -280,15 +280,21 @@ describe('dashboard filter persistence', () => {
     )
   })
 
-  test.each([{ mode: 'input' }, { multiple: false }])(
-    'does not restore a selection reset by an update to %j',
-    async (changes) => {
+  test.each([
+    [{}, { mode: 'input' }],
+    [{}, { multiple: false }],
+    [{ mode: 'input' }, { mode: 'dropdown' }],
+    [{ multiple: false }, { multiple: true }],
+  ])(
+    'does not restore a selection reset by an update from %j to %j',
+    async (initial, changes) => {
+      filters = [{ ...filter, ...initial }]
       await load()
       await store.dispatch('dashboardApplication/applyFilter', {
         filterId: 5,
         values: ['Design'],
       })
-      filters = [{ ...filter, ...changes }]
+      filters = [{ ...filter, ...initial, ...changes }]
       mock.onPatch('/dashboard/filters/5/').reply(200, filters[0])
       await store.dispatch('dashboardApplication/updateFilter', {
         filterId: 5,
@@ -301,15 +307,21 @@ describe('dashboard filter persistence', () => {
     }
   )
 
-  test.each([{ mode: 'input' }, { multiple: false }])(
-    'discards saved values if the server changed to %j while the page was closed',
-    async (changes) => {
+  test.each([
+    [{}, { mode: 'input' }],
+    [{}, { multiple: false }],
+    [{ mode: 'input' }, { mode: 'dropdown' }],
+    [{ multiple: false }, { multiple: true }],
+  ])(
+    'discards saved values if the server changed from %j to %j while the page was closed',
+    async (initial, changes) => {
+      filters = [{ ...filter, ...initial }]
       await load()
       await store.dispatch('dashboardApplication/applyFilter', {
         filterId: 5,
         values: ['Design'],
       })
-      filters = [{ ...filter, ...changes }]
+      filters = [{ ...filter, ...initial, ...changes }]
       const wrapper = await reload()
       expect(wrapper.get('.dashboard-filter__value').text()).toBe(
         'dashboardFilter.choose'

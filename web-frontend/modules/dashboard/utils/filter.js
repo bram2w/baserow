@@ -1,7 +1,7 @@
 export function shouldResetFilterValues(previous, next) {
   return (
-    previous?.mode === 'dropdown' &&
-    (next.mode === 'input' ||
-      (next.mode === 'dropdown' && previous.multiple && !next.multiple))
+    previous != null &&
+    (previous.mode !== next.mode ||
+      (next.mode === 'dropdown' && previous.multiple !== next.multiple))
   )
 }

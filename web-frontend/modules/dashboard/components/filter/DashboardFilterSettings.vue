@@ -81,7 +81,7 @@
         ]"
         :active-index="filter.mode === 'dropdown' ? 0 : 1"
         @update:active-index="
-          save({ mode: $event === 0 ? 'dropdown' : 'input' })
+          requestFormatChange({ mode: $event === 0 ? 'dropdown' : 'input' })
         "
       />
     </FormGroup>
@@ -98,16 +98,55 @@
           { label: $t('dashboardFilter.single') },
         ]"
         :active-index="filter.multiple ? 0 : 1"
-        @update:active-index="save({ multiple: $event === 0 })"
+        @update:active-index="requestFormatChange({ multiple: $event === 0 })"
       />
     </FormGroup>
+    <Modal
+      ref="confirmation"
+      small
+      :can-close="!savingFormat"
+      role="dialog"
+      aria-modal="true"
+      :aria-label="$t('dashboardFilter.confirmResetTitle')"
+      @hidden="pendingFormat = null"
+    >
+      <h2 class="box__title">
+        {{ $t('dashboardFilter.confirmResetTitle') }}
+      </h2>
+      <p>
+        {{
+          $t('dashboardFilter.confirmResetMessage', {
+            format: pendingFormatLabel,
+            filter: filter.label,
+          })
+        }}
+      </p>
+      <div class="actions actions--right actions--gap margin-bottom-0">
+        <Button
+          type="secondary"
+          :disabled="savingFormat"
+          @click="confirmation.hide()"
+        >
+          {{ $t('action.cancel') }}
+        </Button>
+        <Button
+          type="primary"
+          :loading="savingFormat"
+          :disabled="savingFormat || !canEdit || !pendingFormat"
+          @click="confirmFormatChange"
+        >
+          {{ $t('dashboardFilter.confirmReset') }}
+        </Button>
+      </div>
+    </Modal>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useNuxtApp } from '#app'
 import DashboardFilterTableField from '@baserow/modules/dashboard/components/filter/DashboardFilterTableField'
+import { shouldResetFilterValues } from '@baserow/modules/dashboard/utils/filter'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 
 const props = defineProps({
@@ -118,6 +157,16 @@ const props = defineProps({
 const { $store, $hasPermission, $i18n } = useNuxtApp()
 const label = ref(props.filter.label)
 const savingBinding = ref(false)
+const confirmation = ref(null)
+const pendingFormat = ref(null)
+const savingFormat = ref(false)
+const pendingFormatLabel = computed(() => {
+  if (!pendingFormat.value) return ''
+  const { mode, multiple } = pendingFormat.value
+  return $i18n.t(
+    `dashboardFilter.${mode ?? (multiple ? 'multiple' : 'single')}`
+  )
+})
 const prefix = computed(() => `${props.storePrefix}dashboardApplication/`)
 const tables = computed(() => {
   const tableIds = new Set(
@@ -177,10 +226,41 @@ watch(
     label.value = props.filter.label
   }
 )
+watch(
+  [
+    () => props.dashboard.id,
+    () => props.filter.id,
+    () => props.filter.mode,
+    () => props.filter.multiple,
+  ],
+  () => confirmation.value?.hide()
+)
+onBeforeUnmount(() => confirmation.value?.hide())
+function requestFormatChange(values) {
+  if (
+    !canEdit.value ||
+    savingFormat.value ||
+    pendingFormat.value ||
+    !shouldResetFilterValues(props.filter, { ...props.filter, ...values })
+  )
+    return
+  pendingFormat.value = values
+  confirmation.value.show()
+}
+async function confirmFormatChange() {
+  if (!canEdit.value || savingFormat.value || !pendingFormat.value) return
+  savingFormat.value = true
+  try {
+    const updated = await save(pendingFormat.value)
+    if (updated) confirmation.value?.hide()
+  } finally {
+    savingFormat.value = false
+  }
+}
 async function save(values) {
   if (!canEdit.value) return
   try {
-    await $store.dispatch(
+    return await $store.dispatch(
       `${props.storePrefix}dashboardApplication/updateFilter`,
       { filterId: props.filter.id, values }
     )

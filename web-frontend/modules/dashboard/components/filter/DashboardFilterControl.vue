@@ -240,9 +240,8 @@ const props = defineProps({
   canDelete: Boolean,
   deleting: Boolean,
 })
-const emit = defineEmits(['apply', 'select', 'options', 'delete', 'reset'])
+const emit = defineEmits(['apply', 'select', 'options', 'delete'])
 const dropdown = ref(null)
-const pickerOpen = ref(false)
 const input = ref(null)
 const menu = ref(null)
 const menuTrigger = ref(null)
@@ -279,16 +278,12 @@ const requestOptions = (more = false, useCache = false) =>
   })
 
 watch(
-  () => [props.filter, props.appliedValues],
-  ([filter], [previous, appliedValues]) => {
+  () => props.filter,
+  (filter, previous) => {
     if (!shouldResetFilterValues(previous, filter)) return
-    const hadValues =
-      appliedValues.length ||
-      (pickerOpen.value && draft.value.some((value) => value !== ''))
     draft.value = []
     search.value = ''
     dropdown.value?.hide()
-    if (hadValues) emit('reset')
   }
 )
 
@@ -318,7 +313,6 @@ function remove() {
   emit('delete')
 }
 async function onShown() {
-  pickerOpen.value = true
   draft.value = [...props.appliedValues]
   search.value = ''
   if (props.filter.mode === 'dropdown') requestOptions(false, true)
@@ -326,7 +320,6 @@ async function onShown() {
   input.value?.focus()
 }
 function onHidden() {
-  pickerOpen.value = false
   draft.value = [...props.appliedValues]
 }
 function toggle(value, checked) {
