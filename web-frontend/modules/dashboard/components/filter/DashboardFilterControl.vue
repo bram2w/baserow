@@ -1,186 +1,189 @@
 <template>
-  <div
+  <FormGroup
     class="dashboard-filter"
     :class="{ 'dashboard-filter--selected': selected }"
+    :label="filter.label"
+    small-label
+    required
   >
-    <label class="dashboard-filter__label" :for="controlId">{{
-      filter.label
-    }}</label>
-    <div
-      class="dashboard-filter__control"
+    <Dropdown
+      ref="dropdown"
       :class="{ 'dashboard-filter__control--active': appliedValues.length }"
+      :tooltip="hasUnavailable ? $t('dashboardFilter.unavailableHelp') : null"
+      :before-show="beforeShow"
+      @show="onShown"
+      @hide="onHidden"
     >
-      <Button
-        :id="controlId"
-        ref="trigger"
-        v-tooltip.focus="
-          hasUnavailable ? $t('dashboardFilter.unavailableHelp') : null
-        "
-        class="dashboard-filter__trigger"
-        type="secondary"
-        button-type="button"
-        icon="iconoir-filter"
-        :aria-expanded="opened"
-        :aria-description="
-          hasUnavailable ? $t('dashboardFilter.unavailableHelp') : undefined
-        "
-        @click="activate"
-      >
-        <span class="dashboard-filter__value">{{
-          appliedValues.length > 1
-            ? $t('dashboardFilter.selections', { count: appliedValues.length })
-            : appliedValues[0] || $t('dashboardFilter.choose')
-        }}</span>
+      <template #display>
+        <i class="dropdown__selected-icon iconoir-filter" />
+        <span
+          class="dropdown__selected-text dashboard-filter__value"
+          :class="{ 'dropdown__selected-placeholder': !appliedValues.length }"
+          >{{
+            appliedValues.length > 1
+              ? $t('dashboardFilter.selections', {
+                  count: appliedValues.length,
+                })
+              : appliedValues[0] || $t('dashboardFilter.choose')
+          }}</span
+        >
         <i
           v-if="hasUnavailable"
           class="iconoir-info-empty dashboard-filter__info"
           :aria-label="$t('dashboardFilter.unavailable')"
-        ></i>
-      </Button>
-      <ButtonIcon
-        v-if="editMode"
-        class="dashboard-filter__action"
-        type="secondary"
-        size="small"
-        icon="iconoir-more-vert"
-        :aria-label="$t('dashboardFilter.settings')"
-        @click="$emit('select')"
-      />
-      <ButtonIcon
-        v-else-if="appliedValues.length"
-        class="dashboard-filter__action"
-        type="secondary"
-        size="small"
-        icon="iconoir-cancel"
-        :aria-label="$t('dashboardFilter.clear')"
-        @click="$emit('apply', [])"
-      />
-      <i
-        v-else
-        class="iconoir-nav-arrow-down dashboard-filter__arrow"
-        aria-hidden="true"
-      ></i>
-    </div>
-    <Context
-      ref="context"
-      class="dashboard-filter__context"
-      :class="{
-        'dashboard-filter__context--dropdown': filter.mode === 'dropdown',
-      }"
-      @shown="onShown"
-      @hidden="onHidden"
-    >
-      <form @submit.prevent="apply" @keydown.esc.stop.prevent="close">
-        <template v-if="filter.mode === 'dropdown'">
-          <SelectSearch
-            v-model="search"
-            :aria-label="$t('action.search')"
-            @update:model-value="searchOptions"
-          />
-          <div class="dashboard-filter__operator">
-            {{ $t(`dashboardFilter.${filter.operator}`) }}...
-          </div>
-          <div class="dashboard-filter__choices">
-            <div
-              v-for="value in displayedOptions"
-              :key="value"
-              class="dashboard-filter__choice"
-              :class="{ 'dashboard-filter__choice--single': !filter.multiple }"
-            >
-              <Checkbox
-                v-if="filter.multiple"
-                :model-value="draft.includes(value)"
-                @update:model-value="toggle(value, $event)"
+        />
+      </template>
+      <template v-if="editMode || appliedValues.length" #suffix>
+        <ButtonIcon
+          v-if="editMode"
+          class="dashboard-filter__action"
+          type="secondary"
+          size="small"
+          icon="iconoir-more-vert"
+          :aria-label="$t('dashboardFilter.settings')"
+          @click="$emit('select')"
+        />
+        <ButtonIcon
+          v-else
+          class="dashboard-filter__action"
+          type="secondary"
+          size="small"
+          icon="iconoir-cancel"
+          :aria-label="$t('dashboardFilter.clear')"
+          @click="$emit('apply', [])"
+        />
+      </template>
+      <template #content>
+        <div
+          class="dashboard-filter__context"
+          :class="{
+            'dashboard-filter__context--dropdown': filter.mode === 'dropdown',
+          }"
+        >
+          <form @submit.prevent="apply">
+            <template v-if="filter.mode === 'dropdown'">
+              <SelectSearch
+                v-model="search"
+                :aria-label="$t('action.search')"
+                @update:model-value="searchOptions"
+              />
+              <div class="dashboard-filter__operator">
+                {{ $t(`dashboardFilter.${filter.operator}`) }}...
+              </div>
+              <div class="dashboard-filter__choices">
+                <div
+                  v-for="value in displayedOptions"
+                  :key="value"
+                  class="dashboard-filter__choice"
+                  :class="{
+                    'dashboard-filter__choice--single': !filter.multiple,
+                  }"
+                >
+                  <Checkbox
+                    v-if="filter.multiple"
+                    :model-value="draft.includes(value)"
+                    @update:model-value="toggle(value, $event)"
+                  >
+                    <span class="dashboard-filter__option-value">{{
+                      value
+                    }}</span>
+                  </Checkbox>
+                  <Button
+                    v-else
+                    type="secondary"
+                    button-type="button"
+                    full-width
+                    :append-icon="draft.includes(value) ? 'iconoir-check' : ''"
+                    class="dashboard-filter__single-choice"
+                    :aria-pressed="draft.includes(value)"
+                    @click="toggle(value, !draft.includes(value))"
+                  >
+                    <span class="dashboard-filter__option-value">{{
+                      value
+                    }}</span>
+                  </Button>
+                  <span
+                    v-if="optionState.unavailable.includes(value)"
+                    v-tooltip.focus="$t('dashboardFilter.unavailableHelp')"
+                    class="dashboard-filter__unavailable"
+                    tabindex="0"
+                    :aria-label="$t('dashboardFilter.unavailableHelp')"
+                    >{{ $t('dashboardFilter.unavailable') }}</span
+                  >
+                </div>
+                <div
+                  v-if="optionState.loading"
+                  class="dashboard-filter__message"
+                  role="status"
+                >
+                  {{ $t('dashboardFilter.loading') }}
+                </div>
+                <div
+                  v-else-if="optionState.error"
+                  class="dashboard-filter__message"
+                  role="status"
+                >
+                  {{ $t('dashboardFilter.optionsError') }}
+                  <Button
+                    type="secondary"
+                    size="small"
+                    button-type="button"
+                    @click="requestOptions()"
+                    >{{ $t('action.retry') }}</Button
+                  >
+                </div>
+                <div
+                  v-else-if="!displayedOptions.length"
+                  class="dashboard-filter__message"
+                >
+                  {{ $t('dashboardFilter.noOptions') }}
+                </div>
+                <Button
+                  v-if="optionState.next && !optionState.loading"
+                  type="secondary"
+                  size="small"
+                  class="dashboard-filter__more"
+                  button-type="button"
+                  @click="requestOptions(true)"
+                  >{{ $t('dashboardFilter.more') }}</Button
+                >
+              </div>
+            </template>
+            <div v-else class="dashboard-filter__input">
+              <FormGroup
+                :label="`${$t(`dashboardFilter.${filter.operator}`)}...`"
+                small-label
+                required
               >
-                <span class="dashboard-filter__option-value">{{ value }}</span>
-              </Checkbox>
-              <Button
-                v-else
-                type="secondary"
-                button-type="button"
-                full-width
-                :append-icon="draft.includes(value) ? 'iconoir-check' : ''"
-                class="dashboard-filter__single-choice"
-                :aria-pressed="draft.includes(value)"
-                @click="toggle(value, !draft.includes(value))"
-              >
-                <span class="dashboard-filter__option-value">{{ value }}</span>
-              </Button>
-              <span
-                v-if="optionState.unavailable.includes(value)"
-                v-tooltip.focus="$t('dashboardFilter.unavailableHelp')"
-                class="dashboard-filter__unavailable"
-                tabindex="0"
-                :aria-label="$t('dashboardFilter.unavailableHelp')"
-                >{{ $t('dashboardFilter.unavailable') }}</span
-              >
+                <FormInput
+                  ref="input"
+                  :model-value="draft[0] || ''"
+                  :placeholder="$t('dashboardFilter.inputPlaceholder')"
+                  :maxlength="10000"
+                  @update:model-value="draft = [$event]"
+                />
+              </FormGroup>
             </div>
-            <div
-              v-if="optionState.loading"
-              class="dashboard-filter__message"
-              role="status"
-            >
-              {{ $t('dashboardFilter.loading') }}
-            </div>
-            <div
-              v-else-if="optionState.error"
-              class="dashboard-filter__message"
-              role="status"
-            >
-              {{ $t('dashboardFilter.optionsError') }}
-              <Button type="secondary" size="small" @click="requestOptions()">{{
-                $t('action.retry')
+            <div class="dashboard-filter__footer">
+              <Button :disabled="!changed" button-type="submit">{{
+                $t(
+                  appliedValues.length
+                    ? 'dashboardFilter.update'
+                    : 'dashboardFilter.apply'
+                )
               }}</Button>
             </div>
-            <div
-              v-else-if="!displayedOptions.length"
-              class="dashboard-filter__message"
-            >
-              {{ $t('dashboardFilter.noOptions') }}
-            </div>
-            <Button
-              v-if="optionState.next && !optionState.loading"
-              type="secondary"
-              size="small"
-              class="dashboard-filter__more"
-              @click="requestOptions(true)"
-              >{{ $t('dashboardFilter.more') }}</Button
-            >
-          </div>
-        </template>
-        <div v-else class="dashboard-filter__input">
-          <FormGroup
-            :label="`${$t(`dashboardFilter.${filter.operator}`)}...`"
-            small-label
-            required
-          >
-            <FormInput
-              ref="input"
-              :model-value="draft[0] || ''"
-              :placeholder="$t('dashboardFilter.inputPlaceholder')"
-              :maxlength="10000"
-              @update:model-value="draft = [$event]"
-            />
-          </FormGroup>
+          </form>
         </div>
-        <div class="dashboard-filter__footer">
-          <Button :disabled="!changed" button-type="submit">{{
-            $t(
-              appliedValues.length
-                ? 'dashboardFilter.update'
-                : 'dashboardFilter.apply'
-            )
-          }}</Button>
-        </div>
-      </form>
-    </Context>
-  </div>
+      </template>
+    </Dropdown>
+  </FormGroup>
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, ref, useId } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref } from 'vue'
 import debounce from 'lodash/debounce'
-import Context from '@baserow/modules/core/components/Context'
+import Dropdown from '@baserow/modules/core/components/Dropdown'
 import Checkbox from '@baserow/modules/core/components/Checkbox'
 import FormInput from '@baserow/modules/core/components/FormInput'
 import FormGroup from '@baserow/modules/core/components/FormGroup'
@@ -205,9 +208,7 @@ const props = defineProps({
   selected: Boolean,
 })
 const emit = defineEmits(['apply', 'select', 'options'])
-const controlId = `dashboard-filter-${useId()}`
-const context = ref(null)
-const trigger = ref(null)
+const dropdown = ref(null)
 const input = ref(null)
 const opened = ref(false)
 const draft = ref([])
@@ -240,9 +241,11 @@ const searchOptions = debounce(() => {
   if (opened.value) requestOptions()
 }, 250)
 
-function activate(event) {
-  if (props.editMode) emit('select')
-  else context.value.toggle(event.currentTarget, 'bottom', 'left', 4)
+function beforeShow() {
+  if (props.editMode) {
+    emit('select')
+    return false
+  }
 }
 async function onShown() {
   opened.value = true
@@ -270,8 +273,7 @@ function apply() {
   close()
 }
 function close() {
-  context.value.hide()
-  trigger.value?.focus()
+  dropdown.value.close()
 }
 onBeforeUnmount(() => searchOptions.cancel())
 </script>
