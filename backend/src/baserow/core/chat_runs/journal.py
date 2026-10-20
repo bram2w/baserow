@@ -176,11 +176,6 @@ class ChatRunJournal:
 
         self.emit(ChatRunEventKind.RUN_FINISHED, snapshot)
         await self.flush()
-        if not self.output_unavailable:
-            try:
-                await self.buffer.finish()
-            except Exception:
-                logger.warning("Could not expire finished chat buffer {}", self.run.id)
 
     async def keep_flushing(self) -> None:
         while True:

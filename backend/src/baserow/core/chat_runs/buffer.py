@@ -19,7 +19,6 @@ from django.conf import settings
 from redis.asyncio import BlockingConnectionPool, Redis, from_url
 
 ACTIVE_TTL_SECONDS = 3600
-FINISHED_TTL_SECONDS = 24 * 60 * 60
 MAX_BUFFER_BYTES = 8 * 1024 * 1024
 MAX_BUFFER_EVENTS = 10000
 OPERATION_TIMEOUT_SECONDS = 1.0
@@ -84,14 +83,6 @@ redis.call('HSET', meta, 'bytes', bytes + extra, 'count', count + #payloads)
 redis.call('EXPIRE', meta, ARGV[6])
 redis.call('EXPIRE', stream, ARGV[6])
 return ids
-"""
-
-_FINISH = """
-if redis.call('HGET', KEYS[1], 'generation') == ARGV[1] then
-    redis.call('EXPIRE', KEYS[1], ARGV[2])
-    redis.call('EXPIRE', KEYS[2], ARGV[2])
-end
-return 1
 """
 
 _INVALIDATE = """
@@ -203,10 +194,10 @@ async def close_buffer_redis() -> None:
 class ChatRunBuffer:
     """Access one run's temporary Redis output from either HTTP or Celery.
 
-    In Celery, ``ChatRunJournal.flush`` calls ``append`` and ``publish_finished``
-    calls ``finish``. In the web process, ``follow_run`` calls ``read`` to wait for
-    events and ``recover`` to rebuild replay state. Each context creates its own
-    buffer instance for the same run ID; Redis is what connects them.
+    In Celery, ``ChatRunJournal.flush`` calls ``append``. In the web process,
+    ``follow_run`` calls ``read`` to wait for events and ``recover`` to rebuild
+    replay state. Each context creates its own buffer instance for the same run
+    ID; Redis is what connects them.
 
     ``ChatRunHandler`` also publishes lifecycle events after database commits and
     reads retained output during lost-run recovery. This class neither executes
@@ -372,18 +363,6 @@ class ChatRunBuffer:
         except Exception:
             # Missing Redis must never prevent an expired run from ending.
             return None
-
-    async def finish(self) -> None:
-        client = await get_buffer_redis()
-        async with asyncio.timeout(OPERATION_TIMEOUT_SECONDS):
-            await client.eval(
-                _FINISH,
-                2,
-                self.meta_key,
-                self.stream_key,
-                self.generation,
-                FINISHED_TTL_SECONDS,
-            )
 
     async def invalidate(self) -> None:
         """Best-effort flag that this writer can no longer provide live replay.

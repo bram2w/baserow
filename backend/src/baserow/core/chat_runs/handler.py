@@ -145,25 +145,16 @@ class ChatRunHandler:
             )
 
     def _publish_terminal(self, run: ChatRun) -> None:
-        from .buffer import ChatRunBuffer, close_buffer_redis
         from .service import serialize_run
-
-        async def publish():
-            try:
-                buffer = ChatRunBuffer(run.id)
-                await buffer.append([(ChatRunEventKind.RUN_FINISHED, snapshot)])
-                await buffer.finish()
-            finally:
-                await close_buffer_redis()
 
         try:
             snapshot = serialize_run(run)
-            # As in _publish, cleanup must only close this call's own pools.
-            async_to_sync(publish, force_new_loop=True)()
         except Exception as exc:
             logger.warning(
                 "Terminal output unavailable for {} ({})", run.id, type(exc).__name__
             )
+            return
+        self._publish(run, [(ChatRunEventKind.RUN_FINISHED, snapshot)])
 
     def _enqueue(self, run_id: UUID) -> None:
         """Send the task from ``start_run``'s commit callback; do not execute it."""

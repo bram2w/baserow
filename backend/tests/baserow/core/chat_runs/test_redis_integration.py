@@ -79,8 +79,6 @@ async def test_supported_redis_atomic_append_replay_limits_and_blocked_followers
             await writer.append([("progress", {"text": "too much"})])
         assert await client.xlen(writer.stream_key) == len(recovered)
         assert await writer.recover() == recovered
-        await writer.finish()
-        assert 86390 <= await client.ttl(writer.stream_key) <= 86400
     finally:
         for task in followers:
             task.cancel()

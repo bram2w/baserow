@@ -125,14 +125,11 @@ async def test_lease_stop_polling_proceeds_while_output_append_waits(
 
 
 @pytest.mark.asyncio
-async def test_finished_publishes_committed_snapshot_then_sets_reconnect_ttl(
-    output_buffer,
-):
+async def test_finished_publishes_committed_snapshot(output_buffer):
     journal = ChatRunJournal(SimpleNamespace(id=uuid4()))
     snapshot = {"status": "completed", "message": {"id": 3}}
     await journal.publish_finished(snapshot)
     output_buffer.append.assert_awaited_once_with([("run.finished", snapshot)])
-    output_buffer.finish.assert_awaited_once()
 
 
 @pytest.mark.asyncio

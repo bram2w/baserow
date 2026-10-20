@@ -1,6 +1,5 @@
 import asyncio
 from functools import partial
-from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
@@ -132,15 +131,12 @@ async def test_cursor_must_exist_and_cannot_be_ahead():
 
 
 @pytest.mark.asyncio
-async def test_active_and_finished_ttls_and_stable_namespace(buffer_redis):
+async def test_active_ttl_and_stable_namespace(buffer_redis):
     writer = ChatRunBuffer(uuid4())
     await writer.append([("run.started", {})])
     assert writer.meta_key.startswith("baserow:chat-runs:v1:")
     for key in [writer.meta_key, writer.stream_key]:
         assert 3500 <= await buffer_redis.ttl(key) <= 3600
-    await writer.finish()
-    for key in [writer.meta_key, writer.stream_key]:
-        assert 86300 <= await buffer_redis.ttl(key) <= 86400
 
 
 @pytest.mark.asyncio
@@ -199,7 +195,6 @@ async def test_request_buffer_bridge_keeps_active_follower_pool_open(
     monkeypatch.setattr(buffer_module.Redis, "aclose", close)
     monkeypatch.setattr(ChatRunBuffer, "append", append)
     monkeypatch.setattr(ChatRunBuffer, "recover", recover)
-    mocker.patch.object(ChatRunBuffer, "finish", new_callable=AsyncMock)
     mocker.patch("baserow.core.chat_runs.service.serialize_run", return_value={})
     handler = ChatRunHandler()
     run = ChatRun(id=uuid4())

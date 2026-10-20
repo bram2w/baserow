@@ -82,6 +82,5 @@ def create_run(data_fixture, fake_run_type):
 def output_buffer(mocker):
     buffer = mocker.patch("baserow.core.chat_runs.journal.ChatRunBuffer").return_value
     buffer.append = AsyncMock(return_value=[])
-    buffer.finish = AsyncMock()
     buffer.invalidate = AsyncMock()
     return buffer
