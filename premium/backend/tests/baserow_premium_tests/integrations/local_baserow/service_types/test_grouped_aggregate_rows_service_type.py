@@ -19,6 +19,7 @@ from baserow.contrib.builder.elements.element_types import RecordSelectorElement
 from baserow.contrib.builder.formula_property_extractor import (
     get_element_property_names,
 )
+from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.services.exceptions import (
     ServiceImproperlyConfiguredDispatchException,
@@ -4929,3 +4930,94 @@ def test_grouped_aggregate_rows_serializes_trashed_configured_fields(data_fixtur
     assert not LocalBaserowTableServiceAggregationGroupBySerializer(
         primary_group_by
     ).data["trashed"]
+
+
+@pytest.mark.django_db
+def test_grouped_aggregate_rows_service_public_schema_and_context_data(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_number_field(table=table, name="Amount")
+    group_by_field = data_fixture.create_single_select_field(
+        table=table, name="Category"
+    )
+    option = data_fixture.create_select_option(
+        field=group_by_field, value="Books", color="blue"
+    )
+    service = data_fixture.create_service(
+        LocalBaserowGroupedAggregateRows,
+        table=table,
+    )
+    LocalBaserowTableServiceAggregationSeries.objects.create(
+        service=service, field=field, aggregation_type="sum", order=1
+    )
+    LocalBaserowTableServiceAggregationGroupBy.objects.create(
+        service=service, field=group_by_field, order=1
+    )
+    service_type = service_type_registry.get("local_baserow_grouped_aggregate_rows")
+
+    # The creator of the application gets the whole field.
+    schema = service_type.generate_schema(service)
+    metadata = schema["items"]["properties"][group_by_field.db_column]["metadata"]
+    assert metadata["table_id"] == table.id
+    assert "single_select_default" in metadata
+
+    # Anonymous visitors only get what they need to format the labels of the
+    # chart, in the schema and in the context data alike.
+    public_metadata = {
+        "id": group_by_field.id,
+        "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+        "name": "Category",
+        "type": "single_select",
+        "primary": False,
+        "read_only": False,
+        "database_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+        "workspace_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+        "select_options": [{"id": option.id, "value": "Books", "color": "blue"}],
+    }
+    public_schema = service_type.generate_public_schema(service)
+    public_properties = public_schema["items"]["properties"]
+    assert public_properties[group_by_field.db_column] == {
+        **schema["items"]["properties"][group_by_field.db_column],
+        "metadata": public_metadata,
+    }
+    assert (
+        public_properties[f"{field.db_column}_sum"]
+        == schema["items"]["properties"][f"{field.db_column}_sum"]
+    )
+    assert service_type.get_public_context_data(service) == {
+        "fields": {group_by_field.db_column: public_metadata}
+    }
+
+
+@pytest.mark.django_db
+def test_grouped_aggregate_rows_service_public_schema_with_row_id_group_by(
+    data_fixture,
+):
+    table = data_fixture.create_database_table()
+    primary_field = data_fixture.create_text_field(
+        table=table, primary=True, text_default="Unknown"
+    )
+    field = data_fixture.create_number_field(table=table, name="Amount")
+    service = data_fixture.create_service(
+        LocalBaserowGroupedAggregateRows,
+        table=table,
+    )
+    LocalBaserowTableServiceAggregationSeries.objects.create(
+        service=service, field=field, aggregation_type="sum", order=1
+    )
+    LocalBaserowTableServiceAggregationGroupBy.objects.create(
+        service=service, field=None, order=1
+    )
+    service_type = service_type_registry.get("local_baserow_grouped_aggregate_rows")
+
+    public_schema = service_type.generate_public_schema(service)
+    metadata = public_schema["items"]["properties"][primary_field.db_column]["metadata"]
+
+    # The chart finds the primary field through the metadata of the schema.
+    assert metadata["id"] == primary_field.id
+    assert metadata["primary"] is True
+    assert metadata["table_id"] == PUBLIC_PLACEHOLDER_ENTITY_ID
+    assert "text_default" not in metadata
+    assert service_type.get_public_context_data(service) == {
+        "fields": {primary_field.db_column: metadata}
+    }

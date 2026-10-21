@@ -2,6 +2,7 @@ import pytest
 from rest_framework.reverse import reverse
 from rest_framework.status import HTTP_200_OK
 
+from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow_premium.integrations.local_baserow.models import (
     LocalBaserowGroupedAggregateRows,
@@ -114,6 +115,32 @@ def test_public_dashboard_info_exposes_what_the_chart_widget_needs(
     assert (
         f"field_{amount.id}_sum" in public_data_source["schema"]["items"]["properties"]
     )
+    assert public_data_source["table_id"] == PUBLIC_PLACEHOLDER_ENTITY_ID
+    # The grouped field is reduced to what the chart needs to format its labels,
+    # in the context data and in the metadata of the schema alike.
+    public_category = public_data_source["context_data"]["fields"][
+        f"field_{category.id}"
+    ]
+    assert set(public_category.keys()) == {
+        "id",
+        "table_id",
+        "name",
+        "type",
+        "primary",
+        "read_only",
+        "database_id",
+        "workspace_id",
+        "number_decimal_places",
+        "number_negative",
+        "number_prefix",
+        "number_suffix",
+        "number_separator",
+    }
+    assert public_category["table_id"] == PUBLIC_PLACEHOLDER_ENTITY_ID
+    assert public_category["database_id"] == PUBLIC_PLACEHOLDER_ENTITY_ID
+    assert public_category["workspace_id"] == PUBLIC_PLACEHOLDER_ENTITY_ID
+    schema_properties = public_data_source["schema"]["items"]["properties"]
+    assert schema_properties[f"field_{category.id}"]["metadata"] == public_category
 
 
 @pytest.mark.django_db

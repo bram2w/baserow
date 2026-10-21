@@ -56,12 +56,12 @@ from baserow.core.registries import ImportExportConfig
 from baserow.core.registry import (
     APIUrlsInstanceMixin,
     APIUrlsRegistryMixin,
-    CustomFieldsInstanceMixin,
     CustomFieldsRegistryMixin,
     Instance,
     MapAPIExceptionsInstanceMixin,
     ModelInstanceMixin,
     ModelRegistryMixin,
+    PublicCustomFieldsInstanceMixin,
     Registry,
 )
 
@@ -100,7 +100,7 @@ StartingRowType = Union["GeneratedTableModel", List["GeneratedTableModel"]]
 class FieldType(
     MapAPIExceptionsInstanceMixin,
     APIUrlsInstanceMixin,
-    CustomFieldsInstanceMixin,
+    PublicCustomFieldsInstanceMixin,
     ModelInstanceMixin,
     Instance,
 ):
@@ -152,6 +152,36 @@ class FieldType(
     view. When `False` the field is left out of every public payload, even when the
     view's field options say it's visible.
     """
+
+    public_serializer_field_names = []
+    """
+    The type specific serializer field names exposed to anonymous visitors, when the
+    field is serialized with `extra_params={"public": True}`, for example in the
+    context data of a publicly shared dashboard. Only what's needed to format the
+    values of the field belongs here, like the number or date format and the select
+    options, never its configuration, like a formula, a default value or the
+    available collaborators.
+    """
+
+    public_serializer_mixins = []
+    """
+    The serializer mixins add declared fields that aren't among the public field
+    names, so none of them is used for anonymous visitors.
+    """
+
+    @property
+    def public_serializer_field_overrides(self):
+        """
+        The serializer field overrides of the public field names, which are the
+        regular overrides limited to those names.
+        """
+
+        public_field_names = set(self.public_serializer_field_names)
+        return {
+            name: field
+            for name, field in self.serializer_field_overrides.items()
+            if name in public_field_names
+        }
 
     can_get_unique_values = True
     """

@@ -8,6 +8,7 @@ from baserow.contrib.dashboard.api.widgets.serializers import WidgetSerializer
 from baserow.contrib.dashboard.data_sources.models import DashboardDataSource
 from baserow.contrib.dashboard.models import Dashboard
 from baserow.contrib.dashboard.widgets.registries import widget_type_registry
+from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
 from baserow.core.services.registries import service_type_registry
 
 
@@ -36,7 +37,8 @@ class PublicDashboardDataSourceSerializer(PublicServiceSerializer):
     data: the schema and the context data. The service configuration, like the
     integration, the view, the filters or the search query, is never included.
     Service types may add their public fields through
-    `public_serializer_field_names`.
+    `public_serializer_field_names`. The id of the table is replaced by the
+    public placeholder, like publicly shared views do.
     """
 
     id = serializers.SerializerMethodField(help_text="Data source id.")
@@ -59,6 +61,15 @@ class PublicDashboardDataSourceSerializer(PublicServiceSerializer):
     @extend_schema_field(OpenApiTypes.STR)
     def get_name(self, instance):
         return self.context["data_source"].name
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # The table service types expose the id of their table, which is part of
+        # their public contract in the application builder. Visitors of a
+        # dashboard don't need it, so they get the placeholder instead.
+        if "table_id" in data:
+            data["table_id"] = PUBLIC_PLACEHOLDER_ENTITY_ID
+        return data
 
     class Meta(PublicServiceSerializer.Meta):
         fields = PublicServiceSerializer.Meta.fields + ("name", "context_data")

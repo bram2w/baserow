@@ -6,6 +6,7 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
+from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.handler import CoreHandler
 
@@ -160,9 +161,10 @@ def test_get_public_dashboard_info_never_exposes_the_sharing_or_service_config(
     assert dashboard.public_password not in response.content.decode()
 
     public_data_source = response_json["data_sources"][0]
-    # `table_id` is part of the public contract of every table service type and
-    # the summary widget needs the `aggregation_type` to format the result, the
-    # rest of the service configuration must stay private.
+    # `table_id` is part of the public contract of every table service type, but
+    # visitors get the placeholder, and the summary widget needs the
+    # `aggregation_type` to format the result. The rest of the service
+    # configuration must stay private.
     assert set(public_data_source.keys()) == {
         "id",
         "name",
@@ -172,6 +174,27 @@ def test_get_public_dashboard_info_never_exposes_the_sharing_or_service_config(
         "table_id",
         "aggregation_type",
     }
+    assert public_data_source["table_id"] == PUBLIC_PLACEHOLDER_ENTITY_ID
+    # The field is reduced to what the widget needs to format the result.
+    public_field = public_data_source["context_data"]["field"]
+    assert set(public_field.keys()) == {
+        "id",
+        "table_id",
+        "name",
+        "type",
+        "primary",
+        "read_only",
+        "database_id",
+        "workspace_id",
+        "number_decimal_places",
+        "number_negative",
+        "number_prefix",
+        "number_suffix",
+        "number_separator",
+    }
+    assert public_field["table_id"] == PUBLIC_PLACEHOLDER_ENTITY_ID
+    assert public_field["database_id"] == PUBLIC_PLACEHOLDER_ENTITY_ID
+    assert public_field["workspace_id"] == PUBLIC_PLACEHOLDER_ENTITY_ID
     for private_key in (
         "integration_id",
         "view_id",
@@ -185,6 +208,55 @@ def test_get_public_dashboard_info_never_exposes_the_sharing_or_service_config(
         "context_data_schema",
     ):
         assert private_key not in public_data_source
+
+
+@pytest.mark.django_db
+def test_get_public_dashboard_info_never_exposes_the_configuration_of_the_field(
+    api_client, data_fixture
+):
+    user = data_fixture.create_user(first_name="Hidden collaborator")
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+    field = data_fixture.create_created_by_field(table=table, name="Author")
+    dashboard = data_fixture.create_dashboard_application(
+        workspace=workspace, public=True
+    )
+    integration = data_fixture.create_local_baserow_integration(
+        authorized_user=user, application=dashboard
+    )
+    service = data_fixture.create_local_baserow_aggregate_rows_service(
+        integration=integration,
+        table=table,
+        field=field,
+        aggregation_type="empty_count",
+    )
+    data_source = (
+        data_fixture.create_dashboard_local_baserow_aggregate_rows_data_source(
+            name="Authors", user=user, dashboard=dashboard, service=service
+        )
+    )
+    data_fixture.create_summary_widget(
+        dashboard=dashboard, data_source=data_source, title="Authors"
+    )
+
+    response = api_client.get(public_info_url(dashboard.slug), format="json")
+
+    assert response.status_code == HTTP_200_OK
+    public_field = response.json()["data_sources"][0]["context_data"]["field"]
+    assert public_field == {
+        "id": field.id,
+        "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+        "name": "Author",
+        "type": "created_by",
+        "primary": False,
+        "read_only": True,
+        "database_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+        "workspace_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+    }
+    body = response.content.decode()
+    assert "available_collaborators" not in body
+    assert "Hidden collaborator" not in body
 
 
 @pytest.mark.django_db

@@ -6,6 +6,7 @@ from django.db import transaction
 import pytest
 from rest_framework.exceptions import ValidationError
 
+from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
 from baserow.contrib.database.fields.exceptions import FieldDoesNotExist
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.rows.handler import RowHandler
@@ -74,6 +75,41 @@ def test_local_baserow_aggregate_rows_service_generate_schema_for_count_result(
             },
         },
     }
+
+
+@pytest.mark.django_db
+def test_local_baserow_aggregate_rows_service_get_public_context_data(data_fixture):
+    user = data_fixture.create_user(first_name="Hidden collaborator")
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_created_by_field(table=table, name="Author")
+    service = data_fixture.create_local_baserow_aggregate_rows_service(
+        table_id=table.id,
+        field_id=field.id,
+        aggregation_type="empty_count",
+    )
+    service_type = service_type_registry.get("local_baserow_aggregate_rows")
+
+    # The creator of the application gets the whole field.
+    context_data = service_type.get_context_data(service)
+    assert context_data["field"]["table_id"] == table.id
+    assert context_data["field"]["available_collaborators"] == [
+        {"id": user.id, "name": "Hidden collaborator"}
+    ]
+
+    # Anonymous visitors only get what they need to format the result.
+    assert service_type.get_public_context_data(service) == {
+        "field": {
+            "id": field.id,
+            "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+            "name": "Author",
+            "type": "created_by",
+            "primary": False,
+            "read_only": True,
+            "database_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+            "workspace_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+        }
+    }
+    assert service_type.get_public_context_data(service, allowed_fields=[]) == {}
 
 
 def test_local_baserow_aggregate_rows_resolve_service_formulas():
