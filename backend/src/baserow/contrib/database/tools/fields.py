@@ -1108,6 +1108,22 @@ def create_fields(
     return result
 
 
+def _lock_order(field_updates: list[FieldItemUpdate]) -> list[int]:
+    """
+    The positions of the updates sorted by table and field id, so two calls lock
+    the same rows in the same order and can't deadlock while they wait.
+    """
+
+    ids = [update.field_id for update in field_updates]
+    table_ids = dict(
+        BaserowField.objects_and_trash.filter(id__in=ids).values_list("id", "table_id")
+    )
+    return sorted(
+        range(len(field_updates)),
+        key=lambda i: (table_ids.get(ids[i], 0), ids[i], i),
+    )
+
+
 def update_fields(
     ctx: ToolContext,
     fields: Annotated[
@@ -1125,13 +1141,13 @@ def update_fields(
     formula_errors with the parser's message.
     """
 
-    updated = []
-    errors = []
-    formula_errors = []
+    # Outcome per input position: ("updated" | "formula_error" | "error", value)
+    outcomes: dict[int, tuple[str, Any]] = {}
     changed = False
 
     with transaction.atomic():
-        for field_update in fields:
+        for index in _lock_order(fields):
+            field_update = fields[index]
             ctx.update_status(
                 _("Updating field %(field_id)s...")
                 % {"field_id": field_update.field_id}
@@ -1139,20 +1155,28 @@ def update_fields(
             try:
                 with transaction.atomic():
                     field_item, field_changed = update_field(ctx, field_update)
-                updated.append(field_item.model_dump())
+                outcomes[index] = ("updated", field_item.model_dump())
                 changed = changed or field_changed
             except InvalidFormulaFieldError as exc:
-                formula_errors.append(
-                    {"field_id": field_update.field_id, **_formula_error(exc)}
+                outcomes[index] = (
+                    "formula_error",
+                    {"field_id": field_update.field_id, **_formula_error(exc)},
                 )
             except PermissionException:
                 raise
             except Exception as error:
                 forget_cached_table_models()
-                errors.append(
+                outcomes[index] = (
+                    "error",
                     f"Error updating field {field_update.field_id}: "
-                    f"{_item_error_message(error)}"
+                    f"{_item_error_message(error)}",
                 )
+
+    # Reported in the caller's order, whatever order the fields were locked in.
+    in_order = [outcomes[index] for index in range(len(fields))]
+    updated = [value for kind, value in in_order if kind == "updated"]
+    errors = [value for kind, value in in_order if kind == "error"]
+    formula_errors = [value for kind, value in in_order if kind == "formula_error"]
 
     result: dict[str, Any] = {"updated_fields": updated, "changed": changed}
     if errors:

@@ -20,6 +20,7 @@ from baserow.contrib.database.fields.actions import (
 )
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.tools import fields as fields_module
 from baserow.contrib.database.tools.fields import (
     FieldItemCreate,
     FieldItemUpdate,
@@ -708,3 +709,38 @@ def test_create_fields_matches_a_link_field_name_ignoring_case_and_outer_spaces(
     )
 
     assert [f["through_field"] for f in result["created_fields"]] == [link.id]
+
+
+@pytest.mark.django_db
+def test_update_fields_locks_in_table_order_and_answers_in_input_order(
+    data_fixture, table_ctx
+):
+    ctx, table = table_ctx
+    later = data_fixture.create_database_table(database=table.database)
+    later_field = data_fixture.create_text_field(table=later, name="Later")
+    first = data_fixture.create_text_field(table=table, name="First")
+    formula = data_fixture.create_formula_field(table=table, name="F", formula="'x'")
+    missing_id = later_field.id + 1000
+    locked = []
+    original = fields_module.update_field
+
+    def update_field(ctx, field_update):
+        locked.append(field_update.field_id)
+        return original(ctx, field_update)
+
+    with patch.object(fields_module, "update_field", update_field):
+        result = update_fields(
+            ctx,
+            [
+                FieldItemUpdate(field_id=missing_id, name="Nope"),
+                FieldItemUpdate(field_id=later_field.id, name="Later new"),
+                FieldItemUpdate(field_id=formula.id, formula="concat("),
+                FieldItemUpdate(field_id=first.id, name="First new"),
+            ],
+        )
+
+    # A missing field sorts first, then by table and field id.
+    assert locked == [missing_id, first.id, formula.id, later_field.id]
+    assert [f["name"] for f in result["updated_fields"]] == ["Later new", "First new"]
+    assert [e["field_id"] for e in result["formula_errors"]] == [formula.id]
+    assert result["errors"][0].startswith(f"Error updating field {missing_id}")
