@@ -20,6 +20,10 @@ from baserow_enterprise.data_sync.tasks import (
     sync_periodic_data_sync,
 )
 from baserow_enterprise.date_dependency.tasks import date_dependency_recalculate_rows
+from baserow_enterprise.semantic_search.tasks import (
+    delete_semantic_search_vectors,
+    update_semantic_search_data,
+)
 
 
 @app.task(bind=True, queue="export")
@@ -81,4 +85,6 @@ __all__ = [
     "sync_periodic_data_sync",
     "call_periodic_data_sync_syncs_that_are_due",
     "date_dependency_recalculate_rows",
+    "delete_semantic_search_vectors",
+    "update_semantic_search_data",
 ]
