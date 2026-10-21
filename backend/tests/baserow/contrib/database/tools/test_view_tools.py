@@ -752,3 +752,38 @@ def test_create_view_filters_reads_gte_and_lte_as_inclusive(
     create(type="number", operator=operator, value=100)
 
     assert ViewFilter.objects.get(view=view).type == stored
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("operator", ["has", "has_not"])
+@pytest.mark.parametrize("value", [None, "", "row 5", "1.5", True])
+def test_create_view_filters_skips_a_link_row_value_that_is_not_a_row_id(
+    data_fixture, table_ctx, operator, value
+):
+    other = data_fixture.create_database_table(database=table_ctx[1].database)
+    data_fixture.create_text_field(table=other, name="Title", primary=True)
+    field = data_fixture.create_link_row_field(
+        table=table_ctx[1], name="Link", link_row_table=other
+    )
+    view, create = _filter_view(data_fixture, table_ctx, field)
+
+    entry = create(type="link_row", operator=operator, value=value)
+
+    (skipped,) = entry["skipped_filters"]
+    assert "needs a row id" in skipped["error"]
+    assert not ViewFilter.objects.filter(view=view).exists()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("value", [5, "5", " 5 "])
+def test_create_view_filters_stores_a_link_row_id(data_fixture, table_ctx, value):
+    other = data_fixture.create_database_table(database=table_ctx[1].database)
+    data_fixture.create_text_field(table=other, name="Title", primary=True)
+    field = data_fixture.create_link_row_field(
+        table=table_ctx[1], name="Link", link_row_table=other
+    )
+    view, create = _filter_view(data_fixture, table_ctx, field)
+
+    create(type="link_row", operator="has", value=value)
+
+    assert ViewFilter.objects.get(view=view).value == "5"

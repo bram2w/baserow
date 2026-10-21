@@ -660,6 +660,19 @@ def _boolean_orm_value(f, field, **kwargs):
     raise ValueError(f"A boolean filter needs true or false, not {f.value!r}.")
 
 
+def _link_row_orm_value(f, field, **kwargs):
+    """
+    :raises ValueError: When the value is not a row id, as the filter would then
+        match every row.
+    """
+
+    if isinstance(f.value, str) and f.value.strip().isdigit():
+        return str(int(f.value))
+    if isinstance(f.value, int) and not isinstance(f.value, bool) and f.value >= 0:
+        return str(f.value)
+    raise ValueError(f"A link_row filter needs a row id, not {f.value!r}.")
+
+
 _GET_ORM_VALUE = {
     "text": lambda f, field, **kw: (
         f.value if isinstance(f.value, str) else str(f.value or "")
@@ -668,7 +681,7 @@ _GET_ORM_VALUE = {
     "date": _date_orm_value,
     "single_select": _select_orm_value,
     "multiple_select": _select_orm_value,
-    "link_row": lambda f, field, **kw: str(f.value),
+    "link_row": _link_row_orm_value,
     "boolean": _boolean_orm_value,
 }
 
