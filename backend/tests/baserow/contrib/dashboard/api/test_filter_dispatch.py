@@ -1,7 +1,12 @@
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
+
+from django.db import close_old_connections, connections
 from django.urls import reverse
 
 import pytest
 
+from baserow.contrib.dashboard.filters.handler import DashboardFilterHandler
 from baserow.contrib.dashboard.filters.service import DashboardFilterService
 from baserow.contrib.dashboard.widgets.service import WidgetService
 from baserow.core.action.handler import ActionHandler
@@ -93,6 +98,15 @@ def test_deleting_dashboard_filter_restores_unfiltered_widget_data(
         **headers,
     )
     assert response.status_code == 204
+    sources = api_client.get(
+        reverse(
+            "api:dashboard:data_sources:list",
+            kwargs={"dashboard_id": widget.dashboard_id},
+        ),
+        **headers,
+    )
+    assert sources.status_code == 200
+    assert sources.json()[0]["filters"] == []
     response = api_client.post(
         reverse("api:dashboard:widgets:dispatch", kwargs={"widget_id": widget.id}),
         {"filters": []},
@@ -223,7 +237,19 @@ def test_deleting_one_filter_preserves_other_conditions_and_can_be_undone(
     assert response.json() == {"result": "4"}
 
     scope = [ApplicationActionScopeType.value(widget.dashboard_id)]
+    sources_url = reverse(
+        "api:dashboard:data_sources:list", kwargs={"dashboard_id": widget.dashboard_id}
+    )
+    remaining = api_client.get(sources_url, **headers).json()[0]["filters"]
+    assert [item["value"]["formula"] for item in remaining] == [
+        f"get('dashboard_filter.{other.id}')"
+    ]
     ActionHandler.undo(user, scope, "filter-dispatch")
+    restored = api_client.get(sources_url, **headers).json()[0]["filters"]
+    assert {item["value"]["formula"] for item in restored} == {
+        f"get('dashboard_filter.{selection.id}')",
+        f"get('dashboard_filter.{other.id}')",
+    }
     response = api_client.post(
         dispatch_url,
         {"filters": [{"filter_id": selection.id, "values": ["Design"]}]},
@@ -237,6 +263,294 @@ def test_deleting_one_filter_preserves_other_conditions_and_can_be_undone(
     response = api_client.post(dispatch_url, {"filters": []}, format="json", **headers)
     assert response.status_code == 200, response.json()
     assert response.json() == {"result": "21"}
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "formula,mode,removed",
+    [
+        ("concat(get('dashboard_filter.{id}'), 'suffix')", "simple", True),
+        (" ( get( ('dashboard_filter.{id}.0') ) ) ", "advanced", True),
+        ("get('dashboard_filter.{id}')", "raw", False),
+        ("'dashboard_filter.{id}'", "simple", False),
+        ("concat(", "simple", False),
+        ("get('')", "simple", False),
+    ],
+)
+def test_delete_removes_references_but_preserves_literals_and_unrelated_invalid_formulas(
+    api_client, filtered_dashboard, formula, mode, removed
+):
+    user, token, widget, selection, condition = filtered_dashboard
+    condition.value = BaserowFormulaObject.create(formula.format(id=selection.id), mode)
+    condition.save()
+    headers = {"HTTP_AUTHORIZATION": f"JWT {token}"}
+    response = api_client.delete(
+        reverse("api:dashboard:filters:item", kwargs={"filter_id": selection.id}),
+        **headers,
+    )
+    assert response.status_code == 204
+    sources = api_client.get(
+        reverse(
+            "api:dashboard:data_sources:list",
+            kwargs={"dashboard_id": widget.dashboard_id},
+        ),
+        **headers,
+    )
+    filters = sources.json()[0]["filters"]
+    assert len(filters) == (0 if removed else 1)
+    if not removed:
+        assert filters[0]["value"] == condition.value
+
+
+@pytest.mark.django_db
+def test_delete_cleans_all_dashboard_sources_but_not_other_dashboards_or_builder(
+    api_client, data_fixture, filtered_dashboard
+):
+    user, token, widget, selection, condition = filtered_dashboard
+    second_table = data_fixture.create_database_table(user=user)
+    second_field = data_fixture.create_text_field(table=second_table)
+    second_source = (
+        data_fixture.create_dashboard_local_baserow_aggregate_rows_data_source(
+            dashboard=widget.dashboard, table=second_table
+        )
+    )
+    data_fixture.create_local_baserow_table_service_filter(
+        service=second_source.service, field=second_field, value=condition.value
+    )
+    other_source = (
+        data_fixture.create_dashboard_local_baserow_aggregate_rows_data_source(
+            table=condition.field.table
+        )
+    )
+    builder_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        table=condition.field.table
+    )
+    untouched = [
+        data_fixture.create_local_baserow_table_service_filter(
+            service=source.service, field=condition.field, value=condition.value
+        )
+        for source in (other_source, builder_source)
+    ]
+    headers = {"HTTP_AUTHORIZATION": f"JWT {token}"}
+    response = api_client.delete(
+        reverse("api:dashboard:filters:item", kwargs={"filter_id": selection.id}),
+        **headers,
+    )
+    assert response.status_code == 204
+    sources = api_client.get(
+        reverse(
+            "api:dashboard:data_sources:list",
+            kwargs={"dashboard_id": widget.dashboard_id},
+        ),
+        **headers,
+    )
+    assert len(sources.json()) == 2
+    assert all(source["filters"] == [] for source in sources.json())
+    for other_condition in untouched:
+        other_condition.refresh_from_db()
+        assert other_condition.value == condition.value
+
+
+@pytest.mark.django_db
+def test_restore_preserves_nested_groups_and_source_edits_since_deletion(
+    api_client, data_fixture, filtered_dashboard
+):
+    user, token, widget, selection, condition = filtered_dashboard
+    parent = data_fixture.create_local_baserow_table_service_filter_group(
+        service=condition.service, filter_type="AND"
+    )
+    child = data_fixture.create_local_baserow_table_service_filter_group(
+        service=condition.service, filter_type="OR", parent_group=parent
+    )
+    condition.group = child
+    condition.save()
+    headers = {"HTTP_AUTHORIZATION": f"JWT {token}"}
+    DashboardFilterService().delete_filter(user, selection.id)
+    source_url = reverse(
+        "api:dashboard:data_sources:item",
+        kwargs={"data_source_id": widget.data_source_id},
+    )
+    edited = api_client.patch(
+        source_url,
+        {
+            "filters": [
+                {
+                    "field": condition.field_id,
+                    "type": "not_equal",
+                    "value": BaserowFormulaObject.create("Marketing", "raw"),
+                    "group": str(child.id),
+                }
+            ]
+        },
+        format="json",
+        **headers,
+    )
+    assert edited.status_code == 200, edited.json()
+    DashboardFilterService().restore_filter(user, selection.id)
+    sources = api_client.get(
+        reverse(
+            "api:dashboard:data_sources:list",
+            kwargs={"dashboard_id": widget.dashboard_id},
+        ),
+        **headers,
+    ).json()
+    restored = sources[0]
+    assert {item["value"]["formula"] for item in restored["filters"]} == {
+        "Marketing",
+        f"get('dashboard_filter.{selection.id}')",
+    }
+    assert all(item["group"] == str(child.id) for item in restored["filters"])
+    assert restored["filter_groups"] == edited.json()["filter_groups"]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("remove", ["source", "field", "group"])
+def test_restore_filter_after_its_linked_configuration_was_deleted(
+    api_client, data_fixture, filtered_dashboard, remove
+):
+    user, token, widget, selection, condition = filtered_dashboard
+    group = data_fixture.create_local_baserow_table_service_filter_group(
+        service=condition.service
+    )
+    condition.group = group
+    condition.save()
+    DashboardFilterService().delete_filter(user, selection.id)
+    if remove == "source":
+        source = widget.data_source
+        widget.delete()
+        source.delete()
+    elif remove == "field":
+        condition.field.delete()
+    else:
+        group.delete()
+    DashboardFilterService().restore_filter(user, selection.id)
+    assert (
+        DashboardFilterService().get_filter(user, selection.id).label == selection.label
+    )
+    sources = api_client.get(
+        reverse(
+            "api:dashboard:data_sources:list",
+            kwargs={"dashboard_id": widget.dashboard_id},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    ).json()
+    assert all(source["filters"] == [] for source in sources)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("restore_order", [(0, 1), (1, 0)])
+def test_restore_condition_only_when_all_referenced_filters_are_available(
+    api_client, filtered_dashboard, restore_order
+):
+    user, token, widget, selection, condition = filtered_dashboard
+    second = DashboardFilterService().create_filter(
+        user, widget.dashboard_id, label="Second", mode="input"
+    )
+    condition.value = BaserowFormulaObject.create(
+        f"concat(get('dashboard_filter.{selection.id}'), "
+        f"get('dashboard_filter.{second.id}'))"
+    )
+    condition.save()
+    selections = (selection, second)
+    source_url = reverse(
+        "api:dashboard:data_sources:list",
+        kwargs={"dashboard_id": widget.dashboard_id},
+    )
+    headers = {"HTTP_AUTHORIZATION": f"JWT {token}"}
+
+    for control in selections:
+        DashboardFilterService().delete_filter(user, control.id)
+    DashboardFilterService().restore_filter(user, selections[restore_order[0]].id)
+    assert api_client.get(source_url, **headers).json()[0]["filters"] == []
+
+    # Deleting the partially restored control must retain the shared snapshot.
+    DashboardFilterService().delete_filter(user, selections[restore_order[0]].id)
+    DashboardFilterService().restore_filter(user, selections[restore_order[1]].id)
+    assert api_client.get(source_url, **headers).json()[0]["filters"] == []
+    DashboardFilterService().restore_filter(user, selections[restore_order[0]].id)
+    restored = api_client.get(source_url, **headers).json()[0]["filters"]
+    assert len(restored) == 1
+    assert restored[0]["value"] == condition.value
+
+
+@pytest.mark.django_db(transaction=True)
+def test_concurrent_filter_restorations_keep_the_shared_condition(
+    api_client, filtered_dashboard, mocker
+):
+    user, token, widget, selection, condition = filtered_dashboard
+    second = DashboardFilterService().create_filter(
+        user, widget.dashboard_id, label="Second", mode="input"
+    )
+    condition.value = BaserowFormulaObject.create(
+        f"concat(get('dashboard_filter.{selection.id}'), "
+        f"get('dashboard_filter.{second.id}'))"
+    )
+    condition.save()
+    for control in (selection, second):
+        DashboardFilterService().delete_filter(user, control.id)
+
+    barrier = Barrier(2)
+    restore_conditions = DashboardFilterHandler.restore_source_conditions
+
+    def synchronized_restore(handler, *args, **kwargs):
+        # Both transactions have deleted their own trash entry at this point.
+        barrier.wait(timeout=20)
+        return restore_conditions(handler, *args, **kwargs)
+
+    mocker.patch.object(
+        DashboardFilterHandler, "restore_source_conditions", synchronized_restore
+    )
+
+    def restore(control):
+        close_old_connections()
+        try:
+            DashboardFilterService().restore_filter(user, control.id)
+        finally:
+            connections.close_all()
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        list(executor.map(restore, (selection, second)))
+
+    sources = api_client.get(
+        reverse(
+            "api:dashboard:data_sources:list",
+            kwargs={"dashboard_id": widget.dashboard_id},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    ).json()
+    assert [item["value"] for item in sources[0]["filters"]] == [condition.value]
+
+
+@pytest.mark.django_db
+def test_source_save_after_filter_deletion_keeps_only_available_conditions(
+    api_client, filtered_dashboard
+):
+    user, token, widget, selection, condition = filtered_dashboard
+    DashboardFilterService().delete_filter(user, selection.id)
+    raw_value = BaserowFormulaObject.create("Marketing", "raw")
+    response = api_client.patch(
+        reverse(
+            "api:dashboard:data_sources:item",
+            kwargs={"data_source_id": widget.data_source_id},
+        ),
+        {
+            "name": "Updated after deletion",
+            "filters": [
+                {
+                    "field": condition.field_id,
+                    "type": "equal",
+                    "value": value,
+                }
+                for value in (condition.value, raw_value)
+            ],
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == 200, response.json()
+    source = response.json()
+    assert source["name"] == "Updated after deletion"
+    assert [item["value"] for item in source["filters"]] == [raw_value]
 
 
 @pytest.mark.django_db

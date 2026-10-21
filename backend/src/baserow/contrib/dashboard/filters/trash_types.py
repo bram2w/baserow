@@ -16,8 +16,18 @@ class DashboardFilterTrashableItemType(TrashableItemType):
     def get_name(self, trashed_item):
         return trashed_item.label
 
+    def trash(self, item_to_trash, requesting_user, trash_entry):
+        conditions = DashboardFilterHandler().remove_source_conditions(item_to_trash)
+        trash_entry.additional_restoration_data["source_conditions"] = conditions
+        trash_entry.save(update_fields=["additional_restoration_data"])
+        super().trash(item_to_trash, requesting_user, trash_entry)
+
     def restore(self, trashed_item, trash_entry):
         super().restore(trashed_item, trash_entry)
+        DashboardFilterHandler().restore_source_conditions(
+            trashed_item,
+            trash_entry.additional_restoration_data.get("source_conditions", []),
+        )
         dashboard_filters_updated.send(self, dashboard=trashed_item.dashboard)
 
     def get_restore_operation_type(self):
