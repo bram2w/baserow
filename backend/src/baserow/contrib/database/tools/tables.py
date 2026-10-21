@@ -5,6 +5,7 @@ here, so this module calls no model.
 """
 
 import json
+from collections import Counter
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from itertools import groupby
@@ -730,15 +731,28 @@ def create_tables_in_database(
             f"Conflicting table definitions use the same name: {names}. "
             "Submit one definition per table name."
         )
+    name_counts = Counter(table.name for table in existing_tables)
+    # Which of the tables sharing a name to reuse would be a guess.
+    if shared := [t.name for t in plan.requested if name_counts[t.name] > 1]:
+        names = ", ".join(f"'{name}'" for name in shared)
+        raise DjangoValidationError(
+            f"Several tables in this database are named {names}. Give the "
+            "requested table another name, or use create_fields with the ID of "
+            "the table to add fields to. No tables were created."
+        )
 
     with transaction.atomic():
         created_tables = [
             _create_empty_table(ctx, database, table) for table in plan.to_create
         ]
+        # A name several tables share resolves to none, like a link to it does.
+        table_ids = {
+            t.name: t.id
+            for t in [*existing_tables, *created_tables]
+            if name_counts[t.name] <= 1
+        }
         creation = TableCreation(
-            plan=plan,
-            created_tables=created_tables,
-            table_ids={t.name: t.id for t in [*existing_tables, *created_tables]},
+            plan=plan, created_tables=created_tables, table_ids=table_ids
         )
         _add_table_fields(ctx, plan.to_create, created_tables, creation)
     return creation

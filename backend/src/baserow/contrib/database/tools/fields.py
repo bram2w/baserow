@@ -223,13 +223,18 @@ def _resolve_linked_table(linked_table_ref, table):
         q = Q(name=linked_table_ref, database=table.database)
     else:
         q = Q(id=linked_table_ref, database=table.database)
-    result = Table.objects.filter(q).order_by("id").first()
-    if not result:
+    matches = list(Table.objects.filter(q).order_by("id")[:2])
+    if not matches:
         raise ValueError(
             f"Table '{linked_table_ref}' not found in the database. "
             f"Ensure you provide a valid table name or ID."
         )
-    return result
+    if len(matches) > 1:
+        raise ValueError(
+            f"Several tables in this database are named '{linked_table_ref}'. "
+            "Use the table ID instead."
+        )
+    return matches[0]
 
 
 def _simple_to_orm(f, table, user):

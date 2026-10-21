@@ -502,6 +502,58 @@ def test_reused_table_reports_a_field_named_like_the_primary_with_spaces():
     assert [f["name"] for f in conflict["missing_fields"]] == [" Order "]
 
 
+@pytest.mark.django_db
+def test_shared_create_tables_rejects_a_name_several_tables_share(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    for _ in range(2):
+        tags = data_fixture.create_database_table(database=database, name="Tags")
+        data_fixture.create_text_field(table=tags, name="Name", primary=True)
+
+    with pytest.raises(ValidationError, match="Several tables .* named 'Tags'"):
+        create_tables(
+            ToolContext(user, workspace),
+            database.id,
+            [
+                TableItemCreate(name="Tags", primary_field_name="Name", fields=[]),
+                TableItemCreate(name="Posts", primary_field_name="Title", fields=[]),
+            ],
+        )
+
+    assert not Table.objects.filter(database=database, name="Posts").exists()
+
+
+@pytest.mark.django_db
+def test_shared_create_tables_does_not_link_to_a_name_several_tables_share(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    for _ in range(2):
+        tags = data_fixture.create_database_table(database=database, name="Tags")
+        data_fixture.create_text_field(table=tags, name="Name", primary=True)
+
+    result = create_tables(
+        ToolContext(user, workspace),
+        database.id,
+        [
+            TableItemCreate(
+                name="Posts",
+                primary_field_name="Title",
+                fields=[
+                    FieldItemCreate(name="Tags", type="link_row", linked_table="Tags")
+                ],
+            )
+        ],
+    )
+
+    (note,) = result["notes"]
+    assert "Several tables in this database are named 'Tags'" in note
+    assert not LinkRowField.objects.filter(table__name="Posts").exists()
+
+
 @pytest.mark.parametrize("through_field", ["link", " LINK "])
 def test_reused_table_matches_a_lookup_link_name_ignoring_case_and_spaces(
     through_field,
