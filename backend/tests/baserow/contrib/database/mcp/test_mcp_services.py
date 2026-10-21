@@ -74,37 +74,8 @@ def test_list_databases_returns_workspace_databases(data_fixture):
 
 
 # ---------------------------------------------------------------------------
-# list_tables / update_table / delete_table
+# update_table / delete_table
 # ---------------------------------------------------------------------------
-
-
-@pytest.mark.django_db
-def test_list_tables_all_in_workspace(data_fixture):
-    user = data_fixture.create_user()
-    workspace = data_fixture.create_workspace(user=user)
-    db = data_fixture.create_database_application(workspace=workspace)
-    t1 = data_fixture.create_database_table(database=db)
-    t2 = data_fixture.create_database_table(database=db)
-    data_fixture.create_database_table()  # different workspace
-
-    tables = services.list_tables(user, workspace)
-    ids = [t.id for t in tables]
-    assert t1.id in ids
-    assert t2.id in ids
-    assert len(ids) == 2
-
-
-@pytest.mark.django_db
-def test_list_tables_filtered_by_database(data_fixture):
-    user = data_fixture.create_user()
-    workspace = data_fixture.create_workspace(user=user)
-    db1 = data_fixture.create_database_application(workspace=workspace)
-    db2 = data_fixture.create_database_application(workspace=workspace)
-    t1 = data_fixture.create_database_table(database=db1)
-    data_fixture.create_database_table(database=db2)
-
-    tables = services.list_tables(user, workspace, database_id=db1.id)
-    assert [t.id for t in tables] == [t1.id]
 
 
 @pytest.mark.django_db

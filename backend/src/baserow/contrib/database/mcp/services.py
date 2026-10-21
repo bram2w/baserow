@@ -169,21 +169,6 @@ def list_databases(user: AbstractUser, workspace: Workspace) -> list:
 # ---------------------------------------------------------------------------
 
 
-def list_tables(
-    user: AbstractUser, workspace: Workspace, database_id: int | None = None
-) -> list[Table]:
-    """
-    Return all tables visible to the user in the workspace.
-
-    :param database_id: If provided, restrict to tables in this database.
-    :returns: List of Table instances.
-    """
-    qs = filter_tables(user, workspace)
-    if database_id is not None:
-        qs = qs.filter(database_id=database_id)
-    return list(qs)
-
-
 def get_table_schema(
     user: AbstractUser, workspace: Workspace, table_ids: list[int]
 ) -> list[dict]:

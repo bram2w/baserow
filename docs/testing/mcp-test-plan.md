@@ -112,7 +112,7 @@ The following tools are currently enabled:
 | Tool | Description |
 |---|---|
 | `list_databases` | List all databases in the workspace |
-| `list_tables` | List tables, optionally filtered by database |
+| `list_tables` | List tables, optionally filtered by database or table name |
 | `get_table_schema` | Get field names and types for one or more tables |
 | `list_table_rows` | List rows with optional search and pagination |
 | `create_rows` | Create one or more rows in a table |

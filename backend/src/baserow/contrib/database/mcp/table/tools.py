@@ -3,7 +3,6 @@ from baserow.contrib.database.mcp.table.schemas import (
     DeleteTableInput,
     GetTableSchemaInput,
     ListDatabasesInput,
-    ListTablesInput,
     UpdateTableInput,
 )
 from baserow.contrib.database.tools import tables
@@ -33,31 +32,12 @@ class ListDatabasesMcpTool(MCPTool):
         return [{"id": db.id, "name": db.name, "order": db.order} for db in databases]
 
 
-class ListTablesMcpTool(MCPTool):
-    """
-    List all tables in the workspace, optionally filtered by database.
-    Use this to discover table IDs before calling get_table_schema.
-    """
-
+class ListTablesMcpTool(FunctionMCPTool):
     type = "list_tables"
     group = GROUP_DATABASE_READ
     title = "List tables"
     read_only = True
-    input_schema = ListTablesInput
-
-    def _sync_call(self, endpoint: MCPEndpoint, args: ListTablesInput) -> list[dict]:
-        tables = services.list_tables(
-            endpoint.user, endpoint.workspace, database_id=args.database_id
-        )
-        return [
-            {
-                "id": t.id,
-                "name": t.name,
-                "order": t.order,
-                "database_id": t.database_id,
-            }
-            for t in tables
-        ]
+    function = tables.list_tables
 
 
 class CreateTablesMcpTool(FunctionMCPTool):

@@ -681,6 +681,72 @@ def create_tables_in_database(
 # ---------------------------------------------------------------------------
 
 
+def _table_filter(
+    database_id: int | None,
+    database_name: str | None,
+    table_ids: list[int] | None,
+    table_names: list[str] | None,
+) -> Q:
+    q = Q()
+    if database_id is not None:
+        q &= Q(database_id=database_id)
+    if database_name:
+        q &= Q(database__name__icontains=database_name)
+    if table_ids or table_names:
+        any_table = Q(id__in=table_ids or [])
+        for name in table_names or []:
+            any_table |= Q(name__icontains=name)
+        q &= any_table
+    return q
+
+
+def list_tables(
+    ctx: ToolContext,
+    database_id: Annotated[
+        int | None, Field(description="Only list the tables of this database.")
+    ] = None,
+    database_name: Annotated[
+        str | None,
+        Field(
+            description="Only list the tables of databases whose name contains this."
+        ),
+    ] = None,
+    table_ids: Annotated[
+        list[int] | None, Field(description="Only list the tables with these IDs.")
+    ] = None,
+    table_names: Annotated[
+        list[str] | None,
+        Field(description="Only list the tables whose name contains one of these."),
+    ] = None,
+) -> list[dict[str, Any]]:
+    """
+    List the tables in the workspace with their id, name, order, database_id and
+    database_name. Filters combine with AND, except table_ids and table_names: a
+    table matching either is listed.
+    """
+
+    tables = list(
+        TableHandler()
+        .list_workspace_tables(ctx.user, ctx.workspace)
+        .filter(_table_filter(database_id, database_name, table_ids, table_names))
+    )
+    database_names = list(dict.fromkeys(table.database.name for table in tables))
+    ctx.update_status(
+        _("Listing tables in %(database_names)s...")
+        % {"database_names": ", ".join(database_names)}
+    )
+    return [
+        {
+            "id": table.id,
+            "name": table.name,
+            "order": table.order,
+            "database_id": table.database_id,
+            "database_name": table.database.name,
+        }
+        for table in tables
+    ]
+
+
 def create_tables(
     ctx: ToolContext,
     database_id: Annotated[

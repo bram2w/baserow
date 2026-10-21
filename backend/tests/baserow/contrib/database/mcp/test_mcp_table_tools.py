@@ -131,12 +131,14 @@ def test_call_tool_list_tables(data_fixture):
                         "name": table_1.name,
                         "order": table_1.order,
                         "database_id": table_1.database_id,
+                        "database_name": table_1.database.name,
                     },
                     {
                         "id": table_2.id,
                         "name": table_2.name,
                         "order": table_2.order,
                         "database_id": table_2.database_id,
+                        "database_name": table_2.database.name,
                     },
                 ]
 

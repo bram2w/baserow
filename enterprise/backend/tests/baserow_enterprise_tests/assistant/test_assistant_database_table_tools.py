@@ -546,6 +546,50 @@ def test_list_tables_tool(data_fixture):
 
 
 @pytest.mark.django_db
+def test_list_tables_hint_names_and_counts_only_what_the_user_can_see(
+    data_fixture, enable_enterprise, synced_roles
+):
+    admin = data_fixture.create_user()
+    member = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=admin, members=[member])
+    visible = data_fixture.create_database_application(
+        workspace=workspace, name="Visible"
+    )
+    hidden = data_fixture.create_database_application(
+        workspace=workspace, name="Hidden"
+    )
+    data_fixture.create_database_table(database=visible, name="Orders")
+    data_fixture.create_database_table(database=hidden, name="Salaries")
+    data_fixture.create_database_table(database=hidden, name="Reviews")
+    RoleAssignmentHandler().assign_role(
+        member, workspace, role=Role.objects.get(uid="BUILDER")
+    )
+    RoleAssignmentHandler().assign_role(
+        member,
+        workspace,
+        role=Role.objects.get(uid="NO_ACCESS"),
+        scope=hidden.application_ptr,
+    )
+    ctx = make_test_ctx(member, workspace)
+
+    for database_ref in (hidden.id, "Hidden"):
+        response = list_tables(
+            ctx,
+            thought="test",
+            filters=ListTablesFilterArg(
+                database_id_or_name=database_ref, table_ids_or_names=None
+            ),
+        )
+
+        assert response["tables"] == []
+        info = response["_info"]
+        assert f"No database matching '{database_ref}' exists" in info
+        assert "1 table(s) across 1 database(s)" in info
+        assert "Salaries" not in info
+        assert "Reviews" not in info
+
+
+@pytest.mark.django_db
 def test_create_simple_table_tool(data_fixture):
     user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)

@@ -29,6 +29,7 @@ from baserow.contrib.database.tools import tables as shared_tables
 from baserow.contrib.database.tools import views as shared_views
 from baserow.core.exceptions import PermissionException
 from baserow.core.models import Workspace
+from baserow.core.service import CoreService
 from baserow_enterprise.assistant.deps import AssistantDeps, ResourceChanges
 from baserow_enterprise.assistant.prompts import MISSING_RECORDS_GUIDANCE
 from baserow_enterprise.assistant.tools.shared import (
@@ -72,21 +73,23 @@ def _no_tables_found_hint(
     """Build an informative message when no tables match the filters.
 
     When the caller supplied a ``database_id`` that doesn't correspond to any
-    real database in the workspace, say so explicitly and list the first
-    available tables so the model can self-correct.
+    database the user can see, say so explicitly and list the first available
+    tables so the model can self-correct. Only databases and tables the user can
+    see are named or counted.
     """
 
     parts: list[str] = []
+    databases = CoreService().list_applications_in_workspace(
+        user, workspace, specific=False, base_queryset=Database.objects
+    )
 
     # Check whether the requested database actually exists.
     db_ref = filters.database_id_or_name
     if db_ref is not None:
         if isinstance(db_ref, int):
-            db_exists = Database.objects.filter(workspace=workspace, id=db_ref).exists()
+            db_exists = databases.filter(id=db_ref).exists()
         else:
-            db_exists = Database.objects.filter(
-                workspace=workspace, name__icontains=db_ref
-            ).exists()
+            db_exists = databases.filter(name__icontains=db_ref).exists()
         if not db_exists:
             parts.append(
                 f"No database matching '{db_ref}' exists in this "
@@ -102,11 +105,7 @@ def _no_tables_found_hint(
         parts.append("No tables found matching the provided filters.")
 
     # Fetch a sample of available tables across the workspace.
-    all_tables = (
-        helpers.filter_tables(user, workspace)
-        .select_related("database")
-        .order_by("database_id", "id")
-    )
+    all_tables = helpers.filter_tables(user, workspace)
     total_tables = all_tables.count()
 
     if total_tables == 0:
@@ -123,7 +122,7 @@ def _no_tables_found_hint(
             f'database_id={t.database_id}, database_name="{t.database.name}"'
         )
 
-    total_dbs = Database.objects.filter(workspace=workspace).count()
+    total_dbs = databases.count()
 
     parts.append(
         f"Available tables ({total_tables} table(s) across "
@@ -166,38 +165,23 @@ def list_tables(
     DO NOT USE when: You already have the table IDs you need.
     """
 
-    user = ctx.deps.user
-    workspace = ctx.deps.workspace
-    tool_helpers = ctx.deps.tool_helpers
-
-    tables = (
-        helpers.filter_tables(user, workspace)
-        .filter(filters.to_orm_filter())
-        .select_related("database")
+    tables = shared_tables.list_tables(
+        ctx.deps.tool_context(), **filters.to_tool_filters()
     )
 
     databases = {}
-    database_names = []
     for table in tables:
-        if table.database_id not in databases:
-            databases[table.database_id] = {
-                "id": table.database_id,
-                "name": table.database.name,
-                "tables": [],
-            }
-            database_names.append(table.database.name)
-        databases[table.database_id]["tables"].append(
+        database = databases.setdefault(
+            table["database_id"],
+            {"id": table["database_id"], "name": table["database_name"], "tables": []},
+        )
+        database["tables"].append(
             {
-                "id": table.id,
-                "name": table.name,
-                "database_id": table.database_id,
+                "id": table["id"],
+                "name": table["name"],
+                "database_id": table["database_id"],
             }
         )
-
-    tool_helpers.update_status(
-        _("Listing tables in %(database_names)s...")
-        % {"database_names": ", ".join(database_names)}
-    )
 
     result = {
         "next_steps": (
@@ -212,7 +196,10 @@ def list_tables(
         ),
     }
     if len(databases) == 0:
-        result.update(tables=[], _info=_no_tables_found_hint(user, workspace, filters))
+        result.update(
+            tables=[],
+            _info=_no_tables_found_hint(ctx.deps.user, ctx.deps.workspace, filters),
+        )
     elif len(databases) == 1:
         result["tables"] = list(databases.values())[0]["tables"]
     else:
