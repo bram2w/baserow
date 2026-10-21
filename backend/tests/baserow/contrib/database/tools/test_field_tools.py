@@ -785,3 +785,26 @@ def test_update_fields_over_mcp_reports_a_lock_conflict(data_fixture):
         "another operation, please try again after other concurrent operations "
         "have finished."
     )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("field_type", ["single_select", "multiple_select"])
+def test_create_fields_rejects_options_that_share_a_value(table_ctx, field_type):
+    ctx, table = table_ctx
+
+    result = create_fields(
+        ctx,
+        table.id,
+        [
+            FieldItemCreate(
+                name="Status", type=field_type, options=["Open", " open ", "Done"]
+            ),
+            FieldItemCreate(name="Notes", type="text"),
+        ],
+    )
+
+    assert [f["name"] for f in result["created_fields"]] == ["Notes"]
+    (error,) = result["field_errors"]
+    assert "Error creating field Status" in error
+    assert "the new option 'Open' and the new option ' open '" in error
+    assert not table.field_set.filter(name="Status").exists()

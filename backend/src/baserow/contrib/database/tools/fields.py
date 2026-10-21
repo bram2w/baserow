@@ -263,15 +263,18 @@ def _link_row_to_orm(f, table, user):
 
 
 def _select_to_orm(f, table, user):
+    options = [
+        {
+            "value": opt.value,
+            "color": opt.color or _SELECT_COLORS[(i - 1) % len(_SELECT_COLORS)],
+        }
+        for i, opt in enumerate(f.options, start=1)
+    ]
+    _check_unique_values([], options, set(), hint="Give each option its own value.")
     return {
         "name": f.name,
         "select_options": [
-            {
-                "id": -i,
-                "value": opt.value,
-                "color": opt.color or _SELECT_COLORS[(i - 1) % len(_SELECT_COLORS)],
-            }
-            for i, opt in enumerate(f.options, start=1)
+            {"id": -i, **option} for i, option in enumerate(options, start=1)
         ],
     }
 
@@ -742,7 +745,11 @@ def _describe_option(entry: dict[str, Any], renamed_ids: set[int]) -> str:
 
 
 def _check_unique_values(
-    kept: list[dict[str, Any]], added: list[dict[str, Any]], renamed_ids: set[int]
+    kept: list[dict[str, Any]],
+    added: list[dict[str, Any]],
+    renamed_ids: set[int],
+    hint: str = "Leave out options that already exist to keep them, or change "
+    "them with update_options by id.",
 ) -> None:
     """
     Reject added or renamed values that repeat another option's value, ignoring
@@ -753,6 +760,7 @@ def _check_unique_values(
     :param kept: The field's remaining options, with the updates applied.
     :param added: The options to add.
     :param renamed_ids: The ids of the kept options whose value changes.
+    :param hint: How to fix a clash, added to the error.
     :raises ValueError: If an added or renamed value repeats another option's value.
     """
 
@@ -768,8 +776,7 @@ def _check_unique_values(
     if clashes:
         raise ValueError(
             "These options would share a value (case and surrounding spaces are "
-            f"ignored): {'; '.join(clashes)}. Leave out options that already exist "
-            "to keep them, or change them with update_options by id."
+            f"ignored): {'; '.join(clashes)}. {hint}"
         )
 
 
