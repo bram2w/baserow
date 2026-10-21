@@ -73,6 +73,8 @@ class ListTablesMcpTool(FunctionMCPTool):
     title = "List tables"
     read_only = True
     function = tables.list_tables
+    # A legacy default tool, whose clients may still send arguments it dropped.
+    ignore_extra_arguments = True
 
 
 class CreateTablesMcpTool(FunctionMCPTool):
@@ -127,3 +129,5 @@ class GetTableSchemaMcpTool(FunctionMCPTool):
     title = "Get table schema"
     read_only = True
     function = tables.get_table_schema
+    # A legacy default tool, whose clients may still send arguments it dropped.
+    ignore_extra_arguments = True

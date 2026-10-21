@@ -293,3 +293,47 @@ def test_call_tool_get_table_schema_excludes_other_workspace(data_fixture):
             async_to_sync(inner)()
     finally:
         current_key.reset(key_token)
+
+
+def _call(endpoint, name, arguments):
+    async def inner():
+        token = current_key.set(endpoint.key)
+        try:
+            async with client_session(BaserowMCPServer()._mcp_server) as client:
+                return await client.call_tool(name, arguments)
+        finally:
+            current_key.reset(token)
+
+    with transaction.atomic():
+        return async_to_sync(inner)()
+
+
+@pytest.mark.django_db
+def test_legacy_table_tools_ignore_unknown_arguments(data_fixture):
+    endpoint = data_fixture.create_mcp_endpoint()
+    database = data_fixture.create_database_application(workspace=endpoint.workspace)
+    table = data_fixture.create_database_table(database=database)
+    data_fixture.create_text_field(table=table, name="Name", primary=True)
+
+    listed = _call(endpoint, "list_tables", {"bogus": 1})
+    schema = _call(endpoint, "get_table_schema", {"table_ids": [table.id], "bogus": 1})
+
+    assert listed.isError is False
+    assert [t["id"] for t in json.loads(listed.content[0].text)] == [table.id]
+    assert schema.isError is False
+    assert [t["id"] for t in json.loads(schema.content[0].text)] == [table.id]
+
+
+@pytest.mark.django_db
+def test_new_table_tools_still_reject_unknown_arguments(data_fixture):
+    endpoint = data_fixture.create_mcp_endpoint(allowed_tools=["create_tables"])
+    database = data_fixture.create_database_application(workspace=endpoint.workspace)
+
+    result = _call(
+        endpoint,
+        "create_tables",
+        {"database_id": database.id, "tables": [], "bogus": 1},
+    )
+
+    assert result.isError is True
+    assert "bogus: Extra inputs are not permitted" in result.content[0].text
