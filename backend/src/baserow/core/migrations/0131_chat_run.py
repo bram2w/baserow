@@ -7,7 +7,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("core", "0129_template_backfill_official"),
+        ("core", "0130_mcpendpoint_freeze_allowed_tools"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
