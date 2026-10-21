@@ -29,11 +29,11 @@ from baserow.contrib.database.fields.models import (
 )
 from baserow.contrib.database.fields.models import Field as BaserowField
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.mcp.services import user_error_message
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.actions import CreateTableActionType
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.tools.errors import user_error_message
 from baserow.contrib.database.tools.fields import (
     _FIELD_EXAMPLES,
     _TYPE_ALIASES,
