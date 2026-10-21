@@ -787,3 +787,50 @@ def test_create_view_filters_stores_a_link_row_id(data_fixture, table_ctx, value
     create(type="link_row", operator="has", value=value)
 
     assert ViewFilter.objects.get(view=view).value == "5"
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("operator", ["equal", "not_equal", "gt", "lte"])
+@pytest.mark.parametrize("value", [None, "", "many", "nan", True])
+def test_create_view_filters_skips_a_number_value_that_is_not_a_number(
+    data_fixture, table_ctx, operator, value
+):
+    field = data_fixture.create_number_field(table=table_ctx[1], name="Price")
+    view, create = _filter_view(data_fixture, table_ctx, field)
+
+    entry = create(type="number", operator=operator, value=value)
+
+    (skipped,) = entry["skipped_filters"]
+    assert "needs a number" in skipped["error"]
+    assert not ViewFilter.objects.filter(view=view).exists()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "operator,value,stored",
+    [("equal", 1.5, "1.5"), ("higher_than", "-3", "-3")],
+)
+def test_create_view_filters_stores_a_number_value(
+    data_fixture, table_ctx, operator, value, stored
+):
+    field = data_fixture.create_number_field(table=table_ctx[1], name="Price")
+    view, create = _filter_view(data_fixture, table_ctx, field)
+
+    entry = create(type="number", operator=operator, value=value)
+
+    assert "skipped_filters" not in entry
+    assert ViewFilter.objects.get(view=view).value == stored
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("operator", ["empty", "not_empty"])
+def test_create_view_filters_takes_no_number_for_empty(
+    data_fixture, table_ctx, operator
+):
+    field = data_fixture.create_number_field(table=table_ctx[1], name="Price")
+    view, create = _filter_view(data_fixture, table_ctx, field)
+
+    entry = create(type="number", operator=operator)
+
+    assert "skipped_filters" not in entry
+    assert ViewFilter.objects.get(view=view).type == operator

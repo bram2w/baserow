@@ -1,6 +1,7 @@
 import json
 from collections import defaultdict
 from datetime import date
+from decimal import Decimal, InvalidOperation
 from typing import Annotated, Any, Literal
 
 from django.contrib.auth.models import AbstractUser
@@ -660,6 +661,24 @@ def _boolean_orm_value(f, field, **kwargs):
     raise ValueError(f"A boolean filter needs true or false, not {f.value!r}.")
 
 
+def _number_orm_value(f, field, **kwargs):
+    """
+    :raises ValueError: When an operator that compares has no number, as the
+        filter would then match no rows.
+    """
+
+    if f.operator in ("empty", "not_empty"):
+        return str(f.value)
+    if isinstance(f.value, (str, int, float)) and not isinstance(f.value, bool):
+        value = str(f.value).strip()
+        try:
+            if Decimal(value).is_finite():
+                return value
+        except InvalidOperation:
+            pass
+    raise ValueError(f"A number filter needs a number, not {f.value!r}.")
+
+
 def _link_row_orm_value(f, field, **kwargs):
     """
     :raises ValueError: When the value is not a row id, as the filter would then
@@ -677,7 +696,7 @@ _GET_ORM_VALUE = {
     "text": lambda f, field, **kw: (
         f.value if isinstance(f.value, str) else str(f.value or "")
     ),
-    "number": lambda f, field, **kw: str(f.value),
+    "number": _number_orm_value,
     "date": _date_orm_value,
     "single_select": _select_orm_value,
     "multiple_select": _select_orm_value,
