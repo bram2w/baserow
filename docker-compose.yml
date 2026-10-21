@@ -293,6 +293,7 @@ x-backend-variables:
   BASEROW_TWO_WAY_SYNC_MAX_CONSECUTIVE_FAILURES:
   BASEROW_TWO_WAY_SYNC_MAX_RETRIES:
   BASEROW_ASGI_HTTP_MAX_CONCURRENCY: ${BASEROW_ASGI_HTTP_MAX_CONCURRENCY:-}
+  BASEROW_ASGI_HTTP_MAX_CONCURRENT_STREAMS:
   BASEROW_MAX_WEBHOOK_CALLS_IN_QUEUE_PER_WEBHOOK:
   BASEROW_MAX_HEALTHY_CELERY_QUEUE_SIZE:
   BASEROW_ENTERPRISE_PERIODIC_DATA_SYNC_CHECK_INTERVAL_MINUTES:
@@ -459,6 +460,8 @@ services:
     image: baserow/backend:${BASEROW_VERSION:-2.4.1}
     restart: unless-stopped
     command: celery-exportworker
+    # Lets Celery's warm shutdown finish most Kuma runs before the container is killed.
+    stop_grace_period: 120s
     environment:
       <<: *backend-variables
     # The backend image's baked in healthcheck defaults to the django healthcheck

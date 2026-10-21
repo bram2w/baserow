@@ -157,6 +157,13 @@ ASGI_APPLICATION = "baserow.config.asgi.application"
 ASGI_HTTP_MAX_CONCURRENCY = (
     int(os.getenv("BASEROW_ASGI_HTTP_MAX_CONCURRENCY") or 0) or None
 )
+ASGI_HTTP_MAX_CONCURRENT_STREAMS = int(
+    os.getenv("BASEROW_ASGI_HTTP_MAX_CONCURRENT_STREAMS") or 100
+)
+if ASGI_HTTP_MAX_CONCURRENT_STREAMS <= 0:
+    raise ImproperlyConfigured(
+        "BASEROW_ASGI_HTTP_MAX_CONCURRENT_STREAMS must be greater than zero."
+    )
 
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
 REDIS_PORT = os.getenv("REDIS_PORT", "6379")

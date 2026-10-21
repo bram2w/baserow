@@ -45,6 +45,7 @@ x-backend-variables:
   BASEROW_BUILDER_PREVIEW_GRANT_TTL_SECONDS:
   BASEROW_EMBEDDED_SHARE_URL:
   BASEROW_FRONTEND_COOKIE_PREFIX:
+  BASEROW_ASGI_HTTP_MAX_CONCURRENT_STREAMS:
 
   # Set these if you want to use an external postgres instead of the db service below.
   DATABASE_USER: ${DATABASE_USER:-baserow}
@@ -389,6 +390,8 @@ services:
     image: baserow/backend:2.4.1
     restart: unless-stopped
     command: celery-exportworker
+    # Lets Celery's warm shutdown finish most Kuma runs before the container is killed.
+    stop_grace_period: 120s
     environment:
       <<: *backend-variables
     # The backend image's baked in healthcheck defaults to the django healthcheck
