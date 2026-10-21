@@ -111,6 +111,7 @@ The following tools are currently enabled:
 
 | Tool | Description |
 |---|---|
+| `list_applications` | List databases, application builders, automations and dashboards |
 | `list_databases` | List all databases in the workspace |
 | `list_tables` | List tables, optionally filtered by database or table name |
 | `get_table_schema` | Get field names and types for one or more tables |
@@ -118,6 +119,13 @@ The following tools are currently enabled:
 | `create_rows` | Create one or more rows in a table |
 | `update_rows` | Update existing rows by ID |
 | `delete_rows` | Delete rows by ID |
+| `list_views` | List the views of a table |
+| `create_tables` | Create tables with their fields |
+| `create_fields` | Add fields to a table |
+| `update_fields` | Rename fields or change their settings |
+| `delete_fields` | Delete (trash) fields |
+| `create_views` | Create views in a table |
+| `create_view_filters` | Add filters to views |
 
 ## 4. Test scenarios
 
@@ -160,6 +168,26 @@ Expected: Claude calls `delete_rows` and confirms deletion.
 Ask Claude: *"Find rows in [table name] that contain 'test'"*
 
 Expected: Claude calls `list_table_rows` with a `search` parameter.
+
+### Create tables, fields and views
+
+Ask Claude: *"Create a table called Tasks in [database name] with a text field
+Name and a single select field Status with options Open and Done"*
+
+Expected: Claude calls `list_applications` or `list_tables` to find the
+database, then `create_tables`. The table appears in Baserow.
+
+Ask Claude: *"Add a number field Estimate to Tasks, rename Status to State,
+then delete Estimate"*
+
+Expected: Claude calls `create_fields`, `update_fields` and `delete_fields`.
+The field is in the trash afterwards and can be restored.
+
+Ask Claude: *"Create a grid view called Open tasks in Tasks showing only rows
+where State is Open"*
+
+Expected: Claude calls `create_views`, then `create_view_filters`. The view
+shows the filter in Baserow.
 
 ## 5. Verify disabled tools are not exposed
 
