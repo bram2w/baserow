@@ -318,10 +318,14 @@ export default {
 
       this.loading = true
       try {
+        // Use the page mode from the application context rather than the
+        // injected `mode`: inside a repeat element the editor renders the
+        // non-editable repetitions with a forced `public` display mode while
+        // the page is still being edited with the editor credentials.
         const data = await DataSourceService(this.$client).getRecordNames(
           this.element.data_source_id,
           unresolvedRecordIds,
-          this.mode,
+          this.applicationContext.mode,
           this.builder.id
         )
         this.defaultValueOptions = [
