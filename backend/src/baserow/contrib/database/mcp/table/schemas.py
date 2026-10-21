@@ -14,9 +14,3 @@ class UpdateTableInput(BaseModel):
 
 class DeleteTableInput(BaseModel):
     table_id: int = Field(..., description="The ID of the table to delete.")
-
-
-class GetTableSchemaInput(BaseModel):
-    table_ids: list[int] = Field(
-        ..., description="List of table IDs to get the schema for."
-    )

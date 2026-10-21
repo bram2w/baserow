@@ -1,7 +1,6 @@
 from baserow.contrib.database.mcp import services
 from baserow.contrib.database.mcp.table.schemas import (
     DeleteTableInput,
-    GetTableSchemaInput,
     ListDatabasesInput,
     UpdateTableInput,
 )
@@ -86,22 +85,9 @@ class DeleteTableMcpTool(MCPTool):
         return "Table successfully deleted."
 
 
-class GetTableSchemaMcpTool(MCPTool):
-    """
-    Get the field schema for one or more tables.
-    Call this before create_rows or update_rows to learn the field
-    names and types accepted by those tools.
-    """
-
+class GetTableSchemaMcpTool(FunctionMCPTool):
     type = "get_table_schema"
     group = GROUP_DATABASE_READ
     title = "Get table schema"
     read_only = True
-    input_schema = GetTableSchemaInput
-
-    def _sync_call(
-        self, endpoint: MCPEndpoint, args: GetTableSchemaInput
-    ) -> list[dict]:
-        return services.get_table_schema(
-            endpoint.user, endpoint.workspace, args.table_ids
-        )
+    function = tables.get_table_schema

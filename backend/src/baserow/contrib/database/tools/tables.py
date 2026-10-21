@@ -19,6 +19,14 @@ from pydantic import Field, ValidationError, model_validator
 
 from baserow.contrib.database.fields.actions import UpdateFieldActionType
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.models import (
+    DateField,
+    FormulaField,
+    LinkRowField,
+    MultipleSelectField,
+    NumberField,
+    SingleSelectField,
+)
 from baserow.contrib.database.fields.models import Field as BaserowField
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.models import Database
@@ -126,6 +134,36 @@ class TableItem(BaseTableItem):
 # ---------------------------------------------------------------------------
 
 
+def _fields_by_table(
+    tables: Sequence[Table], full_schema: bool
+) -> dict[int, list[BaserowField]]:
+    """
+    The specific fields of the given tables, by table id, in field order.
+
+    :param full_schema: If False, only the primary and link_row fields.
+    """
+
+    q = Q(table__in=tables)
+    if not full_schema:
+        q &= Q(linkrowfield__isnull=False) | Q(primary=True)
+
+    fields = specific_iterator(
+        FieldHandler()
+        .get_base_fields_queryset()
+        .filter(q)
+        .order_by("table_id", "order", "id"),
+        per_content_type_queryset_hook=(
+            lambda field, queryset: field_type_registry.get_by_model(
+                field
+            ).enhance_field_queryset(queryset, field)
+        ),
+    )
+    return {
+        table_id: list(fields_in_table)
+        for table_id, fields_in_table in groupby(fields, lambda f: f.table_id)
+    }
+
+
 def get_tables_schema(
     tables: list[Table],
     full_schema: bool = False,
@@ -139,29 +177,13 @@ def get_tables_schema(
     :returns: List of table descriptions, in the same order as the input tables.
     """
 
-    q = Q(table__in=tables)
-    if not full_schema:
-        q &= Q(linkrowfield__isnull=False) | Q(primary=True)
-
-    base_field_queryset = FieldHandler().get_base_fields_queryset()
-    fields = specific_iterator(
-        base_field_queryset.filter(q).order_by("table_id", "order"),
-        per_content_type_queryset_hook=(
-            lambda field, queryset: field_type_registry.get_by_model(
-                field
-            ).enhance_field_queryset(queryset, field)
-        ),
-    )
-
-    table_items: list[TableItem] = []
+    fields_by_table = _fields_by_table(tables, full_schema)
     tables_by_id = {table.id: table for table in tables}
-    for table_id, fields_in_table in groupby(fields, lambda f: f.table_id):
-        table_items.append(_get_table_schema(tables_by_id, table_id, fields_in_table))
-
-    # Preserve the input order
-    input_order = {t.id: i for i, t in enumerate(tables)}
-    table_items.sort(key=lambda t: input_order[t.id])
-    return table_items
+    return [
+        _get_table_schema(tables_by_id, table.id, fields_by_table[table.id])
+        for table in tables
+        if table.id in fields_by_table
+    ]
 
 
 def _get_table_schema(
@@ -742,6 +764,96 @@ def list_tables(
             "order": table.order,
             "database_id": table.database_id,
             "database_name": table.database.name,
+        }
+        for table in tables
+    ]
+
+
+# TODO: remove after 2.6. The names get_table_schema used before it shared Kuma's
+# field serializer, kept for the MCP clients that read them.
+def _legacy_field_keys(field: BaserowField) -> dict[str, Any]:
+    if isinstance(field, (SingleSelectField, MultipleSelectField)):
+        return {
+            "select_options": [
+                {"id": option.id, "value": option.value, "color": option.color}
+                for option in field.select_options.all()
+            ]
+        }
+    if isinstance(field, LinkRowField):
+        linked = field.link_row_table
+        return {
+            "link_row_table_id": field.link_row_table_id,
+            "link_row_table_name": linked.name if linked else None,
+        }
+    if isinstance(field, NumberField):
+        return {"number_decimal_places": field.number_decimal_places}
+    if isinstance(field, DateField):
+        return {
+            "date_include_time": field.date_include_time,
+            "date_force_timezone": field.date_force_timezone,
+        }
+    if isinstance(field, FormulaField):
+        # Lookup, count and rollup fields are formula fields too.
+        return {"formula": field.formula, "formula_type": field.formula_type}
+    return {}
+
+
+def _schema_field(field: BaserowField) -> dict[str, Any]:
+    return {
+        **FieldItem.from_django_orm(field).model_dump(),
+        "primary": field.primary,
+        **_legacy_field_keys(field),
+    }
+
+
+def get_table_schema(
+    ctx: ToolContext,
+    table_ids: Annotated[
+        list[int], Field(description="The IDs of the tables to describe.")
+    ],
+    full_schema: Annotated[
+        bool,
+        Field(
+            description="False lists only the primary and link_row fields of each "
+            "table, for an overview of the relationships."
+        ),
+    ] = True,
+) -> list[dict[str, Any]]:
+    """
+    Get the fields of one or more tables, to learn the field names, IDs and types
+    before working with rows, fields or views. Returns each table's id, name,
+    database_id and fields, the primary field first. A field has its id, name,
+    type, primary flag and the settings of its type: select options with their
+    IDs, the linked table, the formula and its result type, or a lookup's through
+    and target fields. Tables that don't exist in the workspace are left out.
+    """
+
+    tables_by_id = {
+        table.id: table
+        for table in TableHandler()
+        .list_workspace_tables(ctx.user, ctx.workspace)
+        .filter(id__in=table_ids)
+    }
+    tables = [tables_by_id[i] for i in dict.fromkeys(table_ids) if i in tables_by_id]
+    if not tables:
+        return []
+
+    ctx.update_status(
+        _("Inspecting %(table_names)s schema...")
+        % {"table_names": ", ".join(table.name for table in tables)}
+    )
+    fields_by_table = _fields_by_table(tables, full_schema)
+    return [
+        {
+            "id": table.id,
+            "name": table.name,
+            "database_id": table.database_id,
+            "fields": [
+                _schema_field(field)
+                for field in sorted(
+                    fields_by_table.get(table.id, []), key=lambda f: not f.primary
+                )
+            ],
         }
         for table in tables
     ]

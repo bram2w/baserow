@@ -101,40 +101,6 @@ def test_delete_table(data_fixture):
 
 
 # ---------------------------------------------------------------------------
-# get_table_schema
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.django_db
-def test_get_table_schema_returns_fields(data_fixture):
-    user = data_fixture.create_user()
-    workspace = data_fixture.create_workspace(user=user)
-    db = data_fixture.create_database_application(workspace=workspace)
-    table = data_fixture.create_database_table(database=db)
-    data_fixture.create_text_field(name="Title", table=table, primary=True)
-    data_fixture.create_number_field(name="Score", table=table)
-
-    schemas = services.get_table_schema(user, workspace, [table.id])
-    assert len(schemas) == 1
-    schema = schemas[0]
-    assert schema["id"] == table.id
-    assert schema["name"] == table.name
-    field_names = [f["name"] for f in schema["fields"]]
-    assert "Title" in field_names
-    assert "Score" in field_names
-
-
-@pytest.mark.django_db
-def test_get_table_schema_excludes_inaccessible_tables(data_fixture):
-    user = data_fixture.create_user()
-    workspace = data_fixture.create_workspace(user=user)
-    other_table = data_fixture.create_database_table()  # different workspace
-
-    schemas = services.get_table_schema(user, workspace, [other_table.id])
-    assert schemas == []
-
-
-# ---------------------------------------------------------------------------
 # list_rows / create_rows / update_rows / delete_rows
 # ---------------------------------------------------------------------------
 

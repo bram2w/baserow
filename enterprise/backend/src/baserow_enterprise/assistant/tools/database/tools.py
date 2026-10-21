@@ -50,6 +50,7 @@ from .agents import (
 )
 from .prompts import format_formula_generation_prompt
 from .types import (
+    FieldItem,
     FieldItemCreate,
     FieldItemUpdate,
     ListTablesFilterArg,
@@ -212,6 +213,24 @@ def list_tables(
 # ---------------------------------------------------------------------------
 
 
+def _kuma_table_schema(table: dict[str, Any]) -> dict[str, Any]:
+    """
+    Kuma's shape of a shared table schema: the primary field apart, and only the
+    field keys its other tools take.
+    """
+
+    fields = [
+        {key: value for key, value in field.items() if key in FieldItem.model_fields}
+        for field in table["fields"]
+    ]
+    return {
+        "id": table["id"],
+        "name": table["name"],
+        "primary_field": fields[0],
+        "fields": fields[1:],
+    }
+
+
 def get_tables_schema(
     ctx: RunContext[AssistantDeps],
     table_ids: Annotated[
@@ -236,23 +255,18 @@ def get_tables_schema(
     DO NOT USE when: You need row data — use list_rows instead. For row operations, use load_row_tools, those tools already provide the necessary schema info in their instructions.
     """
 
-    user = ctx.deps.user
-    workspace = ctx.deps.workspace
-    tool_helpers = ctx.deps.tool_helpers
-
     if not table_ids:
         return {"tables_schema": [], "full_schema": full_schema}
 
-    tables = helpers.filter_tables(user, workspace).filter(id__in=table_ids)
-
-    tool_helpers.update_status(
-        _("Inspecting %(table_names)s schema...")
-        % {"table_names": ", ".join(t.name for t in tables)}
+    tables = shared_tables.get_table_schema(
+        ctx.deps.tool_context(), table_ids, full_schema
     )
-
     result = {
+        # A table without a primary field has no Kuma shape, so it's left out.
         "tables_schema": [
-            ts.model_dump() for ts in helpers.get_tables_schema(tables, full_schema)
+            _kuma_table_schema(table)
+            for table in tables
+            if table["fields"] and table["fields"][0]["primary"]
         ],
         "full_schema": full_schema,
     }

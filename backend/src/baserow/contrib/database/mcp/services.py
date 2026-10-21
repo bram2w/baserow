@@ -14,11 +14,8 @@ from django.contrib.auth.models import AbstractUser
 from django.db import transaction
 
 from baserow.api.utils import apply_exception_mapping
-from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
-from baserow.core.db import specific_iterator
 from baserow.core.handler import CoreHandler
 from baserow.core.mcp.exceptions import MCPToolInputError, flatten_error_detail
 from baserow.core.models import Workspace
@@ -167,99 +164,6 @@ def list_databases(user: AbstractUser, workspace: Workspace) -> list:
 # ---------------------------------------------------------------------------
 # Table operations
 # ---------------------------------------------------------------------------
-
-
-def get_table_schema(
-    user: AbstractUser, workspace: Workspace, table_ids: list[int]
-) -> list[dict]:
-    """
-    Return field schemas for the given tables.
-
-    :returns: List of dicts ``{id, name, database_id, fields: [...]}``.
-              Each field dict includes ``id``, ``name``, ``type``, ``primary``
-              and type-specific extras (select_options, link_row_table_id, etc.).
-    """
-    tables = {
-        t.id: t
-        for t in filter_tables(user, workspace)
-        .filter(id__in=table_ids)
-        .select_related("database")
-    }
-
-    valid_table_ids = [tid for tid in table_ids if tid in tables]
-    if not valid_table_ids:
-        return []
-
-    all_fields = list(
-        specific_iterator(
-            FieldHandler()
-            .get_base_fields_queryset()
-            .filter(table_id__in=valid_table_ids)
-            .order_by("table_id", "-primary", "order", "id"),
-            per_content_type_queryset_hook=(
-                lambda model, queryset: field_type_registry.get_by_model(
-                    model
-                ).enhance_field_queryset(queryset, model)
-            ),
-        )
-    )
-
-    fields_by_table: dict[int, list] = {}
-    for field in all_fields:
-        fields_by_table.setdefault(field.table_id, []).append(field)
-
-    return [
-        {
-            "id": tables[tid].id,
-            "name": tables[tid].name,
-            "database_id": tables[tid].database_id,
-            "fields": [_serialize_field(f) for f in fields_by_table.get(tid, [])],
-        }
-        for tid in valid_table_ids
-    ]
-
-
-def _serialize_field(field) -> dict:
-    """Convert a specific field instance to a plain dict for schema output."""
-    from baserow.contrib.database.fields.models import (
-        DateField,
-        FormulaField,
-        LinkRowField,
-        MultipleSelectField,
-        NumberField,
-        RatingField,
-        SingleSelectField,
-    )
-
-    field_type = field_type_registry.get_by_model(field)
-    data: dict[str, Any] = {
-        "id": field.id,
-        "name": field.name,
-        "type": field_type.type,
-        "primary": field.primary,
-    }
-
-    if isinstance(field, (SingleSelectField, MultipleSelectField)):
-        data["select_options"] = [
-            {"id": opt.id, "value": opt.value, "color": opt.color}
-            for opt in field.select_options.all()
-        ]
-    elif isinstance(field, LinkRowField):
-        data["link_row_table_id"] = field.link_row_table_id
-        linked = field.link_row_table
-        data["link_row_table_name"] = linked.name if linked else None
-    elif isinstance(field, NumberField):
-        data["number_decimal_places"] = field.number_decimal_places
-    elif isinstance(field, DateField):
-        data["date_include_time"] = field.date_include_time
-        data["date_force_timezone"] = field.date_force_timezone
-    elif isinstance(field, FormulaField):
-        data["formula"] = field.formula
-        data["formula_type"] = field.formula_type
-    elif isinstance(field, RatingField):
-        data["max_value"] = field.max_value
-
-    return data
 
 
 def update_table(
