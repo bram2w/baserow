@@ -4,11 +4,13 @@
       :label="$t('dashboardFilter.optionValue')"
       :helper-text="$t('dashboardFilter.sourceOptionsHelp')"
       small-label
+      required
       class="margin-bottom-2"
     >
       <InjectedFormulaInput
         :model-value="filter.formula_value || {}"
         :disabled="disabled"
+        placeholder=""
         @update:model-value="$emit('save', { formula_value: $event })"
       />
     </FormGroup>
