@@ -1,11 +1,13 @@
 """Tests for the view tools shared by MCP and Kuma."""
 
 import json
+import logging
 
 from django.db import transaction
 
 import pytest
 from asgiref.sync import async_to_sync
+from loguru import logger as loguru_logger
 from mcp.shared.memory import (
     create_connected_server_and_client_session as client_session,
 )
@@ -221,3 +223,97 @@ def test_create_view_filters_over_mcp_view_in_other_workspace_is_not_found(
     assert result.isError is True
     assert result.content[0].text == "Not found in this workspace."
     assert not ViewFilter.objects.filter(view=other_view).exists()
+
+
+@pytest.fixture
+def error_records():
+    records = []
+    handler_id = loguru_logger.add(
+        lambda m: records.append(m.record), level="ERROR", format="{message}"
+    )
+    yield records
+    loguru_logger.remove(handler_id)
+
+
+@pytest.fixture
+def select_view(data_fixture):
+    endpoint = data_fixture.create_mcp_endpoint(allowed_tools=VIEW_TOOLS)
+    database = data_fixture.create_database_application(workspace=endpoint.workspace)
+    table = data_fixture.create_database_table(database=database)
+    field = data_fixture.create_single_select_field(table=table, name="Status")
+    data_fixture.create_select_option(field=field, value="Active")
+    view = data_fixture.create_grid_view(table=table)
+    return endpoint, field, view
+
+
+def _select_filter(view, field, value):
+    return {
+        "view_filters": [
+            {
+                "view_id": view.id,
+                "filters": [
+                    {
+                        "field_id": field.id,
+                        "type": "single_select",
+                        "operator": "is_any_of",
+                        "value": value,
+                    }
+                ],
+            }
+        ]
+    }
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("value", ["Active", 3, None, []])
+def test_create_view_filters_over_mcp_rejects_a_select_value_that_is_not_a_list(
+    select_view, caplog, error_records, value
+):
+    endpoint, field, view = select_view
+
+    result = _call(endpoint, "create_view_filters", _select_filter(view, field, value))
+
+    assert result.isError is True
+    assert "list of option labels" in result.content[0].text
+    assert [r for r in caplog.records if r.levelno >= logging.ERROR] == []
+    assert error_records == []
+    assert not ViewFilter.objects.filter(view=view).exists()
+
+
+@pytest.mark.django_db
+def test_create_view_filters_over_mcp_skips_labels_that_match_no_option(
+    select_view, caplog, error_records
+):
+    endpoint, field, view = select_view
+
+    result = _call(
+        endpoint, "create_view_filters", _select_filter(view, field, ["Closed"])
+    )
+
+    assert result.isError is False
+    (entry,) = json.loads(result.content[0].text)["created_view_filters"]
+    assert entry["filters"] == []
+    (skipped,) = entry["skipped_filters"]
+    assert "is an option of field 'Status'" in skipped["error"]
+    assert "Active" in skipped["error"]
+    assert [r for r in caplog.records if r.levelno >= logging.ERROR] == []
+    assert error_records == []
+    assert not ViewFilter.objects.filter(view=view).exists()
+
+
+@pytest.mark.django_db
+def test_create_view_filters_over_mcp_writes_nothing_when_a_view_is_not_found(
+    select_view, data_fixture
+):
+    endpoint, field, view = select_view
+    other_view = data_fixture.create_grid_view(
+        table=data_fixture.create_database_table(user=endpoint.user)
+    )
+    arguments = _select_filter(view, field, ["Active"])
+    arguments["view_filters"].append({"view_id": other_view.id, "filters": []})
+
+    result = _call(endpoint, "create_view_filters", arguments)
+
+    assert result.isError is True
+    assert result.content[0].text == "Not found in this workspace."
+    assert not ViewFilter.objects.filter(view=view).exists()

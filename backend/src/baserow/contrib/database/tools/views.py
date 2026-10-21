@@ -535,12 +535,22 @@ def _parse_date(value: str) -> date:
 
 
 def _select_orm_value(f, field, **kwargs):
+    """
+    :raises ValueError: When no label matches an option, as the filter would then
+        have no options.
+    """
+
     values = set(v.lower() for v in f.value)
+    options = list(field.select_options.all())
     valid_option_ids = [
-        option.id
-        for option in field.select_options.all()
-        if option.value.lower() in values
+        option.id for option in options if option.value.lower() in values
     ]
+    if not valid_option_ids:
+        labels = ", ".join(option.value for option in options) or "none"
+        raise ValueError(
+            f"None of {f.value} is an option of field '{field.name}'. "
+            f"Options: {labels}."
+        )
     return ",".join(str(v) for v in valid_option_ids)
 
 
@@ -620,6 +630,12 @@ class ViewFilterItemCreate(BaseModel):
             )
         if self.type == "date" and self.mode is None:
             raise ValueError("date filter requires 'mode'.")
+        if self.type in ("single_select", "multiple_select") and not (
+            isinstance(self.value, list) and self.value
+        ):
+            raise ValueError(
+                f"{self.type} filter requires 'value' as a list of option labels."
+            )
         return self
 
     def get_django_orm_type(self, field, **kwargs) -> str:
@@ -815,9 +831,10 @@ def create_view_filters(
     """
     Add filters to views, so a view shows only the rows that match all of them.
     Each filter names a field, its type, which must match the field's type, an
-    operator and a value. A filter whose field is missing from the view's table or
-    has another type is not created and is returned in skipped_filters with the
-    reason.
+    operator and a value. A filter whose field is missing from the view's table,
+    has another type, or whose labels match no select option is not created and
+    is returned in skipped_filters with the reason. When a view is not found,
+    nothing is created.
 
     Value formats by type:
     - text: string
@@ -830,9 +847,12 @@ def create_view_filters(
     - boolean: true / false
     """
 
+    # Every view is checked before anything is written, so a missing view fails
+    # the call without leaving the filters of the other views behind.
+    orm_views = [get_view(ctx, view_filter.view_id) for view_filter in view_filters]
+
     created_view_filters = []
-    for view_filter in view_filters:
-        orm_view = get_view(ctx, view_filter.view_id)
+    for view_filter, orm_view in zip(view_filters, orm_views):
         ctx.update_status(
             _("Creating filters in %(view_name)s...") % {"view_name": orm_view.name}
         )
