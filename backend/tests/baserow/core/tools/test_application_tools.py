@@ -104,23 +104,28 @@ def test_list_applications_pages(data_fixture):
 
 
 @pytest.mark.django_db
-def test_list_applications_over_mcp(data_fixture):
+def test_list_applications_over_mcp_lists_only_databases(data_fixture):
     endpoint = data_fixture.create_mcp_endpoint(allowed_tools=["list_applications"])
-    builder = data_fixture.create_builder_application(
-        workspace=endpoint.workspace, name="Portal"
+    database = data_fixture.create_database_application(
+        workspace=endpoint.workspace, name="Sales"
     )
+    data_fixture.create_builder_application(workspace=endpoint.workspace)
+    data_fixture.create_automation_application(workspace=endpoint.workspace)
 
-    result = _call(endpoint, "list_applications", {"types": ["builder"]})
+    result = _call(endpoint, "list_applications", {})
     too_big = _call(endpoint, "list_applications", {"size": 101})
-    unknown = _call(endpoint, "list_applications", {"types": ["spreadsheet"]})
+    by_type = _call(endpoint, "list_applications", {"types": ["builder"]})
 
-    assert json.loads(result.content[0].text)["applications"] == [
-        {"id": builder.id, "name": "Portal", "type": "builder"}
-    ]
+    assert json.loads(result.content[0].text) == {
+        "applications": [{"id": database.id, "name": "Sales", "type": "database"}],
+        "total": 1,
+        "page": 1,
+        "has_more": False,
+    }
     assert too_big.isError is True
     assert too_big.content[0].text.startswith("Invalid arguments. size:")
-    assert unknown.isError is True
-    assert unknown.content[0].text == "'spreadsheet' is not a valid type."
+    assert by_type.isError is True
+    assert by_type.content[0].text.startswith("Invalid arguments. types:")
 
 
 @pytest.mark.django_db

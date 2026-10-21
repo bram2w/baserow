@@ -1,3 +1,7 @@
+from typing import Annotated, Any
+
+from pydantic import Field
+
 from baserow.contrib.database.mcp import services
 from baserow.contrib.database.mcp.table.schemas import (
     DeleteTableInput,
@@ -15,12 +19,33 @@ from baserow.core.mcp.registries import FunctionMCPTool, MCPTool
 from baserow.core.tools import ToolContext, applications
 
 
+def list_database_applications(
+    ctx: ToolContext,
+    page: Annotated[int, Field(ge=1, description="The page to return.")] = 1,
+    size: Annotated[
+        int,
+        Field(
+            ge=1,
+            le=applications.MAX_PAGE_SIZE,
+            description="The number of applications a page.",
+        ),
+    ] = 20,
+) -> dict[str, Any]:
+    """
+    List the databases in the workspace, with their id, name and type, in sidebar
+    order. Returns one page, the total count, and whether more pages follow.
+    """
+
+    return applications.list_applications(ctx, ["database"], page, size)
+
+
 class ListApplicationsMcpTool(FunctionMCPTool):
+    # Only databases until the tool groups cover the other application types.
     type = "list_applications"
     group = GROUP_DATABASE_READ
     title = "List applications"
     read_only = True
-    function = applications.list_applications
+    function = list_database_applications
 
 
 # TODO: remove after 2.6. Kept because existing connections allow it by name.
