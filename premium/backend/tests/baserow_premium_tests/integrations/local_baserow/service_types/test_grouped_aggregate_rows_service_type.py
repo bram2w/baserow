@@ -5452,3 +5452,63 @@ def test_grouped_aggregate_rows_service_public_schema_with_row_id_group_by(
     assert service_type.get_public_context_data(service) == {
         "fields": {primary_field.db_column: metadata}
     }
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "field_type,linked",
+    [
+        ("created_by", False),
+        ("last_modified_by", False),
+        ("multiple_collaborators", False),
+        ("created_by", True),
+        ("last_modified_by", True),
+    ],
+)
+def test_group_labels_do_not_expose_user_emails(data_fixture, field_type, linked):
+    """User-valued primary fields use safe names, directly and through linked rows."""
+    user = data_fixture.create_user(first_name="Alice")
+    table = data_fixture.create_database_table(user=user)
+    primary = getattr(data_fixture, f"create_{field_type}_field")(
+        table=table, primary=True, name="Owner"
+    )
+    values = (
+        {primary.db_column: [{"id": user.id}]}
+        if field_type == "multiple_collaborators"
+        else {}
+    )
+    row = RowHandler().create_row(user, table, values=values)
+    if linked:
+        linked_table = table
+        table = data_fixture.create_database_table(user=user)
+        primary = data_fixture.create_link_row_field(
+            table=table, link_row_table=linked_table, primary=True, name="Owner"
+        )
+        RowHandler().create_row(user, table, values={primary.db_column: [row.id]})
+    amount = data_fixture.create_number_field(table=table, name="Amount")
+    service = data_fixture.create_service(
+        LocalBaserowGroupedAggregateRows,
+        table=table,
+        integration_args={"user": user},
+    )
+    LocalBaserowTableServiceAggregationSeries.objects.create(
+        service=service, field=amount, aggregation_type="count", order=0
+    )
+    LocalBaserowTableServiceAggregationGroupBy.objects.create(
+        service=service, field=None, order=0
+    )
+    rows = (
+        ServiceHandler()
+        .dispatch_service(service, FakeDispatchContext())
+        .data["results"]
+    )
+    assert [result["id"] for result in rows] == ["Alice"]
+    model = table.get_model()
+    field_object = model.get_field_object(primary.db_column)
+    value = getattr(model.objects.first(), primary.db_column)
+    assert user.email in primary.get_type().get_human_readable_value(
+        value, field_object
+    )
+    assert primary.get_type().get_group_by_label(value, field_object) == "Alice"
+    if not linked:
+        assert primary.get_type().get_group_by_label(None, field_object) == ""

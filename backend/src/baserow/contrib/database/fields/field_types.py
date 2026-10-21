@@ -2336,6 +2336,10 @@ class LastModifiedByFieldType(ReadOnlyFieldType):
             **kwargs,
         )
 
+    def get_group_by_label(self, value, field_object):
+        """Show the user's name rather than their email in group labels."""
+        return value.first_name if value is not None else ""
+
     def get_serializer_field(self, instance, **kwargs):
         return CollaboratorSerializer(required=False, **kwargs)
 
@@ -2561,6 +2565,10 @@ class CreatedByFieldType(ReadOnlyFieldType):
             db_constraint=False,
             **kwargs,
         )
+
+    def get_group_by_label(self, value, field_object):
+        """Show the user's name rather than their email in group labels."""
+        return value.first_name if value is not None else ""
 
     def get_serializer_field(self, instance, **kwargs):
         return CollaboratorSerializer(required=False, **kwargs)
@@ -3531,6 +3539,18 @@ class LinkRowFieldType(
             self._get_and_map_pk_values(
                 field_object, value, map_to_human_readable_value
             )
+        )
+
+    def get_group_by_label(self, value, field_object):
+        """Delegate linked labels to the primary field's display-safe group hook."""
+
+        def map_to_group_label(inner_value, inner_field_object):
+            return inner_field_object["type"].get_group_by_label(
+                inner_value, inner_field_object
+            )
+
+        return ", ".join(
+            self._get_and_map_pk_values(field_object, value, map_to_group_label)
         )
 
     def _get_related_model_and_primary_field(self, instance):
