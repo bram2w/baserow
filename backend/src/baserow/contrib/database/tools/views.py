@@ -308,7 +308,7 @@ class ViewItemCreate(BaseModel):
 
     model_config = ConfigDict(extra="forbid", coerce_numbers_to_str=True)
 
-    name: str = Field(..., description="Descriptive view name.")
+    name: str = Field(..., max_length=255, description="Descriptive view name.")
     public: bool = Field(False, description="Publicly accessible? Default false.")
     type: ViewType = Field(..., description="View type.")
 

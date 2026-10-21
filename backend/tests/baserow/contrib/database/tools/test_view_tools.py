@@ -850,3 +850,21 @@ def test_create_view_filters_uses_utc_without_a_profile_timezone(
     create(type="date", operator="equal", mode="today")
 
     assert ViewFilter.objects.get(view=view).value == "UTC??today"
+
+
+@pytest.mark.django_db
+def test_create_views_over_mcp_rejects_a_name_longer_than_the_column(data_fixture):
+    endpoint = data_fixture.create_mcp_endpoint(allowed_tools=VIEW_TOOLS)
+    database = data_fixture.create_database_application(workspace=endpoint.workspace)
+    table = data_fixture.create_database_table(database=database)
+    data_fixture.create_text_field(table=table, name="Name", primary=True)
+
+    result = _call(
+        endpoint,
+        "create_views",
+        {"table_id": table.id, "views": [{"name": "x" * 256, "type": "grid"}]},
+    )
+
+    assert result.isError is True
+    assert "at most 255 characters" in result.content[0].text
+    assert not View.objects.filter(table=table).exists()
