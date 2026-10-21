@@ -12,7 +12,6 @@ from baserow.contrib.database.api.fields.serializers import (
     FieldSerializer,
     serialize_public_field,
 )
-from baserow.contrib.database.fields.exceptions import FieldTypeDoesNotExist
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.views.exceptions import AggregationTypeDoesNotExist
 from baserow.contrib.database.views.models import DEFAULT_SORT_TYPE_KEY
@@ -1192,16 +1191,14 @@ class LocalBaserowGroupedAggregateRowsUserServiceType(
                 field_type = field_obj["type"]
                 if collection_field is not None:
                     if collection_mode == AggregationGroupByMode.INDIVIDUAL:
-                        if collection_field.get_type().type == "multiple_select":
-                            sort_field = f"{collection_field.db_column}__value"
-                        elif collection_field.get_type().type == "link_row":
-                            sort_field = (
-                                f"{collection_field.db_column}__"
-                                f"{collection_field.link_row_table_primary_field.db_column}"
+                        sort_annotations["_grouped_sort"] = Min(
+                            field_type.get_individual_group_by_sort_expression(
+                                field_obj["field"].specific,
+                                sort_by.reference,
+                                DEFAULT_SORT_TYPE_KEY,
+                                table_model=model,
                             )
-                        else:
-                            sort_field = f"{collection_field.db_column}__first_name"
-                        sort_annotations["_grouped_sort"] = Min(F(sort_field))
+                        )
                         expression = F("_grouped_sort")
                         sorts.append(
                             expression.asc(nulls_first=True)

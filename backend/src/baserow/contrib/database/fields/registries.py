@@ -2061,6 +2061,23 @@ class FieldType(
 
         return F(field_name)
 
+    def get_individual_group_by_sort_expression(
+        self, field, field_name, sort_type, table_model=None
+    ):
+        """
+        Return the sort value for one member of an individual-value group.
+
+        Unlike complete-selection ordering, this must not aggregate all related
+        values in the cell. Relation types can delegate to their member's type.
+
+        :param field: The grouped field instance.
+        :param field_name: The field column or relation path.
+        :param sort_type: The requested sorting type.
+        :param table_model: The generated table model, when available.
+        :return: An expression identifying an individual member's sort value.
+        """
+        return self.get_sortable_column_expression(field, field_name, sort_type)
+
     def get_group_by_field_unique_value(
         self, field: Field, field_name: str, value: Any
     ) -> Any:

@@ -5512,3 +5512,71 @@ def test_group_labels_do_not_expose_user_emails(data_fixture, field_type, linked
     assert primary.get_type().get_group_by_label(value, field_object) == "Alice"
     if not linked:
         assert primary.get_type().get_group_by_label(None, field_object) == ""
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "field_type", ["link_row", "multiple_collaborators", "multiple_select"]
+)
+@pytest.mark.parametrize("direction", ["ASC", "DESC"])
+def test_individual_group_sort_uses_member_field_type(
+    data_fixture, field_type, direction
+):
+    """Each relation member retains its own sortable representation and aggregate."""
+    user = data_fixture.create_user(first_name="Zulu")
+    table = data_fixture.create_database_table(user=user)
+    if field_type == "link_row":
+        linked_table = data_fixture.create_database_table(user=user)
+        primary = data_fixture.create_number_field(table=linked_table, primary=True)
+        model = linked_table.get_model()
+        members = [
+            model.objects.create(**{primary.db_column: value}).id for value in [10, 2]
+        ]
+        field = data_fixture.create_link_row_field(
+            table=table, link_row_table=linked_table
+        )
+    elif field_type == "multiple_collaborators":
+        other = data_fixture.create_user(
+            first_name="Alice", workspace=table.database.workspace
+        )
+        members = [{"id": person.id} for person in [user, other]]
+        field = data_fixture.create_multiple_collaborators_field(table=table)
+    else:
+        field = data_fixture.create_multiple_select_field(table=table)
+        members = [
+            data_fixture.create_select_option(field=field, value=value).id
+            for value in ["Zulu", "Alice"]
+        ]
+    amount = data_fixture.create_number_field(table=table, name="Amount")
+    service = data_fixture.create_service(
+        LocalBaserowGroupedAggregateRows, table=table, integration_args={"user": user}
+    )
+    LocalBaserowTableServiceAggregationSeries.objects.create(
+        service=service, field=amount, aggregation_type="sum", order=0
+    )
+    LocalBaserowTableServiceAggregationGroupBy.objects.create(
+        service=service, field=field, mode="individual", order=0
+    )
+    LocalBaserowTableServiceAggregationSortBy.objects.create(
+        service=service,
+        sort_on="GROUP_BY",
+        reference=field.db_column,
+        direction=direction,
+        order=0,
+    )
+    RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {field.db_column: [member], amount.db_column: amount_value}
+            for member, amount_value in zip(members, [10, 2])
+        ],
+    )
+    rows = (
+        ServiceHandler()
+        .dispatch_service(service, FakeDispatchContext())
+        .data["results"]
+    )
+    assert [row["Amount sum"] for row in rows] == (
+        [2, 10] if direction == "ASC" else [10, 2]
+    )

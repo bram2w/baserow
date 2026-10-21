@@ -3097,6 +3097,15 @@ class LinkRowFieldType(
             row, related_primary_field
         )
 
+    def get_individual_group_by_sort_expression(
+        self, field, field_name, sort_type, table_model=None
+    ):
+        """Use the linked primary field's sorting semantics for each linked row."""
+        primary = self._get_related_table_primary_field(field, table_model).specific
+        return primary.get_type().get_sortable_column_expression(
+            primary, f"{field_name}__{primary.db_column}", sort_type
+        )
+
     def get_order(
         self, field, field_name, order_direction, sort_type, table_model=None
     ):
@@ -6048,6 +6057,13 @@ class MultipleSelectFieldType(
             [options[option_id] for option_id in (value or []) if option_id in options]
             for value in raw_values
         ]
+
+    def get_individual_group_by_sort_expression(
+        self, field, field_name, sort_type, table_model=None
+    ):
+        """Order individual select options by their requested option attribute."""
+        attribute = self._get_through_sort_expression(field, field_name, sort_type)
+        return F(f"{field_name}__{attribute}")
 
     def _get_through_sort_expression(self, field, field_name, sort_type):
         """
