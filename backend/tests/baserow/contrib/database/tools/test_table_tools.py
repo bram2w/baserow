@@ -15,10 +15,12 @@ from mcp.shared.memory import (
 from baserow.contrib.database.fields.actions import CreateFieldActionType
 from baserow.contrib.database.fields.models import Field, FormulaField, LinkRowField
 from baserow.contrib.database.table.models import Table
-from baserow.contrib.database.tools.fields import FieldItemCreate
+from baserow.contrib.database.tools.fields import FieldItem, FieldItemCreate
 from baserow.contrib.database.tools.tables import (
+    TableItem,
     TableItemCreate,
     create_tables,
+    table_schema_conflict,
 )
 from baserow.core.exceptions import PermissionException
 from baserow.core.mcp import BaserowMCPServer, current_key
@@ -322,3 +324,63 @@ def test_shared_create_tables_drops_the_model_cached_before_a_denied_field(
     assert "Permission denied" in result["notes"][0]
     model = Table.objects.get(database=database, name="Orders").get_model()
     assert [f["field"].name for f in model._field_objects.values()] == ["Order"]
+
+
+def _reused_table_with_a_lookup():
+    return TableItem(
+        id=1,
+        name="Orders",
+        primary_field=FieldItem(id=10, name="Order", type="text"),
+        fields=[
+            FieldItem(id=11, name="Link", type="link_row", linked_table=2),
+            FieldItem(
+                id=12,
+                name="Titles",
+                type="lookup",
+                through_field=11,
+                through_field_name="Link",
+                target_field=20,
+                target_field_name="Title",
+            ),
+        ],
+    )
+
+
+@pytest.mark.parametrize("through_field", ["Link", 11])
+def test_reused_table_matches_a_lookup_named_by_its_link_field(through_field):
+    requested = TableItemCreate(
+        name="Orders",
+        primary_field_name="Order",
+        fields=[
+            FieldItemCreate(
+                name="Titles",
+                type="lookup",
+                through_field=through_field,
+                target_field="Title",
+            )
+        ],
+    )
+
+    assert table_schema_conflict(requested, _reused_table_with_a_lookup()) is None
+
+
+def test_reused_table_reports_a_lookup_through_another_link_field():
+    requested = TableItemCreate(
+        name="Orders",
+        primary_field_name="Order",
+        fields=[
+            FieldItemCreate(
+                name="Titles",
+                type="lookup",
+                through_field="Other",
+                target_field="Title",
+            )
+        ],
+    )
+
+    conflict = table_schema_conflict(requested, _reused_table_with_a_lookup())
+
+    (mismatch,) = conflict["field_mismatches"]
+    assert mismatch["relation_issues"] == {
+        "through_field": {"actual": "Link", "requested": "Other"}
+    }

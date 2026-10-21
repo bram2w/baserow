@@ -576,3 +576,110 @@ def test_delete_fields_drops_the_model_cached_in_a_failed_delete(
         delete_fields(ctx, [field.id])
 
     assert _field_names(table) == ["Name", "Num"]
+
+
+@pytest.fixture
+def linked_tables(data_fixture, table_ctx):
+    ctx, table = table_ctx
+    other = data_fixture.create_database_table(database=table.database, name="Other")
+    data_fixture.create_text_field(table=other, name="Title", primary=True)
+    return ctx, table, other
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("key", ["through_field", "through_field_id"])
+def test_create_fields_looks_up_through_the_named_link_field(
+    data_fixture, linked_tables, key
+):
+    ctx, table, other = linked_tables
+    data_fixture.create_link_row_field(table=table, name="First", link_row_table=other)
+    second = data_fixture.create_link_row_field(
+        table=table, name="Second", link_row_table=other
+    )
+
+    result = create_fields(
+        ctx,
+        table.id,
+        [
+            FieldItemCreate(
+                **{"name": "Titles", "type": "lookup", key: second.id},
+                target_field="Title",
+            )
+        ],
+    )
+
+    assert "field_errors" not in result
+    (created,) = result["created_fields"]
+    assert created["through_field"] == second.id
+    assert table.field_set.get(name="Titles").specific.through_field_id == second.id
+
+
+@pytest.mark.django_db
+def test_create_fields_looks_up_through_a_link_field_named_by_name(
+    data_fixture, linked_tables
+):
+    ctx, table, other = linked_tables
+    link = data_fixture.create_link_row_field(
+        table=table, name="Link", link_row_table=other
+    )
+
+    result = create_fields(
+        ctx,
+        table.id,
+        [
+            FieldItemCreate(
+                name="Titles", type="lookup", through_field="Link", target_field="Title"
+            )
+        ],
+    )
+
+    assert [f["through_field"] for f in result["created_fields"]] == [link.id]
+
+
+@pytest.mark.django_db
+def test_create_fields_reports_a_through_field_that_is_no_link_of_the_table(
+    data_fixture, linked_tables
+):
+    ctx, table, other = linked_tables
+    text = data_fixture.create_text_field(table=table, name="Notes")
+
+    result = create_fields(
+        ctx,
+        table.id,
+        [
+            FieldItemCreate(
+                name="Titles",
+                type="lookup",
+                through_field=text.id,
+                target_field="Title",
+            )
+        ],
+    )
+
+    assert result["created_fields"] == []
+    (error,) = result["field_errors"]
+    assert f"has no link_row field '{text.id}' for lookup 'Titles'" in error
+    assert set(table.field_set.values_list("name", flat=True)) == {"Name", "Notes"}
+
+
+@pytest.mark.django_db
+def test_create_fields_returns_the_link_field_a_lookup_creates(linked_tables):
+    ctx, table, other = linked_tables
+
+    result = create_fields(
+        ctx,
+        table.id,
+        [
+            FieldItemCreate(
+                name="Titles", type="lookup", linked_table="Other", target_field="Title"
+            )
+        ],
+    )
+
+    link, lookup = result["created_fields"]
+    assert (link["name"], link["type"], link["linked_table"]) == (
+        "Other",
+        "link_row",
+        other.id,
+    )
+    assert (lookup["name"], lookup["through_field"]) == ("Titles", link["id"])

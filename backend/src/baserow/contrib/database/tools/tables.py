@@ -381,7 +381,21 @@ def _relation_conflicts(
     through_field = fields_by_id.get(actual.through_field or -1)
     actual_table_id = through_field.linked_table if through_field else None
     conflicts: dict[str, Any] = {}
-    if requested_table_id is None or requested_table_id != actual_table_id:
+    if requested.through_field is not None:
+        actual_through = (
+            actual.through_field
+            if isinstance(requested.through_field, int)
+            else actual.through_field_name
+        )
+        if requested.through_field != actual_through:
+            conflicts["through_field"] = {
+                "actual": actual_through,
+                "requested": requested.through_field,
+            }
+    # A lookup named by its link field may leave linked_table out.
+    if (requested.linked_table is not None or requested.through_field is None) and (
+        requested_table_id is None or requested_table_id != actual_table_id
+    ):
         conflicts["linked_table"] = {
             "actual": actual_table_id,
             "requested": requested.linked_table,

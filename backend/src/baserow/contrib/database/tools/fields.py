@@ -161,8 +161,7 @@ _KEY_ALIASES: dict[str, str] = {
     "date_include_time": "include_time",
     "link_row_table": "linked_table",
     "link_row_table_id": "linked_table",
-    "through_field": "linked_table",
-    "through_field_id": "linked_table",
+    "through_field_id": "through_field",
     "target_field_id": "target_field",
 }
 
@@ -311,26 +310,67 @@ def _formula_to_orm(f, table, user):
     return {"name": f.name, "formula": formula}
 
 
-def _lookup_to_orm(f, table, user):
-    linked = _resolve_linked_table(f.linked_table, table)
+def _named_link_field(f, table) -> LinkRowField:
+    """
+    The link_row field of the table a lookup names in ``through_field``.
 
-    # Find existing link_row field pointing to linked table
-    through = (
+    :raises ValueError: When the table has no such link_row field, or it links to
+        another table than ``linked_table``.
+    """
+
+    if isinstance(f.through_field, str):
+        q = Q(name=f.through_field)
+    else:
+        q = Q(id=f.through_field)
+    through = LinkRowField.objects.filter(q, table=table).order_by("id").first()
+    if through is None:
+        raise ValueError(
+            f"Table '{table.name}' has no link_row field '{f.through_field}' for "
+            f"lookup '{f.name}'."
+        )
+    if f.linked_table is not None:
+        linked = _resolve_linked_table(f.linked_table, table)
+        if linked.id != through.link_row_table_id:
+            raise ValueError(
+                f"Link field '{through.name}' links to table "
+                f"{through.link_row_table_id}, not to '{f.linked_table}'."
+            )
+    return through
+
+
+def _lookup_link_field(f, table) -> LinkRowField | None:
+    """The link_row field a lookup goes through, or None when there is none yet."""
+
+    if f.through_field is not None:
+        return _named_link_field(f, table)
+    linked = _resolve_linked_table(f.linked_table, table)
+    return (
         LinkRowField.objects.filter(table=table, link_row_table=linked)
         .order_by("id")
         .first()
     )
 
-    # Auto-create link_row if missing and user is available
-    if not through and user:
-        through = CreateFieldActionType.do(
-            user,
-            table,
-            "link_row",
-            name=linked.name,
-            link_row_table=linked,
-        )
 
+def create_missing_link_field(
+    f: "FieldItemCreate", table: Table, user
+) -> LinkRowField | None:
+    """
+    Create the link_row field a lookup to ``linked_table`` needs, when the table
+    has none to that table yet.
+
+    :returns: The created link_row field, or None when nothing was created.
+    """
+
+    if f.type != "lookup" or _lookup_link_field(f, table) is not None:
+        return None
+    linked = _resolve_linked_table(f.linked_table, table)
+    return CreateFieldActionType.do(
+        user, table, "link_row", name=linked.name, link_row_table=linked
+    )
+
+
+def _lookup_to_orm(f, table, user):
+    through = _lookup_link_field(f, table)
     if not through:
         raise ValueError(
             f"No link_row field to '{f.linked_table}' exists on this table. "
@@ -442,6 +482,11 @@ class FieldItemCreate(BaseModel):
         description="(formula) The formula expression, in Baserow formula syntax.",
     )
     # (lookup)
+    through_field: int | str | None = Field(
+        None,
+        description="(lookup) ID or name of the link_row field to look up through. "
+        "Instead of linked_table.",
+    )
     target_field: int | str | None = Field(
         None, description="(lookup) ID or name of the field to look up."
     )
@@ -482,6 +527,8 @@ class FieldItemCreate(BaseModel):
     @model_validator(mode="after")
     def _validate_required_for_type(self):
         required = self._REQUIRED_FIELDS.get(self.type)
+        if self.type == "lookup" and self.through_field is not None:
+            required = [("target_field", "target_field")]
         if required:
             missing = [name for attr, name in required if not getattr(self, attr)]
             if missing:
@@ -948,12 +995,15 @@ def create_fields_in_table(
         try:
             # A savepoint, so a failed field leaves the transaction usable.
             with transaction.atomic():
+                link_field = create_missing_link_field(field_item, table, ctx.user)
                 new_field = CreateFieldActionType.do(
                     ctx.user,
                     table,
                     field_item.type,
                     **field_item.to_django_orm_kwargs(table, user=ctx.user),
                 )
+            if link_field is not None:
+                created_fields.append(FieldItem.from_django_orm(link_field))
             created_fields.append(FieldItem.from_django_orm(new_field))
         except InvalidFormulaFieldError as exc:
             formula_errors.append(_formula_error(exc))
@@ -1029,9 +1079,12 @@ def create_fields(
 ) -> dict[str, Any]:
     """
     Add fields to a table. Field names must be unique in the table, and the table
-    of a link_row or lookup field must already exist. A formula is stored as
-    written. An invalid formula is not created: it is returned in formula_errors
-    with the parser's message, to correct and send again.
+    of a link_row or lookup field must already exist. A lookup goes through the
+    link_row field named in through_field, or else the first one to linked_table;
+    when there is none, one is created and returned in created_fields too. A
+    formula is stored as written. An invalid formula is not created: it is
+    returned in formula_errors with the parser's message, to correct and send
+    again.
     """
 
     table = (
