@@ -2176,31 +2176,6 @@ class DateFieldType(FieldType):
             )
         return super().get_group_by_expression(field, field_name, base_queryset)
 
-    def get_group_by_order(
-        self,
-        field,
-        field_name,
-        order_direction,
-        sort_type,
-        table_model=None,
-        group_by_expression=None,
-    ):
-        """
-        Sort on the normalized group key, never the original timestamp.
-
-        Database grouping shadows the field column with its normalized expression.
-        Other callers can supply their own normalized expression explicitly.
-        """
-        expression = (
-            group_by_expression if group_by_expression is not None else F(field_name)
-        )
-        order = (
-            expression.asc(nulls_first=True)
-            if order_direction == "ASC"
-            else expression.desc(nulls_last=True)
-        )
-        return OptionallyAnnotatedOrderBy(order=order)
-
     def get_group_by_field_filters_and_annotations(
         self, field, field_name, base_queryset, value, cte, rows
     ):

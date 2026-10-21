@@ -1054,12 +1054,47 @@ class FieldType(
         :param table_model: The table model instance that the field is part of,
             if available.
         :param group_by_expression: The normalized grouping expression, when the
-            caller stores it separately from the field column.
+            caller stores it separately from the field column. Direct references
+            to the original field in ordering expressions and annotations are
+            replaced with this value, preserving sorting wrappers and direction.
         :return: The ordering applied to the group-by data groups.
         """
 
-        return self.get_group_by_sort_order(
+        order = self.get_group_by_sort_order(
             field, field_name, order_direction, sort_type, table_model=table_model
+        )
+        if group_by_expression is None:
+            return order
+
+        def replace_field_reference(expression):
+            """Replace exact field references without rewriting relation lookups."""
+            if isinstance(expression, F):
+                return (
+                    group_by_expression if expression.name == field_name else expression
+                )
+            if expression is None:
+                return None
+            result = expression.copy()
+            result.set_source_expressions(
+                [
+                    replace_field_reference(source)
+                    for source in expression.get_source_expressions()
+                ]
+            )
+            return result
+
+        return OptionallyAnnotatedOrderBy(
+            order=[
+                replace_field_reference(expression) for expression in order.order_bys
+            ],
+            annotation=(
+                {
+                    alias: replace_field_reference(expression)
+                    for alias, expression in order.annotation.items()
+                }
+                if order.annotation is not None
+                else None
+            ),
         )
 
     def get_group_by_sort_order(
