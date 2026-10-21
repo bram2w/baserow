@@ -8,13 +8,14 @@ from baserow.contrib.database.mcp.table.schemas import (
     ListTablesInput,
     UpdateTableInput,
 )
+from baserow.contrib.database.tools import tables
 from baserow.core.mcp.groups import (
     GROUP_DATABASE_DELETE,
     GROUP_DATABASE_EDIT,
     GROUP_DATABASE_READ,
 )
 from baserow.core.mcp.models import MCPEndpoint
-from baserow.core.mcp.registries import MCPTool
+from baserow.core.mcp.registries import FunctionMCPTool, MCPTool
 
 
 class ListDatabasesMcpTool(MCPTool):
@@ -99,6 +100,15 @@ class CreateTableMcpTool(MCPTool):
             args.name,
             [f.model_dump() for f in args.fields] if args.fields else None,
         )
+
+
+class CreateTablesMcpTool(FunctionMCPTool):
+    type = "create_tables"
+    group = GROUP_DATABASE_EDIT
+    title = "Create tables"
+    read_only = False
+    destructive = False
+    function = tables.create_tables
 
 
 class UpdateTableMcpTool(MCPTool):

@@ -1244,7 +1244,7 @@ class DatabaseConfig(AppConfig):
         )
         from baserow.contrib.database.mcp.table.tools import (
             CreateDatabaseMcpTool,
-            CreateTableMcpTool,
+            CreateTablesMcpTool,
             DeleteTableMcpTool,
             GetTableSchemaMcpTool,
             ListDatabasesMcpTool,
@@ -1271,10 +1271,10 @@ class DatabaseConfig(AppConfig):
         mcp_tool_registry.register(UpdateRowsMcpTool())
         mcp_tool_registry.register(DeleteRowsMcpTool())
         mcp_tool_registry.register(ListViewsMcpTool())
+        mcp_tool_registry.register(CreateTablesMcpTool())
         # Disabled (enabled=False) until users can control tool
         # availability through the UI.
         mcp_tool_registry.register(CreateDatabaseMcpTool())
-        mcp_tool_registry.register(CreateTableMcpTool())
         mcp_tool_registry.register(UpdateTableMcpTool())
         mcp_tool_registry.register(DeleteTableMcpTool())
         mcp_tool_registry.register(CreateFieldsMcpTool())

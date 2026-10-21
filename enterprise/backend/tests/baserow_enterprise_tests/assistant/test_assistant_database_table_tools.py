@@ -1576,3 +1576,51 @@ def test_create_tables_with_invalid_formula_auto_fixes(data_fixture):
     assert len(result["created_tables"]) == 1
     # No formula error notes since auto-fix succeeded
     assert result["notes"] == []
+
+
+@pytest.mark.django_db(transaction=True)
+def test_create_tables_repairs_formulas_after_the_transaction_commits(data_fixture):
+    from django.db import connection
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    calls = []
+
+    def fixer_run(_agent, prompt, **kwargs):
+        calls.append(connection.in_atomic_block)
+        table = database.table_set.get(name="Orders")
+        # The table and its other fields are committed before the model runs.
+        assert table.field_set.filter(name="Notes").exists()
+        return _make_mock_formula_result(
+            table_id=table.id, field_name="Total", formula="'fixed'"
+        )
+
+    with patch(
+        "baserow_enterprise.assistant.tools.database.agents.run_agent_sync_with_model",
+        side_effect=fixer_run,
+    ):
+        result = create_tables(
+            make_test_ctx(user, workspace),
+            database_id=database.id,
+            tables=[
+                TableItemCreate(
+                    name="Orders",
+                    primary_field_name="Order",
+                    fields=[
+                        FieldItemCreate(name="Notes", type="text"),
+                        FieldItemCreate(
+                            name="Total", type="formula", formula="bad formula!!!"
+                        ),
+                    ],
+                )
+            ],
+            add_sample_rows=False,
+            thought="create Orders",
+        )
+
+    assert calls == [False]
+    assert result["notes"] == []
+    assert "formula_errors" not in result
+    total = FormulaField.objects.get(table__database=database, name="Total")
+    assert total.formula == "'fixed'"

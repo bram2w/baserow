@@ -14,18 +14,6 @@ from baserow.contrib.database.tools.fields import (
 from baserow.core.tools import ToolContext
 
 
-@pytest.fixture(autouse=True)
-def no_formula_fixer(monkeypatch):
-    """The shared path never calls a model, so the Kuma fixer must stay unused."""
-
-    def fail(*args, **kwargs):
-        raise AssertionError("The shared field tools must not call a model.")
-
-    monkeypatch.setattr(
-        "baserow_enterprise.assistant.tools.database.agents.make_formula_fixer", fail
-    )
-
-
 @pytest.fixture
 def table_ctx(data_fixture):
     user = data_fixture.create_user()

@@ -426,7 +426,7 @@ class FieldItemCreate(BaseModel):
     )
     # (formula)
     formula: str = Field(
-        "", description="(formula) The formula expression, or '' as placeholder."
+        "", description="(formula) The formula expression, in Baserow formula syntax."
     )
     # (lookup)
     target_field: int | str | None = Field(

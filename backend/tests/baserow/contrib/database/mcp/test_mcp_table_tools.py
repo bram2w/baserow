@@ -26,7 +26,6 @@ ENABLED_TOOL_NAMES = {
 
 DISABLED_TOOL_NAMES = {
     "create_database",
-    "create_table",
     "update_table",
     "delete_table",
     "create_fields",
@@ -197,42 +196,6 @@ def test_call_tool_list_tables_filtered_by_database(data_fixture):
                 data = json.loads(result.content[0].text)
                 assert len(data) == 1
                 assert data[0]["id"] == t1.id
-
-        with transaction.atomic():
-            async_to_sync(inner)()
-    finally:
-        current_key.reset(key_token)
-
-
-@pytest.mark.django_db
-@pytest.mark.usefixtures("enable_all_tools")
-def test_call_tool_create_table(data_fixture):
-    user = data_fixture.create_user()
-    workspace = data_fixture.create_workspace(user=user)
-    endpoint = data_fixture.create_mcp_endpoint(user=user, workspace=workspace)
-    db = data_fixture.create_database_application(workspace=workspace)
-
-    mcp = BaserowMCPServer()
-    key_token = current_key.set(endpoint.key)
-
-    try:
-
-        async def inner():
-            async with client_session(mcp._mcp_server) as client:
-                result = await client.call_tool(
-                    "create_table",
-                    {
-                        "database_id": db.id,
-                        "name": "Orders",
-                        "fields": [{"name": "Customer", "type": "text"}],
-                    },
-                )
-                data = json.loads(result.content[0].text)
-                assert data["name"] == "Orders"
-                assert data["database_id"] == db.id
-                assert isinstance(data["id"], int)
-                field_names = [f["name"] for f in data["fields"]]
-                assert "Customer" in field_names
 
         with transaction.atomic():
             async_to_sync(inner)()

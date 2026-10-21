@@ -1,6 +1,8 @@
+from itertools import groupby
 from typing import TYPE_CHECKING, Annotated, Any, Literal
 
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from django.utils.translation import gettext as _
 
@@ -22,9 +24,9 @@ from baserow.contrib.database.rows.actions import (
     DeleteRowsActionType,
     UpdateRowsActionType,
 )
-from baserow.contrib.database.table.actions import CreateTableActionType
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.tools import fields as shared_fields
+from baserow.contrib.database.tools import tables as shared_tables
 from baserow.contrib.database.tools import views as shared_views
 from baserow.contrib.database.views.actions import (
     CreateViewActionType,
@@ -32,8 +34,6 @@ from baserow.contrib.database.views.actions import (
 )
 from baserow.core.exceptions import PermissionException
 from baserow.core.models import Workspace
-from baserow.core.service import CoreService
-from baserow.core.tools import ToolContext
 from baserow_enterprise.assistant.deps import AssistantDeps, ResourceChanges
 from baserow_enterprise.assistant.prompts import MISSING_RECORDS_GUIDANCE
 from baserow_enterprise.assistant.tools.shared import (
@@ -385,103 +385,45 @@ def list_views(
 # ---------------------------------------------------------------------------
 
 
-def _create_empty_tables(
-    user: AbstractUser,
-    database: Database,
-    tables: list[TableItemCreate],
-    tool_helpers: "ToolHelpers",
-) -> list[Table]:
-    """Create bare tables and rename each one's auto-created primary field."""
-    created_tables: list[Table] = []
-    with transaction.atomic():
-        for table in tables:
-            tool_helpers.raise_if_cancelled()
-            tool_helpers.update_status(
-                _("Creating table %(table_name)s...") % {"table_name": table.name}
-            )
-            created_table, _initial_rows = CreateTableActionType.do(
-                user, database, table.name, fill_example=False
-            )
-            created_tables.append(created_table)
-            primary_field = created_table.get_primary_field().specific
-            UpdateFieldActionType.do(user, primary_field, name=table.primary_field_name)
-    return created_tables
+def _repair_table_formulas(
+    ctx: RunContext[AssistantDeps], creation: shared_tables.TableCreation
+) -> None:
+    """
+    Repair the invalid formulas of new tables with the formula fixer, and note
+    the ones it can't repair. Runs after the tables are committed, because the
+    fixer calls a model.
+    """
 
+    if not creation.formula_errors:
+        return
 
-def _non_primary_fields(table: TableItemCreate) -> list[FieldItemCreate]:
-    """Exclude the field specification represented by the primary field."""
-
-    primary_name = table.primary_field_name.lower()
-    return [field for field in table.fields if field.name.lower() != primary_name]
-
-
-def _create_table_fields(
-    tool_context: ToolContext,
-    tables: list[TableItemCreate],
-    created_tables: list[Table],
-    tool_helpers: "ToolHelpers",
-    formula_fixer,
-) -> tuple[list[str], bool]:
-    """Return field-creation notes and whether permission stopped setup."""
-    notes: list[str] = []
-    for table, created_table in zip(tables, created_tables):
-        tool_helpers.raise_if_cancelled()
+    tool_context = ctx.deps.tool_context()
+    formula_fixer = make_formula_fixer(
+        ctx.deps.user, ctx.deps.workspace, ctx.deps.tool_helpers
+    )
+    tables_by_id = {table.id: table for table in creation.created_tables}
+    for table_id, errors in groupby(
+        creation.formula_errors, key=lambda error: error["table_id"]
+    ):
         try:
-            with transaction.atomic():
-                _, field_errors, formula_errors = shared_fields.create_fields_in_table(
-                    tool_context, created_table, _non_primary_fields(table)
-                )
-            _, formula_errors = helpers.create_repaired_formula_fields(
-                tool_context.user, created_table, formula_fixer, formula_errors
+            _, remaining = helpers.create_repaired_formula_fields(
+                tool_context.user, tables_by_id[table_id], formula_fixer, list(errors)
             )
         except PermissionException:
-            notes.append(
-                f"Permission denied while creating fields in table_{created_table.id}. "
+            creation.notes.append(
+                f"Permission denied while creating fields in table_{table_id}. "
                 "The tables were created, but further field setup stopped. "
                 "Do not retry the denied operation."
             )
-            return notes, True
-        notes.extend(field_errors)
-        for error in formula_errors:
-            notes.append(
+            creation.permission_denied = True
+            break
+        for error in remaining:
+            creation.notes.append(
                 f"Invalid formula for field '{error['field_name']}' "
-                f"in table_{created_table.id}: {error['error']}. "
+                f"in table_{table_id}: {error['error']}. "
                 f"Use generate_formula to fix it."
             )
-    return notes, False
-
-
-def _create_new_tables(
-    tool_context: ToolContext,
-    database: Database,
-    tables: list[TableItemCreate],
-    tool_helpers: "ToolHelpers",
-) -> tuple[list[Table], list[str], bool]:
-    """Create tables, fields, and navigation for new requests."""
-
-    user = tool_context.user
-    created_tables = _create_empty_tables(user, database, tables, tool_helpers)
-    if not created_tables:
-        return [], [], False
-
-    formula_fixer = make_formula_fixer(user, tool_context.workspace, tool_helpers)
-    notes, permission_denied = _create_table_fields(
-        tool_context,
-        tables,
-        created_tables,
-        tool_helpers,
-        formula_fixer,
-    )
-    last_table = created_tables[-1]
-    tool_helpers.navigate_to(
-        TableNavigationType(
-            type="database-table",
-            database_id=database.id,
-            table_id=last_table.id,
-            table_name=last_table.name,
-        )
-    )
-    return created_tables, notes, permission_denied
+    creation.formula_errors = []
 
 
 def _create_sample_rows(
@@ -572,27 +514,28 @@ def create_tables(
 
     require_payload("create_tables", "tables", tables)
 
-    database = CoreService().get_application(
-        user,
-        database_id,
-        specific=False,
-        base_queryset=Database.objects.filter(workspace=workspace),
-    )
-
-    # Only user-visible tables may be reused; their full schema is returned.
-    existing_tables = list(
-        helpers.filter_tables(user, workspace).filter(database=database)
-    )
-    plan = reconciliation.plan_table_creation(tables, existing_tables)
-    if plan.conflicting_names:
-        names = ", ".join(plan.conflicting_names)
-        raise ModelRetry(
-            f"Conflicting table definitions use the same name: {names}. "
-            "Submit one definition per table name."
+    tool_context = ctx.deps.tool_context()
+    database = shared_tables.get_database(tool_context, database_id)
+    try:
+        creation = shared_tables.create_tables_in_database(
+            tool_context, database, tables
         )
-    created_tables, notes, permission_denied = _create_new_tables(
-        ctx.deps.tool_context(), database, plan.to_create, tool_helpers
-    )
+    except DjangoValidationError as exc:
+        raise ModelRetry(" ".join(exc.messages))
+
+    # The tables are committed now, so the fixer's model call is outside it.
+    _repair_table_formulas(ctx, creation)
+    created_tables = creation.created_tables
+    if created_tables:
+        last_table = created_tables[-1]
+        tool_helpers.navigate_to(
+            TableNavigationType(
+                type="database-table",
+                database_id=database.id,
+                table_id=last_table.id,
+                table_name=last_table.name,
+            )
+        )
 
     # A link_row or lookup to an existing table adds a reverse field there.
     _refresh_row_tools(ctx)
@@ -601,19 +544,11 @@ def create_tables(
         workspace,
         tool_helpers,
         created_tables,
-        add_sample_rows if not permission_denied else False,
+        add_sample_rows if not creation.permission_denied else False,
     )
-    notes.extend(row_notes)
+    creation.notes.extend(row_notes)
 
-    created_items = helpers.get_tables_schema(created_tables, full_schema=True)
-    reused_items = helpers.get_tables_schema(plan.to_reuse, full_schema=True)
-    table_ids = {table.name: table.id for table in [*existing_tables, *created_tables]}
-
-    response: dict[str, Any] = {
-        "created_tables": [table.model_dump() for table in created_items],
-        "reused_tables": [table.model_dump() for table in reused_items],
-        "notes": notes,
-    }
+    response = creation.to_response()
     if created_rows:
         response["created_rows"] = {
             f"Row IDs for newly created rows in table_{table_id}": [
@@ -621,9 +556,10 @@ def create_tables(
             ]
             for table_id, rows in created_rows.items()
         }
-    response.update(
-        reconciliation.reused_table_report(plan.requested, reused_items, table_ids)
-    )
+    if "next_steps" in response:
+        response["next_steps"] = reconciliation.reused_tables_next_steps(
+            response["incomplete_reused_tables"]
+        )
     return response
 
 

@@ -1,0 +1,242 @@
+"""Tests for the table tools shared by MCP and Kuma."""
+
+import json
+
+from django.core.exceptions import ValidationError
+from django.db import transaction
+
+import pytest
+from asgiref.sync import async_to_sync
+from mcp.shared.memory import (
+    create_connected_server_and_client_session as client_session,
+)
+
+from baserow.contrib.database.fields.models import Field, FormulaField, LinkRowField
+from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.tools.fields import FieldItemCreate
+from baserow.contrib.database.tools.tables import (
+    TableItemCreate,
+    create_tables,
+)
+from baserow.core.mcp import BaserowMCPServer, current_key
+from baserow.core.mcp.registries import mcp_tool_registry
+from baserow.core.tools import ToolContext
+
+
+def _session(endpoint, callback):
+    async def inner():
+        token = current_key.set(endpoint.key)
+        try:
+            async with client_session(BaserowMCPServer()._mcp_server) as client:
+                return await callback(client)
+        finally:
+            current_key.reset(token)
+
+    with transaction.atomic():
+        return async_to_sync(inner)()
+
+
+def _call_create_tables(endpoint, arguments):
+    async def callback(client):
+        return await client.call_tool("create_tables", arguments)
+
+    return _session(endpoint, callback)
+
+
+@pytest.mark.django_db
+def test_create_tables_over_mcp_creates_linked_tables_and_a_raw_formula(
+    data_fixture,
+):
+    endpoint = data_fixture.create_mcp_endpoint(allowed_tools=["create_tables"])
+    database = data_fixture.create_database_application(workspace=endpoint.workspace)
+
+    result = _call_create_tables(
+        endpoint,
+        {
+            "database_id": database.id,
+            "tables": [
+                {"name": "Customers", "primary_field_name": "Name", "fields": []},
+                {
+                    "name": "Orders",
+                    "primary_field_name": "Order",
+                    "fields": [
+                        {
+                            "name": "Customer",
+                            "type": "link_row",
+                            "linked_table": "Customers",
+                        },
+                        {
+                            "name": "Label",
+                            "type": "formula",
+                            "formula": "concat('#', field('Order'))",
+                        },
+                    ],
+                },
+            ],
+        },
+    )
+
+    assert result.isError is False
+    data = json.loads(result.content[0].text)
+    customers = database.table_set.get(name="Customers")
+    orders = database.table_set.get(name="Orders")
+    assert [t["id"] for t in data["created_tables"]] == [customers.id, orders.id]
+    assert data["reused_tables"] == []
+    assert data["notes"] == []
+    assert "formula_errors" not in data
+    link = LinkRowField.objects.get(table=orders, name="Customer")
+    assert link.link_row_table_id == customers.id
+    # The reverse link field is created in the other table.
+    assert LinkRowField.objects.filter(table=customers, link_row_table=orders).exists()
+    label = FormulaField.objects.get(table=orders, name="Label")
+    assert label.formula == "concat('#', field('Order'))"
+
+
+@pytest.mark.django_db
+def test_create_tables_over_mcp_reports_a_formula_description(data_fixture):
+    endpoint = data_fixture.create_mcp_endpoint(allowed_tools=["create_tables"])
+    database = data_fixture.create_database_application(workspace=endpoint.workspace)
+
+    result = _call_create_tables(
+        endpoint,
+        {
+            "database_id": database.id,
+            "tables": [
+                {
+                    "name": "People",
+                    "primary_field_name": "Name",
+                    "fields": [
+                        {"name": "Notes", "type": "text"},
+                        {
+                            "name": "Full name",
+                            "type": "formula",
+                            "formula": "$formula: first and last name",
+                        },
+                    ],
+                }
+            ],
+        },
+    )
+
+    assert result.isError is False
+    data = json.loads(result.content[0].text)
+    people = database.table_set.get(name="People")
+    assert [t["id"] for t in data["created_tables"]] == [people.id]
+    assert data["formula_errors"] == [
+        {
+            "table_id": people.id,
+            "field_name": "Full name",
+            "formula": "$formula: first and last name",
+            "error": "'Full name' needs a formula, not a description. Write it "
+            "in Baserow formula syntax.",
+        }
+    ]
+    assert list(people.field_set.order_by("id").values_list("name", flat=True)) == [
+        "Name",
+        "Notes",
+    ]
+    assert not Field.objects_and_trash.filter(table=people, name="Full name").exists()
+
+
+@pytest.mark.django_db
+def test_create_tables_over_mcp_lists_only_the_shared_arguments(data_fixture):
+    endpoint = data_fixture.create_mcp_endpoint(allowed_tools=["create_tables"])
+
+    async def callback(client):
+        return await client.list_tools()
+
+    listed = _session(endpoint, callback)
+
+    tool = next(t for t in listed.tools if t.name == "create_tables")
+    assert set(tool.inputSchema["properties"]) == {"database_id", "tables"}
+    assert tool.annotations.readOnlyHint is False
+    assert tool.annotations.destructiveHint is False
+    for kuma_only in ("ask_user", "navigate", "get_tables_schema", "sample"):
+        assert kuma_only not in tool.description
+
+
+@pytest.mark.django_db
+def test_create_tables_database_in_other_workspace_is_not_found(data_fixture):
+    endpoint = data_fixture.create_mcp_endpoint(allowed_tools=["create_tables"])
+    other = data_fixture.create_database_application(user=endpoint.user)
+
+    result = _call_create_tables(
+        endpoint,
+        {
+            "database_id": other.id,
+            "tables": [{"name": "Orders", "primary_field_name": "Name", "fields": []}],
+        },
+    )
+
+    assert result.isError is True
+    assert result.content[0].text == "Not found in this workspace."
+    assert not other.table_set.exists()
+
+
+@pytest.mark.django_db
+def test_create_tables_rejects_an_empty_table_list(data_fixture):
+    endpoint = data_fixture.create_mcp_endpoint(allowed_tools=["create_tables"])
+    database = data_fixture.create_database_application(workspace=endpoint.workspace)
+
+    result = _call_create_tables(endpoint, {"database_id": database.id, "tables": []})
+
+    assert result.isError is True
+    assert "tables" in result.content[0].text
+
+
+@pytest.mark.django_db
+def test_endpoint_without_allow_list_does_not_get_create_tables(data_fixture):
+    endpoint = data_fixture.create_mcp_endpoint(allowed_tools=None)
+
+    assert mcp_tool_registry.get_allowed_tool(endpoint, "create_tables") is None
+
+
+@pytest.mark.django_db
+def test_shared_create_tables_rejects_conflicting_same_name_requests(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+
+    with pytest.raises(ValidationError, match="Conflicting table definitions"):
+        create_tables(
+            ToolContext(user, workspace),
+            database.id,
+            [
+                TableItemCreate(name="Orders", primary_field_name="Order", fields=[]),
+                TableItemCreate(name="Orders", primary_field_name="Ref", fields=[]),
+            ],
+        )
+
+    assert not Table.objects.filter(database=database).exists()
+
+
+@pytest.mark.django_db
+def test_shared_create_tables_reports_an_incomplete_reused_table(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    orders = data_fixture.create_database_table(database=database, name="Orders")
+    data_fixture.create_text_field(table=orders, name="Order", primary=True)
+    statuses = []
+
+    result = create_tables(
+        ToolContext(user, workspace, statuses.append),
+        database.id,
+        [
+            TableItemCreate(
+                name="Orders",
+                primary_field_name="Order",
+                fields=[FieldItemCreate(name="Notes", type="text")],
+            ),
+            TableItemCreate(name="Customers", primary_field_name="Name", fields=[]),
+        ],
+    )
+
+    assert [t["name"] for t in result["created_tables"]] == ["Customers"]
+    assert [t["id"] for t in result["reused_tables"]] == [orders.id]
+    (conflict,) = result["incomplete_reused_tables"]
+    assert [f["name"] for f in conflict["missing_fields"]] == ["Notes"]
+    assert "create_fields" in result["next_steps"]
+    assert "ask_user" not in result["next_steps"]
+    assert statuses == ["Creating table Customers..."]
+    assert list(orders.field_set.values_list("name", flat=True)) == ["Order"]

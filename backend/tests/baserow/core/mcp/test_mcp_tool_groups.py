@@ -36,7 +36,7 @@ def test_core_database_tool_groups():
     assert groups["create_rows"] == GROUP_DATABASE_EDIT
     assert groups["update_rows"] == GROUP_DATABASE_EDIT
     assert groups["create_database"] == GROUP_DATABASE_EDIT
-    assert groups["create_table"] == GROUP_DATABASE_EDIT
+    assert groups["create_tables"] == GROUP_DATABASE_EDIT
     assert groups["update_table"] == GROUP_DATABASE_EDIT
     assert groups["create_fields"] == GROUP_DATABASE_EDIT
     assert groups["update_fields"] == GROUP_DATABASE_EDIT

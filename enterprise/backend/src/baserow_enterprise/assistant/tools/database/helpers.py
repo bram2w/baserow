@@ -1,24 +1,19 @@
-from itertools import groupby
 from typing import Any, Callable
 
 from django.contrib.auth.models import AbstractUser
 from django.db import transaction
-from django.db.models import Q
 
 from baserow.contrib.database.fields.actions import CreateFieldActionType
-from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.mcp.services import filter_tables
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.tools import fields as shared_fields
+from baserow.contrib.database.tools.tables import get_tables_schema  # noqa: F401
 from baserow.contrib.database.views.actions import CreateViewFilterActionType
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import View, ViewFilter
-from baserow.core.db import specific_iterator
 from baserow.core.models import Workspace
 from baserow.core.tools import ToolContext
-from baserow_enterprise.assistant.tools.database.types.table import TableItem
 from baserow_enterprise.assistant.tools.shared import (
     ToolInputError,
     raise_if_permission_denied,
@@ -50,76 +45,6 @@ def get_table(user: AbstractUser, workspace: Workspace, table_id: int) -> Table:
             f"Table with ID {table_id} not found. "
             "Use get_tables_schema to find valid table IDs."
         )
-
-
-def get_tables_schema(
-    tables: list[Table],
-    full_schema: bool = False,
-) -> list[TableItem]:
-    """
-    Build serialised schema descriptions for the given tables.
-
-    :param tables: Tables to describe.
-    :param full_schema: If True include all fields, otherwise only primary
-        fields and relationships.
-    :returns: List of table descriptions, in the same order as the input tables.
-    """
-
-    q = Q(table__in=tables)
-    if not full_schema:
-        q &= Q(linkrowfield__isnull=False) | Q(primary=True)
-
-    base_field_queryset = FieldHandler().get_base_fields_queryset()
-    fields = specific_iterator(
-        base_field_queryset.filter(q).order_by("table_id", "order"),
-        per_content_type_queryset_hook=(
-            lambda field, queryset: field_type_registry.get_by_model(
-                field
-            ).enhance_field_queryset(queryset, field)
-        ),
-    )
-
-    table_items: list[TableItem] = []
-    tables_by_id = {table.id: table for table in tables}
-    for table_id, fields_in_table in groupby(fields, lambda f: f.table_id):
-        table_items.append(_get_table_schema(tables_by_id, table_id, fields_in_table))
-
-    # Preserve the input order
-    input_order = {t.id: i for i, t in enumerate(tables)}
-    table_items.sort(key=lambda t: input_order[t.id])
-    return table_items
-
-
-def _get_table_schema(
-    tables_by_id: dict[int, Table], table_id: int, fields_in_table: list[Field]
-) -> TableItem:
-    """
-    Build a TableItem schema description for a single table given its fields.
-
-    :param tables_by_id: Mapping of table ID → table instance for all tables.
-    :param table_id: ID of the table to describe.
-    :param fields_in_table: Iterable of field instances belonging to the table.
-    :returns: TableItem describing the table and its fields.
-    """
-
-    fields_in_table = list(fields_in_table)
-    primary_field = next((f for f in fields_in_table if f.primary), None)
-    if primary_field is None:
-        raise ValueError(f"Table {table_id} has no primary field")
-    primary_field_item = FieldItem.from_django_orm(primary_field)
-
-    table = tables_by_id[table_id]
-
-    return TableItem(
-        id=table_id,
-        name=table.name,
-        primary_field=primary_field_item,
-        fields=[
-            FieldItem.from_django_orm(f)
-            for f in fields_in_table
-            if f.id != primary_field.id
-        ],
-    )
 
 
 FormulaFixer = Callable[[Table, str, str], str | None]
