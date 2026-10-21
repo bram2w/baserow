@@ -48,6 +48,9 @@ def _user_error_mapping() -> dict[type[Exception], Any]:
             fe.ERROR_FIELD_CONSTRAINT_DOES_NOT_SUPPORT_DEFAULT_VALUE
         ),
         f.FieldDataConstraintException: fe.ERROR_FIELD_DATA_CONSTRAINT,
+        f.FailedToLockFieldDueToConflict: (
+            fe.ERROR_FAILED_TO_LOCK_FIELD_DUE_TO_CONFLICT
+        ),
         r.CannotCreateRowsInTable: re.ERROR_CANNOT_CREATE_ROWS_IN_TABLE,
         r.CannotDeleteRowsInTable: re.ERROR_CANNOT_DELETE_ROWS_IN_TABLE,
         r.RowIdsNotUnique: re.ERROR_ROW_IDS_NOT_UNIQUE,

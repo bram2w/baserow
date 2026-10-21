@@ -676,7 +676,11 @@ def update_fields(
         return {"updated_fields": [], "errors": [], "changed": False}
 
     tool_context = ctx.deps.tool_context()
-    result = shared_fields.update_fields(tool_context, fields)
+    try:
+        result = shared_fields.update_fields(tool_context, fields)
+    except DjangoValidationError as exc:
+        # Another operation holds a lock on one of the fields.
+        raise ModelRetry(" ".join(exc.messages))
 
     formula_errors = result.pop("formula_errors", [])
     if formula_errors:

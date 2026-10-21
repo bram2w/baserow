@@ -7,9 +7,10 @@ so this module calls no model.
 import json
 from typing import Annotated, Any, Literal, get_args
 
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.db import transaction
+from django.db import DatabaseError, transaction
 from django.db.models import Q
 from django.utils.translation import gettext as _
 
@@ -24,6 +25,7 @@ from baserow.contrib.database.fields.actions import (
     DeleteFieldActionType,
     UpdateFieldActionType,
 )
+from baserow.contrib.database.fields.exceptions import FailedToLockFieldDueToConflict
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field as BaserowField
 from baserow.contrib.database.fields.models import (
@@ -36,6 +38,7 @@ from baserow.contrib.database.fields.models import (
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.tools.errors import user_error_message
 from baserow.core.cache import local_cache
 from baserow.core.exceptions import InstanceTypeDoesNotExist, PermissionException
 from baserow.core.formula.parser.exceptions import BaserowFormulaException
@@ -1108,20 +1111,41 @@ def create_fields(
     return result
 
 
-def _lock_order(field_updates: list[FieldItemUpdate]) -> list[int]:
+def _fields_to_lock(ctx: ToolContext, field_ids: list[int]):
     """
-    The positions of the updates sorted by table and field id, so two calls lock
-    the same rows in the same order and can't deadlock while they wait.
+    The requested fields of the workspace, locked with their table like
+    ``FieldHandler.get_specific_field_for_update`` does, in table and field id
+    order.
     """
 
-    ids = [update.field_id for update in field_updates]
-    table_ids = dict(
-        BaserowField.objects_and_trash.filter(id__in=ids).values_list("id", "table_id")
+    tables = TableHandler().list_workspace_tables(ctx.user, ctx.workspace)
+    return (
+        BaserowField.objects.filter(id__in=field_ids, table__in=tables)
+        .select_related("table")
+        .select_for_update(
+            of=("self", "table"), nowait=settings.BASEROW_NOWAIT_FOR_LOCKS
+        )
+        .order_by("table_id", "id")
     )
-    return sorted(
-        range(len(field_updates)),
-        key=lambda i: (table_ids.get(ids[i], 0), ids[i], i),
-    )
+
+
+def _lock_fields(ctx: ToolContext, field_ids: list[int]) -> None:
+    """
+    Lock every requested field before the first update. Concurrent calls then take
+    the locks in one order, which makes a deadlock between them less likely.
+
+    :raises DjangoValidationError: With the REST API's message when another
+        operation holds a lock and Baserow doesn't wait for it.
+    """
+
+    try:
+        list(_fields_to_lock(ctx, field_ids))
+    except DatabaseError as exc:
+        if "could not obtain lock on row" not in str(exc):
+            raise
+        raise DjangoValidationError(
+            user_error_message(FailedToLockFieldDueToConflict())
+        ) from exc
 
 
 def update_fields(
@@ -1141,13 +1165,16 @@ def update_fields(
     formula_errors with the parser's message.
     """
 
-    # Outcome per input position: ("updated" | "formula_error" | "error", value)
-    outcomes: dict[int, tuple[str, Any]] = {}
+    updated = []
+    errors = []
+    formula_errors = []
     changed = False
 
     with transaction.atomic():
-        for index in _lock_order(fields):
-            field_update = fields[index]
+        _lock_fields(ctx, [field_update.field_id for field_update in fields])
+        # Applied in the caller's order, so a rename can come before a formula
+        # that uses the new name.
+        for field_update in fields:
             ctx.update_status(
                 _("Updating field %(field_id)s...")
                 % {"field_id": field_update.field_id}
@@ -1155,28 +1182,20 @@ def update_fields(
             try:
                 with transaction.atomic():
                     field_item, field_changed = update_field(ctx, field_update)
-                outcomes[index] = ("updated", field_item.model_dump())
+                updated.append(field_item.model_dump())
                 changed = changed or field_changed
             except InvalidFormulaFieldError as exc:
-                outcomes[index] = (
-                    "formula_error",
-                    {"field_id": field_update.field_id, **_formula_error(exc)},
+                formula_errors.append(
+                    {"field_id": field_update.field_id, **_formula_error(exc)}
                 )
             except PermissionException:
                 raise
             except Exception as error:
                 forget_cached_table_models()
-                outcomes[index] = (
-                    "error",
+                errors.append(
                     f"Error updating field {field_update.field_id}: "
-                    f"{_item_error_message(error)}",
+                    f"{_item_error_message(error)}"
                 )
-
-    # Reported in the caller's order, whatever order the fields were locked in.
-    in_order = [outcomes[index] for index in range(len(fields))]
-    updated = [value for kind, value in in_order if kind == "updated"]
-    errors = [value for kind, value in in_order if kind == "error"]
-    formula_errors = [value for kind, value in in_order if kind == "formula_error"]
 
     result: dict[str, Any] = {"updated_fields": updated, "changed": changed}
     if errors:

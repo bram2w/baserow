@@ -3,7 +3,7 @@
 import json
 from unittest.mock import patch
 
-from django.db import IntegrityError, connection, transaction
+from django.db import DatabaseError, IntegrityError, connection, transaction
 from django.test.utils import CaptureQueriesContext
 
 import pytest
@@ -712,35 +712,76 @@ def test_create_fields_matches_a_link_field_name_ignoring_case_and_outer_spaces(
 
 
 @pytest.mark.django_db
-def test_update_fields_locks_in_table_order_and_answers_in_input_order(
+def test_update_fields_applies_a_rename_before_a_formula_that_uses_it(
+    data_fixture, table_ctx
+):
+    ctx, table = table_ctx
+    # The formula field has the lower id, so an id order would update it first.
+    double = data_fixture.create_formula_field(table=table, name="Double", formula="1")
+    price = data_fixture.create_number_field(table=table, name="Price")
+
+    result = update_fields(
+        ctx,
+        [
+            FieldItemUpdate(field_id=price.id, name="Cost"),
+            FieldItemUpdate(field_id=double.id, formula="field('Cost') * 2"),
+        ],
+    )
+
+    assert "formula_errors" not in result
+    assert "errors" not in result
+    assert [f["name"] for f in result["updated_fields"]] == ["Cost", "Double"]
+    double.refresh_from_db()
+    assert double.formula == "field('Cost') * 2"
+
+
+@pytest.mark.django_db
+def test_update_fields_locks_every_field_up_front_in_table_order(
     data_fixture, table_ctx
 ):
     ctx, table = table_ctx
     later = data_fixture.create_database_table(database=table.database)
     later_field = data_fixture.create_text_field(table=later, name="Later")
     first = data_fixture.create_text_field(table=table, name="First")
-    formula = data_fixture.create_formula_field(table=table, name="F", formula="'x'")
-    missing_id = later_field.id + 1000
-    locked = []
-    original = fields_module.update_field
 
-    def update_field(ctx, field_update):
-        locked.append(field_update.field_id)
-        return original(ctx, field_update)
-
-    with patch.object(fields_module, "update_field", update_field):
-        result = update_fields(
+    with CaptureQueriesContext(connection) as queries:
+        update_fields(
             ctx,
             [
-                FieldItemUpdate(field_id=missing_id, name="Nope"),
                 FieldItemUpdate(field_id=later_field.id, name="Later new"),
-                FieldItemUpdate(field_id=formula.id, formula="concat("),
                 FieldItemUpdate(field_id=first.id, name="First new"),
             ],
         )
 
-    # A missing field sorts first, then by table and field id.
-    assert locked == [missing_id, first.id, formula.id, later_field.id]
-    assert [f["name"] for f in result["updated_fields"]] == ["Later new", "First new"]
-    assert [e["field_id"] for e in result["formula_errors"]] == [formula.id]
-    assert result["errors"][0].startswith(f"Error updating field {missing_id}")
+    sqls = [q["sql"] for q in queries.captured_queries]
+    lock = next(i for i, sql in enumerate(sqls) if "FOR UPDATE" in sql)
+    assert (
+        'ORDER BY "database_field"."table_id" ASC, "database_field"."id" ASC'
+        in (sqls[lock])
+    )
+    assert not any(sql.startswith("UPDATE") for sql in sqls[:lock])
+
+
+@pytest.mark.django_db
+def test_update_fields_over_mcp_reports_a_lock_conflict(data_fixture):
+    endpoint = data_fixture.create_mcp_endpoint(allowed_tools=FIELD_TOOLS)
+    database = data_fixture.create_database_application(workspace=endpoint.workspace)
+    table = data_fixture.create_database_table(database=database)
+    field = data_fixture.create_text_field(table=table, name="Name")
+
+    def locked(*args, **kwargs):
+        raise DatabaseError("could not obtain lock on row in relation")
+
+    with patch.object(fields_module, "_fields_to_lock", locked):
+        result = _call(
+            endpoint,
+            "update_fields",
+            {"fields": [{"field_id": field.id, "name": "Renamed"}]},
+        )
+
+    assert result.isError is True
+    assert result.content[0].text == (
+        "Invalid value. The requested field is already being updated or used by "
+        "another operation, please try again after other concurrent operations "
+        "have finished."
+    )
