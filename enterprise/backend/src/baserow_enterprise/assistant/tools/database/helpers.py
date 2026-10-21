@@ -48,6 +48,15 @@ def get_table(user: AbstractUser, workspace: Workspace, table_id: int) -> Table:
 FormulaFixer = Callable[[Table, str, str], str | None]
 
 
+def has_formula(error: dict) -> bool:
+    """
+    Whether a formula error has a formula to repair. Without one the fixer would
+    have to invent what the field computes.
+    """
+
+    return bool((error.get("formula") or "").strip())
+
+
 def create_repaired_formula_fields(
     user: AbstractUser,
     table: Table,
@@ -69,6 +78,9 @@ def create_repaired_formula_fields(
     created: list[FieldItem] = []
     remaining: list[dict] = []
     for error in formula_errors:
+        if not has_formula(error):
+            remaining.append(error)
+            continue
         try:
             formula = formula_fixer(table, error["field_name"], error["formula"])
             if formula:
@@ -113,6 +125,9 @@ def apply_repaired_formula_updates(
     errors: list[str] = []
     for error in formula_errors:
         field_id = error["field_id"]
+        if not has_formula(error):
+            errors.append(f"Error updating field {field_id}: {error['error']}")
+            continue
         try:
             table = filter_tables(tool_context.user, tool_context.workspace).get(
                 id=error["table_id"]

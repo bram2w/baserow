@@ -1489,7 +1489,7 @@ def test_formula_field_validation_raises_for_empty_formula(data_fixture):
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("formula", ["invalid_stuff!!!", ""])
+@pytest.mark.parametrize("formula", ["invalid_stuff!!!", "$formula: the name"])
 def test_create_fields_tool_with_invalid_formula_auto_fixes(data_fixture, formula):
     """
     When a formula field has an invalid formula, create_fields

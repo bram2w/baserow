@@ -13,8 +13,10 @@ from baserow.contrib.database.fields.models import Field, SelectOption
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.models import Table
 from baserow.core.action.handler import ActionHandler
+from baserow.core.exceptions import PermissionException
 from baserow_enterprise.assistant.tools.database.tools import (
     create_fields,
+    create_tables,
     delete_fields,
     get_tables_schema,
     update_fields,
@@ -24,6 +26,7 @@ from baserow_enterprise.assistant.tools.database.types import (
     FieldItemUpdate,
     SelectOptionCreate,
     SelectOptionUpdate,
+    TableItemCreate,
 )
 
 from .utils import make_test_ctx
@@ -654,3 +657,128 @@ def test_shared_field_tools_stop_when_the_chat_is_cancelled(data_fixture):
         delete_fields(ctx, field_ids=[field.id], thought="delete")
 
     assert Field.objects.filter(id=field.id).exists()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("formula", ["", "  "])
+def test_create_fields_does_not_ask_the_fixer_to_invent_a_formula(
+    data_fixture, monkeypatch, formula
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+    data_fixture.create_text_field(table=table, name="Name", primary=True)
+    calls = _fake_fixer(monkeypatch, "'invented'")
+
+    result = create_fields(
+        make_test_ctx(user, workspace),
+        table_id=table.id,
+        fields=[FieldItemCreate(name="F", type="formula", formula=formula)],
+        thought="add formula",
+    )
+
+    assert calls == []
+    assert result["created_fields"] == []
+    (error,) = result["formula_errors"]
+    assert (error["field_name"], error["error"]) == ("F", "'F' needs a formula.")
+    assert not table.field_set.filter(name="F").exists()
+
+
+@pytest.mark.django_db
+def test_update_fields_does_not_ask_the_fixer_to_invent_a_formula(
+    data_fixture, monkeypatch
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+    field = data_fixture.create_formula_field(table=table, name="F", formula="'x'")
+    calls = _fake_fixer(monkeypatch, "'invented'")
+
+    result = update_fields(
+        make_test_ctx(user, workspace),
+        fields=[FieldItemUpdate(field_id=field.id, formula="")],
+        thought="clear formula",
+    )
+
+    assert calls == []
+    assert result["errors"] == [
+        f"Error updating field {field.id}: 'F' needs a formula."
+    ]
+    field.refresh_from_db()
+    assert field.formula == "'x'"
+
+
+@pytest.mark.django_db
+def test_create_tables_notes_a_formula_field_without_a_formula(
+    data_fixture, monkeypatch
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    calls = _fake_fixer(monkeypatch, "'invented'")
+
+    result = create_tables(
+        make_test_ctx(user, workspace),
+        database_id=database.id,
+        tables=[
+            TableItemCreate(
+                name="Orders",
+                primary_field_name="Order",
+                fields=[FieldItemCreate(name="Total", type="formula")],
+            )
+        ],
+        add_sample_rows=False,
+        thought="create Orders",
+    )
+
+    table = database.table_set.get(name="Orders")
+    assert calls == []
+    assert result["notes"] == [
+        f"Formula field 'Total' in table_{table.id} was not created: it needs a "
+        "formula."
+    ]
+    assert not table.field_set.filter(name="Total").exists()
+
+
+@pytest.mark.django_db
+def test_create_tables_notes_every_unrepaired_formula_after_a_denial(
+    data_fixture, monkeypatch
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    _fake_fixer(monkeypatch, "'fixed'")
+    monkeypatch.setattr(
+        "baserow_enterprise.assistant.tools.database.helpers.CreateFieldActionType.do",
+        MagicMock(side_effect=PermissionException()),
+    )
+
+    result = create_tables(
+        make_test_ctx(user, workspace),
+        database_id=database.id,
+        tables=[
+            TableItemCreate(
+                name=name,
+                primary_field_name="Name",
+                fields=[
+                    FieldItemCreate(name=f"{name} X", type="formula", formula="concat(")
+                ],
+            )
+            for name in ("A", "B")
+        ],
+        add_sample_rows=False,
+        thought="create A and B",
+    )
+
+    a = database.table_set.get(name="A")
+    b = database.table_set.get(name="B")
+    permission_note, *formula_notes = result["notes"]
+    assert permission_note.startswith(
+        f"Permission denied while creating fields in table_{a.id}."
+    )
+    assert [note.split(":")[0] for note in formula_notes] == [
+        f"Invalid formula for field 'A X' in table_{a.id}",
+        f"Invalid formula for field 'B X' in table_{b.id}",
+    ]

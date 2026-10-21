@@ -406,12 +406,18 @@ def _repair_table_formulas(
         ctx.deps.user, ctx.deps.workspace, ctx.deps.tool_helpers
     )
     tables_by_id = {table.id: table for table in creation.created_tables}
+    denied = False
     for table_id, errors in groupby(
         creation.formula_errors, key=lambda error: error["table_id"]
     ):
+        table = tables_by_id[table_id]
+        errors = list(errors)
+        if denied:
+            _note_unrepaired_formulas(creation, table_id, errors)
+            continue
         try:
             _, remaining = helpers.create_repaired_formula_fields(
-                tool_context.user, tables_by_id[table_id], formula_fixer, list(errors)
+                tool_context.user, table, formula_fixer, errors
             )
         except PermissionException:
             creation.notes.append(
@@ -420,14 +426,29 @@ def _repair_table_formulas(
                 "Do not retry the denied operation."
             )
             creation.permission_denied = True
-            break
-        for error in remaining:
-            creation.notes.append(
-                f"Invalid formula for field '{error['field_name']}' "
-                f"in table_{table_id}: {error['error']}. "
-                f"Use generate_formula to fix it."
-            )
+            denied = True
+            # The fields repaired before the denial exist.
+            created = set(table.field_set.values_list("name", flat=True))
+            remaining = [e for e in errors if e["field_name"] not in created]
+        _note_unrepaired_formulas(creation, table_id, remaining)
     creation.formula_errors = []
+
+
+def _note_unrepaired_formulas(
+    creation: shared_tables.TableCreation, table_id: int, errors: list[dict]
+) -> None:
+    for error in errors:
+        if not helpers.has_formula(error):
+            creation.notes.append(
+                f"Formula field '{error['field_name']}' in table_{table_id} was "
+                f"not created: it needs a formula."
+            )
+            continue
+        creation.notes.append(
+            f"Invalid formula for field '{error['field_name']}' "
+            f"in table_{table_id}: {error['error'].rstrip('.')}. "
+            f"Use generate_formula to fix it."
+        )
 
 
 def _create_sample_rows(
