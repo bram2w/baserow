@@ -493,9 +493,7 @@ def table_schema_conflict(
     missing_fields: list[dict[str, Any]] = []
     field_conflicts: list[dict[str, Any]] = []
     for requested_field in requested.fields:
-        if option_value_key(requested_field.name) == option_value_key(
-            requested.primary_field_name
-        ):
+        if requested_field.name == requested.primary_field_name:
             continue
 
         actual_field = _find_field(actual.fields, requested_field.name)
@@ -643,12 +641,12 @@ def get_database(ctx: ToolContext, database_id: int) -> Database:
 
 
 def _non_primary_fields(table: TableItemCreate) -> list[FieldItemCreate]:
-    """Exclude the field specification represented by the primary field."""
+    """
+    Exclude the field specification represented by the primary field. Names match
+    exactly, like field names do in a table.
+    """
 
-    primary_name = option_value_key(table.primary_field_name)
-    return [
-        field for field in table.fields if option_value_key(field.name) != primary_name
-    ]
+    return [field for field in table.fields if field.name != table.primary_field_name]
 
 
 def _create_empty_table(

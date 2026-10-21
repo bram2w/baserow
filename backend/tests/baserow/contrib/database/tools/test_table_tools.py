@@ -454,6 +454,54 @@ def test_shared_create_tables_matches_reused_field_names_ignoring_case_and_space
     assert "next_steps" not in result
 
 
+@pytest.mark.django_db
+def test_shared_create_tables_keeps_a_field_named_like_the_primary_with_spaces(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+
+    create_tables(
+        ToolContext(user, workspace),
+        database.id,
+        [
+            TableItemCreate(
+                name="People",
+                primary_field_name="Name",
+                fields=[
+                    FieldItemCreate(name="Name", type="text"),
+                    FieldItemCreate(name=" Name ", type="text"),
+                ],
+            )
+        ],
+    )
+
+    people = Table.objects.get(database=database, name="People")
+    assert sorted(people.field_set.values_list("name", flat=True)) == [" Name ", "Name"]
+
+
+def test_reused_table_reports_a_field_named_like_the_primary_with_spaces():
+    requested = TableItemCreate(
+        name="Orders",
+        primary_field_name="Order",
+        fields=[
+            FieldItemCreate(name="Order", type="text"),
+            FieldItemCreate(name=" Order ", type="text"),
+        ],
+    )
+    actual = TableItem(
+        id=1,
+        name="Orders",
+        primary_field=FieldItem(id=10, name="Order", type="text"),
+        fields=[],
+    )
+
+    conflict = table_schema_conflict(requested, actual)
+
+    assert [f["name"] for f in conflict["missing_fields"]] == [" Order "]
+
+
 @pytest.mark.parametrize("through_field", ["link", " LINK "])
 def test_reused_table_matches_a_lookup_link_name_ignoring_case_and_spaces(
     through_field,
