@@ -250,8 +250,5 @@ class PublicDashboardDataSourceDispatchView(APIView):
             base_queryset=DashboardDataSource.objects.filter(dashboard=dashboard),
         )
 
-        # TODO: decide how to handle Advanced features (grouped aggregate rows)
-        # when used in a dashboard chart (which only needs premium). We already do
-        # the license check at creation, so this may be ok?
         dispatch_context = DashboardDispatchContext(request, dashboard.workspace)
         return Response(handler.dispatch_data_source(data_source, dispatch_context))
