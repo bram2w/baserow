@@ -640,3 +640,72 @@ def test_create_views_reports_a_database_error_in_the_field_options(table_ctx):
 
     assert "were rejected and no views were created" in exc_info.value.messages[0]
     assert f"{name.id} (Name, text)" in exc_info.value.messages[0]
+
+
+def _form_view_arguments(table, name, **settings):
+    return {
+        "table_id": table.id,
+        "views": [
+            {
+                "name": "Contact",
+                "type": "form",
+                "submit_action": "REDIRECT",
+                "field_options": [
+                    {
+                        "field_id": name.id,
+                        "name": "Name",
+                        "description": "",
+                        "required": True,
+                        "order": 1,
+                    }
+                ],
+                **settings,
+            }
+        ],
+    }
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "url,error",
+    [
+        ("javascript:alert(1)", "is not a valid URL"),
+        ("https://example.com/" + "a" * 2000, "at most 2000 characters"),
+    ],
+)
+def test_create_views_over_mcp_rejects_an_unsafe_redirect_url(data_fixture, url, error):
+    endpoint = data_fixture.create_mcp_endpoint(allowed_tools=VIEW_TOOLS)
+    database = data_fixture.create_database_application(workspace=endpoint.workspace)
+    table = data_fixture.create_database_table(database=database)
+    name = data_fixture.create_text_field(table=table, name="Name", primary=True)
+
+    result = _call(
+        endpoint,
+        "create_views",
+        _form_view_arguments(table, name, submit_action_redirect_url=url),
+    )
+
+    assert result.isError is True
+    assert result.content[0].text.startswith("Invalid arguments. views.0.")
+    assert error in result.content[0].text
+    assert not FormView.objects.filter(table=table).exists()
+
+
+@pytest.mark.django_db
+def test_create_views_over_mcp_stores_an_https_redirect_url(data_fixture):
+    endpoint = data_fixture.create_mcp_endpoint(allowed_tools=VIEW_TOOLS)
+    database = data_fixture.create_database_application(workspace=endpoint.workspace)
+    table = data_fixture.create_database_table(database=database)
+    name = data_fixture.create_text_field(table=table, name="Name", primary=True)
+
+    result = _call(
+        endpoint,
+        "create_views",
+        _form_view_arguments(
+            table, name, submit_action_redirect_url="https://example.com/thanks"
+        ),
+    )
+
+    assert result.isError is False
+    form = FormView.objects.get(table=table)
+    assert form.submit_action_redirect_url == "https://example.com/thanks"

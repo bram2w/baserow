@@ -5,13 +5,20 @@ from typing import Annotated, Any, Literal
 
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.validators import URLValidator
 from django.db import transaction
 from django.utils.translation import gettext as _
 
 from dateutil import parser as dateutil_parser
-from pydantic import BaseModel, ConfigDict, Field, model_serializer, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_validator,
+    model_serializer,
+    model_validator,
+)
 
-from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
     DateField,
@@ -27,10 +34,7 @@ from baserow.contrib.database.views.actions import (
     CreateViewFilterActionType,
     UpdateViewFieldOptionsActionType,
 )
-from baserow.contrib.database.views.exceptions import (
-    ViewFilterNotSupported,
-    ViewFilterTypeNotAllowedForField,
-)
+from baserow.contrib.database.views.exceptions import ViewFilterNotSupported
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import FormView, View, ViewFilter
 from baserow.contrib.database.views.registries import view_type_registry
@@ -340,12 +344,26 @@ class ViewItemCreate(BaseModel):
     )
     submit_action_message: str = Field("", description="(form) Message after submit.")
     submit_action_redirect_url: str = Field(
-        "", description="(form) Redirect URL after submit."
+        "",
+        max_length=2000,
+        description="(form) Redirect URL after submit, an http(s) URL, or ''.",
     )
     field_options: list[FormFieldOption] | None = Field(
         None,
         description="(form) Fields to show (OPT-IN: include all you want visible).",
     )
+
+    @field_validator("submit_action_redirect_url")
+    @classmethod
+    def _validate_redirect_url(cls, value: str) -> str:
+        # Validated like the REST API: the public form page navigates to it, so a
+        # javascript: URL would run in Baserow's origin.
+        if value:
+            try:
+                URLValidator()(value)
+            except DjangoValidationError:
+                raise ValueError(f"'{value}' is not a valid URL.") from None
+        return value
 
     # Required fields per type: {type: [(attr_name, display_name), ...]}
     _REQUIRED_FIELDS: dict[str, list[tuple[str, str]]] = {
@@ -890,14 +908,6 @@ def create_views(
     return result
 
 
-# Raised by the handler before it writes, for a filter the view or field refuses.
-_REJECTED_FILTER_ERRORS = (
-    ViewFilterNotSupported,
-    ViewFilterTypeNotAllowedForField,
-    FieldNotInTable,
-)
-
-
 def create_view_filters(
     ctx: ToolContext,
     view_filters: Annotated[
@@ -947,7 +957,8 @@ def create_view_filters(
             for item in view_filter.filters:
                 try:
                     orm_filter = create_view_filter(ctx.user, orm_view, fields, item)
-                except (ValueError, *_REJECTED_FILTER_ERRORS) as exc:
+                # The handler raises ViewFilterNotSupported before it writes.
+                except (ValueError, ViewFilterNotSupported) as exc:
                     skipped_filters.append({**item.model_dump(), "error": str(exc)})
                     continue
                 created_filters.append({"id": orm_filter.id, **item.model_dump()})
