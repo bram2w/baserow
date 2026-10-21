@@ -228,10 +228,17 @@ export const actions = {
         return
       }
       if (metadata.reset) {
+        // A baseline rebuilds output only; the run's lifecycle is not in it.
+        const { status, cancelRequested } = follower.view
         commit('UPDATE_FOLLOWER', {
           runId,
           values: {
-            view: { ...initialRunView(), ...type.getInitialView() },
+            view: {
+              ...initialRunView(),
+              ...type.getInitialView(),
+              status,
+              cancelRequested,
+            },
             replayUnavailable: false,
           },
         })

@@ -103,15 +103,21 @@ describe('core HTTP run follower without a product adapter', () => {
     })
   })
 
-  test('an explicit reset replaces state and never fires a live effect', async () => {
+  test('an explicit reset rebuilds output, keeps the run status and never fires a live effect', async () => {
     await follow()
+    await accept(record('8', 'run.started'))
+    await accept(record('9', 'run.cancel_requested'))
     await accept(record('10', 'text.delta', { segment: 0, text: 'Old' }))
     await accept({
       ...record('11', 'text.delta', { segment: 1, text: 'Baseline' }),
       cursor: 'other:11-0',
       reset: true,
     })
-    expect(current().view.text).toBe('Baseline')
+    expect(current().view).toMatchObject({
+      text: 'Baseline',
+      status: 'running',
+      cancelRequested: true,
+    })
     expect(type.onEvent.mock.calls.at(-1)[2]).toBe(false)
   })
 
