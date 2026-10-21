@@ -5,9 +5,7 @@ service functions used by MCP tools and the enterprise assistant.
 
 import pytest
 
-from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.mcp import services
-from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.models import Table
 from baserow.core.mcp.exceptions import MCPToolInputError
 
@@ -55,7 +53,7 @@ def test_get_table_returns_correct_table(data_fixture):
 
 
 # ---------------------------------------------------------------------------
-# list_databases / get_database / create_database
+# list_databases
 # ---------------------------------------------------------------------------
 
 
@@ -75,29 +73,8 @@ def test_list_databases_returns_workspace_databases(data_fixture):
     assert len(ids) == 2
 
 
-@pytest.mark.django_db
-def test_get_database_raises_when_not_in_workspace(data_fixture):
-    user = data_fixture.create_user()
-    workspace = data_fixture.create_workspace(user=user)
-    other_db = data_fixture.create_database_application()  # different workspace
-
-    with pytest.raises(Database.DoesNotExist):
-        services.get_database(user, workspace, other_db.id)
-
-
-@pytest.mark.django_db
-def test_create_database(data_fixture):
-    user = data_fixture.create_user()
-    workspace = data_fixture.create_workspace(user=user)
-
-    db = services.create_database(user, workspace, "My Database")
-    assert db.id is not None
-    assert db.name == "My Database"
-    assert isinstance(db, Database)
-
-
 # ---------------------------------------------------------------------------
-# list_tables / create_table / update_table / delete_table
+# list_tables / update_table / delete_table
 # ---------------------------------------------------------------------------
 
 
@@ -128,49 +105,6 @@ def test_list_tables_filtered_by_database(data_fixture):
 
     tables = services.list_tables(user, workspace, database_id=db1.id)
     assert [t.id for t in tables] == [t1.id]
-
-
-@pytest.mark.django_db
-def test_create_table_no_fields(data_fixture):
-    user = data_fixture.create_user()
-    workspace = data_fixture.create_workspace(user=user)
-    db = data_fixture.create_database_application(workspace=workspace)
-
-    result = services.create_table(user, workspace, db.id, "Orders")
-    assert result["name"] == "Orders"
-    assert result["database_id"] == db.id
-    assert isinstance(result["id"], int)
-    assert result["fields"] == []
-
-
-@pytest.mark.django_db
-def test_create_table_with_fields(data_fixture):
-    user = data_fixture.create_user()
-    workspace = data_fixture.create_workspace(user=user)
-    db = data_fixture.create_database_application(workspace=workspace)
-
-    result = services.create_table(
-        user,
-        workspace,
-        db.id,
-        "Products",
-        fields=[
-            {"name": "Price", "type": "number", "number_decimal_places": 2},
-        ],
-    )
-    assert result["name"] == "Products"
-    field_names = [f["name"] for f in result["fields"]]
-    assert "Price" in field_names
-
-
-@pytest.mark.django_db
-def test_create_table_wrong_database(data_fixture):
-    user = data_fixture.create_user()
-    workspace = data_fixture.create_workspace(user=user)
-    other_db = data_fixture.create_database_application()  # different workspace
-
-    with pytest.raises(Database.DoesNotExist):
-        services.create_table(user, workspace, other_db.id, "Bad Table")
 
 
 @pytest.mark.django_db
@@ -227,63 +161,6 @@ def test_get_table_schema_excludes_inaccessible_tables(data_fixture):
 
     schemas = services.get_table_schema(user, workspace, [other_table.id])
     assert schemas == []
-
-
-# ---------------------------------------------------------------------------
-# create_fields / update_fields / delete_fields
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.django_db
-def test_create_fields(data_fixture):
-    user = data_fixture.create_user()
-    workspace = data_fixture.create_workspace(user=user)
-    db = data_fixture.create_database_application(workspace=workspace)
-    table = data_fixture.create_database_table(database=db)
-
-    created = services.create_fields(
-        user,
-        workspace,
-        table.id,
-        [{"name": "Status", "type": "text"}],
-    )
-    assert len(created) == 1
-    assert created[0]["name"] == "Status"
-    assert created[0]["type"] == "text"
-
-
-@pytest.mark.django_db
-def test_update_fields(data_fixture):
-    user = data_fixture.create_user()
-    workspace = data_fixture.create_workspace(user=user)
-    db = data_fixture.create_database_application(workspace=workspace)
-    table = data_fixture.create_database_table(database=db)
-    field = data_fixture.create_text_field(name="Old", table=table)
-
-    updated = services.update_fields(user, workspace, [{"id": field.id, "name": "New"}])
-    assert updated[0]["name"] == "New"
-
-
-@pytest.mark.django_db
-def test_delete_fields(data_fixture):
-    user = data_fixture.create_user()
-    workspace = data_fixture.create_workspace(user=user)
-    db = data_fixture.create_database_application(workspace=workspace)
-    table = data_fixture.create_database_table(database=db)
-    field = data_fixture.create_text_field(name="ToDelete", table=table)
-
-    services.delete_fields(user, workspace, [field.id])
-    assert not Field.objects.filter(id=field.id, trashed=False).exists()
-
-
-@pytest.mark.django_db
-def test_delete_fields_outside_workspace_raises(data_fixture):
-    user = data_fixture.create_user()
-    workspace = data_fixture.create_workspace(user=user)
-    other_field = data_fixture.create_text_field()  # different workspace
-
-    with pytest.raises(Field.DoesNotExist):
-        services.delete_fields(user, workspace, [other_field.id])
 
 
 # ---------------------------------------------------------------------------

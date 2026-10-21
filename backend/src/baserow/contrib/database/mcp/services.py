@@ -15,7 +15,6 @@ from django.db import transaction
 
 from baserow.api.utils import apply_exception_mapping
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
@@ -165,41 +164,6 @@ def list_databases(user: AbstractUser, workspace: Workspace) -> list:
     )
 
 
-def get_database(user: AbstractUser, workspace: Workspace, database_id: int):
-    """
-    Return a single database by ID, verifying workspace access.
-
-    :raises Database.DoesNotExist: if not found or not accessible.
-    """
-    from baserow.contrib.database.models import Database
-    from baserow.core.operations import ListApplicationsWorkspaceOperationType
-
-    qs = Database.objects.filter(
-        workspace=workspace,
-        workspace__trashed=False,
-        trashed=False,
-        id=database_id,
-    )
-    return (
-        CoreHandler()
-        .filter_queryset(
-            user, ListApplicationsWorkspaceOperationType.type, qs, workspace=workspace
-        )
-        .get()
-    )
-
-
-def create_database(user: AbstractUser, workspace: Workspace, name: str):
-    """
-    Create a new database in the workspace.
-
-    :returns: The created Database instance.
-    """
-    from baserow.core.actions import CreateApplicationActionType
-
-    return CreateApplicationActionType.do(user, workspace, "database", name=name)
-
-
 # ---------------------------------------------------------------------------
 # Table operations
 # ---------------------------------------------------------------------------
@@ -313,55 +277,6 @@ def _serialize_field(field) -> dict:
     return data
 
 
-# Dependency order for field creation: regular → link_row → lookup → formula.
-_FIELD_CREATION_ORDER: dict[str, int] = {
-    "link_row": 1,
-    "lookup": 2,
-    "formula": 3,
-}
-
-
-@input_errors()
-def create_table(
-    user: AbstractUser,
-    workspace: Workspace,
-    database_id: int,
-    name: str,
-    fields: list[dict] | None = None,
-) -> dict:
-    """
-    Create a table in the given database, optionally with additional fields.
-
-    ``fields`` is a list of dicts with at minimum ``name`` and ``type``.
-    Other keys are passed as kwargs to ``CreateFieldActionType.do()``.
-
-    :returns: Dict with the created table and its fields.
-    """
-    from baserow.contrib.database.fields.actions import CreateFieldActionType
-    from baserow.contrib.database.table.actions import CreateTableActionType
-
-    database = get_database(user, workspace, database_id)
-    table, _ = CreateTableActionType.do(user, database, name, fill_example=False)
-
-    created_fields = []
-    if fields:
-        sorted_fields = sorted(
-            fields, key=lambda f: _FIELD_CREATION_ORDER.get(f.get("type", "text"), 0)
-        )
-        for src_field_spec in sorted_fields:
-            field_spec = dict(src_field_spec)
-            type_name = field_spec.pop("type")
-            created = CreateFieldActionType.do(user, table, type_name, **field_spec)
-            created_fields.append(_serialize_field(created))
-
-    return {
-        "id": table.id,
-        "name": table.name,
-        "database_id": table.database_id,
-        "fields": created_fields,
-    }
-
-
 def update_table(
     user: AbstractUser, workspace: Workspace, table_id: int, name: str
 ) -> dict:
@@ -380,96 +295,6 @@ def delete_table(user: AbstractUser, workspace: Workspace, table_id: int) -> Non
 
     table = get_table(user, workspace, table_id)
     DeleteTableActionType.do(user, table)
-
-
-# ---------------------------------------------------------------------------
-# Field operations
-# ---------------------------------------------------------------------------
-
-
-def get_field(user: AbstractUser, workspace: Workspace, field_id: int):
-    """
-    Return a locked specific field by ID, verifying workspace access.
-
-    :raises Field.DoesNotExist: if not found or outside workspace.
-    """
-
-    try:
-        field = Field.objects.select_related("table__database").get(id=field_id)
-    except Field.DoesNotExist:
-        raise
-    if field.table.database.workspace_id != workspace.id:
-        raise Field.DoesNotExist(f"Field {field_id} not in workspace.")
-    if not filter_tables(user, workspace).filter(id=field.table_id).exists():
-        raise Field.DoesNotExist(f"Field {field_id} not accessible.")
-    return FieldHandler().get_specific_field_for_update(field_id)
-
-
-@input_errors()
-def create_fields(
-    user: AbstractUser, workspace: Workspace, table_id: int, fields: list[dict]
-) -> list[dict]:
-    """
-    Create one or more fields in a table.
-
-    Each dict in ``fields`` must have ``name`` and ``type``; other keys are
-    passed as kwargs to ``CreateFieldActionType.do()``.
-
-    Fields are created in dependency order (regular → link_row → lookup → formula).
-
-    :returns: List of serialized created field dicts.
-    """
-    from baserow.contrib.database.fields.actions import CreateFieldActionType
-
-    table = get_table(user, workspace, table_id)
-    sorted_fields = sorted(
-        fields, key=lambda f: _FIELD_CREATION_ORDER.get(f.get("type", "text"), 0)
-    )
-    created = []
-    for src_field_spec in sorted_fields:
-        field_spec = dict(src_field_spec)
-        type_name = field_spec.pop("type")
-        field = CreateFieldActionType.do(user, table, type_name, **field_spec)
-        created.append(_serialize_field(field))
-    return created
-
-
-@input_errors()
-def update_fields(
-    user: AbstractUser, workspace: Workspace, fields: list[dict]
-) -> list[dict]:
-    """
-    Update one or more fields.
-
-    Each dict must have ``id``; other keys are passed to ``UpdateFieldActionType.do()``.
-
-    :returns: List of serialized updated field dicts.
-    """
-    from baserow.contrib.database.fields.actions import UpdateFieldActionType
-
-    updated = []
-    for src_field_spec in fields:
-        field_spec = dict(src_field_spec)
-        field_id = field_spec.pop("id")
-        new_type_name = field_spec.pop("type", None)
-        field = get_field(user, workspace, field_id)
-        result, _ = UpdateFieldActionType.do(
-            user, field, new_type_name=new_type_name, **field_spec
-        )
-        updated.append(_serialize_field(result))
-    return updated
-
-
-@input_errors()
-def delete_fields(
-    user: AbstractUser, workspace: Workspace, field_ids: list[int]
-) -> None:
-    """Delete (trash) a list of fields by ID."""
-    from baserow.contrib.database.fields.actions import DeleteFieldActionType
-
-    for field_id in field_ids:
-        field = get_field(user, workspace, field_id)
-        DeleteFieldActionType.do(user, field)
 
 
 # ---------------------------------------------------------------------------

@@ -166,9 +166,7 @@ Expected: Claude calls `list_table_rows` with a `search` parameter.
 The following tools exist in the codebase but are **not** exposed to MCP
 clients. They are not listed on the consent page either:
 
-- `create_database`
-- `create_table`, `update_table`, `delete_table`
-- `create_fields`, `update_fields`, `delete_fields`
+- `update_table`, `delete_table`
 
 Verify these do **not** appear in your client's tool list.
 

@@ -14,13 +14,14 @@ EXPECTED = {
     "delete_rows": (False, True),
     "list_views": (True, False),
     "create_tables": (False, False),
-    # Disabled tools, annotated so they are ready when enabled.
-    "create_database": (False, False),
     "create_fields": (False, False),
-    "update_table": (False, True),
     "update_fields": (False, True),
-    "delete_table": (False, True),
     "delete_fields": (False, True),
+    "create_views": (False, False),
+    "create_view_filters": (False, False),
+    # Disabled tools, annotated so they are ready when enabled.
+    "update_table": (False, True),
+    "delete_table": (False, True),
 }
 
 

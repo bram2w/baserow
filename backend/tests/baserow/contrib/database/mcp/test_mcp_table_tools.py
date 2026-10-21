@@ -1,4 +1,4 @@
-"""Tests for static MCP table, database, and field tools."""
+"""Tests for static MCP table and database tools."""
 
 import json
 
@@ -25,12 +25,8 @@ ENABLED_TOOL_NAMES = {
 }
 
 DISABLED_TOOL_NAMES = {
-    "create_database",
     "update_table",
     "delete_table",
-    "create_fields",
-    "update_fields",
-    "delete_fields",
 }
 
 ALL_TOOL_NAMES = ENABLED_TOOL_NAMES | DISABLED_TOOL_NAMES
@@ -98,31 +94,6 @@ def test_call_tool_list_databases(data_fixture):
                 assert db1.id in ids
                 assert db2.id in ids
                 assert len(ids) == 2
-
-        with transaction.atomic():
-            async_to_sync(inner)()
-    finally:
-        current_key.reset(key_token)
-
-
-@pytest.mark.django_db
-@pytest.mark.usefixtures("enable_all_tools")
-def test_call_tool_create_database(data_fixture):
-    user = data_fixture.create_user()
-    workspace = data_fixture.create_workspace(user=user)
-    endpoint = data_fixture.create_mcp_endpoint(user=user, workspace=workspace)
-
-    mcp = BaserowMCPServer()
-    key_token = current_key.set(endpoint.key)
-
-    try:
-
-        async def inner():
-            async with client_session(mcp._mcp_server) as client:
-                result = await client.call_tool("create_database", {"name": "My DB"})
-                data = json.loads(result.content[0].text)
-                assert data["name"] == "My DB"
-                assert isinstance(data["id"], int)
 
         with transaction.atomic():
             async_to_sync(inner)()
@@ -318,102 +289,5 @@ def test_call_tool_get_table_schema_excludes_other_workspace(data_fixture):
 
         with transaction.atomic():
             async_to_sync(inner)()
-    finally:
-        current_key.reset(key_token)
-
-
-@pytest.mark.django_db
-@pytest.mark.usefixtures("enable_all_tools")
-def test_call_tool_create_fields(data_fixture):
-    user = data_fixture.create_user()
-    workspace = data_fixture.create_workspace(user=user)
-    endpoint = data_fixture.create_mcp_endpoint(user=user, workspace=workspace)
-    db = data_fixture.create_database_application(workspace=workspace)
-    table = data_fixture.create_database_table(database=db)
-
-    mcp = BaserowMCPServer()
-    key_token = current_key.set(endpoint.key)
-
-    try:
-
-        async def inner():
-            async with client_session(mcp._mcp_server) as client:
-                result = await client.call_tool(
-                    "create_fields",
-                    {
-                        "table_id": table.id,
-                        "fields": [{"name": "Status", "type": "text"}],
-                    },
-                )
-                data = json.loads(result.content[0].text)
-                assert len(data) == 1
-                assert data[0]["name"] == "Status"
-                assert data[0]["type"] == "text"
-
-        with transaction.atomic():
-            async_to_sync(inner)()
-    finally:
-        current_key.reset(key_token)
-
-
-@pytest.mark.django_db
-@pytest.mark.usefixtures("enable_all_tools")
-def test_call_tool_update_fields(data_fixture):
-    user = data_fixture.create_user()
-    workspace = data_fixture.create_workspace(user=user)
-    endpoint = data_fixture.create_mcp_endpoint(user=user, workspace=workspace)
-    db = data_fixture.create_database_application(workspace=workspace)
-    table = data_fixture.create_database_table(database=db)
-    field = data_fixture.create_text_field(name="Old Name", table=table)
-
-    mcp = BaserowMCPServer()
-    key_token = current_key.set(endpoint.key)
-
-    try:
-
-        async def inner():
-            async with client_session(mcp._mcp_server) as client:
-                result = await client.call_tool(
-                    "update_fields",
-                    {"fields": [{"id": field.id, "name": "New Name"}]},
-                )
-                data = json.loads(result.content[0].text)
-                assert len(data) == 1
-                assert data[0]["name"] == "New Name"
-
-        with transaction.atomic():
-            async_to_sync(inner)()
-    finally:
-        current_key.reset(key_token)
-
-
-@pytest.mark.django_db
-@pytest.mark.usefixtures("enable_all_tools")
-def test_call_tool_delete_fields(data_fixture):
-    from baserow.contrib.database.fields.models import Field
-
-    user = data_fixture.create_user()
-    workspace = data_fixture.create_workspace(user=user)
-    endpoint = data_fixture.create_mcp_endpoint(user=user, workspace=workspace)
-    db = data_fixture.create_database_application(workspace=workspace)
-    table = data_fixture.create_database_table(database=db)
-    field = data_fixture.create_text_field(name="ToDelete", table=table)
-
-    mcp = BaserowMCPServer()
-    key_token = current_key.set(endpoint.key)
-
-    try:
-
-        async def inner():
-            async with client_session(mcp._mcp_server) as client:
-                result = await client.call_tool(
-                    "delete_fields", {"field_ids": [field.id]}
-                )
-                assert result.content[0].text == "Fields successfully deleted."
-
-        with transaction.atomic():
-            async_to_sync(inner)()
-
-        assert not Field.objects.filter(id=field.id, trashed=False).exists()
     finally:
         current_key.reset(key_token)

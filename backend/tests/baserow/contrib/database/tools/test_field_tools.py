@@ -1,10 +1,15 @@
 """Tests for the field tools shared by MCP and Kuma."""
 
+import json
 from unittest.mock import patch
 
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 
 import pytest
+from asgiref.sync import async_to_sync
+from mcp.shared.memory import (
+    create_connected_server_and_client_session as client_session,
+)
 
 from baserow.contrib.database.fields.actions import (
     CreateFieldActionType,
@@ -20,6 +25,7 @@ from baserow.contrib.database.tools.fields import (
     delete_fields,
     update_fields,
 )
+from baserow.core.mcp import BaserowMCPServer, current_key
 from baserow.core.tools import ToolContext
 
 
@@ -292,3 +298,95 @@ def test_delete_fields_keeps_the_other_deletes_when_one_fails(data_fixture, tabl
         False,
         True,
     ]
+
+
+def _call(endpoint, name, arguments):
+    async def inner():
+        token = current_key.set(endpoint.key)
+        try:
+            async with client_session(BaserowMCPServer()._mcp_server) as client:
+                return await client.call_tool(name, arguments)
+        finally:
+            current_key.reset(token)
+
+    with transaction.atomic():
+        return async_to_sync(inner)()
+
+
+FIELD_TOOLS = ["create_fields", "update_fields", "delete_fields"]
+
+
+@pytest.mark.django_db
+def test_field_tools_over_mcp(data_fixture):
+    endpoint = data_fixture.create_mcp_endpoint(allowed_tools=FIELD_TOOLS)
+    database = data_fixture.create_database_application(workspace=endpoint.workspace)
+    table = data_fixture.create_database_table(database=database)
+
+    created = _call(
+        endpoint,
+        "create_fields",
+        {"table_id": table.id, "fields": [{"name": "Status", "type": "text"}]},
+    )
+    field_id = json.loads(created.content[0].text)["created_fields"][0]["id"]
+    updated = _call(
+        endpoint,
+        "update_fields",
+        {"fields": [{"field_id": field_id, "name": "State"}]},
+    )
+    deleted = _call(endpoint, "delete_fields", {"field_ids": [field_id]})
+
+    assert created.isError is False
+    assert json.loads(updated.content[0].text)["updated_fields"][0]["name"] == "State"
+    assert json.loads(deleted.content[0].text) == {"deleted_field_ids": [field_id]}
+    assert Field.objects_and_trash.get(id=field_id).trashed
+
+
+@pytest.mark.django_db
+def test_create_fields_over_mcp_table_in_other_workspace_is_not_found(data_fixture):
+    endpoint = data_fixture.create_mcp_endpoint(allowed_tools=FIELD_TOOLS)
+    other_table = data_fixture.create_database_table(user=endpoint.user)
+
+    result = _call(
+        endpoint,
+        "create_fields",
+        {"table_id": other_table.id, "fields": [{"name": "X", "type": "text"}]},
+    )
+
+    assert result.isError is True
+    assert result.content[0].text == "Not found in this workspace."
+    assert not other_table.field_set.filter(name="X").exists()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "tool,arguments,verb",
+    [
+        (
+            "update_fields",
+            lambda field_id: {"fields": [{"field_id": field_id, "name": "Renamed"}]},
+            "updating",
+        ),
+        ("delete_fields", lambda field_id: {"field_ids": [field_id]}, "deleting"),
+    ],
+)
+def test_field_tools_over_mcp_treat_other_workspaces_as_missing(
+    data_fixture, tool, arguments, verb
+):
+    endpoint = data_fixture.create_mcp_endpoint(allowed_tools=FIELD_TOOLS)
+    other_field = data_fixture.create_text_field(user=endpoint.user, name="Other")
+    missing_id = other_field.id + 1000
+
+    other = json.loads(_call(endpoint, tool, arguments(other_field.id)).content[0].text)
+    missing = json.loads(_call(endpoint, tool, arguments(missing_id)).content[0].text)
+
+    def error(field_id):
+        return (
+            f"Error {verb} field {field_id}: The field with id {field_id} does "
+            "not exist."
+        )
+
+    assert other["errors"] == [error(other_field.id)]
+    assert missing["errors"] == [error(missing_id)]
+    other_field.refresh_from_db()
+    assert other_field.name == "Other"
+    assert not other_field.trashed

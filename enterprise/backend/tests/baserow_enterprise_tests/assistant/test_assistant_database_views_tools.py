@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock
+
 import pytest
 from pydantic_ai import ModelRetry
 
@@ -16,7 +18,7 @@ from baserow_enterprise.assistant.tools.database.types.view_filters import (
     ViewFiltersArgs,
 )
 
-from .utils import make_test_ctx
+from .utils import create_fake_tool_helpers, make_test_ctx
 
 
 @pytest.mark.django_db
@@ -985,3 +987,28 @@ def test_create_form_view_skips_incompatible_fields(data_fixture, include_compat
         )
         == supported_options
     )
+
+
+@pytest.mark.django_db
+def test_create_views_with_only_used_names_skips_them_without_navigating(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+    data_fixture.create_grid_view(table=table, name="Grid")
+    tool_helpers = create_fake_tool_helpers()
+    tool_helpers.navigate_to = MagicMock()
+
+    ctx = make_test_ctx(user, workspace, tool_helpers=tool_helpers)
+    response = create_views(
+        ctx,
+        thought="test",
+        table_id=table.id,
+        views=[ViewItemCreate(name="Grid", type="grid")],
+    )
+
+    assert response == {"created_views": [], "skipped_views": ["Grid"]}
+    assert View.objects.filter(table=table).count() == 1
+    tool_helpers.navigate_to.assert_not_called()

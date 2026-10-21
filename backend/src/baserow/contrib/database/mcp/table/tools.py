@@ -1,7 +1,5 @@
 from baserow.contrib.database.mcp import services
 from baserow.contrib.database.mcp.table.schemas import (
-    CreateDatabaseInput,
-    CreateTableInput,
     DeleteTableInput,
     GetTableSchemaInput,
     ListDatabasesInput,
@@ -35,23 +33,6 @@ class ListDatabasesMcpTool(MCPTool):
         return [{"id": db.id, "name": db.name, "order": db.order} for db in databases]
 
 
-class CreateDatabaseMcpTool(MCPTool):
-    """
-    Create a new database in the workspace.
-    Returns the new database ID and name.
-    """
-
-    type = "create_database"
-    group = GROUP_DATABASE_EDIT
-    title = "Create database"
-    enabled = False
-    input_schema = CreateDatabaseInput
-
-    def _sync_call(self, endpoint: MCPEndpoint, args: CreateDatabaseInput) -> dict:
-        db = services.create_database(endpoint.user, endpoint.workspace, args.name)
-        return {"id": db.id, "name": db.name}
-
-
 class ListTablesMcpTool(MCPTool):
     """
     List all tables in the workspace, optionally filtered by database.
@@ -77,29 +58,6 @@ class ListTablesMcpTool(MCPTool):
             }
             for t in tables
         ]
-
-
-class CreateTableMcpTool(MCPTool):
-    """
-    Create a new table in a database, optionally with initial fields.
-    Fields are created in dependency order (regular → link_row → lookup → formula).
-    For link_row fields, the linked table must already exist.
-    """
-
-    type = "create_table"
-    group = GROUP_DATABASE_EDIT
-    title = "Create table"
-    enabled = False
-    input_schema = CreateTableInput
-
-    def _sync_call(self, endpoint: MCPEndpoint, args: CreateTableInput) -> dict:
-        return services.create_table(
-            endpoint.user,
-            endpoint.workspace,
-            args.database_id,
-            args.name,
-            [f.model_dump() for f in args.fields] if args.fields else None,
-        )
 
 
 class CreateTablesMcpTool(FunctionMCPTool):

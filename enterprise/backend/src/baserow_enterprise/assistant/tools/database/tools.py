@@ -16,7 +16,6 @@ from baserow.contrib.database.fields.actions import (
     DeleteFieldActionType,
     UpdateFieldActionType,
 )
-from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.rows.actions import (
@@ -28,10 +27,6 @@ from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.tools import fields as shared_fields
 from baserow.contrib.database.tools import tables as shared_tables
 from baserow.contrib.database.tools import views as shared_views
-from baserow.contrib.database.views.actions import (
-    CreateViewActionType,
-    UpdateViewFieldOptionsActionType,
-)
 from baserow.core.exceptions import PermissionException
 from baserow.core.models import Workspace
 from baserow_enterprise.assistant.deps import AssistantDeps, ResourceChanges
@@ -59,7 +54,6 @@ from .types import (
     ListTablesFilterArg,
     TableItemCreate,
     ViewFiltersArgs,
-    ViewItem,
     ViewItemCreate,
     get_create_row_model,
     get_link_row_hints,
@@ -709,43 +703,6 @@ def delete_fields(
 # ---------------------------------------------------------------------------
 
 
-def _describe_fields(table: Table) -> str:
-    """List a table's fields as ``id (name, type)`` for retry prompts."""
-
-    fields = FieldHandler().get_base_fields_queryset().filter(table=table)
-    return (
-        ", ".join(f"{f.id} ({f.name}, {f.get_type().type})" for f in fields) or "none"
-    )
-
-
-def _drop_form_incompatible_fields(
-    table: Table, field_options: dict
-) -> tuple[dict, list[str]]:
-    """
-    Split form field_options into the ones the form view accepts and the names
-    it rejects.
-
-    A form view refuses read-only fields and field types that cannot be a form
-    input (e.g. formula); enabling one raises and would roll the whole
-    create_views call back, so they are skipped and reported instead.
-    """
-
-    fields = {f.id: f for f in table.field_set.all()}
-    kept: dict = {}
-    skipped: list[str] = []
-    for field_id, options in field_options.items():
-        field = fields.get(int(field_id))
-        if field is None:
-            kept[field_id] = options
-            continue
-        field_type = field_type_registry.get_by_model(field.specific_class)
-        if field.read_only or not field_type.can_be_in_form_view:
-            skipped.append(field.name)
-        else:
-            kept[field_id] = options
-    return kept, skipped
-
-
 def create_views(
     ctx: RunContext[AssistantDeps],
     table_id: Annotated[
@@ -766,88 +723,34 @@ def create_views(
 
     WHEN to use: User wants a new view (grid, form, gallery, kanban, calendar, timeline) on a table.
     WHAT it does: Creates views in the table. View names must be unique. A default grid view is auto-created with every new table — no need to recreate it.
-    RETURNS: Created views with id, name, type configuration.
+    RETURNS: Created views with id, name, type configuration. Views whose name is already used are not created and are listed in skipped_views.
     DO NOT USE when: The default grid view already meets the user's needs. Check existing views with list_views to avoid duplicates.
     HOW: Each view type requires specific config. Form views: provide field_options listing every field to show (field_id, name, order, required). Kanban: set column_field_id to a single_select field. Calendar: set date_field_id to a date field. Timeline: set both start/end date fields. Gallery: optionally set cover_field_id to a file field. Call get_tables_schema first to get the field IDs you need.
     REQUIRED: `table_id` and `views` must arrive in the same call. The ID says where to act; the payload says what to create. A call carrying only the ID creates nothing and is rejected.
     """
 
-    user = ctx.deps.user
-    workspace = ctx.deps.workspace
-    tool_helpers = ctx.deps.tool_helpers
-
     require_payload("create_views", "views", views)
 
-    table = helpers.get_table(user, workspace, table_id)
+    table = helpers.get_table(ctx.deps.user, ctx.deps.workspace, table_id)
+    try:
+        result = shared_views.create_views(ctx.deps.tool_context(), table.id, views)
+    except DjangoValidationError as exc:
+        raise ModelRetry(" ".join(exc.messages))
 
-    created_views = []
-    with transaction.atomic():
-        for view in views:
-            tool_helpers.raise_if_cancelled()
-            tool_helpers.update_status(
-                _("Creating %(view_type)s view %(view_name)s")
-                % {"view_type": view.type, "view_name": view.name}
+    created_views = result["created_views"]
+    if created_views:
+        ctx.deps.tool_helpers.navigate_to(
+            ViewNavigationType(
+                type="database-view",
+                database_id=table.database_id,
+                table_id=table.id,
+                view_id=created_views[0]["id"],
+                view_name=created_views[0]["name"],
+                view_type=created_views[0]["type"],
             )
-
-            # A wrong field id must become a retry prompt, not a turn-ending error.
-            try:
-                orm_kwargs = view.to_django_orm_kwargs(table)
-            except (ValueError, TypeError) as exc:
-                raise ModelRetry(
-                    f"Cannot create the '{view.name}' {view.type} view: {exc} "
-                    f"Fields in table '{table.name}': {_describe_fields(table)}"
-                ) from exc
-
-            orm_view = CreateViewActionType.do(
-                user,
-                table,
-                view.type,
-                **orm_kwargs,
-            )
-
-            field_options = view.field_options_to_django_orm()
-            skipped_fields: list[str] = []
-            if field_options:
-                field_options, skipped_fields = _drop_form_incompatible_fields(
-                    table, field_options
-                )
-            if field_options:
-                try:
-                    UpdateViewFieldOptionsActionType.do(user, orm_view, field_options)
-                except Exception as exc:
-                    raise_if_permission_denied(exc)
-                    # ModelRetry rolls the transaction back, so say so explicitly.
-                    raise ModelRetry(
-                        f"The field_options of the '{view.name}' {view.type} view "
-                        f"were rejected and no views were created: {exc} Retry "
-                        f"without the rejected fields. Fields in table "
-                        f"'{table.name}': {_describe_fields(table)}"
-                    ) from exc
-
-            created = {"id": orm_view.id, **view.model_dump()}
-            if view.type == "form":
-                created["field_options"] = ViewItem.from_django_orm(
-                    orm_view
-                ).model_dump()["field_options"]
-            if skipped_fields:
-                created["skipped_fields"] = (
-                    "Not shown on the form, these field types cannot be a form "
-                    f"input: {', '.join(skipped_fields)}"
-                )
-            created_views.append(created)
-
-    tool_helpers.navigate_to(
-        ViewNavigationType(
-            type="database-view",
-            database_id=table.database_id,
-            table_id=table.id,
-            view_id=created_views[0]["id"],
-            view_name=created_views[0]["name"],
-            view_type=created_views[0]["type"],
         )
-    )
 
-    return {"created_views": created_views}
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -872,7 +775,7 @@ def create_view_filters(
 
     WHEN to use: User wants to filter a view to show only specific rows matching conditions.
     WHAT it does: Creates filter conditions on one or more views. Supports multiple filters per view.
-    RETURNS: Created filters with id and configuration per view.
+    RETURNS: Created filters with id and configuration per view. Filters whose field is missing or of another type are returned in skipped_filters with the reason.
     DO NOT USE when: The view doesn't exist yet — create it first with create_views.
     HOW: Get the table schema first to know field IDs and types. Match filter type to field type.
     REQUIRED: `view_filters` must contain at least one entry, each carrying the ID of the view it applies to. The ID says where to act; the payload says what to create. A call carrying no entries creates nothing and is rejected.
@@ -887,39 +790,9 @@ def create_view_filters(
     - boolean: true / false
     """
 
-    user = ctx.deps.user
-    workspace = ctx.deps.workspace
-    tool_helpers = ctx.deps.tool_helpers
-
     require_payload("create_view_filters", "view_filters", view_filters)
 
-    created_view_filters = []
-    for vf in view_filters:
-        tool_helpers.raise_if_cancelled()
-        orm_view = helpers.get_view(user, workspace, vf.view_id)
-        tool_helpers.update_status(
-            _("Creating filters in %(view_name)s...") % {"view_name": orm_view.name}
-        )
-
-        fields = {f.id: f for f in orm_view.table.field_set.all()}
-        created_filters = []
-        with transaction.atomic():
-            for filter in vf.filters:
-                try:
-                    orm_filter = helpers.create_view_filter(
-                        user, orm_view, fields, filter
-                    )
-                except ValueError as e:
-                    logger.warning(f"Skipping filter creation: {e}")
-                    continue
-
-                created_filters.append({"id": orm_filter.id, **filter.model_dump()})
-        created_view_filters.append({"view_id": vf.view_id, "filters": created_filters})
-
-    return {
-        "created_view_filters": created_view_filters,
-        "changed": any(item["filters"] for item in created_view_filters),
-    }
+    return shared_views.create_view_filters(ctx.deps.tool_context(), view_filters)
 
 
 # ---------------------------------------------------------------------------

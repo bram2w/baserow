@@ -35,14 +35,17 @@ def test_core_database_tool_groups():
     assert groups["list_table_rows"] == GROUP_DATABASE_READ
     assert groups["create_rows"] == GROUP_DATABASE_EDIT
     assert groups["update_rows"] == GROUP_DATABASE_EDIT
-    assert groups["create_database"] == GROUP_DATABASE_EDIT
     assert groups["create_tables"] == GROUP_DATABASE_EDIT
     assert groups["update_table"] == GROUP_DATABASE_EDIT
     assert groups["create_fields"] == GROUP_DATABASE_EDIT
     assert groups["update_fields"] == GROUP_DATABASE_EDIT
+    assert groups["create_views"] == GROUP_DATABASE_EDIT
+    assert groups["create_view_filters"] == GROUP_DATABASE_EDIT
     assert groups["delete_rows"] == GROUP_DATABASE_DELETE
     assert groups["delete_table"] == GROUP_DATABASE_DELETE
     assert groups["delete_fields"] == GROUP_DATABASE_DELETE
+    assert "create_database" not in groups
+    assert "create_table" not in groups
 
 
 def test_read_only_preset_groups_hold_only_read_only_tools():

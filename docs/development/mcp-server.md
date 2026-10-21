@@ -110,13 +110,14 @@ Some tools are currently disabled (`enabled = False`) and hidden from MCP client
 | `update_rows` | enabled | Update rows by ID using field names |
 | `delete_rows` | enabled | Delete rows by ID |
 | `list_views` | enabled | List the views of a table (shared with Kuma) |
-| `create_database` | disabled | Create a new database |
-| `create_table` | disabled | Create a table with optional initial fields |
+| `create_tables` | enabled | Create tables with their fields (shared with Kuma) |
+| `create_fields` | enabled | Add fields to a table (shared with Kuma) |
+| `update_fields` | enabled | Rename fields or change their settings (shared with Kuma) |
+| `delete_fields` | enabled | Delete (trash) fields (shared with Kuma) |
+| `create_views` | enabled | Create views in a table (shared with Kuma) |
+| `create_view_filters` | enabled | Add filters to views (shared with Kuma) |
 | `update_table` | disabled | Rename a table |
 | `delete_table` | disabled | Delete (trash) a table |
-| `create_fields` | disabled | Add fields to an existing table |
-| `update_fields` | disabled | Update existing fields |
-| `delete_fields` | disabled | Delete (trash) fields |
 
 ### Typical LLM workflow
 

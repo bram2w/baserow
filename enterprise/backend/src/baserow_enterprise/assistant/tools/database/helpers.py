@@ -1,17 +1,16 @@
-from typing import Any, Callable
+from typing import Callable
 
 from django.contrib.auth.models import AbstractUser
 from django.db import transaction
 
 from baserow.contrib.database.fields.actions import CreateFieldActionType
-from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.mcp.services import filter_tables
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.tools import fields as shared_fields
 from baserow.contrib.database.tools.tables import get_tables_schema  # noqa: F401
-from baserow.contrib.database.views.actions import CreateViewFilterActionType
+from baserow.contrib.database.tools.views import create_view_filter  # noqa: F401
 from baserow.contrib.database.views.handler import ViewHandler
-from baserow.contrib.database.views.models import View, ViewFilter
+from baserow.contrib.database.views.models import View
 from baserow.core.models import Workspace
 from baserow.core.tools import ToolContext
 from baserow_enterprise.assistant.tools.shared import (
@@ -20,7 +19,6 @@ from baserow_enterprise.assistant.tools.shared import (
 )
 
 from .types import (
-    AnyViewFilterItemCreate,
     FieldItem,
     FieldItemUpdate,
     InvalidFormulaFieldError,
@@ -150,48 +148,4 @@ def get_view(user: AbstractUser, workspace: Workspace, view_id: int) -> View:
         user,
         view_id,
         base_queryset=View.objects.filter(table__database__workspace=workspace),
-    )
-
-
-def create_view_filter(
-    user: AbstractUser,
-    orm_view: View,
-    table_fields: dict[int, Any],
-    view_filter_item: AnyViewFilterItemCreate,
-) -> ViewFilter:
-    """
-    Create a single view filter after validating the field type matches.
-
-    :param user: The acting user.
-    :param orm_view: The view to add the filter to.
-    :param table_fields: Mapping of field ID → field instance for the table.
-    :param view_filter_item: The filter definition to create.
-    :raises ValueError: If the field is not found or its type doesn't match.
-    """
-
-    field = table_fields.get(view_filter_item.field_id)
-    if field is None:
-        raise ValueError(
-            f"Field {view_filter_item.field_id} not found for filter. "
-            f"Available field IDs: {sorted(table_fields.keys())}"
-        )
-    field_type = field_type_registry.get_by_model(field.specific_class)
-    if field_type.type != view_filter_item.type:
-        raise ValueError(
-            f"Field '{field.name}' (id={field.id}) is type '{field_type.type}', "
-            f"but filter declared type '{view_filter_item.type}'"
-        )
-
-    filter_type = view_filter_item.get_django_orm_type(field)
-    filter_value = view_filter_item.get_django_orm_value(
-        field, timezone=user.profile.timezone
-    )
-
-    return CreateViewFilterActionType.do(
-        user,
-        orm_view,
-        field,
-        filter_type,
-        filter_value,
-        filter_group_id=None,
     )

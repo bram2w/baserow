@@ -1243,7 +1243,6 @@ class DatabaseConfig(AppConfig):
             UpdateRowsMcpTool,
         )
         from baserow.contrib.database.mcp.table.tools import (
-            CreateDatabaseMcpTool,
             CreateTablesMcpTool,
             DeleteTableMcpTool,
             GetTableSchemaMcpTool,
@@ -1251,7 +1250,11 @@ class DatabaseConfig(AppConfig):
             ListTablesMcpTool,
             UpdateTableMcpTool,
         )
-        from baserow.contrib.database.mcp.views.tools import ListViewsMcpTool
+        from baserow.contrib.database.mcp.views.tools import (
+            CreateViewFiltersMcpTool,
+            CreateViewsMcpTool,
+            ListViewsMcpTool,
+        )
         from baserow.core.mcp.groups import (
             DatabaseDeleteMCPToolGroup,
             DatabaseEditMCPToolGroup,
@@ -1272,14 +1275,15 @@ class DatabaseConfig(AppConfig):
         mcp_tool_registry.register(DeleteRowsMcpTool())
         mcp_tool_registry.register(ListViewsMcpTool())
         mcp_tool_registry.register(CreateTablesMcpTool())
-        # Disabled (enabled=False) until users can control tool
-        # availability through the UI.
-        mcp_tool_registry.register(CreateDatabaseMcpTool())
-        mcp_tool_registry.register(UpdateTableMcpTool())
-        mcp_tool_registry.register(DeleteTableMcpTool())
         mcp_tool_registry.register(CreateFieldsMcpTool())
         mcp_tool_registry.register(UpdateFieldsMcpTool())
         mcp_tool_registry.register(DeleteFieldsMcpTool())
+        mcp_tool_registry.register(CreateViewsMcpTool())
+        mcp_tool_registry.register(CreateViewFiltersMcpTool())
+        # Disabled (enabled=False) until users can control tool
+        # availability through the UI.
+        mcp_tool_registry.register(UpdateTableMcpTool())
+        mcp_tool_registry.register(DeleteTableMcpTool())
 
         from baserow.contrib.database.rows.history_providers import (
             CreateRowHistoryProvider,
