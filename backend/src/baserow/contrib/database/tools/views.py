@@ -852,15 +852,17 @@ def create_view_filters(
     orm_views = [get_view(ctx, view_filter.view_id) for view_filter in view_filters]
 
     created_view_filters = []
-    for view_filter, orm_view in zip(view_filters, orm_views):
-        ctx.update_status(
-            _("Creating filters in %(view_name)s...") % {"view_name": orm_view.name}
-        )
+    # One transaction for every view, so an error on a later view doesn't leave
+    # the filters of the earlier ones behind for a retry to duplicate.
+    with transaction.atomic():
+        for view_filter, orm_view in zip(view_filters, orm_views):
+            ctx.update_status(
+                _("Creating filters in %(view_name)s...") % {"view_name": orm_view.name}
+            )
 
-        fields = {f.id: f for f in orm_view.table.field_set.all()}
-        created_filters = []
-        skipped_filters = []
-        with transaction.atomic():
+            fields = {f.id: f for f in orm_view.table.field_set.all()}
+            created_filters = []
+            skipped_filters = []
             for item in view_filter.filters:
                 try:
                     orm_filter = create_view_filter(ctx.user, orm_view, fields, item)
@@ -869,13 +871,13 @@ def create_view_filters(
                     continue
                 created_filters.append({"id": orm_filter.id, **item.model_dump()})
 
-        entry: dict[str, Any] = {
-            "view_id": view_filter.view_id,
-            "filters": created_filters,
-        }
-        if skipped_filters:
-            entry["skipped_filters"] = skipped_filters
-        created_view_filters.append(entry)
+            entry: dict[str, Any] = {
+                "view_id": view_filter.view_id,
+                "filters": created_filters,
+            }
+            if skipped_filters:
+                entry["skipped_filters"] = skipped_filters
+            created_view_filters.append(entry)
 
     return {
         "created_view_filters": created_view_filters,

@@ -2,6 +2,7 @@
 
 import json
 import logging
+from unittest.mock import patch
 
 from django.db import transaction
 
@@ -12,6 +13,7 @@ from mcp.shared.memory import (
     create_connected_server_and_client_session as client_session,
 )
 
+from baserow.contrib.database.tools import views as views_module
 from baserow.contrib.database.tools.views import (
     ViewFilterItemCreate,
     ViewFiltersArgs,
@@ -20,6 +22,7 @@ from baserow.contrib.database.tools.views import (
     create_views,
 )
 from baserow.contrib.database.views.models import View, ViewFilter
+from baserow.core.exceptions import PermissionException
 from baserow.core.mcp import BaserowMCPServer, current_key
 from baserow.core.tools import ToolContext
 
@@ -122,6 +125,44 @@ def test_create_view_filters_returns_the_skipped_filters(data_fixture, table_ctx
     assert "is type 'number'" in skipped["error"]
     assert result["changed"] is True
     assert ViewFilter.objects.filter(view=view).count() == 1
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "error", [PermissionException(), RuntimeError("the second view failed")]
+)
+def test_create_view_filters_writes_nothing_when_a_later_view_fails(
+    data_fixture, table_ctx, error
+):
+    ctx, table = table_ctx
+    number = data_fixture.create_number_field(table=table, name="Amount")
+    first_view = data_fixture.create_grid_view(table=table)
+    second_view = data_fixture.create_grid_view(table=table)
+    original = views_module.create_view_filter
+
+    def create_view_filter(user, view, fields, item):
+        if view.id == second_view.id:
+            raise error
+        return original(user, view, fields, item)
+
+    filters = [
+        ViewFilterItemCreate(
+            field_id=number.id, type="number", operator="higher_than", value=10
+        )
+    ]
+    with (
+        patch.object(views_module, "create_view_filter", create_view_filter),
+        pytest.raises(type(error)),
+    ):
+        create_view_filters(
+            ctx,
+            [
+                ViewFiltersArgs(view_id=first_view.id, filters=filters),
+                ViewFiltersArgs(view_id=second_view.id, filters=filters),
+            ],
+        )
+
+    assert not ViewFilter.objects.filter(view=first_view).exists()
 
 
 @pytest.mark.django_db
