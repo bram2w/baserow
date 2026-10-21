@@ -1,6 +1,7 @@
 import FilterService from '@baserow/modules/dashboard/services/filter'
 import {
   filterHasOptions,
+  hasActiveDashboardFilter,
   shouldResetFilterValues,
 } from '@baserow/modules/dashboard/utils/filter'
 import {
@@ -377,6 +378,19 @@ export const filterActions = {
 }
 
 export const filterGetters = {
+  isDataSourceFiltered: (state) => (dataSourceId) => {
+    const source = state.dataSources.find(({ id }) => id === dataSourceId)
+    return (source?.filters ?? []).some(
+      (condition) =>
+        condition.field != null &&
+        !condition.trashed &&
+        hasActiveDashboardFilter(
+          condition.value,
+          state.filters,
+          state.appliedFilters
+        )
+    )
+  },
   getFilters: (state) => state.filters,
   getSelectedFilter: (state) =>
     state.filters.find((f) => f.id === state.selectedFilterId),

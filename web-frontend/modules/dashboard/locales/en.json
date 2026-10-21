@@ -26,7 +26,8 @@
     "title": "Add new widget"
   },
   "widget": {
-    "fixConfiguration": "Fix configuration"
+    "fixConfiguration": "Fix configuration",
+    "filtered": "This widget is filtered."
   },
   "summaryWidget": {
     "name": "Summary"
