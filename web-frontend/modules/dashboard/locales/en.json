@@ -114,7 +114,7 @@
     "invalidFieldHelp": "Choose a compatible text field for this table.",
     "providerName": "Dashboard filters",
     "options": "Options",
-    "optionValue": "Dropdown values",
+    "optionValue": "Filter values",
     "sourceOptionsHelp": "Choose fields from a table used by your widgets to fill the list."
   },
   "shareDashboardLink": {

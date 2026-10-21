@@ -1,10 +1,8 @@
 <template>
   <div>
-    <p class="dashboard-filter-settings__help">
-      {{ $t('dashboardFilter.sourceOptionsHelp') }}
-    </p>
     <FormGroup
       :label="$t('dashboardFilter.optionValue')"
+      :helper-text="$t('dashboardFilter.sourceOptionsHelp')"
       small-label
       class="margin-bottom-2"
     >
