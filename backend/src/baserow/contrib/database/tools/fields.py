@@ -7,13 +7,18 @@ so this module calls no model.
 import json
 from typing import Annotated, Any, Literal, get_args
 
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from django.db.models import Q
 from django.utils.translation import gettext as _
 
+from loguru import logger
 from pydantic import BaseModel as PydanticBaseModel
 from pydantic import ConfigDict, Field, model_serializer, model_validator
+from rest_framework.exceptions import ValidationError as DRFValidationError
 
+from baserow.api.exceptions import RequestBodyValidationException
 from baserow.contrib.database.fields.actions import (
     CreateFieldActionType,
     DeleteFieldActionType,
@@ -31,8 +36,10 @@ from baserow.contrib.database.fields.models import (
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
-from baserow.core.exceptions import PermissionException
+from baserow.core.cache import local_cache
+from baserow.core.exceptions import InstanceTypeDoesNotExist, PermissionException
 from baserow.core.formula.parser.exceptions import BaserowFormulaException
+from baserow.core.mcp.exceptions import INTERNAL_ERROR_MESSAGE, to_mcp_error
 from baserow.core.tools import ToolContext
 
 
@@ -847,6 +854,44 @@ def _formula_error(exc: InvalidFormulaFieldError) -> dict[str, Any]:
     }
 
 
+# Errors to_mcp_error turns into a readable message.
+_FORMATTED_ERRORS = (
+    DjangoValidationError,
+    DRFValidationError,
+    RequestBodyValidationException,
+    InstanceTypeDoesNotExist,
+)
+
+
+def _item_error_message(exc: Exception) -> str:
+    """
+    The message for one field that failed while the others go on. Call it from
+    the ``except`` block, so an unexpected error is logged with its traceback.
+
+    :param exc: The exception the item raised.
+    :returns: The exception's own message when it is a Baserow or validation
+        error the caller can act on, or a generic message for anything else.
+    """
+
+    if isinstance(exc, _FORMATTED_ERRORS):
+        # None for an InstanceTypeDoesNotExist without a type name: a server bug.
+        message = to_mcp_error(exc)
+    elif not isinstance(exc, AttributeError) and (
+        isinstance(exc, (ValueError, ObjectDoesNotExist))
+        or type(exc).__module__.startswith("baserow")
+    ):
+        # Baserow's own errors (FieldWithSameNameAlreadyExists, FieldDoesNotExist,
+        # ...) say what the caller did wrong. Django's RelatedObjectDoesNotExist is
+        # also an AttributeError, and a server bug.
+        message = str(exc) or type(exc).__name__
+    else:
+        message = None
+    if message is None:
+        logger.exception("Unexpected error in a field tool item: {}", exc)
+        return INTERNAL_ERROR_MESSAGE
+    return message
+
+
 def _get_field(ctx: ToolContext, field_id: int) -> BaserowField:
     """
     Get a field of a table the user can see in the context's workspace.
@@ -899,9 +944,13 @@ def create_fields_in_table(
         except PermissionException:
             raise
         except Exception as error:
+            # A model built inside the rolled back savepoint can still be cached
+            # for this request.
+            local_cache.delete(f"database_table_model_{table.id}*")
+            message = _item_error_message(error).rstrip(".")
             field_errors.append(
                 f"Error creating field {field_item.name} in table_{table.id}: "
-                f"{error}.\n"
+                f"{message}.\n"
                 f"Please retry recreating this field later, if important."
             )
     return created_fields, field_errors, formula_errors
@@ -1024,7 +1073,10 @@ def update_fields(
             except PermissionException:
                 raise
             except Exception as error:
-                errors.append(f"Error updating field {field_update.field_id}: {error}")
+                errors.append(
+                    f"Error updating field {field_update.field_id}: "
+                    f"{_item_error_message(error)}"
+                )
 
     result: dict[str, Any] = {"updated_fields": updated, "changed": changed}
     if errors:
@@ -1060,7 +1112,9 @@ def delete_fields(
             except PermissionException:
                 raise
             except Exception as error:
-                errors.append(f"Error deleting field {field_id}: {error}")
+                errors.append(
+                    f"Error deleting field {field_id}: {_item_error_message(error)}"
+                )
 
     result: dict[str, Any] = {"deleted_field_ids": deleted}
     if errors:

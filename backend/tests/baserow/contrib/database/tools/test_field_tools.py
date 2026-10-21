@@ -7,6 +7,7 @@ from django.db import IntegrityError, transaction
 
 import pytest
 from asgiref.sync import async_to_sync
+from loguru import logger as loguru_logger
 from mcp.shared.memory import (
     create_connected_server_and_client_session as client_session,
 )
@@ -298,6 +299,89 @@ def test_delete_fields_keeps_the_other_deletes_when_one_fails(data_fixture, tabl
         False,
         True,
     ]
+
+
+@pytest.fixture
+def error_records():
+    records = []
+    handler_id = loguru_logger.add(
+        lambda m: records.append(m.record), level="ERROR", format="{message}"
+    )
+    yield records
+    loguru_logger.remove(handler_id)
+
+
+def _raise_unexpected(*args, **kwargs):
+    raise RuntimeError("relation secret_table does not exist")
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "action_type,run,errors_key",
+    [
+        (
+            CreateFieldActionType,
+            lambda ctx, table, field: create_fields(
+                ctx, table.id, [FieldItemCreate(name="New", type="text")]
+            ),
+            "field_errors",
+        ),
+        (
+            UpdateFieldActionType,
+            lambda ctx, table, field: update_fields(
+                ctx, [FieldItemUpdate(field_id=field.id, name="Renamed")]
+            ),
+            "errors",
+        ),
+        (
+            DeleteFieldActionType,
+            lambda ctx, table, field: delete_fields(ctx, [field.id]),
+            "errors",
+        ),
+    ],
+)
+def test_field_tools_log_an_unexpected_error_and_hide_its_message(
+    data_fixture, table_ctx, error_records, action_type, run, errors_key
+):
+    ctx, table = table_ctx
+    field = data_fixture.create_text_field(table=table, name="Old")
+
+    with patch.object(action_type, "do", side_effect=_raise_unexpected):
+        result = run(ctx, table, field)
+
+    (error,) = result[errors_key]
+    assert "Internal error." in error
+    assert "secret_table" not in error
+    (record,) = error_records
+    assert record["exception"].type is RuntimeError
+
+
+@pytest.mark.django_db
+def test_field_tools_keep_the_message_of_an_expected_error(
+    data_fixture, table_ctx, error_records
+):
+    ctx, table = table_ctx
+    field = data_fixture.create_text_field(table=table, name="Old")
+    primary = table.field_set.get(primary=True)
+
+    created = create_fields(ctx, table.id, [FieldItemCreate(name="Old", type="text")])
+    updated = update_fields(ctx, [FieldItemUpdate(field_id=field.id, name="Name")])
+    deleted = delete_fields(ctx, [primary.id])
+
+    (create_error,) = created["field_errors"]
+    assert (
+        f"A field already exists for table '{table.name}' with the name 'Old'."
+        in create_error
+    )
+    assert updated["errors"] == [
+        f"Error updating field {field.id}: A field already exists for table "
+        f"'{table.name}' with the name 'Name'."
+    ]
+    assert deleted["errors"] == [
+        f"Error deleting field {primary.id}: Cannot delete the primary field of "
+        "a table."
+    ]
+    assert error_records == []
 
 
 def _call(endpoint, name, arguments):
