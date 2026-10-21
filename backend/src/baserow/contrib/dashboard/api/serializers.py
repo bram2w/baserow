@@ -1,3 +1,5 @@
+from rest_framework import serializers
+
 from baserow.contrib.dashboard.models import Dashboard
 
 MIN_PUBLIC_PASSWORD_LENGTH = 8
@@ -24,3 +26,29 @@ class HashPublicPasswordSerializerMixin:
             )
 
         return internal_value
+
+
+class UpdateDashboardSharingSerializer(
+    HashPublicPasswordSerializerMixin, serializers.Serializer
+):
+    public = serializers.BooleanField(
+        required=False,
+        help_text="Indicates whether the dashboard is publicly accessible to "
+        "visitors. Changing it removes any previously set password.",
+    )
+    public_password = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        write_only=True,
+        min_length=MIN_PUBLIC_PASSWORD_LENGTH,
+        max_length=MAX_PUBLIC_PASSWORD_LENGTH,
+        help_text="The new password or an empty string to remove any previous "
+        "password from the dashboard and make it publicly accessible again.",
+    )
+
+    def validate(self, attrs):
+        if not attrs:
+            raise serializers.ValidationError(
+                "At least one of `public` or `public_password` must be provided."
+            )
+        return attrs

@@ -96,7 +96,7 @@ describe('ShareDashboardLink', () => {
   test('creates a private link for a dashboard that is not shared yet', async () => {
     const dashboard = await createDashboard()
     testApp.mock
-      .onPatch(`/applications/${DASHBOARD_ID}/`, { public: true })
+      .onPatch(`/dashboard/${DASHBOARD_ID}/sharing/`, { public: true })
       .reply(200, { id: DASHBOARD_ID, type: 'dashboard', public: true })
 
     const { context } = await openContext(dashboard)
@@ -142,7 +142,7 @@ describe('ShareDashboardLink', () => {
   test('disables the shared link', async () => {
     const dashboard = await createDashboard({ public: true })
     testApp.mock
-      .onPatch(`/applications/${DASHBOARD_ID}/`, { public: false })
+      .onPatch(`/dashboard/${DASHBOARD_ID}/sharing/`, { public: false })
       .reply(200, { id: DASHBOARD_ID, type: 'dashboard', public: false })
 
     const { context } = await openContext(dashboard)
@@ -226,7 +226,7 @@ describe('ShareDashboardLink', () => {
   test('protects the link with a password after it was entered', async () => {
     const dashboard = await createDashboard({ public: true })
     testApp.mock
-      .onPatch(`/applications/${DASHBOARD_ID}/`, {
+      .onPatch(`/dashboard/${DASHBOARD_ID}/sharing/`, {
         public_password: 'secret-password',
       })
       .reply(200, {
@@ -291,7 +291,7 @@ describe('ShareDashboardLink', () => {
       public_has_password: true,
     })
     testApp.mock
-      .onPatch(`/applications/${DASHBOARD_ID}/`, {
+      .onPatch(`/dashboard/${DASHBOARD_ID}/sharing/`, {
         public_password: 'another-password',
       })
       .reply(200, {
@@ -327,7 +327,7 @@ describe('ShareDashboardLink', () => {
       public_has_password: true,
     })
     testApp.mock
-      .onPatch(`/applications/${DASHBOARD_ID}/`, { public_password: '' })
+      .onPatch(`/dashboard/${DASHBOARD_ID}/sharing/`, { public_password: '' })
       .reply(200, {
         id: DASHBOARD_ID,
         type: 'dashboard',
@@ -389,7 +389,7 @@ describe('ShareDashboardLink', () => {
     // Disabling the link also removes the password on the backend, which the
     // response reports.
     testApp.mock
-      .onPatch(`/applications/${DASHBOARD_ID}/`, { public: false })
+      .onPatch(`/dashboard/${DASHBOARD_ID}/sharing/`, { public: false })
       .reply(200, {
         id: DASHBOARD_ID,
         type: 'dashboard',

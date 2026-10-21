@@ -35,8 +35,8 @@ def authenticated_dispatch_url(data_source_id):
     )
 
 
-def update_application_url(dashboard):
-    return reverse("api:applications:item", kwargs={"application_id": dashboard.id})
+def sharing_url(dashboard):
+    return reverse("api:dashboard:sharing", kwargs={"dashboard_id": dashboard.id})
 
 
 def create_shared_dashboard(data_fixture, user, workspace=None, **dashboard_kwargs):
@@ -499,7 +499,7 @@ def test_changing_the_password_invalidates_public_dashboard_tokens(
     access_token = get_public_access_token(api_client, dashboard.slug)
 
     response = api_client.patch(
-        update_application_url(dashboard),
+        sharing_url(dashboard),
         {"public_password": "new-password"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",

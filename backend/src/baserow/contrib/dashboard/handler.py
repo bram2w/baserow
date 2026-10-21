@@ -1,4 +1,5 @@
-from typing import Optional, Union
+from dataclasses import dataclass
+from typing import Any, Optional, Union
 
 from django.contrib.auth.models import AbstractUser, AnonymousUser
 from django.db.models import QuerySet
@@ -12,8 +13,25 @@ from baserow.core.public_sharing import (
 )
 from baserow.core.telemetry.utils import baserow_trace_handler
 from baserow.core.trash.handler import TrashHandler
+from baserow.core.utils import extract_allowed
 
 from .exceptions import DashboardDoesNotExist, NoAuthorizationToPublicDashboard
+
+# The fields that make up the public sharing state of a dashboard. The slug is
+# left out on purpose, it can only be rotated.
+DASHBOARD_SHARING_FIELDS = ["public", "public_password", "show_logo"]
+
+
+@dataclass
+class UpdatedDashboardSharing:
+    """
+    The outcome of `DashboardHandler.update_sharing`: the updated dashboard and
+    the values of the provided sharing fields before and after the update.
+    """
+
+    dashboard: Dashboard
+    original_values: dict[str, Any]
+    new_values: dict[str, Any]
 
 
 @baserow_trace_handler
@@ -65,6 +83,27 @@ class DashboardHandler:
         dashboard.slug = slug
         dashboard.save()
         return dashboard
+
+    def update_sharing(self, dashboard: Dashboard, **values) -> UpdatedDashboardSharing:
+        """
+        Updates the public sharing state of the dashboard. Only the
+        `DASHBOARD_SHARING_FIELDS` are applied, any other value is ignored.
+
+        :param dashboard: The dashboard whose sharing state must be updated.
+        :param values: The new values. `public_password` must already be hashed
+            with `Dashboard.make_password`, an empty string removes the password.
+        :return: The updated dashboard with the original and the new values of
+            the provided fields.
+        """
+
+        new_values = extract_allowed(values, DASHBOARD_SHARING_FIELDS)
+        original_values = {key: getattr(dashboard, key) for key in new_values}
+
+        for key, value in new_values.items():
+            setattr(dashboard, key, value)
+        dashboard.save()
+
+        return UpdatedDashboardSharing(dashboard, original_values, new_values)
 
     def get_public_dashboard_by_slug(
         self,

@@ -18,11 +18,11 @@ from baserow.api.schemas import (
     CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
     get_error_schema,
 )
+from baserow.contrib.dashboard.actions import UpdateDashboardSharingActionType
 from baserow.contrib.dashboard.api.errors import ERROR_DASHBOARD_DOES_NOT_EXIST
 from baserow.contrib.dashboard.exceptions import DashboardDoesNotExist
 from baserow.contrib.dashboard.handler import DashboardHandler
 from baserow.core.action.registries import action_type_registry
-from baserow.core.actions import UpdateApplicationActionType
 from baserow.core.exceptions import UserNotInWorkspace
 from baserow_premium.api.views.errors import (
     ERROR_CANNOT_UPDATE_PREMIUM_ATTRIBUTES_ON_TEMPLATE,
@@ -94,7 +94,7 @@ class PremiumDashboardAttributesView(APIView):
             PREMIUM, request.user, workspace
         )
 
-        dashboard = action_type_registry.get_by_type(UpdateApplicationActionType).do(
-            request.user, dashboard, **data
-        )
+        dashboard = action_type_registry.get_by_type(
+            UpdateDashboardSharingActionType
+        ).do(request.user, dashboard.id, **data)
         return Response(PolymorphicApplicationResponseSerializer(dashboard).data)

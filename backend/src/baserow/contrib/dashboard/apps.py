@@ -119,7 +119,10 @@ class DashboardConfig(AppConfig):
         )
 
         import baserow.contrib.dashboard.receivers  # noqa: F401
-        from baserow.contrib.dashboard.actions import RotateDashboardSlugActionType
+        from baserow.contrib.dashboard.actions import (
+            RotateDashboardSlugActionType,
+            UpdateDashboardSharingActionType,
+        )
         from baserow.contrib.dashboard.data_sources.actions import (
             UpdateDashboardDataSourceActionType,
         )
@@ -144,6 +147,7 @@ class DashboardConfig(AppConfig):
         action_type_registry.register(DeleteWidgetActionType())
         action_type_registry.register(UpdateDashboardDataSourceActionType())
         action_type_registry.register(RotateDashboardSlugActionType())
+        action_type_registry.register(UpdateDashboardSharingActionType())
 
         from baserow.core.search.registries import workspace_search_registry
 

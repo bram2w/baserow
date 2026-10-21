@@ -1,4 +1,4 @@
-import ApplicationService from '@baserow/modules/core/services/application'
+import DashboardService from '@baserow/modules/dashboard/services/dashboard'
 
 /**
  * The sharing state of a dashboard as the application endpoints return it.
@@ -11,11 +11,13 @@ export const DASHBOARD_SHARING_FIELDS = [
 ]
 
 /**
- * Updates the sharing state of a dashboard and copies the state that the
- * backend returns into the store. The generic `application/update` action only
- * copies the requested keys back, which isn't enough here: `public_password` is
- * write only and a change of `public` also clears the password, so the derived
- * `public_has_password` has to come from the response.
+ * Updates the sharing state of a dashboard through the dedicated sharing
+ * endpoint and copies the state that the backend returns into the store. The
+ * generic `application/update` action can't be used: the backend ignores the
+ * sharing fields there, and it only copies the requested keys back, which isn't
+ * enough here either because `public_password` is write only and a change of
+ * `public` also clears the password, so the derived `public_has_password` has
+ * to come from the response.
  *
  * @param {object} nuxtApp Anything exposing `$client` and `$store`, like the
  *  nuxt app or an options API component.
@@ -28,7 +30,7 @@ export async function updateDashboardSharing(
   dashboard,
   values
 ) {
-  const { data } = await ApplicationService($client).update(
+  const { data } = await DashboardService($client).updateSharing(
     dashboard.id,
     values
   )

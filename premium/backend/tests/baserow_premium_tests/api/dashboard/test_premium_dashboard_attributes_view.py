@@ -9,6 +9,9 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
+from baserow.contrib.dashboard.actions import UpdateDashboardSharingActionType
+from baserow.core.action.models import Action
+
 
 def premium_attributes_url(dashboard_id):
     return reverse(
@@ -38,6 +41,8 @@ def test_premium_dashboard_attributes_hide_logo(api_client, premium_data_fixture
     assert response_json["show_logo"] is False
     dashboard.refresh_from_db()
     assert dashboard.show_logo is False
+    # Registered as a sharing change, so the audit log doesn't report a rename.
+    assert Action.objects.get().type == UpdateDashboardSharingActionType.type
 
 
 @pytest.mark.django_db
