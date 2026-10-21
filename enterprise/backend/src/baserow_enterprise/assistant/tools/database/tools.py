@@ -24,6 +24,7 @@ from baserow.contrib.database.rows.actions import (
 )
 from baserow.contrib.database.table.actions import CreateTableActionType
 from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.tools import fields as shared_fields
 from baserow.contrib.database.tools import views as shared_views
 from baserow.contrib.database.views.actions import (
     CreateViewActionType,
@@ -32,6 +33,7 @@ from baserow.contrib.database.views.actions import (
 from baserow.core.exceptions import PermissionException
 from baserow.core.models import Workspace
 from baserow.core.service import CoreService
+from baserow.core.tools import ToolContext
 from baserow_enterprise.assistant.deps import AssistantDeps, ResourceChanges
 from baserow_enterprise.assistant.prompts import MISSING_RECORDS_GUIDANCE
 from baserow_enterprise.assistant.tools.shared import (
@@ -414,7 +416,7 @@ def _non_primary_fields(table: TableItemCreate) -> list[FieldItemCreate]:
 
 
 def _create_table_fields(
-    user: AbstractUser,
+    tool_context: ToolContext,
     tables: list[TableItemCreate],
     created_tables: list[Table],
     tool_helpers: "ToolHelpers",
@@ -426,13 +428,12 @@ def _create_table_fields(
         tool_helpers.raise_if_cancelled()
         try:
             with transaction.atomic():
-                _, field_errors, formula_errors = helpers.create_fields(
-                    user,
-                    created_table,
-                    _non_primary_fields(table),
-                    tool_helpers,
-                    formula_fixer=formula_fixer,
+                _, field_errors, formula_errors = shared_fields.create_fields_in_table(
+                    tool_context, created_table, _non_primary_fields(table)
                 )
+            _, formula_errors = helpers.create_repaired_formula_fields(
+                tool_context.user, created_table, formula_fixer, formula_errors
+            )
         except PermissionException:
             notes.append(
                 f"Permission denied while creating fields in table_{created_table.id}. "
@@ -451,21 +452,21 @@ def _create_table_fields(
 
 
 def _create_new_tables(
-    user: AbstractUser,
-    workspace: Workspace,
+    tool_context: ToolContext,
     database: Database,
     tables: list[TableItemCreate],
     tool_helpers: "ToolHelpers",
 ) -> tuple[list[Table], list[str], bool]:
     """Create tables, fields, and navigation for new requests."""
 
+    user = tool_context.user
     created_tables = _create_empty_tables(user, database, tables, tool_helpers)
     if not created_tables:
         return [], [], False
 
-    formula_fixer = make_formula_fixer(user, workspace, tool_helpers)
+    formula_fixer = make_formula_fixer(user, tool_context.workspace, tool_helpers)
     notes, permission_denied = _create_table_fields(
-        user,
+        tool_context,
         tables,
         created_tables,
         tool_helpers,
@@ -590,7 +591,7 @@ def create_tables(
             "Submit one definition per table name."
         )
     created_tables, notes, permission_denied = _create_new_tables(
-        user, workspace, database, plan.to_create, tool_helpers
+        ctx.deps.tool_context(), database, plan.to_create, tool_helpers
     )
 
     # A link_row or lookup to an existing table adds a reverse field there.
@@ -659,29 +660,27 @@ def create_fields(
 
     user = ctx.deps.user
     workspace = ctx.deps.workspace
-    tool_helpers = ctx.deps.tool_helpers
 
     require_payload("create_fields", "fields", fields)
 
     table = helpers.get_table(user, workspace, table_id)
+    result = shared_fields.create_fields(ctx.deps.tool_context(), table.id, fields)
 
-    with transaction.atomic():
-        formula_fixer = make_formula_fixer(user, workspace, tool_helpers)
-        created_fields, field_errors, formula_errors = helpers.create_fields(
-            user, table, fields, tool_helpers, formula_fixer=formula_fixer
+    formula_errors = result.pop("formula_errors", [])
+    if formula_errors:
+        formula_fixer = make_formula_fixer(user, workspace, ctx.deps.tool_helpers)
+        repaired, formula_errors = helpers.create_repaired_formula_fields(
+            user, table, formula_fixer, formula_errors
         )
-
-    _refresh_row_tools(ctx)
-
-    result = {"created_fields": [field.model_dump() for field in created_fields]}
-    if field_errors:
-        result["field_errors"] = field_errors
+        result["created_fields"].extend(field.model_dump() for field in repaired)
     if formula_errors:
         for err in formula_errors:
             err["hint"] = (
                 "Use generate_formula to create a valid formula for this field."
             )
         result["formula_errors"] = formula_errors
+
+    _refresh_row_tools(ctx)
     return result
 
 
@@ -712,40 +711,26 @@ def update_fields(
     HOW: Call get_tables_schema first to see current field IDs, types and option IDs. For select options, use add_options, update_options and remove_options; options you don't list stay as they are.
     """
 
-    user = ctx.deps.user
-    workspace = ctx.deps.workspace
-    tool_helpers = ctx.deps.tool_helpers
-
     if not fields:
         return {"updated_fields": [], "errors": [], "changed": False}
 
-    updated = []
-    errors = []
-    changed = False
-    formula_fixer = make_formula_fixer(user, workspace, tool_helpers)
+    tool_context = ctx.deps.tool_context()
+    result = shared_fields.update_fields(tool_context, fields)
 
-    with transaction.atomic():
-        for field_update in fields:
-            tool_helpers.raise_if_cancelled()
-            tool_helpers.update_status(
-                _("Updating field %(field_id)s...")
-                % {"field_id": field_update.field_id}
-            )
-            try:
-                field_item, field_changed = helpers.update_field(
-                    user, workspace, field_update, formula_fixer=formula_fixer
-                )
-                updated.append(field_item.model_dump())
-                changed = changed or field_changed
-            except Exception as error:
-                raise_if_permission_denied(error)
-                errors.append(f"Error updating field {field_update.field_id}: {error}")
+    formula_errors = result.pop("formula_errors", [])
+    if formula_errors:
+        formula_fixer = make_formula_fixer(
+            ctx.deps.user, ctx.deps.workspace, ctx.deps.tool_helpers
+        )
+        repaired, changed, errors = helpers.apply_repaired_formula_updates(
+            tool_context, formula_fixer, fields, formula_errors
+        )
+        result["updated_fields"].extend(field.model_dump() for field in repaired)
+        result["changed"] = result["changed"] or changed
+        if errors:
+            result["errors"] = [*result.get("errors", []), *errors]
 
     _refresh_row_tools(ctx)
-
-    result: dict[str, Any] = {"updated_fields": updated, "changed": changed}
-    if errors:
-        result["errors"] = errors
     return result
 
 
@@ -774,34 +759,12 @@ def delete_fields(
     HOW: Call get_tables_schema first to confirm field IDs.
     """
 
-    user = ctx.deps.user
-    workspace = ctx.deps.workspace
-    tool_helpers = ctx.deps.tool_helpers
-
     if not field_ids:
         return {"deleted_field_ids": [], "errors": []}
 
-    deleted = []
-    errors = []
-
-    with transaction.atomic():
-        for field_id in field_ids:
-            tool_helpers.raise_if_cancelled()
-            tool_helpers.update_status(
-                _("Deleting field %(field_id)s...") % {"field_id": field_id}
-            )
-            try:
-                helpers.delete_field(user, workspace, field_id)
-                deleted.append(field_id)
-            except Exception as error:
-                raise_if_permission_denied(error)
-                errors.append(f"Error deleting field {field_id}: {error}")
+    result = shared_fields.delete_fields(ctx.deps.tool_context(), field_ids)
 
     _refresh_row_tools(ctx)
-
-    result: dict[str, Any] = {"deleted_field_ids": deleted}
-    if errors:
-        result["errors"] = errors
     return result
 
 

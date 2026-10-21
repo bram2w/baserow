@@ -1,3 +1,4 @@
+import asyncio
 from typing import Any, NamedTuple
 from unittest.mock import MagicMock
 
@@ -13,11 +14,13 @@ from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.models import Table
 from baserow.core.action.handler import ActionHandler
 from baserow_enterprise.assistant.tools.database.tools import (
+    create_fields,
     delete_fields,
     get_tables_schema,
     update_fields,
 )
 from baserow_enterprise.assistant.tools.database.types import (
+    FieldItemCreate,
     FieldItemUpdate,
     SelectOptionCreate,
     SelectOptionUpdate,
@@ -559,3 +562,95 @@ def test_delete_primary_field_fails(data_fixture):
     # Primary field should still exist
     refreshed = FieldHandler().get_field(primary_field.id)
     assert refreshed.primary is True
+
+
+def _fake_fixer(monkeypatch, fixed_formula):
+    calls = []
+
+    def make_fixer(user, workspace, tool_helpers):
+        def fix(table, field_name, formula):
+            calls.append((table.id, field_name, formula))
+            return fixed_formula
+
+        return fix
+
+    monkeypatch.setattr(
+        "baserow_enterprise.assistant.tools.database.tools.make_formula_fixer",
+        make_fixer,
+    )
+    return calls
+
+
+@pytest.mark.django_db
+def test_create_fields_repairs_a_formula_description(data_fixture, monkeypatch):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+    data_fixture.create_text_field(table=table, name="Name", primary=True)
+    calls = _fake_fixer(monkeypatch, "upper(field('Name'))")
+
+    result = create_fields(
+        make_test_ctx(user, workspace),
+        table_id=table.id,
+        fields=[
+            FieldItemCreate(name="Loud", type="formula", formula="$formula: the name")
+        ],
+        thought="add formula",
+    )
+
+    assert calls == [(table.id, "Loud", "$formula: the name")]
+    assert [field["name"] for field in result["created_fields"]] == ["Loud"]
+    assert "formula_errors" not in result
+    assert table.field_set.get(name="Loud").specific.formula == "upper(field('Name'))"
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("fixed_formula", ["concat('a', 'b')", None])
+def test_update_fields_repairs_an_invalid_formula(
+    data_fixture, monkeypatch, fixed_formula
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+    field = data_fixture.create_formula_field(table=table, name="F", formula="'x'")
+    calls = _fake_fixer(monkeypatch, fixed_formula)
+
+    result = update_fields(
+        make_test_ctx(user, workspace),
+        fields=[FieldItemUpdate(field_id=field.id, name="G", formula="concat(")],
+        thought="fix formula",
+    )
+
+    assert calls == [(table.id, "G", "concat(")]
+    field.refresh_from_db()
+    if fixed_formula:
+        assert result["changed"] is True
+        assert result["updated_fields"][0]["formula"] == fixed_formula
+        assert "errors" not in result
+        assert (field.name, field.formula) == ("G", fixed_formula)
+    else:
+        assert result["changed"] is False
+        assert result["updated_fields"] == []
+        (error,) = result["errors"]
+        assert error.startswith(
+            f"Error updating field {field.id}: Invalid formula for field 'G': "
+        )
+        assert (field.name, field.formula) == ("F", "'x'")
+
+
+@pytest.mark.django_db
+def test_shared_field_tools_stop_when_the_chat_is_cancelled(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+    field = data_fixture.create_text_field(table=table, name="Kept")
+    ctx = make_test_ctx(user, workspace)
+    ctx.deps.tool_helpers.cancel()
+
+    with pytest.raises(asyncio.CancelledError):
+        delete_fields(ctx, field_ids=[field.id], thought="delete")
+
+    assert Field.objects.filter(id=field.id).exists()
