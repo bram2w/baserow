@@ -456,6 +456,15 @@ def _find_field(fields: list[FieldItem], name: str) -> FieldItem | None:
     return next((f for f in fields if option_value_key(f.name) == key), None)
 
 
+def _is_primary_field_name(table: TableItemCreate, name: str) -> bool:
+    """
+    Case is ignored, as clients vary it, but spaces are not: " Name " is a field
+    of its own next to "Name".
+    """
+
+    return name.lower() == table.primary_field_name.lower()
+
+
 def _primary_field_conflict(
     requested: TableItemCreate, actual: TableItem
 ) -> dict[str, Any] | None:
@@ -494,7 +503,7 @@ def table_schema_conflict(
     missing_fields: list[dict[str, Any]] = []
     field_conflicts: list[dict[str, Any]] = []
     for requested_field in requested.fields:
-        if requested_field.name == requested.primary_field_name:
+        if _is_primary_field_name(requested, requested_field.name):
             continue
 
         actual_field = _find_field(actual.fields, requested_field.name)
@@ -642,12 +651,9 @@ def get_database(ctx: ToolContext, database_id: int) -> Database:
 
 
 def _non_primary_fields(table: TableItemCreate) -> list[FieldItemCreate]:
-    """
-    Exclude the field specification represented by the primary field. Names match
-    exactly, like field names do in a table.
-    """
+    """Exclude the field specification represented by the primary field."""
 
-    return [field for field in table.fields if field.name != table.primary_field_name]
+    return [f for f in table.fields if not _is_primary_field_name(table, f.name)]
 
 
 def _create_empty_table(

@@ -640,3 +640,44 @@ def test_reused_table_prefers_the_link_field_with_the_exact_name():
     assert mismatch["relation_issues"] == {
         "through_field": {"actual": "Link", "requested": "link"}
     }
+
+
+@pytest.mark.django_db
+def test_shared_create_tables_skips_a_field_named_like_the_primary_in_another_case(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+
+    result = create_tables(
+        ToolContext(user, workspace),
+        database.id,
+        [
+            TableItemCreate(
+                name="People",
+                primary_field_name="Name",
+                fields=[FieldItemCreate(name="name", type="text")],
+            )
+        ],
+    )
+
+    assert result["notes"] == []
+    people = Table.objects.get(database=database, name="People")
+    assert list(people.field_set.values_list("name", flat=True)) == ["Name"]
+
+
+def test_reused_table_skips_a_field_named_like_the_primary_in_another_case():
+    requested = TableItemCreate(
+        name="Orders",
+        primary_field_name="Order",
+        fields=[FieldItemCreate(name="ORDER", type="text")],
+    )
+    actual = TableItem(
+        id=1,
+        name="Orders",
+        primary_field=FieldItem(id=10, name="Order", type="text"),
+        fields=[],
+    )
+
+    assert table_schema_conflict(requested, actual) is None
