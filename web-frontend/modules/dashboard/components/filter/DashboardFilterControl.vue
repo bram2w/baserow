@@ -171,7 +171,11 @@
               </div>
             </template>
             <div v-else class="dashboard-filter__input">
-              <FormGroup :label="filter.label" small-label required>
+              <FormGroup
+                :label="`${upperCaseFirst(operatorName)}...`"
+                small-label
+                required
+              >
                 <FormInput
                   ref="input"
                   :type="
@@ -236,6 +240,7 @@ import Button from '@baserow/modules/core/components/Button'
 import ButtonIcon from '@baserow/modules/core/components/ButtonIcon'
 import SelectSearch from '@baserow/modules/core/components/SelectSearch'
 import Context from '@baserow/modules/core/components/Context'
+import { upperCaseFirst } from '@baserow/modules/core/utils/string'
 import { useNuxtApp } from '#app'
 import {
   filterHasOptions,
