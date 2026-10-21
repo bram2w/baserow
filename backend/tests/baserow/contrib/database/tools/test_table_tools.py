@@ -20,6 +20,7 @@ from baserow.contrib.database.tools.tables import (
     TableItemCreate,
     create_tables,
 )
+from baserow.core.exceptions import PermissionException
 from baserow.core.mcp import BaserowMCPServer, current_key
 from baserow.core.mcp.registries import mcp_tool_registry
 from baserow.core.tools import ToolContext
@@ -285,3 +286,39 @@ def test_shared_create_tables_keeps_tables_and_fields_when_a_field_fails(
         "Three",
     }
     assert any("Error creating field Two" in note for note in result["notes"])
+
+
+@pytest.mark.django_db
+def test_shared_create_tables_drops_the_model_cached_before_a_denied_field(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    original = CreateFieldActionType.do
+
+    def do(user, table, field_type, **kwargs):
+        if kwargs["name"] == "Two":
+            raise PermissionException()
+        return original(user, table, field_type, **kwargs)
+
+    with patch.object(CreateFieldActionType, "do", side_effect=do):
+        result = create_tables(
+            ToolContext(user, workspace),
+            database.id,
+            [
+                TableItemCreate(
+                    name="Orders",
+                    primary_field_name="Order",
+                    fields=[
+                        # A formula field builds the table model while created.
+                        FieldItemCreate(name="One", type="formula", formula="1"),
+                        FieldItemCreate(name="Two", type="formula", formula="2"),
+                    ],
+                )
+            ],
+        )
+
+    assert "Permission denied" in result["notes"][0]
+    model = Table.objects.get(database=database, name="Orders").get_model()
+    assert [f["field"].name for f in model._field_objects.values()] == ["Order"]

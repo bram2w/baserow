@@ -898,6 +898,16 @@ def _item_error_message(exc: Exception) -> str:
     return message
 
 
+def forget_cached_table_models() -> None:
+    """
+    Drop the table models cached for this request. Call it after a savepoint
+    rolls back, because a model built inside it can still be cached. Every table
+    is dropped, as a link field also changes the model of the table it links to.
+    """
+
+    local_cache.delete("database_table_model_*")
+
+
 def _get_field(ctx: ToolContext, field_id: int) -> BaserowField:
     """
     Get a field of a table the user can see in the context's workspace.
@@ -950,9 +960,7 @@ def create_fields_in_table(
         except PermissionException:
             raise
         except Exception as error:
-            # A model built inside the rolled back savepoint can still be cached
-            # for this request.
-            local_cache.delete(f"database_table_model_{table.id}*")
+            forget_cached_table_models()
             message = _item_error_message(error).rstrip(".")
             field_errors.append(
                 f"Error creating field {field_item.name} in table_{table.id}: "
@@ -976,7 +984,10 @@ def update_field(
         changed then.
     """
 
-    field = _get_field(ctx, field_update.field_id).specific
+    _get_field(ctx, field_update.field_id)
+    # Locked like the REST API does, so concurrent option changes don't merge from
+    # a stale read.
+    field = FieldHandler().get_specific_field_for_update(field_update.field_id)
     kwargs = field_update.to_update_kwargs(field)
     previous = FieldItem.from_django_orm(field)
     if not kwargs:
@@ -1079,6 +1090,7 @@ def update_fields(
             except PermissionException:
                 raise
             except Exception as error:
+                forget_cached_table_models()
                 errors.append(
                     f"Error updating field {field_update.field_id}: "
                     f"{_item_error_message(error)}"
@@ -1118,6 +1130,7 @@ def delete_fields(
             except PermissionException:
                 raise
             except Exception as error:
+                forget_cached_table_models()
                 errors.append(
                     f"Error deleting field {field_id}: {_item_error_message(error)}"
                 )

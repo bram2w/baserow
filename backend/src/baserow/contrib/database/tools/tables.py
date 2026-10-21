@@ -41,6 +41,7 @@ from baserow.contrib.database.tools.fields import (
     FieldItemCreate,
     SelectOption,
     create_fields_in_table,
+    forget_cached_table_models,
     option_value_key,
 )
 from baserow.core.db import specific_iterator
@@ -645,6 +646,7 @@ def _add_table_fields(
                     ctx, created_table, _non_primary_fields(table)
                 )
         except PermissionException:
+            forget_cached_table_models()
             creation.notes.append(
                 f"Permission denied while creating fields in "
                 f"table_{created_table.id}. The tables were created, but further "

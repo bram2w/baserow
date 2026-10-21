@@ -3,7 +3,8 @@
 import json
 from unittest.mock import patch
 
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, connection, transaction
+from django.test.utils import CaptureQueriesContext
 
 import pytest
 from asgiref.sync import async_to_sync
@@ -525,3 +526,53 @@ def test_field_tools_over_mcp_treat_other_workspaces_as_missing(
     other_field.refresh_from_db()
     assert other_field.name == "Other"
     assert not other_field.trashed
+
+
+@pytest.mark.django_db
+def test_update_fields_locks_the_field_like_the_rest_api(data_fixture, table_ctx):
+    ctx, table = table_ctx
+    field = data_fixture.create_single_select_field(table=table, name="Status")
+
+    with CaptureQueriesContext(connection) as queries:
+        update_fields(
+            ctx, [FieldItemUpdate(field_id=field.id, add_options=[{"value": "New"}])]
+        )
+
+    locks = [
+        q["sql"]
+        for q in queries.captured_queries
+        if "FOR UPDATE" in q["sql"] and '"database_field"' in q["sql"]
+    ]
+    assert locks
+    assert list(field.select_options.values_list("value", flat=True)) == ["New"]
+
+
+def _field_names(table):
+    model = Table.objects.get(id=table.id).get_model()
+    return sorted(f["field"].name for f in model._field_objects.values())
+
+
+@pytest.mark.django_db
+def test_update_fields_drops_the_model_cached_in_a_failed_update(
+    data_fixture, table_ctx
+):
+    ctx, table = table_ctx
+    field = data_fixture.create_number_field(table=table, name="Num")
+
+    with _fail_after_doing(UpdateFieldActionType, lambda a, k: True):
+        update_fields(ctx, [FieldItemUpdate(field_id=field.id, name="Renamed")])
+
+    assert _field_names(table) == ["Name", "Num"]
+
+
+@pytest.mark.django_db
+def test_delete_fields_drops_the_model_cached_in_a_failed_delete(
+    data_fixture, table_ctx
+):
+    ctx, table = table_ctx
+    field = data_fixture.create_number_field(table=table, name="Num")
+
+    with _fail_after_doing(DeleteFieldActionType, lambda a, k: True):
+        delete_fields(ctx, [field.id])
+
+    assert _field_names(table) == ["Name", "Num"]
