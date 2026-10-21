@@ -30,7 +30,7 @@
             tabindex="0"
             :aria-label="$t('widget.filtered')"
           >
-            <i class="iconoir-filter" aria-hidden="true"></i>
+            <i class="iconoir-info-empty" aria-hidden="true"></i>
           </span>
           <span
             v-if="isMisconfigured"

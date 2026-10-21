@@ -64,7 +64,7 @@ describe('widget filter indicator', () => {
 
     await apply(['France'])
     const status = wrapper.get(indicator)
-    expect(status.get('.iconoir-filter').exists()).toBe(true)
+    expect(status.get('.iconoir-info-empty').exists()).toBe(true)
     expect(status.element.previousElementSibling.textContent).toBe('Revenue')
     expect(status.attributes('aria-label')).toBe('widget.filtered')
     expect(status.attributes('tabindex')).toBe('0')
