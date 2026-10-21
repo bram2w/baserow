@@ -1,7 +1,7 @@
 import json
 from typing import Any, Literal
 
-from pydantic import Field, model_serializer, model_validator
+from pydantic import Field, model_validator
 
 from baserow.contrib.database.fields.models import (
     DateField,
@@ -9,21 +9,15 @@ from baserow.contrib.database.fields.models import (
     SingleSelectField,
 )
 from baserow.contrib.database.table.models import Table
-from baserow.contrib.database.views.models import View as BaserowView
-from baserow.contrib.database.views.registries import view_type_registry
+from baserow.contrib.database.tools.views import (  # noqa: F401
+    FormFieldOption,
+    ViewItem,
+)
 from baserow_enterprise.assistant.types import BaseModel
 
 # ---------------------------------------------------------------------------
 # Shared types
 # ---------------------------------------------------------------------------
-
-
-class FormFieldOption(BaseModel):
-    field_id: int = Field(..., description="Field ID.")
-    name: str = Field(..., description="Display name in form.")
-    description: str = Field(..., description="Field description, or ''.")
-    required: bool = Field(..., description="Required?")
-    order: int = Field(..., description="Sort order.")
 
 
 class GridFieldOption(BaseModel):
@@ -150,41 +144,6 @@ _TO_DJANGO_ORM = {
 
 
 # ---------------------------------------------------------------------------
-# from_django_orm builders: (orm_view) -> dict of extra kwargs
-# ---------------------------------------------------------------------------
-
-
-def _form_field_options_from_orm(orm_view):
-    return [
-        FormFieldOption(
-            field_id=fo.field_id,
-            name=fo.name,
-            description=fo.description,
-            required=fo.required,
-            order=fo.order,
-        )
-        for fo in orm_view.active_field_options.all()
-    ]
-
-
-_FROM_DJANGO_ORM: dict[str, Any] = {
-    "grid": lambda v: {"row_height": v.row_height_size},
-    "kanban": lambda v: {"column_field_id": v.single_select_field_id},
-    "calendar": lambda v: {"date_field_id": v.date_field_id},
-    "gallery": lambda v: {"cover_field_id": v.card_cover_image_field_id},
-    "timeline": lambda v: {
-        "start_date_field_id": v.start_date_field_id,
-        "end_date_field_id": v.end_date_field_id,
-    },
-    "form": lambda v: {
-        "title": v.title,
-        "description": v.description,
-        "field_options": _form_field_options_from_orm(v),
-    },
-}
-
-
-# ---------------------------------------------------------------------------
 # ViewItemCreate
 # ---------------------------------------------------------------------------
 
@@ -280,46 +239,3 @@ class ViewItemCreate(BaseModel):
             }
             for fo in self.field_options
         }
-
-
-# ---------------------------------------------------------------------------
-# ViewItem (read-back)
-# ---------------------------------------------------------------------------
-
-
-class ViewItem(BaseModel):
-    """Existing view with ID — flat structure matching ViewItemCreate."""
-
-    id: int = Field(...)
-    name: str = Field(...)
-    public: bool = Field(...)
-    type: str = Field(...)
-
-    # Type-specific (populated per type, others excluded via serializer)
-    row_height: str | None = None
-    column_field_id: int | None = None
-    date_field_id: int | None = None
-    cover_field_id: int | None = None
-    start_date_field_id: int | None = None
-    end_date_field_id: int | None = None
-    title: str | None = None
-    description: str | None = None
-    field_options: list[FormFieldOption] | None = None
-
-    @model_serializer(mode="wrap")
-    def _exclude_none(self, handler):
-        return {k: v for k, v in handler(self).items() if v is not None}
-
-    @classmethod
-    def from_django_orm(cls, orm_view: BaserowView) -> "ViewItem":
-        view_type = view_type_registry.get_by_model(orm_view).type
-        kwargs: dict[str, Any] = {
-            "id": orm_view.id,
-            "name": orm_view.name,
-            "public": orm_view.public,
-            "type": view_type,
-        }
-        builder = _FROM_DJANGO_ORM.get(view_type)
-        if builder:
-            kwargs.update(builder(orm_view))
-        return cls(**kwargs)

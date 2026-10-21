@@ -5,6 +5,11 @@ from baserow.contrib.database.mcp.rows.schemas import (
     ListRowsInput,
     UpdateRowsInput,
 )
+from baserow.core.mcp.groups import (
+    GROUP_DATABASE_DELETE,
+    GROUP_DATABASE_EDIT,
+    GROUP_DATABASE_READ,
+)
 from baserow.core.mcp.models import MCPEndpoint
 from baserow.core.mcp.registries import MCPTool
 
@@ -16,6 +21,7 @@ class ListRowsMcpTool(MCPTool):
     """
 
     type = "list_table_rows"
+    group = GROUP_DATABASE_READ
     title = "List rows"
     read_only = True
     input_schema = ListRowsInput
@@ -39,6 +45,7 @@ class CreateRowsMcpTool(MCPTool):
     """
 
     type = "create_rows"
+    group = GROUP_DATABASE_EDIT
     title = "Create rows"
     input_schema = CreateRowsInput
 
@@ -57,6 +64,7 @@ class UpdateRowsMcpTool(MCPTool):
     """
 
     type = "update_rows"
+    group = GROUP_DATABASE_EDIT
     title = "Update rows"
     destructive = True
     input_schema = UpdateRowsInput
@@ -77,6 +85,7 @@ class DeleteRowsMcpTool(MCPTool):
     """
 
     type = "delete_rows"
+    group = GROUP_DATABASE_DELETE
     title = "Delete rows"
     destructive = True
     input_schema = DeleteRowsInput

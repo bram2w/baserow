@@ -58,7 +58,7 @@ def test_call_tool_list_rows_cross_workspace_returns_error(data_fixture):
                 result = await client.call_tool(
                     "list_table_rows", {"table_id": other_table.id}
                 )
-                assert "does not exist" in result.content[0].text.lower()
+                assert result.content[0].text == "Not found in this workspace."
 
         with transaction.atomic():
             async_to_sync(inner)()
@@ -181,7 +181,7 @@ def test_call_tool_create_rows_cross_workspace_returns_error(data_fixture):
                     "create_rows",
                     {"table_id": other_table.id, "rows": [{"Name": "Test"}]},
                 )
-                assert "does not exist" in result.content[0].text.lower()
+                assert result.content[0].text == "Not found in this workspace."
 
         with transaction.atomic():
             async_to_sync(inner)()
@@ -265,7 +265,7 @@ def test_call_tool_update_rows_cross_workspace_returns_error(data_fixture):
                     "update_rows",
                     {"table_id": other_table.id, "rows": [{"id": 1, "Name": "Test"}]},
                 )
-                assert "does not exist" in result.content[0].text.lower()
+                assert result.content[0].text == "Not found in this workspace."
 
         with transaction.atomic():
             async_to_sync(inner)()
@@ -320,7 +320,7 @@ def test_call_tool_delete_rows_cross_workspace_returns_error(data_fixture):
                     "delete_rows",
                     {"table_id": other_table.id, "row_ids": [1]},
                 )
-                assert "does not exist" in result.content[0].text.lower()
+                assert result.content[0].text == "Not found in this workspace."
 
         with transaction.atomic():
             async_to_sync(inner)()

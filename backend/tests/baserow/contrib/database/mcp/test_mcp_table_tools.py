@@ -11,6 +11,7 @@ from mcp.shared.memory import (
 )
 
 from baserow.core.mcp import BaserowMCPServer, current_key
+from baserow.core.mcp.constants import LEGACY_DEFAULT_TOOLS
 from baserow.core.mcp.registries import mcp_tool_registry
 
 ENABLED_TOOL_NAMES = {
@@ -42,6 +43,11 @@ def enable_all_tools(monkeypatch):
 
     for name in DISABLED_TOOL_NAMES:
         monkeypatch.setattr(mcp_tool_registry.get(name), "enabled", True)
+    # An endpoint without an allow-list only gets the legacy default tools.
+    monkeypatch.setattr(
+        "baserow.core.mcp.registries.LEGACY_DEFAULT_TOOLS",
+        [*LEGACY_DEFAULT_TOOLS, *DISABLED_TOOL_NAMES],
+    )
 
 
 @pytest.mark.django_db

@@ -107,6 +107,57 @@ class UpdateMCPEndpointActionType(ActionType):
         return WorkspaceActionScopeType.value(workspace_id)
 
 
+class UpdateMCPEndpointToolsActionType(ActionType):
+    type = "update_mcp_endpoint_tools"
+    description = ActionTypeDescription(
+        _("Change MCP tools"),
+        _('The tools of "%(endpoint_name)s" (%(endpoint_id)s) changed'),
+        WORKSPACE_ACTION_CONTEXT,
+    )
+    analytics_params = [
+        "endpoint_id",
+        "workspace_id",
+        "tool_count",
+    ]
+
+    @dataclasses.dataclass
+    class Params:
+        endpoint_id: int
+        endpoint_name: str
+        workspace_id: int
+        workspace_name: str
+        original_allowed_tools: list[str]
+        allowed_tools: list[str]
+        tool_count: int
+
+    @classmethod
+    def do(cls, user: AbstractUser, endpoint: MCPEndpoint, names: list[str]):
+        original = mcp_tool_registry.get_allowed_names(endpoint)
+        workspace = endpoint.workspace
+
+        endpoint = MCPEndpointHandler().update_allowed_tools(user, endpoint, names)
+
+        cls.register_action(
+            user,
+            cls.Params(
+                endpoint.id,
+                endpoint.name,
+                workspace.id,
+                workspace.name,
+                original,
+                endpoint.allowed_tools,
+                len(mcp_tool_registry.get_allowed_tools(endpoint)),
+            ),
+            cls.scope(workspace.id),
+            workspace,
+        )
+        return endpoint
+
+    @classmethod
+    def scope(cls, workspace_id: int):
+        return WorkspaceActionScopeType.value(workspace_id)
+
+
 class DeleteMCPEndpointActionType(ActionType):
     type = "delete_mcp_endpoint"
     description = ActionTypeDescription(
@@ -213,7 +264,7 @@ class ConnectMCPOAuthClientActionType(OAuthClientAnalyticsMixin, ActionType):
             name,
             workspace.id,
             workspace.name,
-            allowed_tools,
+            endpoint.allowed_tools,
             len(mcp_tool_registry.get_allowed_tools(endpoint)),
             not created,
         )

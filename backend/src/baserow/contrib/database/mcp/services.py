@@ -7,11 +7,13 @@ All functions accept ``user`` and ``workspace`` and apply permission filtering
 so callers never need to worry about permissions or cross-workspace access.
 """
 
+from contextlib import contextmanager
 from typing import Any
 
 from django.contrib.auth.models import AbstractUser
 from django.db import transaction
 
+from baserow.api.utils import apply_exception_mapping
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
@@ -19,11 +21,104 @@ from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
 from baserow.core.db import specific_iterator
 from baserow.core.handler import CoreHandler
+from baserow.core.mcp.exceptions import MCPToolInputError, flatten_error_detail
 from baserow.core.models import Workspace
 
 # ---------------------------------------------------------------------------
 # Query helpers (shared with enterprise assistant)
 # ---------------------------------------------------------------------------
+
+
+def _user_error_mapping() -> dict[type[Exception], Any]:
+    """
+    Baserow exceptions that a client causes with its input, mapped to the REST API's
+    error, so REST and MCP give the same message.
+    """
+
+    from baserow.contrib.database.api.fields import errors as fe
+    from baserow.contrib.database.api.rows import errors as re
+    from baserow.contrib.database.fields import exceptions as f
+    from baserow.contrib.database.rows import exceptions as r
+
+    return {
+        f.FieldWithSameNameAlreadyExists: fe.ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS,
+        f.ReservedBaserowFieldNameException: fe.ERROR_RESERVED_BASEROW_FIELD_NAME,
+        f.InvalidBaserowFieldName: fe.ERROR_INVALID_BASEROW_FIELD_NAME,
+        f.MaxFieldNameLengthExceeded: fe.ERROR_MAX_FIELD_NAME_LENGTH_EXCEEDED,
+        f.MaxFieldLimitExceeded: fe.ERROR_MAX_FIELD_COUNT_EXCEEDED,
+        f.CannotCreateFieldType: fe.ERROR_CANNOT_CREATE_FIELD_TYPE,
+        f.CannotChangeFieldType: fe.ERROR_CANNOT_CHANGE_FIELD_TYPE,
+        f.IncompatibleField: fe.ERROR_INCOMPATIBLE_FIELD_TYPE,
+        f.IncompatiblePrimaryFieldTypeError: fe.ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE,
+        f.LinkRowTableNotProvided: fe.ERROR_LINK_ROW_TABLE_NOT_PROVIDED,
+        f.LinkRowTableNotInSameDatabase: fe.ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE,
+        f.SelfReferencingLinkRowCannotHaveRelatedField: (
+            fe.ERROR_SELF_REFERENCING_LINK_ROW_CANNOT_HAVE_RELATED_FIELD
+        ),
+        f.FieldNotInTable: fe.ERROR_FIELD_NOT_IN_TABLE,
+        f.FieldIsAlreadyPrimary: fe.ERROR_FIELD_IS_ALREADY_PRIMARY,
+        f.CannotDeletePrimaryField: fe.ERROR_CANNOT_DELETE_PRIMARY_FIELD,
+        f.PrimaryFieldAlreadyExists: fe.ERROR_PRIMARY_FIELD_ALREADY_EXISTS,
+        f.SelectOptionDoesNotBelongToField: (
+            fe.ERROR_SELECT_OPTION_DOES_NOT_BELONG_TO_FIELD
+        ),
+        f.InvalidFieldConstraint: fe.ERROR_INVALID_FIELD_CONSTRAINT,
+        f.InvalidDefaultValueFunction: fe.ERROR_INVALID_DEFAULT_VALUE_FUNCTION,
+        f.DbIndexNotSupportedError: fe.ERROR_DB_INDEX_NOT_SUPPORTED,
+        f.FieldConstraintDoesNotSupportDefaultValueError: (
+            fe.ERROR_FIELD_CONSTRAINT_DOES_NOT_SUPPORT_DEFAULT_VALUE
+        ),
+        f.FieldDataConstraintException: fe.ERROR_FIELD_DATA_CONSTRAINT,
+        r.CannotCreateRowsInTable: re.ERROR_CANNOT_CREATE_ROWS_IN_TABLE,
+        r.CannotDeleteRowsInTable: re.ERROR_CANNOT_DELETE_ROWS_IN_TABLE,
+        r.RowIdsNotUnique: re.ERROR_ROW_IDS_NOT_UNIQUE,
+    }
+
+
+def _user_error_message(exc: Exception) -> str | None:
+    """The REST API's message for a client error, or None for other exceptions."""
+
+    _, error, detail = apply_exception_mapping(_user_error_mapping(), exc)
+    if error is None:
+        return None
+    return detail or str(exc) or error.removeprefix("ERROR_").replace("_", " ").lower()
+
+
+def _formula_error_types() -> tuple[type[Exception], ...]:
+    from baserow.core.formula.parser.exceptions import BaserowFormulaException
+
+    return (BaserowFormulaException,)
+
+
+@contextmanager
+def input_errors():
+    """
+    Turns known Baserow user errors raised inside the block into
+    ``MCPToolInputError`` so the client gets a readable message.
+    """
+
+    from baserow.contrib.database.rows.exceptions import (
+        FieldsNotWritable,
+        RowDoesNotExist,
+    )
+
+    try:
+        yield
+    except RowDoesNotExist as exc:
+        ids = ", ".join(str(i) for i in exc.ids)
+        raise MCPToolInputError(f"Rows not found in this table: {ids}.") from exc
+    except _formula_error_types() as exc:
+        raise MCPToolInputError(f"Invalid formula: {exc}") from exc
+    except FieldsNotWritable as exc:
+        names = ", ".join(field.name for field in exc.fields)
+        raise MCPToolInputError(
+            f"You don't have permission to change these fields: {names}."
+        ) from exc
+    except Exception as exc:
+        message = _user_error_message(exc)
+        if message is None:
+            raise
+        raise MCPToolInputError(message) from exc
 
 
 def filter_tables(user: AbstractUser, workspace: Workspace):
@@ -226,6 +321,7 @@ _FIELD_CREATION_ORDER: dict[str, int] = {
 }
 
 
+@input_errors()
 def create_table(
     user: AbstractUser,
     workspace: Workspace,
@@ -309,6 +405,7 @@ def get_field(user: AbstractUser, workspace: Workspace, field_id: int):
     return FieldHandler().get_specific_field_for_update(field_id)
 
 
+@input_errors()
 def create_fields(
     user: AbstractUser, workspace: Workspace, table_id: int, fields: list[dict]
 ) -> list[dict]:
@@ -337,6 +434,7 @@ def create_fields(
     return created
 
 
+@input_errors()
 def update_fields(
     user: AbstractUser, workspace: Workspace, fields: list[dict]
 ) -> list[dict]:
@@ -362,6 +460,7 @@ def update_fields(
     return updated
 
 
+@input_errors()
 def delete_fields(
     user: AbstractUser, workspace: Workspace, field_ids: list[int]
 ) -> None:
@@ -416,34 +515,57 @@ def list_rows(
     return {"count": count, "results": list(data)}
 
 
-def _map_user_field_names(model, rows: list[dict]) -> list[dict]:
+def _validate_rows(model, rows: list[dict], update: bool = False) -> list[dict]:
     """
-    Convert user field names to internal column names.
+    Validates rows keyed by user field names with the REST API's row serializer, so
+    a value the API would refuse gets the same message.
 
-    e.g. ``{"Name": "John"}`` → ``{"field_1": "John"}``.
-
-    :raises ValueError: if a field name is not recognised.
+    :returns: The validated rows, keyed by internal column names.
+    :raises MCPToolInputError: if a value is invalid.
     """
-    name_to_col = {
-        info["field"].name: info["name"] for info in model._field_objects.values()
-    }
-    result = []
+
+    from baserow.api.exceptions import RequestBodyValidationException
+    from baserow.api.utils import validate_data
+    from baserow.contrib.database.api.rows.serializers import (
+        get_batch_row_serializer_class,
+        get_row_serializer_class,
+    )
+
+    _check_field_names(model, rows)
+    extra = {"include_id": True, "required_fields": ["id"]} if update else {}
+    row_serializer = get_row_serializer_class(model, user_field_names=True, **extra)
+    try:
+        data = validate_data(
+            get_batch_row_serializer_class(row_serializer),
+            {"items": rows},
+            partial=True,
+            return_validated=True,
+        )
+    except RequestBodyValidationException as exc:
+        detail = exc.detail["detail"]
+        detail = detail.get("items", detail) if isinstance(detail, dict) else detail
+        problems = flatten_error_detail(detail, "rows")
+        raise MCPToolInputError("Invalid value. " + "; ".join(problems)) from exc
+    return data["items"]
+
+
+def _check_field_names(model, rows: list[dict]):
+    """
+    Checks that every key of every row is ``id`` or a user field name.
+
+    :raises MCPToolInputError: if a field name is not recognised.
+    """
+
+    names = [info["field"].name for info in model._field_objects.values()]
     for row in rows:
-        converted: dict[str, Any] = {}
-        for key, value in row.items():
-            if key == "id":
-                converted["id"] = value
-            elif key in name_to_col:
-                converted[name_to_col[key]] = value
-            else:
-                available = list(name_to_col.keys())
-                raise ValueError(
-                    f"Unknown field name '{key}'. Available fields: {available}"
+        for key in row:
+            if key != "id" and key not in names:
+                raise MCPToolInputError(
+                    f"Unknown field name '{key}'. Available fields: {names}"
                 )
-        result.append(converted)
-    return result
 
 
+@input_errors()
 def create_rows(
     user: AbstractUser, workspace: Workspace, table_id: int, rows: list[dict]
 ) -> list[dict]:
@@ -460,12 +582,13 @@ def create_rows(
 
     table = get_table(user, workspace, table_id)
     model = table.get_model()
-    rows_values = _map_user_field_names(model, rows)
+    rows_values = _validate_rows(model, rows)
     with transaction.atomic():
         created = CreateRowsActionType.do(user, table, rows_values, model=model)
     return list(serialize_rows_for_response(created, model, user_field_names=True))
 
 
+@input_errors()
 def update_rows(
     user: AbstractUser, workspace: Workspace, table_id: int, rows: list[dict]
 ) -> list[dict]:
@@ -483,7 +606,7 @@ def update_rows(
 
     table = get_table(user, workspace, table_id)
     model = table.get_model()
-    rows_values = _map_user_field_names(model, rows)
+    rows_values = _validate_rows(model, rows, update=True)
     with transaction.atomic():
         result = UpdateRowsActionType.do(user, table, rows_values, model=model)
     return list(
@@ -491,6 +614,7 @@ def update_rows(
     )
 
 
+@input_errors()
 def delete_rows(
     user: AbstractUser, workspace: Workspace, table_id: int, row_ids: list[int]
 ) -> None:

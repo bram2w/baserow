@@ -24,17 +24,18 @@ from baserow.contrib.database.rows.actions import (
 )
 from baserow.contrib.database.table.actions import CreateTableActionType
 from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.tools import views as shared_views
 from baserow.contrib.database.views.actions import (
     CreateViewActionType,
     UpdateViewFieldOptionsActionType,
 )
-from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.exceptions import PermissionException
 from baserow.core.models import Workspace
 from baserow.core.service import CoreService
 from baserow_enterprise.assistant.deps import AssistantDeps, ResourceChanges
 from baserow_enterprise.assistant.prompts import MISSING_RECORDS_GUIDANCE
 from baserow_enterprise.assistant.tools.shared import (
+    ToolInputError,
     raise_if_permission_denied,
     require_payload,
     return_permission_error,
@@ -368,28 +369,13 @@ def list_views(
     DO NOT USE when: You already have the view IDs you need.
     """
 
-    user = ctx.deps.user
-    workspace = ctx.deps.workspace
-    tool_helpers = ctx.deps.tool_helpers
-
-    table = helpers.get_table(user, workspace, table_id)
-
-    tool_helpers.update_status(
-        _("Listing views in %(table_name)s...") % {"table_name": table.name}
-    )
-
-    views = ViewHandler().list_views(
-        user,
-        table,
-        filters=False,
-        sortings=False,
-        decorations=False,
-        group_bys=False,
-        limit=100,
-        prefetch_field_options=False,
-    )
-
-    return {"views": [ViewItem.from_django_orm(view).model_dump() for view in views]}
+    try:
+        return shared_views.list_views(ctx.deps.tool_context(), table_id)
+    except Table.DoesNotExist:
+        raise ToolInputError(
+            f"Table with ID {table_id} not found. "
+            "Use get_tables_schema to find valid table IDs."
+        )
 
 
 # ---------------------------------------------------------------------------

@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 from asgiref.sync import sync_to_async
 from loguru import logger
 
+from baserow.core.mcp.exceptions import INTERNAL_ERROR_MESSAGE, to_mcp_error
 from baserow.core.mcp.sse import DjangoChannelsSseServerTransport
 
 if TYPE_CHECKING:
@@ -114,7 +115,7 @@ class BaserowMCPServer:
                 content=[TextContent(type="text", text="Endpoint not found.")],
                 isError=True,
             )
-        tool = mcp_tool_registry.get_allowed_tool(endpoint, name)
+        tool = await sync_to_async(mcp_tool_registry.get_allowed_tool)(endpoint, name)
         if not tool:
             return CallToolResult(
                 content=[TextContent(type="text", text=f"Tool '{name}' not found.")],
@@ -123,12 +124,15 @@ class BaserowMCPServer:
         try:
             result = await tool.call(endpoint, arguments)
         except Exception as e:
-            logger.exception("Unhandled exception in MCP tool '{}'", name)
+            message = to_mcp_error(e)
+            if message is None:
+                logger.exception("Unhandled exception in MCP tool '{}'", name)
+                message = INTERNAL_ERROR_MESSAGE
             self.capture_event(
                 endpoint, "mcp_tool_called", {"tool": name, "success": False}
             )
             return CallToolResult(
-                content=[TextContent(type="text", text=f"Error: {e}")],
+                content=[TextContent(type="text", text=message)],
                 isError=True,
             )
         self.capture_event(endpoint, "mcp_tool_called", {"tool": name, "success": True})

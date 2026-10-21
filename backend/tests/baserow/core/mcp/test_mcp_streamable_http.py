@@ -14,6 +14,7 @@ from baserow.core.mcp import (
     current_endpoint,
     current_key,
 )
+from baserow.core.mcp.constants import LEGACY_DEFAULT_TOOLS
 from baserow.core.mcp.models import MCPEndpoint
 from tests.baserow.core.mcp.oauth.helpers import enabled_tool_names, obtain_tokens
 
@@ -218,14 +219,14 @@ def test_endpoint_key_honours_allowed_tools(data_fixture):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_endpoint_without_allowed_tools_gets_all_enabled_tools(data_fixture):
+def test_endpoint_without_allowed_tools_gets_legacy_default_tools(data_fixture):
     user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)
     endpoint = data_fixture.create_mcp_endpoint(user=user, workspace=workspace)
     assert endpoint.allowed_tools is None
     response = _post(LIST, endpoint.key)
     names = [t["name"] for t in response.json()["result"]["tools"]]
-    assert names == enabled_tool_names()
+    assert set(names) == set(LEGACY_DEFAULT_TOOLS)
 
 
 @pytest.mark.django_db(transaction=True)

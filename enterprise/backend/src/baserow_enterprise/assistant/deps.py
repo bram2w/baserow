@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractUser
 
     from baserow.core.models import Workspace
+    from baserow.core.tools import ToolContext
     from baserow_enterprise.assistant.model_profiles import (
         ResolvedAssistantModelProfile,
     )
@@ -155,3 +156,14 @@ class AssistantDeps:
         """
 
         self.sources.extend(s for s in new_sources if s not in self.sources)
+
+    def tool_context(self) -> "ToolContext":
+        """The context for calling a tool shared with the other clients."""
+
+        from baserow.core.tools import ToolContext
+
+        return ToolContext(
+            user=self.user,
+            workspace=self.workspace,
+            update_status=self.tool_helpers.update_status,
+        )
