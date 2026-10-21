@@ -34,9 +34,9 @@ role picker preselects "No access", so adding a colleague or a team to a table w
 touching the dropdown locks them out, admins included
 ([#4345](https://github.com/baserow/baserow/issues/4345), folded into
 [#6012](https://github.com/baserow/baserow/issues/6012)). An admin locked out of a
-database can't see it, can't open its role modal and can't undo the assignment.
+database can't see it, can't open its share dialog and can't undo the assignment.
 
-In scope: how roles resolve for admins, what the role modals show for them, and who can
+In scope: how roles resolve for admins, what the share dialog shows for them, and who can
 change whose role. Out of scope: the picker's default role and the confirmation before
 "No access" (#6012), the access summary of a scope (#6012), which roles a team may hold,
 and privacy inside a table, which field permissions and personal views keep providing.
@@ -108,9 +108,9 @@ shortcut may skip it.
 
 No data migration. An assignment the rules ignore stays stored, so demoting the admin
 later makes it effective again, and nothing has to tell an accidental assignment from a
-deliberate one. The role modals show such users and agents with a locked Admin role and
-an explanation naming the level that makes them an admin, offer removal only, and don't
-offer them in the picker.
+deliberate one. The share dialog of an object shows such users and agents with a locked
+Admin role and an explanation naming the level that makes them an admin, offers removal
+only, and lists them in its picker with that reason instead of offering them.
 
 ### 5. Nobody can change their own role through the API
 
@@ -143,20 +143,21 @@ rejected for the admins it happens to contain, and the UI never sends it.
   personal views. To restrict an admin, lower their role at the level that makes them an
   admin.
 - The last admin can't step down. A second admin has to be promoted first.
-- The role modals lock exactly the users and agents the backend protects: the stored
-  workspace roles and the role assignments of the parent scopes are known client side.
-- A team's Admin on a database shows as Admin in the role modal, but its members can
-  still be given a lower role on a table inside. The explanation of full access is only
-  shown for users and agents.
+- The share dialog locks exactly the users and agents the backend protects: the stored
+  workspace roles are known client side, and the dialog fetches the role assignments of
+  the parent database and table. A parent whose roles the user may not read is skipped,
+  so its admins aren't marked there.
+- A team's Admin on a database shows as Admin in the database's share dialog, but its
+  members can still be given a lower role on a table inside. The explanation of full
+  access is only shown for users and agents.
 - A "No role" member whose team holds Admin on the workspace is an admin of the
   workspace without the new protection: a lower role on a database or table inside still
   locks them out, and the members page lists them as Admin under "Highest role" all the
   same. Restricting Admin for teams on the workspace is a separate decision.
 - The ordering endpoints work for admins without placeholders.
 - Follow-up work: #6012 (picker defaults to Viewer, confirmation before "No access",
-  access summary of a scope), the share dialog of #6013, which replaces the role modal
-  and has to apply the same locks, and #6374, which shows the effective workspace role
-  of "No role" members on the members page.
+  access summary of a scope) and #6374, which shows the effective workspace role of "No
+  role" members on the members page.
 
 ## Revisit triggers
 

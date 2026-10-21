@@ -16,7 +16,7 @@ export class SubjectType extends Registerable {
   }
 
   /**
-   * Tells subjects of different types apart, for instance in the role modals
+   * Tells subjects of different types apart, for instance in the share dialog
    * where users, agents and teams are listed together.
    */
   getKey(subject) {
@@ -119,7 +119,7 @@ export class SubjectType extends Registerable {
   getInviteOption(subject) {
     const id = this.getId(subject)
     return {
-      key: `${this.type}:${id}`,
+      key: this.getKey(subject),
       type: this.type,
       id,
       name: this.getDisplayName(subject),

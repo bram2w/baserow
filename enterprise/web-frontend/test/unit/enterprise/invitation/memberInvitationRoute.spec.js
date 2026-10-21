@@ -41,7 +41,7 @@ function createRegistry(app) {
     get: (namespace, type) => subjectTypes.find((s) => s.type === type),
     getOrderedList: () => subjectTypes,
     getAll: () =>
-      [...roles, noAccess].map((role) => ({
+      [{ uid: 'ADMIN' }, ...roles, noAccess].map((role) => ({
         getUid: () => role.uid,
         getDeactivatedClickModal: () => null,
       })),
@@ -79,7 +79,9 @@ const captchaWidget = {
 function createTargetType() {
   return {
     getRoles: () => roles,
-    getScopeTypeName: () => 'Table',
+    getScopeTypeName: (scopeType) =>
+      ({ application: 'Database', database_view: 'View' })[scopeType] ||
+      'Table',
     sendInvitation: vi.fn().mockResolvedValue({
       id: 2,
       email: 'new@x.com',
@@ -89,9 +91,16 @@ function createTargetType() {
   }
 }
 
-function createClient({ withAgentAssignment = false } = {}) {
+function createClient({
+  withAgentAssignment = false,
+  assignmentsPerScopeType = {},
+} = {}) {
   return {
-    get: vi.fn((url) => {
+    get: vi.fn((url, config) => {
+      const scopeType = config?.params?.scope_type
+      if (url === '/role/12/' && scopeType in assignmentsPerScopeType) {
+        return Promise.resolve({ data: assignmentsPerScopeType[scopeType] })
+      }
       if (url === '/role/12/invitations/') {
         return Promise.resolve({
           data: [{ id: 1, email: 'olga@x.com', role: 'EDITOR', scope_id: 20 }],
@@ -161,6 +170,9 @@ async function mountRoute(
     captcha = false,
     canInviteNewUsers = true,
     realList = false,
+    routeWorkspace = workspace,
+    routeTarget = target,
+    canReadParentRoles = true,
   } = {}
 ) {
   picker.removed = []
@@ -172,12 +184,19 @@ async function mountRoute(
     $i18n: { t: (key) => key },
   }
   const wrapper = await mountSuspended(MemberInvitationRoute, {
-    props: { workspace, target, targetType },
+    props: { workspace: routeWorkspace, target: routeTarget, targetType },
     global: {
       mocks: {
         $client: client,
-        $hasPermission: (operation) =>
-          operation !== 'workspace.create_invitation' || canInviteNewUsers,
+        $hasPermission: (operation) => {
+          if (operation === 'workspace.create_invitation') {
+            return canInviteNewUsers
+          }
+          if (operation.endsWith('.read_role')) {
+            return canReadParentRoles
+          }
+          return true
+        },
         $config: { public: { baserowEmbeddedShareUrl: 'http://localhost' } },
         $store: { getters: { 'auth/getUserId': 7 } },
         $registry: createRegistry(app),
@@ -191,6 +210,7 @@ async function mountRoute(
             'roles',
             'emailRoleUids',
             'emailDisabledReason',
+            'inheritedAdmins',
           ],
           template:
             '<div class="picker" :data-email-disabled-reason="emailDisabledReason">' +
@@ -201,6 +221,7 @@ async function mountRoute(
             '</div>' +
             '<div class="picker-pending">{{ pendingEmails.join(",") }}</div>' +
             '<div class="picker-assigned">{{ assignedKeys.join(",") }}</div>' +
+            '<div class="picker-admins">{{ JSON.stringify(inheritedAdmins) }}</div>' +
             '<div class="picker-roles">{{ roles.map((r) => r.uid).join(",") }}' +
             '|{{ emailRoleUids.join(",") }}</div>',
           methods: {
@@ -219,7 +240,9 @@ async function mountRoute(
               template:
                 '<div class="access">{{ items.map((i) => i.key).join(",") }}</div>' +
                 '<div class="access-roles">{{ items.map((i) => i.key + "=" + ' +
-                'i.roles.map((r) => r.uid).join("/")).join(",") }}</div>',
+                'i.roles.map((r) => r.uid).join("/")).join(",") }}</div>' +
+                '<div class="access-locks">{{ items.map((i) => i.key + "=" + ' +
+                'i.roleUid + ":" + (i.helpText || "")).join(",") }}</div>',
             },
         ScopeInheritedAccess: { template: '<div class="inherited"></div>' },
         CaptchaWidget: captcha
@@ -538,6 +561,207 @@ test('changes and revokes roles of invitations and assignments', async () => {
       role: null,
     })
     expect(items()).toBe('')
+  } finally {
+    wrapper.unmount()
+  }
+})
+
+// A workspace with an admin role, where Jane is an admin of the workspace.
+const adminRole = { uid: 'ADMIN', name: 'Admin', isVisible: true }
+const adminWorkspace = {
+  ...workspace,
+  users: [
+    { ...workspace.users[0], permissions: 'EDITOR' },
+    { ...workspace.users[1], permissions: 'EDITOR' },
+    { ...workspace.users[2], permissions: 'ADMIN' },
+  ],
+  _: { roles: [adminRole, ...roles, noAccess] },
+}
+const database = { id: 30, name: 'CRM', type: 'database' }
+const table = { id: 20, name: 'Projects' }
+const assignment = (id, subjectType, subject, role, scopeType, scopeId) => ({
+  id,
+  subject_type: subjectType,
+  subject,
+  role,
+  scope_id: scopeId,
+  scope_type: scopeType,
+})
+const mark = { id: 8, name: 'Mark Delgado', email: 'mark@x.com' }
+const jane = { id: 9, name: 'Jane Roe', email: 'jane@x.com' }
+const managers = { id: 3, name: 'Management', subject_count: 2 }
+const smith = { id: 4, name: 'Smith' }
+
+test('locks the role of admins of the workspace and of the database', async () => {
+  const client = createClient({
+    assignmentsPerScopeType: {
+      // Mark is an admin of the database himself, the team only through its
+      // role, which doesn't protect its members.
+      application: [
+        assignment(1, 'auth.User', mark, 'ADMIN', 'application', 30),
+        assignment(
+          2,
+          'baserow_enterprise.Team',
+          managers,
+          'ADMIN',
+          'application',
+          30
+        ),
+      ],
+      database_table: [
+        assignment(5, 'auth.User', mark, 'NO_ACCESS', 'database_table', 20),
+        assignment(6, 'auth.User', jane, 'VIEWER', 'database_table', 20),
+        assignment(
+          7,
+          'baserow_enterprise.Team',
+          managers,
+          'NO_ACCESS',
+          'database_table',
+          20
+        ),
+      ],
+    },
+  })
+  const wrapper = await mountRoute(client, createTargetType(), {
+    routeWorkspace: adminWorkspace,
+    routeTarget: { ...target, database },
+  })
+  try {
+    expect(client.get).toHaveBeenCalledWith('/role/12/', {
+      params: { scope_id: 30, scope_type: 'application' },
+    })
+    expect(JSON.parse(wrapper.find('.picker-admins').text())).toEqual({
+      'auth.User:8': 'database',
+      'auth.User:9': 'common.workspace',
+    })
+    expect(wrapper.find('.access-roles').text()).toBe(
+      'invitation:1=EDITOR/VIEWER,auth.User:8=ADMIN,auth.User:9=ADMIN,' +
+        'baserow_enterprise.Team:3=ADMIN/EDITOR/VIEWER/NO_ACCESS'
+    )
+    expect(wrapper.find('.access-locks').text()).toBe(
+      'invitation:1=EDITOR:,' +
+        'auth.User:8=ADMIN:shareScope.inheritedAdminHelpText,' +
+        'auth.User:9=ADMIN:shareScope.inheritedAdminHelpText,' +
+        'baserow_enterprise.Team:3=NO_ACCESS:'
+    )
+  } finally {
+    wrapper.unmount()
+  }
+})
+
+test('names the outermost level that makes someone an admin of a view', async () => {
+  const client = createClient({
+    assignmentsPerScopeType: {
+      application: [
+        assignment(1, 'auth.User', mark, 'ADMIN', 'application', 30),
+      ],
+      database_table: [
+        assignment(2, 'auth.User', mark, 'ADMIN', 'database_table', 20),
+        assignment(3, 'core.Agent', smith, 'ADMIN', 'database_table', 20),
+      ],
+      database_view: [],
+    },
+  })
+  const wrapper = await mountRoute(client, createTargetType(), {
+    routeWorkspace: adminWorkspace,
+    routeTarget: {
+      type: 'scope',
+      scopeType: 'database_view',
+      scope: { id: 40, name: 'Grid' },
+      database,
+      table,
+    },
+  })
+  try {
+    expect(JSON.parse(wrapper.find('.picker-admins').text())).toEqual({
+      'auth.User:8': 'database',
+      'auth.User:9': 'common.workspace',
+      'core.Agent:4': 'table',
+    })
+  } finally {
+    wrapper.unmount()
+  }
+})
+
+test('explains the full access of a direct admin of the table only', async () => {
+  const client = createClient({
+    assignmentsPerScopeType: {
+      application: [],
+      database_table: [
+        assignment(5, 'auth.User', mark, 'ADMIN', 'database_table', 20),
+        assignment(
+          6,
+          'baserow_enterprise.Team',
+          managers,
+          'ADMIN',
+          'database_table',
+          20
+        ),
+      ],
+    },
+  })
+  const wrapper = await mountRoute(client, createTargetType(), {
+    routeWorkspace: adminWorkspace,
+    routeTarget: { ...target, database },
+  })
+  try {
+    expect(wrapper.find('.access-locks').text()).toBe(
+      'invitation:1=EDITOR:,' +
+        'auth.User:8=ADMIN:shareScope.scopeAdminHelpText,' +
+        'baserow_enterprise.Team:3=ADMIN:'
+    )
+  } finally {
+    wrapper.unmount()
+  }
+})
+
+test('skips the parent roles the user may not read', async () => {
+  const client = createClient()
+  const wrapper = await mountRoute(client, createTargetType(), {
+    routeWorkspace: adminWorkspace,
+    routeTarget: { ...target, database },
+    canReadParentRoles: false,
+  })
+  try {
+    expect(client.get).not.toHaveBeenCalledWith('/role/12/', {
+      params: { scope_id: 30, scope_type: 'application' },
+    })
+    // The workspace admins are still known from the workspace itself.
+    expect(JSON.parse(wrapper.find('.picker-admins').text())).toEqual({
+      'auth.User:9': 'common.workspace',
+    })
+  } finally {
+    wrapper.unmount()
+  }
+})
+
+test('shows a locked admin role with an explanation in the list', async () => {
+  const client = createClient({
+    assignmentsPerScopeType: {
+      application: [],
+      database_table: [
+        assignment(6, 'auth.User', jane, 'NO_ACCESS', 'database_table', 20),
+      ],
+    },
+  })
+  const wrapper = await mountRoute(client, createTargetType(), {
+    routeWorkspace: adminWorkspace,
+    routeTarget: { ...target, database },
+    realList: true,
+  })
+  try {
+    const rows = wrapper.findAll('.invite-list__item')
+    expect(rows[1].find('.invite-list__name').text()).toBe('Jane Roe')
+    expect(rows[1].find('.invite-list__role > a').text()).toBe('Admin')
+    expect(rows[1].find('.help-icon').exists()).toBe(true)
+    expect(rows[0].find('.help-icon').exists()).toBe(false)
+
+    await rows[1].find('.invite-list__role > a').trigger('click')
+    const options = rows[1]
+      .findAll('.context__menu-item-link')
+      .map((link) => link.text().trim())
+    expect(options).toContain('Admin')
+    expect(options).not.toContain('No access')
   } finally {
     wrapper.unmount()
   }

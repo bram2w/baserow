@@ -31,16 +31,26 @@
             </div>
           </div>
         </div>
-        <ScopeRoleSelector
-          class="invite-list__role"
-          :value="getRole(item)"
-          :roles="item.roles || roles"
-          :disabled="item.disabled"
-          :allow-removing-role="item.allowRemovingRole !== false"
-          :workspace="workspace"
-          @delete="$emit('role-updated', item, null)"
-          @input="({ uid }) => $emit('role-updated', item, uid)"
-        />
+        <div class="invite-list__access">
+          <HelpIcon
+            v-if="item.helpText"
+            :tooltip="item.helpText"
+            :tooltip-content-classes="[
+              'tooltip__content--expandable',
+              'tooltip__content--expandable-plain-text',
+            ]"
+          />
+          <ScopeRoleSelector
+            class="invite-list__role"
+            :value="getRole(item)"
+            :roles="item.roles || roles"
+            :disabled="item.disabled"
+            :allow-removing-role="item.allowRemovingRole !== false"
+            :workspace="workspace"
+            @delete="$emit('role-updated', item, null)"
+            @input="({ uid }) => $emit('role-updated', item, uid)"
+          />
+        </div>
       </li>
     </ul>
   </div>
@@ -60,7 +70,8 @@ export default {
   props: {
     /**
      * Rows of `{ key, name, subtitle, badge, badgeColor, initials, icon, color,
-     * roleUid, roles, disabled, allowRemovingRole }`, prepared by the caller.
+     * roleUid, roles, disabled, allowRemovingRole, helpText }`, prepared by the
+     * caller. `helpText`, when set, explains the role next to it.
      */
     items: {
       type: Array,
