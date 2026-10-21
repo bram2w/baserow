@@ -161,44 +161,32 @@ class DatabaseWorkflowServiceActionType(
         storage: Optional[Storage] = None,
         cache: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        """
-        Blanks whatever the backing service calls sensitive. `serialize_property`
-        is where the service is exported, and it is never handed the config, so
-        the stripping happens here instead.
+        """Forward export settings so the backing service owns its redaction."""
 
-        A key on an HTTP action lives in the service's own headers rather than
-        in an integration, so without this it travels with every export.
-        """
-
-        exported = super().export_serialized(
-            instance, import_export_config, files_zip, storage, cache
+        exclude_sensitive_data = getattr(
+            import_export_config, "exclude_sensitive_data", False
         )
-
-        if getattr(import_export_config, "exclude_sensitive_data", False):
-            service = exported.get("service") or {}
-            for prop_name in instance.service.specific.get_type().sensitive_fields:
-                if prop_name not in service:
-                    continue
-                rows = service[prop_name]
-                if isinstance(rows, list):
-                    # Only the value is dropped. Blanking the whole list would
-                    # take `Content-Type` and `api-version` with the key, and
-                    # the imported button would send a different request while
-                    # looking configured. Keeping the names says what has to be
-                    # entered again, which is what the data sync types do.
-                    service[prop_name] = [
-                        {**row, "value": None} if isinstance(row, dict) else row
-                        for row in rows
-                    ]
-                else:
-                    service[prop_name] = None
-
-        return exported
+        return {
+            key: (
+                None
+                if exclude_sensitive_data and key in self.sensitive_fields
+                else self.serialize_property(
+                    instance,
+                    key,
+                    import_export_config=import_export_config,
+                    files_zip=files_zip,
+                    storage=storage,
+                    cache=cache,
+                )
+            )
+            for key in self.get_property_names()
+        }
 
     def serialize_property(
         self,
         workflow_action: WorkflowAction,
         prop_name: str,
+        import_export_config: Optional[Any] = None,
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
         cache: Optional[Dict[str, Any]] = None,
@@ -206,7 +194,11 @@ class DatabaseWorkflowServiceActionType(
         if prop_name == "service":
             service = workflow_action.service.specific
             exported = service.get_type().export_serialized(
-                service, files_zip=files_zip, storage=storage, cache=cache
+                service,
+                import_export_config=import_export_config,
+                files_zip=files_zip,
+                storage=storage,
+                cache=cache,
             )
             # An export travels to snapshots, copies and templates, and what a
             # click remembered describes this installation's data. Nothing

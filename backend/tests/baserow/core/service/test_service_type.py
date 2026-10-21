@@ -3,10 +3,46 @@ from unittest.mock import MagicMock, Mock, PropertyMock
 import pytest
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
+from baserow.core.registries import ImportExportConfig
+from baserow.core.services.handler import ServiceHandler
 from baserow.core.services.models import Service
 from baserow.core.services.registries import ServiceType
 from baserow.test_utils.pytest_conftest import FakeDispatchContext
 from baserow_premium.integrations.local_baserow.service_types import DispatchResult
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("exclude_sensitive_data", [True, False])
+def test_service_export_redacts_sensitive_scalars(data_fixture, exclude_sensitive_data):
+    """The shared export path redacts SMTP content only when requested."""
+
+    values = {
+        "from_email": "'sender@example.com'",
+        "from_name": "'Billing'",
+        "to_emails": "'recipient@example.com'",
+        "cc_emails": "'cc@example.com'",
+        "bcc_emails": "'bcc@example.com'",
+        "subject": "'Your invoice'",
+        "body": "'Account 1234 is overdue'",
+    }
+    service = data_fixture.create_core_smtp_email_service(
+        integration=None, body_type="plain", **values
+    )
+    exported = ServiceHandler().export_service(
+        service,
+        import_export_config=ImportExportConfig(
+            include_permission_data=False, exclude_sensitive_data=exclude_sensitive_data
+        ),
+    )
+
+    assert exported["type"] == "smtp_email"
+    assert exported["body_type"] == "plain"
+    for prop_name, formula in values.items():
+        if exclude_sensitive_data:
+            assert exported[prop_name] is None
+        else:
+            assert exported[prop_name]["formula"] == formula
+        assert getattr(service, prop_name)["formula"] == formula
 
 
 def test_service_type_is_active_by_default(mocker):

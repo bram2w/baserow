@@ -225,9 +225,9 @@ def test_export_workflow_passes_sensitive_data_config_to_node_service(data_fixtu
     normal_service = normal_export["nodes"][0]["service"]
 
     assert sanitized_service["url"] == normal_service["url"]
-    assert sanitized_service["headers"] is None
-    assert sanitized_service["query_params"] is None
-    assert sanitized_service["form_data"] is None
+    assert sanitized_service["headers"] == [{"key": "Authorization", "value": None}]
+    assert sanitized_service["query_params"] == [{"key": "api_key", "value": None}]
+    assert sanitized_service["form_data"] == [{"key": "token", "value": None}]
     assert sanitized_service["body_content"] is None
     assert normal_service["headers"]
     assert normal_service["query_params"]
