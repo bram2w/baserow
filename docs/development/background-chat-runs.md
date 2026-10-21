@@ -192,3 +192,7 @@ flowchart TD
   Redis read connections.
 - Followers don't count against `BASEROW_ASGI_HTTP_MAX_CONCURRENCY`, so long
   answers never block normal requests.
+- Redis calls time out after 1 s, including the DNS lookup for a new connection,
+  and every run in the worker opens new connections. Where lookups can stall, as
+  in some Kubernetes clusters, use a node-local DNS cache: a run whose first
+  lookup is slow streams no live output, only its final answer.
