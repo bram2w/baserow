@@ -124,7 +124,7 @@ class DashboardSharingView(APIView):
             DashboardDoesNotExist: ERROR_DASHBOARD_DOES_NOT_EXIST,
         }
     )
-    @validate_body(UpdateDashboardSharingSerializer)
+    @validate_body(UpdateDashboardSharingSerializer, return_validated=True)
     def patch(
         self, request: Request, dashboard_id: int, data: Dict[str, Any]
     ) -> Response:
