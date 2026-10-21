@@ -318,11 +318,16 @@ def _named_link_field(f, table) -> LinkRowField:
         another table than ``linked_table``.
     """
 
+    links = list(LinkRowField.objects.filter(table=table).order_by("id"))
     if isinstance(f.through_field, str):
-        q = Q(name=f.through_field)
+        # Like select labels, an exact name wins, then case and outer spaces are
+        # ignored.
+        key = option_value_key(f.through_field)
+        through = next((x for x in links if x.name == f.through_field), None) or next(
+            (x for x in links if option_value_key(x.name) == key), None
+        )
     else:
-        q = Q(id=f.through_field)
-    through = LinkRowField.objects.filter(q, table=table).order_by("id").first()
+        through = next((x for x in links if x.id == f.through_field), None)
     if through is None:
         raise ValueError(
             f"Table '{table.name}' has no link_row field '{f.through_field}' for "

@@ -683,3 +683,28 @@ def test_create_fields_returns_the_link_field_a_lookup_creates(linked_tables):
         other.id,
     )
     assert (lookup["name"], lookup["through_field"]) == ("Titles", link["id"])
+
+
+@pytest.mark.django_db
+def test_create_fields_matches_a_link_field_name_ignoring_case_and_outer_spaces(
+    data_fixture, linked_tables
+):
+    ctx, table, other = linked_tables
+    link = data_fixture.create_link_row_field(
+        table=table, name="Link", link_row_table=other
+    )
+
+    result = create_fields(
+        ctx,
+        table.id,
+        [
+            FieldItemCreate(
+                name="Titles",
+                type="lookup",
+                through_field=" link ",
+                target_field="Title",
+            )
+        ],
+    )
+
+    assert [f["through_field"] for f in result["created_fields"]] == [link.id]
