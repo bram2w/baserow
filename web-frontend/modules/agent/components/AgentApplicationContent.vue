@@ -25,7 +25,7 @@
         :can-create="state.canCreateConversation"
         :ready-to-send="state.readyToSend"
         @select="state.selectConversation"
-        @create="state.newConversation"
+        @create="startConversation"
         @retry="state.retryConversations"
         @load-more="state.loadMoreConversations"
       />
@@ -145,6 +145,7 @@
             @submit.prevent="state.sendMessage"
           >
             <FormTextarea
+              ref="messageInput"
               :model-value="state.currentDraft?.content || ''"
               :readonly="Boolean(state.currentDraft?.submission)"
               :placeholder="$t('agent.messagePlaceholder')"
@@ -312,4 +313,10 @@ watch(
       historyElement.value.scrollTop = historyElement.value.scrollHeight
   }
 )
+const messageInput = ref(null)
+async function startConversation() {
+  state.newConversation()
+  await nextTick()
+  messageInput.value?.focus()
+}
 </script>

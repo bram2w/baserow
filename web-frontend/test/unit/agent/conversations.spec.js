@@ -86,6 +86,15 @@ describe('Agent conversations', () => {
     expect(selected(wrapper).text()).toContain('First message')
   })
 
+  test('focuses the composer when a new conversation starts', async () => {
+    const wrapper = await mount()
+
+    await wrapper.get('.agent-conversations__footer .button').trigger('click')
+    await flushPromises()
+
+    expect(document.activeElement).toBe(composer(wrapper).element)
+  })
+
   test('sends on Enter but not on Shift+Enter or while composing', async () => {
     const wrapper = await mount()
     await composer(wrapper).setValue('Hello')
