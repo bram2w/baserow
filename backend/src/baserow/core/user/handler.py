@@ -501,7 +501,9 @@ class UserHandler:
 
         reset_url = urljoin(base_url, signed_token)
 
-        def send_email():
+        # The rate limit key includes the function name, so this one must not share
+        # its name with the verification email sender.
+        def send_reset_password_email():
             with translation.override(user.profile.language):
                 email = ResetPasswordEmail(user, reset_url, to=[user.email])
                 email.send()
@@ -512,7 +514,7 @@ class UserHandler:
                 rate=settings.BASEROW_SEND_RESET_PASSWORD_EMAIL_RATE_LIMIT,
                 key=user.username,
                 raise_exception=False,
-            )(send_email)()
+            )(send_reset_password_email)()
         )
 
     def reset_password(self, token: str, password: str) -> AbstractUser:

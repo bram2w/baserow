@@ -323,7 +323,8 @@ def test_send_reset_password_email_in_different_language(data_fixture, mailoutbo
 
 @pytest.mark.django_db(transaction=True)
 @override_settings(
-    BASEROW_SEND_RESET_PASSWORD_EMAIL_RATE_LIMIT=RateLimit.from_string("2/h")
+    BASEROW_SEND_RESET_PASSWORD_EMAIL_RATE_LIMIT=RateLimit.from_string("2/h"),
+    BASEROW_SEND_VERIFY_EMAIL_RATE_LIMIT=RateLimit.from_string("2/h"),
 )
 def test_send_reset_password_email_is_rate_limited_per_user(data_fixture, mailoutbox):
     user = data_fixture.create_user(email="test@localhost")
@@ -341,6 +342,10 @@ def test_send_reset_password_email_is_rate_limited_per_user(data_fixture, mailou
         ["test@localhost"],
         ["other@localhost"],
     ]
+
+    # The reset limit doesn't use up the verification email limit.
+    with transaction.atomic():
+        assert handler.send_email_pending_verification(user) is True
 
 
 @pytest.mark.django_db(transaction=True)
