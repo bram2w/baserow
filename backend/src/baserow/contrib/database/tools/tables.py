@@ -675,32 +675,49 @@ def _create_empty_table(
     return created_table
 
 
+# Created once every table has its other fields, so a lookup can target a field
+# of a table later in the request, and a formula can use the lookup.
+_DEFERRED_FIELD_TYPES = {"lookup", "formula"}
+
+
 def _add_table_fields(
     ctx: ToolContext,
     tables: list[TableItemCreate],
     created_tables: list[Table],
     creation: TableCreation,
 ) -> None:
-    """Create the requested fields, stopping at the first permission error."""
+    """
+    Create the requested fields, stopping at the first permission error. Lookup
+    and formula fields come after the other fields of every table.
+    """
 
-    for table, created_table in zip(tables, created_tables):
-        try:
-            # A savepoint, so a denied field keeps the tables created so far.
-            with transaction.atomic():
-                _, field_errors, formula_errors = create_fields_in_table(
-                    ctx, created_table, _non_primary_fields(table)
+    for deferred in (False, True):
+        for table, created_table in zip(tables, created_tables):
+            field_items = [
+                f
+                for f in _non_primary_fields(table)
+                if (f.type in _DEFERRED_FIELD_TYPES) == deferred
+            ]
+            if not field_items:
+                continue
+            try:
+                # A savepoint, so a denied field keeps the tables created so far.
+                with transaction.atomic():
+                    _, field_errors, formula_errors = create_fields_in_table(
+                        ctx, created_table, field_items
+                    )
+            except PermissionException:
+                forget_cached_table_models()
+                creation.notes.append(
+                    f"Permission denied while creating fields in "
+                    f"table_{created_table.id}. The tables were created, but "
+                    "further field setup stopped. Do not retry the denied "
+                    "operation."
                 )
-        except PermissionException:
-            forget_cached_table_models()
-            creation.notes.append(
-                f"Permission denied while creating fields in "
-                f"table_{created_table.id}. The tables were created, but further "
-                "field setup stopped. Do not retry the denied operation."
-            )
-            creation.permission_denied = True
-            return
-        creation.notes.extend(field_errors)
-        creation.formula_errors.extend(formula_errors)
+                creation.permission_denied = True
+                return
+            creation.notes.extend(field_errors)
+            creation.formula_errors.extend(formula_errors)
 
 
 def create_tables_in_database(

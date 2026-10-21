@@ -455,6 +455,53 @@ def test_shared_create_tables_matches_reused_field_names_ignoring_case_and_space
 
 
 @pytest.mark.django_db
+def test_shared_create_tables_looks_up_a_field_of_a_later_table(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+
+    result = create_tables(
+        ToolContext(user, workspace),
+        database.id,
+        [
+            TableItemCreate(
+                name="Orders",
+                primary_field_name="Order",
+                fields=[
+                    FieldItemCreate(
+                        name="Customer", type="link_row", linked_table="Customers"
+                    ),
+                    FieldItemCreate(
+                        name="Customer email",
+                        type="lookup",
+                        through_field="Customer",
+                        target_field="Email",
+                    ),
+                    FieldItemCreate(
+                        name="Emails",
+                        type="formula",
+                        formula="join(field('Customer email'), ',')",
+                    ),
+                ],
+            ),
+            TableItemCreate(
+                name="Customers",
+                primary_field_name="Name",
+                fields=[FieldItemCreate(name="Email", type="text")],
+            ),
+        ],
+    )
+
+    assert result["notes"] == []
+    assert "formula_errors" not in result
+    orders = Table.objects.get(database=database, name="Orders")
+    email = Field.objects.get(table__name="Customers", name="Email")
+    lookup = orders.field_set.get(name="Customer email").specific
+    assert lookup.target_field_id == email.id
+    assert orders.field_set.filter(name="Emails").exists()
+
+
+@pytest.mark.django_db
 def test_shared_create_tables_keeps_a_field_named_like_the_primary_with_spaces(
     data_fixture,
 ):
