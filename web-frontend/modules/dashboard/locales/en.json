@@ -113,7 +113,6 @@
     "invalidField": "Field unavailable",
     "invalidFieldHelp": "Choose a compatible text field for this table.",
     "providerName": "Dashboard filters",
-    "providerHelp": "Select this filter in your data source conditions to use its operator and values.",
     "options": "Options",
     "optionValue": "Dropdown values",
     "sourceOptionsHelp": "Choose fields from a table used by your widgets to fill the list."

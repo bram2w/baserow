@@ -81,9 +81,6 @@
         @update:active-index="requestFormatChange({ multiple: $event === 0 })"
       />
     </FormGroup>
-    <p class="dashboard-filter-settings__help">
-      {{ $t('dashboardFilter.providerHelp') }}
-    </p>
     <DashboardFilterOptionsForm
       v-if="filterHasOptions(filter)"
       :filter="filter"
