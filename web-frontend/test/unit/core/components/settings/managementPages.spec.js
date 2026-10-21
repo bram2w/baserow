@@ -19,54 +19,65 @@ describe('Management pages', () => {
   })
   afterEach(async () => await app.afterEach())
 
-  test('members retain their email and 2FA status alongside the new identity cell', async () => {
-    app.mock.onGet('/workspaces/users/workspace/1/').reply(200, [
-      {
-        id: 10,
-        user_id: 42,
-        name: 'Alex Taylor Morgan',
-        email: 'alex@example.com',
-        permissions: 'ADMIN',
-        two_factor_auth: { is_enabled: true },
-      },
-    ])
-    app.authenticate({
-      id: 42,
-      first_name: 'Alex',
-      username: 'alex@example.com',
-    })
-    const wrapper = await app.mount(MembersTable, {
-      props: { workspace },
-      global: {
-        mocks: {
-          $hasPermission: () => true,
-          $t: (key, params) =>
-            key === 'membersSettings.membersTable.title'
-              ? `${params.userAmount} members`
-              : key,
+  test.each([
+    [true, 3],
+    [false, 1],
+  ])(
+    'members retain their identity and permitted total (agents visible: %s)',
+    async (canListAgents, memberCount) => {
+      app.mock.onGet('/workspaces/users/workspace/1/').reply(200, [
+        {
+          id: 10,
+          user_id: 42,
+          name: 'Alex Taylor Morgan',
+          email: 'alex@example.com',
+          permissions: 'ADMIN',
+          two_factor_auth: { is_enabled: true },
         },
-      },
-    })
+      ])
+      app.authenticate({
+        id: 42,
+        first_name: 'Alex',
+        username: 'alex@example.com',
+      })
+      const wrapper = await app.mount(MembersTable, {
+        props: {
+          workspace: { ...workspace, users: [{ id: 42 }], agents_count: 2 },
+        },
+        global: {
+          mocks: {
+            $hasPermission: (operation) =>
+              operation !== 'workspace.list_agents' || canListAgents,
+            $t: (key, params) =>
+              key === 'membersSettings.membersTable.title'
+                ? `${params.userAmount} members`
+                : key,
+          },
+        },
+      })
 
-    expect(wrapper.get('h1').text()).toBe('1 members')
-    expect(wrapper.get('.management-name-field').text()).toContain(
-      'Alex Taylor Morgan'
-    )
-    expect(wrapper.get('.management-name-field .avatar__initials').text()).toBe(
-      'AM'
-    )
-    expect(wrapper.get('.management-name-field .badge').text()).toBe(
-      'managementPages.you'
-    )
-    expect(wrapper.get('tbody').text()).toContain('alex@example.com')
-    expect(wrapper.get('tbody').text()).toContain('twoFactorAuthField.enabled')
-    expect(
-      wrapper.get('.member-role-field__link').attributes('disabled')
-    ).toBeDefined()
-    expect(wrapper.get('input').attributes('placeholder')).toBe(
-      'membersSettings.membersTable.search'
-    )
-  })
+      expect(wrapper.get('h1').text()).toBe(`${memberCount} members`)
+      expect(wrapper.get('.management-name-field').text()).toContain(
+        'Alex Taylor Morgan'
+      )
+      expect(
+        wrapper.get('.management-name-field .avatar__initials').text()
+      ).toBe('AM')
+      expect(wrapper.get('.management-name-field .badge').text()).toBe(
+        'managementPages.you'
+      )
+      expect(wrapper.get('tbody').text()).toContain('alex@example.com')
+      expect(wrapper.get('tbody').text()).toContain(
+        'twoFactorAuthField.enabled'
+      )
+      expect(
+        wrapper.get('.member-role-field__link').attributes('disabled')
+      ).toBeDefined()
+      expect(wrapper.get('input').attributes('placeholder')).toBe(
+        'membersSettings.membersTable.search'
+      )
+    }
+  )
 
   test('invites keep their email and role with a contextual search', async () => {
     app.mock

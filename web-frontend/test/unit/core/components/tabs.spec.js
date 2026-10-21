@@ -65,18 +65,22 @@ describe('Tabs', () => {
     expect(tabItem.get('.tabs__link').text()).toBe('Agents')
   })
 
-  it('renders a development badge next to the tab title', async () => {
-    const wrapper = await mountSuspended(Tabs, {
-      components: {
-        Tab,
-      },
-      slots: {
-        default: '<Tab title="Agents" development-stage="beta">Content</Tab>',
-      },
-    })
+  it.each(['', 'badge="New"'])(
+    'renders one development badge when the tab also has %s',
+    async (badge) => {
+      const wrapper = await mountSuspended(Tabs, {
+        components: {
+          Tab,
+        },
+        slots: {
+          default: `<Tab title="Agents" development-stage="beta" ${badge}>Content</Tab>`,
+        },
+      })
 
-    expect(wrapper.get('.tabs__link .badge').text()).toContain('common.beta')
-  })
+      expect(wrapper.findAll('.tabs__link .badge')).toHaveLength(1)
+      expect(wrapper.get('.tabs__link .badge').text()).toContain('common.beta')
+    }
+  )
 })
 
 test('shows an optional tab badge without changing its navigation label', async () => {
