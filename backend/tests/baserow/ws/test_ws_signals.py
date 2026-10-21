@@ -506,6 +506,7 @@ def test_workspace_user_added(
     assert args[0][1]["workspace_id"] == workspace.id
     assert args[0][1]["workspace_user"]["user_id"] == workspace_user_2.user_id
     assert args[0][1]["workspace_user"]["permissions"] == "MEMBER"
+    assert args[0][1]["workspace_user"]["role_uid"] == "MEMBER"
 
 
 @pytest.mark.django_db(transaction=True)
@@ -534,6 +535,7 @@ def test_workspace_user_updated(
     assert args[0][1]["workspace_id"] == workspace.id
     assert args[0][1]["workspace_user"]["user_id"] == workspace_user_1.user_id
     assert args[0][1]["workspace_user"]["permissions"] == "MEMBER"
+    assert args[0][1]["workspace_user"]["role_uid"] == "MEMBER"
 
 
 @pytest.mark.django_db(transaction=True)

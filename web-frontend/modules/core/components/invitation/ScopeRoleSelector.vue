@@ -20,7 +20,7 @@
       :show-commercial-info="showCommercialInfo"
       role-value-column="uid"
       @update-role="roleUpdated"
-      @delete="$emit('delete')"
+      @delete="remove"
     />
   </div>
 </template>
@@ -29,8 +29,7 @@
 import EditRoleContext from '@baserow/modules/core/components/settings/members/EditRoleContext'
 
 export default {
-  name: 'RoleSelector',
-  emits: ['delete', 'input', 'update:modelValue'],
+  name: 'ScopeRoleSelector',
   components: { EditRoleContext },
   props: {
     value: {
@@ -62,12 +61,17 @@ export default {
       default: true,
     },
   },
+  emits: ['delete', 'input', 'update:modelValue'],
   computed: {
     currentValue() {
       return this.modelValue !== undefined ? this.modelValue : this.value || {}
     },
   },
   methods: {
+    remove() {
+      this.$refs.editRoleContext.hide()
+      this.$emit('delete')
+    },
     roleUpdated({ uid }) {
       const role = this.roles.find((role) => role.uid === uid)
       this.$emit('input', role)

@@ -139,9 +139,13 @@ export default {
   },
   beforeMount() {
     this.$bus.$on('invite-submitted', this.inviteSubmitted)
+    this.$bus.$on('invite-updated', this.refreshInvitations)
+    this.$bus.$on('invite-deleted', this.refreshInvitations)
   },
   beforeUnmount() {
     this.$bus.$off('invite-submitted', this.inviteSubmitted)
+    this.$bus.$off('invite-updated', this.refreshInvitations)
+    this.$bus.$off('invite-deleted', this.refreshInvitations)
   },
   methods: {
     onRowContext({ row, event, target }) {
@@ -179,6 +183,11 @@ export default {
     },
     inviteSubmitted(values) {
       this.$refs.crudTable.upsertRow(values)
+    },
+    refreshInvitations(invitation) {
+      if (invitation.workspace === this.workspace.id) {
+        this.$refs.crudTable.refresh()
+      }
     },
   },
 }

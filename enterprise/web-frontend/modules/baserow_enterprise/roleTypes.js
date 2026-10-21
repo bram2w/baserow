@@ -1,7 +1,4 @@
-import {
-  AdminRoleType,
-  MemberRoleType,
-} from '@baserow/modules/database/roleTypes'
+import { AdminRoleType, MemberRoleType } from '@baserow/modules/core/roleTypes'
 import EnterpriseFeatures from '@baserow_enterprise/features'
 import PaidFeaturesModal from '@baserow_premium/components/PaidFeaturesModal'
 import { RBACPaidFeature } from '@baserow_enterprise/paidFeatures'
@@ -153,6 +150,10 @@ export class EnterpriseCommenterRoleType extends MemberRoleType {
 }
 
 export class EnterpriseViewerRoleType extends MemberRoleType {
+  getIsDefaultForInvitations(workspaceId) {
+    return true
+  }
+
   static getType() {
     return 'viewer'
   }
@@ -231,6 +232,10 @@ export class NoAccessRoleType extends MemberRoleType {
 }
 
 export class NoRoleLowPriorityRoleType extends MemberRoleType {
+  getInvitationSubtitle(workspaceId) {
+    return this.app.$i18n.t('shareScope.pendingNoWorkspaceRole')
+  }
+
   static getType() {
     return 'noRoleLowPriority'
   }
