@@ -90,6 +90,7 @@ from baserow.core.user.exceptions import (
 from baserow.core.user.handler import UserHandler
 from baserow.core.user.utils import generate_session_tokens_for_user
 from baserow.core.utils import get_user_remote_ip_address_from_request
+from baserow.throttling.handler import AnonymousEmailRateThrottle
 
 from .errors import (
     ERROR_ALREADY_EXISTS,
@@ -365,6 +366,11 @@ class UserView(APIView):
 
 class SendResetPasswordEmailView(APIView):
     permission_classes = (AllowAny,)
+
+    def get_throttles(self):
+        # Every call counts per IP, also for unknown addresses, on top of the
+        # per recipient limit applied when the email is sent.
+        return super().get_throttles() + [AnonymousEmailRateThrottle()]
 
     @extend_schema(
         tags=["User"],
@@ -660,6 +666,11 @@ class UserPreferencesView(APIView):
 
 class SendVerifyEmailView(APIView):
     permission_classes = (AllowAny,)
+
+    def get_throttles(self):
+        # Every call counts per IP, also for unknown addresses, on top of the
+        # per recipient limit applied when the email is sent.
+        return super().get_throttles() + [AnonymousEmailRateThrottle()]
 
     @extend_schema(
         tags=["User"],

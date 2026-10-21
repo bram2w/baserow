@@ -468,15 +468,17 @@ class UserHandler:
 
         return URLSafeTimedSerializer(settings.SECRET_KEY, "user-change-email")
 
-    def send_reset_password_email(self, user: AbstractUser, base_url: str):
+    def send_reset_password_email(self, user: AbstractUser, base_url: str) -> bool:
         """
-        Sends an email containing a password reset url to the user.
+        Sends an email containing a password reset url to the user, unless too many
+        were sent to the user recently.
 
         :param user: The user instance.
         :param base_url: The base url of the frontend, where the user can reset his
             password. The reset token is appended to the URL (base_url + '/TOKEN').
             Only the PUBLIC_WEB_FRONTEND_HOSTNAME is allowed as domain name.
         :raises: ResetPasswordDisabledError: If the reset password is disabled.
+        :return: Whether the email was sent.
         """
 
         if not CoreHandler().get_settings().allow_reset_password:
@@ -499,9 +501,19 @@ class UserHandler:
 
         reset_url = urljoin(base_url, signed_token)
 
-        with translation.override(user.profile.language):
-            email = ResetPasswordEmail(user, reset_url, to=[user.email])
-            email.send()
+        def send_email():
+            with translation.override(user.profile.language):
+                email = ResetPasswordEmail(user, reset_url, to=[user.email])
+                email.send()
+            return True
+
+        return bool(
+            rate_limit(
+                rate=settings.BASEROW_SEND_RESET_PASSWORD_EMAIL_RATE_LIMIT,
+                key=user.username,
+                raise_exception=False,
+            )(send_email)()
+        )
 
     def reset_password(self, token: str, password: str) -> AbstractUser:
         """
@@ -1026,13 +1038,15 @@ class UserHandler:
         user_profile.save()
         return user
 
-    def send_email_pending_verification(self, user: User):
+    def send_email_pending_verification(self, user: User) -> bool:
         """
         Sends out a pending verification email to the user.
 
         :user: User that should receive the verification email.
         :raises EmailAlreadyVerified: Raised when the user's
             email is verified already.
+        :return: Whether the email was sent, which isn't the case when too many
+            were sent to the user recently.
         """
 
         if user.profile.email_verified:
@@ -1055,12 +1069,15 @@ class UserHandler:
                     confirm_url=confirm_url,
                 )
                 email.send(fail_silently=False)
+            return True
 
-        rate_limit(
-            rate=settings.BASEROW_SEND_VERIFY_EMAIL_RATE_LIMIT,
-            key=user.username,
-            raise_exception=False,
-        )(send_email)()
+        return bool(
+            rate_limit(
+                rate=settings.BASEROW_SEND_VERIFY_EMAIL_RATE_LIMIT,
+                key=user.username,
+                raise_exception=False,
+            )(send_email)()
+        )
 
     def start_share_onboarding_details_with_baserow(
         self,

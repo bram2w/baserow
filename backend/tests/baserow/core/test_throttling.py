@@ -1,8 +1,7 @@
 from unittest import mock
 
-from django.core.cache import cache
-
 import pytest
+from django_redis import get_redis_connection
 from freezegun import freeze_time
 
 from baserow.throttling.exceptions import RateLimitExceededException
@@ -18,10 +17,13 @@ throttled_key_2 = "my_key_2"
 @pytest.fixture
 def clear_throttle_cache():
     yield
-    cache.delete(f"{throttled_fn_name}:{throttled_key}")
-    cache.delete(f"{throttled_fn_name}:{throttled_key_2}")
-    cache.delete(f"{throttled_fn_2_name}:{throttled_key}")
-    cache.delete(f"{throttled_fn_2_name}:{throttled_key_2}")
+    get_redis_connection("default").delete(
+        *(
+            f"baserow_rate_limit:{fn_name}:{key}"
+            for fn_name in (throttled_fn_name, throttled_fn_2_name)
+            for key in (throttled_key, throttled_key_2)
+        )
+    )
 
 
 def get_named_mock(function_name):
@@ -133,3 +135,18 @@ def test_rate_limit_per_hour(clear_throttle_cache):
         rate_limit(rate=rate, key=throttled_key)(mock_fn)()
     with freeze_time("2023-03-30 01:01:00"):
         rate_limit(rate=rate, key=throttled_key)(mock_fn)()
+
+
+def test_rate_limit_counts_calls_in_redis(clear_throttle_cache):
+    # The slot is reserved by an atomic Redis script, not a read and write of the
+    # Django cache that parallel callers could all pass with the same count.
+    mock_fn = get_named_mock(throttled_fn_name)
+
+    rate_limit(rate=RateLimit.from_string("2/m"), key=throttled_key)(mock_fn)()
+
+    assert (
+        get_redis_connection("default").zcard(
+            f"baserow_rate_limit:{throttled_fn_name}:{throttled_key}"
+        )
+        == 1
+    )
