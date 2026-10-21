@@ -55,12 +55,16 @@
             ></span
           >
           <i
-            class="agent-configuration__section-caret"
-            :class="
-              errors.instructions
-                ? 'iconoir-warning-circle'
-                : 'iconoir-nav-arrow-right'
-            "
+            v-if="sectionErrors.instructions"
+            v-tooltip="sectionErrors.instructions"
+            tooltip-position="bottom-left"
+            class="agent-configuration__section-caret agent-configuration__section-caret--error iconoir-warning-circle"
+            role="img"
+            :aria-label="sectionErrors.instructions"
+          />
+          <i
+            v-else
+            class="agent-configuration__section-caret iconoir-nav-arrow-right"
           />
         </button>
         <button
@@ -79,12 +83,16 @@
             ></span
           >
           <i
-            class="agent-configuration__section-caret"
-            :class="
-              errors.provider_type || errors.model_identifier
-                ? 'iconoir-warning-circle'
-                : 'iconoir-nav-arrow-right'
-            "
+            v-if="sectionErrors.settings"
+            v-tooltip="sectionErrors.settings"
+            tooltip-position="bottom-left"
+            class="agent-configuration__section-caret agent-configuration__section-caret--error iconoir-warning-circle"
+            role="img"
+            :aria-label="sectionErrors.settings"
+          />
+          <i
+            v-else
+            class="agent-configuration__section-caret iconoir-nav-arrow-right"
           />
         </button>
       </div>
@@ -264,6 +272,15 @@ const models = computed(() =>
     ]),
   ].filter(Boolean)
 )
+const sectionFields = {
+  instructions: ['instructions'],
+  settings: ['provider_type', 'model_identifier'],
+}
+const fieldLabels = {
+  instructions: 'agent.instructions',
+  provider_type: 'agent.provider',
+  model_identifier: 'agent.model',
+}
 const unavailableMessages = {
   provider_type: 'agent.providerUnavailable',
   model_identifier: 'agent.modelUnavailable',
@@ -276,6 +293,22 @@ const errorMessage = (field) => {
       : 'error.requiredField'
   )
 }
+const sectionErrors = computed(() =>
+  Object.fromEntries(
+    Object.entries(sectionFields).map(([section, fields]) => [
+      section,
+      fields
+        .filter((field) => props.errors[field])
+        .map((field) =>
+          $i18n.t('agent.fieldError', {
+            field: $i18n.t(fieldLabels[field]),
+            error: errorMessage(field),
+          })
+        )
+        .join(' '),
+    ])
+  )
+)
 function changeProvider(providerType) {
   if (providerType === props.configuration.provider_type) return
   emit('change', { provider_type: providerType, model_identifier: null })

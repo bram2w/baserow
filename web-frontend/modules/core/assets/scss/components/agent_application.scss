@@ -1,6 +1,5 @@
 .agent-application__header {
   align-items: center;
-  justify-content: space-between;
   padding: 0 20px;
 }
 
@@ -220,6 +219,10 @@
   flex: 0 0 14px;
   font-size: 14px;
   color: $palette-neutral-700;
+}
+
+.agent-configuration__section-caret--error {
+  color: $palette-red-700;
 }
 
 .agent-configuration__form {

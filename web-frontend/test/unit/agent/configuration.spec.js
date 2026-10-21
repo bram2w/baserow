@@ -317,6 +317,26 @@ describe('Agent configuration', () => {
     }
   )
 
+  test('flags the section that holds a missing setting', async () => {
+    mockConfiguration(testApp, incompleteConfiguration('model_identifier'))
+    const wrapper = await mount()
+
+    const [instructionsSection, settingsSection] = wrapper.findAll(
+      '.agent-configuration__section'
+    )
+
+    expect(
+      instructionsSection
+        .find('.agent-configuration__section-caret--error')
+        .exists()
+    ).toBe(false)
+    expect(
+      settingsSection
+        .get('.agent-configuration__section-caret--error')
+        .attributes('aria-label')
+    ).toBe('agent.fieldError')
+  })
+
   test('renames the Agent through the application with the trimmed name', async () => {
     mockRename(testApp, { ...agentData, name: 'Support' })
     const wrapper = await mount()

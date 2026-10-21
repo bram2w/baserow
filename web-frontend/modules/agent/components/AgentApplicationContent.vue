@@ -1,6 +1,8 @@
 <template>
   <div class="agent-application">
-    <header class="layout__col-2-1 header agent-application__header">
+    <header
+      class="layout__col-2-1 header header--space-between agent-application__header"
+    >
       <div class="agent-application__header-name">{{ agent.name }}</div>
       <ButtonIcon
         v-if="state.canReadConfiguration"
