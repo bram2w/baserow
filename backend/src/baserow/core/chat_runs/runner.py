@@ -93,7 +93,15 @@ def _finish(
             "Could not save outcome of chat run {} ({})", run.id, type(exc).__name__
         )
     else:
-        return serialize_run(handler.get_run(run.id))
+        try:
+            return serialize_run(handler.get_run(run.id))
+        except Exception as exc:
+            logger.error(
+                "Could not serialize outcome of chat run {} ({})",
+                run.id,
+                type(exc).__name__,
+            )
+            return None
 
     # Product writes rolled back. Keep a durable started-run warning even if the
     # adapter cannot save its answer, so future history never claims no tools ran.

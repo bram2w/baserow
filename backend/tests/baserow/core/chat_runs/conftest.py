@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 from fakeredis.aioredis import FakeRedis
+from loguru import logger
 
 from baserow.core.chat_runs.buffer import set_buffer_redis
 from baserow.core.chat_runs.handler import ChatRunHandler
@@ -84,3 +85,11 @@ def output_buffer(mocker):
     buffer.append = AsyncMock(return_value=[])
     buffer.invalidate = AsyncMock()
     return buffer
+
+
+@pytest.fixture
+def logs():
+    written = []
+    sink_id = logger.add(written.append, diagnose=True, backtrace=True)
+    yield written
+    logger.remove(sink_id)

@@ -136,3 +136,18 @@ def test_stop_polling_continues_while_redis_append_blocks(
     run.refresh_from_db()
     assert run.status == "cancelled"
     assert run.outcome["content"] == "partial"
+
+
+def test_a_serialization_error_after_saving_logs_only_its_class(
+    create_run, fake_run_type, output_buffer, mocker, logs
+):
+    run = create_run(claim=True)
+    mocker.patch.object(
+        fake_run_type, "serialize_outcome", side_effect=RuntimeError("private-canary")
+    )
+    async_to_sync(run_chat_run)(run, fake_run_type)
+    run.refresh_from_db()
+    assert run.status == "completed"
+    assert "RuntimeError" in "".join(logs)
+    assert "private-canary" not in "".join(logs)
+

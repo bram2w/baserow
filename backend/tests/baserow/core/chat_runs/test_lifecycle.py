@@ -6,7 +6,6 @@ from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
 import pytest
-from loguru import logger
 
 from baserow.core.chat_runs.constants import (
     MAX_ACTIVE_RUNS_PER_USER,
@@ -24,7 +23,7 @@ pytestmark = pytest.mark.django_db
 
 @pytest.mark.parametrize("terminal", [False, True])
 def test_output_failure_logs_only_run_identity_and_exception_class(
-    create_run, mocker, terminal
+    create_run, mocker, logs, terminal
 ):
     run = create_run()
     private_content = "private-chat-output-canary"
@@ -34,17 +33,12 @@ def test_output_failure_logs_only_run_identity_and_exception_class(
         "baserow.core.chat_runs.buffer.ChatRunBuffer.append",
         side_effect=RuntimeError(private_error),
     )
-    written = []
-    sink_id = logger.add(written.append, diagnose=True, backtrace=True)
-    try:
-        handler = ChatRunHandler()
-        if terminal:
-            handler._publish_terminal(run)
-        else:
-            handler._publish(run, [("run.created", {"content": private_content})])
-    finally:
-        logger.remove(sink_id)
-    logged = "".join(written)
+    handler = ChatRunHandler()
+    if terminal:
+        handler._publish_terminal(run)
+    else:
+        handler._publish(run, [("run.created", {"content": private_content})])
+    logged = "".join(logs)
     assert str(run.id) in logged
     assert "RuntimeError" in logged
     assert private_content not in logged
