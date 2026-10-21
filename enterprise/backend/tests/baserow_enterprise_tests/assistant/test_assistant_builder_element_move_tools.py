@@ -264,7 +264,7 @@ def test_move_element_helper_drops_place_in_container_without_parent(
 
     # The tool wraps each move in a transaction (the helper locks the row).
     with transaction.atomic():
-        helpers.move_element(ctx.deps.user, move)
+        helpers.move_element(ctx.deps.user, page, move)
 
     page.refresh_from_db()
     # h1 is last, on the default output; no stray `next["0"]` edge.

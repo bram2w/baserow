@@ -10,9 +10,13 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 
 from django.contrib.auth.models import AbstractUser
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
+from baserow.contrib.builder.data_sources.models import DataSource
+from baserow.contrib.builder.data_sources.operations import (
+    ReadDataSourceOperationType,
+)
 from baserow.contrib.builder.data_sources.service import DataSourceService
 from baserow.contrib.builder.elements.actions import (
     CreateElementActionType,
@@ -32,8 +36,11 @@ from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.operations import ListPagesBuilderOperationType
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.pages.models import Page
+from baserow.contrib.builder.pages.operations import ReadPageOperationType
 from baserow.contrib.builder.pages.service import PageService
+from baserow.contrib.builder.workflow_actions.models import BuilderWorkflowAction
 from baserow.contrib.builder.workflow_actions.operations import (
+    ReadBuilderWorkflowActionOperationType,
     UpdateBuilderWorkflowActionOperationType,
 )
 from baserow.contrib.builder.workflow_actions.registries import (
@@ -111,18 +118,90 @@ def get_builder(
         )
 
 
-def get_page(user: AbstractUser, page_id: int) -> Page:
+def workspace_pages(workspace: Workspace) -> QuerySet:
     """
-    Get a page with permission check.
+    The pages of the workspace's builders that aren't trashed. Looking pages up
+    through it makes an ID from another workspace the user belongs to look like a
+    missing one.
+    """
+
+    return Page.objects.filter(builder__workspace=workspace, builder__trashed=False)
+
+
+def on_page(page: Page) -> Q:
+    """
+    Filter for the elements or data sources a tool working on ``page`` may reach:
+    those on the page itself and on its builder's shared page.
+    """
+
+    return Q(page=page) | Q(page__builder_id=page.builder_id, page__shared=True)
+
+
+def check_data_source_on_page(page: Page, data_source_id: int) -> None:
+    """
+    :raises ToolInputError: When the data source is neither on ``page`` nor on its
+        builder's shared page.
+    """
+
+    if not DataSource.objects.filter(on_page(page), id=data_source_id).exists():
+        raise ToolInputError(
+            f"Data source with ID {data_source_id} not found on this page. "
+            "Use list_data_sources to find valid data source IDs. No changes were "
+            "applied."
+        )
+
+
+def check_page_links(builder: Builder, values: Any) -> None:
+    """
+    Check that every ``navigate_to_page_id`` in ``values``, including those of
+    nested menu items, is a page of ``builder``.
+
+    :raises ToolInputError: When one names a page of another application.
+    """
+
+    page_ids = set()
+
+    def collect(value: Any) -> None:
+        if isinstance(value, dict):
+            if value.get("navigate_to_page_id") is not None:
+                page_ids.add(value["navigate_to_page_id"])
+            for item in value.values():
+                collect(item)
+        elif isinstance(value, (list, tuple)):
+            for item in value:
+                collect(item)
+
+    collect(values)
+    found = set(
+        Page.objects.filter(builder=builder, id__in=page_ids).values_list(
+            "id", flat=True
+        )
+    )
+    missing = sorted(page_ids - found, key=str)
+    if missing:
+        raise ToolInputError(
+            f"Page with ID {missing[0]} not found in this application. "
+            "Use list_pages to find valid page IDs. No changes were applied."
+        )
+
+
+def get_page(user: AbstractUser, workspace: Workspace, page_id: int) -> Page:
+    """
+    Get a page of the workspace with permission check.
 
     :param user: The acting user.
+    :param workspace: The workspace the page must belong to.
     :param page_id: The ID of the page to fetch.
     :returns: The matching page.
     :raises ToolInputError: When the page is missing or not accessible.
     """
 
     try:
-        return PageService().get_page(user, page_id)
+        page = PageHandler().get_page(page_id, base_queryset=workspace_pages(workspace))
+        CoreHandler().check_permissions(
+            user, ReadPageOperationType.type, workspace=workspace, context=page
+        )
+        return page
     except Exception as exc:
         raise_if_permission_denied(exc)
         raise ToolInputError(
@@ -198,8 +277,6 @@ def list_workflow_actions(user: AbstractUser, page: Page) -> list[ActionItem]:
 def create_page(user: AbstractUser, builder: Builder, page_create: PageCreate) -> Page:
     """Create a page in a builder application."""
 
-    from baserow.contrib.builder.pages.service import PageService
-
     svc = PageService()
     page = svc.create_page(
         user,
@@ -232,6 +309,7 @@ def create_page(user: AbstractUser, builder: Builder, page_create: PageCreate) -
 
 def update_page(
     user: AbstractUser,
+    workspace: Workspace,
     page_update: PageUpdate,
 ) -> Page:
     """
@@ -240,9 +318,7 @@ def update_page(
     Returns the updated page.
     """
 
-    from baserow.contrib.builder.pages.service import PageService
-
-    page = get_page(user, page_update.page_id)
+    page = get_page(user, workspace, page_update.page_id)
     kwargs = page_update.to_update_kwargs()
     if kwargs:
         PageService().update_page(user, page, **kwargs)
@@ -304,23 +380,26 @@ def create_data_source(
 
 def update_data_source(
     user: AbstractUser,
+    page: Page,
     ds_update: DataSourceUpdate,
-    workspace: Any,
 ) -> tuple[Any, str]:
     """
-    Update an existing data source by ID.
+    Update an existing data source of the page or its builder's shared page by ID.
 
     :param user: The acting user.
+    :param page: The page the data source must be on, or whose builder's shared
+        page it must be on. Referenced tables must be in its workspace.
     :param ds_update: The update definition.
-    :param workspace: The workspace the referenced tables must belong to.
     :returns: ``(orm_data_source, service_type_str)``.
     :raises ToolInputError: When the data source does not exist.
     """
 
-    from baserow.core.services.registries import service_type_registry
-
+    workspace = page.builder.workspace
     try:
-        ds = DataSourceHandler().get_data_source_for_update(ds_update.data_source_id)
+        ds = DataSourceHandler().get_data_source_for_update(
+            ds_update.data_source_id,
+            base_queryset=DataSource.objects.filter(on_page(page)),
+        )
     except Exception as exc:
         raise_if_permission_denied(exc)
         raise ToolInputError(
@@ -337,6 +416,10 @@ def update_data_source(
             DataSourceService()
             .update_data_source(user, ds, service_type=service_type, **kwargs)
             .data_source
+        )
+    else:
+        CoreHandler().check_permissions(
+            user, ReadDataSourceOperationType.type, workspace=workspace, context=ds
         )
 
     ds_type = ds.service.get_type().type if ds.service else ""
@@ -367,6 +450,7 @@ def create_element(
 
     if shared_page_refs is None:
         shared_page_refs = set()
+    elements = Element.objects.filter(on_page(page))
 
     element_type = element_type_registry.get(element_create.type)
 
@@ -378,11 +462,14 @@ def create_element(
     elif isinstance(parent, int):
         # Check if the parent element lives on the shared page
         try:
-            parent_el = ElementHandler().get_element(parent)
-            if parent_el.page.shared:
-                use_shared_page = True
-        except Exception:
-            pass
+            parent_el = ElementHandler().get_element(parent, base_queryset=elements)
+        except ElementDoesNotExist:
+            raise ToolInputError(
+                f"Parent element with ID {parent} not found on this page. "
+                "Use list_elements to find valid element IDs. No changes were applied."
+            )
+        if parent_el.page.shared:
+            use_shared_page = True
 
     target_page = page.builder.shared_page if use_shared_page else page
     if use_shared_page:
@@ -400,8 +487,12 @@ def create_element(
             "create_data_sources first, or use an id from list_data_sources. No "
             "changes were applied."
         )
+    # Checked before to_orm_kwargs, which reads the data source's table fields.
+    if element_create.data_source is not None:
+        check_data_source_on_page(page, int(element_create.data_source))
 
     kwargs = element_create.to_orm_kwargs(user, target_page)
+    check_page_links(page.builder, kwargs)
 
     # Resolve parent
     if isinstance(parent, int):
@@ -424,7 +515,9 @@ def create_element(
             kwargs["place_in_container"] = element_create.place_in_container
         else:
             try:
-                parent = ElementHandler().get_element(kwargs["parent_element_id"])
+                parent = ElementHandler().get_element(
+                    kwargs["parent_element_id"], base_queryset=elements
+                )
                 if parent.get_type().type == "column":
                     kwargs["place_in_container"] = "0"
             except Exception:
@@ -439,9 +532,18 @@ def create_element(
     before = None
     if before_id is not None:
         try:
-            before = ElementService().get_element(user, before_id)
+            before = ElementHandler().get_element(before_id, base_queryset=elements)
         except ElementDoesNotExist:
-            pass
+            raise ToolInputError(
+                f"Before element with ID {before_id} not found on this page. "
+                "Use list_elements to find valid element IDs. No changes were applied."
+            )
+        CoreHandler().check_permissions(
+            user,
+            ReadElementOperationType.type,
+            workspace=page.builder.workspace,
+            context=before,
+        )
 
     parent_element_id = kwargs.pop("parent_element_id", None)
     if parent_element_id is not None:
@@ -476,6 +578,7 @@ def create_element(
 
 def move_element(
     user: AbstractUser,
+    page: Page,
     element_move: ElementMove,
 ) -> Any:
     """
@@ -484,18 +587,30 @@ def move_element(
     Returns the moved ORM element.
     """
 
+    elements = Element.objects.filter(on_page(page))
     try:
-        element = ElementHandler().get_element_for_update(element_move.element_id)
+        element = ElementHandler().get_element(
+            element_move.element_id, base_queryset=elements
+        )
     except ElementDoesNotExist:
         raise ToolInputError(
             f"Element with ID {element_move.element_id} not found. "
             "Use list_elements to find valid element IDs."
         )
+    CoreHandler().check_permissions(
+        user,
+        UpdateElementOperationType.type,
+        workspace=page.builder.workspace,
+        context=element,
+    )
+    element = ElementHandler().get_element_for_update(element.id)
 
     parent = None
     if element_move.parent_element_id is not None:
         try:
-            parent = ElementHandler().get_element(element_move.parent_element_id)
+            parent = ElementHandler().get_element(
+                element_move.parent_element_id, base_queryset=elements
+            )
         except ElementDoesNotExist:
             raise ToolInputError(
                 f"Parent element with ID {element_move.parent_element_id} not found."
@@ -504,7 +619,9 @@ def move_element(
     before = None
     if element_move.before_id is not None:
         try:
-            before = ElementHandler().get_element(element_move.before_id)
+            before = ElementHandler().get_element(
+                element_move.before_id, base_queryset=elements
+            )
         except ElementDoesNotExist:
             raise ToolInputError(
                 f"Before element with ID {element_move.before_id} not found."
@@ -571,6 +688,7 @@ def _accepted_update_keys(element: Element) -> set[str]:
 
 def update_element(
     user: AbstractUser,
+    page: Page,
     element_update: ElementUpdate,
 ) -> ElementUpdateOutcome:
     """
@@ -580,6 +698,8 @@ def update_element(
     what the element's own update doesn't save, and report on it.
 
     :param user: The user updating the element.
+    :param page: The page the element must be on, or whose builder's shared page it
+        must be on.
     :param element_update: The properties to change.
     :return: The updated element, its type, and the keys its type's hooks add to
         update_element's result.
@@ -590,7 +710,10 @@ def update_element(
 
     with transaction.atomic():
         try:
-            element = ElementHandler().get_element_for_update(element_update.element_id)
+            element = ElementHandler().get_element_for_update(
+                element_update.element_id,
+                base_queryset=Element.objects.filter(on_page(page)),
+            )
         except ElementDoesNotExist:
             raise ToolInputError(
                 f"Element with ID {element_update.element_id} not found. "
@@ -631,6 +754,7 @@ def update_element(
         ) | set(element_update.get_formula_dependent_fields(element_type))
         for field in deferred_fields:
             kwargs.pop(field, None)
+        check_page_links(page.builder, kwargs)
         if kwargs:
             element = UpdateElementActionType.do(user, element, kwargs)
         after_update_result = hooks.after_update(user, element, element_update)
@@ -686,6 +810,7 @@ def save_child_menu(
     :raises PermissionDenied: When the user can't update or create the menu.
     """
 
+    check_page_links(container.page.builder, menu_items)
     if menu is not None:
         return UpdateElementActionType.do(user, menu, {"menu_items": menu_items})
     # A new menu has no sub-links yet, and creating one doesn't take children.
@@ -712,6 +837,7 @@ def save_child_menu(
 
 def update_element_style(
     user: AbstractUser,
+    page: Page,
     style_update: ElementStyleUpdate,
 ) -> tuple[Any, str]:
     """
@@ -721,7 +847,10 @@ def update_element_style(
     """
 
     try:
-        element = ElementHandler().get_element_for_update(style_update.element_id)
+        element = ElementHandler().get_element_for_update(
+            style_update.element_id,
+            base_queryset=Element.objects.filter(on_page(page)),
+        )
     except ElementDoesNotExist:
         raise ToolInputError(
             f"Element with ID {style_update.element_id} not found. "
@@ -733,6 +862,13 @@ def update_element_style(
     kwargs = style_update.to_update_kwargs(element_type, existing_styles)
     if kwargs:
         element = UpdateElementActionType.do(user, element, kwargs)
+    else:
+        CoreHandler().check_permissions(
+            user,
+            ReadElementOperationType.type,
+            workspace=page.builder.workspace,
+            context=element,
+        )
     return element, element_type
 
 
@@ -864,7 +1000,9 @@ def create_workflow_action(
     if isinstance(ds, str) and ds in data_source_ref_to_id_map:
         kwargs["data_source_id"] = data_source_ref_to_id_map[ds]
     elif isinstance(ds, int):
+        check_data_source_on_page(page, ds)
         kwargs["data_source_id"] = ds
+    check_page_links(page.builder, kwargs)
 
     action = BuilderWorkflowActionService().create_workflow_action(
         user, action_type, **kwargs
@@ -913,7 +1051,11 @@ def create_table_button_actions(
 
 
 def add_field_mapping_to_action(
-    user: AbstractUser, action_id: int, field_id: int, value_formula: str
+    user: AbstractUser,
+    workspace: Workspace,
+    action_id: int,
+    field_id: int,
+    value_formula: str,
 ) -> dict[str, Any]:
     """Add or update a field mapping on a create_row/update_row workflow action."""
 
@@ -923,13 +1065,26 @@ def add_field_mapping_to_action(
     from baserow.core.formula.types import BASEROW_FORMULA_MODE_ADVANCED
     from baserow_enterprise.assistant.tools.shared.formula_utils import formula_object
 
-    action = BuilderWorkflowActionService().get_workflow_action(user, action_id)
-    CoreHandler().check_permissions(
-        user,
-        UpdateBuilderWorkflowActionOperationType.type,
-        workspace=action.page.builder.workspace,
-        context=action,
-    )
+    try:
+        action = (
+            BuilderWorkflowAction.objects.filter(
+                page__builder__workspace=workspace, page__builder__trashed=False
+            )
+            .get(id=action_id)
+            .specific
+        )
+    except BuilderWorkflowAction.DoesNotExist:
+        raise ToolInputError(
+            f"Action with ID {action_id} not found in this workspace. "
+            "Use list_actions to find valid action IDs."
+        )
+    for operation_type in (
+        ReadBuilderWorkflowActionOperationType,
+        UpdateBuilderWorkflowActionOperationType,
+    ):
+        CoreHandler().check_permissions(
+            user, operation_type.type, workspace=workspace, context=action
+        )
     action_type = action.get_type().type
 
     if action_type not in ("create_row", "update_row"):
@@ -1191,10 +1346,6 @@ def create_login_page(
     Create a login page with an auth_form element and set it as the
     builder's login page.
     """
-
-    from baserow.contrib.builder.elements.registries import element_type_registry
-    from baserow.contrib.builder.pages.service import PageService
-    from baserow.core.handler import CoreHandler
 
     page = PageService().create_page(user, builder, "Login", "/login")
 
