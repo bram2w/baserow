@@ -711,7 +711,7 @@ class ViewFilterItemCreate(BaseModel):
                 data = dict(data)
                 data["operator"] = normalized
                 # Auto-set or_equal for _or_equal variants
-                if "or_equal" in op:
+                if "or_equal" in op or op in ("gte", "lte"):
                     data.setdefault("or_equal", True)
         return data
 

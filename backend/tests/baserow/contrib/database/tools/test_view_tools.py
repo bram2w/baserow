@@ -737,3 +737,18 @@ def test_create_view_filters_adds_no_note_without_a_value(data_fixture, table_ct
     (created,) = entry["filters"]
     assert created["value"] is None
     assert "note" not in created
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "operator,stored", [("gte", "higher_than_or_equal"), ("lte", "lower_than_or_equal")]
+)
+def test_create_view_filters_reads_gte_and_lte_as_inclusive(
+    data_fixture, table_ctx, operator, stored
+):
+    field = data_fixture.create_number_field(table=table_ctx[1], name="Price")
+    view, create = _filter_view(data_fixture, table_ctx, field)
+
+    create(type="number", operator=operator, value=100)
+
+    assert ViewFilter.objects.get(view=view).type == stored
