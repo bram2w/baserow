@@ -265,6 +265,45 @@ describe('ShareDashboardLink', () => {
     ).toBe(true)
   })
 
+  test('protects the link with a password when Enter is pressed', async () => {
+    const dashboard = await createDashboard({ public: true })
+    testApp.mock
+      .onPatch(`/dashboard/${DASHBOARD_ID}/sharing/`, {
+        public_password: 'secret-password',
+      })
+      .reply(200, {
+        id: DASHBOARD_ID,
+        type: 'dashboard',
+        public: true,
+        public_has_password: true,
+      })
+
+    const { wrapper, context } = await openContext(dashboard)
+    await findPasswordOption(context).find('.switch').trigger('click')
+
+    const modal = teleported(
+      wrapper.findComponent(DashboardEnablePasswordModal)
+    )
+    await modal.find('input').setValue('secret-password')
+
+    // Pressing Enter in the input activates the first submit button of the
+    // form, which jsdom doesn't simulate, so that button is clicked instead.
+    const defaultButton = modal
+      .findAll('form button')
+      .filter((button) => button.element.type === 'submit')
+      .at(0)
+    expect(defaultButton.text()).toContain(
+      'dashboardEnablePasswordModal.setPassword'
+    )
+    await defaultButton.trigger('click')
+    await flushPromises()
+
+    expect(testApp.mock.history.patch).toHaveLength(1)
+    expect(
+      store.getters['application/get'](DASHBOARD_ID).public_has_password
+    ).toBe(true)
+  })
+
   test('does not send a password shorter than 8 characters', async () => {
     const dashboard = await createDashboard({ public: true })
 

@@ -15,6 +15,7 @@
         <Button
           type="secondary"
           size="large"
+          button-type="button"
           :disabled="loading"
           @click.prevent="hide()"
         >
@@ -23,6 +24,7 @@
         <Button
           type="primary"
           size="large"
+          button-type="submit"
           :loading="loading"
           :disabled="loading || v$.$invalid"
         >
