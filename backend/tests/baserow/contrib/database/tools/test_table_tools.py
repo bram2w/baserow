@@ -295,6 +295,8 @@ def test_shared_create_tables_keeps_tables_and_fields_when_a_field_fails(
     "primary_field_name,reason",
     [
         ("id", "reserved"),
+        ("", "must not be blank"),
+        ("   ", "must not be blank"),
         ("x" * 300, "longer than 255 characters"),
     ],
 )
@@ -422,3 +424,31 @@ def test_reused_table_reports_a_lookup_through_another_link_field():
     assert mismatch["relation_issues"] == {
         "through_field": {"actual": "Link", "requested": "Other"}
     }
+
+
+@pytest.mark.django_db
+def test_shared_create_tables_matches_reused_field_names_ignoring_case_and_spaces(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    people = data_fixture.create_database_table(database=database, name="People")
+    data_fixture.create_text_field(table=people, name="Name", primary=True)
+    data_fixture.create_text_field(table=people, name="Email")
+
+    result = create_tables(
+        ToolContext(user, workspace),
+        database.id,
+        [
+            TableItemCreate(
+                name="People",
+                primary_field_name="name",
+                fields=[FieldItemCreate(name=" email ", type="text")],
+            )
+        ],
+    )
+
+    assert [t["id"] for t in result["reused_tables"]] == [people.id]
+    assert "incomplete_reused_tables" not in result
+    assert "next_steps" not in result

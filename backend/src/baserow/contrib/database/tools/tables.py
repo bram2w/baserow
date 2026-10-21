@@ -438,11 +438,26 @@ def _field_conflict(
     return {**field, **conflicts} if conflicts else None
 
 
+def _find_field(fields: list[FieldItem], name: str) -> FieldItem | None:
+    """
+    The field with this name, else one whose name differs only in case and outer
+    spaces, so a reused table is never told to add a near duplicate.
+    """
+
+    exact = next((field for field in fields if field.name == name), None)
+    if exact is not None:
+        return exact
+    key = option_value_key(name)
+    return next((f for f in fields if option_value_key(f.name) == key), None)
+
+
 def _primary_field_conflict(
     requested: TableItemCreate, actual: TableItem
 ) -> dict[str, Any] | None:
     conflict: dict[str, Any] = {"field_id": actual.primary_field.id}
-    if actual.primary_field.name != requested.primary_field_name:
+    if option_value_key(actual.primary_field.name) != option_value_key(
+        requested.primary_field_name
+    ):
         conflict.update(
             actual_name=actual.primary_field.name,
             requested_name=requested.primary_field_name,
@@ -470,15 +485,16 @@ def table_schema_conflict(
 
     primary_conflict = _primary_field_conflict(requested, actual)
 
-    actual_fields = {field.name: field for field in actual.fields}
     fields_by_id = {field.id: field for field in actual.fields}
     missing_fields: list[dict[str, Any]] = []
     field_conflicts: list[dict[str, Any]] = []
     for requested_field in requested.fields:
-        if requested_field.name.lower() == requested.primary_field_name.lower():
+        if option_value_key(requested_field.name) == option_value_key(
+            requested.primary_field_name
+        ):
             continue
 
-        actual_field = actual_fields.get(requested_field.name)
+        actual_field = _find_field(actual.fields, requested_field.name)
         if actual_field is None:
             missing_fields.append(
                 requested_field.model_dump(exclude_none=True, exclude_unset=True)
@@ -625,8 +641,10 @@ def get_database(ctx: ToolContext, database_id: int) -> Database:
 def _non_primary_fields(table: TableItemCreate) -> list[FieldItemCreate]:
     """Exclude the field specification represented by the primary field."""
 
-    primary_name = table.primary_field_name.lower()
-    return [field for field in table.fields if field.name.lower() != primary_name]
+    primary_name = option_value_key(table.primary_field_name)
+    return [
+        field for field in table.fields if option_value_key(field.name) != primary_name
+    ]
 
 
 def _create_empty_table(
