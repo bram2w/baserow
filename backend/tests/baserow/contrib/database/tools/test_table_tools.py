@@ -1,9 +1,10 @@
 """Tests for the table tools shared by MCP and Kuma."""
 
 import json
+from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
-from django.db import transaction
+from django.db import IntegrityError, transaction
 
 import pytest
 from asgiref.sync import async_to_sync
@@ -11,6 +12,7 @@ from mcp.shared.memory import (
     create_connected_server_and_client_session as client_session,
 )
 
+from baserow.contrib.database.fields.actions import CreateFieldActionType
 from baserow.contrib.database.fields.models import Field, FormulaField, LinkRowField
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.tools.fields import FieldItemCreate
@@ -240,3 +242,46 @@ def test_shared_create_tables_reports_an_incomplete_reused_table(data_fixture):
     assert "ask_user" not in result["next_steps"]
     assert statuses == ["Creating table Customers..."]
     assert list(orders.field_set.values_list("name", flat=True)) == ["Order"]
+
+
+@pytest.mark.django_db
+def test_shared_create_tables_keeps_tables_and_fields_when_a_field_fails(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    original = CreateFieldActionType.do
+
+    def do(user, table, field_type, **kwargs):
+        field = original(user, table, field_type, **kwargs)
+        if kwargs["name"] == "Two":
+            raise IntegrityError("duplicate key value")
+        return field
+
+    with patch.object(CreateFieldActionType, "do", side_effect=do):
+        result = create_tables(
+            ToolContext(user, workspace),
+            database.id,
+            [
+                TableItemCreate(
+                    name="Orders",
+                    primary_field_name="Order",
+                    fields=[
+                        FieldItemCreate(name="One", type="text"),
+                        FieldItemCreate(name="Two", type="text"),
+                        FieldItemCreate(name="Three", type="text"),
+                    ],
+                ),
+                TableItemCreate(name="Customers", primary_field_name="Name", fields=[]),
+            ],
+        )
+
+    assert [t["name"] for t in result["created_tables"]] == ["Orders", "Customers"]
+    orders = Table.objects.get(database=database, name="Orders")
+    assert set(orders.field_set.values_list("name", flat=True)) == {
+        "Order",
+        "One",
+        "Three",
+    }
+    assert any("Error creating field Two" in note for note in result["notes"])

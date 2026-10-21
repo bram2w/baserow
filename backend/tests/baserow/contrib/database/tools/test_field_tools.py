@@ -1,7 +1,16 @@
 """Tests for the field tools shared by MCP and Kuma."""
 
+from unittest.mock import patch
+
+from django.db import IntegrityError
+
 import pytest
 
+from baserow.contrib.database.fields.actions import (
+    CreateFieldActionType,
+    DeleteFieldActionType,
+    UpdateFieldActionType,
+)
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.tools.fields import (
@@ -193,3 +202,93 @@ def test_delete_fields_trashes_the_fields(data_fixture, table_ctx):
 
     assert result == {"deleted_field_ids": [field.id]}
     assert Field.objects_and_trash.get(id=field.id).trashed
+
+
+def _fail_after_doing(action_type, should_fail):
+    """
+    Patch an action's `do` so it applies the change and then raises, as a
+    database error in the middle of an item would.
+    """
+
+    original = action_type.do
+
+    def do(user, *args, **kwargs):
+        result = original(user, *args, **kwargs)
+        if should_fail(args, kwargs):
+            raise IntegrityError("duplicate key value")
+        return result
+
+    return patch.object(action_type, "do", side_effect=do)
+
+
+@pytest.mark.django_db
+def test_create_fields_keeps_the_other_fields_when_one_fails(table_ctx):
+    ctx, table = table_ctx
+
+    with _fail_after_doing(CreateFieldActionType, lambda a, k: k["name"] == "Two"):
+        result = create_fields(
+            ctx,
+            table.id,
+            [
+                FieldItemCreate(name="One", type="text"),
+                FieldItemCreate(name="Two", type="text"),
+                FieldItemCreate(name="Three", type="text"),
+            ],
+        )
+
+    assert [f["name"] for f in result["created_fields"]] == ["One", "Three"]
+    (error,) = result["field_errors"]
+    assert "Error creating field Two" in error
+    assert set(table.field_set.values_list("name", flat=True)) == {
+        "Name",
+        "One",
+        "Three",
+    }
+
+
+@pytest.mark.django_db
+def test_update_fields_keeps_the_other_updates_when_one_fails(data_fixture, table_ctx):
+    ctx, table = table_ctx
+    fields = [
+        data_fixture.create_text_field(table=table, name=name)
+        for name in ("One", "Two", "Three")
+    ]
+
+    with _fail_after_doing(UpdateFieldActionType, lambda a, k: a[0].id == fields[1].id):
+        result = update_fields(
+            ctx,
+            [FieldItemUpdate(field_id=f.id, name=f"{f.name} new") for f in fields],
+        )
+
+    assert [f["id"] for f in result["updated_fields"]] == [
+        fields[0].id,
+        fields[2].id,
+    ]
+    (error,) = result["errors"]
+    assert error.startswith(f"Error updating field {fields[1].id}")
+    assert [Field.objects.get(id=f.id).name for f in fields] == [
+        "One new",
+        "Two",
+        "Three new",
+    ]
+
+
+@pytest.mark.django_db
+def test_delete_fields_keeps_the_other_deletes_when_one_fails(data_fixture, table_ctx):
+    ctx, table = table_ctx
+    fields = [
+        data_fixture.create_text_field(table=table, name=name)
+        for name in ("One", "Two", "Three")
+    ]
+
+    with _fail_after_doing(DeleteFieldActionType, lambda a, k: a[0].id == fields[1].id):
+        result = delete_fields(ctx, [f.id for f in fields])
+
+    assert result["deleted_field_ids"] == [fields[0].id, fields[2].id]
+    (error,) = result["errors"]
+    assert error.startswith(f"Error deleting field {fields[1].id}")
+    assert [Field.objects_and_trash.get(id=f.id).trashed for f in fields] == [
+        True,
+        False,
+        True,
+    ]

@@ -885,12 +885,14 @@ def create_fields_in_table(
             _("Creating field %(field_name)s...") % {"field_name": field_item.name}
         )
         try:
-            new_field = CreateFieldActionType.do(
-                ctx.user,
-                table,
-                field_item.type,
-                **field_item.to_django_orm_kwargs(table, user=ctx.user),
-            )
+            # A savepoint, so a failed field leaves the transaction usable.
+            with transaction.atomic():
+                new_field = CreateFieldActionType.do(
+                    ctx.user,
+                    table,
+                    field_item.type,
+                    **field_item.to_django_orm_kwargs(table, user=ctx.user),
+                )
             created_fields.append(FieldItem.from_django_orm(new_field))
         except InvalidFormulaFieldError as exc:
             formula_errors.append(_formula_error(exc))
@@ -1011,7 +1013,8 @@ def update_fields(
                 % {"field_id": field_update.field_id}
             )
             try:
-                field_item, field_changed = update_field(ctx, field_update)
+                with transaction.atomic():
+                    field_item, field_changed = update_field(ctx, field_update)
                 updated.append(field_item.model_dump())
                 changed = changed or field_changed
             except InvalidFormulaFieldError as exc:
@@ -1051,7 +1054,8 @@ def delete_fields(
                 _("Deleting field %(field_id)s...") % {"field_id": field_id}
             )
             try:
-                delete_field(ctx, field_id)
+                with transaction.atomic():
+                    delete_field(ctx, field_id)
                 deleted.append(field_id)
             except PermissionException:
                 raise
