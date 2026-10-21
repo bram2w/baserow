@@ -46,6 +46,9 @@ class DashboardApplicationType(ApplicationType):
             help_text="Indicates whether the public dashboard is password protected.",
         ),
     }
+    # Without this the request serializer inherits `serializer_field_overrides`,
+    # declaring `public_has_password` on a serializer that doesn't list it.
+    request_serializer_field_overrides = {}
     allowed_fields = ["description"]
     supports_integrations = True
     # Dashboard supports runtime functions, but no data provider references.

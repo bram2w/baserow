@@ -9,6 +9,7 @@ from baserow.core.action.registries import (
     ActionScopeStr,
     ActionTypeDescription,
     UndoableActionType,
+    render_action_type_description,
 )
 from baserow.core.action.scopes import ApplicationActionScopeType
 
@@ -79,7 +80,7 @@ class UpdateDashboardSharingActionType(UndoableActionType):
     type = "update_dashboard_sharing"
     description = ActionTypeDescription(
         _("Update dashboard sharing"),
-        _("Sharing settings updated (%(changes)s)"),
+        _("Sharing settings updated"),
         DASHBOARD_ACTION_CONTEXT,
     )
     analytics_params = ["dashboard_id"]
@@ -139,13 +140,20 @@ class UpdateDashboardSharingActionType(UndoableActionType):
 
     @classmethod
     def get_long_description(cls, params_dict: dict[str, Any], *args, **kwargs) -> str:
+        # The changes are put into words here rather than stored in `Params`, so
+        # they are translated when the audit log is read, like the rest of the
+        # description.
         changes = cls.describe_changes(
             params_dict.get("data") or {}, params_dict.get("original_data") or {}
         )
-        return super().get_long_description(
+        description = ActionTypeDescription(
+            cls.description.short,
+            _("Sharing settings updated (%(changes)s)"),
+            cls.description.context,
+        )
+        return render_action_type_description(
+            description,
             {**params_dict, "changes": ", ".join(str(change) for change in changes)},
-            *args,
-            **kwargs,
         )
 
     @staticmethod
