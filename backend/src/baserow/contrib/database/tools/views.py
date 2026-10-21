@@ -11,6 +11,7 @@ from django.utils.translation import gettext as _
 from dateutil import parser as dateutil_parser
 from pydantic import BaseModel, ConfigDict, Field, model_serializer, model_validator
 
+from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
     DateField,
@@ -20,10 +21,15 @@ from baserow.contrib.database.fields.models import (
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.tools.fields import option_value_key
 from baserow.contrib.database.views.actions import (
     CreateViewActionType,
     CreateViewFilterActionType,
     UpdateViewFieldOptionsActionType,
+)
+from baserow.contrib.database.views.exceptions import (
+    ViewFilterNotSupported,
+    ViewFilterTypeNotAllowedForField,
 )
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import FormView, View, ViewFilter
@@ -39,7 +45,8 @@ class FormFieldOption(BaseModel):
     name: str = Field(..., description="Display name in form.")
     description: str = Field(..., description="Field description, or ''.")
     required: bool = Field(..., description="Required?")
-    order: int = Field(..., description="Sort order.")
+    # The column is a smallint.
+    order: int = Field(..., ge=-32768, le=32767, description="Sort order.")
 
 
 def _form_field_option(fo) -> FormFieldOption:
@@ -270,7 +277,15 @@ def _timeline_to_orm(v, table):
 
 
 def _form_to_orm(v, table):
-    return {"title": v.title, "description": v.description}
+    # receive_notification_on_submit is set once the view exists.
+    return {
+        "title": v.title,
+        "description": v.description,
+        "submit_text": v.submit_button_label,
+        "submit_action": v.submit_action,
+        "submit_action_message": v.submit_action_message,
+        "submit_action_redirect_url": v.submit_action_redirect_url,
+    }
 
 
 _TO_DJANGO_ORM = {
@@ -536,33 +551,79 @@ def _parse_date(value: str) -> date:
 
 def _select_orm_value(f, field, **kwargs):
     """
-    :raises ValueError: When no label matches an option, as the filter would then
-        have no options.
+    Match the labels to the field's options, ignoring case and outer spaces.
+
+    :raises ValueError: When a label matches no option, as the filter would then
+        match other rows than asked.
     """
 
-    values = set(v.lower() for v in f.value)
     options = list(field.select_options.all())
-    valid_option_ids = [
-        option.id for option in options if option.value.lower() in values
+    ids_by_key: dict[str, int] = {}
+    for option in options:
+        ids_by_key.setdefault(option_value_key(option.value), option.id)
+    unmatched = [
+        label for label in f.value if option_value_key(label) not in ids_by_key
     ]
-    if not valid_option_ids:
+    if unmatched:
         labels = ", ".join(option.value for option in options) or "none"
         raise ValueError(
-            f"None of {f.value} is an option of field '{field.name}'. "
-            f"Options: {labels}."
+            f"{unmatched} are not options of field '{field.name}'. Options: {labels}."
         )
-    return ",".join(str(v) for v in valid_option_ids)
+    option_ids = dict.fromkeys(ids_by_key[option_value_key(v)] for v in f.value)
+    return ",".join(str(option_id) for option_id in option_ids)
+
+
+def _date_count(f) -> str:
+    """The number of days, weeks, months or years of an ``nr_*`` mode."""
+
+    value = f.value
+    if isinstance(value, str) and value.strip().isdigit():
+        return str(int(value))
+    if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
+        return str(value)
+    raise ValueError(f"Mode '{f.mode}' needs a whole number as value, not {value!r}.")
 
 
 def _date_orm_value(f, field, **kwargs):
+    """
+    :raises ValueError: When an exact date can't be parsed, or an ``nr_*`` mode
+        has no whole number.
+    """
+
     timezone = kwargs.get("timezone", "UTC")
-    if isinstance(f.value, str):
+    if f.mode == "exact_date":
+        if not isinstance(f.value, str):
+            raise ValueError("Mode 'exact_date' needs a date string as value.")
         value = _parse_date(f.value).isoformat()
-    elif isinstance(f.value, int):
-        value = str(f.value)
+    elif f.mode.startswith("nr_"):
+        value = _date_count(f)
     else:
+        # today, this_week and the other relative modes take no value.
         value = ""
     return f"{timezone}?{value}?{f.mode}"
+
+
+_BOOLEAN_VALUES = {
+    "true": "1",
+    "1": "1",
+    "yes": "1",
+    "false": "0",
+    "0": "0",
+    "no": "0",
+    "": "0",
+}
+
+
+def _boolean_orm_value(f, field, **kwargs):
+    """:raises ValueError: When the value is not a known true or false."""
+
+    if isinstance(f.value, bool):
+        return "1" if f.value else "0"
+    if isinstance(f.value, (str, int, float)):
+        value = _BOOLEAN_VALUES.get(str(f.value).strip().lower())
+        if value is not None:
+            return value
+    raise ValueError(f"A boolean filter needs true or false, not {f.value!r}.")
 
 
 _GET_ORM_VALUE = {
@@ -574,7 +635,7 @@ _GET_ORM_VALUE = {
     "single_select": _select_orm_value,
     "multiple_select": _select_orm_value,
     "link_row": lambda f, field, **kw: str(f.value),
-    "boolean": lambda f, field, **kw: "1" if f.value else "0",
+    "boolean": _boolean_orm_value,
 }
 
 
@@ -778,6 +839,15 @@ def create_views(
                 ) from exc
 
             orm_view = CreateViewActionType.do(ctx.user, table, view.type, **orm_kwargs)
+            if view.type == "form" and view.receive_notification_on_submit:
+                # Not an action of its own: undoing the creation removes the view.
+                orm_view = (
+                    ViewHandler()
+                    .update_view(
+                        ctx.user, orm_view, receive_notification_on_submit=True
+                    )
+                    .updated_view_instance
+                )
 
             field_options = view.field_options_to_django_orm()
             skipped_fields: list[str] = []
@@ -787,9 +857,11 @@ def create_views(
                 )
             if field_options:
                 try:
-                    UpdateViewFieldOptionsActionType.do(
-                        ctx.user, orm_view, field_options
-                    )
+                    # A savepoint, so the error message can still query the table.
+                    with transaction.atomic():
+                        UpdateViewFieldOptionsActionType.do(
+                            ctx.user, orm_view, field_options
+                        )
                 except PermissionException:
                     raise
                 except Exception as exc:
@@ -818,6 +890,14 @@ def create_views(
     return result
 
 
+# Raised by the handler before it writes, for a filter the view or field refuses.
+_REJECTED_FILTER_ERRORS = (
+    ViewFilterNotSupported,
+    ViewFilterTypeNotAllowedForField,
+    FieldNotInTable,
+)
+
+
 def create_view_filters(
     ctx: ToolContext,
     view_filters: Annotated[
@@ -832,17 +912,18 @@ def create_view_filters(
     Add filters to views, so a view shows only the rows that match all of them.
     Each filter names a field, its type, which must match the field's type, an
     operator and a value. A filter whose field is missing from the view's table,
-    has another type, or whose labels match no select option is not created and
-    is returned in skipped_filters with the reason. When a view is not found,
-    nothing is created.
+    has another type, has a value of the wrong format, has a label that matches no
+    select option, or that the view refuses (a form view takes no filters) is not
+    created and is returned in skipped_filters with the reason. When a view is not
+    found, nothing is created.
 
     Value formats by type:
     - text: string
     - number: number
-    - date: ISO date string (mode=exact_date), or an integer (mode=nr_days_ago
-      etc.), or "" (mode=today etc.)
-    - single_select / multiple_select: list of option labels, matched
-      case-insensitively
+    - date: ISO date string (mode=exact_date), or a whole number (mode=nr_days_ago
+      etc.). The other modes (today etc.) take no value.
+    - single_select / multiple_select: list of option labels, matched ignoring
+      case and outer spaces
     - link_row: row ID (integer)
     - boolean: true / false
     """
@@ -866,7 +947,7 @@ def create_view_filters(
             for item in view_filter.filters:
                 try:
                     orm_filter = create_view_filter(ctx.user, orm_view, fields, item)
-                except ValueError as exc:
+                except (ValueError, *_REJECTED_FILTER_ERRORS) as exc:
                     skipped_filters.append({**item.model_dump(), "error": str(exc)})
                     continue
                 created_filters.append({"id": orm_filter.id, **item.model_dump()})

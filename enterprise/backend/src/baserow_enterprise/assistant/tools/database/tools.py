@@ -785,7 +785,7 @@ def create_view_filters(
 
     WHEN to use: User wants to filter a view to show only specific rows matching conditions.
     WHAT it does: Creates filter conditions on one or more views. Supports multiple filters per view.
-    RETURNS: Created filters with id and configuration per view. Filters whose field is missing or of another type are returned in skipped_filters with the reason.
+    RETURNS: Created filters with id and configuration per view. Filters that can't be created (missing field, another type, wrong value, unknown option label, or a form view) are returned in skipped_filters with the reason.
     DO NOT USE when: The view doesn't exist yet — create it first with create_views.
     HOW: Get the table schema first to know field IDs and types. Match filter type to field type.
     REQUIRED: `view_filters` must contain at least one entry, each carrying the ID of the view it applies to. The ID says where to act; the payload says what to create. A call carrying no entries creates nothing and is rejected.
@@ -795,7 +795,7 @@ def create_view_filters(
     - text: string
     - number: number
     - date: ISO date string (mode=exact_date) or integer (mode=nr_days_ago etc.) or "" (mode=today etc.)
-    - single_select / multiple_select: list of option label strings (matched case-insensitively)
+    - single_select / multiple_select: list of option label strings (matched ignoring case and outer spaces)
     - link_row: row ID (integer)
     - boolean: true / false
     """

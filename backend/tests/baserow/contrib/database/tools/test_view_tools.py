@@ -4,7 +4,8 @@ import json
 import logging
 from unittest.mock import patch
 
-from django.db import transaction
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import connection, transaction
 
 import pytest
 from asgiref.sync import async_to_sync
@@ -21,7 +22,7 @@ from baserow.contrib.database.tools.views import (
     create_view_filters,
     create_views,
 )
-from baserow.contrib.database.views.models import View, ViewFilter
+from baserow.contrib.database.views.models import FormView, View, ViewFilter
 from baserow.core.exceptions import PermissionException
 from baserow.core.mcp import BaserowMCPServer, current_key
 from baserow.core.tools import ToolContext
@@ -335,7 +336,7 @@ def test_create_view_filters_over_mcp_skips_labels_that_match_no_option(
     (entry,) = json.loads(result.content[0].text)["created_view_filters"]
     assert entry["filters"] == []
     (skipped,) = entry["skipped_filters"]
-    assert "is an option of field 'Status'" in skipped["error"]
+    assert "are not options of field 'Status'" in skipped["error"]
     assert "Active" in skipped["error"]
     assert [r for r in caplog.records if r.levelno >= logging.ERROR] == []
     assert error_records == []
@@ -358,3 +359,284 @@ def test_create_view_filters_over_mcp_writes_nothing_when_a_view_is_not_found(
     assert result.isError is True
     assert result.content[0].text == "Not found in this workspace."
     assert not ViewFilter.objects.filter(view=view).exists()
+
+
+@pytest.mark.django_db
+def test_create_view_filters_over_mcp_skips_the_filters_of_a_form_view(data_fixture):
+    endpoint = data_fixture.create_mcp_endpoint(allowed_tools=VIEW_TOOLS)
+    database = data_fixture.create_database_application(workspace=endpoint.workspace)
+    table = data_fixture.create_database_table(database=database)
+    name = data_fixture.create_text_field(table=table, name="Name", primary=True)
+    grid = data_fixture.create_grid_view(table=table)
+    form = data_fixture.create_form_view(table=table)
+    text_filter = {"field_id": name.id, "type": "text", "operator": "equal"}
+
+    result = _call(
+        endpoint,
+        "create_view_filters",
+        {
+            "view_filters": [
+                {"view_id": grid.id, "filters": [{**text_filter, "value": "a"}]},
+                {"view_id": form.id, "filters": [{**text_filter, "value": "b"}]},
+            ]
+        },
+    )
+
+    assert result.isError is False
+    grid_entry, form_entry = json.loads(result.content[0].text)["created_view_filters"]
+    assert len(grid_entry["filters"]) == 1
+    assert form_entry["filters"] == []
+    (skipped,) = form_entry["skipped_filters"]
+    assert skipped["error"] == "Filtering is not supported for form views."
+    assert ViewFilter.objects.filter(view=grid).count() == 1
+    assert not ViewFilter.objects.filter(view=form).exists()
+
+
+@pytest.mark.django_db
+def test_create_views_stores_the_form_submit_settings(table_ctx):
+    ctx, table = table_ctx
+    name = table.field_set.get(name="Name")
+
+    result = create_views(
+        ctx,
+        table.id,
+        [
+            ViewItemCreate(
+                name="Contact",
+                type="form",
+                submit_button_label="Go",
+                submit_action="REDIRECT",
+                submit_action_message="Thanks",
+                submit_action_redirect_url="https://example.com",
+                receive_notification_on_submit=True,
+                field_options=[
+                    {
+                        "field_id": name.id,
+                        "name": "Name",
+                        "description": "",
+                        "required": True,
+                        "order": 1,
+                    }
+                ],
+            )
+        ],
+    )
+
+    (created,) = result["created_views"]
+    form = FormView.objects.get(id=created["id"])
+    assert form.submit_text == created["submit_button_label"] == "Go"
+    assert form.submit_action == created["submit_action"] == "REDIRECT"
+    assert form.submit_action_message == "Thanks"
+    assert form.submit_action_redirect_url == "https://example.com"
+    assert list(form.users_to_notify_on_submit.all()) == [ctx.user]
+
+
+def _filter_view(data_fixture, table_ctx, field):
+    ctx, table = table_ctx
+    view = data_fixture.create_grid_view(table=table)
+
+    def create(**item):
+        result = create_view_filters(
+            ctx,
+            [
+                ViewFiltersArgs(
+                    view_id=view.id,
+                    filters=[ViewFilterItemCreate(field_id=field.id, **item)],
+                )
+            ],
+        )
+        return result["created_view_filters"][0]
+
+    return view, create
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "mode,value,stored",
+    [
+        ("today", "", "UTC??today"),
+        ("today", None, "UTC??today"),
+        ("this_week", "", "UTC??this_week"),
+        ("nr_days_ago", "7", "UTC?7?nr_days_ago"),
+        ("nr_days_ago", 7, "UTC?7?nr_days_ago"),
+        ("nr_months_from_now", " 2 ", "UTC?2?nr_months_from_now"),
+        ("exact_date", "2024-01-05", "UTC?2024-01-05?exact_date"),
+    ],
+)
+def test_create_view_filters_reads_the_date_value_by_mode(
+    data_fixture, table_ctx, mode, value, stored
+):
+    field = data_fixture.create_date_field(table=table_ctx[1], name="Due")
+    view, create = _filter_view(data_fixture, table_ctx, field)
+
+    entry = create(type="date", operator="equal", mode=mode, value=value)
+
+    assert "skipped_filters" not in entry
+    assert ViewFilter.objects.get(view=view).value == stored
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "mode,value",
+    [("nr_days_ago", "a week"), ("nr_days_ago", -3), ("exact_date", 5)],
+)
+def test_create_view_filters_skips_a_date_value_the_mode_cannot_use(
+    data_fixture, table_ctx, mode, value
+):
+    field = data_fixture.create_date_field(table=table_ctx[1], name="Due")
+    view, create = _filter_view(data_fixture, table_ctx, field)
+
+    entry = create(type="date", operator="equal", mode=mode, value=value)
+
+    (skipped,) = entry["skipped_filters"]
+    assert f"'{mode}' needs" in skipped["error"]
+    assert not ViewFilter.objects.filter(view=view).exists()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "value,stored",
+    [
+        ("false", "0"),
+        ("FALSE", "0"),
+        ("0", "0"),
+        ("no", "0"),
+        ("", "0"),
+        (False, "0"),
+        ("true", "1"),
+        ("Yes", "1"),
+        ("1", "1"),
+        (True, "1"),
+    ],
+)
+def test_create_view_filters_reads_a_boolean_value(
+    data_fixture, table_ctx, value, stored
+):
+    field = data_fixture.create_boolean_field(table=table_ctx[1], name="Done")
+    view, create = _filter_view(data_fixture, table_ctx, field)
+
+    create(type="boolean", operator="equal", value=value)
+
+    assert ViewFilter.objects.get(view=view).value == stored
+
+
+@pytest.mark.django_db
+def test_create_view_filters_skips_a_boolean_value_that_is_not_true_or_false(
+    data_fixture, table_ctx
+):
+    field = data_fixture.create_boolean_field(table=table_ctx[1], name="Done")
+    view, create = _filter_view(data_fixture, table_ctx, field)
+
+    entry = create(type="boolean", operator="equal", value="maybe")
+
+    (skipped,) = entry["skipped_filters"]
+    assert skipped["error"] == "A boolean filter needs true or false, not 'maybe'."
+    assert not ViewFilter.objects.filter(view=view).exists()
+
+
+@pytest.mark.django_db
+def test_create_view_filters_matches_labels_ignoring_case_and_outer_spaces(
+    data_fixture, table_ctx
+):
+    field = data_fixture.create_single_select_field(table=table_ctx[1], name="Status")
+    active = data_fixture.create_select_option(field=field, value="Active")
+    done = data_fixture.create_select_option(field=field, value="Done")
+    view, create = _filter_view(data_fixture, table_ctx, field)
+
+    entry = create(
+        type="single_select", operator="is_any_of", value=["active", " Done "]
+    )
+
+    assert "skipped_filters" not in entry
+    assert ViewFilter.objects.get(view=view).value == f"{active.id},{done.id}"
+
+
+@pytest.mark.django_db
+def test_create_view_filters_skips_a_select_filter_with_an_unknown_label(
+    data_fixture, table_ctx
+):
+    field = data_fixture.create_single_select_field(table=table_ctx[1], name="Status")
+    data_fixture.create_select_option(field=field, value="Active")
+    view, create = _filter_view(data_fixture, table_ctx, field)
+
+    entry = create(type="single_select", operator="is_any_of", value=["Active", "Nope"])
+
+    assert entry["filters"] == []
+    (skipped,) = entry["skipped_filters"]
+    assert skipped["error"] == (
+        "['Nope'] are not options of field 'Status'. Options: Active."
+    )
+    assert not ViewFilter.objects.filter(view=view).exists()
+
+
+@pytest.mark.django_db
+def test_create_views_over_mcp_rejects_a_form_field_order_out_of_range(data_fixture):
+    endpoint = data_fixture.create_mcp_endpoint(allowed_tools=VIEW_TOOLS)
+    database = data_fixture.create_database_application(workspace=endpoint.workspace)
+    table = data_fixture.create_database_table(database=database)
+    name = data_fixture.create_text_field(table=table, name="Name", primary=True)
+
+    result = _call(
+        endpoint,
+        "create_views",
+        {
+            "table_id": table.id,
+            "views": [
+                {
+                    "name": "Contact",
+                    "type": "form",
+                    "field_options": [
+                        {
+                            "field_id": name.id,
+                            "name": "Name",
+                            "description": "",
+                            "required": True,
+                            "order": 40000,
+                        }
+                    ],
+                }
+            ],
+        },
+    )
+
+    assert result.isError is True
+    assert result.content[0].text.startswith("Invalid arguments. views.0.")
+    assert "less than or equal to 32767" in result.content[0].text
+    assert not FormView.objects.filter(table=table).exists()
+
+
+@pytest.mark.django_db
+def test_create_views_reports_a_database_error_in_the_field_options(table_ctx):
+    ctx, table = table_ctx
+    name = table.field_set.get(name="Name")
+
+    def fail(*args, **kwargs):
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1/0")
+
+    with (
+        patch.object(views_module.UpdateViewFieldOptionsActionType, "do", fail),
+        pytest.raises(DjangoValidationError) as exc_info,
+    ):
+        create_views(
+            ctx,
+            table.id,
+            [
+                ViewItemCreate(
+                    name="Contact",
+                    type="form",
+                    field_options=[
+                        {
+                            "field_id": name.id,
+                            "name": "Name",
+                            "description": "",
+                            "required": True,
+                            "order": 1,
+                        }
+                    ],
+                )
+            ],
+        )
+
+    assert "were rejected and no views were created" in exc_info.value.messages[0]
+    assert f"{name.id} (Name, text)" in exc_info.value.messages[0]
