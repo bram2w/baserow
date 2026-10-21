@@ -709,3 +709,31 @@ def test_create_views_over_mcp_stores_an_https_redirect_url(data_fixture):
     assert result.isError is False
     form = FormView.objects.get(table=table)
     assert form.submit_action_redirect_url == "https://example.com/thanks"
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("value", ["2024-01-05", 7])
+def test_create_view_filters_reports_a_value_a_relative_date_mode_ignores(
+    data_fixture, table_ctx, value
+):
+    field = data_fixture.create_date_field(table=table_ctx[1], name="Due")
+    view, create = _filter_view(data_fixture, table_ctx, field)
+
+    entry = create(type="date", operator="equal", mode="today", value=value)
+
+    (created,) = entry["filters"]
+    assert created["value"] is None
+    assert created["note"] == "The value was ignored: mode 'today' takes none."
+    assert ViewFilter.objects.get(view=view).value == "UTC??today"
+
+
+@pytest.mark.django_db
+def test_create_view_filters_adds_no_note_without_a_value(data_fixture, table_ctx):
+    field = data_fixture.create_date_field(table=table_ctx[1], name="Due")
+    _, create = _filter_view(data_fixture, table_ctx, field)
+
+    entry = create(type="date", operator="equal", mode="this_week", value="")
+
+    (created,) = entry["filters"]
+    assert created["value"] is None
+    assert "note" not in created

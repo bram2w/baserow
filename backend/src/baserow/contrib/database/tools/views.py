@@ -602,6 +602,23 @@ def _date_count(f) -> str:
     raise ValueError(f"Mode '{f.mode}' needs a whole number as value, not {value!r}.")
 
 
+def _date_mode_takes_value(mode: str) -> bool:
+    """today, this_week and the other relative modes without a count take none."""
+
+    return mode == "exact_date" or mode.startswith("nr_")
+
+
+def _created_filter(orm_filter: ViewFilter, item: "ViewFilterItemCreate") -> dict:
+    """The created filter as stored, with a note when a value was ignored."""
+
+    created = {"id": orm_filter.id, **item.model_dump()}
+    if item.type == "date" and not _date_mode_takes_value(item.mode):
+        if item.value not in (None, ""):
+            created["note"] = f"The value was ignored: mode '{item.mode}' takes none."
+        created["value"] = None
+    return created
+
+
 def _date_orm_value(f, field, **kwargs):
     """
     :raises ValueError: When an exact date can't be parsed, or an ``nr_*`` mode
@@ -609,15 +626,14 @@ def _date_orm_value(f, field, **kwargs):
     """
 
     timezone = kwargs.get("timezone", "UTC")
+    if not _date_mode_takes_value(f.mode):
+        return f"{timezone}??{f.mode}"
     if f.mode == "exact_date":
         if not isinstance(f.value, str):
             raise ValueError("Mode 'exact_date' needs a date string as value.")
         value = _parse_date(f.value).isoformat()
-    elif f.mode.startswith("nr_"):
-        value = _date_count(f)
     else:
-        # today, this_week and the other relative modes take no value.
-        value = ""
+        value = _date_count(f)
     return f"{timezone}?{value}?{f.mode}"
 
 
@@ -931,7 +947,8 @@ def create_view_filters(
     - text: string
     - number: number
     - date: ISO date string (mode=exact_date), or a whole number (mode=nr_days_ago
-      etc.). The other modes (today etc.) take no value.
+      etc.). The other modes (today etc.) take none; a value given is ignored
+      and noted.
     - single_select / multiple_select: list of option labels, matched ignoring
       case and outer spaces
     - link_row: row ID (integer)
@@ -961,7 +978,7 @@ def create_view_filters(
                 except (ValueError, ViewFilterNotSupported) as exc:
                     skipped_filters.append({**item.model_dump(), "error": str(exc)})
                     continue
-                created_filters.append({"id": orm_filter.id, **item.model_dump()})
+                created_filters.append(_created_filter(orm_filter, item))
 
             entry: dict[str, Any] = {
                 "view_id": view_filter.view_id,
