@@ -15,7 +15,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser, AnonymousUser
 from django.core.files.storage import Storage
 from django.db import OperationalError, transaction
-from django.db.models import Count, Model, Prefetch, Q, QuerySet
+from django.db.models import Count, F, Model, Prefetch, Q, QuerySet
 from django.utils import translation
 from django.utils.translation import gettext as _
 
@@ -2055,6 +2055,37 @@ class CoreHandler:
             )
 
         return template
+
+    def list_templates(
+        self,
+        actor,
+        template_type: Optional[str] = None,
+        owned: bool = False,
+    ) -> QuerySet[Template]:
+        """
+        Returns the templates the actor can open, most recently updated first.
+        Revisions are left out.
+
+        :param actor: The user or anonymous user listing the templates.
+        :param template_type: Only the templates of this `Template.Type`.
+        :param owned: Only the templates owned by the actor.
+        :return: The templates.
+        """
+
+        templates = Template.objects.openable(actor).filter(root__isnull=True)
+        if template_type == Template.Type.OFFICIAL:
+            templates = templates.official()
+        elif template_type == Template.Type.USER:
+            templates = templates.user()
+        if owned:
+            templates = (
+                templates.filter(owner=actor)
+                if actor.is_authenticated
+                else templates.none()
+            )
+        return templates.prefetch_related("categories").order_by(
+            F("updated_on").desc(nulls_last=True), "-id"
+        )
 
     # This single function generates a huge number of spans and events, we know it
     # is slow, and so we disable instrumenting it to save significant resources in

@@ -76,6 +76,7 @@ describe('CreateUserTemplateModal', () => {
         pages: [],
       },
       { id: 21, name: 'Notes', workspace: { id: 2 }, ...database },
+      { id: 31, name: 'Shared', workspace: { id: 3 }, ...database },
     ]
     for (const application of applications) {
       await store.dispatch('application/forceCreate', application)
@@ -87,9 +88,9 @@ describe('CreateUserTemplateModal', () => {
     await testApp.afterEach()
   })
 
-  const mountAndShow = async () => {
+  const mountAndShow = async (props = { categories }) => {
     const wrapper = await testApp.mount(CreateUserTemplateModal, {
-      props: { categories },
+      props,
       global: { stubs: { Modal: ModalStub }, mocks },
     })
     await wrapper.vm.show()
@@ -238,6 +239,77 @@ describe('CreateUserTemplateModal', () => {
       [2, false],
       [3, true],
     ])
+  })
+
+  test('explains why a workspace is disabled', async () => {
+    mocks = {
+      $hasPermission: (operation, context, workspaceId) => workspaceId !== 3,
+    }
+    testApp.store.commit('application/DELETE_ITEM', 21)
+    const wrapper = await mountAndShow()
+    await goToContent(wrapper)
+
+    expect(
+      wrapper
+        .findAllComponents({ name: 'DropdownItem' })
+        .map((item) => [
+          item.props('value'),
+          item.props('disabled'),
+          item.props('description'),
+        ])
+    ).toStrictEqual([
+      [1, false, null],
+      [2, true, 'createUserTemplateModal.workspaceEmpty'],
+      [3, true, 'createUserTemplateModal.workspaceNoPermission'],
+    ])
+  })
+
+  test('only fetches the permissions that are not loaded yet', async () => {
+    await testApp.store.dispatch('workspace/forceCreate', {
+      id: 4,
+      name: 'Other',
+    })
+    testApp.mock.onGet('/workspaces/4/permissions/').reply(200, [])
+    const wrapper = await mountAndShow()
+
+    expect(
+      testApp.mock.history.get
+        .map((request) => request.url)
+        .filter((url) => url.includes('/permissions/'))
+    ).toStrictEqual(['/workspaces/4/permissions/'])
+    expect(testApp.store.getters['workspace/get'](4)._.permissionsLoaded).toBe(
+      true
+    )
+
+    // Loaded once.
+    wrapper.vm.hide()
+    await wrapper.vm.show()
+    await flushPromises()
+    expect(
+      testApp.mock.history.get.filter((r) => r.url.includes('/permissions/'))
+    ).toHaveLength(1)
+  })
+
+  test("doesn't ask for a category when there are none", async () => {
+    let request = null
+    testApp.mock.onPost('/jobs/').reply((config) => {
+      request = JSON.parse(config.data)
+      return [200, runningJob({ category_ids: [] })]
+    })
+    const wrapper = await mountAndShow({ categories: [] })
+
+    expect(wrapper.find('.chips').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('createUserTemplateModal.categories')
+
+    await wrapper.find('input').setValue('Sprint Tracker')
+    await continueButton(wrapper).trigger('click')
+    expect(wrapper.find('.create-user-template-modal__title').text()).toBe(
+      'createUserTemplateModal.contentTitle'
+    )
+
+    await createButton(wrapper).trigger('click')
+    await flushPromises()
+    expect(request.category_ids).toStrictEqual([])
   })
 
   test('starts with an exportable workspace', async () => {
@@ -436,6 +508,40 @@ describe('CreateUserTemplateModal', () => {
 
     expect(wrapper.text()).not.toContain('Permission denied')
     expect(wrapper.find('input').element.value).toBe('')
+  })
+
+  test('shows a job started from another wizard instead of a failed one', async () => {
+    testApp.mock.onPost('/jobs/').reply(200, runningJob())
+    const wrapper = await mountAndShow()
+    await goToContent(wrapper)
+    await createButton(wrapper).trigger('click')
+    await flushPromises()
+    await testApp.store.dispatch('job/forceUpdate', {
+      job: testApp.store.getters['job/get'](7),
+      data: { state: 'failed', human_readable_error: 'Permission denied' },
+    })
+    wrapper.vm.hide()
+
+    await testApp.store.dispatch(
+      'job/forceCreate',
+      runningJob({
+        id: 8,
+        name: 'Roadmap',
+        workspace_id: 2,
+        application_ids: [21],
+      })
+    )
+    await wrapper.vm.show()
+    await flushPromises()
+
+    expect(wrapper.text()).not.toContain('Permission denied')
+    expect(wrapper.findComponent({ name: 'ProgressBar' }).exists()).toBe(true)
+    expect(wrapper.vm.job.id).toBe(8)
+    expect(wrapper.vm.values).toMatchObject({
+      name: 'Roadmap',
+      workspaceId: 2,
+      applicationIds: [21],
+    })
   })
 
   test('shows a running job again', async () => {

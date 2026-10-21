@@ -25,7 +25,7 @@ class TemplateFixtures:
             kwargs["name"] = self.fake.name()
 
         if "slug" not in kwargs:
-            kwargs["slug"] = self.fake.slug()
+            kwargs["slug"] = self.fake.unique.slug()
 
         if "icon" not in kwargs:
             kwargs["icon"] = "document"

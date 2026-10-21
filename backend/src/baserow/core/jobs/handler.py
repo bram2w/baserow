@@ -35,21 +35,13 @@ class JobHandler:
         """
 
         job_type = job_type_registry.get_by_model(job.specific_class)
-        if not job_type.lock_on_cancel:
-            if job.cancelled:
-                return
-            elif job.ended:
-                raise JobNotCancellable()
-
-            job.set_state_cancelled()
-            job.save()
-            return job
-
         with transaction.atomic():
-            locked_job = cls.lock_job(job)
-            if locked_job.cancelled:
+            current_job = cls.lock_job(job) if job_type.lock_on_cancel else job
+            if current_job.cancelled:
                 return
-            elif locked_job.ended or not job_type.is_cancellable(locked_job):
+            elif current_job.ended or (
+                job_type.lock_on_cancel and not job_type.is_cancellable(current_job)
+            ):
                 raise JobNotCancellable()
 
             # Only the state is saved, so that what the job saved in the meantime

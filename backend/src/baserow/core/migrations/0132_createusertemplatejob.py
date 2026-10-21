@@ -3,24 +3,20 @@
 import django.db.models.deletion
 from django.db import migrations, models
 
+from baserow.core.migration_utils import LockTimeoutMigration
 
-class Migration(migrations.Migration):
+
+class Migration(LockTimeoutMigration):
+    """
+    Creating the tables adds foreign keys to `core_job`, `core_workspace` and
+    `core_template`, which locks them, so it's done with a short lock timeout.
+    """
 
     dependencies = [
-        ("core", "0129_template_backfill_official"),
+        ("core", "0131_chat_run"),
     ]
 
     operations = [
-        migrations.AddField(
-            model_name="template",
-            name="metadata",
-            field=models.JSONField(
-                blank=True,
-                db_default={},
-                default=dict,
-                help_text="Private, owner-only revision metadata.",
-            ),
-        ),
         migrations.CreateModel(
             name="CreateUserTemplateJob",
             fields=[
@@ -109,29 +105,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "base_revision",
-                    models.ForeignKey(
-                        help_text="The latest revision when an update was scheduled. Empty when creating.",
-                        null=True,
-                        on_delete=django.db.models.deletion.SET_NULL,
-                        related_name="+",
-                        to="core.template",
-                    ),
-                ),
-                (
-                    "revision",
-                    models.ForeignKey(
-                        help_text="The revision the job committed. Empty until commit.",
-                        null=True,
-                        on_delete=django.db.models.deletion.SET_NULL,
-                        related_name="+",
-                        to="core.template",
-                    ),
-                ),
-                (
                     "source_workspace",
                     models.ForeignKey(
-                        help_text="The workspace the applications are copied from. Empty for a details-only update.",
+                        help_text="The workspace the applications are copied from.",
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
                         related_name="+",
@@ -141,7 +117,7 @@ class Migration(migrations.Migration):
                 (
                     "template",
                     models.ForeignKey(
-                        help_text="The template the job creates, or the one it updates.",
+                        help_text="The template the job created. Empty until it's committed.",
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
                         related_name="+",
@@ -149,7 +125,7 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "workspace",
+                    "template_workspace",
                     models.ForeignKey(
                         help_text="The workspace holding the copy. It's deleted when the job doesn't end with a template pointing at it.",
                         null=True,
@@ -163,5 +139,35 @@ class Migration(migrations.Migration):
                 "abstract": False,
             },
             bases=("core.job", models.Model),
+        ),
+        migrations.CreateModel(
+            name="UserTemplateContentToDelete",
+            fields=[
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "workspace_id",
+                    models.PositiveIntegerField(
+                        help_text="The id of the workspace holding the copy. It's not a foreign key, because the workspace can be deleted already.",
+                        null=True,
+                    ),
+                ),
+                (
+                    "archive_name",
+                    models.CharField(
+                        blank=True,
+                        default="",
+                        help_text="The name of the stored archive of the template.",
+                        max_length=255,
+                    ),
+                ),
+            ],
         ),
     ]

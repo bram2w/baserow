@@ -299,8 +299,9 @@ class BlacklistedToken(CreatedAndUpdatedOnMixin, models.Model):
 
 class _WorkspaceTemplatesCacheKey:
     """
-    Caches the template types of a workspace by its id and `updated_on`, and keeps
-    the instance, so that its prefetched `template_set` is used on a miss.
+    Caches the template types of a workspace by its id and `updated_on`, and holds
+    the instance, so that its prefetched `template_set` is used on a miss. The
+    cache keeps the key of a miss, so the instance is dropped after it.
     """
 
     __slots__ = ("key", "workspace")
@@ -320,10 +321,12 @@ class _WorkspaceTemplatesCacheKey:
 def _get_workspace_template_types(key: _WorkspaceTemplatesCacheKey) -> frozenset[str]:
     # Iterates `all()`, so that a prefetched `template_set` is used. A null `type`
     # means official.
-    return frozenset(
+    template_types = frozenset(
         template.type or Template.Type.OFFICIAL
         for template in key.workspace.template_set.all()
     )
+    key.workspace = None
+    return template_types
 
 
 class Workspace(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOnMixin):
@@ -368,11 +371,10 @@ class Workspace(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOn
 
         return _get_workspace_template_types(_WorkspaceTemplatesCacheKey(self))
 
-    def has_openable_template(self) -> bool:
+    def has_openable_template(self, actor) -> bool:
         """
-        Whether anyone can open this workspace as a template: it holds an official
-        template or, while user templates are enabled, a user template not marked
-        for deletion. Matches `Template.objects.openable()`.
+        Whether the actor can open this workspace as a template, see
+        `Template.is_openable_by`.
         """
 
         template_types = self.get_template_types()
@@ -382,10 +384,9 @@ class Workspace(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOn
             FF_USER_TEMPLATES
         ):
             return False
-        # Not cached, because a user template can be marked for deletion.
+        # Not cached, because the state of a user template changes.
         return any(
-            template.root_id is None and template.marked_for_deletion_at is None
-            for template in self.template_set.all()
+            template.is_openable_by(actor) for template in self.template_set.all()
         )
 
     def get_workspace_user(
@@ -586,27 +587,49 @@ def template_archive_upload_to(instance, filename):
     return f"template-revisions/{uuid.uuid4().hex}.zip"
 
 
+def _official_template_q() -> Q:
+    # TODO ZDM: `type` is null for rows inserted by the previous version during
+    # the deploy. Drop the null check once `type` is not nullable.
+    return Q(type__isnull=True) | Q(type=Template.Type.OFFICIAL)
+
+
+def _get_user_id(actor) -> int | None:
+    return actor.id if isinstance(actor, User) else None
+
+
 class TemplateQuerySet(QuerySet):
     def official(self):
-        # TODO ZDM: `type` is null for rows inserted by the previous version during
-        # the deploy. Drop the null check once `type` is not nullable.
-        return self.filter(Q(type__isnull=True) | Q(type=Template.Type.OFFICIAL))
+        return self.filter(_official_template_q())
 
     def user(self):
         return self.filter(type=Template.Type.USER)
 
-    def openable(self):
+    def official_or_owned(self, actor):
         """
-        The templates anyone can open: the official ones and, while user templates
-        are enabled, the user templates not marked for deletion.
+        The official templates and the user templates owned by the actor.
         """
 
-        official = Q(type__isnull=True) | Q(type=Template.Type.OFFICIAL)
+        q = _official_template_q()
+        if (user_id := _get_user_id(actor)) is not None:
+            q |= Q(type=Template.Type.USER, owner_id=user_id)
+        return self.filter(q)
+
+    def openable(self, actor):
+        """
+        The templates the actor can open. Matches `Template.is_openable_by`.
+        """
+
+        official = _official_template_q()
         if not feature_flag_is_enabled(FF_USER_TEMPLATES):
             return self.filter(official)
+
+        visible = Q(public_revision__isnull=False, blocked_at__isnull=True)
+        if (user_id := _get_user_id(actor)) is not None:
+            visible |= Q(owner_id=user_id)
         return self.filter(
             official
             | Q(
+                visible,
                 type=Template.Type.USER,
                 root__isnull=True,
                 marked_for_deletion_at__isnull=True,
@@ -782,12 +805,6 @@ class Template(models.Model):
         help_text="How many times any revision of the template was installed. Only "
         "counted on roots.",
     )
-    metadata = models.JSONField(
-        default=dict,
-        blank=True,
-        db_default={},
-        help_text="Private, owner-only revision metadata.",
-    )
     review_state = models.CharField(
         max_length=16,
         choices=ReviewState.choices,
@@ -930,6 +947,27 @@ class Template(models.Model):
 
     def get_root(self):
         return self.root if self.root_id is not None else self
+
+    def is_openable_by(self, actor) -> bool:
+        """
+        Whether the actor can open this template: an official one or, while user
+        templates are enabled, a user template not marked for deletion that is
+        public and not blocked, or owned by the actor. Matches
+        `Template.objects.openable`.
+        """
+
+        if self.type in (None, Template.Type.OFFICIAL):
+            return True
+        if (
+            self.root_id is not None
+            or self.marked_for_deletion_at is not None
+            or not feature_flag_is_enabled(FF_USER_TEMPLATES)
+        ):
+            return False
+        if self.public_revision_id is not None and self.blocked_at is None:
+            return True
+        user_id = _get_user_id(actor)
+        return user_id is not None and self.owner_id == user_id
 
     def clean(self):
         """

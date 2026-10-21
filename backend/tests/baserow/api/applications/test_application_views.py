@@ -200,37 +200,6 @@ def test_list_applications(api_client, data_fixture, django_assert_num_queries):
     )
 
 
-@pytest.mark.django_db
-@pytest.mark.parametrize("user_templates_enabled", [True, False])
-def test_list_applications_of_openable_template_workspaces_only(
-    api_client, data_fixture, settings, user_templates_enabled
-):
-    if not user_templates_enabled:
-        settings.FEATURE_FLAGS = []
-    _, token = data_fixture.create_user_and_token()
-    official = data_fixture.create_template()
-    user_template = data_fixture.create_user_template()
-    revision = data_fixture.create_user_template_revision(user_template)
-    marked = data_fixture.create_user_template(marked_for_deletion_at=timezone.now())
-    for template in (official, user_template, revision, marked):
-        data_fixture.create_database_application(workspace=template.workspace)
-
-    opened = (HTTP_200_OK, HTTP_200_OK)
-    closed = (HTTP_401_UNAUTHORIZED, HTTP_400_BAD_REQUEST)
-    for template, (anonymous_status, stranger_status) in [
-        (official, opened),
-        (user_template, opened if user_templates_enabled else closed),
-        (revision, closed),
-        (marked, closed),
-    ]:
-        url = reverse(
-            "api:applications:list", kwargs={"workspace_id": template.workspace_id}
-        )
-        assert api_client.get(url).status_code == anonymous_status
-        response = api_client.get(url, HTTP_AUTHORIZATION=f"JWT {token}")
-        assert response.status_code == stranger_status
-
-
 @pytest.mark.django_db(transaction=True)
 def test_list_applications_with_permissions(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token(

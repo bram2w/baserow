@@ -88,6 +88,7 @@ from baserow.contrib.integrations.local_baserow.mixins import (
     LocalBaserowTableServiceSearchableMixin,
     LocalBaserowTableServiceSortableMixin,
     LocalBaserowTableServiceSpecificRowMixin,
+    import_refinement_field_id,
 )
 from baserow.contrib.integrations.local_baserow.models import (
     LocalBaserowAggregateRows,
@@ -1188,10 +1189,13 @@ class LocalBaserowListRowsUserServiceType(
         if field_dbname == "id":
             return path
 
-        # Apply the mapping in case it is present for this field
-        field_id = self.import_property_name(field_dbname, id_mapping)
+        # Apply the mapping in case it is present for this field. Like in
+        # `import_path`, an unmapped field keeps its reference.
+        imported_field_dbname = (
+            self.import_property_name(field_dbname, id_mapping) or field_dbname
+        )
 
-        return [field_id, *rest]
+        return [imported_field_dbname, *rest]
 
     def dispatch_data(
         self,
@@ -1608,7 +1612,9 @@ class LocalBaserowAggregateRowsUserServiceType(
         """
 
         if prop_name == "field_id":
-            return id_mapping.get("database_fields", {}).get(value, value)
+            return import_refinement_field_id(
+                value, id_mapping, kwargs.get("import_export_config")
+            )
 
         return super().deserialize_property(
             prop_name,
@@ -3309,11 +3315,18 @@ class LocalBaserowFieldsUpdatedTriggerServiceType(
     ):
         if prop_name == "field_ids":
             database_fields = id_mapping.get("database_fields", {})
-            # Remap each field id; skip fields that were trashed during export.
+            # Remap each field id like the filters do; also skip fields that were
+            # trashed during export.
             return [
-                database_fields.get(field_id, field_id)
+                new_field_id
                 for field_id in value
-                if not database_fields or database_fields.get(field_id) is not None
+                if (
+                    new_field_id := import_refinement_field_id(
+                        field_id, id_mapping, kwargs.get("import_export_config")
+                    )
+                )
+                is not None
+                and (not database_fields or field_id in database_fields)
             ]
 
         return super().deserialize_property(

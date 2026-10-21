@@ -57,6 +57,7 @@ def test_list_templates(api_client, data_fixture):
             "templates": [
                 {
                     "id": template_1.id,
+                    "type": "official",
                     "name": "Template 1",
                     "slug": template_1.slug,
                     "description": "Plan projects.",
@@ -74,6 +75,7 @@ def test_list_templates(api_client, data_fixture):
             "templates": [
                 {
                     "id": template_2.id,
+                    "type": "official",
                     "name": "Template 2",
                     "slug": template_2.slug,
                     "description": "",
@@ -85,6 +87,7 @@ def test_list_templates(api_client, data_fixture):
                 },
                 {
                     "id": template_3.id,
+                    "type": "official",
                     "name": "Template 3",
                     "slug": template_3.slug,
                     "description": "",
@@ -102,6 +105,7 @@ def test_list_templates(api_client, data_fixture):
             "templates": [
                 {
                     "id": template_3.id,
+                    "type": "official",
                     "name": "Template 3",
                     "slug": template_3.slug,
                     "description": "",

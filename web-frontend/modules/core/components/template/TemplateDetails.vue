@@ -57,7 +57,6 @@
             ></component>
           </ul>
         </div>
-        <!-- Installing a user template isn't possible yet. -->
         <div v-if="template.type !== 'user'" class="template-details__foot">
           <TemplateInstall
             :template="template"

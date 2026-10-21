@@ -1,31 +1,3 @@
-.user-template-list {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background-color: $palette-neutral-0;
-}
-
-.user-template-list__head {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  height: 52px;
-  padding: 0 56px 0 20px;
-  border-bottom: solid 1px $palette-neutral-200;
-}
-
-// The padding on the left evens out the one of the close button.
-.user-template-list__head--centered {
-  justify-content: center;
-  padding-left: 56px;
-}
-
-.user-template-list__head-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: $palette-neutral-1200;
-}
-
 .user-template-list__body {
   display: flex;
   flex: 1 1 auto;

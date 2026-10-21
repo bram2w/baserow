@@ -3,16 +3,11 @@ from django.urls import re_path
 from .views import (
     AsyncInstallTemplateView,
     InstallTemplateView,
-    OwnTemplatesView,
     TemplatesView,
     TemplateView,
 )
 
 app_name = "baserow.api.templates"
-
-# The list routes share the prefix of the `templates/<slug>/` route, so these words
-# can't be template slugs. User template slugs always end with a random suffix.
-RESERVED_TEMPLATE_SLUGS = ("install", "own", "shared")
 
 
 urlpatterns = [
@@ -26,7 +21,6 @@ urlpatterns = [
         AsyncInstallTemplateView.as_view(),
         name="install_async",
     ),
-    re_path(r"own/$", OwnTemplatesView.as_view(), name="own"),
     re_path(r"(?P<slug>[\w-]+)/$", TemplateView.as_view(), name="item"),
     re_path(r"$", TemplatesView.as_view(), name="list"),
 ]

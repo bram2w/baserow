@@ -514,13 +514,19 @@ def test_job_with_lock_on_cancel_keeps_a_cancel_accepted_as_it_starts(
     mutable_job_type_registry.register(LockingJobType())
     job = create_pending_job(data_fixture.create_user(), LockingJobType)
 
-    def cancel_as_the_worker_starts(user):
-        # After the worker checked for a cancellation, before it saves STARTED.
-        JobHandler.cancel_job(Job.objects.get(id=job.id))
+    is_cancelled = Job.cancelled.fget
+    checks = []
 
-    with patch(
-        "baserow.core.jobs.tasks.setup_user_in_sentry", cancel_as_the_worker_starts
-    ):
+    def cancel_after_the_cached_check(self):
+        if not checks:
+            # The worker's cached check passes, then the cancel commits before the
+            # worker locks the row to save STARTED.
+            checks.append(self.id)
+            JobHandler.cancel_job(Job.objects.get(id=job.id))
+            return False
+        return is_cancelled(self)
+
+    with patch.object(Job, "cancelled", property(cancel_after_the_cached_check)):
         run_async_job(job.id)
 
     assert cancelled_job_ids == [job.id]

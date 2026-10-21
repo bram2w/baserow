@@ -173,8 +173,9 @@ export default {
   methods: {
     /**
      * When the modal is opened we want to fetch all the templates and their
-     * categories, so that the user can browse them. If a template id or slug is
-     * provided, the details of that template are opened right away.
+     * categories, so that the user can browse them. The details of the template
+     * with the provided id or slug, or else of the default template, are opened
+     * right away.
      */
     async show(templateId = null, ...args) {
       modal.methods.show.call(this, ...args)
@@ -195,13 +196,15 @@ export default {
         return
       }
 
-      if (templateId !== null) {
-        const template = this.categories
-          .flatMap((category) => category.templates)
-          .find((t) => t.id === templateId || t.slug === templateId)
-        if (template) {
-          this.selectTemplate(template)
-        }
+      const template = this.categories
+        .flatMap((category) => category.templates)
+        .find((t) =>
+          templateId === null
+            ? t.is_default
+            : t.id === templateId || t.slug === templateId
+        )
+      if (template) {
+        this.selectTemplate(template)
       }
     },
     selectTab(tab) {

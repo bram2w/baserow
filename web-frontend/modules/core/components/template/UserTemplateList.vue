@@ -1,17 +1,18 @@
 <template>
-  <div class="user-template-list">
+  <!-- The frame is shared with the list of the official templates. -->
+  <div class="template-list user-template-list">
     <div
-      class="user-template-list__head"
-      :class="{ 'user-template-list__head--centered': $slots.head }"
+      class="template-list__head"
+      :class="{ 'template-list__head--centered': $slots.head }"
     >
       <slot name="head">
-        <div class="user-template-list__head-title">
+        <div class="template-list__title">
           {{ $t('userTemplateList.title') }}
         </div>
       </slot>
     </div>
     <div class="user-template-list__body">
-      <div v-if="!ready" class="user-template-list__loading">
+      <div v-if="!loaded" class="user-template-list__loading">
         <div class="loading"></div>
       </div>
       <TemplateEmptyState
@@ -56,7 +57,7 @@
             icon-left="iconoir-search"
             :placeholder="$t('userTemplateList.search')"
           ></FormInput>
-          <span v-tooltip="createDisabledReason || null">
+          <span v-tooltip:[TOOLTIP_OPTIONS]="createDisabledReason || null">
             <Button
               icon="iconoir-plus"
               :disabled="!!createDisabledReason"
@@ -119,7 +120,7 @@
               </div>
               <div class="user-template-list__cell">
                 <Badge
-                  v-tooltip="template.reason || null"
+                  v-tooltip:[TOOLTIP_OPTIONS]="template.reason || null"
                   :color="getState(template).color"
                   rounded
                   >{{ getState(template).label }}</Badge
@@ -148,6 +149,9 @@ import InfiniteScroll from '@baserow/modules/core/components/helpers/InfiniteScr
 import TemplateEmptyState from '@baserow/modules/core/components/template/TemplateEmptyState'
 
 const PAGE_SIZE = 20
+
+// The tooltips hold sentences, which don't fit in one line.
+const TOOLTIP_OPTIONS = { contentClasses: 'tooltip__content--expandable' }
 
 const STATES = {
   private: { color: 'neutral', label: 'userTemplateList.statePrivate' },
@@ -180,7 +184,7 @@ const props = defineProps({
 
 const emit = defineEmits(['selected', 'create'])
 
-const { $client, $i18n, $priorityBus, $store, $hasPermission } = useNuxtApp()
+const { $client, $i18n, $priorityBus, $store } = useNuxtApp()
 
 const searchInput = ref(null)
 const search = ref('')
@@ -190,7 +194,6 @@ const loading = ref(false)
 const loaded = ref(false)
 // Whether the templates couldn't be loaded, while none are shown yet.
 const failed = ref(false)
-const permissionsLoaded = ref(false)
 // The search the shown templates were loaded with.
 const loadedSearch = ref('')
 
@@ -201,35 +204,21 @@ let lastRequest = 0
 // Nothing found without a search: the user hasn't created any template yet.
 const isEmpty = computed(() => count.value === 0 && loadedSearch.value === '')
 
-// Shown once both are loaded, so that the layout doesn't change right after.
-const ready = computed(() => loaded.value && permissionsLoaded.value)
-
 const workspaces = computed(() => $store.getters['workspace/getAll'])
 
-// A template is created from a workspace that the user can export. Explains why
-// the user can't create one, or is null when they can.
+// A template is created from a workspace with content. Explains why the user
+// can't create one, or is null when they can. The permissions are only checked
+// by the wizard, which fetches them.
 const createDisabledReason = computed(() => {
   if (workspaces.value.length === 0) {
     return $i18n.t('userTemplateList.noWorkspace')
   }
-  const canExport = workspaces.value.some((workspace) =>
-    $hasPermission('workspace.export', workspace, workspace.id)
+  const hasContent = workspaces.value.some(
+    (workspace) =>
+      $store.getters['application/getAllOfWorkspace'](workspace).length > 0
   )
-  return canExport ? null : $i18n.t('userTemplateList.noPermission')
+  return hasContent ? null : $i18n.t('userTemplateList.noContent')
 })
-
-/**
- * The permissions of a workspace are only fetched when needed. Until then the
- * global permissions are used, which can allow an export that isn't allowed.
- */
-async function loadPermissions() {
-  await Promise.all(
-    workspaces.value.map((workspace) =>
-      $store.dispatch('workspace/fetchPermissions', workspace).catch(() => {})
-    )
-  )
-  permissionsLoaded.value = true
-}
 
 async function fetchPage(offset, requestSearch = search.value) {
   const request = ++lastRequest
@@ -290,7 +279,6 @@ function listenToSearch(active) {
 
 onMounted(() => {
   fetchPage(0)
-  loadPermissions()
   listenToSearch(props.active)
 })
 watch(() => props.active, listenToSearch)

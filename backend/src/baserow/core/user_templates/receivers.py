@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.db import transaction
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 
@@ -27,17 +26,11 @@ def mark_owned_user_templates_deleted(sender, instance, **kwargs):
 def delete_create_user_template_job_content(sender, instance, **kwargs):
     """
     Deleting an unfinished job, when it expires or with its user, would lose
-    track of the workspace and archive it copied, so they're deleted along. A
-    failure is logged, so that it doesn't stop deleting the other jobs.
+    track of the workspace and archive it copied, so they're deleted along.
     """
 
-    workspace_id, archive_name = instance.workspace_id, instance.archive_name
-    if workspace_id is None and not archive_name:
-        return
-
-    transaction.on_commit(
-        lambda: UserTemplateHandler().delete_content_without_template(
-            workspace_id, archive_name
-        ),
-        robust=True,
-    )
+    # What a finished job created is its template's.
+    if instance.template_id is None:
+        UserTemplateHandler().delete_content_of_deleted_job(
+            instance.template_workspace_id, instance.archive_name
+        )

@@ -1,13 +1,15 @@
 import os
 import re
+import threading
 from datetime import timedelta
 from unittest.mock import patch
 
 from django.conf import settings
+from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
-from django.db import IntegrityError
+from django.db import IntegrityError, connection, transaction
 from django.test.utils import override_settings
 from django.utils import timezone
 
@@ -16,7 +18,11 @@ import pytest
 from baserow.core.handler import CoreHandler
 from baserow.core.import_export.handler import ImportExportHandler
 from baserow.core.models import Template, Workspace
-from baserow.core.user_templates.constants import USER_TEMPLATE_ICONS, UserTemplateState
+from baserow.core.user.exceptions import UserNotFound
+from baserow.core.user_templates.constants import (
+    USER_TEMPLATE_ICON_MAX_LENGTH,
+    UserTemplateState,
+)
 from baserow.core.user_templates.exceptions import (
     InvalidTemplateCategory,
     InvalidTemplateIcon,
@@ -36,19 +42,23 @@ def create_root(data_fixture, **kwargs):
     kwargs.setdefault("name", "My template")
     kwargs.setdefault("description", "What it does")
     kwargs.setdefault("icon", "iconoir-view-grid")
-    kwargs.setdefault("category_ids", [data_fixture.create_template_category().id])
+    if "category_ids" not in kwargs:
+        kwargs["category_ids"] = [data_fixture.create_template_category().id]
     kwargs.setdefault("workspace", data_fixture.create_workspace())
     return UserTemplateHandler().create_template_root(**kwargs)
 
 
-def test_user_template_icons_fit_the_icon_column():
-    max_length = Template._meta.get_field("icon").max_length
+def test_user_template_icon_max_length_fits_the_icon_column():
+    assert USER_TEMPLATE_ICON_MAX_LENGTH == Template._meta.get_field("icon").max_length
 
-    assert len(USER_TEMPLATE_ICONS) == len(set(USER_TEMPLATE_ICONS))
-    assert "iconoir-view-grid" in USER_TEMPLATE_ICONS
-    for icon in USER_TEMPLATE_ICONS:
-        assert len(icon) <= max_length
-        assert icon.startswith("iconoir-")
+
+@pytest.mark.parametrize(
+    "icon",
+    ["fa-table", "iconoir-", "iconoir-table extra", "iconoir-" + "a" * 25, ""],
+)
+def test_validate_icon_and_categories_rejects_an_invalid_icon(icon):
+    with pytest.raises(InvalidTemplateIcon):
+        UserTemplateHandler().validate_icon_and_categories(icon, [])
 
 
 def test_generate_template_slug_format():
@@ -106,7 +116,6 @@ def test_create_template_root(data_fixture):
     assert template.shared_revision is None
     assert template.private_link_token is None
     assert not template.archive
-    assert template.metadata == {}
     assert UserTemplateHandler().get_template_state(template) == (
         UserTemplateState.PRIVATE,
         None,
@@ -114,31 +123,82 @@ def test_create_template_root(data_fixture):
 
 
 @pytest.mark.django_db
-def test_create_template_root_stores_metadata(data_fixture):
-    workspace = data_fixture.create_workspace()
-    metadata = UserTemplateHandler().build_template_metadata(workspace, [3, 1])
-
-    template = create_root(data_fixture, metadata=metadata)
-
-    template = Template.objects.get(id=template.id)
-    assert template.metadata == {
-        "source_workspace_id": workspace.id,
-        "source_application_ids": [3, 1],
-    }
-    assert UserTemplateHandler().get_template_metadata(template) == metadata
-
-
-@pytest.mark.django_db
 def test_create_template_root_opens_a_workspace_checked_before(data_fixture):
     # Anyone can check the workspace while the job copies into it, e.g. through
     # the applications list of its id. The answer is cached in that process.
     workspace = data_fixture.create_workspace()
-    assert not Workspace.objects.get(id=workspace.id).has_openable_template()
+    owner = data_fixture.create_user()
+    assert not Workspace.objects.get(id=workspace.id).has_openable_template(owner)
 
-    create_root(data_fixture, workspace=workspace)
+    create_root(data_fixture, owner=owner, workspace=workspace)
 
     # The next request loads the workspace again.
-    assert Workspace.objects.get(id=workspace.id).has_openable_template()
+    assert Workspace.objects.get(id=workspace.id).has_openable_template(owner)
+
+
+@pytest.mark.django_db
+def test_create_template_root_refuses_a_deleted_owner(data_fixture):
+    owner = data_fixture.create_user()
+    category = data_fixture.create_template_category()
+
+    def delete_owner(*args, **kwargs):
+        # Deleted after the template was validated.
+        type(owner).objects.filter(id=owner.id).delete()
+
+    with patch.object(Template, "full_clean", delete_owner):
+        with pytest.raises(UserNotFound):
+            create_root(data_fixture, owner=owner, category_ids=[category.id])
+
+    assert not Template.objects.exists()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_deleting_the_owner_waits_for_a_template_being_created(data_fixture):
+    owner = data_fixture.create_user()
+    category = data_fixture.create_template_category()
+    workspace = data_fixture.create_workspace()
+    created = threading.Event()
+    commit = threading.Event()
+    errors = []
+
+    def in_thread(function):
+        def run():
+            try:
+                function()
+            except Exception as error:
+                errors.append(error)
+            finally:
+                connection.close()
+
+        thread = threading.Thread(target=run)
+        thread.start()
+        return thread
+
+    def create():
+        with transaction.atomic():
+            create_root(
+                data_fixture,
+                owner=owner,
+                category_ids=[category.id],
+                workspace=workspace,
+            )
+            created.set()
+            commit.wait(timeout=10)
+
+    creator = in_thread(create)
+    assert created.wait(timeout=10)
+    deleter = in_thread(lambda: type(owner).objects.get(id=owner.id).delete())
+    deleter.join(timeout=1)
+    assert deleter.is_alive()
+
+    commit.set()
+    creator.join(timeout=10)
+    deleter.join(timeout=10)
+
+    assert errors == []
+    template = Template.objects.get()
+    assert template.owner_id is None
+    assert template.marked_for_deletion_at is not None
 
 
 @pytest.mark.django_db
@@ -152,12 +212,9 @@ def test_create_template_root_stores_archive(data_fixture, tmpdir):
 
 
 @pytest.mark.django_db
-def test_create_template_root_rejects_icon_outside_allowlist(data_fixture):
+def test_create_template_root_rejects_an_invalid_icon(data_fixture):
     with pytest.raises(InvalidTemplateIcon):
-        create_root(data_fixture, icon="iconoir-not-an-icon")
-
-    with pytest.raises(InvalidTemplateIcon):
-        create_root(data_fixture, icon="")
+        create_root(data_fixture, icon="fa-table")
 
     assert not Template.objects.exists()
 
@@ -173,6 +230,13 @@ def test_create_template_root_rejects_missing_or_unknown_categories(data_fixture
         create_root(data_fixture, category_ids=[category.id, category.id + 100])
 
     assert not Template.objects.exists()
+
+
+@pytest.mark.django_db
+def test_create_template_root_without_categories_on_the_instance(data_fixture):
+    template = create_root(data_fixture, category_ids=[])
+
+    assert list(template.categories.all()) == []
 
 
 @pytest.mark.django_db
@@ -289,23 +353,31 @@ def test_list_own_templates(data_fixture):
     data_fixture.create_user_template(user=user, marked_for_deletion_at=now)
     data_fixture.create_template()
 
-    templates = list(UserTemplateHandler().list_own_templates(user))
+    templates = list(
+        CoreHandler().list_templates(user, template_type="user", owned=True)
+    )
 
     assert templates == [same_time, newer, older]
 
 
 @pytest.mark.django_db
-def test_list_own_templates_prefetches_categories(
-    data_fixture, django_assert_num_queries
-):
+def test_list_templates_puts_never_updated_templates_last(data_fixture):
     user = data_fixture.create_user()
-    for _ in range(3):
-        data_fixture.create_user_template(user=user)
+    never_updated = data_fixture.create_template()
+    official = data_fixture.create_template()
+    own = data_fixture.create_user_template(user=user)
+    Template.objects.filter(id=never_updated.id).update(updated_on=None)
 
-    with django_assert_num_queries(2):
-        templates = list(UserTemplateHandler().list_own_templates(user))
-        for template in templates:
-            assert len(template.categories.all()) == 1
+    templates = list(CoreHandler().list_templates(user))
+
+    assert templates == [own, official, never_updated]
+
+
+@pytest.mark.django_db
+def test_list_templates_owned_by_an_anonymous_user(data_fixture):
+    data_fixture.create_template()
+
+    assert list(CoreHandler().list_templates(AnonymousUser(), owned=True)) == []
 
 
 @pytest.mark.django_db

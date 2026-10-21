@@ -9,17 +9,23 @@ from django.db import connection, transaction
 import pytest
 from freezegun import freeze_time
 
+from baserow.contrib.automation.nodes.node_types import (
+    LocalBaserowFieldsUpdatedTriggerNodeType,
+)
 from baserow.contrib.builder.data_sources.models import DataSource
+from baserow.contrib.builder.elements.models import ChoiceElement
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.models import View
 from baserow.contrib.integrations.core.models import SMTPIntegration
 from baserow.contrib.integrations.local_baserow.models import (
     LocalBaserowAggregateRows,
+    LocalBaserowFieldsUpdated,
     LocalBaserowIntegration,
+    LocalBaserowTableServiceFilter,
+    LocalBaserowTableServiceSort,
 )
 from baserow.core.cache import local_cache
 from baserow.core.exceptions import (
-    FeatureDisabledException,
     PermissionDenied,
     UserNotInWorkspace,
     WorkspaceDoesNotExist,
@@ -53,15 +59,24 @@ from baserow.core.user_templates.actions import CreateUserTemplateActionType
 from baserow.core.user_templates.exceptions import NoApplicationsSelected
 from baserow.core.user_templates.handler import UserTemplateHandler
 from baserow.core.user_templates.job_types import CreateUserTemplateJobType
-from baserow.core.user_templates.models import CreateUserTemplateJob
+from baserow.core.user_templates.models import (
+    CreateUserTemplateJob,
+    UserTemplateContentToDelete,
+)
 from baserow.core.user_templates.service import UserTemplateService
 from baserow.core.user_templates.tasks import delete_orphaned_user_template_workspaces
 from baserow.core.utils import Progress
 
+pytestmark = [
+    pytest.mark.import_export_workspace,
+    pytest.mark.django_db(transaction=True),
+    pytest.mark.usefixtures("use_tmp_media_root"),
+]
+
 ICON = "iconoir-view-grid"
-# The aggregate `field_id` and the HTTP trigger `uid` are left to #6330.
 CLEARED_KEYS = {
     "table_id",
+    "field_id",
     "view_id",
     "authorized_subject_type",
     "authorized_subject_id",
@@ -121,8 +136,21 @@ def create_source(data_fixture):
     integration = data_fixture.create_local_baserow_integration(
         application=builder, user=user
     )
-    data_fixture.create_builder_local_baserow_list_rows_data_source(
+    list_rows = data_fixture.create_builder_local_baserow_list_rows_data_source(
         page=page, integration=integration, table=table, view=view, name="List"
+    )
+    data_fixture.create_local_baserow_table_service_sort(
+        service=list_rows.service, field=text_field, order_by="ASC", order=0
+    )
+    data_fixture.create_local_baserow_table_service_filter(
+        service=list_rows.service, field=text_field, value="Row"
+    )
+    data_fixture.create_builder_choice_element(
+        page=page,
+        option_type=ChoiceElement.OPTION_TYPE.FORMULAS,
+        formula_value=(
+            f"get('data_source_context.{list_rows.id}.{text_field.db_column}.*.value')"
+        ),
     )
     data_fixture.create_builder_data_source(
         page=page,
@@ -148,6 +176,19 @@ def create_source(data_fixture):
         automation=automation, create_trigger=False
     )
     data_fixture.create_core_http_trigger_node(workflow=workflow)
+    data_fixture.create_automation_node(
+        workflow=data_fixture.create_automation_workflow(
+            automation=automation, create_trigger=False
+        ),
+        type=LocalBaserowFieldsUpdatedTriggerNodeType.type,
+        service=data_fixture.create_local_baserow_fields_updated_service(
+            integration=data_fixture.create_local_baserow_integration(
+                application=automation, user=user
+            ),
+            table=table,
+            fields=[text_field],
+        ),
+    )
     data_fixture.create_smtp_integration(
         application=automation, username="smtp-user", password="smtp-secret"
     )
@@ -157,6 +198,7 @@ def create_source(data_fixture):
         "workspace": workspace,
         "database": database,
         "table": table,
+        "text_field": text_field,
         "builder": builder,
         "dashboard": dashboard,
         "automation": automation,
@@ -206,9 +248,7 @@ def assert_no_copy_left(source_workspace):
         assert storage.listdir("template-revisions")[1] == []
 
 
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
-def test_create_user_template_job(data_fixture, use_tmp_media_root):
+def test_create_user_template_job(data_fixture):
     source = create_source(data_fixture)
     user, workspace = source["user"], source["workspace"]
     category = data_fixture.create_template_category()
@@ -228,12 +268,6 @@ def test_create_user_template_job(data_fixture, use_tmp_media_root):
     template = Template.objects.get()
     job.refresh_from_db()
     assert job.template == template
-    assert job.revision_id == job.template_id
-    assert job.base_revision_id is None
-    assert template.metadata == {
-        "source_workspace_id": workspace.id,
-        "source_application_ids": [application.id for application in applications],
-    }
     assert template.owner == user
     assert template.name == "Mine"
     assert template.description == "What it does"
@@ -246,7 +280,7 @@ def test_create_user_template_job(data_fixture, use_tmp_media_root):
 
     template_workspace = template.workspace
     assert template_workspace.name == "Mine"
-    assert job.workspace == template_workspace
+    assert job.template_workspace == template_workspace
     assert not WorkspaceUser.objects.filter(workspace=template_workspace).exists()
     assert set(copied_applications(template)) == {
         "database",
@@ -278,9 +312,7 @@ def test_create_user_template_job(data_fixture, use_tmp_media_root):
     }
 
 
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
-def test_create_user_template_job_content_rules(data_fixture, use_tmp_media_root):
+def test_create_user_template_job_content_rules(data_fixture):
     source = create_source(data_fixture)
     user, workspace = source["user"], source["workspace"]
 
@@ -329,11 +361,7 @@ def test_create_user_template_job_content_rules(data_fixture, use_tmp_media_root
     assert dashboard_service.field_id == text_field.id
 
 
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
-def test_create_user_template_job_strips_automation_secrets(
-    data_fixture, use_tmp_media_root
-):
+def test_create_user_template_job_strips_automation_secrets(data_fixture):
     source = create_source(data_fixture)
 
     job = start_job(source["user"], source["workspace"], [source["automation"]])
@@ -345,11 +373,7 @@ def test_create_user_template_job_strips_automation_secrets(
     assert not smtp.host
 
 
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
-def test_create_user_template_job_clears_references_outside_the_selection(
-    data_fixture, use_tmp_media_root
-):
+def test_create_user_template_job_clears_references_outside_the_selection(data_fixture):
     source = create_source(data_fixture)
 
     job = start_job(
@@ -374,6 +398,19 @@ def test_create_user_template_job_clears_references_outside_the_selection(
     for service in services:
         assert service.table_id is None
         assert service.view_id is None
+        assert getattr(service, "field_id", None) is None
+        assert not LocalBaserowTableServiceFilter.objects.filter(service=service)
+        assert not LocalBaserowTableServiceSort.objects.filter(service=service)
+    trigger = LocalBaserowFieldsUpdated.objects.get(
+        automation_workflow_node__workflow__automation=applications["automation"]
+    )
+    assert trigger.table_id is None
+    assert trigger.field_ids == []
+    # A formula keeps a reference it can't map, which resolves to nothing.
+    choice = ChoiceElement.objects.get(page__builder=applications["builder"])
+    assert choice.formula_value["formula"].endswith(
+        f".{source['text_field'].db_column}.*.value')"
+    )
 
     archive = read_archive(job.archive_name)
     assert archive
@@ -381,11 +418,7 @@ def test_create_user_template_job_clears_references_outside_the_selection(
         assert value in (None, ""), f"{key} = {value}"
 
 
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
-def test_create_user_template_job_without_export_permission(
-    data_fixture, use_tmp_media_root
-):
+def test_create_user_template_job_without_export_permission(data_fixture):
     source = create_source(data_fixture)
     check_permissions = CoreHandler.check_permissions
 
@@ -402,10 +435,8 @@ def test_create_user_template_job_without_export_permission(
     assert Template.objects.count() == 0
 
 
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
 def test_create_user_template_job_refuses_foreign_and_trashed_applications(
-    data_fixture, use_tmp_media_root
+    data_fixture,
 ):
     user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)
@@ -445,11 +476,7 @@ def test_get_exportable_applications_refuses_a_trashed_workspace(data_fixture):
         )
 
 
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
-def test_create_user_template_job_refuses_a_template_workspace(
-    data_fixture, use_tmp_media_root
-):
+def test_create_user_template_job_refuses_a_template_workspace(data_fixture):
     user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)
     database = data_fixture.create_database_application(workspace=workspace)
@@ -459,10 +486,8 @@ def test_create_user_template_job_refuses_a_template_workspace(
         start_job(user, workspace, [database])
 
 
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
 def test_create_user_template_job_fails_when_access_is_lost_before_it_runs(
-    data_fixture, use_tmp_media_root
+    data_fixture,
 ):
     user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)
@@ -500,9 +525,7 @@ def test_create_user_template_job_fails_when_the_source_workspace_is_gone(
         CreateUserTemplateJobType().run(job, Progress(100))
 
 
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
-def test_create_user_template_job_cleans_up_on_error(data_fixture, use_tmp_media_root):
+def test_create_user_template_job_cleans_up_on_error(data_fixture):
     source = create_source(data_fixture)
 
     with patch(
@@ -516,10 +539,8 @@ def test_create_user_template_job_cleans_up_on_error(data_fixture, use_tmp_media
     assert_no_copy_left(source["workspace"])
 
 
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
 def test_create_user_template_job_cleans_up_on_error_after_storing_the_archive(
-    data_fixture, use_tmp_media_root
+    data_fixture,
 ):
     source = create_source(data_fixture)
 
@@ -534,10 +555,8 @@ def test_create_user_template_job_cleans_up_on_error_after_storing_the_archive(
     assert_no_copy_left(source["workspace"])
 
 
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
 def test_create_user_template_job_cleans_up_an_archive_written_before_an_error(
-    data_fixture, use_tmp_media_root
+    data_fixture,
 ):
     source = create_source(data_fixture)
     storage = get_default_storage()
@@ -556,11 +575,7 @@ def test_create_user_template_job_cleans_up_an_archive_written_before_an_error(
     assert_no_copy_left(source["workspace"])
 
 
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
-def test_create_user_template_job_cleans_up_when_cancelled(
-    data_fixture, use_tmp_media_root
-):
+def test_create_user_template_job_cleans_up_when_cancelled(data_fixture):
     source = create_source(data_fixture)
     export_workspace_applications = ImportExportHandler.export_workspace_applications
     calls = []
@@ -583,11 +598,7 @@ def test_create_user_template_job_cleans_up_when_cancelled(
     assert_no_copy_left(source["workspace"])
 
 
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
-def test_create_user_template_job_raising_job_cancelled_cleans_up(
-    data_fixture, use_tmp_media_root
-):
+def test_create_user_template_job_raising_job_cancelled_cleans_up(data_fixture):
     source = create_source(data_fixture)
 
     with patch(
@@ -601,11 +612,7 @@ def test_create_user_template_job_raising_job_cancelled_cleans_up(
     assert_no_copy_left(source["workspace"])
 
 
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
-def test_create_user_template_job_cancelled_while_creating_the_template(
-    data_fixture, use_tmp_media_root
-):
+def test_create_user_template_job_cancelled_while_creating_the_template(data_fixture):
     source = create_source(data_fixture)
     create_template_root = UserTemplateHandler.create_template_root
     delete_content = UserTemplateHandler.delete_content_without_template
@@ -637,11 +644,7 @@ def test_create_user_template_job_cancelled_while_creating_the_template(
     assert_no_copy_left(source["workspace"])
 
 
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
-def test_create_user_template_job_cancelled_right_before_the_commit(
-    data_fixture, use_tmp_media_root
-):
+def test_create_user_template_job_cancelled_right_before_the_commit(data_fixture):
     source = create_source(data_fixture)
     save_template = CreateUserTemplateJobType._save_template
 
@@ -660,10 +663,8 @@ def test_create_user_template_job_cancelled_right_before_the_commit(
     assert_no_copy_left(source["workspace"])
 
 
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
 def test_create_user_template_job_cancel_overwritten_in_the_cache_is_noticed(
-    data_fixture, use_tmp_media_root
+    data_fixture,
 ):
     source = create_source(data_fixture)
     save_template = CreateUserTemplateJobType._save_template
@@ -685,10 +686,8 @@ def test_create_user_template_job_cancel_overwritten_in_the_cache_is_noticed(
     assert_no_copy_left(source["workspace"])
 
 
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
 def test_create_user_template_job_cancel_is_kept_when_content_is_tracked_after_it(
-    data_fixture, use_tmp_media_root
+    data_fixture,
 ):
     source = create_source(data_fixture)
     track_content = CreateUserTemplateJobType._track_content
@@ -708,11 +707,7 @@ def test_create_user_template_job_cancel_is_kept_when_content_is_tracked_after_i
     assert_no_copy_left(source["workspace"])
 
 
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
-def test_create_user_template_job_cancel_accepted_as_it_starts_is_noticed(
-    data_fixture, use_tmp_media_root
-):
+def test_create_user_template_job_cancel_accepted_as_it_starts_is_noticed(data_fixture):
     source = create_source(data_fixture)
 
     def cancel_as_the_worker_starts(user):
@@ -729,10 +724,8 @@ def test_create_user_template_job_cancel_accepted_as_it_starts_is_noticed(
     assert_no_copy_left(source["workspace"])
 
 
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
 def test_create_user_template_job_concurrent_cancel_waits_for_the_commit(
-    data_fixture, test_thread, use_tmp_media_root
+    data_fixture, test_thread
 ):
     source = create_source(data_fixture)
     save_template = CreateUserTemplateJobType._save_template
@@ -766,10 +759,8 @@ def test_create_user_template_job_concurrent_cancel_waits_for_the_commit(
     assert Template.objects.get().id == job.template_id
 
 
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
 def test_create_user_template_job_cleans_up_on_error_right_before_the_commit(
-    data_fixture, use_tmp_media_root
+    data_fixture,
 ):
     source = create_source(data_fixture)
     save_template = CreateUserTemplateJobType._save_template
@@ -785,16 +776,11 @@ def test_create_user_template_job_cleans_up_on_error_right_before_the_commit(
     job = CreateUserTemplateJob.objects.get()
     assert job.state == JOB_FAILED
     assert job.template_id is None
-    assert job.revision_id is None
     assert not Template.objects.exists()
     assert_no_copy_left(source["workspace"])
 
 
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
-def test_create_user_template_job_cannot_be_cancelled_after_the_commit(
-    data_fixture, use_tmp_media_root
-):
+def test_create_user_template_job_cannot_be_cancelled_after_the_commit(data_fixture):
     source = create_source(data_fixture)
     do = CreateUserTemplateActionType.do
 
@@ -811,10 +797,8 @@ def test_create_user_template_job_cannot_be_cancelled_after_the_commit(
     assert Template.objects.get().id == job.template_id
 
 
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
 def test_create_user_template_job_keeps_the_template_on_error_after_the_commit(
-    data_fixture, use_tmp_media_root
+    data_fixture,
 ):
     source = create_source(data_fixture)
     do = CreateUserTemplateActionType.do
@@ -833,11 +817,7 @@ def test_create_user_template_job_keeps_the_template_on_error_after_the_commit(
     assert get_default_storage().exists(template.archive.name)
 
 
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
-def test_create_user_template_job_logs_a_failed_clean_up_after_a_cancel(
-    data_fixture, use_tmp_media_root
-):
+def test_create_user_template_job_logs_a_failed_clean_up_after_a_cancel(data_fixture):
     source = create_source(data_fixture)
 
     with (
@@ -870,16 +850,13 @@ def create_unfinished_job(data_fixture, user, **kwargs):
         source_workspace=data_fixture.create_workspace(user=user),
         name="Copy",
         icon=ICON,
-        workspace=template_workspace,
+        template_workspace=template_workspace,
         archive_name=archive_name,
         **kwargs,
     )
 
 
-@pytest.mark.django_db(transaction=True)
-def test_sweep_cleans_up_after_a_killed_worker(
-    data_fixture, use_tmp_media_root, settings
-):
+def test_sweep_cleans_up_after_a_killed_worker(data_fixture, settings):
     settings.BASEROW_JOB_SOFT_TIME_LIMIT = 60
     settings.BASEROW_JOB_EXPIRATION_TIME_LIMIT = 60
     user = data_fixture.create_user()
@@ -887,7 +864,7 @@ def test_sweep_cleans_up_after_a_killed_worker(
 
     with freeze_time(now - timedelta(minutes=5)):
         job = create_unfinished_job(data_fixture, user, state=JOB_STARTED)
-    workspace_id, archive_name = job.workspace_id, job.archive_name
+    workspace_id, archive_name = job.template_workspace_id, job.archive_name
 
     with freeze_time(now):
         JobHandler().clean_up_jobs()
@@ -899,39 +876,33 @@ def test_sweep_cleans_up_after_a_killed_worker(
     delete_orphaned_user_template_workspaces()
 
     job.refresh_from_db()
-    assert job.workspace_id is None
+    assert job.template_workspace_id is None
     assert job.archive_name == ""
     assert_no_content_left([workspace_id], archive_name)
     delete_orphaned_user_template_workspaces()
 
 
-@pytest.mark.django_db(transaction=True)
-def test_sweep_keeps_content_of_a_template_and_running_jobs(
-    data_fixture, use_tmp_media_root
-):
+def test_sweep_keeps_content_of_a_template_and_running_jobs(data_fixture):
     user = data_fixture.create_user()
     running = create_unfinished_job(data_fixture, user, state=JOB_STARTED)
     failed = create_unfinished_job(data_fixture, user, state=JOB_FAILED)
-    data_fixture.create_template(workspace=failed.workspace)
-    Template.objects.filter(workspace=failed.workspace).update(
+    data_fixture.create_template(workspace=failed.template_workspace)
+    Template.objects.filter(workspace=failed.template_workspace).update(
         archive=failed.archive_name
     )
 
     delete_orphaned_user_template_workspaces()
 
-    assert Workspace.objects.filter(id=running.workspace_id).exists()
-    assert Workspace.objects.filter(id=failed.workspace_id).exists()
+    assert Workspace.objects.filter(id=running.template_workspace_id).exists()
+    assert Workspace.objects.filter(id=failed.template_workspace_id).exists()
     assert get_default_storage().exists(running.archive_name)
     assert get_default_storage().exists(failed.archive_name)
 
 
-@pytest.mark.django_db(transaction=True)
-def test_sweep_skips_a_job_that_failed_after_its_commit(
-    data_fixture, use_tmp_media_root
-):
+def test_sweep_skips_a_job_that_failed_after_its_commit(data_fixture):
     user = data_fixture.create_user()
     failed = create_unfinished_job(data_fixture, user, state=JOB_FAILED)
-    failed.template = data_fixture.create_template(workspace=failed.workspace)
+    failed.template = data_fixture.create_template(workspace=failed.template_workspace)
     failed.save()
 
     with patch.object(
@@ -942,8 +913,7 @@ def test_sweep_skips_a_job_that_failed_after_its_commit(
     delete_content.assert_not_called()
 
 
-@pytest.mark.django_db(transaction=True)
-def test_sweep_skips_a_job_already_cleaned_up(data_fixture, use_tmp_media_root):
+def test_sweep_skips_a_job_already_cleaned_up(data_fixture):
     user = data_fixture.create_user()
     CreateUserTemplateJob.objects.create(
         user=user,
@@ -961,10 +931,7 @@ def test_sweep_skips_a_job_already_cleaned_up(data_fixture, use_tmp_media_root):
     delete_content.assert_not_called()
 
 
-@pytest.mark.django_db(transaction=True)
-def test_sweep_waits_for_the_worker_of_a_cancelled_job(
-    data_fixture, use_tmp_media_root, settings
-):
+def test_sweep_waits_for_the_worker_of_a_cancelled_job(data_fixture, settings):
     settings.BASEROW_JOB_SOFT_TIME_LIMIT = 60
     user = data_fixture.create_user()
     now = datetime.now(tz=timezone.utc)
@@ -977,7 +944,7 @@ def test_sweep_waits_for_the_worker_of_a_cancelled_job(
         cancelled_recently = create_unfinished_job(
             data_fixture, user, state=JOB_CANCELLED
         )
-    workspace_id = cancelled_long_ago.workspace_id
+    workspace_id = cancelled_long_ago.template_workspace_id
     archive_name = cancelled_long_ago.archive_name
 
     with freeze_time(now):
@@ -986,21 +953,20 @@ def test_sweep_waits_for_the_worker_of_a_cancelled_job(
     assert not Workspace.objects_and_trash.filter(id=workspace_id).exists()
     assert not get_default_storage().exists(archive_name)
     # Its worker may still be running and cleans up when it notices.
-    assert Workspace.objects.filter(id=cancelled_recently.workspace_id).exists()
+    assert Workspace.objects.filter(
+        id=cancelled_recently.template_workspace_id
+    ).exists()
     assert get_default_storage().exists(cancelled_recently.archive_name)
 
 
-@pytest.mark.django_db(transaction=True)
-def test_sweep_continues_after_a_job_fails_to_clean_up(
-    data_fixture, use_tmp_media_root
-):
+def test_sweep_continues_after_a_job_fails_to_clean_up(data_fixture):
     user = data_fixture.create_user()
     broken = create_unfinished_job(data_fixture, user, state=JOB_FAILED)
     other = create_unfinished_job(data_fixture, user, state=JOB_FAILED)
     delete_content = UserTemplateHandler.delete_content_without_template
 
     def fail_for_broken(handler, workspace_id, archive_name):
-        if workspace_id == broken.workspace_id:
+        if workspace_id == broken.template_workspace_id:
             raise ValueError("Storage unavailable.")
         delete_content(handler, workspace_id, archive_name)
 
@@ -1014,18 +980,17 @@ def test_sweep_continues_after_a_job_fails_to_clean_up(
 
     broken.refresh_from_db()
     assert broken.archive_name != ""
-    assert Workspace.objects.filter(id=broken.workspace_id).exists()
-    workspace_id, archive_name = other.workspace_id, other.archive_name
+    assert Workspace.objects.filter(id=broken.template_workspace_id).exists()
+    workspace_id, archive_name = other.template_workspace_id, other.archive_name
     other.refresh_from_db()
     assert other.archive_name == ""
     assert_no_content_left([workspace_id], archive_name)
 
 
-@pytest.mark.django_db(transaction=True)
-def test_deleting_an_unfinished_job_cleans_up(data_fixture, use_tmp_media_root):
+def test_deleting_an_unfinished_job_cleans_up(data_fixture):
     user = data_fixture.create_user()
     job = create_unfinished_job(data_fixture, user, state=JOB_FAILED)
-    workspace_id, archive_name = job.workspace_id, job.archive_name
+    workspace_id, archive_name = job.template_workspace_id, job.archive_name
 
     with transaction.atomic():
         JobHandler().delete_job(job)
@@ -1035,18 +1000,15 @@ def test_deleting_an_unfinished_job_cleans_up(data_fixture, use_tmp_media_root):
     assert_no_content_left([workspace_id], archive_name)
 
 
-@pytest.mark.django_db(transaction=True)
-def test_deleting_jobs_continues_after_a_job_fails_to_clean_up(
-    data_fixture, use_tmp_media_root
-):
+def test_deleting_jobs_continues_after_a_job_fails_to_clean_up(data_fixture):
     user = data_fixture.create_user()
     broken = create_unfinished_job(data_fixture, user, state=JOB_FAILED)
     other = create_unfinished_job(data_fixture, user, state=JOB_FAILED)
-    workspace_id, archive_name = other.workspace_id, other.archive_name
+    workspace_id, archive_name = other.template_workspace_id, other.archive_name
     delete_content = UserTemplateHandler.delete_content_without_template
 
     def fail_for_broken(handler, workspace_id, archive_name):
-        if workspace_id == broken.workspace_id:
+        if workspace_id == broken.template_workspace_id:
             raise ValueError("Storage unavailable.")
         delete_content(handler, workspace_id, archive_name)
 
@@ -1061,27 +1023,101 @@ def test_deleting_jobs_continues_after_a_job_fails_to_clean_up(
             JobHandler().delete_job(other)
 
     assert not CreateUserTemplateJob.objects.exists()
-    assert Workspace.objects.filter(id=broken.workspace_id).exists()
+    assert Workspace.objects.filter(id=broken.template_workspace_id).exists()
     assert_no_content_left([workspace_id], archive_name)
+    # The sweep retries it.
+    assert list(
+        UserTemplateContentToDelete.objects.values_list("workspace_id", "archive_name")
+    ) == [(broken.template_workspace_id, broken.archive_name)]
 
 
-@pytest.mark.django_db(transaction=True)
-def test_deleting_the_user_of_an_unfinished_job_cleans_up(
-    data_fixture, use_tmp_media_root
-):
+def test_deleting_the_user_of_an_unfinished_job_cleans_up(data_fixture):
     user = data_fixture.create_user()
     job = create_unfinished_job(data_fixture, user, state=JOB_FAILED)
-    workspace_id, archive_name = job.workspace_id, job.archive_name
+    workspace_id, archive_name = job.template_workspace_id, job.archive_name
 
     user.delete()
 
     assert not CreateUserTemplateJob.objects.exists()
     assert_no_content_left([workspace_id], archive_name)
+    assert not UserTemplateContentToDelete.objects.exists()
 
 
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
-def test_deleting_a_finished_job_keeps_the_template(data_fixture, use_tmp_media_root):
+def test_sweep_retries_the_content_of_a_deleted_job(data_fixture):
+    user = data_fixture.create_user()
+    job = create_unfinished_job(data_fixture, user, state=JOB_FAILED)
+    workspace_id, archive_name = job.template_workspace_id, job.archive_name
+
+    with patch.object(
+        get_default_storage().__class__,
+        "delete",
+        side_effect=OSError("Storage unavailable."),
+    ):
+        user.delete()
+
+    assert not CreateUserTemplateJob.objects.exists()
+    assert get_default_storage().exists(archive_name)
+    assert UserTemplateContentToDelete.objects.filter(
+        archive_name=archive_name
+    ).exists()
+
+    delete_orphaned_user_template_workspaces()
+
+    assert_no_content_left([workspace_id], archive_name)
+    assert not UserTemplateContentToDelete.objects.exists()
+
+
+def delete_user(user):
+    type(user).objects.get(id=user.id).delete()
+
+
+def test_deleting_the_user_as_the_copy_is_created_cleans_up(data_fixture):
+    source = create_source(data_fixture)
+    track_content = CreateUserTemplateJobType._track_content
+
+    def delete_user_then_track(self, job, **content):
+        if "template_workspace" in content:
+            # The deletion of the job doesn't see the copy yet.
+            delete_user(source["user"])
+        track_content(self, job, **content)
+
+    with (
+        patch.object(
+            CreateUserTemplateJobType, "_track_content", delete_user_then_track
+        ),
+        pytest.raises(Exception),
+    ):
+        start_job(source["user"], source["workspace"], [source["database"]])
+
+    assert not CreateUserTemplateJob.objects.exists()
+    assert_no_copy_left(source["workspace"])
+    assert not UserTemplateContentToDelete.objects.exists()
+
+
+def test_deleting_the_user_as_the_archive_is_stored_cleans_up(data_fixture):
+    source = create_source(data_fixture)
+    track_content = CreateUserTemplateJobType._track_content
+
+    def track_then_delete_user(self, job, **content):
+        track_content(self, job, **content)
+        if "archive_name" in content:
+            # The deletion of the job doesn't see the archive, stored after it.
+            delete_user(source["user"])
+
+    with (
+        patch.object(
+            CreateUserTemplateJobType, "_track_content", track_then_delete_user
+        ),
+        pytest.raises(Exception),
+    ):
+        start_job(source["user"], source["workspace"], [source["database"]])
+
+    assert not CreateUserTemplateJob.objects.exists()
+    assert_no_copy_left(source["workspace"])
+    assert not UserTemplateContentToDelete.objects.exists()
+
+
+def test_deleting_a_finished_job_keeps_the_template(data_fixture):
     source = create_source(data_fixture)
     job = start_job(source["user"], source["workspace"], [source["database"]])
     template = job.template
@@ -1093,9 +1129,7 @@ def test_deleting_a_finished_job_keeps_the_template(data_fixture, use_tmp_media_
     assert get_default_storage().exists(template.archive.name)
 
 
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
-def test_create_user_template_job_max_count(data_fixture, use_tmp_media_root):
+def test_create_user_template_job_max_count(data_fixture):
     user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)
     database = data_fixture.create_database_application(workspace=workspace)
@@ -1114,16 +1148,3 @@ def test_create_user_template_job_max_count(data_fixture, use_tmp_media_root):
         sync=True,
     )
     assert export_job.state == JOB_FINISHED
-
-
-@pytest.mark.django_db
-def test_create_user_template_job_with_flag_off(data_fixture, settings):
-    settings.FEATURE_FLAGS = []
-    user = data_fixture.create_user()
-    workspace = data_fixture.create_workspace(user=user)
-    database = data_fixture.create_database_application(workspace=workspace)
-
-    with pytest.raises(FeatureDisabledException):
-        start_job(user, workspace, [database])
-
-    assert CreateUserTemplateJob.objects.count() == 0

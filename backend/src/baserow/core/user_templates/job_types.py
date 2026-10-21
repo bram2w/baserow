@@ -33,7 +33,7 @@ from baserow.core.jobs.registries import JobType
 from baserow.core.user_templates.actions import CreateUserTemplateActionType
 from baserow.core.user_templates.constants import (
     USER_TEMPLATE_DESCRIPTION_MAX_LENGTH,
-    USER_TEMPLATE_ICONS,
+    USER_TEMPLATE_ICON_MAX_LENGTH,
 )
 from baserow.core.user_templates.exceptions import (
     InvalidTemplateCategory,
@@ -44,6 +44,35 @@ from baserow.core.user_templates.handler import UserTemplateHandler
 from baserow.core.user_templates.models import CreateUserTemplateJob
 from baserow.core.user_templates.service import UserTemplateService
 from baserow.core.utils import Progress
+
+
+def _get_id_field_overrides(response: bool) -> Dict[str, serializers.Field]:
+    """
+    The id fields of the request, which are sent back read-only in the response.
+    The other fields of the request are serialized from the model.
+    """
+
+    read_only = {"read_only": True} if response else {}
+    return {
+        "workspace_id": serializers.IntegerField(
+            **({"source": "source_workspace_id"} if response else {}),
+            **read_only,
+            help_text="The ID of the workspace the applications are copied from.",
+        ),
+        "application_ids": serializers.ListField(
+            child=serializers.IntegerField(),
+            **(read_only or {"min_length": 1}),
+            help_text="The IDs of the applications copied into the template.",
+        ),
+        "category_ids": serializers.ListField(
+            child=serializers.IntegerField(),
+            **read_only,
+            help_text=(
+                "The IDs of the existing categories of the template, at least one "
+                "unless there are none."
+            ),
+        ),
+    }
 
 
 class CreateUserTemplateJobType(JobType):
@@ -82,14 +111,7 @@ class CreateUserTemplateJobType(JobType):
         "category_ids",
     ]
     request_serializer_field_overrides = {
-        "workspace_id": serializers.IntegerField(
-            help_text="The ID of the workspace the applications are copied from.",
-        ),
-        "application_ids": serializers.ListField(
-            child=serializers.IntegerField(),
-            min_length=1,
-            help_text="The IDs of the applications copied into the template.",
-        ),
+        **_get_id_field_overrides(response=False),
         "name": serializers.CharField(
             max_length=64, help_text="The name of the template."
         ),
@@ -99,43 +121,16 @@ class CreateUserTemplateJobType(JobType):
             default="",
             help_text="The description of the template.",
         ),
-        "icon": serializers.ChoiceField(
-            choices=USER_TEMPLATE_ICONS, help_text="The icon of the template."
-        ),
-        "category_ids": serializers.ListField(
-            child=serializers.IntegerField(),
-            min_length=1,
-            help_text="The IDs of the existing categories of the template.",
+        "icon": serializers.CharField(
+            max_length=USER_TEMPLATE_ICON_MAX_LENGTH,
+            help_text="The iconoir class name of the icon of the template.",
         ),
     }
 
     # The request is sent back, so that the wizard can show a running job again.
-    serializer_field_names = [
-        "workspace_id",
-        "application_ids",
-        "name",
-        "description",
-        "icon",
-        "category_ids",
-        "template",
-    ]
+    serializer_field_names = [*request_serializer_field_names, "template"]
     serializer_field_overrides = {
-        # `workspace` on the job is the workspace of the template.
-        "workspace_id": serializers.IntegerField(
-            source="source_workspace_id",
-            read_only=True,
-            help_text="The ID of the workspace the applications are copied from.",
-        ),
-        "application_ids": serializers.ListField(
-            child=serializers.IntegerField(),
-            read_only=True,
-            help_text="The IDs of the applications copied into the template.",
-        ),
-        "category_ids": serializers.ListField(
-            child=serializers.IntegerField(),
-            read_only=True,
-            help_text="The IDs of the categories of the template.",
-        ),
+        **_get_id_field_overrides(response=True),
         "template": serializers.PrimaryKeyRelatedField(
             read_only=True, help_text="The ID of the created template."
         ),
@@ -193,10 +188,29 @@ class CreateUserTemplateJobType(JobType):
                 before_commit=partial(self._save_template, job),
             )
         except BaseException:
-            # The template and the revision are only set when their transaction
-            # committed.
-            job.refresh_from_db(fields=["template", "revision"])
+            try:
+                # The template is only set when its transaction committed.
+                job.refresh_from_db(fields=["template"])
+            except CreateUserTemplateJob.DoesNotExist:
+                self._delete_content_of_deleted_job(job)
             raise
+
+    def _delete_content_of_deleted_job(self, job: CreateUserTemplateJob) -> None:
+        """
+        A job deleted while it runs, with its user, can't be saved as failed, so
+        `on_error` doesn't run, and its deletion only saw what it tracked by then.
+        What it tracked since is still on the instance.
+        """
+
+        try:
+            UserTemplateHandler().delete_content_of_deleted_job(
+                job.template_workspace_id, job.archive_name
+            )
+        except Exception:
+            logger.exception(
+                f"Deleting the content of deleted create user template job {job.id} "
+                "failed."
+            )
 
     def _save_template(self, job: CreateUserTemplateJob, template) -> None:
         """
@@ -210,8 +224,7 @@ class CreateUserTemplateJobType(JobType):
         if JobHandler.lock_job(job).state == JOB_CANCELLED:
             raise JobCancelled()
         job.template = template
-        job.revision = template  # the root is revision 1
-        job.save(update_fields=["template", "revision"])
+        job.save(update_fields=["template"])
 
     def is_cancellable(self, job: CreateUserTemplateJob) -> bool:
         return job.template_id is None
@@ -230,7 +243,7 @@ class CreateUserTemplateJobType(JobType):
         # A template that was committed is kept with its action, like a
         # cancellation is refused after the commit.
         UserTemplateHandler().delete_content_without_template(
-            job.workspace_id, job.archive_name
+            job.template_workspace_id, job.archive_name
         )
 
     def on_cancelled(self, job: CreateUserTemplateJob):
@@ -238,7 +251,7 @@ class CreateUserTemplateJobType(JobType):
         # deleted here is left to the sweep of unfinished jobs.
         try:
             UserTemplateHandler().delete_content_without_template(
-                job.workspace_id, job.archive_name
+                job.template_workspace_id, job.archive_name
             )
         except Exception:
             logger.exception(

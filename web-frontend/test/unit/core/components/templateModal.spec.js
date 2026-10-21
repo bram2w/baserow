@@ -172,6 +172,21 @@ describe('TemplateModal navigation', () => {
     expect(wrapper.find('.details').text()).toBe('Project Tracker: Business')
   })
 
+  it('opens the default template right away', async () => {
+    testApp.mock.resetHandlers()
+    testApp.mock.onGet('/templates/').reply(200, [
+      { ...categories[0], templates: [projectTracker] },
+      { ...categories[1], templates: [{ ...recipeBook, is_default: true }] },
+    ])
+    const wrapper = await mountAndShow()
+
+    expect(wrapper.find('.details').text()).toBe('Recipe Book: Personal')
+
+    await wrapper.find('.details__back').trigger('click')
+
+    expect(wrapper.find('.list').isVisible()).toBe(true)
+  })
+
   it('opens the list again when shown after a template was opened', async () => {
     const wrapper = await mountAndShow('project-tracker')
 

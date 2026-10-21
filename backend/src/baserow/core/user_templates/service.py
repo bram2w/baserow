@@ -1,35 +1,18 @@
 from typing import Callable, List, Optional, Tuple
 
 from django.contrib.auth.models import AbstractUser
-from django.db.models import QuerySet
 
 from baserow.core.exceptions import PermissionDenied
 from baserow.core.feature_flags import FF_USER_TEMPLATES, feature_flag_is_enabled
-from baserow.core.handler import CoreHandler
-from baserow.core.models import Application, Template, Workspace
-from baserow.core.operations import (
-    ExportWorkspaceOperationType,
-    ListApplicationsWorkspaceOperationType,
-)
+from baserow.core.job_types import ExportApplicationsJobType
+from baserow.core.jobs.registries import job_type_registry
+from baserow.core.models import Application, Workspace
 from baserow.core.user_templates.exceptions import NoApplicationsSelected
 from baserow.core.user_templates.handler import UserTemplateHandler
 from baserow.core.utils import ChildProgressBuilder
 
 
 class UserTemplateService:
-    def list_own_templates(self, user: AbstractUser) -> QuerySet[Template]:
-        """
-        Returns the user templates owned by the user, newest first.
-
-        :param user: The user whose templates are listed.
-        :raises FeatureDisabledException: If user templates are disabled.
-        :return: The templates of the user.
-        """
-
-        feature_flag_is_enabled(FF_USER_TEMPLATES, raise_if_disabled=True)
-
-        return UserTemplateHandler().list_own_templates(user)
-
     def get_exportable_applications(
         self, user: AbstractUser, workspace: Workspace, application_ids: List[int]
     ) -> List[Application]:
@@ -53,34 +36,14 @@ class UserTemplateService:
         if not application_ids:
             raise NoApplicationsSelected("At least one application must be selected.")
 
-        CoreHandler().check_permissions(
-            user,
-            ExportWorkspaceOperationType.type,
-            workspace=workspace,
-            context=workspace,
-        )
+        applications = job_type_registry.get(
+            ExportApplicationsJobType.type
+        ).fetch_applications(user, workspace, list(set(application_ids)))
 
         if workspace.has_template():
             raise PermissionDenied("A template can't be created from a template.")
 
-        application_ids = set(application_ids)
-        applications = CoreHandler().filter_queryset(
-            user,
-            ListApplicationsWorkspaceOperationType.type,
-            Application.objects.filter(
-                workspace=workspace, workspace__trashed=False, id__in=application_ids
-            ),
-            workspace=workspace,
-        )
-        applications = list(applications)
-
-        if len(applications) != len(application_ids):
-            raise PermissionDenied(
-                "Some of the selected applications do not exist or the user does "
-                "not have access to them."
-            )
-
-        return applications
+        return list(applications)
 
     def copy_applications(
         self,

@@ -99,6 +99,7 @@
           </FormGroup>
 
           <FormGroup
+            v-if="categories.length > 0"
             :label="$t('createUserTemplateModal.categories')"
             small-label
             required
@@ -153,7 +154,8 @@
                 :key="workspace.id"
                 :name="workspace.name"
                 :value="workspace.id"
-                :disabled="!canExport(workspace)"
+                :disabled="getDisabledReason(workspace) !== null"
+                :description="getDisabledReason(workspace)"
               />
             </Dropdown>
           </FormGroup>
@@ -238,6 +240,7 @@ import job from '@baserow/modules/core/mixins/job'
 import JobService from '@baserow/modules/core/services/job'
 import { CreateUserTemplateJobType } from '@baserow/modules/core/jobTypes'
 import { DEFAULT_TEMPLATE_ICON } from '@baserow/modules/core/utils/templateIcons'
+import { fetchPermissionsOfWorkspaces } from '@baserow/modules/core/utils/workspace'
 import ApplicationSelector from '@baserow/modules/core/components/export/ApplicationSelector'
 import TemplateIconSelectContext from '@baserow/modules/core/components/template/TemplateIconSelectContext'
 
@@ -250,7 +253,8 @@ export default {
   components: { ApplicationSelector, TemplateIconSelectContext },
   mixins: [modal, error, job],
   props: {
-    // The categories an author can pick from, each with an `id` and a `name`.
+    // The categories an author can pick from, each with an `id` and a `name`. An
+    // instance that never synced the templates has none, and then none is needed.
     categories: {
       type: Array,
       required: true,
@@ -288,7 +292,11 @@ export default {
       return ''
     },
     categoriesError() {
-      if (this.detailsSubmitted && this.values.categoryIds.length === 0) {
+      if (
+        this.detailsSubmitted &&
+        this.categories.length > 0 &&
+        this.values.categoryIds.length === 0
+      ) {
         return this.$t('createUserTemplateModal.categoriesRequired')
       }
       return ''
@@ -296,7 +304,7 @@ export default {
     canCreate() {
       return (
         this.selectedWorkspace !== null &&
-        this.canExport(this.selectedWorkspace) &&
+        this.getDisabledReason(this.selectedWorkspace) === null &&
         this.values.applicationIds.length > 0 &&
         !this.createLoading &&
         !this.jobIsRunning &&
@@ -306,13 +314,17 @@ export default {
   },
   methods: {
     show(...args) {
-      // A running job is shown again instead of an empty form. A job that failed
-      // while the modal was closed is shown once with its error and inputs.
-      if (this.job?.state === 'failed') {
+      // A running job is shown again instead of an empty form, also one started
+      // from another wizard. A job that failed while the modal was closed is shown
+      // once with its error and inputs.
+      const runningJob = this.findRunningJob()
+      if (runningJob && runningJob.id !== this.job?.id) {
+        this.reset()
+        this.restoreJob(runningJob)
+      } else if (this.job?.state === 'failed') {
         this.job = null
       } else if (!this.jobIsRunning) {
         this.reset()
-        this.restoreRunningJob()
       }
       this.loadPermissions()
       modal.methods.show.call(this, ...args)
@@ -335,16 +347,28 @@ export default {
       this.job = null
       this.values = this.getDefaultValues()
       this.hideError()
-      const selected = this.$store.getters['workspace/getSelected']
-      this.selectWorkspace(selected?.id ?? this.workspaces[0]?.id ?? null)
+      this.selectWorkspace(this.getDefaultWorkspaceId())
     },
-    restoreRunningJob() {
-      const runningJob = this.$store.getters['job/getUnfinishedJobs'].find(
+    /**
+     * The selected workspace if a template can be created from it, otherwise the
+     * first one it can be created from.
+     */
+    getDefaultWorkspaceId() {
+      const selected = this.$store.getters['workspace/getSelected']
+      const candidates = selected
+        ? [selected, ...this.workspaces]
+        : [...this.workspaces]
+      const workspace =
+        candidates.find((w) => this.getDisabledReason(w) === null) ||
+        candidates[0]
+      return workspace?.id ?? null
+    },
+    findRunningJob() {
+      return this.$store.getters['job/getUnfinishedJobs'].find(
         (job) => job.type === CreateUserTemplateJobType.getType()
       )
-      if (!runningJob) {
-        return
-      }
+    },
+    restoreJob(runningJob) {
       this.job = runningJob
       this.step = 'content'
       this.values = {
@@ -362,32 +386,34 @@ export default {
      * the global permissions are used and the backend checks again.
      */
     async loadPermissions() {
-      await Promise.all(
-        this.workspaces.map((workspace) =>
-          this.$store
-            .dispatch('workspace/fetchPermissions', workspace)
-            .catch(() => {})
-        )
-      )
+      await fetchPermissionsOfWorkspaces(this.$store, this.workspaces)
       if (
         this.jobIsRunning ||
         this.workspaceChosen ||
-        this.canExport(this.selectedWorkspace)
+        this.getDisabledReason(this.selectedWorkspace) === null
       ) {
         return
       }
-      const exportable = this.workspaces.find((workspace) =>
-        this.canExport(workspace)
-      )
-      if (exportable) {
-        this.selectWorkspace(exportable.id)
-      }
+      this.selectWorkspace(this.getDefaultWorkspaceId())
     },
-    canExport(workspace) {
-      return (
-        workspace !== null &&
-        this.$hasPermission('workspace.export', workspace, workspace.id)
-      )
+    /**
+     * Explains why a template can't be created from the workspace, or is null when
+     * it can.
+     */
+    getDisabledReason(workspace) {
+      if (workspace === null) {
+        return ''
+      }
+      if (
+        this.$store.getters['application/getAllOfWorkspace'](workspace)
+          .length === 0
+      ) {
+        return this.$t('createUserTemplateModal.workspaceEmpty')
+      }
+      if (!this.$hasPermission('workspace.export', workspace, workspace.id)) {
+        return this.$t('createUserTemplateModal.workspaceNoPermission')
+      }
+      return null
     },
     chooseWorkspace(workspaceId) {
       this.workspaceChosen = true

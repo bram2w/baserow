@@ -1,25 +1,10 @@
-import time
-
 import django.core.validators
 import django.db.models.deletion
 from django.conf import settings
-from django.db import OperationalError, migrations, models, transaction
+from django.db import migrations, models
 
 import baserow.core.models
-from baserow.core.psycopg import errors
-
-LOCK_TIMEOUT = "2s"
-LOCK_ATTEMPTS = 10
-
-
-def _set_lock_timeout(cursor):
-    # Keep a stricter timeout set by the deployment.
-    cursor.execute(
-        "SELECT set_config('lock_timeout', %s, true) WHERE "
-        "current_setting('lock_timeout')::interval = interval '0' OR "
-        "current_setting('lock_timeout')::interval > %s::interval",
-        [LOCK_TIMEOUT, LOCK_TIMEOUT],
-    )
+from baserow.core.migration_utils import LockTimeoutMigration
 
 
 def rename_duplicate_root_slugs(apps, schema_editor):
@@ -52,41 +37,13 @@ def rename_duplicate_root_slugs(apps, schema_editor):
         roots.filter(id=template_id).update(slug=new_slug)
 
 
-class Migration(migrations.Migration):
+class Migration(LockTimeoutMigration):
     """
     Changes `core_template` with a short lock timeout and retries, so that a long
     running transaction reading templates, like a template install, can't make
     every request touching templates wait behind the migration. Existing rows are
     backfilled in the next migration.
     """
-
-    atomic = False
-
-    def apply(self, project_state, schema_editor, collect_sql=False):
-        if collect_sql:
-            return super().apply(project_state, schema_editor, collect_sql)
-
-        connection = schema_editor.connection
-        for attempt in range(1, LOCK_ATTEMPTS + 1):
-            try:
-                with transaction.atomic(using=connection.alias):
-                    with connection.cursor() as cursor:
-                        _set_lock_timeout(cursor)
-                    state = super().apply(project_state.clone(), schema_editor)
-                    # Run the deferred foreign keys and indexes in the same
-                    # transaction, so they also respect the timeout.
-                    for sql in schema_editor.deferred_sql:
-                        schema_editor.execute(sql)
-                    schema_editor.deferred_sql = []
-                    return state
-            except OperationalError as exc:
-                schema_editor.deferred_sql = []
-                if (
-                    not isinstance(exc.__cause__, errors.LockNotAvailable)
-                    or attempt == LOCK_ATTEMPTS
-                ):
-                    raise
-                time.sleep(attempt)
 
     dependencies = [
         ("core", "0127_mcpendpoint_allowed_tools"),

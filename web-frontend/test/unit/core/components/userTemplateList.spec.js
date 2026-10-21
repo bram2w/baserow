@@ -5,24 +5,6 @@ import { TestApp } from '@baserow/test/helpers/testApp'
 import UserTemplateList from '@baserow/modules/core/components/template/UserTemplateList'
 import InfiniteScroll from '@baserow/modules/core/components/helpers/InfiniteScroll'
 
-// The permission plugin allows everything in tests and can't be replaced.
-const permission = vi.hoisted(() => ({ allowed: true }))
-
-vi.mock('#app', async (importOriginal) => {
-  const original = await importOriginal()
-  return {
-    ...original,
-    useNuxtApp: () =>
-      new Proxy(original.useNuxtApp(), {
-        get(target, property) {
-          return property === '$hasPermission'
-            ? () => permission.allowed
-            : Reflect.get(target, property)
-        },
-      }),
-  }
-})
-
 const userTemplate = (id, name, state = 'private', extra = {}) => ({
   id,
   type: 'user',
@@ -51,11 +33,18 @@ describe('UserTemplateList', () => {
   let testApp = null
   let requests = []
 
-  // Replies with the given pages in order and records the query of each request.
+  // Replies with the given pages in order and records the paging and search of
+  // each request, which always asks for the user's own templates.
   const mockPages = (...pages) => {
     pages.forEach((data) => {
-      testApp.mock.onGet('/templates/own/').replyOnce((config) => {
-        requests.push(config.params)
+      testApp.mock.onGet('/templates/').replyOnce((config) => {
+        const { view, type, owned, ...query } = config.params
+        expect({ view, type, owned }).toStrictEqual({
+          view: 'flat',
+          type: 'user',
+          owned: true,
+        })
+        requests.push(query)
         return [200, data]
       })
     })
@@ -66,16 +55,17 @@ describe('UserTemplateList', () => {
     requests = []
     const { store } = testApp
     await store.dispatch('workspace/forceCreate', { id: 1, name: 'Acme' })
-    // Loaded, so that they aren't fetched.
-    store.commit('workspace/SET_PERMISSIONS', {
-      workspaceId: 1,
-      permissions: [],
+    await store.dispatch('application/forceCreate', {
+      id: 11,
+      name: 'CRM',
+      type: 'database',
+      tables: [],
+      workspace: { id: 1 },
     })
   })
 
   afterEach(async () => {
     vi.useRealTimers()
-    permission.allowed = true
     await testApp.afterEach()
   })
 
@@ -161,7 +151,7 @@ describe('UserTemplateList', () => {
 
   test('shows only the loading state until the list is loaded', async () => {
     let reply = null
-    testApp.mock.onGet('/templates/own/').replyOnce(
+    testApp.mock.onGet('/templates/').replyOnce(
       () =>
         new Promise((resolve) => {
           reply = resolve
@@ -191,7 +181,7 @@ describe('UserTemplateList', () => {
   })
 
   test('shows an error when the list could not be loaded', async () => {
-    testApp.mock.onGet('/templates/own/').replyOnce(500)
+    testApp.mock.onGet('/templates/').replyOnce(500)
     mockPages(page([userTemplate(1, 'Sprint Tracker')]))
     const wrapper = await mountComponent()
 
@@ -221,14 +211,14 @@ describe('UserTemplateList', () => {
 
     const scenarios = [
       ['no workspaces', 'userTemplateList.noWorkspace'],
-      ['no exportable workspace', 'userTemplateList.noPermission'],
+      ['only empty workspaces', 'userTemplateList.noContent'],
     ]
 
     const setUp = (scenario) => {
       if (scenario === 'no workspaces') {
         testApp.store.commit('workspace/DELETE_ITEM', 1)
       } else {
-        permission.allowed = false
+        testApp.store.commit('application/DELETE_ITEM', 11)
       }
     }
 
@@ -263,7 +253,16 @@ describe('UserTemplateList', () => {
       }
     )
 
-    test('enables the button of the list with an exportable workspace', async () => {
+    test("doesn't fetch the permissions of the workspaces", async () => {
+      mockPages(page([userTemplate(1, 'Sprint Tracker')]))
+      await mountComponent()
+
+      expect(
+        testApp.mock.history.get.filter((r) => r.url.includes('/permissions/'))
+      ).toStrictEqual([])
+    })
+
+    test('enables the button of the list with a workspace with content', async () => {
       mockPages(page([userTemplate(1, 'Sprint Tracker')]))
       const wrapper = await mountComponent()
 

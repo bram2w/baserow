@@ -73,7 +73,7 @@ class CreateUserTemplateActionType(ActionType):
         :param application_ids: The ids of the selected applications.
         :param name: The name of the template.
         :param description: The description of the template.
-        :param icon: The icon class name, one of `USER_TEMPLATE_ICONS`.
+        :param icon: The icon class name, an iconoir class.
         :param category_ids: The ids of the existing categories of the template.
         :param progress_builder: A progress builder that allows for publishing
             progress.
@@ -102,9 +102,6 @@ class CreateUserTemplateActionType(ActionType):
                 category_ids=category_ids,
                 workspace=template_workspace,
                 archive=archive_name,
-                metadata=UserTemplateHandler().build_template_metadata(
-                    workspace, application_ids
-                ),
             )
             params = cls.Params(
                 template_id=template.id,

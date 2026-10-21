@@ -1,6 +1,5 @@
-// Mirrors `USER_TEMPLATE_ICONS` in `baserow/core/user_templates/constants.py`, the
-// icons an author can pick for a user template. A backend test checks that both
-// lists are the same.
+// The icons an author can pick for a user template. The backend only checks that
+// an icon is an iconoir class, so this is the one list of them.
 export const TEMPLATE_ICONS = [
   'iconoir-add-user',
   'iconoir-agile',

@@ -4,10 +4,11 @@ from datetime import timedelta
 from typing import Callable, Iterable, List, Optional, Tuple
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.core.files import File
 from django.db import IntegrityError, transaction
-from django.db.models import F, Q, QuerySet
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.text import slugify
 
@@ -26,14 +27,20 @@ from baserow.core.models import (
 from baserow.core.registries import ImportExportConfig
 from baserow.core.storage import get_default_storage
 from baserow.core.trash.handler import TrashHandler
-from baserow.core.user_templates.constants import USER_TEMPLATE_ICONS, UserTemplateState
+from baserow.core.user.exceptions import UserNotFound
+from baserow.core.user_templates.constants import (
+    USER_TEMPLATE_ICON_MAX_LENGTH,
+    USER_TEMPLATE_ICON_REGEX,
+    UserTemplateState,
+)
 from baserow.core.user_templates.exceptions import (
     InvalidTemplateCategory,
     InvalidTemplateIcon,
     TemplateSlugGenerationFailed,
 )
-from baserow.core.user_templates.types import TemplateMetadata
 from baserow.core.utils import ChildProgressBuilder
+
+User = get_user_model()
 
 SLUG_SUFFIX_LENGTH = 6
 SLUG_SUFFIX_ALPHABET = string.ascii_lowercase + string.digits
@@ -84,48 +91,33 @@ class UserTemplateHandler:
         """
         Checks the icon and the categories chosen for a user template.
 
-        :param icon: The icon class name, one of `USER_TEMPLATE_ICONS`.
-        :param category_ids: The ids of the existing categories, at least one.
+        :param icon: The icon class name, an iconoir class.
+        :param category_ids: The ids of the existing categories, at least one
+            unless the instance has none, like one that never synced templates.
         :raises InvalidTemplateIcon: If the icon isn't allowed.
-        :raises InvalidTemplateCategory: If no category is given, or one of them
-            doesn't exist.
+        :raises InvalidTemplateCategory: If no category is given while there are
+            some, or one of them doesn't exist.
         :return: The categories.
         """
 
-        if icon not in USER_TEMPLATE_ICONS:
+        if len(
+            icon
+        ) > USER_TEMPLATE_ICON_MAX_LENGTH or not USER_TEMPLATE_ICON_REGEX.fullmatch(
+            icon
+        ):
             raise InvalidTemplateIcon(f"The icon {icon} is not allowed.")
 
         category_ids = set(category_ids)
+        if not category_ids:
+            if TemplateCategory.objects.exists():
+                raise InvalidTemplateCategory("At least one category is required.")
+            return []
+
         categories = list(TemplateCategory.objects.filter(id__in=category_ids))
-        if not category_ids or len(categories) != len(category_ids):
-            raise InvalidTemplateCategory("The categories are missing or invalid.")
+        if len(categories) != len(category_ids):
+            raise InvalidTemplateCategory("The categories are invalid.")
 
         return categories
-
-    def build_template_metadata(
-        self, source_workspace: Workspace, source_application_ids: Iterable[int]
-    ) -> TemplateMetadata:
-        """
-        Returns the private metadata of a revision copied from the applications of
-        a workspace.
-
-        :param source_workspace: The workspace the applications are copied from.
-        :param source_application_ids: The ids of the copied applications.
-        :return: The metadata to store on the revision.
-        """
-
-        return TemplateMetadata(
-            source_workspace_id=source_workspace.id,
-            source_application_ids=list(source_application_ids),
-        )
-
-    def get_template_metadata(self, template: Template) -> TemplateMetadata:
-        """
-        Returns the private metadata of a template revision. Any key can be
-        missing.
-        """
-
-        return TemplateMetadata(**template.metadata)
 
     def create_template_root(
         self,
@@ -137,7 +129,6 @@ class UserTemplateHandler:
         category_ids: Iterable[int],
         workspace: Workspace,
         archive: Optional[File | str] = None,
-        metadata: Optional[TemplateMetadata] = None,
     ) -> Template:
         """
         Creates a private user template, which is a root holding revision 1. This is
@@ -147,19 +138,18 @@ class UserTemplateHandler:
             author.
         :param name: The name of the template.
         :param description: The description of the template.
-        :param icon: The icon class name, one of `USER_TEMPLATE_ICONS`.
+        :param icon: The icon class name, an iconoir class.
         :param category_ids: The ids of the existing categories of the template, at
             least one.
         :param workspace: The workspace holding the content of the template.
         :param archive: The downloadable file of the template, or the name of a
             file already in the storage.
-        :param metadata: The private metadata of revision 1, built with
-            `build_template_metadata`.
         :raises InvalidTemplateIcon: If the icon isn't allowed.
         :raises InvalidTemplateCategory: If no category is given, or one of them
             doesn't exist.
         :raises ValidationError: If the template isn't valid.
         :raises TemplateSlugGenerationFailed: If no free slug was found.
+        :raises UserNotFound: If the owner was deleted.
         :return: The created template.
         """
 
@@ -176,7 +166,6 @@ class UserTemplateHandler:
             icon=icon,
             workspace=workspace,
             archive=archive,
-            metadata=metadata or {},
         )
         # The slug is generated by us. Its uniqueness is left to the database, so a
         # slug taken in the meantime can be retried below. `open_application` is
@@ -184,6 +173,9 @@ class UserTemplateHandler:
         template.full_clean(exclude=["slug", "open_application"])
 
         with transaction.atomic():
+            if not self._lock_user(owner):
+                raise UserNotFound("The owner of the template was deleted.")
+
             for _ in range(SLUG_MAX_ATTEMPTS):
                 template.slug = generate_template_slug(name)
                 try:
@@ -220,9 +212,9 @@ class UserTemplateHandler:
         template.
 
         The export and the import run their own transactions, so nothing is rolled
-        back if it fails. `track_content` is called with the `workspace` and then
-        with the `archive_name` as soon as they exist, so that the caller can
-        remove them with `delete_content_without_template`.
+        back if it fails. `track_content` is called with the `template_workspace`
+        and then with the `archive_name` as soon as they exist, so that the caller
+        can remove them with `delete_content_without_template`.
 
         :param owner: The user who creates the template.
         :param applications: The applications copied into the template.
@@ -254,7 +246,7 @@ class UserTemplateHandler:
         )
 
         workspace = Workspace.objects.create(name=name)
-        track_content(workspace=workspace)
+        track_content(template_workspace=workspace)
 
         resource = import_export_handler.export_workspace_applications(
             applications,
@@ -313,25 +305,25 @@ class UserTemplateHandler:
 
         return stored_name
 
-    def list_own_templates(self, user: AbstractUser) -> QuerySet[Template]:
+    def _lock_user(self, user: AbstractUser) -> bool:
         """
-        Returns the user templates owned by the user, newest first. Revisions and
-        templates marked for deletion are left out.
+        Locks the row of the user until the end of the transaction. Creating a
+        template and deleting its owner both lock it, so that a template is either
+        committed before the deletion marks it, or not created at all.
+
+        :return: Whether the user still exists.
         """
 
-        return (
-            Template.objects.user()
-            .filter(owner=user, root__isnull=True, marked_for_deletion_at__isnull=True)
-            .prefetch_related("categories")
-            .order_by(F("updated_on").desc(nulls_last=True), "-id")
-        )
+        return User.objects.select_for_update().filter(id=user.id).exists()
 
     def mark_owned_templates_for_deletion(self, user: AbstractUser) -> None:
         """
         Marks the user templates owned by the user for deletion. The templates
-        themselves are removed later.
+        themselves are removed later. Must run in the transaction deleting the
+        user, see `_lock_user`.
         """
 
+        self._lock_user(user)
         Template.objects.user().filter(
             owner=user, root__isnull=True, marked_for_deletion_at__isnull=True
         ).update(marked_for_deletion_at=timezone.now())
@@ -382,16 +374,58 @@ class UserTemplateHandler:
             if storage.exists(archive_name):
                 storage.delete(archive_name)
 
+    def delete_content_of_deleted_job(
+        self, workspace_id: Optional[int], archive_name: str
+    ) -> None:
+        """
+        Deletes the workspace and the archive of a create job that is deleted, once
+        the transaction deleting it commits. They're kept track of until then, and
+        until their deletion succeeds, so that the sweep retries a failed one.
+
+        :param workspace_id: The id of the workspace holding the copy, if any.
+        :param archive_name: The name of the stored archive, if any.
+        """
+
+        from baserow.core.user_templates.models import UserTemplateContentToDelete
+
+        if workspace_id is None and not archive_name:
+            return
+
+        content = UserTemplateContentToDelete.objects.create(
+            workspace_id=workspace_id, archive_name=archive_name
+        )
+        transaction.on_commit(lambda: self._delete_tracked_content(content))
+
+    def _delete_tracked_content(self, content) -> None:
+        """
+        Deletes the content a `UserTemplateContentToDelete` keeps track of, and the
+        row once it's gone. A failure is logged, so that it doesn't stop deleting
+        the rest, and the row is kept for the next sweep.
+        """
+
+        try:
+            self.delete_content_without_template(
+                content.workspace_id, content.archive_name
+            )
+        except Exception:
+            logger.exception(f"Deleting the user template content {content.id} failed.")
+            return
+        content.delete()
+
     def delete_content_of_unfinished_jobs(self) -> None:
         """
         Deletes what the failed and cancelled create jobs left behind. It covers a
-        job that was failed after its worker was killed, which no job hook sees.
+        job that was failed after its worker was killed, which no job hook sees,
+        and retries what a deleted job left, see `delete_content_of_deleted_job`.
 
         A cancelled job is only cleaned up once its worker can't be running anymore,
         because the worker notices the cancellation late and cleans up itself.
         """
 
-        from baserow.core.user_templates.models import CreateUserTemplateJob
+        from baserow.core.user_templates.models import (
+            CreateUserTemplateJob,
+            UserTemplateContentToDelete,
+        )
 
         # The worker of a job is killed at the latest after the hard time limit of
         # `run_async_job`, which started before the job was cancelled.
@@ -403,15 +437,17 @@ class UserTemplateHandler:
                 Q(state=JOB_FAILED)
                 | Q(state=JOB_CANCELLED, updated_on__lt=cancelled_before)
             )
-            .exclude(workspace__isnull=True, archive_name="")
+            .exclude(template_workspace__isnull=True, archive_name="")
             # What a job that failed after its commit left is the template's.
             .exclude(template__isnull=False)
-            .only("id", "workspace_id", "archive_name")
+            .only("id", "template_workspace_id", "archive_name")
         )
         for job in jobs.iterator():
             # One job that can't be cleaned up must not block the others.
             try:
-                self.delete_content_without_template(job.workspace_id, job.archive_name)
+                self.delete_content_without_template(
+                    job.template_workspace_id, job.archive_name
+                )
             except Exception:
                 logger.exception(
                     f"Deleting the content of create user template job {job.id} failed."
@@ -419,3 +455,6 @@ class UserTemplateHandler:
                 continue
             # The workspace is unset by the deletion, the archive name isn't.
             CreateUserTemplateJob.objects.filter(id=job.id).update(archive_name="")
+
+        for content in UserTemplateContentToDelete.objects.iterator():
+            self._delete_tracked_content(content)

@@ -63,7 +63,7 @@ class JobType(
     `JobHandler.lock_job` and check for a cancellation in the same transaction, so
     that a cancellation is either noticed before the commit or refused after it.
     The job must then save its row with `update_fields`, so that it doesn't write
-    its in-memory state over a cancellation; `run_async_job` does so when the job
+    its in-memory state over a cancellation, like `run_async_job` does when the job
     starts.
     """
 

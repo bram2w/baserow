@@ -1,8 +1,7 @@
 from datetime import datetime, timezone
-from pathlib import Path
 
-from django.conf import settings
 from django.db import connection
+from django.db.models import F
 from django.shortcuts import reverse
 from django.test.utils import CaptureQueriesContext
 from django.utils import timezone as django_timezone
@@ -17,12 +16,13 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
-from baserow.api.templates.urls import RESERVED_TEMPLATE_SLUGS
-from baserow.core.models import TemplateCategory
+from baserow.core.models import Template, TemplateCategory
 from baserow.core.user_templates.job_types import CreateUserTemplateJobType
 from baserow.core.user_templates.models import CreateUserTemplateJob
 
-OWN_URL = reverse("api:templates:own")
+pytestmark = pytest.mark.django_db
+
+LIST_URL = reverse("api:templates:list")
 
 
 def create_own_template(data_fixture, user, **kwargs):
@@ -30,82 +30,132 @@ def create_own_template(data_fixture, user, **kwargs):
     return data_fixture.create_user_template(user=user, **kwargs)
 
 
-@pytest.mark.django_db
+def publish(template):
+    Template.objects.filter(id=template.id).update(public_revision_id=F("id"))
+    template.refresh_from_db()
+    return template
+
+
+def list_templates(api_client, token=None, **params):
+    params.setdefault("view", "flat")
+    headers = {"HTTP_AUTHORIZATION": f"JWT {token}"} if token else {}
+    return api_client.get(LIST_URL, params, **headers)
+
+
+def list_own_templates(api_client, token, **params):
+    return list_templates(api_client, token, type="user", owned="true", **params)
+
+
 def test_list_own_templates(api_client, data_fixture):
+    # Which templates are listed and in which order is tested on the handler.
     user, token = data_fixture.create_user_and_token()
     category_1 = data_fixture.create_template_category(name="Cat 1")
     category_2 = data_fixture.create_template_category(name="Cat 2")
     with freeze_time("2026-10-01 10:00"):
-        older = create_own_template(
+        template = create_own_template(
             data_fixture,
             user,
             name="Older",
             description="Plans projects.",
             categories=[category_2, category_1],
             open_application=1,
+            review_state="rejected",
+            reject_reason="Not a template.",
         )
-    with freeze_time("2026-10-02 10:00"):
-        newer = create_own_template(data_fixture, user, name="Newer")
-        # Same `updated_on`, so the higher id comes first.
-        newest_id = create_own_template(data_fixture, user, name="Newest id")
 
-    # Revisions, templates of others and templates marked for deletion are left out.
-    data_fixture.create_user_template_revision(older)
-    data_fixture.create_user_template()
-    create_own_template(
-        data_fixture, user, marked_for_deletion_at=django_timezone.now()
+    response = list_own_templates(api_client, token)
+
+    assert response.status_code == HTTP_200_OK
+    assert response.json()["results"] == [
+        {
+            "id": template.id,
+            "type": "user",
+            "name": "Older",
+            "slug": template.slug,
+            "description": "Plans projects.",
+            "icon": "iconoir-view-grid",
+            "keywords": "",
+            "workspace_id": template.workspace_id,
+            "is_default": False,
+            "open_application": 1,
+            "categories": [
+                {"id": category_1.id, "name": "Cat 1"},
+                {"id": category_2.id, "name": "Cat 2"},
+            ],
+            "state": "rejected",
+            "reason": "Not a template.",
+            "created_on": "2026-10-01T10:00:00Z",
+            "updated_on": "2026-10-01T10:00:00Z",
+        }
+    ]
+
+
+def test_list_templates_lists_what_the_actor_can_open(api_client, data_fixture):
+    owner, owner_token = data_fixture.create_user_and_token()
+    _, stranger_token = data_fixture.create_user_and_token()
+    official = data_fixture.create_template()
+    public = publish(create_own_template(data_fixture, owner))
+    private = create_own_template(data_fixture, owner)
+    blocked = publish(
+        create_own_template(data_fixture, owner, blocked_at=django_timezone.now())
     )
+
+    def listed_ids(token):
+        response = list_templates(api_client, token)
+        assert response.status_code == HTTP_200_OK
+        return {t["id"] for t in response.json()["results"]}
+
+    assert listed_ids(None) == {official.id, public.id}
+    assert listed_ids(stranger_token) == {official.id, public.id}
+    assert listed_ids(owner_token) == {official.id, public.id, private.id, blocked.id}
+
+
+def test_list_templates_hides_the_state_from_others(api_client, data_fixture):
+    owner, owner_token = data_fixture.create_user_and_token()
+    _, stranger_token = data_fixture.create_user_and_token()
+    publish(create_own_template(data_fixture, owner))
     data_fixture.create_template()
 
-    response = api_client.get(OWN_URL, HTTP_AUTHORIZATION=f"JWT {token}")
+    for token in [None, stranger_token]:
+        response = list_templates(api_client, token)
+        assert response.status_code == HTTP_200_OK
+        results = response.json()["results"]
+        assert len(results) == 2
+        assert {(t["state"], t["reason"]) for t in results} == {(None, None)}
 
-    assert response.status_code == HTTP_200_OK
-    response_json = response.json()
-    assert response_json["count"] == 3
-    assert [t["id"] for t in response_json["results"]] == [
-        newest_id.id,
-        newer.id,
-        older.id,
-    ]
-    assert response_json["results"][2] == {
-        "id": older.id,
-        "type": "user",
-        "name": "Older",
-        "slug": older.slug,
-        "description": "Plans projects.",
-        "icon": "iconoir-view-grid",
-        "workspace_id": older.workspace_id,
-        "open_application": 1,
-        "categories": [
-            {"id": category_1.id, "name": "Cat 1"},
-            {"id": category_2.id, "name": "Cat 2"},
-        ],
-        "state": "private",
-        "reason": None,
-        "created_on": "2026-10-01T10:00:00Z",
-        "updated_on": "2026-10-01T10:00:00Z",
-    }
+    response = list_templates(api_client, owner_token, type="user")
+    assert response.json()["results"][0]["state"] == "public"
 
 
-@pytest.mark.django_db
-def test_list_own_templates_shows_state_and_reason(api_client, data_fixture):
+def test_list_templates_filters_by_type(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
-    create_own_template(
-        data_fixture,
-        user,
-        review_state="rejected",
-        reject_reason="Not a template.",
-    )
+    official = data_fixture.create_template()
+    # Templates created before the type existed are official.
+    legacy = data_fixture.create_template(type=None)
+    own = create_own_template(data_fixture, user)
 
-    response = api_client.get(OWN_URL, HTTP_AUTHORIZATION=f"JWT {token}")
+    response = list_templates(api_client, token, type="official")
+    assert {t["id"] for t in response.json()["results"]} == {official.id, legacy.id}
+    assert {t["type"] for t in response.json()["results"]} == {"official"}
 
+    response = list_templates(api_client, token, type="user")
+    assert [t["id"] for t in response.json()["results"]] == [own.id]
+
+
+def test_list_templates_filters_by_owner(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    data_fixture.create_template()
+    publish(data_fixture.create_user_template())
+    own = create_own_template(data_fixture, user)
+
+    response = list_templates(api_client, token, owned="true")
+    assert [t["id"] for t in response.json()["results"]] == [own.id]
+
+    response = list_templates(api_client, owned="true")
     assert response.status_code == HTTP_200_OK
-    result = response.json()["results"][0]
-    assert result["state"] == "rejected"
-    assert result["reason"] == "Not a template."
+    assert response.json()["count"] == 0
 
 
-@pytest.mark.django_db
 def test_list_own_templates_paging(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     templates = [
@@ -114,39 +164,33 @@ def test_list_own_templates_paging(api_client, data_fixture):
     ]
     expected_ids = [template.id for template in reversed(templates)]
 
-    response = api_client.get(OWN_URL, HTTP_AUTHORIZATION=f"JWT {token}")
+    response = list_own_templates(api_client, token)
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
     assert response_json["count"] == 25
     assert [t["id"] for t in response_json["results"]] == expected_ids[:20]
     assert response_json["next"] is not None
 
-    response = api_client.get(
-        f"{OWN_URL}?limit=20&offset=20", HTTP_AUTHORIZATION=f"JWT {token}"
-    )
+    response = list_own_templates(api_client, token, limit=20, offset=20)
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
     assert [t["id"] for t in response_json["results"]] == expected_ids[20:]
     assert response_json["next"] is None
 
 
-@pytest.mark.django_db
 def test_list_own_templates_limit_is_capped(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     category = data_fixture.create_template_category()
     for _ in range(101):
         create_own_template(data_fixture, user, category=category)
 
-    response = api_client.get(
-        f"{OWN_URL}?limit=1000", HTTP_AUTHORIZATION=f"JWT {token}"
-    )
+    response = list_own_templates(api_client, token, limit=1000)
 
     assert response.status_code == HTTP_200_OK
     assert response.json()["count"] == 101
     assert len(response.json()["results"]) == 100
 
 
-@pytest.mark.django_db
 def test_list_own_templates_search(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     by_name = create_own_template(data_fixture, user, name="CRM", description="")
@@ -154,11 +198,9 @@ def test_list_own_templates_search(api_client, data_fixture):
         data_fixture, user, name="Sales", description="A small crm for a shop."
     )
     create_own_template(data_fixture, user, name="Tasks", description="To do.")
-    data_fixture.create_user_template(name="CRM of another user")
+    publish(data_fixture.create_user_template(name="CRM of another user"))
 
-    response = api_client.get(
-        f"{OWN_URL}?search=crm", HTTP_AUTHORIZATION=f"JWT {token}"
-    )
+    response = list_own_templates(api_client, token, search="crm")
 
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
@@ -168,71 +210,61 @@ def test_list_own_templates_search(api_client, data_fixture):
         by_description.id,
     }
 
+    response = list_own_templates(api_client, token, search="")
 
-@pytest.mark.django_db
+    assert response.status_code == HTTP_200_OK
+    assert response.json()["count"] == 3
+
+
 def test_list_own_templates_query_count_is_constant(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     categories = [data_fixture.create_template_category() for _ in range(2)]
     create_own_template(data_fixture, user, categories=list(categories))
 
     with CaptureQueriesContext(connection) as one_template:
-        response = api_client.get(OWN_URL, HTTP_AUTHORIZATION=f"JWT {token}")
+        response = list_own_templates(api_client, token)
         assert response.status_code == HTTP_200_OK
 
     for _ in range(3):
         create_own_template(data_fixture, user, categories=list(categories))
 
     with CaptureQueriesContext(connection) as four_templates:
-        response = api_client.get(OWN_URL, HTTP_AUTHORIZATION=f"JWT {token}")
+        response = list_own_templates(api_client, token)
         assert response.status_code == HTTP_200_OK
         assert response.json()["count"] == 4
 
     assert len(four_templates.captured_queries) == len(one_template.captured_queries)
 
 
-@pytest.mark.django_db
-def test_list_own_templates_requires_authentication(api_client, data_fixture):
-    data_fixture.create_user_template()
-
-    response = api_client.get(OWN_URL)
-
-    assert response.status_code == HTTP_401_UNAUTHORIZED
-
-
-@pytest.mark.django_db
-def test_list_own_templates_with_flag_off(api_client, data_fixture, settings):
+def test_list_templates_with_flag_off(api_client, data_fixture, settings):
     settings.FEATURE_FLAGS = []
     user, token = data_fixture.create_user_and_token()
+    official = data_fixture.create_template()
     create_own_template(data_fixture, user)
 
-    response = api_client.get(OWN_URL, HTTP_AUTHORIZATION=f"JWT {token}")
-
-    assert response.status_code == HTTP_403_FORBIDDEN
-    assert response.json()["error"] == "ERROR_FEATURE_DISABLED"
-
-
-@pytest.mark.django_db
-def test_own_templates_route_is_not_shadowed_by_the_slug_route(
-    api_client, data_fixture
-):
-    user, token = data_fixture.create_user_and_token()
-    # Even a template with that slug can't take the route over.
-    data_fixture.create_template(slug="own")
-
-    assert OWN_URL == reverse("api:templates:item", kwargs={"slug": "own"})
-    response = api_client.get(OWN_URL, HTTP_AUTHORIZATION=f"JWT {token}")
+    response = list_templates(api_client, token)
 
     assert response.status_code == HTTP_200_OK
-    assert response.json()["count"] == 0
+    assert [t["id"] for t in response.json()["results"]] == [official.id]
 
 
-def test_no_official_template_slug_is_reserved():
-    stems = {
-        path.stem for path in Path(settings.APPLICATION_TEMPLATES_DIR).glob("*.json")
-    }
+def test_list_templates_with_an_invalid_parameter(api_client, data_fixture):
+    response = list_templates(api_client, type="other")
 
-    assert stems
-    assert stems.isdisjoint(RESERVED_TEMPLATE_SLUGS)
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_QUERY_PARAMETER_VALIDATION"
+
+
+def test_list_template_categories_ignores_the_parameters(api_client, data_fixture):
+    # The deprecated categories never read the parameters, so old clients sending
+    # any keep working.
+    category = data_fixture.create_template_category(name="Official")
+    data_fixture.create_template(category=category)
+
+    response = list_templates(api_client, view="tree", type="other", search="")
+
+    assert response.status_code == HTTP_200_OK
+    assert [c["id"] for c in response.json()] == [category.id]
 
 
 def create_job(api_client, token, workspace, applications, **overrides):
@@ -256,7 +288,6 @@ def create_job(api_client, token, workspace, applications, **overrides):
     )
 
 
-@pytest.mark.django_db
 @pytest.mark.parametrize(
     "overrides,field",
     [
@@ -264,9 +295,8 @@ def create_job(api_client, token, workspace, applications, **overrides):
         ({"name": ""}, "name"),
         ({"name": "x" * 65}, "name"),
         ({"description": "x" * 81}, "description"),
-        ({"icon": "iconoir-not-allowed"}, "icon"),
+        ({"icon": "iconoir-" + "a" * 30}, "icon"),
         ({"icon": None}, "icon"),
-        ({"category_ids": []}, "category_ids"),
         ({"category_ids": None}, "category_ids"),
         ({"application_ids": []}, "application_ids"),
         ({"application_ids": None}, "application_ids"),
@@ -288,19 +318,18 @@ def test_create_user_template_job_request_validation(
     assert not CreateUserTemplateJob.objects.exists()
 
 
-@pytest.mark.django_db
-def test_create_user_template_job_with_unknown_category(api_client, data_fixture):
+@pytest.mark.parametrize("unknown", [True, False])
+def test_create_user_template_job_with_invalid_categories(
+    api_client, data_fixture, unknown
+):
     user, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace(user=user)
     database = data_fixture.create_database_application(workspace=workspace)
     category = TemplateCategory.objects.create(name="Cat")
+    category_ids = [category.id, category.id + 1000] if unknown else []
 
     response = create_job(
-        api_client,
-        token,
-        workspace,
-        [database],
-        category_ids=[category.id, category.id + 1000],
+        api_client, token, workspace, [database], category_ids=category_ids
     )
 
     assert response.status_code == HTTP_400_BAD_REQUEST
@@ -308,7 +337,6 @@ def test_create_user_template_job_with_unknown_category(api_client, data_fixture
     assert not CreateUserTemplateJob.objects.exists()
 
 
-@pytest.mark.django_db
 def test_create_user_template_job_accepts_valid_request(
     api_client, data_fixture, use_tmp_media_root
 ):
@@ -348,7 +376,6 @@ def test_create_user_template_job_accepts_valid_request(
     assert job.name == "x" * 64
 
 
-@pytest.mark.django_db
 def test_create_user_template_job_with_flag_off(api_client, data_fixture, settings):
     settings.FEATURE_FLAGS = []
     user, token = data_fixture.create_user_and_token()
@@ -370,63 +397,85 @@ def create_template_with_rows(data_fixture, template):
     return data_fixture.create_grid_view(table=table)
 
 
-def get_as_anonymous_and_stranger(api_client, token, url):
-    return (
-        api_client.get(url).status_code,
-        api_client.get(url, HTTP_AUTHORIZATION=f"JWT {token}").status_code,
+def get_as_anonymous_stranger_and_owner(api_client, tokens, url):
+    return tuple(
+        api_client.get(url, **headers).status_code
+        for headers in [{}]
+        + [{"HTTP_AUTHORIZATION": f"JWT {token}"} for token in tokens]
     )
 
 
-@pytest.mark.django_db
 @pytest.mark.parametrize("user_templates_enabled", [True, False])
 def test_open_user_template(api_client, data_fixture, settings, user_templates_enabled):
     if not user_templates_enabled:
         settings.FEATURE_FLAGS = []
-    _, token = data_fixture.create_user_and_token()
+    _, stranger_token = data_fixture.create_user_and_token()
+    owner, owner_token = data_fixture.create_user_and_token()
+    tokens = [stranger_token, owner_token]
     official = data_fixture.create_template()
-    user_template = data_fixture.create_user_template()
+    user_template = data_fixture.create_user_template(user=owner)
     marked = data_fixture.create_user_template(
-        marked_for_deletion_at=datetime(2026, 10, 1, tzinfo=timezone.utc)
+        user=owner, marked_for_deletion_at=datetime(2026, 10, 1, tzinfo=timezone.utc)
     )
 
+    # Anonymous, a stranger and the owner.
     for template, opens in [
-        (official, True),
-        (user_template, user_templates_enabled),
-        (marked, False),
+        (official, (True, True, True)),
+        (user_template, (False, False, user_templates_enabled)),
+        (marked, (False, False, False)),
     ]:
         grid = create_template_with_rows(data_fixture, template)
 
-        statuses = get_as_anonymous_and_stranger(
+        statuses = get_as_anonymous_stranger_and_owner(
             api_client,
-            token,
+            tokens,
             reverse("api:templates:item", kwargs={"slug": template.slug}),
         )
-        assert statuses == (
-            (HTTP_200_OK, HTTP_200_OK) if opens else (HTTP_404_NOT_FOUND,) * 2
+        assert statuses == tuple(
+            HTTP_200_OK if allowed else HTTP_404_NOT_FOUND for allowed in opens
         )
 
-        statuses = get_as_anonymous_and_stranger(
+        # Not a member, so a signed in user gets a 400 when it's refused.
+        refused = (HTTP_401_UNAUTHORIZED, HTTP_400_BAD_REQUEST, HTTP_400_BAD_REQUEST)
+        statuses = get_as_anonymous_stranger_and_owner(
             api_client,
-            token,
+            tokens,
             reverse(
                 "api:applications:list",
                 kwargs={"workspace_id": template.workspace_id},
             ),
         )
-        assert statuses == (
-            (HTTP_200_OK, HTTP_200_OK)
-            if opens
-            else (HTTP_401_UNAUTHORIZED, HTTP_400_BAD_REQUEST)
+        assert statuses == tuple(
+            HTTP_200_OK if allowed else status
+            for allowed, status in zip(opens, refused)
         )
 
-        url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
-        response = api_client.get(url)
-        if opens:
-            assert response.status_code == HTTP_200_OK
-            assert response.json()["count"] == 1
-            response = api_client.get(url, HTTP_AUTHORIZATION=f"JWT {token}")
-            assert response.status_code == HTTP_200_OK
-        else:
-            assert response.status_code == HTTP_401_UNAUTHORIZED
-            response = api_client.get(url, HTTP_AUTHORIZATION=f"JWT {token}")
-            assert response.status_code == HTTP_400_BAD_REQUEST
+        statuses = get_as_anonymous_stranger_and_owner(
+            api_client,
+            tokens,
+            reverse("api:database:views:grid:list", kwargs={"view_id": grid.id}),
+        )
+        assert statuses == tuple(
+            HTTP_200_OK if allowed else status
+            for allowed, status in zip(opens, refused)
+        )
+
+
+def test_template_by_slug_has_its_type(api_client, data_fixture):
+    owner, token = data_fixture.create_user_and_token()
+    official = data_fixture.create_template()
+    legacy = data_fixture.create_template(type=None)
+    user_template = data_fixture.create_user_template(user=owner)
+
+    for template, template_type in [
+        (official, "official"),
+        (legacy, "official"),
+        (user_template, "user"),
+    ]:
+        response = api_client.get(
+            reverse("api:templates:item", kwargs={"slug": template.slug}),
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+        assert response.status_code == HTTP_200_OK
+        assert response.json()["type"] == template_type
