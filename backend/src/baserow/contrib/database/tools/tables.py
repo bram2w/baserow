@@ -383,12 +383,16 @@ def _relation_conflicts(
     actual_table_id = through_field.linked_table if through_field else None
     conflicts: dict[str, Any] = {}
     if requested.through_field is not None:
-        actual_through = (
-            actual.through_field
-            if isinstance(requested.through_field, int)
-            else actual.through_field_name
-        )
-        if requested.through_field != actual_through:
+        if isinstance(requested.through_field, int):
+            actual_through = actual.through_field
+            matches = requested.through_field == actual_through
+        else:
+            # Resolved like lookup creation resolves a link field name.
+            actual_through = actual.through_field_name
+            links = [f for f in fields_by_id.values() if f.type == "link_row"]
+            link = _find_field(links, requested.through_field)
+            matches = link is not None and link.id == actual.through_field
+        if not matches:
             conflicts["through_field"] = {
                 "actual": actual_through,
                 "requested": requested.through_field,

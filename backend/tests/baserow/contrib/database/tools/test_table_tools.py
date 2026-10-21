@@ -452,3 +452,44 @@ def test_shared_create_tables_matches_reused_field_names_ignoring_case_and_space
     assert [t["id"] for t in result["reused_tables"]] == [people.id]
     assert "incomplete_reused_tables" not in result
     assert "next_steps" not in result
+
+
+@pytest.mark.parametrize("through_field", ["link", " LINK "])
+def test_reused_table_matches_a_lookup_link_name_ignoring_case_and_spaces(
+    through_field,
+):
+    requested = TableItemCreate(
+        name="Orders",
+        primary_field_name="Order",
+        fields=[
+            FieldItemCreate(
+                name="Titles",
+                type="lookup",
+                through_field=through_field,
+                target_field="Title",
+            )
+        ],
+    )
+
+    assert table_schema_conflict(requested, _reused_table_with_a_lookup()) is None
+
+
+def test_reused_table_prefers_the_link_field_with_the_exact_name():
+    actual = _reused_table_with_a_lookup()
+    actual.fields.append(FieldItem(id=13, name="link", type="link_row", linked_table=2))
+    requested = TableItemCreate(
+        name="Orders",
+        primary_field_name="Order",
+        fields=[
+            FieldItemCreate(
+                name="Titles", type="lookup", through_field="link", target_field="Title"
+            )
+        ],
+    )
+
+    conflict = table_schema_conflict(requested, actual)
+
+    (mismatch,) = conflict["field_mismatches"]
+    assert mismatch["relation_issues"] == {
+        "through_field": {"actual": "Link", "requested": "link"}
+    }
