@@ -789,6 +789,59 @@ describe('dashboard text filters', () => {
     ).toMatchObject({ loading: false, results: [] })
   })
 
+  test.each(['deleteFilter', 'handleFiltersUpdated'])(
+    '%s refreshes source conditions and ignores a previous save response',
+    async (action) => {
+      const source = {
+        id: 10,
+        dashboard_id: 1,
+        filters: [
+          {
+            field: 20,
+            type: 'equal',
+            value: { formula: "get('dashboard_filter.5')", mode: 'simple' },
+          },
+        ],
+      }
+      mock.onGet('/dashboard/1/data-sources/').reply(200, [source])
+      await store.dispatch('dashboardApplication/fetchNewDataSources', 1)
+      let resolveUpdate
+      mock.onPatch('/dashboard/data-sources/10/').reply(
+        () =>
+          new Promise((resolve) => {
+            resolveUpdate = resolve
+          })
+      )
+      const update = store.dispatch('dashboardApplication/updateDataSource', {
+        dataSourceId: 10,
+        values: { filters: source.filters },
+      })
+      await vi.waitFor(() => expect(resolveUpdate).toBeTypeOf('function'))
+      mock
+        .onGet('/dashboard/1/data-sources/')
+        .reply(200, [{ ...source, filters: [] }])
+      mock.onGet('/dashboard/1/filters/').reply(200, [])
+      mock.onDelete('/dashboard/filters/5/').reply(204)
+
+      await store.dispatch(`dashboardApplication/${action}`, 5)
+
+      expect(
+        store.getters['dashboardApplication/getDataSourceById'](10).filters
+      ).toEqual([])
+
+      // The save may have succeeded before or after the control deletion.
+      // Re-read its latest state so independent edits are also preserved.
+      mock
+        .onGet('/dashboard/1/data-sources/')
+        .reply(200, [{ ...source, name: 'Saved name', filters: [] }])
+      resolveUpdate([200, { ...source, name: 'Saved name' }])
+      await update
+      expect(
+        store.getters['dashboardApplication/getDataSourceById'](10)
+      ).toMatchObject({ name: 'Saved name', filters: [] })
+    }
+  )
+
   test('does not restore a deleted filter from a delayed update response', async () => {
     let resolveUpdate
     mock.onPatch('/dashboard/filters/5/').reply(

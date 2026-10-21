@@ -510,6 +510,7 @@ export const actions = {
     commit('INVALIDATE_DATA_SOURCE_DISPATCH', dataSourceId)
     commit('INVALIDATE_DATA_SOURCE_MUTATION', dataSourceId)
     const request = getDataSourceMutationRequest({ dataSourceId }, state)
+    const filterGeneration = state.filterFetchGeneration
     commit('UPDATE_DATA_FOR_SOURCE', { dataSourceId, values: null })
 
     let data
@@ -534,6 +535,16 @@ export const actions = {
 
     if (!isDataSourceMutationCurrent(state, request)) {
       return
+    }
+
+    if (filterGeneration !== state.filterFetchGeneration) {
+      // A control deletion or restoration can change conditions while saving.
+      // Read the current source instead of reapplying the earlier PATCH response.
+      const sources = await dispatch('fetchNewDataSources', request.dashboardId)
+      data = sources?.find((source) => source.id === dataSourceId)
+      if (!data || !isDataSourceMutationCurrent(state, request)) {
+        return
+      }
     }
 
     commit('INVALIDATE_DATA_SOURCE_COLLECTION_FETCH')

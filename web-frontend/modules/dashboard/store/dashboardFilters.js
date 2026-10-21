@@ -200,11 +200,19 @@ export const filterActions = {
     commit('INVALIDATE_FILTER_OPTIONS', filterId)
     commit('DELETE_FILTER', filterId)
     persistFilterValues(state, rootGetters)
-    await dispatch('refreshWidgets')
+    await Promise.all([
+      dispatch('fetchNewDataSources', request.id),
+      dispatch('refreshWidgets'),
+    ])
   },
-  async handleFiltersUpdated({ dispatch }) {
+  async handleFiltersUpdated({ state, dispatch }) {
     const filters = await dispatch('fetchFilters')
-    if (filters !== undefined) await dispatch('refreshWidgets')
+    if (filters !== undefined) {
+      await Promise.all([
+        dispatch('fetchNewDataSources', state.dashboardId),
+        dispatch('refreshWidgets'),
+      ])
+    }
   },
   async applyFilter(
     { state, commit, dispatch, rootGetters },
