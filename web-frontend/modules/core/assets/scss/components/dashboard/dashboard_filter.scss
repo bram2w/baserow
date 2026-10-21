@@ -65,6 +65,19 @@
   width: 235px;
 }
 
+.dashboard-filter__operator {
+  padding: 12px 12px 4px;
+  color: $palette-neutral-900;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 11px;
+  letter-spacing: 0.22px;
+
+  &::first-letter {
+    text-transform: uppercase;
+  }
+}
+
 .dashboard-filter__choices {
   max-height: 300px;
   overflow-y: auto;

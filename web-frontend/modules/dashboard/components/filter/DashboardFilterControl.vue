@@ -88,6 +88,9 @@
                 v-model="search"
                 :aria-label="$t('action.search')"
               />
+              <div class="dashboard-filter__operator">
+                {{ operatorName }}...
+              </div>
               <div class="dashboard-filter__choices">
                 <div
                   v-for="value in displayedOptions"
