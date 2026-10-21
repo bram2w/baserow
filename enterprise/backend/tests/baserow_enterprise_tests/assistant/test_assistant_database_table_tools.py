@@ -590,6 +590,63 @@ def test_list_tables_hint_names_and_counts_only_what_the_user_can_see(
 
 
 @pytest.mark.django_db
+def test_get_tables_schema_hides_the_formulas_of_lookup_count_and_rollup(
+    data_fixture,
+):
+    from baserow.contrib.database.fields.handler import FieldHandler
+    from baserow_enterprise.assistant.tools.database.helpers import (
+        get_tables_schema as table_items,
+    )
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    customers = data_fixture.create_database_table(database=database, name="Customers")
+    data_fixture.create_text_field(table=customers, name="Name", primary=True)
+    data_fixture.create_number_field(table=customers, name="Spent")
+    orders = data_fixture.create_database_table(database=database, name="Orders")
+    data_fixture.create_text_field(table=orders, name="Order", primary=True)
+    handler = FieldHandler()
+    link = handler.create_field(
+        user, orders, "link_row", name="Customer", link_row_table=customers
+    )
+    handler.create_field(
+        user,
+        orders,
+        "lookup",
+        name="Customer name",
+        through_field_id=link.id,
+        target_field_name="Name",
+    )
+    handler.create_field(user, orders, "count", name="Count", through_field_id=link.id)
+    handler.create_field(
+        user,
+        orders,
+        "rollup",
+        name="Total",
+        through_field_id=link.id,
+        target_field_id=customers.field_set.get(name="Spent").id,
+        rollup_function="sum",
+    )
+    handler.create_field(user, orders, "formula", name="Double", formula="1 + 1")
+
+    result = get_tables_schema(
+        make_test_ctx(user, workspace),
+        table_ids=[orders.id],
+        full_schema=True,
+        thought="inspect",
+    )
+
+    [schema] = result["tables_schema"]
+    assert schema == table_items([orders], full_schema=True)[0].model_dump()
+    fields = {field["name"]: field for field in schema["fields"]}
+    for name in ("Customer name", "Count", "Total"):
+        assert "formula" not in fields[name]
+        assert "formula_type" not in fields[name]
+    assert fields["Double"]["formula"] == "1 + 1"
+
+
+@pytest.mark.django_db
 def test_create_simple_table_tool(data_fixture):
     user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)

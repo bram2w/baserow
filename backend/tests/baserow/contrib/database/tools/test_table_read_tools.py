@@ -178,6 +178,10 @@ def test_get_table_schema_has_kuma_extras_and_the_old_keys(linked_tables):
     assert fields["Names"]["array_formula_type"] == "text"
     assert fields["Total"]["decimal_places"] == 2
     assert fields["Total"]["number_decimal_places"] == 2
+    # The old MCP output sent the generated formula of a lookup.
+    lookup = orders.field_set.get(name="Customer name").specific
+    assert fields["Customer name"]["formula"] == lookup.formula
+    assert fields["Customer name"]["formula_type"] == lookup.formula_type
 
 
 @pytest.mark.django_db

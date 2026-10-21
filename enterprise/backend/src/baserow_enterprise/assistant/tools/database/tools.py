@@ -213,16 +213,25 @@ def list_tables(
 # ---------------------------------------------------------------------------
 
 
+def _kuma_field(field: dict[str, Any]) -> dict[str, Any]:
+    """
+    The keys of a shared schema field that ``FieldItem`` sends. MCP also gets the
+    generated formula of lookup, count and rollup fields, which Kuma never sees.
+    """
+
+    keys = set(FieldItem.model_fields)
+    if field["type"] != "formula":
+        keys -= {"formula", "formula_type"}
+    return {key: value for key, value in field.items() if key in keys}
+
+
 def _kuma_table_schema(table: dict[str, Any]) -> dict[str, Any]:
     """
     Kuma's shape of a shared table schema: the primary field apart, and only the
     field keys its other tools take.
     """
 
-    fields = [
-        {key: value for key, value in field.items() if key in FieldItem.model_fields}
-        for field in table["fields"]
-    ]
+    fields = [_kuma_field(field) for field in table["fields"]]
     return {
         "id": table["id"],
         "name": table["name"],
