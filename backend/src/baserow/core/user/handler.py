@@ -49,7 +49,7 @@ from baserow.core.signals import (
 )
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import generate_hash, get_baserow_saas_base_url
-from baserow.throttling.handler import rate_limit
+from baserow.throttling.handler import consume_rate_limit
 
 from ..telemetry.utils import baserow_trace, baserow_trace_handler
 from .emails import (
@@ -501,21 +501,23 @@ class UserHandler:
 
         reset_url = urljoin(base_url, signed_token)
 
-        # The rate limit key includes the function name, so this one must not share
-        # its name with the verification email sender.
-        def send_reset_password_email():
-            with translation.override(user.profile.language):
-                email = ResetPasswordEmail(user, reset_url, to=[user.email])
-                email.send()
-            return True
+        if not consume_rate_limit(
+            settings.BASEROW_SEND_RESET_PASSWORD_EMAIL_RATE_LIMIT,
+            "send_reset_password_email",
+            user.username,
+        ):
+            logger.warning(
+                "Not sending a password reset email to user {user_id}, too many "
+                "were requested recently.",
+                user_id=user.id,
+            )
+            return False
 
-        return bool(
-            rate_limit(
-                rate=settings.BASEROW_SEND_RESET_PASSWORD_EMAIL_RATE_LIMIT,
-                key=user.username,
-                raise_exception=False,
-            )(send_reset_password_email)()
-        )
+        with translation.override(user.profile.language):
+            email = ResetPasswordEmail(user, reset_url, to=[user.email])
+            email.send()
+
+        return True
 
     def reset_password(self, token: str, password: str) -> AbstractUser:
         """
@@ -1064,22 +1066,26 @@ class UserHandler:
 
         confirm_url = urljoin(base_url, f"verify-email-address/{token}")
 
-        def send_email():
-            with translation.override(user.profile.language):
-                email = EmailPendingVerificationEmail(
-                    to=[user.email],
-                    confirm_url=confirm_url,
-                )
-                email.send(fail_silently=False)
-            return True
+        if not consume_rate_limit(
+            settings.BASEROW_SEND_VERIFY_EMAIL_RATE_LIMIT,
+            "send_verify_email",
+            user.username,
+        ):
+            logger.warning(
+                "Not sending a verification email to user {user_id}, too many were "
+                "requested recently.",
+                user_id=user.id,
+            )
+            return False
 
-        return bool(
-            rate_limit(
-                rate=settings.BASEROW_SEND_VERIFY_EMAIL_RATE_LIMIT,
-                key=user.username,
-                raise_exception=False,
-            )(send_email)()
-        )
+        with translation.override(user.profile.language):
+            email = EmailPendingVerificationEmail(
+                to=[user.email],
+                confirm_url=confirm_url,
+            )
+            email.send(fail_silently=False)
+
+        return True
 
     def start_share_onboarding_details_with_baserow(
         self,

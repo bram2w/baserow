@@ -475,22 +475,50 @@ class AnonymousEmailRateThrottle(RateLimitThrottle):
     given by an anonymous caller, like the password reset, can be called. Every
     call counts, also for unknown addresses, so the limit doesn't tell which
     addresses belong to an account.
+
+    It only applies when ``BASEROW_THROTTLE_IP_ENABLED`` is set, because the
+    client IP is only reliable when the proxies in front of Baserow pass it on
+    correctly. Otherwise every caller could share one IP, or pick their own.
     """
 
     scope = "anonymous_email"
 
     def get_rate_limits(self, request):
+        if not settings.BASEROW_THROTTLE_IP_ENABLED:
+            return ()
         return settings.BASEROW_ANONYMOUS_EMAIL_IP_RATE_LIMITS
 
     def get_ident(self, request) -> str | None:
         return get_user_remote_ip_address_from_request(request)
 
 
+def consume_rate_limit(rate: RateLimit, name: str, key: str) -> bool:
+    """
+    Counts one call towards the rate limit identified by `name` and `key`, unless
+    the limit is already reached. The check and the count happen in one atomic
+    Redis script, so the limit also holds when called in parallel.
+
+    :param rate: The number of allowed calls over specified period.
+    :param name: Identifies what is limited, for example the email being sent.
+        Calls with the same name and key share one limit.
+    :param key: Identifies who the limit applies to, for example a username.
+    :return: Whether the call is allowed.
+    """
+
+    reserved, _ = reserve_rate_limit_slot(
+        _get_redis_cli(),
+        f"baserow_rate_limit_fn:{name}:{key}",
+        (rate,),
+        time.time(),
+        str(uuid4()),
+    )
+    return reserved
+
+
 def rate_limit(rate: RateLimit, key: str, raise_exception: bool = True):
     """
-    A general purpose throttling function decorator. The check and the reservation
-    of a call happen in one atomic Redis script, so the limit also holds when the
-    decorated function is called in parallel.
+    A general purpose throttling function decorator, limiting calls by the name
+    of the decorated function and `key`. See `consume_rate_limit`.
 
     :param rate: The number of allowed calls over specified period.
     :param key: The key parametrizes the same function calls that should be
@@ -504,12 +532,7 @@ def rate_limit(rate: RateLimit, key: str, raise_exception: bool = True):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            cache_key = f"baserow_rate_limit:{func.__name__}:{key}"
-            reserved, _ = reserve_rate_limit_slot(
-                _get_redis_cli(), cache_key, (rate,), time.time(), str(uuid4())
-            )
-
-            if not reserved:
+            if not consume_rate_limit(rate, func.__name__, key):
                 if raise_exception:
                     raise RateLimitExceededException(
                         f"Rate limit exceeded for {func.__name__}"

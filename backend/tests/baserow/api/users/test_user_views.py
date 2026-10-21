@@ -676,7 +676,6 @@ def test_create_user_with_template(data_fixture, client):
 
 
 @pytest.mark.django_db(transaction=True)
-@override_settings(BASEROW_ANONYMOUS_EMAIL_IP_RATE_LIMITS=())
 def test_send_reset_password_email(data_fixture, client, mailoutbox):
     data_fixture.create_password_provider()
     data_fixture.create_user(email="test@localhost.nl")
@@ -1362,7 +1361,8 @@ def test_send_verify_email_address(client, data_fixture, mailoutbox):
 
 @pytest.mark.django_db(transaction=True)
 @override_settings(
-    BASEROW_ANONYMOUS_EMAIL_IP_RATE_LIMITS=(RateLimit.from_string("2/m"),)
+    BASEROW_THROTTLE_IP_ENABLED=True,
+    BASEROW_ANONYMOUS_EMAIL_IP_RATE_LIMITS=(RateLimit.from_string("2/m"),),
 )
 @pytest.mark.parametrize(
     "url_name,body",
@@ -1394,9 +1394,42 @@ def test_anonymous_email_endpoints_are_rate_limited_per_ip(
     assert len(mailoutbox) == 2
 
 
+@pytest.mark.django_db
+@override_settings(
+    BASEROW_THROTTLE_IP_ENABLED=True,
+    BASEROW_ANONYMOUS_EMAIL_IP_RATE_LIMITS=(RateLimit.from_string("1/m"),),
+)
+def test_anonymous_email_ip_rate_limit_only_counts_post(client):
+    url = reverse("api:user:send_reset_password_email")
+
+    assert client.get(url).status_code == 405
+    assert client.get(url).status_code == 405
+    response = client.post(
+        url,
+        {"email": "unknown@example.com", "base_url": "http://localhost:3000"},
+        format="json",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
+
+
+@pytest.mark.django_db
+@override_settings(
+    BASEROW_THROTTLE_IP_ENABLED=False,
+    BASEROW_ANONYMOUS_EMAIL_IP_RATE_LIMITS=(RateLimit.from_string("1/m"),),
+)
+def test_anonymous_email_ip_rate_limit_needs_ip_throttling_enabled(client):
+    # Without it, the client IP may be shared by every caller, or picked by them.
+    for _ in range(2):
+        response = client.post(
+            reverse("api:user:send_verify_email"),
+            {"email": "unknown@example.com"},
+            format="json",
+        )
+        assert response.status_code == HTTP_204_NO_CONTENT
+
+
 @pytest.mark.django_db(transaction=True)
 @override_settings(
-    BASEROW_ANONYMOUS_EMAIL_IP_RATE_LIMITS=(),
     BASEROW_SEND_RESET_PASSWORD_EMAIL_RATE_LIMIT=RateLimit.from_string("2/h"),
 )
 def test_send_reset_password_email_rate_limited_per_recipient(

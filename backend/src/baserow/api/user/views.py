@@ -368,9 +368,12 @@ class SendResetPasswordEmailView(APIView):
     permission_classes = (AllowAny,)
 
     def get_throttles(self):
+        throttles = super().get_throttles()
         # Every call counts per IP, also for unknown addresses, on top of the
         # per recipient limit applied when the email is sent.
-        return super().get_throttles() + [AnonymousEmailRateThrottle()]
+        if self.request.method == "POST":
+            throttles.append(AnonymousEmailRateThrottle())
+        return throttles
 
     @extend_schema(
         tags=["User"],
@@ -389,6 +392,7 @@ class SendResetPasswordEmailView(APIView):
             400: get_error_schema(
                 ["ERROR_REQUEST_BODY_VALIDATION", "ERROR_HOSTNAME_IS_NOT_ALLOWED"]
             ),
+            429: None,
         },
         auth=[],
     )
@@ -668,9 +672,12 @@ class SendVerifyEmailView(APIView):
     permission_classes = (AllowAny,)
 
     def get_throttles(self):
+        throttles = super().get_throttles()
         # Every call counts per IP, also for unknown addresses, on top of the
         # per recipient limit applied when the email is sent.
-        return super().get_throttles() + [AnonymousEmailRateThrottle()]
+        if self.request.method == "POST":
+            throttles.append(AnonymousEmailRateThrottle())
+        return throttles
 
     @extend_schema(
         tags=["User"],
@@ -682,6 +689,7 @@ class SendVerifyEmailView(APIView):
         ),
         responses={
             204: None,
+            429: None,
         },
     )
     @transaction.atomic

@@ -1,8 +1,11 @@
+import threading
+import time
 from unittest import mock
 
 import pytest
 from django_redis import get_redis_connection
 from freezegun import freeze_time
+from redis import Redis
 
 from baserow.throttling.exceptions import RateLimitExceededException
 from baserow.throttling.handler import rate_limit
@@ -19,7 +22,7 @@ def clear_throttle_cache():
     yield
     get_redis_connection("default").delete(
         *(
-            f"baserow_rate_limit:{fn_name}:{key}"
+            f"baserow_rate_limit_fn:{fn_name}:{key}"
             for fn_name in (throttled_fn_name, throttled_fn_2_name)
             for key in (throttled_key, throttled_key_2)
         )
@@ -137,16 +140,32 @@ def test_rate_limit_per_hour(clear_throttle_cache):
         rate_limit(rate=rate, key=throttled_key)(mock_fn)()
 
 
-def test_rate_limit_counts_calls_in_redis(clear_throttle_cache):
-    # The slot is reserved by an atomic Redis script, not a read and write of the
-    # Django cache that parallel callers could all pass with the same count.
+def test_rate_limit_holds_for_parallel_calls(clear_throttle_cache):
+    # Pausing after every Redis command lets the other threads run in between,
+    # like parallel requests would. A separate read and write of the counter then
+    # lets them all see the same count, an atomic script doesn't.
+    execute_command = Redis.execute_command
+
+    def slow_execute_command(self, *args, **kwargs):
+        result = execute_command(self, *args, **kwargs)
+        time.sleep(0.01)
+        return result
+
     mock_fn = get_named_mock(throttled_fn_name)
+    limited_fn = rate_limit(
+        rate=RateLimit.from_string("5/m"), key=throttled_key, raise_exception=False
+    )(mock_fn)
+    start = threading.Barrier(20)
 
-    rate_limit(rate=RateLimit.from_string("2/m"), key=throttled_key)(mock_fn)()
+    def call():
+        start.wait()
+        limited_fn()
 
-    assert (
-        get_redis_connection("default").zcard(
-            f"baserow_rate_limit:{throttled_fn_name}:{throttled_key}"
-        )
-        == 1
-    )
+    threads = [threading.Thread(target=call) for _ in range(20)]
+    with mock.patch.object(Redis, "execute_command", slow_execute_command):
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+
+    assert mock_fn.call_count == 5
