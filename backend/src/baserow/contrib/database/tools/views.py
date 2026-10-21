@@ -626,7 +626,8 @@ def _date_orm_value(f, field, **kwargs):
         has no whole number.
     """
 
-    timezone = kwargs.get("timezone", "UTC")
+    # A profile can have no timezone.
+    timezone = kwargs.get("timezone") or "UTC"
     if not _date_mode_takes_value(f.mode):
         return f"{timezone}??{f.mode}"
     if f.mode == "exact_date":

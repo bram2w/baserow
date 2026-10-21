@@ -834,3 +834,19 @@ def test_create_view_filters_takes_no_number_for_empty(
 
     assert "skipped_filters" not in entry
     assert ViewFilter.objects.get(view=view).type == operator
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("timezone", [None, ""])
+def test_create_view_filters_uses_utc_without_a_profile_timezone(
+    data_fixture, table_ctx, timezone
+):
+    ctx, table = table_ctx
+    ctx.user.profile.timezone = timezone
+    ctx.user.profile.save()
+    field = data_fixture.create_date_field(table=table, name="Due")
+    view, create = _filter_view(data_fixture, table_ctx, field)
+
+    create(type="date", operator="equal", mode="today")
+
+    assert ViewFilter.objects.get(view=view).value == "UTC??today"
