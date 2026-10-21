@@ -216,14 +216,18 @@ _FIELD_EXAMPLES: dict[str, dict] = {
 # ---------------------------------------------------------------------------
 
 
-def _resolve_linked_table(linked_table_ref, table):
-    """Resolve a linked_table reference (name or ID) to a Table object."""
+def _resolve_linked_table(linked_table_ref, table, user):
+    """
+    Resolve a linked_table reference (name or ID) to a table of the database the
+    user can see. Hidden tables are left out, so an error never reveals one.
+    """
 
     if isinstance(linked_table_ref, str):
         q = Q(name=linked_table_ref, database=table.database)
     else:
         q = Q(id=linked_table_ref, database=table.database)
-    matches = list(Table.objects.filter(q).order_by("id")[:2])
+    tables = TableHandler().list_workspace_tables(user, table.database.workspace)
+    matches = list(tables.filter(q).order_by("id")[:2])
     if not matches:
         raise ValueError(
             f"Table '{linked_table_ref}' not found in the database. "
@@ -263,7 +267,7 @@ def _date_to_orm(f, table, user):
 
 
 def _link_row_to_orm(f, table, user):
-    linked = _resolve_linked_table(f.linked_table, table)
+    linked = _resolve_linked_table(f.linked_table, table, user)
     return {"name": f.name, "link_row_table": linked}
 
 
@@ -321,7 +325,7 @@ def _formula_to_orm(f, table, user):
     return {"name": f.name, "formula": formula}
 
 
-def _named_link_field(f, table) -> LinkRowField:
+def _named_link_field(f, table, user) -> LinkRowField:
     """
     The link_row field of the table a lookup names in ``through_field``.
 
@@ -345,7 +349,7 @@ def _named_link_field(f, table) -> LinkRowField:
             f"lookup '{f.name}'."
         )
     if f.linked_table is not None:
-        linked = _resolve_linked_table(f.linked_table, table)
+        linked = _resolve_linked_table(f.linked_table, table, user)
         if linked.id != through.link_row_table_id:
             raise ValueError(
                 f"Link field '{through.name}' links to table "
@@ -354,12 +358,12 @@ def _named_link_field(f, table) -> LinkRowField:
     return through
 
 
-def _lookup_link_field(f, table) -> LinkRowField | None:
+def _lookup_link_field(f, table, user) -> LinkRowField | None:
     """The link_row field a lookup goes through, or None when there is none yet."""
 
     if f.through_field is not None:
-        return _named_link_field(f, table)
-    linked = _resolve_linked_table(f.linked_table, table)
+        return _named_link_field(f, table, user)
+    linked = _resolve_linked_table(f.linked_table, table, user)
     return (
         LinkRowField.objects.filter(table=table, link_row_table=linked)
         .order_by("id")
@@ -377,16 +381,16 @@ def create_missing_link_field(
     :returns: The created link_row field, or None when nothing was created.
     """
 
-    if f.type != "lookup" or _lookup_link_field(f, table) is not None:
+    if f.type != "lookup" or _lookup_link_field(f, table, user) is not None:
         return None
-    linked = _resolve_linked_table(f.linked_table, table)
+    linked = _resolve_linked_table(f.linked_table, table, user)
     return CreateFieldActionType.do(
         user, table, "link_row", name=linked.name, link_row_table=linked
     )
 
 
 def _lookup_to_orm(f, table, user):
-    through = _lookup_link_field(f, table)
+    through = _lookup_link_field(f, table, user)
     if not through:
         raise ValueError(
             f"No link_row field to '{f.linked_table}' exists on this table. "

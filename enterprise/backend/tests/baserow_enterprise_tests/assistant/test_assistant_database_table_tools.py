@@ -1731,3 +1731,49 @@ def test_create_tables_repairs_formulas_after_the_transaction_commits(data_fixtu
     assert "formula_errors" not in result
     total = FormulaField.objects.get(table__database=database, name="Total")
     assert total.formula == "'fixed'"
+
+
+@pytest.mark.django_db
+def test_create_tables_ignores_a_table_of_the_same_name_the_user_cannot_see(
+    data_fixture, enable_enterprise, synced_roles
+):
+    from baserow.contrib.database.fields.models import LinkRowField
+    from baserow.contrib.database.tools.tables import create_tables as shared_create
+    from baserow.core.tools import ToolContext
+
+    admin = data_fixture.create_user()
+    member = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=admin, members=[member])
+    database = data_fixture.create_database_application(workspace=workspace)
+    hidden, visible = [
+        data_fixture.create_database_table(database=database, name="Tags")
+        for _ in range(2)
+    ]
+    for table in (hidden, visible):
+        data_fixture.create_text_field(table=table, name="Name", primary=True)
+    RoleAssignmentHandler().assign_role(
+        member, workspace, role=Role.objects.get(uid="BUILDER")
+    )
+    RoleAssignmentHandler().assign_role(
+        member, workspace, role=Role.objects.get(uid="NO_ACCESS"), scope=hidden
+    )
+
+    result = shared_create(
+        ToolContext(member, workspace),
+        database.id,
+        [
+            TableItemCreate(name="Tags", primary_field_name="Name", fields=[]),
+            TableItemCreate(
+                name="Posts",
+                primary_field_name="Title",
+                fields=[
+                    FieldItemCreate(name="Tags", type="link_row", linked_table="Tags")
+                ],
+            ),
+        ],
+    )
+
+    assert result["notes"] == []
+    assert [t["id"] for t in result["reused_tables"]] == [visible.id]
+    link = LinkRowField.objects.get(table__name="Posts", name="Tags")
+    assert link.link_row_table_id == visible.id
