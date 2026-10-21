@@ -27,7 +27,7 @@
   },
   "widget": {
     "fixConfiguration": "Fix configuration",
-    "filtered": "This widget is filtered."
+    "filtered": "This widget content is filtered"
   },
   "summaryWidget": {
     "name": "Summary"
