@@ -1246,6 +1246,7 @@ class DatabaseConfig(AppConfig):
             CreateTablesMcpTool,
             DeleteTableMcpTool,
             GetTableSchemaMcpTool,
+            ListApplicationsMcpTool,
             ListDatabasesMcpTool,
             ListTablesMcpTool,
             UpdateTableMcpTool,
@@ -1267,6 +1268,7 @@ class DatabaseConfig(AppConfig):
         mcp_tool_group_registry.register(DatabaseEditMCPToolGroup())
         mcp_tool_group_registry.register(DatabaseDeleteMCPToolGroup())
         mcp_tool_registry.register(ListDatabasesMcpTool())
+        mcp_tool_registry.register(ListApplicationsMcpTool())
         mcp_tool_registry.register(ListTablesMcpTool())
         mcp_tool_registry.register(GetTableSchemaMcpTool())
         mcp_tool_registry.register(ListRowsMcpTool())

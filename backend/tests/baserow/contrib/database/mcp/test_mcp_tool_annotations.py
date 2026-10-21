@@ -6,6 +6,7 @@ from baserow.core.mcp.registries import mcp_tool_registry
 # name: (read_only, destructive)
 EXPECTED = {
     "list_databases": (True, False),
+    "list_applications": (True, False),
     "list_tables": (True, False),
     "get_table_schema": (True, False),
     "list_table_rows": (True, False),

@@ -30,6 +30,7 @@ def test_every_tool_has_a_registered_group():
 def test_core_database_tool_groups():
     groups = {tool.name: tool.group for tool in mcp_tool_registry.get_all()}
     assert groups["list_databases"] == GROUP_DATABASE_READ
+    assert groups["list_applications"] == GROUP_DATABASE_READ
     assert groups["list_tables"] == GROUP_DATABASE_READ
     assert groups["get_table_schema"] == GROUP_DATABASE_READ
     assert groups["list_table_rows"] == GROUP_DATABASE_READ

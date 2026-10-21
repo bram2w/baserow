@@ -102,9 +102,10 @@ Some tools are currently disabled (`enabled = False`) and hidden from MCP client
 
 | Tool | Status | Description |
 |---|---|---|
-| `list_databases` | enabled | List all databases in the workspace |
-| `list_tables` | enabled | List tables, optionally filtered by database or table name |
-| `get_table_schema` | enabled | Get field definitions for one or more tables |
+| `list_applications` | enabled | List databases, application builders, automations and dashboards, a page at a time (shared with Kuma) |
+| `list_databases` | enabled | List all databases in the workspace (kept for existing connections, until 2.6) |
+| `list_tables` | enabled | List tables, optionally filtered by database or table name (shared with Kuma) |
+| `get_table_schema` | enabled | Get field definitions for one or more tables (shared with Kuma) |
 | `list_table_rows` | enabled | List rows with optional search and pagination |
 | `create_rows` | enabled | Create one or more rows using field names |
 | `update_rows` | enabled | Update rows by ID using field names |

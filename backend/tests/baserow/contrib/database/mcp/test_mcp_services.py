@@ -53,27 +53,6 @@ def test_get_table_returns_correct_table(data_fixture):
 
 
 # ---------------------------------------------------------------------------
-# list_databases
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.django_db
-def test_list_databases_returns_workspace_databases(data_fixture):
-    user = data_fixture.create_user()
-    workspace = data_fixture.create_workspace(user=user)
-    db_1 = data_fixture.create_database_application(workspace=workspace)
-    db_2 = data_fixture.create_database_application(workspace=workspace)
-    # Different workspace
-    data_fixture.create_database_application()
-
-    databases = services.list_databases(user, workspace)
-    ids = [db.id for db in databases]
-    assert db_1.id in ids
-    assert db_2.id in ids
-    assert len(ids) == 2
-
-
-# ---------------------------------------------------------------------------
 # update_table / delete_table
 # ---------------------------------------------------------------------------
 

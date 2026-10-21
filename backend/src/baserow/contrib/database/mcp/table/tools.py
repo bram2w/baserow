@@ -12,8 +12,18 @@ from baserow.core.mcp.groups import (
 )
 from baserow.core.mcp.models import MCPEndpoint
 from baserow.core.mcp.registries import FunctionMCPTool, MCPTool
+from baserow.core.tools import ToolContext, applications
 
 
+class ListApplicationsMcpTool(FunctionMCPTool):
+    type = "list_applications"
+    group = GROUP_DATABASE_READ
+    title = "List applications"
+    read_only = True
+    function = applications.list_applications
+
+
+# TODO: remove after 2.6. Kept because existing connections allow it by name.
 class ListDatabasesMcpTool(MCPTool):
     """
     List all databases in the workspace.
@@ -27,7 +37,8 @@ class ListDatabasesMcpTool(MCPTool):
     input_schema = ListDatabasesInput
 
     def _sync_call(self, endpoint: MCPEndpoint, args: ListDatabasesInput) -> list[dict]:
-        databases = services.list_databases(endpoint.user, endpoint.workspace)
+        ctx = ToolContext(user=endpoint.user, workspace=endpoint.workspace)
+        databases = applications.visible_applications(ctx, ["database"])
         return [{"id": db.id, "name": db.name, "order": db.order} for db in databases]
 
 

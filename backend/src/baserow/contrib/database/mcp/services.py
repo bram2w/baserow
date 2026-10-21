@@ -16,7 +16,6 @@ from django.db import transaction
 from baserow.api.utils import apply_exception_mapping
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
-from baserow.core.handler import CoreHandler
 from baserow.core.mcp.exceptions import MCPToolInputError, flatten_error_detail
 from baserow.core.models import Workspace
 
@@ -129,36 +128,6 @@ def get_table(user: AbstractUser, workspace: Workspace, table_id: int) -> Table:
     :raises Table.DoesNotExist: if the table is not found or not accessible.
     """
     return filter_tables(user, workspace).get(id=table_id)
-
-
-# ---------------------------------------------------------------------------
-# Database operations
-# ---------------------------------------------------------------------------
-
-
-def list_databases(user: AbstractUser, workspace: Workspace) -> list:
-    """
-    Return all databases in the workspace that the user can see.
-
-    :returns: List of Database instances, ordered by (order, id).
-    """
-    from baserow.contrib.database.models import Database
-    from baserow.core.operations import ListApplicationsWorkspaceOperationType
-
-    qs = Database.objects.filter(
-        workspace=workspace,
-        workspace__trashed=False,
-        trashed=False,
-    ).order_by("order", "id")
-
-    return list(
-        CoreHandler().filter_queryset(
-            user,
-            ListApplicationsWorkspaceOperationType.type,
-            qs,
-            workspace=workspace,
-        )
-    )
 
 
 # ---------------------------------------------------------------------------
