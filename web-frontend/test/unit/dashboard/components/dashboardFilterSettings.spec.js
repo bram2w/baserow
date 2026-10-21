@@ -303,10 +303,10 @@ test('cleans up the open confirmation when the filter is removed remotely', asyn
   expect(testApp.mock.history.patch).toHaveLength(0)
 })
 
-test('offers only table formulas for option labels and values', async () => {
+test('offers only a table formula for dropdown values', async () => {
   const wrapper = await render()
   expect(wrapper.text()).toContain('dashboardFilter.sourceOptionsHelp')
-  expect(wrapper.findAll('.formula-input-field')).toHaveLength(2)
+  expect(wrapper.findAll('.formula-input-field')).toHaveLength(1)
   expect(wrapper.text()).not.toContain('dashboardFilter.manualOptions')
   expect(wrapper.text()).not.toContain('dashboardFilter.addOption')
 })
