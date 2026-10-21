@@ -54,9 +54,7 @@ Disconnecting a follower never cancels the run; Stop is a separate operation.
 
 Enforce one active run per conversation, per-user limits, execution deadlines,
 a not-started timeout for queued runs no worker picks up, atomic claims and
-terminal transitions. Runs use a dedicated `chat_run` Celery queue consumed by
-the existing export worker, so no new service is needed. The run engine never
-restarts failed or interrupted runs or
+terminal transitions. The run engine never restarts failed or interrupted runs or
 replays their tool effects. Provider-request and validation retries within a
 live run remain product behavior. Stop is run-scoped and finishes after active
 tools drain; committed changes remain.
