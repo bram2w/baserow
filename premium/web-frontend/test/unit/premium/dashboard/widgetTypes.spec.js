@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest'
+import { unwrapLazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 
 import ChartWidget from '@baserow_premium/dashboard/components/widget/ChartWidget'
 import {
@@ -14,7 +15,11 @@ const app = {
 
 describe('premium dashboard widget types', () => {
   test('maps cartesian and pie widgets to the shared chart component', () => {
-    expect(new ChartWidgetType({ app }).component).toBe(ChartWidget)
-    expect(new PieChartWidgetType({ app }).component).toBe(ChartWidget)
+    expect(unwrapLazyComponent(new ChartWidgetType({ app }).component)).toBe(
+      ChartWidget
+    )
+    expect(unwrapLazyComponent(new PieChartWidgetType({ app }).component)).toBe(
+      ChartWidget
+    )
   })
 })

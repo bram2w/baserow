@@ -1,7 +1,14 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { DataSourceLocalBaserowTableServiceType } from '@baserow/modules/integrations/localBaserow/serviceTypes'
-import LocalBaserowGroupedAggregateRowsForm from '@baserow_premium/integrations/localBaserow/components/services/LocalBaserowGroupedAggregateRowsForm'
-import PaidFeaturesModal from '@baserow_premium/components/PaidFeaturesModal'
 import { GroupedAggregateRowsDataSourcePaidFeature } from '@baserow_premium/paidFeatures'
+
+const LocalBaserowGroupedAggregateRowsForm = lazyComponent(
+  () =>
+    import('@baserow_premium/integrations/localBaserow/components/services/LocalBaserowGroupedAggregateRowsForm')
+)
+const PaidFeaturesModal = lazyComponent(
+  () => import('@baserow_premium/components/PaidFeaturesModal')
+)
 
 export const BUILDER_GROUPED_AGGREGATE_ROWS_FEATURE =
   'builder_grouped_aggregate_rows'

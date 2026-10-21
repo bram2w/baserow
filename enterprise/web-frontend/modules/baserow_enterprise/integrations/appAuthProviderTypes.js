@@ -1,18 +1,38 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { AppAuthProviderType } from '@baserow/modules/core/appAuthProviderTypes'
 import {
   SamlAuthProviderTypeMixin,
   OAuth2AuthProviderTypeMixin,
 } from '@baserow_enterprise/authProviderTypes'
 
-import LocalBaserowUserSourceForm from '@baserow_enterprise/integrations/localBaserow/components/appAuthProviders/LocalBaserowPasswordAppAuthProviderForm'
-import LocalBaserowAuthPassword from '@baserow_enterprise/integrations/localBaserow/components/appAuthProviders/LocalBaserowAuthPassword'
-import CommonSamlSettingForm from '@baserow_enterprise/integrations/common/components/CommonSamlSettingForm'
-import CommonOIDCSettingForm from '@baserow_enterprise/integrations/common/components/CommonOIDCSettingForm'
-import SamlAuthLink from '@baserow_enterprise/integrations/common/components/SamlAuthLink'
-import OIDCAuthLink from '@baserow_enterprise/integrations/common/components/OIDCAuthLink'
 import OpenIdIcon from '@baserow_enterprise/assets/images/providers/OpenID.svg?url'
 import { PasswordFieldType } from '@baserow/modules/database/fieldTypes'
 import EnterpriseFeatures from '@baserow_enterprise/features'
+
+const LocalBaserowUserSourceForm = lazyComponent(
+  () =>
+    import('@baserow_enterprise/integrations/localBaserow/components/appAuthProviders/LocalBaserowPasswordAppAuthProviderForm')
+)
+const LocalBaserowAuthPassword = lazyComponent(
+  () =>
+    import('@baserow_enterprise/integrations/localBaserow/components/appAuthProviders/LocalBaserowAuthPassword')
+)
+const CommonSamlSettingForm = lazyComponent(
+  () =>
+    import('@baserow_enterprise/integrations/common/components/CommonSamlSettingForm')
+)
+const CommonOIDCSettingForm = lazyComponent(
+  () =>
+    import('@baserow_enterprise/integrations/common/components/CommonOIDCSettingForm')
+)
+const SamlAuthLink = lazyComponent(
+  () =>
+    import('@baserow_enterprise/integrations/common/components/SamlAuthLink')
+)
+const OIDCAuthLink = lazyComponent(
+  () =>
+    import('@baserow_enterprise/integrations/common/components/OIDCAuthLink')
+)
 
 export class LocalBaserowPasswordAppAuthProviderType extends AppAuthProviderType {
   static getType() {

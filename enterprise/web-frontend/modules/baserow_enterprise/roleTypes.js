@@ -1,10 +1,14 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import {
   AdminRoleType,
   MemberRoleType,
 } from '@baserow/modules/database/roleTypes'
 import EnterpriseFeatures from '@baserow_enterprise/features'
-import PaidFeaturesModal from '@baserow_premium/components/PaidFeaturesModal'
 import { RBACPaidFeature } from '@baserow_enterprise/paidFeatures'
+
+const PaidFeaturesModal = lazyComponent(
+  () => import('@baserow_premium/components/PaidFeaturesModal')
+)
 
 export class EnterpriseAdminRoleType extends AdminRoleType {
   showIsBillable(workspaceId) {

@@ -1,5 +1,9 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { Registerable } from '@baserow/modules/core/registry'
-import ApplicationForm from '@baserow/modules/core/components/application/ApplicationForm'
+
+const ApplicationForm = lazyComponent(
+  () => import('@baserow/modules/core/components/application/ApplicationForm')
+)
 
 /**
  * The application type base class that can be extended when creating a plugin

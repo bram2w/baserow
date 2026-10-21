@@ -1,9 +1,14 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import {
   ServiceType,
   WorkflowActionServiceTypeMixin,
 } from '@baserow/modules/core/serviceTypes'
-import SlackWriteMessageServiceForm from '@baserow/modules/integrations/slack/components/services/SlackWriteMessageServiceForm'
 import { SlackBotIntegrationType } from '@baserow/modules/integrations/slack/integrationTypes'
+
+const SlackWriteMessageServiceForm = lazyComponent(
+  () =>
+    import('@baserow/modules/integrations/slack/components/services/SlackWriteMessageServiceForm')
+)
 
 export class SlackWriteMessageServiceType extends WorkflowActionServiceTypeMixin(
   ServiceType

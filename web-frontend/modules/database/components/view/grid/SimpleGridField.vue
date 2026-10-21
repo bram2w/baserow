@@ -11,6 +11,7 @@
 </template>
 
 <script>
+import { unwrapLazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 export default {
   name: 'SimpleGridField',
   props: {
@@ -25,9 +26,11 @@ export default {
   },
   methods: {
     getFieldComponent(type) {
-      return this.$registry
-        .get('field', type)
-        .getFunctionalGridViewFieldComponent(this.field)
+      return unwrapLazyComponent(
+        this.$registry
+          .get('field', type)
+          .getFunctionalGridViewFieldComponent(this.field)
+      )
     },
   },
 }

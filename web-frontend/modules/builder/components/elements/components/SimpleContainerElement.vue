@@ -37,11 +37,19 @@
 </template>
 
 <script>
-import AddElementZone from '@baserow/modules/builder/components/elements/AddElementZone'
 import containerElement from '@baserow/modules/builder/mixins/containerElement'
-import AddElementModal from '@baserow/modules/builder/components/elements/AddElementModal'
-import ElementPreview from '@baserow/modules/builder/components/elements/ElementPreview'
 import PageElement from '@baserow/modules/builder/components/page/PageElement'
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
+
+const AddElementZone = lazyComponent(
+  () => import('@baserow/modules/builder/components/elements/AddElementZone')
+)
+const AddElementModal = lazyComponent(
+  () => import('@baserow/modules/builder/components/elements/AddElementModal')
+)
+const ElementPreview = lazyComponent(
+  () => import('@baserow/modules/builder/components/elements/ElementPreview')
+)
 
 export default {
   name: 'SimpleContainerElement',

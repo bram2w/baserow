@@ -56,6 +56,7 @@
 </template>
 
 <script>
+import { unwrapLazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import RecursiveWrapper from '@baserow/modules/core/components/RecursiveWrapper'
 
 export default {
@@ -127,7 +128,9 @@ export default {
   },
   methods: {
     getCardComponent(field) {
-      return this.$registry.get('field', field.type).getCardComponent(field)
+      return unwrapLazyComponent(
+        this.$registry.get('field', field.type).getCardComponent(field)
+      )
     },
   },
 }

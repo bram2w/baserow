@@ -1,9 +1,23 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { markRaw } from 'vue'
 import { Registerable } from '@baserow/modules/core/registry'
-import ElementsContextComponent from '@baserow/modules/builder/components/page/header/ElementsContext'
-import DataSourceContextComponent from '@baserow/modules/builder/components/page/header/DataSourceContext'
-import VariablesContextComponent from '@baserow/modules/builder/components/page/header/VariablesContext'
-import PageSettingsModalComponent from '@baserow/modules/builder/components/page/settings/PageSettingsModal'
+
+const ElementsContextComponent = lazyComponent(
+  () =>
+    import('@baserow/modules/builder/components/page/header/ElementsContext')
+)
+const DataSourceContextComponent = lazyComponent(
+  () =>
+    import('@baserow/modules/builder/components/page/header/DataSourceContext')
+)
+const VariablesContextComponent = lazyComponent(
+  () =>
+    import('@baserow/modules/builder/components/page/header/VariablesContext')
+)
+const PageSettingsModalComponent = lazyComponent(
+  () =>
+    import('@baserow/modules/builder/components/page/settings/PageSettingsModal')
+)
 
 const ElementsContext = markRaw(ElementsContextComponent)
 const DataSourceContext = markRaw(DataSourceContextComponent)

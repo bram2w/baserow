@@ -1,5 +1,9 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { SettingsType } from '@baserow/modules/core/settingsTypes'
-import APITokenSettings from '@baserow/modules/database/components/settings/APITokenSettings'
+
+const APITokenSettings = lazyComponent(
+  () => import('@baserow/modules/database/components/settings/APITokenSettings')
+)
 
 export class APITokenSettingsType extends SettingsType {
   static getType() {

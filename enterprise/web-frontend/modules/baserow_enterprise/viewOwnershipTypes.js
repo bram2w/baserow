@@ -1,9 +1,16 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { ViewOwnershipType } from '@baserow/modules/database/viewOwnershipTypes'
 import EnterpriseFeatures from '@baserow_enterprise/features'
-import PaidFeaturesModal from '@baserow_premium/components/PaidFeaturesModal'
 import { RBACPaidFeature } from '@baserow_enterprise/paidFeatures'
 import { FormViewType } from '@baserow/modules/database/viewTypes.js'
-import RestrictedViewFilterContext from '@baserow_enterprise/components/views/RestrictedViewFilterContext'
+
+const PaidFeaturesModal = lazyComponent(
+  () => import('@baserow_premium/components/PaidFeaturesModal')
+)
+const RestrictedViewFilterContext = lazyComponent(
+  () =>
+    import('@baserow_enterprise/components/views/RestrictedViewFilterContext')
+)
 
 export class RestrictedViewOwnershipType extends ViewOwnershipType {
   static getType() {

@@ -10,6 +10,7 @@
 </template>
 
 <script>
+import { unwrapLazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 export default {
   height: 22,
   name: 'RowCardFieldFormula',
@@ -36,7 +37,7 @@ export default {
         'formula_type',
         this.field.formula_type
       )
-      return formulaType.getCardComponent(this.field)
+      return unwrapLazyComponent(formulaType.getCardComponent(this.field))
     },
   },
 }

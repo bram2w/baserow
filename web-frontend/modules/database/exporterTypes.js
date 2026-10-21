@@ -1,6 +1,10 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { Registerable } from '@baserow/modules/core/registry'
 import { GridViewType } from '@baserow/modules/database/viewTypes'
-import TableCSVExporter from '@baserow/modules/database/components/export/TableCSVExporter'
+
+const TableCSVExporter = lazyComponent(
+  () => import('@baserow/modules/database/components/export/TableCSVExporter')
+)
 
 export class TableExporterType extends Registerable {
   /**

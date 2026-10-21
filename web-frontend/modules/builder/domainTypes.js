@@ -1,8 +1,18 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { Registerable } from '@baserow/modules/core/registry'
-import CustomDomainDetails from '@baserow/modules/builder/components/domain/CustomDomainDetails'
-import CustomDomainForm from '@baserow/modules/builder/components/domain/CustomDomainForm'
-import SubDomainForm from '@baserow/modules/builder/components/domain/SubDomainForm'
-import SubDomainDetails from '@baserow/modules/builder/components/domain/SubDomainDetails'
+
+const CustomDomainDetails = lazyComponent(
+  () => import('@baserow/modules/builder/components/domain/CustomDomainDetails')
+)
+const CustomDomainForm = lazyComponent(
+  () => import('@baserow/modules/builder/components/domain/CustomDomainForm')
+)
+const SubDomainForm = lazyComponent(
+  () => import('@baserow/modules/builder/components/domain/SubDomainForm')
+)
+const SubDomainDetails = lazyComponent(
+  () => import('@baserow/modules/builder/components/domain/SubDomainDetails')
+)
 
 export class DomainType extends Registerable {
   get name() {

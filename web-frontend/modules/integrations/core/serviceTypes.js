@@ -1,6 +1,4 @@
-import CoreHTTPTriggerServiceForm from '@baserow/modules/integrations/core/components/services/CoreHTTPTriggerServiceForm'
-import CoreInboundEmailTriggerServiceForm from '@baserow/modules/integrations/core/components/services/CoreInboundEmailTriggerServiceForm'
-import CoreManualTriggerServiceForm from '@baserow/modules/integrations/core/components/services/CoreManualTriggerServiceForm'
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import {
   DataSourceServiceTypeMixin,
   getFilesGroup,
@@ -10,16 +8,56 @@ import {
   TriggerServiceTypeMixin,
   WorkflowActionServiceTypeMixin,
 } from '@baserow/modules/core/serviceTypes'
-import CoreHTTPRequestServiceForm from '@baserow/modules/integrations/core/components/services/CoreHTTPRequestServiceForm'
-import CoreSMTPEmailServiceForm from '@baserow/modules/integrations/core/components/services/CoreSMTPEmailServiceForm'
-import CoreRouterServiceForm from '@baserow/modules/integrations/core/components/services/CoreRouterServiceForm'
-import CoreGotoServiceForm from '@baserow/modules/integrations/core/components/services/CoreGotoServiceForm'
-import CoreIteratorServiceForm from '@baserow/modules/integrations/core/components/services/CoreIteratorServiceForm'
-import CoreCSVFileReaderServiceForm from '@baserow/modules/integrations/core/components/services/CoreCSVFileReaderServiceForm'
-import CorePeriodicTriggerServiceForm from '@baserow/modules/integrations/core/components/services/CorePeriodicTriggerServiceForm.vue'
-import CoreStartWorkflowServiceForm from '@baserow/modules/integrations/core/components/services/CoreStartWorkflowServiceForm.vue'
 import { SMTPIntegrationType } from '@baserow/modules/integrations/core/integrationTypes'
-import CoreResponseServiceForm from '@baserow/modules/integrations/core/components/services/CoreResponseServiceForm.vue'
+
+const CoreHTTPTriggerServiceForm = lazyComponent(
+  () =>
+    import('@baserow/modules/integrations/core/components/services/CoreHTTPTriggerServiceForm')
+)
+const CoreInboundEmailTriggerServiceForm = lazyComponent(
+  () =>
+    import('@baserow/modules/integrations/core/components/services/CoreInboundEmailTriggerServiceForm')
+)
+const CoreManualTriggerServiceForm = lazyComponent(
+  () =>
+    import('@baserow/modules/integrations/core/components/services/CoreManualTriggerServiceForm')
+)
+const CoreHTTPRequestServiceForm = lazyComponent(
+  () =>
+    import('@baserow/modules/integrations/core/components/services/CoreHTTPRequestServiceForm')
+)
+const CoreSMTPEmailServiceForm = lazyComponent(
+  () =>
+    import('@baserow/modules/integrations/core/components/services/CoreSMTPEmailServiceForm')
+)
+const CoreRouterServiceForm = lazyComponent(
+  () =>
+    import('@baserow/modules/integrations/core/components/services/CoreRouterServiceForm')
+)
+const CoreGotoServiceForm = lazyComponent(
+  () =>
+    import('@baserow/modules/integrations/core/components/services/CoreGotoServiceForm')
+)
+const CoreIteratorServiceForm = lazyComponent(
+  () =>
+    import('@baserow/modules/integrations/core/components/services/CoreIteratorServiceForm')
+)
+const CoreCSVFileReaderServiceForm = lazyComponent(
+  () =>
+    import('@baserow/modules/integrations/core/components/services/CoreCSVFileReaderServiceForm')
+)
+const CorePeriodicTriggerServiceForm = lazyComponent(
+  () =>
+    import('@baserow/modules/integrations/core/components/services/CorePeriodicTriggerServiceForm.vue')
+)
+const CoreStartWorkflowServiceForm = lazyComponent(
+  () =>
+    import('@baserow/modules/integrations/core/components/services/CoreStartWorkflowServiceForm.vue')
+)
+const CoreResponseServiceForm = lazyComponent(
+  () =>
+    import('@baserow/modules/integrations/core/components/services/CoreResponseServiceForm.vue')
+)
 
 export class CoreHTTPRequestServiceType extends WorkflowActionServiceTypeMixin(
   ServiceType

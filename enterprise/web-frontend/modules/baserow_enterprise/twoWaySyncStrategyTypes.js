@@ -1,7 +1,11 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { TwoWaySyncStrategyType } from '@baserow/modules/database/twoWaySyncStrategyTypes'
-import PaidFeaturesModal from '@baserow_premium/components/PaidFeaturesModal.vue'
 import { DataSyncPaidFeature } from '@baserow_enterprise/paidFeatures'
 import EnterpriseFeatures from '@baserow_enterprise/features'
+
+const PaidFeaturesModal = lazyComponent(
+  () => import('@baserow_premium/components/PaidFeaturesModal.vue')
+)
 
 export class RealtimePushTwoWaySyncStrategyType extends TwoWaySyncStrategyType {
   static getType() {

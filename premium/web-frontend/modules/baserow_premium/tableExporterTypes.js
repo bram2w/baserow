@@ -1,12 +1,24 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { TableExporterType } from '@baserow/modules/database/exporterTypes'
 import { GridViewType } from '@baserow/modules/database/viewTypes'
-import TableJSONExporter from '@baserow_premium/components/exporter/TableJSONExporter'
-import TableXMLExporter from '@baserow_premium/components/exporter/TableXMLExporter'
 import PremiumFeatures from '@baserow_premium/features'
-import TableExcelExporter from '@baserow_premium/components/exporter/TableExcelExporter'
-import TableFileExporter from '@baserow_premium/components/exporter/TableFileExporter'
-import PaidFeaturesModal from '@baserow_premium/components/PaidFeaturesModal'
 import { ExportsPaidFeature } from '@baserow_premium/paidFeatures'
+
+const TableJSONExporter = lazyComponent(
+  () => import('@baserow_premium/components/exporter/TableJSONExporter')
+)
+const TableXMLExporter = lazyComponent(
+  () => import('@baserow_premium/components/exporter/TableXMLExporter')
+)
+const TableExcelExporter = lazyComponent(
+  () => import('@baserow_premium/components/exporter/TableExcelExporter')
+)
+const TableFileExporter = lazyComponent(
+  () => import('@baserow_premium/components/exporter/TableFileExporter')
+)
+const PaidFeaturesModal = lazyComponent(
+  () => import('@baserow_premium/components/PaidFeaturesModal')
+)
 
 class PremiumTableExporterType extends TableExporterType {
   getDeactivatedText() {

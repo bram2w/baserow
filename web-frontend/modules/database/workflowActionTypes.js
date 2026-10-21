@@ -1,6 +1,5 @@
+import { lazyComponent } from '@baserow/modules/core/utils/lazyComponent'
 import { WorkflowActionType } from '@baserow/modules/core/workflowActionTypes'
-import DatabaseWorkflowActionWithService from '@baserow/modules/database/components/field/DatabaseWorkflowActionWithService'
-import OpenUrlWorkflowActionForm from '@baserow/modules/database/components/field/OpenUrlWorkflowActionForm'
 import {
   LocalBaserowCreateRowServiceType,
   LocalBaserowUpdateRowServiceType,
@@ -26,6 +25,15 @@ import {
   referencedActionIdsInConfig,
   workflowActionKey,
 } from '@baserow/modules/database/utils/workflowActionReconciliation'
+
+const DatabaseWorkflowActionWithService = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/field/DatabaseWorkflowActionWithService')
+)
+const OpenUrlWorkflowActionForm = lazyComponent(
+  () =>
+    import('@baserow/modules/database/components/field/OpenUrlWorkflowActionForm')
+)
 
 // A single select, link row, file or collaborator value. A Date is not one:
 // it stringifies to something a URL can carry.
