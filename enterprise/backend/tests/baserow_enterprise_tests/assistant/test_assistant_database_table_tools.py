@@ -1470,8 +1470,8 @@ def test_formula_field_validation_passes_for_valid_formula(data_fixture):
 
 
 @pytest.mark.django_db
-def test_formula_field_validation_passes_for_empty_formula(data_fixture):
-    """Empty formula string skips validation."""
+def test_formula_field_validation_raises_for_empty_formula(data_fixture):
+    """An empty formula is an invalid formula, so the fixer can write one."""
 
     table = data_fixture.create_database_table(name="Test")
 
@@ -1480,12 +1480,17 @@ def test_formula_field_validation_passes_for_empty_formula(data_fixture):
         type="formula",
         formula="",
     )
-    result = item.to_django_orm_kwargs(table)
-    assert result == {"name": "Empty Formula", "formula": ""}
+    with pytest.raises(InvalidFormulaFieldError) as exc_info:
+        item.to_django_orm_kwargs(table)
+
+    assert exc_info.value.field_name == "Empty Formula"
+    assert exc_info.value.formula == ""
+    assert exc_info.value.error == "'Empty Formula' needs a formula."
 
 
 @pytest.mark.django_db
-def test_create_fields_tool_with_invalid_formula_auto_fixes(data_fixture):
+@pytest.mark.parametrize("formula", ["invalid_stuff!!!", ""])
+def test_create_fields_tool_with_invalid_formula_auto_fixes(data_fixture, formula):
     """
     When a formula field has an invalid formula, create_fields
     auto-fixes it via the formula generation pipeline.
@@ -1519,7 +1524,7 @@ def test_create_fields_tool_with_invalid_formula_auto_fixes(data_fixture):
                 FieldItemCreate(
                     name="Bad Formula",
                     type="formula",
-                    formula="invalid_stuff!!!",
+                    formula=formula,
                 ),
             ],
         )
@@ -1532,6 +1537,7 @@ def test_create_fields_tool_with_invalid_formula_auto_fixes(data_fixture):
     # Verify the formula field was created with the original name and fixed formula
     formula_field = table.field_set.filter(name="Bad Formula").first()
     assert formula_field is not None
+    assert formula_field.specific.formula == "field('Name')"
 
 
 @pytest.mark.django_db

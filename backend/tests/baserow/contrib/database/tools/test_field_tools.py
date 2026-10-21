@@ -384,6 +384,57 @@ def test_field_tools_keep_the_message_of_an_expected_error(
     assert error_records == []
 
 
+@pytest.mark.django_db
+@pytest.mark.parametrize("formula", [None, "", "  "])
+def test_create_fields_reports_a_formula_field_without_a_formula(table_ctx, formula):
+    ctx, table = table_ctx
+    item = {"name": "Total", "type": "formula"}
+    if formula is not None:
+        item["formula"] = formula
+
+    result = create_fields(ctx, table.id, [FieldItemCreate(**item)])
+
+    assert result["created_fields"] == []
+    assert "field_errors" not in result
+    assert result["formula_errors"] == [
+        {
+            "table_id": table.id,
+            "field_name": "Total",
+            "formula": formula or "",
+            "error": "'Total' needs a formula.",
+        }
+    ]
+    assert not Field.objects_and_trash.filter(table=table, name="Total").exists()
+
+
+@pytest.mark.django_db
+def test_update_fields_reports_an_empty_formula(data_fixture, table_ctx):
+    ctx, table = table_ctx
+    field = data_fixture.create_formula_field(table=table, name="F", formula="'x'")
+
+    result = update_fields(ctx, [FieldItemUpdate(field_id=field.id, formula="")])
+
+    assert result["updated_fields"] == []
+    assert "errors" not in result
+    assert result["formula_errors"] == [
+        {
+            "field_id": field.id,
+            "table_id": table.id,
+            "field_name": "F",
+            "formula": "",
+            "error": "'F' needs a formula.",
+        }
+    ]
+    field.refresh_from_db()
+    assert field.formula == "'x'"
+
+
+def test_create_fields_schema_has_no_default_formula():
+    schema = FieldItemCreate.model_json_schema()["properties"]["formula"]
+
+    assert schema.get("default") is None
+
+
 def _call(endpoint, name, arguments):
     async def inner():
         token = current_key.set(endpoint.key)

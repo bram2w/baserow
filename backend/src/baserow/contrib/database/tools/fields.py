@@ -282,9 +282,14 @@ def check_formula(table: Table, field_name: str, formula: str) -> None:
     :param field_name: The name of the formula field.
     :param formula: The formula to check.
     :raises InvalidFormulaFieldError: With the parser message, or with a request
-        for a formula when a ``$formula:`` description is given instead.
+        for a formula when it is empty or a ``$formula:`` description is given
+        instead.
     """
 
+    if not formula.strip():
+        raise InvalidFormulaFieldError(
+            field_name, formula, table, f"'{field_name}' needs a formula."
+        )
     if formula.strip().lower().startswith(FORMULA_DESCRIPTION_PREFIX):
         raise InvalidFormulaFieldError(
             field_name,
@@ -301,9 +306,9 @@ def check_formula(table: Table, field_name: str, formula: str) -> None:
 
 
 def _formula_to_orm(f, table, user):
-    if f.formula:
-        check_formula(table, f.name, f.formula)
-    return {"name": f.name, "formula": f.formula}
+    formula = f.formula or ""
+    check_formula(table, f.name, formula)
+    return {"name": f.name, "formula": formula}
 
 
 def _lookup_to_orm(f, table, user):
@@ -432,8 +437,9 @@ class FieldItemCreate(BaseModel):
         description="(single_select, multiple_select) List of options with colors.",
     )
     # (formula)
-    formula: str = Field(
-        "", description="(formula) The formula expression, in Baserow formula syntax."
+    formula: str | None = Field(
+        None,
+        description="(formula) The formula expression, in Baserow formula syntax.",
     )
     # (lookup)
     target_field: int | str | None = Field(
@@ -976,7 +982,7 @@ def update_field(
     if not kwargs:
         return previous, False
 
-    if kwargs.get("formula"):
+    if "formula" in kwargs:
         check_formula(field.table, kwargs.get("name", field.name), kwargs["formula"])
 
     UpdateFieldActionType.do(ctx.user, field, **kwargs)
