@@ -151,3 +151,18 @@ def test_a_serialization_error_after_saving_logs_only_its_class(
     assert "RuntimeError" in "".join(logs)
     assert "private-canary" not in "".join(logs)
 
+
+def test_the_deadline_asks_the_run_to_stop(
+    create_run, fake_run_type, output_buffer, monkeypatch
+):
+    run = create_run(claim=True)
+    monkeypatch.setattr("baserow.core.chat_runs.runner.RUN_DEADLINE_SECONDS", 0.01)
+    reasons = []
+
+    async def execute(run, journal):
+        reasons.append(await asyncio.wait_for(journal.wait_for_stop(), 1))
+        return ChatRunOutcome(ChatRunStatus.FAILED)
+
+    fake_run_type.execute = execute
+    async_to_sync(run_chat_run)(run, fake_run_type)
+    assert reasons == [ChatRunStopReason.TIMEOUT]
