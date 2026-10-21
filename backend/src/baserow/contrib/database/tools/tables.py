@@ -29,6 +29,7 @@ from baserow.contrib.database.fields.models import (
 )
 from baserow.contrib.database.fields.models import Field as BaserowField
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.mcp.services import user_error_message
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.actions import CreateTableActionType
 from baserow.contrib.database.table.handler import TableHandler
@@ -640,7 +641,16 @@ def _create_empty_table(
         ctx.user, database, table.name, fill_example=False
     )
     primary_field = created_table.get_primary_field().specific
-    UpdateFieldActionType.do(ctx.user, primary_field, name=table.primary_field_name)
+    try:
+        UpdateFieldActionType.do(ctx.user, primary_field, name=table.primary_field_name)
+    except Exception as exc:
+        message = user_error_message(exc)
+        if message is None:
+            raise
+        raise DjangoValidationError(
+            f"The primary_field_name of table '{table.name}' is refused: "
+            f"{message.rstrip('.')}. No tables were created."
+        ) from exc
     return created_table
 
 

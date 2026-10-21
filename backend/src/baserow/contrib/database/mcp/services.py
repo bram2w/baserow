@@ -70,7 +70,7 @@ def _user_error_mapping() -> dict[type[Exception], Any]:
     }
 
 
-def _user_error_message(exc: Exception) -> str | None:
+def user_error_message(exc: Exception) -> str | None:
     """The REST API's message for a client error, or None for other exceptions."""
 
     _, error, detail = apply_exception_mapping(_user_error_mapping(), exc)
@@ -110,7 +110,7 @@ def input_errors():
             f"You don't have permission to change these fields: {names}."
         ) from exc
     except Exception as exc:
-        message = _user_error_message(exc)
+        message = user_error_message(exc)
         if message is None:
             raise
         raise MCPToolInputError(message) from exc

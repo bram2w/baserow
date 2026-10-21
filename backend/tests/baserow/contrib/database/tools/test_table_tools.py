@@ -291,6 +291,44 @@ def test_shared_create_tables_keeps_tables_and_fields_when_a_field_fails(
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize(
+    "primary_field_name,reason",
+    [
+        ("id", "reserved"),
+        ("x" * 300, "longer than 255 characters"),
+    ],
+)
+def test_create_tables_over_mcp_reports_a_refused_primary_field_name(
+    data_fixture, primary_field_name, reason
+):
+    endpoint = data_fixture.create_mcp_endpoint(allowed_tools=["create_tables"])
+    database = data_fixture.create_database_application(workspace=endpoint.workspace)
+
+    result = _call_create_tables(
+        endpoint,
+        {
+            "database_id": database.id,
+            "tables": [
+                {"name": "Fine", "primary_field_name": "Name", "fields": []},
+                {
+                    "name": "Orders",
+                    "primary_field_name": primary_field_name,
+                    "fields": [],
+                },
+            ],
+        },
+    )
+
+    assert result.isError is True
+    text = result.content[0].text
+    assert text.startswith(
+        "Invalid value. The primary_field_name of table 'Orders' is refused: "
+    )
+    assert reason in text
+    assert not Table.objects.filter(database=database).exists()
+
+
+@pytest.mark.django_db
 def test_shared_create_tables_drops_the_model_cached_before_a_denied_field(
     data_fixture,
 ):
