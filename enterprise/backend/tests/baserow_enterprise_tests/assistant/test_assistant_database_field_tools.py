@@ -3,11 +3,15 @@ from typing import Any, NamedTuple
 from unittest.mock import MagicMock
 
 from django.contrib.auth.models import AbstractUser
+from django.db import IntegrityError
 
 import pytest
 from pydantic import ValidationError
 
-from baserow.contrib.database.fields.actions import UpdateFieldActionType
+from baserow.contrib.database.fields.actions import (
+    CreateFieldActionType,
+    UpdateFieldActionType,
+)
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field, SelectOption
 from baserow.contrib.database.rows.handler import RowHandler
@@ -782,3 +786,93 @@ def test_create_tables_notes_every_unrepaired_formula_after_a_denial(
         f"Invalid formula for field 'A X' in table_{a.id}",
         f"Invalid formula for field 'B X' in table_{b.id}",
     ]
+
+
+@pytest.mark.django_db
+def test_create_tables_keeps_the_repairs_made_before_a_denial(
+    data_fixture, monkeypatch
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    _fake_fixer(monkeypatch, "'fixed'")
+    original = CreateFieldActionType.do
+    calls = []
+
+    def do(user, table, field_type, **kwargs):
+        calls.append(kwargs["name"])
+        if len(calls) > 1:
+            raise PermissionException()
+        return original(user, table, field_type, **kwargs)
+
+    monkeypatch.setattr(
+        "baserow_enterprise.assistant.tools.database.helpers.CreateFieldActionType.do",
+        do,
+    )
+
+    result = create_tables(
+        make_test_ctx(user, workspace),
+        database_id=database.id,
+        tables=[
+            TableItemCreate(
+                name="A",
+                primary_field_name="Name",
+                fields=[
+                    FieldItemCreate(name=n, type="formula", formula="concat(")
+                    for n in ("A X", "A Y")
+                ],
+            ),
+            TableItemCreate(
+                name="B",
+                primary_field_name="Name",
+                fields=[FieldItemCreate(name="B X", type="formula", formula="concat(")],
+            ),
+        ],
+        add_sample_rows=False,
+        thought="create A and B",
+    )
+
+    a = database.table_set.get(name="A")
+    b = database.table_set.get(name="B")
+    assert a.field_set.get(name="A X").specific.formula == "'fixed'"
+    permission_note, *formula_notes = result["notes"]
+    assert permission_note.startswith(
+        f"Permission denied while creating fields in table_{a.id}."
+    )
+    assert [note.split(":")[0] for note in formula_notes] == [
+        f"Invalid formula for field 'A Y' in table_{a.id}",
+        f"Invalid formula for field 'B X' in table_{b.id}",
+    ]
+
+
+@pytest.mark.django_db
+def test_create_fields_drops_the_model_cached_in_a_failed_repair(
+    data_fixture, monkeypatch
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+    data_fixture.create_text_field(table=table, name="Name", primary=True)
+    _fake_fixer(monkeypatch, "'fixed'")
+    original = CreateFieldActionType.do
+
+    def do(*args, **kwargs):
+        original(*args, **kwargs)
+        raise IntegrityError("duplicate key value")
+
+    monkeypatch.setattr(
+        "baserow_enterprise.assistant.tools.database.helpers.CreateFieldActionType.do",
+        do,
+    )
+
+    result = create_fields(
+        make_test_ctx(user, workspace),
+        table_id=table.id,
+        fields=[FieldItemCreate(name="F", type="formula", formula="concat(")],
+        thought="add formula",
+    )
+
+    assert result["created_fields"] == []
+    model = Table.objects.get(id=table.id).get_model()
+    assert [f["field"].name for f in model._field_objects.values()] == ["Name"]

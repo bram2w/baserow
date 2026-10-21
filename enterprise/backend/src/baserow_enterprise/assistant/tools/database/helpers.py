@@ -95,6 +95,8 @@ def create_repaired_formula_fields(
                 created.append(FieldItem.from_django_orm(new_field))
                 continue
         except Exception as exc:
+            # The savepoint rolled back a field its cached model may still have.
+            shared_fields.forget_cached_table_models()
             raise_if_permission_denied(exc)
         remaining.append(error)
     return created, remaining
@@ -145,6 +147,7 @@ def apply_repaired_formula_updates(
             updated.append(field_item)
             changed = changed or field_changed
         except Exception as exc:
+            shared_fields.forget_cached_table_models()
             raise_if_permission_denied(exc)
             errors.append(f"Error updating field {field_id}: {exc}")
     return updated, changed, errors
