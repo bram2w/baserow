@@ -24,6 +24,11 @@ __all__ = [
 
 
 class Automation(Application):
+    untrusted_content = models.BooleanField(
+        default=False,
+        db_default=False,
+        help_text="Blocks custom code nodes until explicitly trusted.",
+    )
     published_from = models.ForeignKey(
         AutomationWorkflow,
         on_delete=models.CASCADE,

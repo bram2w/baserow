@@ -38,12 +38,13 @@ class AutomationApplicationType(ApplicationType):
     type = "automation"
     model_class = Automation
     serializer_field_names = [
+        "untrusted_content",
         "name",
         "workflows",
     ]
-    allowed_fields = []
+    allowed_fields = ["untrusted_content"]
     supports_integrations = True
-    request_serializer_field_names = []
+    request_serializer_field_names = ["untrusted_content"]
     serializer_mixins = [lazy_get_instance_serializer_class]
     data_provider_type_registry = automation_data_provider_type_registry
 
@@ -126,6 +127,10 @@ class AutomationApplicationType(ApplicationType):
         return AutomationDict(
             workflows=serialized_workflows,
             integrations=serialized_integrations,
+            untrusted_content=(
+                automation.untrusted_content
+                or self._is_external_import_export(import_export_config)
+            ),
             **serialized_automation,
         )
 
@@ -175,6 +180,14 @@ class AutomationApplicationType(ApplicationType):
 
         return imported_integrations
 
+    @staticmethod
+    def _is_external_import_export(config: ImportExportConfig) -> bool:
+        """Portable copies require trust; internal copies retain their restriction."""
+
+        return config.is_user_template or not (
+            config.is_duplicate or config.is_publishing or config.is_template
+        )
+
     def import_serialized(
         self,
         workspace: Workspace,
@@ -191,6 +204,10 @@ class AutomationApplicationType(ApplicationType):
 
         self.cache = {}
 
+        untrusted_content = self._is_external_import_export(
+            import_export_config
+        ) or serialized_values.get("untrusted_content", False)
+        serialized_values.pop("untrusted_content", None)
         serialized_workflows = serialized_values.pop("workflows")
         serialized_integrations = serialized_values.pop("integrations")
 
@@ -214,6 +231,8 @@ class AutomationApplicationType(ApplicationType):
         )
 
         automation = application.specific
+        automation.untrusted_content = untrusted_content
+        automation.save(update_fields=["untrusted_content"])
 
         if not serialized_integrations:
             progress.increment(

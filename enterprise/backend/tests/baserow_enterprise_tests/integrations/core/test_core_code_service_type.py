@@ -227,3 +227,58 @@ def test_core_code_workflow_action_dispatch_returns_formula_used_public_result(
             "function main() { return { publicValue: 42, hiddenValue: 7 } }",
         )
     ]
+
+
+@pytest.mark.parametrize("state", [None, "test_clone", "live"])
+def test_untrusted_automation_code_nodes_require_consent(
+    enterprise_data_fixture,
+    enable_enterprise,
+    monkeypatch,
+    code_runner_registered,
+    state,
+):
+    """Draft, test, and live nodes cannot reach the runner until explicitly trusted."""
+
+    from baserow.contrib.automation.workflows.handler import AutomationWorkflowHandler
+
+    automation = enterprise_data_fixture.create_automation_application(
+        untrusted_content=True
+    )
+    workflow = enterprise_data_fixture.create_automation_workflow(automation=automation)
+    service = enterprise_data_fixture.create_enterprise_core_code_service(
+        code="function main(context) { return { newValue: 4 } }"
+    )
+    original_node = enterprise_data_fixture.create_automation_node(
+        workflow=workflow, type="code", service=service
+    )
+    node = original_node
+    handler = AutomationWorkflowHandler()
+    if state:
+        clone, mapping = handler._clone_workflow(workflow, state)
+        node = type(node).objects.get(
+            id=mapping["automation_workflow_nodes"][original_node.id]
+        )
+        assert clone.untrusted_content is True
+
+    runner = FakeCodeRunnerType()
+    monkeypatch.setattr(
+        "baserow_enterprise.integrations.core.service_types.get_code_runner",
+        lambda: runner,
+    )
+    with pytest.raises(ServiceImproperlyConfiguredDispatchException, match="trusted"):
+        node.get_type().dispatch(node, FakeDispatchContext())
+    assert runner.calls == []
+
+    automation.untrusted_content = False
+    automation.save(update_fields=["untrusted_content"])
+    if state:
+        clone, mapping = handler._clone_workflow(workflow, state)
+        node = type(node).objects.get(
+            id=mapping["automation_workflow_nodes"][original_node.id]
+        )
+        assert clone.untrusted_content is False
+    else:
+        node = type(node).objects.get(id=original_node.id)
+    result = node.get_type().dispatch(node, FakeDispatchContext())
+    assert result.data == {"newValue": 4}
+    assert runner.calls == [({}, service.code)]

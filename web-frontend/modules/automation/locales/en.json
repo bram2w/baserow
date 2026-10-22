@@ -53,6 +53,7 @@
     "automation": "automation"
   },
   "generalSettings": {
+    "blockUntrustedContent": "Block custom code nodes",
     "titleOverview": "General",
     "nameLabel": "Automation name",
     "notificationLabel": "Notifications",

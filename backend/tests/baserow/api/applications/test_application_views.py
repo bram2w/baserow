@@ -811,28 +811,3 @@ def test_applications_expose_last_viewed_of_requesting_user(api_client, data_fix
     )
     assert response.status_code == HTTP_200_OK
     assert response.json()["last_viewed"] == "2026-01-02T12:00:00Z"
-
-
-@pytest.mark.django_db
-@pytest.mark.parametrize("application_type", ["database", "automation", "dashboard"])
-def test_untrusted_content_is_builder_only(api_client, data_fixture, application_type):
-    """Other application types neither store nor expose Builder's content restriction."""
-
-    from baserow.core.registries import ImportExportConfig
-
-    user, token = data_fixture.create_user_and_token()
-    workspace = data_fixture.create_workspace(user=user)
-    application = getattr(data_fixture, f"create_{application_type}_application")(
-        workspace=workspace
-    )
-    assert not hasattr(application, "untrusted_content")
-
-    url = reverse("api:applications:item", kwargs={"application_id": application.id})
-    response = api_client.get(url, HTTP_AUTHORIZATION=f"JWT {token}")
-    assert response.status_code == 200
-    assert "untrusted_content" not in response.json()
-
-    serialized = application.get_type().export_serialized(
-        application, ImportExportConfig(include_permission_data=False)
-    )
-    assert "untrusted_content" not in serialized

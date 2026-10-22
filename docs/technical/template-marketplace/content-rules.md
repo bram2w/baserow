@@ -170,25 +170,17 @@ Button field row actions use the Local Baserow service types above and follow th
 
 ## Active content
 
-Builder applications carry an `untrusted_content` flag. Portable exports and imports set it
-without changing the source application. Internal duplicates, snapshots, publishing,
-and official templates preserve the existing value. While set, Builder blocks iframe
-URLs and embedded HTML in the editor, preview, and public pages. Enterprise Builder
-also blocks custom JavaScript, CSS, external scripts/stylesheets, and code workflow
-actions. The content is retained for review. An application editor can clear the flag
-in General settings to enable it; published applications require publishing again.
-
 | Module | What enforces it | Status | Owner |
 | --- | --- | --- | --- |
 | Builder frontend | Template preview always sandboxes IFrame embeds, including Repeat items (`sandboxPermissions` in `IFrameElement.vue`) | to do | core/database |
-| Builder | Installed copies keep embedded HTML off until the installer turns it on (per-application untrusted content flag) | done | WAB |
+| Builder | Installed copies keep embedded HTML off until the installer turns it on (per-application untrusted content flag) | to do | WAB |
 | Builder | `IFrameElementType` forces `allow_same_origin` off in the template and in installs | to do | WAB |
 
 ## Custom code
 
 | Module | What enforces it | Status | Owner |
 | --- | --- | --- | --- |
-| Enterprise builder | `CustomCodeBuilderApplicationTypeMixin.import_serialized` and `CoreCodeActionType` respect the per-application untrusted content flag, set in installed copies | done | WAB |
+| Enterprise builder | `CustomCodeBuilderApplicationTypeMixin.import_serialized` and `CoreCodeActionType` respect the per-application untrusted content flag, off in installed copies | to do | WAB |
 | Builder frontend | The template allowlist has no `ReadApplicationOperationType`, so the builder preview and `PublicCustomCodeView` refuse template viewers; custom code is only added by `PublicPageContent.vue` | done | WAB |
 | Builder | `DispatchBuilderWorkflowActionOperationType` is not on the template allowlist, so `CoreCodeActionType` never runs in the preview | done | WAB |
 

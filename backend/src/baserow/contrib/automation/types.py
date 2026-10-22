@@ -17,6 +17,7 @@ class AutomationWorkflowDict(TypedDict):
 
 
 class AutomationDict(TypedDict):
+    untrusted_content: bool
     id: int
     name: str
     order: int
