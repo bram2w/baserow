@@ -43,6 +43,12 @@
       </div>
     </FormGroup>
 
+    <FormGroup class="padding-top-2">
+      <Checkbox v-model="values.untrusted_content" :disabled="disabled">
+        {{ $t('workflowGeneralSettings.blockUntrustedContent') }}
+      </Checkbox>
+    </FormGroup>
+
     <MemberAssignmentModal
       ref="workflowDisabledRecipientsModal"
       :members="workspaceMembers"
@@ -107,8 +113,13 @@ const membersLoading = ref(false)
 const values = reactive({
   name: '',
   notification_recipient_ids: [],
+  untrusted_content: false,
 })
-const allowedValues = ['name', 'notification_recipient_ids']
+const allowedValues = [
+  'name',
+  'notification_recipient_ids',
+  'untrusted_content',
+]
 
 const rules = computed(() => ({
   values: {

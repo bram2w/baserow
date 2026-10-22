@@ -1,4 +1,26 @@
 {
+  "untrustedContentReviewModal": {
+    "title": "Review imported content",
+    "description": "This report lists active content found during import. It may have changed since then. Review the content in the editor before trusting it.",
+    "confirmation": "Trusting enables all current custom content, including changes made after import. Publish again to enable it in the published version.",
+    "trust": "Trust content",
+    "empty": "No active content was recorded at import. Review the current content in the editor before trusting it.",
+    "page": "Page: {name}",
+    "typeIframe": "Iframe",
+    "typeCodeAction": "Code action",
+    "typeCodeNode": "Code node",
+    "typeCss": "Custom CSS",
+    "typeJs": "Custom JavaScript",
+    "typeScript": "External script",
+    "typeStylesheet": "External stylesheet",
+    "typeUnknown": "Active content",
+    "errorTitle": "Could not trust content",
+    "errorMessage": "The content is still blocked. Check your permissions and try again."
+  },
+  "applicationUntrustedContentAlert": {
+    "title": "Untrusted content blocked",
+    "review": "Review and trust"
+  },
   "mcpAuthorize": {
     "title": "Connect {client}",
     "titleFrom": "Connect {client} from {host}",
