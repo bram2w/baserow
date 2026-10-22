@@ -1,6 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 
 from baserow.contrib.automation.nodes.node_types import AutomationActionNodeType
+from baserow.core.import_export.untrusted_content import UntrustedContentTypeMixin
 from baserow.core.services.exceptions import (
     ServiceImproperlyConfiguredDispatchException,
 )
@@ -16,7 +17,7 @@ from baserow_enterprise.integrations.core.service_types import (
 from baserow_premium.license.handler import LicenseHandler
 
 
-class CoreCodeActionNodeType(AutomationActionNodeType):
+class CoreCodeActionNodeType(UntrustedContentTypeMixin, AutomationActionNodeType):
     type = "code"
     model_class = CoreCodeActionNode
     service_type = CoreCodeServiceType.type

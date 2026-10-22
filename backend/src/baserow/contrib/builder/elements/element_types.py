@@ -113,6 +113,7 @@ from baserow.core.formula.validator import (
     ensure_numeric,
     ensure_string_or_integer,
 )
+from baserow.core.import_export.untrusted_content import UntrustedContentTypeMixin
 from baserow.core.registry import Instance, T
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.user_files.handler import UserFileHandler
@@ -2164,7 +2165,7 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
         return value
 
 
-class IFrameElementType(ElementType):
+class IFrameElementType(UntrustedContentTypeMixin, ElementType):
     display_name = _("Iframe")
     type = "iframe"
     model_class = IFrameElement

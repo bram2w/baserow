@@ -20,7 +20,9 @@ from baserow.contrib.automation.nodes.models import AutomationNode
 from baserow.contrib.automation.operations import ListAutomationWorkflowsOperationType
 from baserow.contrib.automation.types import AutomationDict
 from baserow.contrib.automation.workflows.handler import AutomationWorkflowHandler
+from baserow.core.deferred_callbacks import deferred_callback_context
 from baserow.core.handler import CoreHandler
+from baserow.core.import_export.untrusted_content import defer_untrusted_content_update
 from baserow.core.integrations.handler import IntegrationHandler
 from baserow.core.integrations.models import Integration
 from baserow.core.models import Application, Workspace
@@ -83,13 +85,15 @@ class AutomationApplicationType(ApplicationType):
         storage: Optional[Storage] = None,
         progress_builder: ChildProgressBuilder | None = None,
         workflows: Optional[List[AutomationWorkflow]] = None,
+        cache: Optional[Dict[str, Any]] = None,
     ) -> AutomationDict:
         """
         Exports the automation application type to a serialized format that can later
         be imported via the `import_serialized`.
         """
 
-        self.cache = {}
+        if cache is None:
+            cache = {}
 
         handler = AutomationWorkflowHandler()
         workflows = (
@@ -102,7 +106,7 @@ class AutomationApplicationType(ApplicationType):
                 import_export_config,
                 files_zip=files_zip,
                 storage=storage,
-                cache=self.cache,
+                cache=cache,
             )
             for i in IntegrationHandler().get_integrations(automation)
         ]
@@ -113,7 +117,7 @@ class AutomationApplicationType(ApplicationType):
                 import_export_config=import_export_config,
                 files_zip=files_zip,
                 storage=storage,
-                cache=self.cache,
+                cache=cache,
             )
             for w in workflows
         ]
@@ -128,8 +132,9 @@ class AutomationApplicationType(ApplicationType):
             workflows=serialized_workflows,
             integrations=serialized_integrations,
             untrusted_content=(
-                automation.untrusted_content
-                or self._is_external_import_export(import_export_config)
+                cache.get("has_untrusted_content", False)
+                if self._is_external_import_export(import_export_config)
+                else automation.untrusted_content
             ),
             **serialized_automation,
         )
@@ -143,6 +148,7 @@ class AutomationApplicationType(ApplicationType):
         storage: Optional[Storage] = None,
         progress_builder: Optional[ChildProgressBuilder] = None,
         import_export_config: Optional[ImportExportConfig] = None,
+        cache: Optional[Dict[str, Any]] = None,
     ) -> List[Integration]:
         """
         Import integrations to builder. This method has to be compatible with the output
@@ -158,6 +164,9 @@ class AutomationApplicationType(ApplicationType):
         :return: The created integration instances.
         """
 
+        if cache is None:
+            cache = {}
+
         progress = ChildProgressBuilder.build(
             progress_builder, child_total=len(serialized_integrations)
         )
@@ -170,7 +179,7 @@ class AutomationApplicationType(ApplicationType):
                 serialized_integration,
                 id_mapping,
                 import_export_config=import_export_config,
-                cache=self.cache,
+                cache=cache,
                 files_zip=files_zip,
                 storage=storage,
             )
@@ -186,6 +195,7 @@ class AutomationApplicationType(ApplicationType):
 
         return not (config.is_duplicate or config.is_publishing or config.is_template)
 
+    @deferred_callback_context()
     def import_serialized(
         self,
         workspace: Workspace,
@@ -195,17 +205,19 @@ class AutomationApplicationType(ApplicationType):
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
         progress_builder: Optional[ChildProgressBuilder] = None,
+        cache: Optional[Dict[str, Any]] = None,
     ) -> Application:
         """
         Imports an automation application exported by the `export_serialized` method.
         """
 
-        self.cache = {}
+        if cache is None:
+            cache = {}
 
-        untrusted_content = self._is_external_import_export(
-            import_export_config
-        ) or serialized_values.get("untrusted_content", False)
-        serialized_values.pop("untrusted_content", None)
+        untrusted_content = serialized_values.pop("untrusted_content", False)
+        if self._is_external_import_export(import_export_config):
+            # Keep partial imports blocked until deferred content detection finishes.
+            untrusted_content = True
         serialized_workflows = serialized_values.pop("workflows")
         serialized_integrations = serialized_values.pop("integrations")
 
@@ -231,6 +243,7 @@ class AutomationApplicationType(ApplicationType):
         automation = application.specific
         automation.untrusted_content = untrusted_content
         automation.save(update_fields=["untrusted_content"])
+        defer_untrusted_content_update(automation, cache, import_export_config)
 
         if not serialized_integrations:
             progress.increment(
@@ -246,6 +259,7 @@ class AutomationApplicationType(ApplicationType):
                 storage,
                 progress.create_child_builder(represents_progress=integration_progress),
                 import_export_config=import_export_config,
+                cache=cache,
             )
 
         if not serialized_workflows:
@@ -259,6 +273,7 @@ class AutomationApplicationType(ApplicationType):
                 storage,
                 progress.create_child_builder(represents_progress=workflow_progress),
                 import_export_config=import_export_config,
+                cache=cache,
             )
 
         return automation

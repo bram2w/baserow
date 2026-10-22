@@ -369,3 +369,44 @@ def test_untrusted_custom_code_requires_explicit_consent(
     assert response.content.decode() == (
         "alert(1)" if code_type == "js" else "body { color: red }"
     )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "content", ["empty", "css", "js", "script", "stylesheet", "empty_script"]
+)
+def test_only_custom_code_content_requires_trust_on_import(
+    enable_enterprise, data_fixture, content
+):
+    """Detect retained code and external assets, including files claiming to be safe."""
+
+    from baserow.core.registries import ImportExportConfig
+
+    builder = data_fixture.create_builder_application()
+    if content in ["css", "js"]:
+        setattr(builder.custom_code, content, "custom content")
+        builder.custom_code.save()
+    if content in ["script", "stylesheet", "empty_script"]:
+        BuilderCustomScript.objects.create(
+            builder=builder,
+            order=0,
+            type="stylesheet" if content == "stylesheet" else "javascript",
+            url="https://example.com/asset" if content != "empty_script" else "",
+        )
+    config = ImportExportConfig(include_permission_data=False)
+    application_type = builder.get_type()
+    serialized = application_type.export_serialized(builder, config)
+    expected = content not in ["empty", "empty_script"]
+    assert serialized["untrusted_content"] is expected
+    serialized["untrusted_content"] = False
+
+    imported = application_type.import_serialized(
+        builder.workspace, serialized, config, {}
+    )
+    imported.refresh_from_db()
+    assert imported.untrusted_content is expected
+    assert imported.custom_code.css == builder.custom_code.css
+    assert imported.custom_code.js == builder.custom_code.js
+    assert list(imported.scripts.values_list("url", flat=True)) == list(
+        builder.scripts.values_list("url", flat=True)
+    )

@@ -140,18 +140,11 @@ class CustomCodeBuilderApplicationTypeMixin:
         files_zip=None,
         storage=None,
         progress_builder=None,
+        cache=None,
     ) -> BuilderCustomCodeDict:
         """
         Serializes the scripts and the custom_code properties.
         """
-
-        builder_dict = super().export_serialized(
-            builder,
-            import_export_config,
-            files_zip=files_zip,
-            storage=storage,
-            progress_builder=progress_builder,
-        )
 
         scripts = [
             {
@@ -162,6 +155,24 @@ class CustomCodeBuilderApplicationTypeMixin:
             }
             for s in builder.scripts.all()
         ]
+
+        if cache is None:
+            cache = {}
+        if (
+            builder.custom_code.css
+            or builder.custom_code.js
+            or any(script["url"] for script in scripts)
+        ):
+            cache["has_untrusted_content"] = True
+
+        builder_dict = super().export_serialized(
+            builder,
+            import_export_config,
+            files_zip=files_zip,
+            storage=storage,
+            progress_builder=progress_builder,
+            cache=cache,
+        )
 
         return BuilderCustomCodeDict(
             **builder_dict,
@@ -178,6 +189,7 @@ class CustomCodeBuilderApplicationTypeMixin:
         files_zip=None,
         storage=None,
         progress_builder=None,
+        cache=None,
     ) -> Builder:
         """
         Handles the scripts and the custom_code properties.
@@ -188,6 +200,15 @@ class CustomCodeBuilderApplicationTypeMixin:
             "custom_code", {"css": "", "js": ""}
         )
 
+        if cache is None:
+            cache = {}
+        if (
+            serialized_custom_code.get("css")
+            or serialized_custom_code.get("js")
+            or any(script.get("url") for script in serialized_scripts)
+        ):
+            cache["has_untrusted_content"] = True
+
         instance = super().import_serialized(
             workspace,
             serialized_values,
@@ -196,6 +217,7 @@ class CustomCodeBuilderApplicationTypeMixin:
             files_zip=files_zip,
             storage=storage,
             progress_builder=progress_builder,
+            cache=cache,
         )
 
         instance.custom_code.css = serialized_custom_code["css"]

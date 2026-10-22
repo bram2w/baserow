@@ -282,3 +282,51 @@ def test_untrusted_automation_code_nodes_require_consent(
     result = node.get_type().dispatch(node, FakeDispatchContext())
     assert result.data == {"newValue": 4}
     assert runner.calls == [({}, service.code)]
+
+
+@pytest.mark.parametrize("application_kind", ["builder", "automation"])
+@pytest.mark.parametrize(
+    "config_values,external",
+    [
+        ({}, True),
+        ({"is_duplicate": True}, False),
+        ({"is_publishing": True}, False),
+        ({"is_template": True}, False),
+    ],
+)
+def test_code_action_and_node_detect_untrusted_content_during_copy(
+    enterprise_data_fixture,
+    code_runner_registered,
+    application_kind,
+    config_values,
+    external,
+):
+    """Code actions/nodes mark their application's cache without trusting file metadata."""
+
+    from baserow.core.registries import ImportExportConfig
+
+    fixture = enterprise_data_fixture
+    application = getattr(fixture, f"create_{application_kind}_application")()
+    service = fixture.create_enterprise_core_code_service(
+        code="function main(context) { return { value: 1 } }"
+    )
+    if application_kind == "builder":
+        page = fixture.create_builder_page(builder=application)
+        element = fixture.create_builder_button_element(page=page)
+        CoreCodeWorkflowAction.objects.create(
+            page=page, element=element, service=service, event=EventTypes.CLICK, order=0
+        )
+    else:
+        workflow = fixture.create_automation_workflow(automation=application)
+        fixture.create_automation_node(workflow=workflow, type="code", service=service)
+
+    application_type = application.get_type()
+    config = ImportExportConfig(include_permission_data=False, **config_values)
+    serialized = application_type.export_serialized(application, config)
+    assert serialized["untrusted_content"] is external
+    serialized["untrusted_content"] = False
+    imported = application_type.import_serialized(
+        application.workspace, serialized, config, {}
+    )
+    imported.refresh_from_db()
+    assert imported.untrusted_content is external

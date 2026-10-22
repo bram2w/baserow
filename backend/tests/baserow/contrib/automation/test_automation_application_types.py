@@ -86,7 +86,7 @@ def test_automation_export_serialized(data_fixture):
     serialized = json.loads(json.dumps(serialized))
 
     reference = {
-        "untrusted_content": True,
+        "untrusted_content": False,
         "id": automation.id,
         "name": automation.name,
         "order": automation.order,
@@ -386,15 +386,16 @@ def test_enhance_queryset(data_fixture, django_assert_num_queries):
 def test_automation_content_trust_export_import(
     data_fixture, config_values, expected_untrusted, already_untrusted
 ):
-    """External copies require consent; internal copies preserve existing restrictions."""
+    """Empty external copies stay trusted; internal copies preserve existing restrictions."""
 
     automation = data_fixture.create_automation_application(
         untrusted_content=already_untrusted
     )
     config = ImportExportConfig(include_permission_data=False, **config_values)
+    expected_untrusted = already_untrusted and not expected_untrusted
     application_type = AutomationApplicationType()
     serialized = application_type.export_serialized(automation, config)
-    assert serialized["untrusted_content"] is (expected_untrusted or already_untrusted)
+    assert serialized["untrusted_content"] is expected_untrusted
     automation.refresh_from_db()
     assert automation.untrusted_content is already_untrusted
 
@@ -402,13 +403,15 @@ def test_automation_content_trust_export_import(
         automation.workspace, serialized, config, {}
     )
     imported.refresh_from_db()
-    assert imported.untrusted_content is (expected_untrusted or already_untrusted)
+    assert imported.untrusted_content is expected_untrusted
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("serialized_flag", [None, False])
-def test_external_automation_import_cannot_bypass_trust(data_fixture, serialized_flag):
-    """Legacy and edited files both need explicit consent to run custom code nodes."""
+@pytest.mark.parametrize("serialized_flag", [None, False, True])
+def test_external_automation_import_without_code_stays_trusted(
+    data_fixture, serialized_flag
+):
+    """Applications without custom code do not require content consent."""
 
     automation = data_fixture.create_automation_application()
     application_type = AutomationApplicationType()
@@ -421,4 +424,4 @@ def test_external_automation_import_cannot_bypass_trust(data_fixture, serialized
     imported = application_type.import_serialized(
         automation.workspace, serialized, config, {}
     )
-    assert imported.untrusted_content is True
+    assert imported.untrusted_content is False
