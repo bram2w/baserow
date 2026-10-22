@@ -1,10 +1,13 @@
 <template>
   <aside class="agent-configuration" :aria-busy="loading">
-    <div class="agent-configuration__header">
-      <Button
+    <div
+      class="agent-configuration__header"
+      :class="{ 'agent-configuration__header--section': selectedSection }"
+    >
+      <ButtonText
         v-if="selectedSection"
+        class="agent-configuration__back"
         type="secondary"
-        size="small"
         button-type="button"
         icon="iconoir-nav-arrow-left"
         :aria-label="$t('action.back')"
@@ -127,6 +130,7 @@ import { computed, nextTick, ref } from 'vue'
 import ReadOnlyForm from '@baserow/modules/core/components/ReadOnlyForm'
 import MenuList from '@baserow/modules/core/components/MenuList'
 import Icon from '@baserow/modules/core/components/Icon'
+import ButtonText from '@baserow/modules/core/components/ButtonText'
 
 const props = defineProps({
   name: { type: String, required: true },

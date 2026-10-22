@@ -116,6 +116,32 @@
   }
 }
 
+.agent-configuration__header--section {
+  padding-left: 8px;
+}
+
+.agent-configuration__back {
+  width: 28px;
+  height: 28px;
+  justify-content: center;
+
+  @include rounded($rounded-md);
+
+  &:hover,
+  &:focus-visible {
+    background: $palette-neutral-100;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $palette-blue-500;
+    outline-offset: -2px;
+  }
+
+  .button-text__icon {
+    font-size: 16px;
+  }
+}
+
 .agent-configuration__save-indicator {
   display: flex;
   align-items: center;
@@ -133,6 +159,14 @@
 .agent-configuration__sections {
   min-width: 0;
   padding: 8px;
+
+  .menu-list__item + .menu-list__item::before {
+    content: '';
+    display: block;
+    // Align the divider with the text, leaving the leading icon outside it.
+    margin: 0 10px 0 36px;
+    border-top: 1px solid $palette-neutral-200;
+  }
 }
 
 .agent-configuration__skeleton-row {
