@@ -9,6 +9,7 @@
         :subjects="pickableSubjects"
         :assigned-keys="assignedKeys"
         :pending-emails="pendingEmails"
+        :inherited-admins="inheritedAdmins"
         :roles="assignableRoles"
         :email-role-uids="invitationRoleUids"
         :email-disabled-reason="emailDisabledReason"
@@ -74,6 +75,13 @@ import { filterRoles } from '@baserow_enterprise/utils/roles'
  * object, which takes it away from them below their workspace role; an
  * invitation can't, as there is no point in inviting someone to nothing. Only
  * assignable subject types take part; anonymous visitors are display-only.
+ *
+ * A user or agent who is an admin of the workspace, or holds the admin role
+ * themselves on the database or table the object is in, keeps full access to
+ * the object whatever role it has here. Such a row shows a locked admin role
+ * with an explanation, and the picker lists them with that reason instead of
+ * offering them. A team's admin role never protects its members, so it is
+ * shown as any other role.
  */
 export default {
   name: 'MemberInvitationRoute',
@@ -104,6 +112,7 @@ export default {
       fetchFailed: false,
       adding: false,
       roleAssignments: [],
+      parentRoleAssignments: {},
       scopedInvitations: [],
       subjects: {},
     }
@@ -181,6 +190,74 @@ export default {
     pendingEmails() {
       return this.scopedInvitations.map(({ email }) => email)
     },
+    adminRole() {
+      return this.workspace._.roles.find(({ uid }) => uid === 'ADMIN')
+    },
+    /**
+     * The scopes above the object, other than the workspace, whose admins keep
+     * full access to it, from the outermost in.
+     */
+    parentScopes() {
+      const { database, table } = this.target
+      const parents = []
+      if (
+        database &&
+        ['database_table', 'database_view'].includes(this.scopeType)
+      ) {
+        parents.push({
+          scopeType: 'application',
+          scope: database,
+          operation: 'application.read_role',
+        })
+      }
+      if (table && this.scopeType === 'database_view') {
+        parents.push({
+          scopeType: 'database_table',
+          scope: table,
+          operation: 'database.table.read_role',
+        })
+      }
+      return parents
+    },
+    /**
+     * The users and agents whose role on the object has no effect because they
+     * are an admin of a level above it, as `{ '<subject type>:<id>': '<level>' }`
+     * where the level is the lower case name of the outermost such level.
+     */
+    inheritedAdmins() {
+      const admins = {}
+      for (const parent of [...this.parentScopes].reverse()) {
+        const level = this.targetType
+          .getScopeTypeName(parent.scopeType, parent.scope)
+          .toLowerCase()
+        for (const roleAssignment of this.parentRoleAssignments[
+          parent.scopeType
+        ] || []) {
+          const subjectType = this.$registry.get(
+            'subject',
+            roleAssignment.subject_type
+          )
+          if (
+            roleAssignment.role === 'ADMIN' &&
+            subjectType?.holdsRolesDirectly
+          ) {
+            admins[subjectType.getKey(roleAssignment.subject)] = level
+          }
+        }
+      }
+      const workspaceLevel = this.$t('common.workspace').toLowerCase()
+      for (const subjectType of this.subjectTypes) {
+        if (!subjectType.holdsRolesDirectly) {
+          continue
+        }
+        for (const subject of this.subjects[subjectType.type] || []) {
+          if (subjectType.getWorkspaceRoleUid(subject) === 'ADMIN') {
+            admins[subjectType.getKey(subject)] = workspaceLevel
+          }
+        }
+      }
+      return admins
+    },
     /**
      * The rows of the direct access list: pending invitations first, then the
      * subjects with a role assignment on the object. Rows of a subject type
@@ -215,8 +292,10 @@ export default {
             'subject',
             roleAssignment.subject_type
           )
+          const key = subjectType.getKey(subject)
+          const adminLevel = this.inheritedAdmins[key]
           return {
-            key: `${roleAssignment.subject_type}:${subject.id}`,
+            key,
             kind: roleAssignment.subject_type,
             name: subjectType.getDisplayName(subject),
             subtitle: subjectType.getSubtitle(subject),
@@ -225,9 +304,16 @@ export default {
             initials: subjectType.getInitials(subject),
             icon: subjectType.iconClass,
             color: subjectType.avatarColor,
-            roleUid: roleAssignment.role,
-            roles: this.assignableRoles,
+            roleUid: adminLevel ? 'ADMIN' : roleAssignment.role,
+            roles: adminLevel
+              ? [this.adminRole].filter(Boolean)
+              : this.assignableRoles,
             disabled: subjectType.isCurrentUser(subject, this.userId),
+            helpText: this.getAdminHelpText(
+              subjectType,
+              roleAssignment.role,
+              adminLevel
+            ),
             roleAssignment,
           }
         })
@@ -239,6 +325,7 @@ export default {
     try {
       await Promise.all([
         this.fetchRoleAssignments(),
+        this.fetchParentRoleAssignments(),
         this.fetchScopedInvitations(),
         ...this.subjectTypes.map((subjectType) =>
           this.fetchSubjects(subjectType)
@@ -266,6 +353,55 @@ export default {
         this.roleAssignments = []
         this.showFetchError()
       }
+    },
+    /**
+     * Fetches the role assignments of the scopes above the object that the user
+     * may read, to tell who is an admin there. Without them the dialog still
+     * works, only those admins aren't marked, so a failure only notifies.
+     */
+    async fetchParentRoleAssignments() {
+      const service = RoleAssignmentsService(this.$client)
+      await Promise.all(
+        this.parentScopes
+          .filter(({ operation, scope }) =>
+            this.$hasPermission(operation, scope, this.workspace.id)
+          )
+          .map(async ({ scopeType, scope }) => {
+            try {
+              const { data } = await service.getRoleAssignments(
+                this.workspace.id,
+                scope.id,
+                scopeType
+              )
+              this.parentRoleAssignments[scopeType] = data
+            } catch (error) {
+              notifyIf(error)
+            }
+          })
+      )
+    },
+    /**
+     * Explains the role of an admin's row: an admin of a level above keeps full
+     * access whatever their role here, and a direct admin of a database or
+     * table has full access to everything inside it. Nothing for anyone else.
+     */
+    getAdminHelpText(subjectType, roleUid, adminLevel) {
+      if (adminLevel) {
+        return this.$t('shareScope.inheritedAdminHelpText', {
+          type: this.scopeTypeName,
+          level: adminLevel,
+        })
+      }
+      if (
+        roleUid === 'ADMIN' &&
+        subjectType.holdsRolesDirectly &&
+        this.scopeType !== 'database_view'
+      ) {
+        return this.$t('shareScope.scopeAdminHelpText', {
+          type: this.scopeTypeName,
+        })
+      }
+      return null
     },
     async fetchScopedInvitations() {
       try {

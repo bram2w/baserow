@@ -154,6 +154,28 @@ test('lists an invited address and an assigned subject with the reason', async (
   }
 })
 
+test('lists an admin of a level above with the reason instead of offering them', async () => {
+  const wrapper = await mountInput({
+    inheritedAdmins: { 'auth.User:8': 'workspace' },
+  })
+  try {
+    const input = wrapper.find('input')
+    await input.trigger('focus')
+    await input.setValue('mar')
+
+    const row = wrapper.find('.invite-input__item')
+    expect(itemTitles(wrapper)).toEqual(['Mark Delgado'])
+    expect(row.classes()).toContain('invite-input__item--disabled')
+    expect(wrapper.find('.invite-input__item-subtitle').text()).toBe(
+      'shareScope.alreadyAdmin'
+    )
+    await row.trigger('click')
+    expect(wrapper.findAll('.invite-input__chip')).toHaveLength(0)
+  } finally {
+    wrapper.unmount()
+  }
+})
+
 test('only mentions and offers the subject types it is given', async () => {
   const withoutAgents = await mountInput()
   try {

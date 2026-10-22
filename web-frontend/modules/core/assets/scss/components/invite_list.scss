@@ -38,6 +38,14 @@
   min-width: 0;
 }
 
+// The role of a row, with an optional explanation in front of it.
+.invite-list__access {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+}
+
 .invite-list__name {
   display: flex;
   align-items: center;

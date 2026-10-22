@@ -34,8 +34,11 @@
     />
     <HelpIcon
       v-if="roleUidSelected === 'ADMIN'"
-      :tooltip="$t('membersRoleField.adminHelpText')"
-      icon="warning-triangle"
+      :tooltip="$t('membersRoleField.adminFullAccessHelpText')"
+      :tooltip-content-classes="[
+        'tooltip__content--expandable',
+        'tooltip__content--expandable-plain-text',
+      ]"
     />
   </div>
 </template>

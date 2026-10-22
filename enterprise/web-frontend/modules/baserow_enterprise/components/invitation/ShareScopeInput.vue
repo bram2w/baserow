@@ -36,7 +36,8 @@ import InviteInput from '@baserow/modules/core/components/invitation/InviteInput
  * that can be picked per subject type, and every type in it gets a tab. A
  * subject whose key is in `assignedKeys` already holds a role on the object
  * and an address in `pendingEmails` already has an invitation on it, so both
- * are listed with that reason rather than offered. Submitting emits `add` with
+ * are listed with that reason rather than offered. So is a subject in
+ * `inheritedAdmins`, who has full access to the object already. Submitting emits `add` with
  * the picked items and the chosen role uid; the parent calls `remove()` and
  * `reset()` once they were added.
  */
@@ -73,6 +74,16 @@ export default {
       type: Array,
       required: false,
       default: () => [],
+    },
+    /**
+     * The users and agents who are an admin of a level above the object, as
+     * `{ '<subject type>:<id>': '<level>' }`. A role on the object would have
+     * no effect on them.
+     */
+    inheritedAdmins: {
+      type: Object,
+      required: false,
+      default: () => ({}),
     },
     roles: {
       type: Array,
@@ -144,11 +155,21 @@ export default {
         type: this.scopeTypeName,
       })
       return [
-        ...subjects.map((option) =>
-          this.assignedKeys.includes(option.key)
-            ? { ...option, disabledReason: assigned }
-            : option
-        ),
+        ...subjects.map((option) => {
+          if (this.assignedKeys.includes(option.key)) {
+            return { ...option, disabledReason: assigned }
+          }
+          if (this.inheritedAdmins[option.key]) {
+            return {
+              ...option,
+              disabledReason: this.$t('shareScope.alreadyAdmin', {
+                type: this.scopeTypeName,
+                level: this.inheritedAdmins[option.key],
+              }),
+            }
+          }
+          return option
+        }),
         ...this.pendingEmails.map((email) => ({
           key: `invitation:${email}`,
           type: 'email',

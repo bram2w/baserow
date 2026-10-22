@@ -15,6 +15,32 @@ export class SubjectType extends Registerable {
     return subject.id
   }
 
+  /**
+   * Tells subjects of different types apart, for instance in the share dialog
+   * where users, agents and teams are listed together.
+   */
+  getKey(subject) {
+    return `${this.getType()}:${this.getId(subject)}`
+  }
+
+  /**
+   * The uid of the role the subject holds on the workspace itself, or `null`
+   * when the type doesn't carry one on its records, like teams.
+   */
+  getWorkspaceRoleUid(subject) {
+    return null
+  }
+
+  /**
+   * Whether a subject of this type holds its roles itself, as users and agents
+   * do. A team passes its roles on to its members instead: such a role applies
+   * on the scope it is held on, but it never makes a member an admin of what is
+   * inside that scope.
+   */
+  get holdsRolesDirectly() {
+    return true
+  }
+
   getTypeDisplayName() {
     return this.type
   }
@@ -93,7 +119,7 @@ export class SubjectType extends Registerable {
   getInviteOption(subject) {
     const id = this.getId(subject)
     return {
-      key: `${this.type}:${id}`,
+      key: this.getKey(subject),
       type: this.type,
       id,
       name: this.getDisplayName(subject),
@@ -172,6 +198,10 @@ export class UserSubjectType extends SubjectType {
   isUser() {
     return true
   }
+
+  getWorkspaceRoleUid(subject) {
+    return subject.permissions ?? null
+  }
 }
 
 export class AnonymousUserSubjectType extends SubjectType {
@@ -230,5 +260,9 @@ export class AgentSubjectType extends SubjectType {
     }
     const { data } = await AgentService(this.app.$client).list(workspace.id)
     return data.results
+  }
+
+  getWorkspaceRoleUid(subject) {
+    return subject.role_uid ?? null
   }
 }
