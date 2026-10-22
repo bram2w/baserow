@@ -1328,15 +1328,9 @@ def test_sync_and_install_single_template(data_fixture, tmpdir):
     workspace_user = data_fixture.create_user_workspace()
     template = Template.objects.get()
     with transaction.atomic():
-        applications, _ = handler.install_template(
+        handler.install_template(
             workspace_user.user, workspace_user.workspace, template, storage=storage
         )
-
-    assert not template.workspace.application_set.filter(
-        untrusted_content=True
-    ).exists()
-    assert applications
-    assert all(not application.untrusted_content for application in applications)
 
 
 @pytest.mark.django_db

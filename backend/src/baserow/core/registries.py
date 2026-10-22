@@ -138,14 +138,6 @@ class ImportExportConfig:
     check that against.
     """
 
-    @property
-    def is_external(self) -> bool:
-        """Whether content crosses a trust boundary rather than an internal copy."""
-
-        return self.is_user_template or not (
-            self.is_duplicate or self.is_publishing or self.is_template
-        )
-
 
 class Plugin(APIUrlsInstanceMixin, Instance):
     """
@@ -548,9 +540,6 @@ class ApplicationType(
             order=application.order,
             type=self.type,
         )
-        structure["untrusted_content"] = (
-            application.untrusted_content or import_export_config.is_external
-        )
         # Annotate any `SerializationProcessorType` we have.
         structure = self.export_serialized_structure_with_registry(
             application.get_root(), application, structure, import_export_config
@@ -606,11 +595,6 @@ class ApplicationType(
         # If the Application originates from a Snapshot, pop it
         # off, we'll use it after the Application has been created.
         snapshot_from = serialized_copy.pop("snapshot_from", None)
-
-        serialized_copy["untrusted_content"] = (
-            import_export_config.is_external
-            or serialized_copy.get("untrusted_content", False)
-        )
 
         application = self.model_class.objects.create(
             workspace=workspace, **serialized_copy

@@ -152,7 +152,7 @@ class ApplicationUpdatedResult:
 @baserow_trace_handler
 class CoreHandler:
     default_create_allowed_fields = ["name", "init_with_data"]
-    default_update_allowed_fields = ["name", "untrusted_content"]
+    default_update_allowed_fields = ["name"]
 
     def clear_context(self):
         """

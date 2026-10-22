@@ -2,11 +2,11 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-    dependencies = [("core", "0132_createusertemplatejob")]
+    dependencies = [("builder", "0081_choiceelement_show_search")]
 
     operations = [
         migrations.AddField(
-            model_name="application",
+            model_name="builder",
             name="untrusted_content",
             field=models.BooleanField(
                 default=False,

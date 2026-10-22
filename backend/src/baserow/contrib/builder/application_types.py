@@ -66,11 +66,13 @@ class BuilderApplicationType(ApplicationType):
     supports_integrations = True
     supports_user_sources = True
     allowed_fields = [
+        "untrusted_content",
         "favicon_file",
         "login_page_id",
         "breakpoints",
     ]
     serializer_field_names = [
+        "untrusted_content",
         "favicon_file",
         "login_page_id",
         "breakpoints",
@@ -78,6 +80,7 @@ class BuilderApplicationType(ApplicationType):
         "theme",
     ]
     public_serializer_field_names = [
+        "untrusted_content",
         "favicon_file",
         "login_page_id",
         "breakpoints",
@@ -86,6 +89,7 @@ class BuilderApplicationType(ApplicationType):
         "user_sources",
     ]
     request_serializer_field_names = [
+        "untrusted_content",
         "favicon_file",
         "login_page_id",
         "breakpoints",
@@ -290,6 +294,10 @@ class BuilderApplicationType(ApplicationType):
             favicon_file=serialized_favicon_file,
             login_page=serialized_login_page,
             breakpoints=builder.breakpoints,
+            untrusted_content=(
+                builder.untrusted_content
+                or self._is_external_import_export(import_export_config)
+            ),
             **serialized_builder,
         )
 
@@ -380,6 +388,14 @@ class BuilderApplicationType(ApplicationType):
 
         return imported_user_sources
 
+    @staticmethod
+    def _is_external_import_export(config: ImportExportConfig) -> bool:
+        """Portable copies require trust; internal copies retain their restriction."""
+
+        return config.is_user_template or not (
+            config.is_duplicate or config.is_publishing or config.is_template
+        )
+
     def import_serialized(
         self,
         workspace: Workspace,
@@ -396,6 +412,10 @@ class BuilderApplicationType(ApplicationType):
 
         self.cache = {}
 
+        untrusted_content = self._is_external_import_export(
+            import_export_config
+        ) or serialized_values.get("untrusted_content", False)
+        serialized_values.pop("untrusted_content", None)
         serialized_pages = serialized_values.pop("pages")
         serialized_integrations = serialized_values.pop("integrations")
         serialized_user_sources = serialized_values.pop("user_sources")
@@ -435,7 +455,8 @@ class BuilderApplicationType(ApplicationType):
         # export without them is therefore a legacy configuration, not a newly
         # created builder application that should receive the new defaults.
         builder.breakpoints = breakpoints
-        builder.save(update_fields=["breakpoints"])
+        builder.untrusted_content = untrusted_content
+        builder.save(update_fields=["breakpoints", "untrusted_content"])
 
         # Always initialize the integrations mapping, even when the export
         # contains none (e.g. they were all trashed). Downstream importers

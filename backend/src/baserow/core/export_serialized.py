@@ -8,7 +8,7 @@ class CoreExportSerializedStructure:
     # This is needed by `DatabaseApplicationType.import_serialized` to prevent
     # additional data being  passed up to `ApplicationType.import_serialized`
     # when the `Application` is being created.
-    fields = ["id", "name", "order", "type", "snapshot_from", "untrusted_content"]
+    fields = ["id", "name", "order", "type", "snapshot_from"]
 
     @classmethod
     def filter_application_fields(

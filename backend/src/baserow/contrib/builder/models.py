@@ -91,6 +91,11 @@ def default_builder_breakpoints():
 
 
 class Builder(Application):
+    untrusted_content = models.BooleanField(
+        default=False,
+        db_default=False,
+        help_text="Blocks custom code and embedded content until explicitly trusted.",
+    )
     breakpoints = models.JSONField(
         default=default_builder_breakpoints,
         db_default=LEGACY_BUILDER_BREAKPOINTS,

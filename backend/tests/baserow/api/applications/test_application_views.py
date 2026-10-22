@@ -814,27 +814,25 @@ def test_applications_expose_last_viewed_of_requesting_user(api_client, data_fix
 
 
 @pytest.mark.django_db
-def test_application_content_can_be_explicitly_trusted(api_client, data_fixture):
-    """Only an authorized application editor can enable imported active content."""
+@pytest.mark.parametrize("application_type", ["database", "automation", "dashboard"])
+def test_untrusted_content_is_builder_only(api_client, data_fixture, application_type):
+    """Other application types neither store nor expose Builder's content restriction."""
+
+    from baserow.core.registries import ImportExportConfig
 
     user, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace(user=user)
-    builder = data_fixture.create_builder_application(
-        workspace=workspace, untrusted_content=True
+    application = getattr(data_fixture, f"create_{application_type}_application")(
+        workspace=workspace
     )
-    url = reverse("api:applications:item", kwargs={"application_id": builder.id})
-    response = api_client.patch(url, {"untrusted_content": False}, format="json")
-    assert response.status_code == 401
-    builder.refresh_from_db()
-    assert builder.untrusted_content is True
+    assert not hasattr(application, "untrusted_content")
 
-    response = api_client.patch(
-        url,
-        {"untrusted_content": False},
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
+    url = reverse("api:applications:item", kwargs={"application_id": application.id})
+    response = api_client.get(url, HTTP_AUTHORIZATION=f"JWT {token}")
     assert response.status_code == 200
-    assert response.json()["untrusted_content"] is False
-    builder.refresh_from_db()
-    assert builder.untrusted_content is False
+    assert "untrusted_content" not in response.json()
+
+    serialized = application.get_type().export_serialized(
+        application, ImportExportConfig(include_permission_data=False)
+    )
+    assert "untrusted_content" not in serialized

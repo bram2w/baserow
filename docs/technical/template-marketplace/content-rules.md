@@ -170,7 +170,7 @@ Button field row actions use the Local Baserow service types above and follow th
 
 ## Active content
 
-Applications carry an `untrusted_content` flag. Portable exports and imports set it
+Builder applications carry an `untrusted_content` flag. Portable exports and imports set it
 without changing the source application. Internal duplicates, snapshots, publishing,
 and official templates preserve the existing value. While set, Builder blocks iframe
 URLs and embedded HTML in the editor, preview, and public pages. Enterprise Builder
