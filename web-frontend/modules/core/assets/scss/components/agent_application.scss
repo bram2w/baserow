@@ -47,11 +47,6 @@
   padding: 0 8px;
 }
 
-.agent-conversations__empty {
-  padding: 8px;
-  color: $palette-neutral-600;
-}
-
 .agent-conversations__list {
   list-style: none;
   padding: 0;
@@ -135,13 +130,42 @@
   background: $palette-neutral-0;
 }
 
+.agent-conversations.agent-conversations--empty {
+  position: relative;
+  flex: 0 0 0;
+  border-right: 0;
+
+  .agent-conversations__footer {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    z-index: 1;
+    width: 240px;
+    max-width: 100cqw;
+  }
+}
+
+// Keep the empty-state action below the composer when they cannot fit side by side.
+.agent-conversations--empty.agent-conversations--with-create + .agent-chat {
+  padding-bottom: 68px;
+}
+
 .agent-chat__history {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+
   // Older messages are anchored by the component when they are prepended.
   overflow-anchor: none;
   padding: 24px;
+}
+
+.agent-chat--empty .agent-chat__history {
+  background: radial-gradient(
+    ellipse 75% 90% at 50% 0,
+    rgba($palette-purple-500, 0.08),
+    transparent 75%
+  );
 }
 
 .agent-chat__intro {
@@ -450,12 +474,36 @@
     }
   }
 
+  .agent-conversations--empty.agent-conversations--with-create + .agent-chat {
+    padding-bottom: 52px;
+  }
+
   .agent-chat__history {
     padding: 16px;
   }
 
   .agent-chat__footer {
     padding: 0 16px 16px;
+  }
+}
+
+@container (min-width: 1240px) {
+  .agent-conversations--empty.agent-conversations--with-create + .agent-chat {
+    padding-bottom: 0;
+  }
+
+  .agent-application__content--configuration-open
+    .agent-conversations--empty.agent-conversations--with-create
+    + .agent-chat {
+    padding-bottom: 68px;
+  }
+}
+
+@container (min-width: 1640px) {
+  .agent-application__content--configuration-open
+    .agent-conversations--empty.agent-conversations--with-create
+    + .agent-chat {
+    padding-bottom: 0;
   }
 }
 

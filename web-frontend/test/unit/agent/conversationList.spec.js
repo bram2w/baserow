@@ -67,4 +67,39 @@ describe('Agent conversation list', () => {
     expect(more.element.disabled).toBe(true)
     expect(wrapper.emitted('load-more')).toBeUndefined()
   })
+
+  test('keeps the creation control focused as an empty list finishes loading and gains a draft', async () => {
+    const wrapper = await testApp.mount(AgentConversationList, {
+      props: { items: [], loading: true, canCreate: true, readyToSend: true },
+    })
+    const create = wrapper.get('.agent-conversations__footer button')
+    create.element.focus()
+    expect(wrapper.find('.skeleton').exists()).toBe(true)
+
+    await wrapper.setProps({ loading: false })
+    expect(wrapper.find('.agent-conversations__header').exists()).toBe(false)
+    expect(wrapper.find('.agent-conversations__content').exists()).toBe(false)
+    expect(document.activeElement).toBe(create.element)
+
+    await wrapper.setProps({ error: true })
+    expect(wrapper.find('.alert').exists()).toBe(true)
+    expect(wrapper.find('.agent-conversations__header').exists()).toBe(true)
+
+    await wrapper.setProps({
+      error: false,
+      items: [{ uuid: 'draft', title: '', local: true }],
+    })
+    const row = wrapper.get('.agent-conversations__item')
+    expect(row.get('.iconoir-chat-bubble').exists()).toBe(true)
+    expect(row.element.lastElementChild).toBe(
+      row.get('.agent-conversations__status').element
+    )
+    expect(row.get('.agent-conversations__draft').text()).toBe('agent.draft')
+    expect(wrapper.get('.agent-conversations__footer button').element).toBe(
+      create.element
+    )
+    expect(document.activeElement).toBe(create.element)
+    create.element.click()
+    expect(wrapper.emitted('create')).toHaveLength(1)
+  })
 })

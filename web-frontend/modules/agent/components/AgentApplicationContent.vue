@@ -14,7 +14,13 @@
         @click="configurationOpen = !configurationOpen"
       />
     </header>
-    <div class="layout__col-2-2 agent-application__content">
+    <div
+      class="layout__col-2-2 agent-application__content"
+      :class="{
+        'agent-application__content--configuration-open':
+          state.canReadConfiguration && configurationOpen,
+      }"
+    >
       <AgentConversationList
         v-if="state.canReadConversations"
         :items="state.conversationItems"
@@ -29,7 +35,7 @@
         @retry="state.retryConversations"
         @load-more="state.loadMoreConversations"
       />
-      <main class="agent-chat">
+      <main class="agent-chat" :class="{ 'agent-chat--empty': showChatIntro }">
         <div ref="historyElement" class="agent-chat__history">
           <div
             v-if="
@@ -82,12 +88,7 @@
               </div>
             </div>
           </template>
-          <div
-            v-else-if="
-              !state.currentHistory?.loading && !state.currentHistory?.error
-            "
-            class="agent-chat__intro"
-          >
+          <div v-else-if="showChatIntro" class="agent-chat__intro">
             <div class="agent-chat__avatar">
               <img :src="agentOrb" alt="" />
             </div>
@@ -228,6 +229,12 @@ const state = reactive({
   ...useAgentConversations(agent, configuration),
 })
 const configurationOpen = ref(true)
+const showChatIntro = computed(
+  () =>
+    !state.currentHistory?.items.length &&
+    !state.currentHistory?.loading &&
+    !state.currentHistory?.error
+)
 const configurationSidebar = ref(null)
 const historyElement = ref(null)
 // Any selection change, even away and back, invalidates a pending scroll anchor.

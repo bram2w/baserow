@@ -1,9 +1,17 @@
 <template>
-  <aside class="agent-conversations" :aria-busy="loading">
-    <div class="agent-conversations__header">
+  <aside
+    class="agent-conversations"
+    :class="{
+      'agent-conversations--empty': empty,
+      'agent-conversations--with-create': canCreate,
+    }"
+    :aria-busy="loading"
+    :aria-hidden="empty && !canCreate ? true : undefined"
+  >
+    <div v-if="!empty" class="agent-conversations__header">
       {{ $t('agent.recent') }}
     </div>
-    <div class="agent-conversations__content">
+    <div v-if="!empty" class="agent-conversations__content">
       <div
         v-if="!error && loading && !items.length"
         class="skeleton"
@@ -14,18 +22,10 @@
           :key="width"
           class="agent-conversations__skeleton-row"
         >
-          <SkeletonBlock width="6px" height="6px" shape="circle" />
+          <SkeletonBlock width="16px" height="16px" shape="circle" />
           <SkeletonBlock :width="width" />
         </div>
       </div>
-      <p
-        v-else-if="!error && !items.length"
-        class="agent-conversations__empty"
-        role="status"
-        aria-live="polite"
-      >
-        {{ $t('agent.noConversations') }}
-      </p>
       <ul v-if="items.length" class="agent-conversations__list">
         <li v-for="item in items" :key="item.uuid">
           <button
@@ -37,8 +37,9 @@
             :aria-current="item.uuid === selected ? 'true' : undefined"
             @click="$emit('select', item)"
           >
-            <span
-              class="agent-conversations__status agent-conversations__status--idle"
+            <Icon
+              icon="iconoir-chat-bubble"
+              type="secondary"
               aria-hidden="true"
             />
             <span class="agent-conversations__item-name">{{
@@ -47,6 +48,10 @@
             <span v-if="item.local" class="agent-conversations__draft">{{
               $t('agent.draft')
             }}</span>
+            <span
+              class="agent-conversations__status agent-conversations__status--idle"
+              aria-hidden="true"
+            />
           </button>
         </li>
       </ul>
@@ -88,7 +93,10 @@
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue'
+import Icon from '@baserow/modules/core/components/Icon'
+
+const props = defineProps({
   items: { type: Array, required: true },
   selected: { type: String, default: null },
   loading: Boolean,
@@ -98,4 +106,7 @@ defineProps({
   readyToSend: Boolean,
 })
 defineEmits(['select', 'retry', 'load-more', 'create'])
+const empty = computed(
+  () => !props.loading && !props.error && !props.items.length
+)
 </script>
