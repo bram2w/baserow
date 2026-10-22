@@ -5364,6 +5364,86 @@ def test_grouped_datetime_sort_preserves_minute_totals(
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize("direction", ["ASC", "DESC"])
+@pytest.mark.parametrize(
+    "kind",
+    ["single_select", "date", "multiple_select_complete", "multiple_select_individual"],
+)
+def test_grouped_aggregate_rows_empty_group_overflows_into_other_bucket(
+    data_fixture, direction, kind
+):
+    """Fold an empty group into the overflow bucket; never drop or double count it."""
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    amount = data_fixture.create_number_field(table=table, name="Amount")
+    group_by_kwargs = {}
+    if kind == "single_select":
+        field = data_fixture.create_single_select_field(table=table, name="Category")
+        values = [
+            data_fixture.create_select_option(field=field, value=value).id
+            for value in ["A", "B", "C"]
+        ]
+        empty = None
+    elif kind == "date":
+        field = data_fixture.create_date_field(
+            table=table, name="Date", date_include_time=True
+        )
+        values = [f"2026-01-0{day}T10:00:00Z" for day in [1, 2, 3]]
+        empty = None
+    else:
+        field = data_fixture.create_multiple_select_field(table=table, name="Category")
+        values = [
+            [data_fixture.create_select_option(field=field, value=value).id]
+            for value in ["A", "B", "C"]
+        ]
+        empty = []
+        if kind == "multiple_select_individual":
+            group_by_kwargs["mode"] = "individual"
+    service = data_fixture.create_service(
+        LocalBaserowGroupedAggregateRows,
+        table=table,
+        bucket_limit=3,
+        integration_args={"user": user},
+    )
+    LocalBaserowTableServiceAggregationSeries.objects.create(
+        service=service, field=amount, aggregation_type="sum", order=0
+    )
+    LocalBaserowTableServiceAggregationGroupBy.objects.create(
+        service=service, field=field, order=0, **group_by_kwargs
+    )
+    LocalBaserowTableServiceAggregationSortBy.objects.create(
+        service=service,
+        sort_on="SERIES",
+        reference=f"{amount.db_column}_sum",
+        direction=direction,
+        order=0,
+    )
+    RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {field.db_column: group_value, amount.db_column: amount_value}
+            for group_value, amount_value in zip([*values, empty], [10, 20, 30, 5])
+        ],
+    )
+    rows = (
+        ServiceHandler()
+        .dispatch_service(service, FakeDispatchContext())
+        .data["results"]
+    )
+    totals = [row["Amount sum"] for row in rows]
+    assert sum(totals) == 65
+    assert rows[-1]["id"] == "OTHER_VALUES"
+    if direction == "ASC":
+        # The empty group is kept and must not be counted again in "Other".
+        assert rows[0]["id"] == "-"
+        assert totals == [5, 10, 50]
+    else:
+        # The empty group overflows and must be part of "Other".
+        assert totals == [30, 20, 15]
+
+
+@pytest.mark.django_db
 def test_grouped_aggregate_rows_service_public_schema_and_context_data(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)

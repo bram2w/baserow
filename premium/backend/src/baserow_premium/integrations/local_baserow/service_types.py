@@ -1328,11 +1328,16 @@ class LocalBaserowGroupedAggregateRowsUserServiceType(
                 raw_results = raw_results[: bucket_limit - 1]
                 results = results[: bucket_limit - 1]
                 buckets_taken = [result[bucket_db_column] for result in raw_results]
+                # The bucket column is an annotation, so Django does not add the
+                # `IS NOT NULL` guard it adds to negated field lookups. Without it
+                # `NOT (value IN (...))` is NULL for an empty group and the group
+                # silently disappears from the overflow bucket.
                 taken_filter = Q(
                     **{
                         f"{bucket_db_column}__in": [
                             value for value in buckets_taken if value is not None
-                        ]
+                        ],
+                        f"{bucket_db_column}__isnull": False,
                     }
                 )
                 if None in buckets_taken:
