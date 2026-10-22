@@ -58,6 +58,12 @@ class AutomationWorkflow(
         db_default=False,
         help_text="Blocks custom code nodes until explicitly trusted.",
     )
+    import_report = models.JSONField(
+        default=list,
+        db_default=[],
+        editable=False,
+        help_text="Active content found during import, using the imported object IDs.",
+    )
     supports_edges = True
 
     automation = models.ForeignKey(

@@ -5,7 +5,7 @@ exports[`automation untrusted content header alert > stays visible until content
   <div class="alert__wrapper"><i class="alert__icon iconoir-warning-triangle"></i>
     <div class="alert__content">
       <!--v-if-->
-      <div class="alert__message">applicationUntrustedContentAlert.title</div>
+      <div class="alert__message"><span class="header__alert-label">applicationUntrustedContentAlert.title</span><a href="#">applicationUntrustedContentAlert.review</a></div>
       <!--v-if-->
     </div>
     <!--v-if-->
@@ -18,7 +18,7 @@ exports[`builder untrusted content header alert > stays visible until content is
   <div class="alert__wrapper"><i class="alert__icon iconoir-warning-triangle"></i>
     <div class="alert__content">
       <!--v-if-->
-      <div class="alert__message">applicationUntrustedContentAlert.title</div>
+      <div class="alert__message"><span class="header__alert-label">applicationUntrustedContentAlert.title</span><a href="#">applicationUntrustedContentAlert.review</a></div>
       <!--v-if-->
     </div>
     <!--v-if-->

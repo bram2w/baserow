@@ -20,6 +20,15 @@ from baserow_premium.license.handler import LicenseHandler
 
 
 class CoreCodeActionType(UntrustedContentTypeMixin, BuilderWorkflowServiceActionType):
+    def get_import_report_entry(self, instance):
+        return {
+            "type": "builder_code_action",
+            "id": instance.id,
+            "page_id": instance.page_id,
+            "page_name": instance.page.name,
+            "element_id": instance.element_id,
+        }
+
     type = "code"
     model_class = CoreCodeWorkflowAction
     service_type = CoreCodeServiceType.type

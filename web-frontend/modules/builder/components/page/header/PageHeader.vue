@@ -13,7 +13,12 @@
         @selected="actionSetDeviceTypeSelected"
       />
       <ApplicationUntrustedContentAlert
-        :untrusted="builder.untrusted_content"
+        :key="builder.id"
+        :content-owner="builder"
+        :can-trust="
+          $hasPermission('application.update', builder, builder.workspace.id)
+        "
+        :trust-content="trustContent"
         :message="$t('builderUntrustedContent.warning')"
       />
       <PageActions />
@@ -59,6 +64,12 @@ export default {
     }
   },
   methods: {
+    trustContent() {
+      return this.$store.dispatch('application/update', {
+        application: this.builder,
+        values: { untrusted_content: false },
+      })
+    },
     ...mapActions({
       actionSetDeviceTypeSelected: 'page/setDeviceTypeSelected',
     }),

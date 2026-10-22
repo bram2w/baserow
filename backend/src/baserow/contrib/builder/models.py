@@ -91,6 +91,13 @@ def default_builder_breakpoints():
 
 
 class Builder(Application):
+    import_report = models.JSONField(
+        default=list,
+        db_default=[],
+        editable=False,
+        help_text="Active content found during import, using the imported object IDs.",
+    )
+
     untrusted_content = models.BooleanField(
         default=False,
         db_default=False,

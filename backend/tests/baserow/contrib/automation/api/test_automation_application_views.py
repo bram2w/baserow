@@ -58,6 +58,7 @@ def test_get_automation_application(api_client, data_fixture):
                 "notification_recipient_ids": [],
                 "graph": {"0": trigger.id, str(trigger.id): {}},
                 "immediate_dispatch": False,
+                "import_report": [],
             }
         ],
     }
@@ -116,6 +117,7 @@ def test_list_automation_applications(api_client, data_fixture):
                     "notification_recipient_ids": [],
                     "graph": {"0": trigger.id, str(trigger.id): {}},
                     "immediate_dispatch": False,
+                    "import_report": [],
                 }
             ],
         }

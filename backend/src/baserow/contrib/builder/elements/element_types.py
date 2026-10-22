@@ -2166,6 +2166,14 @@ class ChoiceElementType(FormElementTypeMixin, ElementType):
 
 
 class IFrameElementType(UntrustedContentTypeMixin, ElementType):
+    def get_import_report_entry(self, instance):
+        return {
+            "type": "iframe",
+            "id": instance.id,
+            "page_id": instance.page_id,
+            "page_name": instance.page.name,
+        }
+
     display_name = _("Iframe")
     type = "iframe"
     model_class = IFrameElement

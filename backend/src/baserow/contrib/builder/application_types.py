@@ -74,6 +74,7 @@ class BuilderApplicationType(ApplicationType):
         "breakpoints",
     ]
     serializer_field_names = [
+        "import_report",
         "untrusted_content",
         "favicon_file",
         "login_page_id",

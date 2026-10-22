@@ -1,0 +1,14 @@
+.untrusted-content-report {
+  max-height: 40vh;
+  padding-left: 20px;
+  overflow: auto;
+}
+
+.untrusted-content-report__item {
+  margin-bottom: 12px;
+}
+
+.untrusted-content-report__detail {
+  color: $palette-neutral-900;
+  overflow-wrap: anywhere;
+}

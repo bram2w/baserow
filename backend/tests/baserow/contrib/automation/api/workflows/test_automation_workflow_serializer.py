@@ -36,6 +36,7 @@ def test_automation_workflow_serializer_fields(workflow_fixture):
         "graph",
         "id",
         "immediate_dispatch",
+        "import_report",
         "name",
         "notification_recipient_ids",
         "order",

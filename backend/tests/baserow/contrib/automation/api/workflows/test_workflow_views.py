@@ -71,6 +71,7 @@ def test_create_workflow(api_client, data_fixture):
         "simulate_until_node_id": None,
         "graph": {},
         "immediate_dispatch": False,
+        "import_report": [],
         "untrusted_content": False,
     }
 
@@ -161,6 +162,7 @@ def test_read_workflow(api_client, data_fixture):
         "graph": {"0": trigger.id, str(trigger.id): {}},
         "notification_recipient_ids": [],
         "immediate_dispatch": False,
+        "import_report": [],
         "untrusted_content": False,
     }
 
@@ -452,6 +454,7 @@ def test_duplicate_workflow(api_client, data_fixture):
             "simulate_until_node_id": None,
             "graph": {"0": trigger.id, str(trigger.id): {}},
             "immediate_dispatch": False,
+            "import_report": [],
             "untrusted_content": False,
         },
         "progress_percentage": 0,
@@ -875,7 +878,9 @@ def test_trust_is_scoped_to_one_workflow(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     automation = data_fixture.create_automation_application(user=user)
     workflow = data_fixture.create_automation_workflow(
-        automation=automation, untrusted_content=True
+        automation=automation,
+        untrusted_content=True,
+        import_report=[{"type": "automation_code_node", "id": 123}],
     )
     sibling = data_fixture.create_automation_workflow(
         automation=automation, untrusted_content=True
@@ -890,7 +895,7 @@ def test_trust_is_scoped_to_one_workflow(api_client, data_fixture):
 
     response = api_client.patch(
         url,
-        {"untrusted_content": False},
+        {"untrusted_content": False, "import_report": []},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -900,3 +905,5 @@ def test_trust_is_scoped_to_one_workflow(api_client, data_fixture):
     sibling.refresh_from_db()
     assert workflow.untrusted_content is False
     assert sibling.untrusted_content is True
+
+    assert workflow.import_report == [{"type": "automation_code_node", "id": 123}]

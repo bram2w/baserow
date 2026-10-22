@@ -327,6 +327,8 @@ def test_code_action_and_node_detect_untrusted_content_during_copy(
         serialized if application_kind == "builder" else serialized["workflows"][0]
     )
     assert serialized_owner["untrusted_content"] is external
+    assert "import_report" not in serialized_owner
+    serialized_owner["import_report"] = [{"type": "invalid", "id": -1}]
     serialized_owner["untrusted_content"] = False
     imported = application_type.import_serialized(
         application.workspace, serialized, config, {}
@@ -334,6 +336,28 @@ def test_code_action_and_node_detect_untrusted_content_during_copy(
     imported.refresh_from_db()
     owner = imported if application_kind == "builder" else imported.workflows.get()
     assert owner.untrusted_content is external
+
+    assert len(owner.import_report) == 1
+    entry = owner.import_report[0]
+    if application_kind == "builder":
+        action = CoreCodeWorkflowAction.objects.get(page__builder=imported)
+        assert entry == {
+            "type": "builder_code_action",
+            "id": action.id,
+            "page_id": action.page_id,
+            "page_name": action.page.name,
+            "element_id": action.element_id,
+        }
+    else:
+        from baserow_enterprise.automation.nodes.models import CoreCodeActionNode
+
+        node = CoreCodeActionNode.objects.get(workflow=owner)
+        assert entry == {
+            "type": "automation_code_node",
+            "id": node.id,
+            "label": node.label,
+            "workflow_id": owner.id,
+        }
 
 
 def test_workflow_content_detection_does_not_leak_to_siblings(
@@ -367,3 +391,9 @@ def test_workflow_content_detection_does_not_leak_to_siblings(
         "Code": True,
         "Clean": False,
     }
+
+    imported_code = imported.workflows.get(name="Code")
+    imported_clean = imported.workflows.get(name="Clean")
+    assert len(imported_code.import_report) == 1
+    assert imported_code.import_report[0]["workflow_id"] == imported_code.id
+    assert imported_clean.import_report == []

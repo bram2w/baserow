@@ -14,4 +14,14 @@ class Migration(migrations.Migration):
                 help_text="Blocks custom code and embedded content until explicitly trusted.",
             ),
         ),
+        migrations.AddField(
+            model_name="builder",
+            name="import_report",
+            field=models.JSONField(
+                default=list,
+                db_default=[],
+                editable=False,
+                help_text="Active content found during import, using the imported object IDs.",
+            ),
+        ),
     ]

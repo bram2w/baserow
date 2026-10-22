@@ -410,3 +410,29 @@ def test_only_custom_code_content_requires_trust_on_import(
     assert list(imported.scripts.values_list("url", flat=True)) == list(
         builder.scripts.values_list("url", flat=True)
     )
+
+    expected_types = {
+        "empty": [],
+        "empty_script": [],
+        "css": ["custom_css"],
+        "js": ["custom_js"],
+        "script": ["external_script"],
+        "stylesheet": ["external_stylesheet"],
+    }
+    assert [item["type"] for item in imported.import_report] == expected_types[content]
+    if content in ["script", "stylesheet"]:
+        assert imported.import_report[0]["id"] == imported.scripts.get().id
+        assert imported.import_report[0]["url"] == "https://example.com/asset"
+    from baserow.api.applications.serializers import (
+        PolymorphicApplicationResponseSerializer,
+        PublicPolymorphicApplicationResponseSerializer,
+    )
+
+    assert (
+        PolymorphicApplicationResponseSerializer(imported).data["import_report"]
+        == imported.import_report
+    )
+    assert (
+        "import_report"
+        not in PublicPolymorphicApplicationResponseSerializer(imported).data
+    )

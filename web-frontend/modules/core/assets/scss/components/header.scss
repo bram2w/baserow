@@ -291,7 +291,7 @@
 
 .header__alert {
   align-self: center;
-  min-width: 44px;
+  min-width: 160px;
   margin: 0 12px;
 
   .alert__wrapper {
@@ -309,10 +309,20 @@
   }
 
   .alert__message {
-    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     margin-top: 0;
     line-height: 18px;
-    text-overflow: ellipsis;
     white-space: nowrap;
+
+    a {
+      flex-shrink: 0;
+    }
   }
+}
+
+.header__alert-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

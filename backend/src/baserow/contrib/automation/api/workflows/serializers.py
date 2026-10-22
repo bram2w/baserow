@@ -27,6 +27,7 @@ class AutomationWorkflowSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "untrusted_content",
+            "import_report",
             "order",
             "automation_id",
             "allow_test_run_until",

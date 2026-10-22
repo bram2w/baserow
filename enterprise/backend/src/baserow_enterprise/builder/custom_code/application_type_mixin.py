@@ -1,4 +1,5 @@
 from baserow.contrib.builder.models import Builder
+from baserow.core.deferred_callbacks import deferred_callback_context
 from baserow_enterprise.builder.custom_code.models import BuilderCustomScript
 from baserow_enterprise.builder.custom_code.types import BuilderCustomCodeDict
 from baserow_enterprise.features import BUILDER_CUSTOM_CODE
@@ -180,6 +181,7 @@ class CustomCodeBuilderApplicationTypeMixin:
             custom_code={"css": builder.custom_code.css, "js": builder.custom_code.js},
         )
 
+    @deferred_callback_context()
     def import_serialized(
         self,
         workspace,
@@ -202,13 +204,6 @@ class CustomCodeBuilderApplicationTypeMixin:
 
         if cache is None:
             cache = {}
-        if (
-            serialized_custom_code.get("css")
-            or serialized_custom_code.get("js")
-            or any(script.get("url") for script in serialized_scripts)
-        ):
-            cache["has_untrusted_content"] = True
-
         instance = super().import_serialized(
             workspace,
             serialized_values,
@@ -226,4 +221,19 @@ class CustomCodeBuilderApplicationTypeMixin:
 
         self._create_scripts_in_bulk(instance, serialized_scripts)
 
+        report = cache.setdefault("import_report", [])
+        for code_type in ("css", "js"):
+            if serialized_custom_code.get(code_type):
+                report.append({"type": f"custom_{code_type}"})
+        for script in instance.scripts.all():
+            if script.url:
+                report.append(
+                    {
+                        "type": "external_stylesheet"
+                        if script.type == "stylesheet"
+                        else "external_script",
+                        "id": script.id,
+                        "url": script.url,
+                    }
+                )
         return instance

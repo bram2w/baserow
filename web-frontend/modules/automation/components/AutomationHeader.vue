@@ -77,7 +77,19 @@
 
     <ApplicationUntrustedContentAlert
       v-if="!loading"
-      :untrusted="Boolean(workflow?.untrusted_content)"
+      :key="workflow?.id"
+      :content-owner="workflow"
+      :can-trust="
+        Boolean(
+          workflow &&
+          $hasPermission(
+            'automation.workflow.update',
+            workflow,
+            automation.workspace.id
+          )
+        )
+      "
+      :trust-content="trustContent"
       :message="$t('automationHeader.untrustedContentWarning')"
     />
 
@@ -325,12 +337,20 @@ export default defineComponent({
       isPublishing.value = false
     }
 
+    const trustContent = () =>
+      store.dispatch('automationWorkflow/update', {
+        automation: props.automation,
+        workflow: workflow.value,
+        values: { untrusted_content: false },
+      })
+
     const workflowSettingsModal = ref(null)
     const openSettingsModal = () => {
       workflowSettingsModal.value.show()
     }
 
     return {
+      trustContent,
       isDev,
       debug,
       workflow,

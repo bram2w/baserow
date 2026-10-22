@@ -2495,3 +2495,17 @@ def test_deferred_content_detection_is_isolated_per_builder(data_fixture):
     imported_safe.refresh_from_db()
     assert imported_unsafe.untrusted_content is True
     assert imported_safe.untrusted_content is False
+
+    from baserow.contrib.builder.elements.models import IFrameElement
+
+    imported_iframe = IFrameElement.objects.get(page__builder=imported_unsafe)
+    assert imported_unsafe.import_report == [
+        {
+            "type": "iframe",
+            "id": imported_iframe.id,
+            "page_id": imported_iframe.page_id,
+            "page_name": imported_iframe.page.name,
+        }
+    ]
+    assert imported_iframe.id != page.element_set.get().id
+    assert imported_safe.import_report == []

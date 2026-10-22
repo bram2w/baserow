@@ -243,7 +243,9 @@ def test_application_content_can_be_explicitly_trusted(api_client, data_fixture)
     user, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace(user=user)
     builder = data_fixture.create_builder_application(
-        workspace=workspace, untrusted_content=True
+        workspace=workspace,
+        untrusted_content=True,
+        import_report=[{"type": "custom_js"}],
     )
     url = reverse("api:applications:item", kwargs={"application_id": builder.id})
     response = api_client.patch(url, {"untrusted_content": False}, format="json")
@@ -253,7 +255,7 @@ def test_application_content_can_be_explicitly_trusted(api_client, data_fixture)
 
     response = api_client.patch(
         url,
-        {"untrusted_content": False},
+        {"untrusted_content": False, "import_report": []},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -261,3 +263,5 @@ def test_application_content_can_be_explicitly_trusted(api_client, data_fixture)
     assert response.json()["untrusted_content"] is False
     builder.refresh_from_db()
     assert builder.untrusted_content is False
+
+    assert builder.import_report == [{"type": "custom_js"}]

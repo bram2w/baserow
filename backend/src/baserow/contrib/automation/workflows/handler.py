@@ -595,7 +595,7 @@ class AutomationWorkflowHandler:
 
         imported_workflows = []
         for serialized_workflow in serialized_workflows:
-            workflow_cache = {**cache, "has_untrusted_content": False}
+            workflow_cache = {**cache, "import_report": []}
             workflow_values = {**serialized_workflow}
             if self._is_external_import_export(import_export_config):
                 workflow_values["untrusted_content"] = True

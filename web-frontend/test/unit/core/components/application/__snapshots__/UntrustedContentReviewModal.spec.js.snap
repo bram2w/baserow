@@ -1,0 +1,20 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`shows the import snapshot and enables content only after confirmation 1`] = `
+"<ul class="untrusted-content-report">
+  <li class="untrusted-content-report__item"><strong>untrustedContentReviewModal.typeIframe</strong>
+    <!--v-if-->
+    <div class="untrusted-content-report__detail">untrustedContentReviewModal.page</div>
+    <!--v-if-->
+  </li>
+  <li class="untrusted-content-report__item"><strong>untrustedContentReviewModal.typeCodeNode</strong><span> — Transform data</span>
+    <!--v-if-->
+    <!--v-if-->
+  </li>
+  <li class="untrusted-content-report__item"><strong>untrustedContentReviewModal.typeScript</strong>
+    <!--v-if-->
+    <!--v-if-->
+    <div class="untrusted-content-report__detail">https://example.com/a.js</div>
+  </li>
+</ul>"
+`;

@@ -18,6 +18,14 @@ from baserow_premium.license.handler import LicenseHandler
 
 
 class CoreCodeActionNodeType(UntrustedContentTypeMixin, AutomationActionNodeType):
+    def get_import_report_entry(self, instance):
+        return {
+            "type": "automation_code_node",
+            "id": instance.id,
+            "label": instance.label,
+            "workflow_id": instance.workflow_id,
+        }
+
     type = "code"
     model_class = CoreCodeActionNode
     service_type = CoreCodeServiceType.type
