@@ -116,7 +116,7 @@
     "providerName": "Dashboard filters",
     "options": "Options",
     "optionValue": "Filter values",
-    "sourceOptionsHelp": "Choose fields from a table used by your widgets to fill the list."
+    "sourceOptionsHelp": "Choose values from a data source or enter them separated by commas."
   },
   "shareDashboardLink": {
     "shareDashboard": "Share dashboard",
