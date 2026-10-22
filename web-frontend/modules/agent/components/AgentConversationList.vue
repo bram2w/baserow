@@ -1,22 +1,35 @@
 <template>
-  <aside class="agent-conversations">
+  <aside class="agent-conversations" :aria-busy="loading">
     <div class="agent-conversations__header">
       {{ $t('agent.recent') }}
     </div>
     <div class="agent-conversations__content">
+      <div
+        v-if="!error && loading && !items.length"
+        class="skeleton"
+        aria-hidden="true"
+      >
+        <div
+          v-for="width in ['75%', '55%', '85%', '65%']"
+          :key="width"
+          class="agent-conversations__skeleton-row"
+        >
+          <SkeletonBlock width="6px" height="6px" shape="circle" />
+          <SkeletonBlock :width="width" />
+        </div>
+      </div>
       <p
-        v-if="!error && !items.length"
+        v-else-if="!error && !items.length"
         class="agent-conversations__empty"
         role="status"
         aria-live="polite"
       >
-        {{
-          $t(loading ? 'agent.loadingConversations' : 'agent.noConversations')
-        }}
+        {{ $t('agent.noConversations') }}
       </p>
       <ul v-if="items.length" class="agent-conversations__list">
         <li v-for="item in items" :key="item.uuid">
           <button
+            type="button"
             class="agent-conversations__item"
             :class="{
               'agent-conversations__item--selected': item.uuid === selected,
@@ -40,15 +53,20 @@
       <Alert v-if="error" type="error" class="margin-top-2">
         {{ $t('agent.conversationsLoadError') }}
         <template #actions
-          ><Button type="secondary" size="small" @click="$emit('retry')">{{
-            $t('action.retry')
-          }}</Button></template
+          ><Button
+            type="secondary"
+            size="small"
+            button-type="button"
+            @click="$emit('retry')"
+            >{{ $t('action.retry') }}</Button
+          ></template
         >
       </Alert>
       <Button
         v-else-if="hasMore"
         type="secondary"
         size="small"
+        button-type="button"
         :loading="loading"
         class="agent-conversations__more"
         @click="$emit('load-more')"
@@ -58,7 +76,9 @@
     <div v-if="canCreate" class="agent-conversations__footer">
       <Button
         type="secondary"
+        button-type="button"
         icon="iconoir-plus"
+        full-width
         :disabled="!readyToSend"
         @click="$emit('create')"
         >{{ $t('agent.newConversation') }}</Button

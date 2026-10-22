@@ -95,6 +95,17 @@ describe('Agent conversations', () => {
     expect(document.activeElement).toBe(composer(wrapper).element)
   })
 
+  test('keeps focus in the composer after clicking Send', async () => {
+    const wrapper = await mount()
+    await composer(wrapper).setValue('Hello')
+    send(wrapper).element.focus()
+    send(wrapper).element.click()
+    await flushPromises()
+
+    expect(document.activeElement).toBe(composer(wrapper).element)
+    expect(composer(wrapper).element.value).toBe('')
+  })
+
   test('sends on Enter but not on Shift+Enter or while composing', async () => {
     const wrapper = await mount()
     await composer(wrapper).setValue('Hello')
@@ -380,6 +391,11 @@ describe('Agent conversations', () => {
       const wrapper = await mount()
       await selectConversation(wrapper, 'Conversation A')
       const history = wrapper.get('.agent-chat__history').element
+      const anchor = wrapper.get('.agent-chat__message').element
+      let anchorOffset = 0
+      vi.spyOn(anchor, 'offsetTop', 'get').mockImplementation(
+        () => anchorOffset
+      )
       let scrollHeight = 1000
       let scrollTop = 400
       vi.spyOn(history, 'scrollHeight', 'get').mockImplementation(
@@ -403,6 +419,7 @@ describe('Agent conversations', () => {
       }
 
       scrollHeight = selection === 'other' ? 600 : 1500
+      anchorOffset = 500
       older.resolve(200, page([message('a1', 'Older A')]))
       await flushPromises()
 

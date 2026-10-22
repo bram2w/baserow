@@ -1,7 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from threading import Barrier
 from unittest.mock import ANY
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from django.contrib.auth import get_user_model
 from django.db import close_old_connections
@@ -45,6 +45,8 @@ def test_first_message_creates_a_private_conversation(
     payload = new_conversation("  Hello\nworld  " + "x" * 300)
 
     response = api_client.post(agent_url(agent, "conversations"), payload)
+    conversation = AgentConversation.objects.get()
+    message = AgentMessage.objects.get()
 
     assert response.json() == {
         "conversation": {
@@ -54,14 +56,13 @@ def test_first_message_creates_a_private_conversation(
             "updated_on": ANY,
         },
         "message": {
+            "id": message.id,
             "uuid": payload["message_uuid"],
             "role": "user",
             "content": payload["content"],
             "created_on": ANY,
         },
     }
-    conversation = AgentConversation.objects.get()
-    message = AgentMessage.objects.get()
     assert conversation.owner_user == api_user
     assert registered.call_args.args[1] == {
         "agent_id": agent.id,
@@ -235,6 +236,36 @@ def test_conversations_and_messages_are_paginated_newest_first(
     assert api_client.get(messages_url + "?size=101").status_code == 400
     assert missing.status_code == 404
     assert missing.json()["error"] == "ERROR_AGENT_CONVERSATION_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+def test_equal_timestamp_messages_are_paginated_in_creation_order(
+    data_fixture, configured_agent, api_client, api_user
+):
+    agent = configured_agent(user=api_user)
+    conversation = data_fixture.create_agent_conversation(user=api_user, agent=agent)
+    with freeze_time("2026-10-22 08:00:00"):
+        messages = [
+            data_fixture.create_agent_message(
+                conversation=conversation, uuid=UUID(int=5 - index)
+            )
+            for index in range(5)
+        ]
+    url = agent_url(agent, "messages", conversation_uuid=conversation.uuid)
+
+    pages = [
+        api_client.get(url + f"?size=2&page={page}").json()["results"]
+        for page in (1, 2, 3)
+    ]
+
+    assert len({message["created_on"] for page in pages for message in page}) == 1
+    expected = [messages[3:5], messages[1:3], messages[:1]]
+    assert [[message["id"] for message in page] for page in pages] == [
+        [message.id for message in page] for page in expected
+    ]
+    assert [[message["uuid"] for message in page] for page in pages] == [
+        [str(message.uuid) for message in page] for page in expected
+    ]
 
 
 @pytest.mark.django_db(transaction=True)

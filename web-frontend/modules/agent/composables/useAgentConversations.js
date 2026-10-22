@@ -8,6 +8,12 @@ const uniqueBy = (items, key) => [
   ...new Map(items.map((item) => [item[key], item])).values(),
 ]
 
+// IDs are the API's chronological order, including equal/imported timestamps.
+const mergeMessages = (...pages) =>
+  uniqueBy(pages.flat(), 'uuid').sort((a, b) =>
+    a.id != null && b.id != null ? a.id - b.id : 0
+  )
+
 const REJECTED_MESSAGE_ERRORS = [
   'ERROR_AGENT_NOT_READY',
   'ERROR_REQUEST_BODY_VALIDATION',
@@ -50,6 +56,7 @@ export function useAgentConversations(agent, configuration) {
   let requestedConversationPage = 1
   let appendConversations = false
   let conversationWriteVersion = 0
+  let conversationsRefreshPending = false
   const writtenConversations = new Map()
 
   const conversationItems = computed(() => [
@@ -148,8 +155,22 @@ export function useAgentConversations(agent, configuration) {
     } finally {
       if (scopeIsCurrent(currentScope) && request === conversationsRequest) {
         conversationsLoading.value = false
+        if (conversationsRefreshPending) {
+          conversationsRefreshPending = false
+          refreshConversations()
+        }
       }
     }
+  }
+
+  function refreshConversations() {
+    if (conversationsLoading.value) {
+      conversationsRefreshPending = true
+      return
+    }
+    // Keep selected/previously loaded rows. Restart the pagination boundary so
+    // insertions ahead of older pages cannot make the next read skip any rows.
+    return fetchConversations(1, true)
   }
 
   function loadMoreConversations() {
@@ -171,10 +192,13 @@ export function useAgentConversations(agent, configuration) {
         next: false,
         loading: false,
         error: false,
+        stale: false,
+        refreshError: false,
         request: 0,
       }
     }
     const history = histories[conversationUuid]
+    if (history.loading) return
     const request = ++history.request
     history.loading = true
     history.error = false
@@ -190,10 +214,7 @@ export function useAgentConversations(agent, configuration) {
         !canReadConversations.value
       )
         return
-      history.items = uniqueBy(
-        page > 1 ? [...data.results, ...history.items] : data.results,
-        'uuid'
-      )
+      history.items = mergeMessages(data.results, page > 1 ? history.items : [])
       history.page = page
       history.next = Boolean(data.next)
     } catch {
@@ -203,12 +224,73 @@ export function useAgentConversations(agent, configuration) {
     } finally {
       if (scopeIsCurrent(currentScope) && history.request === request) {
         history.loading = false
+        if (history.stale) refreshMessages(conversationUuid)
+      }
+    }
+  }
+
+  async function refreshMessages(conversationUuid) {
+    const history = histories[conversationUuid]
+    if (!history || !canReadConversations.value) return
+    history.stale = true
+    if (history.loading || drafts[conversationUuid]?.sending) return
+
+    const currentScope = scope
+    const agentId = agent.value.id
+    const request = ++history.request
+    const knownMessages = new Set(history.items.map(({ uuid }) => uuid))
+    history.stale = false
+    history.loading = true
+    history.error = false
+    history.refreshError = false
+    const latest = []
+    let page = 1
+    try {
+      while (true) {
+        const { data } = await service.getMessages(
+          agentId,
+          conversationUuid,
+          page
+        )
+        if (
+          !scopeIsCurrent(currentScope) ||
+          history.request !== request ||
+          !canReadConversations.value
+        )
+          return
+        latest.push(...data.results)
+        if (
+          !data.next ||
+          !knownMessages.size ||
+          data.results.some(({ uuid }) => knownMessages.has(uuid))
+        ) {
+          // Immutable messages can be merged safely, retaining older pages and
+          // any send accepted while this refresh was in flight.
+          history.items = mergeMessages(latest, history.items)
+          history.page = page
+          history.next = Boolean(data.next)
+          break
+        }
+        page++
+      }
+    } catch {
+      if (scopeIsCurrent(currentScope) && history.request === request) {
+        history.error = true
+        history.refreshError = true
+      }
+    } finally {
+      if (scopeIsCurrent(currentScope) && history.request === request) {
+        history.loading = false
+        if (history.stale) refreshMessages(conversationUuid)
       }
     }
   }
 
   // A failed page keeps the last loaded page number, so this also retries it.
   function loadMoreMessages() {
+    if (currentHistory.value.refreshError) {
+      return refreshMessages(selectedUuid.value)
+    }
     return fetchMessages(selectedUuid.value, currentHistory.value.page + 1)
   }
 
@@ -217,6 +299,8 @@ export function useAgentConversations(agent, configuration) {
     ensureDraft(conversation.uuid)
     if (!conversation.local && !histories[conversation.uuid]?.page) {
       fetchMessages(conversation.uuid)
+    } else if (histories[conversation.uuid]?.stale) {
+      refreshMessages(conversation.uuid)
     }
   }
 
@@ -260,7 +344,7 @@ export function useAgentConversations(agent, configuration) {
       )
       const history = histories[conversationUuid]
       if (history) {
-        history.items = uniqueBy([...history.items, data.message], 'uuid')
+        history.items = mergeMessages(history.items, [data.message])
       } else {
         histories[conversationUuid] = {
           items: [data.message],
@@ -268,6 +352,8 @@ export function useAgentConversations(agent, configuration) {
           next: false,
           loading: false,
           error: false,
+          stale: false,
+          refreshError: false,
           request: 0,
         }
       }
@@ -284,7 +370,11 @@ export function useAgentConversations(agent, configuration) {
         await configuration.refreshConfiguration()
       }
     } finally {
-      if (scopeIsCurrent(currentScope)) draft.sending = false
+      if (scopeIsCurrent(currentScope)) {
+        draft.sending = false
+        if (histories[conversationUuid]?.stale)
+          refreshMessages(conversationUuid)
+      }
     }
   }
 
@@ -293,6 +383,7 @@ export function useAgentConversations(agent, configuration) {
     conversations.value = []
     writtenConversations.clear()
     conversationWriteVersion = 0
+    conversationsRefreshPending = false
     localConversations.value = []
     selectedUuid.value = null
     Object.keys(histories).forEach((key) => delete histories[key])
@@ -319,6 +410,19 @@ export function useAgentConversations(agent, configuration) {
     if (allowed) fetchConversations()
     else clearConversations()
   })
+  watch(
+    () => agent.value?._?.conversationUpdate,
+    (update) => {
+      if (!update || !canReadConversations.value) return
+      refreshConversations()
+      const history = histories[update.uuid]
+      if (!history) return
+      history.stale = true
+      if (update.uuid === selectedUuid.value) refreshMessages(update.uuid)
+    },
+    // Each event marks its conversation, even if several arrive in one tick.
+    { flush: 'sync' }
+  )
   onBeforeUnmount(reset)
 
   return {

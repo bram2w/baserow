@@ -36,14 +36,26 @@
               state.currentHistory?.loading &&
               !state.currentHistory.items.length
             "
-            class="agent-chat__loading loading"
-          />
+            class="agent-chat__loading skeleton"
+            role="status"
+            :aria-label="$t('agent.loadingMessages')"
+          >
+            <div
+              v-for="row in 3"
+              :key="row"
+              class="agent-chat__message"
+              aria-hidden="true"
+            >
+              <SkeletonBlock :width="`${row % 2 ? 60 : 40}%`" height="44px" />
+            </div>
+          </div>
           <Alert v-if="state.currentHistory?.error" type="error">
             {{ $t('agent.messagesLoadError') }}
             <template #actions
               ><Button
                 type="secondary"
                 size="small"
+                button-type="button"
                 @click="loadMoreMessages"
                 >{{ $t('action.retry') }}</Button
               ></template
@@ -54,6 +66,7 @@
               v-if="state.currentHistory.next"
               type="secondary"
               size="small"
+              button-type="button"
               :loading="state.currentHistory.loading"
               class="agent-chat__older"
               @click="loadMoreMessages"
@@ -142,7 +155,7 @@
           <form
             v-if="showComposer"
             class="agent-chat__composer"
-            @submit.prevent="state.sendMessage"
+            @submit.prevent="submitMessage"
           >
             <FormTextarea
               ref="messageInput"
@@ -287,33 +300,67 @@ function handleEnter(event) {
   if (event.isComposing || event.keyCode === 229) return
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault()
-    state.sendMessage()
+    submitMessage()
   }
 }
 async function loadMoreMessages() {
   const container = historyElement.value
+  const loadingOlder =
+    state.currentHistory?.page > 0 && !state.currentHistory.refreshError
   const selectionRevision = historySelectionRevision
-  const previousHeight = container.scrollHeight
-  const previousTop = container.scrollTop
+  const anchor = container.querySelector('.agent-chat__message')
+  const previousOffset = anchor?.offsetTop
   await state.loadMoreMessages()
   await nextTick()
   if (
+    !loadingOlder ||
+    !anchor ||
     selectionRevision !== historySelectionRevision ||
-    historyElement.value !== container
+    historyElement.value !== container ||
+    !container.contains(anchor)
   ) {
     return
   }
-  container.scrollTop = previousTop + container.scrollHeight - previousHeight
+  container.scrollTop += anchor.offsetTop - previousOffset
 }
 watch(
-  () => state.currentHistory?.items.at(-1)?.uuid,
-  async () => {
+  () => [state.selectedUuid, state.currentHistory?.items.at(-1)?.uuid],
+  async ([selection], [previousSelection, previousLast]) => {
+    const container = historyElement.value
+    if (!container) return
+    const revision = historySelectionRevision
+    const followLatest =
+      selection !== previousSelection ||
+      !previousLast ||
+      container.scrollHeight - container.scrollTop - container.clientHeight < 40
     await nextTick()
-    if (historyElement.value)
-      historyElement.value.scrollTop = historyElement.value.scrollHeight
+    if (
+      followLatest &&
+      revision === historySelectionRevision &&
+      historyElement.value === container
+    ) {
+      container.scrollTop = container.scrollHeight
+    }
   }
 )
 const messageInput = ref(null)
+async function submitMessage() {
+  if (!state.canSend || !state.currentDraft?.content.trim()) return
+  // Move focus before the send button becomes disabled, keeping the composer
+  // ready for the next message without stealing focus after an async response.
+  messageInput.value?.focus()
+  const revision = historySelectionRevision
+  await state.sendMessage()
+  await nextTick()
+  if (
+    revision === historySelectionRevision &&
+    !state.currentDraft?.error &&
+    !state.currentDraft?.content &&
+    historyElement.value
+  ) {
+    historyElement.value.scrollTop = historyElement.value.scrollHeight
+  }
+}
 async function startConversation() {
   state.newConversation()
   await nextTick()

@@ -79,7 +79,8 @@ class AgentConversationSerializer(serializers.ModelSerializer):
 class AgentMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = AgentMessage
-        fields = ("uuid", "role", "content", "created_on")
+        fields = ("id", "uuid", "role", "content", "created_on")
+        read_only_fields = ("id",)
 
 
 class AgentMessageContentSerializer(

@@ -35,12 +35,15 @@ describe('Agent components', () => {
     const wrapper = await testApp.mount(AgentConversationList, {
       props: { items: [], loading: true },
     })
-    const hint = wrapper.get('[role="status"]')
-    expect(hint.text()).toBe('agent.loadingConversations')
+    expect(wrapper.get('aside').attributes('aria-busy')).toBe('true')
+    expect(wrapper.get('.skeleton').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.findAll('.skeleton-block')).toHaveLength(8)
+    expect(wrapper.find('[role="status"]').exists()).toBe(false)
 
     await wrapper.setProps({ loading: false })
-    expect(wrapper.get('[role="status"]').element).toBe(hint.element)
-    expect(hint.text()).toBe('agent.noConversations')
+    expect(wrapper.get('aside').attributes('aria-busy')).toBe('false')
+    expect(wrapper.find('.skeleton').exists()).toBe(false)
+    expect(wrapper.get('[role="status"]').text()).toBe('agent.noConversations')
     await wrapper.setProps({ error: true })
     await wrapper.get('.alert button').trigger('click')
     expect(wrapper.emitted('retry')).toHaveLength(1)

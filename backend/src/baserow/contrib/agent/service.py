@@ -18,6 +18,7 @@ from .operations import (
     ReadAgentConfigurationOperationType,
     ReadAgentConversationsOperationType,
 )
+from .signals import agent_conversation_updated
 from .types import AgentConfiguration, AgentConfigurationUpdated, AgentMessageCreated
 from .validators import validate_message_content
 
@@ -178,9 +179,14 @@ class AgentService:
         if retry is not None:
             return retry
         self._require_ready(agent)
-        return self.handler.create_conversation(
+        result = self.handler.create_conversation(
             agent, user, uuid, message_uuid, content
         )
+        if result.created:
+            agent_conversation_updated.send(
+                self, conversation=result.conversation, user=user
+            )
+        return result
 
     @transaction.atomic
     def create_message(
@@ -218,4 +224,9 @@ class AgentService:
         if retry is not None:
             return retry
         self._require_ready(agent)
-        return self.handler.create_message(conversation, uuid, content)
+        result = self.handler.create_message(conversation, uuid, content)
+        if result.created:
+            agent_conversation_updated.send(
+                self, conversation=result.conversation, user=user
+            )
+        return result

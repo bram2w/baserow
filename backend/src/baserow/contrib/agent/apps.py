@@ -46,3 +46,4 @@ class AgentConfig(AppConfig):
             action_type_registry.register(action())
 
         import baserow.contrib.agent.receivers  # noqa: F401
+        import baserow.contrib.agent.ws.signals  # noqa: F401

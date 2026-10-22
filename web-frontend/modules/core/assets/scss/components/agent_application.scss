@@ -58,6 +58,14 @@
   margin: 0;
 }
 
+.agent-conversations__skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 32px;
+  padding: 0 8px;
+}
+
 .agent-conversations__item {
   display: flex;
   align-items: center;
@@ -78,6 +86,11 @@
 
   &:hover {
     background: $palette-neutral-100;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $palette-blue-500;
+    outline-offset: -2px;
   }
 
   &.agent-conversations__item--selected {
@@ -112,10 +125,6 @@
 
 .agent-conversations__footer {
   padding: 16px;
-
-  > .button {
-    width: 100%;
-  }
 }
 
 .agent-chat {
@@ -130,6 +139,8 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  // Older messages are anchored by the component when they are prepended.
+  overflow-anchor: none;
   padding: 24px;
 }
 
@@ -401,13 +412,6 @@
   padding: 20px;
   font-size: 12px;
   color: $palette-neutral-600;
-}
-
-.agent-conversations__item {
-  &:focus-visible {
-    outline: 2px solid $palette-blue-500;
-    outline-offset: -2px;
-  }
 }
 
 @container (max-width: 900px) {
