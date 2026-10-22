@@ -57,6 +57,10 @@ def test_core_automation_tool_groups():
     groups = {tool.name: tool.group for tool in mcp_tool_registry.get_all()}
     assert groups["list_workflows"] == GROUP_AUTOMATION_READ
     assert groups["list_nodes"] == GROUP_AUTOMATION_READ
+    assert groups["create_workflows"] == GROUP_AUTOMATION_EDIT
+    assert groups["add_nodes"] == GROUP_AUTOMATION_EDIT
+    assert groups["update_nodes"] == GROUP_AUTOMATION_EDIT
+    assert groups["delete_nodes"] == GROUP_AUTOMATION_DELETE
     for group in (
         GROUP_AUTOMATION_READ,
         GROUP_AUTOMATION_EDIT,

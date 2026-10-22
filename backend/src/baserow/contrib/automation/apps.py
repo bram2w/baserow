@@ -168,8 +168,14 @@ class AutomationConfig(AppConfig):
 
         action_scope_registry.register(WorkflowActionScopeType())
 
-        from baserow.contrib.automation.mcp.nodes.tools import ListNodesMcpTool
+        from baserow.contrib.automation.mcp.nodes.tools import (
+            AddNodesMcpTool,
+            DeleteNodesMcpTool,
+            ListNodesMcpTool,
+            UpdateNodesMcpTool,
+        )
         from baserow.contrib.automation.mcp.workflows.tools import (
+            CreateWorkflowsMcpTool,
             ListWorkflowsMcpTool,
         )
         from baserow.core.mcp.groups import (
@@ -185,6 +191,10 @@ class AutomationConfig(AppConfig):
         mcp_tool_group_registry.register(AutomationDeleteMCPToolGroup())
         mcp_tool_registry.register(ListWorkflowsMcpTool())
         mcp_tool_registry.register(ListNodesMcpTool())
+        mcp_tool_registry.register(CreateWorkflowsMcpTool())
+        mcp_tool_registry.register(AddNodesMcpTool())
+        mcp_tool_registry.register(UpdateNodesMcpTool())
+        mcp_tool_registry.register(DeleteNodesMcpTool())
 
         from baserow.core.registries import permission_manager_type_registry
 
