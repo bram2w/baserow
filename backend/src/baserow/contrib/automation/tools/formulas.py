@@ -30,12 +30,17 @@ EMPTY_FORMULA = "''"
 
 # Formula syntax written as a value: get('...'), concat(...), {{ ... }},
 # comparison functions, if(...), today(), now().
+# A function name must touch its parenthesis, so text such as "Order now (today
+# only)" stays a literal.
 RAW_FORMULA_RE = re.compile(
-    r"\bget\s*\(|\bconcat\s*\(|\{\{.*\}\}"
+    r"\bget\(|\bconcat\(|\{\{.*\}\}"
     r"|\b(?:equal|not_equal|greater_than|less_than"
-    r"|greater_than_(?:or_)?equal|less_than_(?:or_)?equal)\s*\("
-    r"|\bif\s*\(|\btoday\s*\(|\bnow\s*\("
+    r"|greater_than_(?:or_)?equal|less_than_(?:or_)?equal)\("
+    r"|\bif\(|\btoday\(|\bnow\("
 )
+
+# The node part of a previous_node path: previous_node.<node>.…
+PREVIOUS_NODE_RE = re.compile(r"(previous_node\.)([^.'\"\s)]+)")
 
 
 class InvalidAutomationFormula(Exception):
@@ -97,6 +102,20 @@ def wrap_static_string(value: str) -> str:
     return f"'{escaped}'"
 
 
+def resolve_node_refs(formula: str, refs: dict[str, int]) -> str:
+    """
+    Replace the refs of nodes made earlier in the call with their IDs in the
+    formula's previous_node paths, so ``get('previous_node.trigger.0.id')`` reads
+    the trigger.
+    """
+
+    def replace(match: re.Match) -> str:
+        node = match.group(2)
+        return match.group(1) + str(refs.get(node, node))
+
+    return PREVIOUS_NODE_RE.sub(replace, formula)
+
+
 def check_automation_formula(field: str, formula: str) -> None:
     """
     Check that a formula is valid in an automation: it parses, and its functions,
@@ -123,6 +142,15 @@ def check_automation_formula(field: str, formula: str) -> None:
             f"'{field}' needs a formula, not a description. Write it in Baserow "
             "formula syntax.",
         )
+    for match in PREVIOUS_NODE_RE.finditer(formula):
+        if not match.group(2).isdigit():
+            raise InvalidAutomationFormula(
+                field,
+                formula,
+                f"'{match.group(2)}' is not a node ID. Read a node's output with "
+                "get('previous_node.<node id>...'): list_nodes gives the IDs, and "
+                "a node defined earlier in the same call can be named by its ref.",
+            )
     try:
         tree = get_parse_tree_for_formula(formula)
         BaserowFormulaValidationVisitor(

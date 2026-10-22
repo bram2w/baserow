@@ -159,32 +159,58 @@ def _formula_update(
     return NodeUpdate(node_id=node_id, **values)
 
 
-def workflow_formula_context(
-    user, workflow, refs: dict[int, str] | None = None
-) -> "AssistantFormulaContext":
+class WorkflowExamples:
     """
-    The example data of every node of a workflow, for the generator.
-
-    :param refs: The ref each node was created under, to help the generator.
+    The example data of a workflow's nodes for the generator, read once per
+    workflow however many of its nodes are repaired.
     """
 
-    context = AssistantFormulaContext()
-    for node, previous, _output in shared_nodes.nodes_in_order(user, workflow):
-        service = node.service.specific
-        schema = service.get_type().generate_schema(service)
-        if not schema:
-            continue
-        metadata = minimize_json_schema(schema)
-        metadata["node_id"] = node.id
-        metadata["label"] = node.label
-        if refs and node.id in refs:
-            metadata["node_ref"] = refs[node.id]
-        if previous is not None:
-            metadata["previous_node_id"] = previous.id
-        context.add_node_context(
-            node.id, create_example_from_json_schema(schema), metadata
-        )
-    return context
+    def __init__(self, user, refs: dict[int, str] | None = None):
+        self.user = user
+        self.refs = refs or {}
+        self._workflows: dict[int, tuple[dict, dict]] = {}
+
+    def _read(self, workflow) -> tuple[dict, dict]:
+        if workflow.id not in self._workflows:
+            previous_of = {}
+            examples = {}
+            for node, previous, _output in shared_nodes.nodes_in_order(
+                self.user, workflow
+            ):
+                previous_of[node.id] = previous.id if previous else None
+                service = node.service.specific
+                schema = service.get_type().generate_schema(service)
+                if not schema:
+                    continue
+                metadata = minimize_json_schema(schema)
+                metadata["node_id"] = node.id
+                metadata["label"] = node.label
+                if node.id in self.refs:
+                    metadata["node_ref"] = self.refs[node.id]
+                if previous is not None:
+                    metadata["previous_node_id"] = previous.id
+                examples[node.id] = (create_example_from_json_schema(schema), metadata)
+            self._workflows[workflow.id] = (previous_of, examples)
+        return self._workflows[workflow.id]
+
+    def context_for(self, node: AutomationNode) -> "AssistantFormulaContext":
+        """
+        The nodes that run before ``node`` on its path, the only ones its
+        formulas can read.
+        """
+
+        previous_of, examples = self._read(node.workflow)
+        context = AssistantFormulaContext()
+        ancestor = previous_of.get(node.id)
+        ancestors = []
+        while ancestor is not None:
+            ancestors.append(ancestor)
+            ancestor = previous_of.get(ancestor)
+        for node_id in reversed(ancestors):
+            if node_id in examples:
+                example, metadata = examples[node_id]
+                context.add_node_context(node_id, example, metadata)
+        return context
 
 
 def repair_formula_errors(
@@ -207,6 +233,7 @@ def repair_formula_errors(
 
     generate_formula = get_generate_formulas_tool(tool_helpers.model_profile)
     field_ids = shared_nodes.table_field_ids()
+    examples = WorkflowExamples(tool_context.user, refs)
     remaining: list[dict[str, Any]] = []
     by_node: dict[int, list[dict[str, Any]]] = {}
     for error in formula_errors:
@@ -218,9 +245,9 @@ def repair_formula_errors(
                     tool_context,
                     generate_formula,
                     field_ids,
+                    examples,
                     node_id,
                     node_errors,
-                    refs,
                 )
             )
         except Exception as exc:
@@ -235,9 +262,9 @@ def _repair_node(
     tool_context: ToolContext,
     generate_formula: Callable,
     field_ids: Callable[[int], set[int]],
+    examples: WorkflowExamples,
     node_id: int,
     node_errors: list[dict[str, Any]],
-    refs: dict[int, str] | None,
 ) -> list[dict[str, Any]]:
     """
     Generate one node's formulas and write them in their own transaction.
@@ -249,7 +276,7 @@ def _repair_node(
     tool_context.update_status(
         _("Generating formulas for node '%(label)s'...") % {"label": node.label}
     )
-    context = workflow_formula_context(tool_context.user, node.workflow, refs)
+    context = examples.context_for(node)
     generated = generate_formula(formula_requests(node, node_errors), context) or {}
 
     repaired = [e for e in node_errors if _request_key(e) in generated]
@@ -263,6 +290,16 @@ def _repair_node(
                 field_ids,
                 as_formulas=True,
             )
+        for error in repaired:
+            # A branch label the update couldn't match leaves that condition
+            # unset; any other refusal leaves the node's values unset.
+            refusals = [
+                message
+                for message in values.errors
+                if "edge_label" not in error or f"'{error['edge_label']}'" in message
+            ]
+            if refusals:
+                remaining.append({**error, "error": " ".join(refusals)})
         remaining.extend(
             formula_error(node, exc, **target) for exc, target in values.invalid
         )

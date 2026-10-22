@@ -192,6 +192,26 @@ def describe_node(
     return description
 
 
+def describe_workflow_nodes(
+    ctx: ToolContext, workflow_id: int, with_output_schema: bool = True
+) -> list[dict[str, Any]]:
+    """
+    The nodes of a workflow of the context's workspace in execution order.
+
+    :param with_output_schema: Whether to add each node's output schema, which
+        reads the schema of every node's service.
+    """
+
+    workflow = get_workflow_in_workspace(ctx, workflow_id)
+    nodes = []
+    for node, previous, output in nodes_in_order(ctx.user, workflow):
+        description = describe_node(node, previous, output)
+        if with_output_schema:
+            description["output_schema"] = output_schema(node)
+        nodes.append(description)
+    return nodes
+
+
 def list_nodes(
     ctx: ToolContext,
     workflow_id: Annotated[
@@ -206,16 +226,7 @@ def list_nodes(
     get('<formula_path>.<property key>').
     """
 
-    workflow = get_workflow_in_workspace(ctx, workflow_id)
-    return {
-        "nodes": [
-            {
-                **describe_node(node, previous, output),
-                "output_schema": output_schema(node),
-            }
-            for node, previous, output in nodes_in_order(ctx.user, workflow)
-        ]
-    }
+    return {"nodes": describe_workflow_nodes(ctx, workflow_id)}
 
 
 # ---------------------------------------------------------------------------
@@ -290,7 +301,8 @@ def node_refs(user: AbstractUser, workflow: AutomationWorkflow) -> NodeRefs:
         refs.add(
             str(node.id),
             node.id,
-            {edge["label"]: edge["uid"] for edge in edges}
+            # The first branch wins when labels repeat, as in the editor's order.
+            {edge["label"]: edge["uid"] for edge in reversed(edges)}
             if node.get_type().type == "router"
             else None,
         )
@@ -356,7 +368,7 @@ def create_node(
     """
 
     ctx.update_status(_("Creating node %(label)s...") % {"label": spec.label})
-    values = ServiceValues(field_ids)
+    values = ServiceValues(field_ids, refs=refs.ids())
     data: dict[str, Any] = {"label": spec.label}
     if isinstance(spec, TriggerNodeCreate):
         data["service"] = spec.to_orm_service_dict()
@@ -405,10 +417,13 @@ def add_nodes(
     other. Use list_nodes to find the IDs of the nodes to attach to, and
     router_edge_label to attach to a router branch. A value that takes a formula
     is a formula when it looks like one (get(...), concat(...), ...), otherwise a
-    literal. A valid formula is stored as written. An invalid one leaves that
-    value empty and is returned in formula_errors with the parser's message: fix
-    it with update_nodes. Nothing is written when a previous_node_ref or branch is
-    unknown.
+    literal; to store text that looks like a formula, send it as a quoted string
+    such as 'Call now()'. A formula reads an earlier node with
+    get('previous_node.<node id>...'), and a node defined earlier in the call can
+    be named by its ref there. A valid formula is stored as written. An invalid
+    one leaves that value empty and is returned in formula_errors with the
+    parser's message: fix it with update_nodes. Nothing is written when a
+    previous_node_ref or branch is unknown, or a ref is used twice.
     """
 
     if not nodes:
@@ -450,13 +465,17 @@ def update_node(
     :raises AutomationNodeDoesNotExist: When the node is not in the workflow.
     """
 
-    node = get_node_in_workspace(ctx, node_update.node_id)
+    try:
+        node = get_node_in_workspace(ctx, node_update.node_id)
+    except PermissionException:
+        # Not found, like a missing node, so the result doesn't tell which.
+        raise AutomationNodeDoesNotExist(node_update.node_id)
     if node.workflow_id != workflow.id:
         raise AutomationNodeDoesNotExist(node_update.node_id)
     if node_update.table_id is not None:
         check_tables_in_workspace(ctx, {node_update.table_id})
 
-    values = ServiceValues(field_ids, as_formulas)
+    values = ServiceValues(field_ids, as_formulas, updating=True)
     data: dict[str, Any] = {}
     if node_update.label is not None:
         data["label"] = node_update.label
@@ -498,9 +517,10 @@ def update_nodes(
     Update nodes of a workflow: their label and settings, a row action's table
     and field values, and the conditions of a router's branches. A node's type and
     a trigger's settings cannot change. Values not given keep theirs. Formulas
-    work as in add_nodes: an invalid one leaves that value empty and is returned
-    in formula_errors. A node that fails is reported in errors and the others are
-    still updated.
+    work as in add_nodes, except that a value with an invalid formula keeps what
+    it had; the formula is returned in formula_errors. A node that fails is
+    reported in errors and the others are still updated. If the user may not
+    change a node, nothing is changed.
     """
 
     if not nodes:

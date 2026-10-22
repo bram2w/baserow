@@ -63,11 +63,13 @@ def list_nodes(
 
     ctx.deps.tool_helpers.update_status(_("Listing nodes..."))
 
-    nodes = shared_nodes.list_nodes(ctx.deps.tool_context(), workflow_id)["nodes"]
-    # The output schemas are long, and Kuma's formula generator reads them itself.
-    for node in nodes:
-        node.pop("output_schema")
-    return {"nodes": nodes}
+    # No output schemas: they are long, and Kuma's formula generator reads them
+    # itself.
+    return {
+        "nodes": shared_nodes.describe_workflow_nodes(
+            ctx.deps.tool_context(), workflow_id, with_output_schema=False
+        )
+    }
 
 
 def _shared_call(function, *args):
@@ -186,7 +188,7 @@ def create_workflows(
     )
     created_workflows = []
     formula_errors = []
-    errors = []
+    errors = list(creation.failed)
     for workflow_spec, workflow, node_creation in creation.created:
         created_workflows.append(shared_workflows.describe_workflow(workflow))
         errors.extend(node_creation.errors)

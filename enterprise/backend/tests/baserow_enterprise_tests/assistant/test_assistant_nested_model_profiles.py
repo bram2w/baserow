@@ -90,7 +90,7 @@ def test_automation_formula_repair_forwards_request_model_profile():
 
     with (
         patch.object(automation_agents.shared_nodes, "get_node_in_workspace"),
-        patch.object(automation_agents, "workflow_formula_context"),
+        patch.object(automation_agents, "WorkflowExamples"),
         patch.object(automation_agents, "get_generate_formulas_tool") as factory,
     ):
         factory.return_value.return_value = {}

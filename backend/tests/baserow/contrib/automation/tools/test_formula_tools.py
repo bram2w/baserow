@@ -94,3 +94,19 @@ def test_service_values_leave_an_invalid_formula_empty():
         ("values", {"field_id": 1}),
     ]
     assert values.errors == ["Field 2 is not in table 7, so its value was not set."]
+
+
+@pytest.mark.parametrize("value", ["Order now (today only)", "if (you can)"])
+def test_text_with_a_word_before_a_parenthesis_is_a_literal(value):
+    assert needs_formula(value) is False
+
+
+def test_a_previous_node_path_needs_a_node_id():
+    from baserow.contrib.automation.tools.formulas import resolve_node_refs
+
+    with pytest.raises(InvalidAutomationFormula, match="'trigger' is not a node ID"):
+        check_automation_formula("row_id", "get('previous_node.trigger.0.id')")
+
+    resolved = resolve_node_refs("get('previous_node.trigger.0.id')", {"trigger": 7})
+    assert resolved == "get('previous_node.7.0.id')"
+    check_automation_formula("row_id", resolved)

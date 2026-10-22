@@ -1,5 +1,7 @@
 """Tests for create_workflows, shared by MCP and Kuma."""
 
+from unittest.mock import patch
+
 from django.core.exceptions import ValidationError as DjangoValidationError
 
 import pytest
@@ -7,6 +9,9 @@ import pytest
 from baserow.contrib.automation.nodes.models import AutomationNode
 from baserow.contrib.automation.tools.types import WorkflowCreate
 from baserow.contrib.automation.tools.workflows import create_workflows
+from baserow.contrib.automation.workflows.actions import (
+    CreateAutomationWorkflowActionType,
+)
 from baserow.contrib.automation.workflows.models import AutomationWorkflow
 from baserow.contrib.database.table.models import Table
 from baserow.core.action.models import Action
@@ -286,3 +291,88 @@ def test_an_empty_list_is_rejected(automation_ctx):
 
     with pytest.raises(DjangoValidationError, match="at least one workflow"):
         create_workflows(ctx, automation.id, [])
+
+
+@pytest.mark.django_db
+def test_a_formula_can_name_an_earlier_node_by_its_ref(automation_ctx):
+    ctx, automation, table, _ = automation_ctx
+    workflow = _workflow(
+        table, _email(label="Mail", subject="get('previous_node.trigger.0.id')")
+    )
+
+    result = create_workflows(ctx, automation.id, [workflow])
+
+    created = result["created_workflows"][0]
+    trigger_id = created["nodes"][0]["id"]
+    mail = _nodes(created["id"])["Mail"].service.specific
+    assert mail.subject["formula"] == f"get('previous_node.{trigger_id}.0.id')"
+
+
+@pytest.mark.django_db
+def test_router_branches_need_their_own_labels():
+    with pytest.raises(ValueError, match="its own label"):
+        WorkflowCreate(
+            name="X",
+            trigger={
+                "ref": "t",
+                "type": "periodic",
+                "periodic_interval": {"interval": "DAY"},
+            },
+            nodes=[
+                {
+                    "ref": "r",
+                    "type": "router",
+                    "previous_node_ref": "t",
+                    "edges": [
+                        {"label": "A", "condition": "true"},
+                        {"label": "a", "condition": "true"},
+                    ],
+                }
+            ],
+        )
+
+
+def test_labels_and_names_have_the_database_limits():
+    with pytest.raises(ValueError, match="75"):
+        WorkflowCreate(
+            name="X",
+            trigger={
+                "ref": "t",
+                "type": "periodic",
+                "periodic_interval": {"interval": "DAY"},
+            },
+            nodes=[{**_email(), "label": "x" * 76}],
+        )
+    with pytest.raises(ValueError, match="255"):
+        WorkflowCreate(
+            name="x" * 256,
+            trigger={
+                "ref": "t",
+                "type": "periodic",
+                "periodic_interval": {"interval": "DAY"},
+            },
+        )
+
+
+@pytest.mark.django_db
+def test_a_workflow_that_fails_keeps_the_ones_saved_before(automation_ctx):
+    ctx, automation, table, _ = automation_ctx
+    first = _workflow(table, _email(subject="$formula: the id"), name="First")
+    second = _workflow(table, _email(), name="Second")
+    do = CreateAutomationWorkflowActionType.do
+
+    def fail_second(user, automation_id, data):
+        if data["name"] == "Second":
+            raise DjangoValidationError("No more workflows.")
+        return do(user, automation_id, data)
+
+    with patch.object(
+        CreateAutomationWorkflowActionType, "do", side_effect=fail_second
+    ):
+        result = create_workflows(ctx, automation.id, [first, second])
+
+    assert [w["name"] for w in result["created_workflows"]] == ["First"]
+    assert result["errors"] == [
+        "Workflow Second was not created: Invalid value. No more workflows."
+    ]
+    assert result["formula_errors"][0]["field"] == "subject"

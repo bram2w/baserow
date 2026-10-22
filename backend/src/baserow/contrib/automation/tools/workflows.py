@@ -3,7 +3,7 @@ Workflow tools shared by the clients that act for a user.
 """
 
 from collections.abc import Iterable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Annotated, Any
 
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -22,6 +22,7 @@ from baserow.contrib.automation.workflows.models import AutomationWorkflow
 from baserow.contrib.automation.workflows.operations import (
     ReadAutomationWorkflowOperationType,
 )
+from baserow.core.exceptions import PermissionException
 from baserow.core.handler import CoreHandler
 from baserow.core.service import CoreService
 from baserow.core.tools import ToolContext
@@ -188,6 +189,9 @@ class WorkflowCreation:
     created: list[tuple[WorkflowCreate, AutomationWorkflow, Any]]
     """Each created workflow with its definition and its ``NodeCreation``."""
 
+    failed: list[str] = field(default_factory=list)
+    """Why each workflow that could not be saved wasn't."""
+
     def to_response(self, user) -> dict[str, Any]:
         from baserow.contrib.automation.tools.nodes import describe_node, nodes_in_order
 
@@ -207,7 +211,10 @@ class WorkflowCreation:
                 for workflow in self.plan.to_reuse
             ],
         }
-        errors = [error for *_, creation in self.created for error in creation.errors]
+        errors = [
+            *self.failed,
+            *(error for *_, creation in self.created for error in creation.errors),
+        ]
         if errors:
             result["errors"] = errors
         formula_errors = self.formula_errors
@@ -240,6 +247,7 @@ def create_workflows_in_automation(
         check_node_refs,
         check_tables_in_workspace,
         create_node,
+        item_error_message,
         node_table_ids,
         table_field_ids,
     )
@@ -273,19 +281,29 @@ def create_workflows_in_automation(
     )
 
     created = []
+    failed = []
     field_ids = table_field_ids()
     for spec in plan.to_create:
         ctx.update_status(_("Creating workflow %(name)s...") % {"name": spec.name})
         creation = NodeCreation()
-        with transaction.atomic():
-            workflow = CreateAutomationWorkflowActionType.do(
-                ctx.user, automation.id, {"name": spec.name}
+        try:
+            with transaction.atomic():
+                workflow = CreateAutomationWorkflowActionType.do(
+                    ctx.user, automation.id, {"name": spec.name}
+                )
+                refs = NodeRefs()
+                for node in (spec.trigger, *spec.nodes):
+                    create_node(ctx, workflow, node, refs, creation, field_ids)
+        except PermissionException:
+            raise
+        except Exception as exc:
+            # The workflows saved before stay, with their formula errors.
+            failed.append(
+                f"Workflow {spec.name} was not created: {item_error_message(exc)}"
             )
-            refs = NodeRefs()
-            for node in (spec.trigger, *spec.nodes):
-                create_node(ctx, workflow, node, refs, creation, field_ids)
+            continue
         created.append((spec, workflow, creation))
-    return WorkflowCreation(plan=plan, created=created)
+    return WorkflowCreation(plan=plan, created=created, failed=failed)
 
 
 def create_workflows(
@@ -304,19 +322,22 @@ def create_workflows(
     workflow, and router_edge_label attaches a node to a router branch. A row
     trigger or row action needs the table_id and field IDs of a table in the
     workspace. update_row and delete_row need a row_id; after a row trigger it is
-    usually get('previous_node.<trigger node id>.0.id').
+    usually get('previous_node.<trigger ref>.0.id').
 
     A value that takes a formula is a formula when it looks like one (get(...),
-    concat(...), if(...), ...), otherwise a literal. Read an earlier node's output
-    with get('previous_node.<node id>...'): list_nodes shows each node's output
-    paths. A router condition is always a formula. A valid formula is stored as
+    concat(...), if(...), ...), otherwise a literal; to store text that looks like
+    a formula, send it as a quoted string such as 'Call now()'. Read an earlier
+    node's output with get('previous_node.<node>...'), where <node> is the ref of
+    a node earlier in the same workflow or a node ID: list_nodes shows each node's
+    output paths. A router condition is always a formula. A valid formula is stored as
     written. An invalid one leaves that value empty and is returned in
     formula_errors with the node and the parser's message: fix it with
     update_nodes.
 
     A workflow whose name already exists is not created again nor changed: it is
     returned in reused_workflows with its nodes. Nothing is written when two
-    definitions share a name, or a previous_node_ref or branch is unknown.
+    definitions share a name, or a previous_node_ref or branch is unknown. A
+    workflow that fails to save is reported in errors and the others are kept.
     """
 
     automation = get_automation_in_workspace(ctx, automation_id)

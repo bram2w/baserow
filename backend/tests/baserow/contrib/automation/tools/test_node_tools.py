@@ -372,3 +372,108 @@ def test_update_nodes_explains_a_deactivated_node_type(automation_ctx):
     assert result["errors"] == [
         f"Error updating node {mail.id}: This automation node type is deactivated."
     ]
+
+
+@pytest.mark.django_db
+def test_update_nodes_keeps_a_value_whose_new_formula_is_invalid(automation_ctx):
+    ctx, automation, table, _ = automation_ctx
+    workflow, trigger = create_workflow(ctx.user, automation, "Flow", table)
+    mail = _email_node(ctx, workflow, trigger, "Mail")
+
+    result = update_nodes(
+        ctx, workflow.id, [NodeUpdate(node_id=mail.id, subject="concat(")]
+    )
+
+    assert result["formula_errors"][0]["field"] == "subject"
+    service = mail.service.specific
+    service.refresh_from_db()
+    assert service.subject["formula"] == "'Before'"
+
+
+@pytest.mark.django_db
+def test_update_nodes_refuses_values_a_row_node_does_not_take(automation_ctx):
+    ctx, automation, table, name = automation_ctx
+    workflow, trigger = create_workflow(ctx.user, automation, "Flow", table)
+    store = create_node(
+        ctx.user,
+        workflow,
+        "local_baserow_create_row",
+        reference_node_id=trigger.id,
+        service={"table_id": table.id},
+    )
+    remove = create_node(
+        ctx.user,
+        workflow,
+        "local_baserow_delete_row",
+        reference_node_id=store.id,
+        service={"table_id": table.id},
+    )
+
+    result = update_nodes(
+        ctx,
+        workflow.id,
+        [
+            NodeUpdate(node_id=store.id, row_id="5"),
+            NodeUpdate(node_id=remove.id, values=[{"field_id": name.id, "value": "x"}]),
+        ],
+    )
+
+    assert result["errors"] == [
+        f"Node {store.id} ({store.label}): A create_row node takes no row_id.",
+        f"Node {remove.id} ({remove.label}): A delete_row node takes no values.",
+    ]
+    store.service.specific.refresh_from_db()
+    assert not store.service.specific.row_id["formula"]
+
+
+@pytest.mark.django_db
+def test_update_nodes_hides_a_node_the_user_cannot_read(automation_ctx):
+    from baserow.contrib.automation.tools import nodes as nodes_module
+    from baserow.core.exceptions import PermissionException
+
+    ctx, automation, table, _ = automation_ctx
+    workflow, trigger = create_workflow(ctx.user, automation, "Flow", table)
+    hidden = _email_node(ctx, workflow, trigger, "Hidden")
+    check = nodes_module.CoreHandler.check_permissions
+
+    def deny_hidden(self, actor, operation, workspace=None, context=None, **kwargs):
+        if getattr(context, "id", None) == hidden.id:
+            raise PermissionException()
+        return check(
+            self, actor, operation, workspace=workspace, context=context, **kwargs
+        )
+
+    with patch.object(nodes_module.CoreHandler, "check_permissions", deny_hidden):
+        result = update_nodes(
+            ctx, workflow.id, [NodeUpdate(node_id=hidden.id, label="X")]
+        )
+
+    assert result["errors"] == [
+        f"Error updating node {hidden.id}: Not found in this workspace."
+    ]
+
+
+@pytest.mark.django_db
+def test_update_nodes_refuses_a_label_that_names_several_branches(automation_ctx):
+    ctx, automation, table, _ = automation_ctx
+    workflow, trigger = create_workflow(ctx.user, automation, "Flow", table)
+    router = create_node(
+        ctx.user,
+        workflow,
+        "router",
+        reference_node_id=trigger.id,
+        service={
+            "edges": [
+                {"uid": str(uuid4()), "label": "Yes"},
+                {"uid": str(uuid4()), "label": "Yes"},
+            ]
+        },
+    )
+
+    result = update_nodes(
+        ctx,
+        workflow.id,
+        [NodeUpdate(node_id=router.id, edges=[{"label": "Yes", "condition": "true"}])],
+    )
+
+    assert "names several branches" in result["errors"][0]

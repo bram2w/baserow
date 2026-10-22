@@ -1160,3 +1160,108 @@ def test_a_failed_repair_keeps_the_created_nodes(
     assert result["created_nodes"][0]["label"] == "Formula Email"
     (error,) = result["formula_errors"]
     assert error["field"] == "subject"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_formulas_only_see_the_nodes_before_them(
+    data_fixture, monkeypatch, real_formula_pass
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    automation = data_fixture.create_automation_application(workspace=workspace)
+    ctx = make_test_ctx(user, workspace)
+    seen = []
+
+    def generate(formulas, context):
+        seen.append(set(context.context))
+        return {key: "'x'" for key in formulas}
+
+    monkeypatch.setattr(
+        automation_agents, "get_generate_formulas_tool", lambda profile: generate
+    )
+
+    def email(ref, previous):
+        return ActionNodeCreate(
+            ref=ref,
+            label=ref,
+            previous_node_ref=previous,
+            type="smtp_email",
+            to_emails="a@example.com",
+            subject="$formula: the trigger" if ref == "first" else "Hi",
+            body="Hello",
+        )
+
+    result = create_workflows(
+        ctx,
+        automation_id=automation.id,
+        workflows=[
+            WorkflowCreate(
+                name="Flow",
+                trigger=TriggerNodeCreate(
+                    ref="trigger",
+                    type="periodic",
+                    periodic_interval={"interval": "DAY"},
+                ),
+                nodes=[email("first", "trigger"), email("second", "first")],
+            )
+        ],
+        thought="create",
+    )
+
+    workflow = AutomationWorkflowHandler().get_workflow(
+        result["created_workflows"][0]["id"]
+    )
+    trigger = workflow.get_trigger()
+    assert seen == [{str(trigger.id)}]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_repair_the_update_refuses_stays_in_formula_errors(
+    data_fixture, monkeypatch, real_formula_pass
+):
+    from uuid import uuid4
+
+    from baserow.contrib.automation.nodes.registries import (
+        automation_node_type_registry,
+    )
+    from baserow.contrib.automation.nodes.service import AutomationNodeService
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    automation, workflow_id = _create_test_workflow(data_fixture, user, workspace)
+    ctx = make_test_ctx(user, workspace)
+    workflow = AutomationWorkflowHandler().get_workflow(workflow_id)
+    router = AutomationNodeService().create_node(
+        user,
+        automation_node_type_registry.get("router"),
+        workflow,
+        reference_node_id=workflow.get_trigger().id,
+        service={"edges": [{"uid": str(uuid4()), "label": "Yes"}]},
+    )
+
+    def rename_then_generate(formulas, context):
+        # Someone renames the branch between the update and the repair.
+        router.service.specific.edges.update(label="No")
+        return {key: "true" for key in formulas}
+
+    monkeypatch.setattr(
+        automation_agents,
+        "get_generate_formulas_tool",
+        lambda profile: rename_then_generate,
+    )
+
+    result = update_nodes(
+        ctx,
+        workflow_id=workflow_id,
+        nodes=[
+            NodeUpdate(
+                node_id=router.id,
+                edges=[{"label": "Yes", "condition": "$formula: always"}],
+            )
+        ],
+        thought="update",
+    )
+
+    (error,) = result["formula_errors"]
+    assert error["edge_label"] == "Yes"
+    assert "'Yes' is not a branch" in error["error"]

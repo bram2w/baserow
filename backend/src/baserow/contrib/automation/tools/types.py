@@ -21,6 +21,7 @@ from baserow.contrib.automation.tools.formulas import (
     check_automation_formula,
     formula_object,
     needs_formula,
+    resolve_node_refs,
     wrap_static_string,
 )
 from baserow.core.formula.types import (
@@ -44,23 +45,38 @@ SUPPORTS_FORMULA = " A literal or a formula."
 # ---------------------------------------------------------------------------
 
 
+# Returned for a value whose formula is invalid while updating: the value keeps
+# what it had.
+UNCHANGED = object()
+
+
 class ServiceValues:
     """
     Builds a node's service values from its definition. A literal is quoted, a
-    valid formula is kept. An invalid formula is left empty and collected in
-    ``invalid``, a value that can't be set at all in ``errors``.
+    valid formula is kept. An invalid formula is collected in ``invalid`` and is
+    left empty on a new node, or unchanged on an update. A value that can't be set
+    at all is collected in ``errors``.
     """
 
     def __init__(
-        self, table_field_ids: Callable[[int], set[int]], as_formulas: bool = False
+        self,
+        table_field_ids: Callable[[int], set[int]],
+        as_formulas: bool = False,
+        refs: dict[str, int] | None = None,
+        updating: bool = False,
     ):
         """
         :param table_field_ids: Returns the ids of the fields of a table.
         :param as_formulas: Take every value as a formula, for values a caller
             knows are formulas.
+        :param refs: The ID of each node defined earlier in the call, by ref.
+        :param updating: Whether the values update a node. An invalid formula
+            then returns ``UNCHANGED``.
         """
 
         self.as_formulas = as_formulas
+        self.refs = refs or {}
+        self.updating = updating
         self.invalid: list[tuple[InvalidAutomationFormula, dict[str, Any]]] = []
         self.errors: list[str] = []
         self._table_field_ids = table_field_ids
@@ -73,16 +89,18 @@ class ServiceValues:
         **target: Any,
     ) -> Any:
         """
-        A value that must be a formula, or an empty one when it's invalid.
+        A value that must be a formula. When it's invalid: an empty one, or
+        ``UNCHANGED`` while updating.
 
         :param target: ``field_id`` or ``edge_label``, reported with an error.
         """
 
+        value = resolve_node_refs(value, self.refs)
         try:
             check_automation_formula(field, value)
         except InvalidAutomationFormula as exc:
             self.invalid.append((exc, target))
-            return formula_object("", mode)
+            return UNCHANGED if self.updating else formula_object("", mode)
         return formula_object(value, mode)
 
     def value(self, field: str, value: str | None, **target: Any) -> Any:
@@ -165,7 +183,7 @@ class RowsTriggersSettings(BaseModel):
 class RouterEdgeCreate(BaseModel):
     """Router branch. Order matters: first matching branch is taken."""
 
-    label: str = Field(description="Branch label.")
+    label: str = Field(max_length=75, description="Branch label.")
     condition: str = Field(
         description="A formula that is true when this branch is taken, for example "
         "greater_than(get('previous_node.1.0.field_2'), 100).",
@@ -228,6 +246,11 @@ class NodeRefs:
         """
 
         self._nodes[str(ref)] = (node_id, edges)
+
+    def ids(self) -> dict[str, int]:
+        """The ID of each node that exists, by ref."""
+
+        return {ref: node_id for ref, (node_id, _) in self._nodes.items() if node_id}
 
     def __contains__(self, ref: str) -> bool:
         return str(ref) in self._nodes
@@ -321,7 +344,9 @@ class TriggerNodeCreate(BaseModel):
     """Create a trigger node in a workflow."""
 
     ref: str = Field(..., description="Temporary reference ID for creation.")
-    label: str = Field("", description="Display name. Defaults to the node type.")
+    label: str = Field(
+        "", max_length=75, description="Display name. Defaults to the node type."
+    )
     # Registered names are accepted too, as list_nodes returns them.
     type: Literal[
         "periodic",
@@ -430,7 +455,9 @@ class ActionNodeCreate(BaseModel):
         return _fold_type_alias(data)
 
     ref: str = Field(..., description="Temporary reference ID for creation.")
-    label: str = Field("", description="Display name. Defaults to the node type.")
+    label: str = Field(
+        "", max_length=75, description="Display name. Defaults to the node type."
+    )
     type: ActionNodeType
     previous_node_ref: str = Field(
         ...,
@@ -467,7 +494,7 @@ class ActionNodeCreate(BaseModel):
     body_type: Literal["plain", "html"] = "plain"
 
     # -- slack_write_message --
-    channel: str | None = None
+    channel: str | None = Field(default=None, max_length=80)
     text: str | None = Field(
         default=None, description=f"(slack) Message.{SUPPORTS_FORMULA}"
     )
@@ -521,6 +548,9 @@ class ActionNodeCreate(BaseModel):
     def _validate_required_for_type(self):
         if not self.label:
             self.label = self.type.replace("_", " ").capitalize()
+        labels = [edge.label.lower() for edge in self.edges or []]
+        if len(labels) != len(set(labels)):
+            raise ValueError("Each router branch needs its own label.")
         required = self._REQUIRED_FIELDS.get(self.type)
         if required:
             missing = [
@@ -602,7 +632,7 @@ class NodeUpdate(BaseModel):
     """Flat model for updating an automation node."""
 
     node_id: int = Field(..., description="The ID of the node to update.")
-    label: str | None = Field(None, description="New display name.")
+    label: str | None = Field(None, max_length=75, description="New display name.")
 
     # -- router --
     edges: list[RouterEdgeUpdate] | None = Field(
@@ -630,7 +660,7 @@ class NodeUpdate(BaseModel):
     body_type: Literal["plain", "html"] | None = None
 
     # -- slack_write_message --
-    channel: str | None = None
+    channel: str | None = Field(default=None, max_length=80)
     text: str | None = Field(
         default=None, description=f"(slack) Message.{SUPPORTS_FORMULA}"
     )
@@ -666,11 +696,12 @@ class NodeUpdate(BaseModel):
         builder = _TO_UPDATE_SERVICE.get(service_dispatch_type(node.service))
         if builder is None:
             return None
-        return builder(self, node.service.specific, values) or None
+        service = builder(self, node, values)
+        return {k: v for k, v in service.items() if v is not UNCHANGED} or None
 
 
 def _email_update_service(
-    n: NodeUpdate, service: Service, values: ServiceValues
+    n: NodeUpdate, node: AutomationNode, values: ServiceValues
 ) -> dict[str, Any]:
     d = {}
     for name in ("to_emails", "cc_emails", "bcc_emails", "subject", "body"):
@@ -682,7 +713,7 @@ def _email_update_service(
 
 
 def _slack_update_service(
-    n: NodeUpdate, service: Service, values: ServiceValues
+    n: NodeUpdate, node: AutomationNode, values: ServiceValues
 ) -> dict[str, Any]:
     d = {}
     if n.channel is not None:
@@ -693,15 +724,23 @@ def _slack_update_service(
 
 
 def _row_action_update_service(
-    n: NodeUpdate, service: Service, values: ServiceValues
+    n: NodeUpdate, node: AutomationNode, values: ServiceValues
 ) -> dict[str, Any]:
+    service = node.service.specific
+    node_type = CANONICAL_TO_SHORT_TYPE.get(node.get_type().type)
     d: dict[str, Any] = {}
     table_id = service.table_id
     if n.table_id is not None and n.table_id != table_id:
         d["table_id"] = table_id = n.table_id
-    if n.row_id is not None and hasattr(service, "row_id"):
-        d["row_id"] = values.value("row_id", n.row_id)
-    if not hasattr(service, "field_mappings"):
+    if n.row_id is not None:
+        if node_type == "create_row":
+            # A row id would make the node update that row instead.
+            values.errors.append("A create_row node takes no row_id.")
+        else:
+            d["row_id"] = values.value("row_id", n.row_id)
+    if node_type == "delete_row":
+        if n.values:
+            values.errors.append("A delete_row node takes no values.")
         return d
     if n.values is not None or "table_id" in d:
         # Mappings of the previous table can't be dispatched on the new one.
@@ -730,13 +769,13 @@ def _row_action_update_service(
 
 
 def _router_update_service(
-    n: NodeUpdate, service: Service, values: ServiceValues
+    n: NodeUpdate, node: AutomationNode, values: ServiceValues
 ) -> dict[str, Any]:
     if not n.edges:
         return {}
     edges = [
         {"uid": str(edge.uid), "label": edge.label, "condition": edge.condition}
-        for edge in service.edges.all()
+        for edge in node.service.specific.edges.all()
     ]
     for update in n.edges:
         matches = [edge for edge in edges if edge["label"] == update.label] or [
@@ -744,22 +783,25 @@ def _router_update_service(
         ]
         if len(matches) != 1:
             labels = ", ".join(f"'{edge['label']}'" for edge in edges) or "none"
+            reason = "names several branches" if matches else "is not a branch"
             values.errors.append(
-                f"'{update.label}' is not a branch of node {n.node_id}, so its "
-                f"condition was not set. Its branches: {labels}."
+                f"'{update.label}' {reason} of node {n.node_id}, so its condition "
+                f"was not set. Its branches: {labels}."
             )
             continue
-        matches[0]["condition"] = values.formula(
+        condition = values.formula(
             "condition",
             update.condition,
             BASEROW_FORMULA_MODE_ADVANCED,
             edge_label=matches[0]["label"],
         )
+        if condition is not UNCHANGED:
+            matches[0]["condition"] = condition
     return {"edges": edges}
 
 
 def _ai_agent_update_service(
-    n: NodeUpdate, service: Service, values: ServiceValues
+    n: NodeUpdate, node: AutomationNode, values: ServiceValues
 ) -> dict[str, Any]:
     d = {}
     if n.prompt is not None:
@@ -789,7 +831,7 @@ _TO_UPDATE_SERVICE: dict[str, Callable] = {
 class WorkflowCreate(BaseModel):
     """A workflow to create, with its trigger and the nodes after it."""
 
-    name: str = Field(..., description="Workflow name.")
+    name: str = Field(..., max_length=255, description="Workflow name.")
     trigger: TriggerNodeCreate = Field(..., description="The trigger node.")
     nodes: list[ActionNodeCreate] = Field(
         default_factory=list,
