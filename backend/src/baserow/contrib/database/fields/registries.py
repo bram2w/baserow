@@ -1551,6 +1551,20 @@ class FieldType(
 
         return self.get_human_readable_value(value, field_object)
 
+    def get_group_by_response_serializer_field(self, instance: Field, **kwargs):
+        """
+        Return the serializer used for this field's value in grouped results.
+
+        Defaults to the response serializer. Override when that representation
+        contains information that should not appear next to the display-safe
+        group labels of `get_group_by_label`.
+
+        :param instance: The field instance whose grouped value is serialized.
+        :return: The serializer field for the grouped value.
+        """
+
+        return self.get_response_serializer_field(instance, **kwargs)
+
     # noinspection PyMethodMayBeStatic
     def get_other_fields_to_trash_restore_always_together(
         self, field: Field

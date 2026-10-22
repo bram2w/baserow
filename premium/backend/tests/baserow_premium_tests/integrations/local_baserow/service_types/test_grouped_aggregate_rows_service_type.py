@@ -5583,6 +5583,7 @@ def test_group_labels_do_not_expose_user_emails(data_fixture, field_type, linked
         .data["results"]
     )
     assert [result["id"] for result in rows] == ["Alice"]
+    assert user.email not in str(rows)
     model = table.get_model()
     field_object = model.get_field_object(primary.db_column)
     value = getattr(model.objects.first(), primary.db_column)
@@ -5592,6 +5593,56 @@ def test_group_labels_do_not_expose_user_emails(data_fixture, field_type, linked
     assert primary.get_type().get_group_by_label(value, field_object) == "Alice"
     if not linked:
         assert primary.get_type().get_group_by_label(None, field_object) == ""
+
+
+@pytest.mark.django_db
+def test_link_row_group_values_use_display_safe_labels(data_fixture):
+    """Linked rows in group values carry the primary's group label, not its e-mail."""
+    user = data_fixture.create_user(first_name="Alice")
+    people = data_fixture.create_database_table(user=user)
+    member = data_fixture.create_multiple_collaborators_field(
+        table=people, primary=True
+    )
+    person = RowHandler().create_row(
+        user, people, values={member.db_column: [{"id": user.id}]}
+    )
+    tasks = data_fixture.create_database_table(user=user, database=people.database)
+    owner = data_fixture.create_link_row_field(
+        table=tasks, link_row_table=people, name="Owner"
+    )
+    amount = data_fixture.create_number_field(table=tasks, name="Amount")
+    RowHandler().create_row(
+        user, tasks, values={owner.db_column: [person.id], amount.db_column: 10}
+    )
+    service = data_fixture.create_service(
+        LocalBaserowGroupedAggregateRows, table=tasks, integration_args={"user": user}
+    )
+    LocalBaserowTableServiceAggregationSeries.objects.create(
+        service=service, field=amount, aggregation_type="sum", order=0
+    )
+    LocalBaserowTableServiceAggregationGroupBy.objects.create(
+        service=service, field=owner, order=0
+    )
+    # Sort on the group by so the related primary is resolved before the dispatch
+    # serializes the linked rows.
+    LocalBaserowTableServiceAggregationSortBy.objects.create(
+        service=service,
+        sort_on="GROUP_BY",
+        reference=owner.db_column,
+        direction="ASC",
+        order=0,
+    )
+
+    rows = (
+        ServiceHandler()
+        .dispatch_service(service, FakeDispatchContext())
+        .data["results"]
+    )
+
+    assert user.email not in str(rows)
+    assert rows[0]["id"] == "Alice"
+    assert rows[0]["Owner"][0]["id"] == person.id
+    assert rows[0]["Owner"][0]["value"] == "Alice"
 
 
 @pytest.mark.django_db

@@ -1259,7 +1259,8 @@ class LocalBaserowGroupedAggregateRowsUserServiceType(
                     )
                 else:
                     related_value_resolvers[field.db_column] = resolve_related
-                    serializer = field_object["type"].get_response_serializer_field(
+                    field_type = field_object["type"]
+                    serializer = field_type.get_group_by_response_serializer_field(
                         field_object["field"]
                     )
 

@@ -93,6 +93,7 @@ from baserow.contrib.database.api.fields.serializers import (
     IntegerOrStringField,
     LimitListSerializer,
     LinkRowFieldSerializerMixin,
+    LinkRowGroupByValueSerializer,
     LinkRowRequestSerializer,
     LinkRowValueSerializer,
     ListOrStringField,
@@ -3651,6 +3652,22 @@ class LinkRowFieldType(
 
         return LimitListSerializer(
             child=inner_serializer(),
+            **{
+                "required": False,
+                "limit": kwargs.pop("limit_linked_items", None),
+                **kwargs,
+            },
+        )
+
+    def get_group_by_response_serializer_field(self, instance, **kwargs):
+        """
+        Grouped results render linked rows with the display-safe group label of
+        the related primary field instead of its human-readable value, so the
+        e-mail addresses of user-valued primaries do not leak through `str(row)`.
+        """
+
+        return LimitListSerializer(
+            child=LinkRowGroupByValueSerializer(),
             **{
                 "required": False,
                 "limit": kwargs.pop("limit_linked_items", None),
