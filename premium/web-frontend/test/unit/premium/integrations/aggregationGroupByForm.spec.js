@@ -79,29 +79,105 @@ describe('Multiple-select aggregation grouping', () => {
   })
 })
 
+const mountBucketLimitForm = (bucketLimit = null) =>
+  mountSuspended(AggregationGroupByForm, {
+    props: {
+      tableFields: [{ id: 1, name: 'Tags', type: 'multiple_select' }],
+      aggregationGroupBys: [{ field_id: 1 }],
+      bucketLimit,
+    },
+    global: { stubs: dropdownStubs },
+  })
+
 describe('Bucket limit validation', () => {
   test.each([null, 1, 10, 0, 11, 1.5])(
     'validates limit %s',
     async (bucketLimit) => {
-      const wrapper = await mountSuspended(AggregationGroupByForm, {
-        props: {
-          tableFields: [{ id: 1, name: 'Tags', type: 'multiple_select' }],
-          aggregationGroupBys: [{ field_id: 1 }],
-          bucketLimit,
-        },
-        global: { stubs: dropdownStubs },
-      })
-      expect(wrapper.vm.v$.bucketLimit.$invalid).toBe(
+      const wrapper = await mountBucketLimitForm(bucketLimit)
+      expect(wrapper.vm.v$.bucketLimitInput.$invalid).toBe(
         bucketLimit !== null &&
           (!Number.isInteger(bucketLimit) ||
             bucketLimit < 1 ||
             bucketLimit > 10)
       )
-      await wrapper.get('input[type="number"]').setValue('3')
-      expect(wrapper.emitted('bucket-limit-changed').at(-1)).toEqual([3])
+      const input = wrapper.get('input[type="number"]')
+      await input.setValue('3')
+      await input.trigger('blur')
+      expect(wrapper.emitted('bucket-limit-changed')).toEqual([[3]])
       wrapper.unmount()
     }
   )
+})
+
+describe('Bucket limit saving', () => {
+  let wrapper
+  afterEach(() => {
+    vi.useRealTimers()
+    wrapper?.unmount()
+  })
+
+  test('emits once the user pauses instead of on every keystroke', async () => {
+    wrapper = await mountBucketLimitForm()
+    const input = wrapper.get('input[type="number"]')
+    vi.useFakeTimers()
+    await input.setValue('1')
+    await vi.advanceTimersByTimeAsync(250)
+    await input.setValue('10')
+    await vi.advanceTimersByTimeAsync(499)
+    expect(wrapper.emitted('bucket-limit-changed')).toBeUndefined()
+    await vi.advanceTimersByTimeAsync(1)
+    expect(wrapper.emitted('bucket-limit-changed')).toEqual([[10]])
+  })
+
+  test('emits immediately when the input loses focus', async () => {
+    wrapper = await mountBucketLimitForm()
+    const input = wrapper.get('input[type="number"]')
+    await input.setValue('5')
+    expect(wrapper.emitted('bucket-limit-changed')).toBeUndefined()
+    await input.trigger('blur')
+    expect(wrapper.emitted('bucket-limit-changed')).toEqual([[5]])
+    // Leaving the input again without a change does not save again.
+    await input.trigger('blur')
+    expect(wrapper.emitted('bucket-limit-changed')).toEqual([[5]])
+  })
+
+  test('never emits a value the backend would reject', async () => {
+    wrapper = await mountBucketLimitForm(3)
+    const input = wrapper.get('input[type="number"]')
+    await input.setValue('11')
+    await input.trigger('blur')
+    expect(wrapper.emitted('bucket-limit-changed')).toBeUndefined()
+    expect(wrapper.vm.v$.bucketLimitInput.$error).toBe(true)
+    expect(input.element.value).toBe('11')
+    // A number input never reports a non-numeric string in a browser; guard the
+    // parsing anyway so `NaN` cannot be saved as `null`.
+    wrapper.vm.bucketLimitChangedByUser('e')
+    await wrapper.vm.$nextTick()
+    await input.trigger('blur')
+    expect(wrapper.emitted('bucket-limit-changed')).toBeUndefined()
+    expect(wrapper.vm.v$.bucketLimitInput.$invalid).toBe(true)
+    // Clearing the input is valid and removes the limit.
+    await input.setValue('')
+    await input.trigger('blur')
+    expect(wrapper.emitted('bucket-limit-changed')).toEqual([[null]])
+  })
+
+  test('a save response does not overwrite a value still being typed', async () => {
+    wrapper = await mountBucketLimitForm()
+    const input = wrapper.get('input[type="number"]')
+    await input.setValue('10')
+    // The dashboard saves asynchronously; an earlier save resolving now must
+    // not reset the input.
+    await wrapper.setProps({ bucketLimit: 1 })
+    expect(input.element.value).toBe('10')
+    await input.trigger('blur')
+    expect(wrapper.emitted('bucket-limit-changed')).toEqual([[10]])
+    // Once the typed value is emitted the saved value is followed again.
+    await wrapper.setProps({ bucketLimit: 10 })
+    expect(input.element.value).toBe('10')
+    await wrapper.setProps({ bucketLimit: 4 })
+    expect(input.element.value).toBe('4')
+  })
 })
 
 describe('Grouping mode persistence in data-source forms', () => {
@@ -191,7 +267,9 @@ describe('Grouping mode persistence in data-source forms', () => {
           wrapper.emitted('change').at(-1)[0].aggregation_group_bys
         ).toEqual([{ field_id: 1, mode: 'individual' }])
       }
-      await groupForm.get('input[type="number"]').setValue('3')
+      const bucketLimitInput = groupForm.get('input[type="number"]')
+      await bucketLimitInput.setValue('3')
+      await bucketLimitInput.trigger('blur')
       if (surface === 'builder') {
         await wrapper.get('[data-test=save]').trigger('click')
         expect(wrapper.emitted('save').at(-1)[0].bucket_limit).toBe(3)
