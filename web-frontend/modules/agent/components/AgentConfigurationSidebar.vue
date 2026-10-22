@@ -6,7 +6,7 @@
     >
       <ButtonText
         v-if="selectedSection"
-        class="agent-configuration__back"
+        class="agent-configuration__header-button"
         type="secondary"
         button-type="button"
         icon="iconoir-nav-arrow-left"
@@ -22,9 +22,9 @@
           :aria-label="$t('agent.saving')"
         />
       </span>
-      <Button
+      <ButtonText
+        class="agent-configuration__header-button"
         type="secondary"
-        size="small"
         button-type="button"
         icon="iconoir-cancel"
         :aria-label="$t('action.close')"
