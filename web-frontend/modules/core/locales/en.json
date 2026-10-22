@@ -558,7 +558,8 @@
     "contents": "What’s inside",
     "actions": "Actions",
     "editDetails": "Edit details",
-    "updateContent": "Update template content"
+    "updateContent": "Update template content",
+    "delete": "Delete"
   },
   "templateModal": {
     "officialTemplates": "Official templates",
@@ -585,6 +586,11 @@
     "failedAfterUpdated": "The template was updated, but something went wrong afterwards.",
     "cannotBeCancelled": "It’s not possible to cancel, because the template has already been updated.",
     "invalidKeptDetails": "The icon or a category of the template can’t be used anymore. Change them with “Edit details” first, then update the content."
+  },
+  "deleteUserTemplateModal": {
+    "title": "Are you sure you want to delete “{name}”?",
+    "description": "The template is removed for everyone in this instance. Copies people already installed in their workspaces are not affected.",
+    "delete": "Delete template"
   },
   "userTemplateDetailsForm": {
     "name": "Name",
@@ -635,7 +641,8 @@
     "retry": "Retry",
     "actions": "Actions",
     "editDetails": "Edit details",
-    "updateContent": "Update template content"
+    "updateContent": "Update template content",
+    "delete": "Delete"
   },
   "trashSidebar": {
     "unnamedWorkspace": "Unnamed workspace {id}",

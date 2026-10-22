@@ -165,6 +165,15 @@
                   {{ $t('userTemplateList.updateContent') }}
                 </a>
               </li>
+              <li class="context__menu-item context__menu-item--with-separator">
+                <a
+                  class="context__menu-item-link context__menu-item-link--delete"
+                  @click.prevent="askToDelete()"
+                >
+                  <i class="context__menu-item-icon iconoir-bin"></i>
+                  {{ $t('userTemplateList.delete') }}
+                </a>
+              </li>
             </ul>
           </Context>
         </div>
@@ -218,7 +227,8 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['selected', 'create', 'edit'])
+// `delete` asks to delete a template, which `remove` then drops from the list.
+const emit = defineEmits(['selected', 'create', 'edit', 'delete'])
 
 const { $client, $i18n, $priorityBus, $store } = useNuxtApp()
 
@@ -324,6 +334,31 @@ function edit(mode) {
   emit('edit', template, mode)
 }
 
+function askToDelete() {
+  const template = focusedTemplate.value
+  actionsContext.value.hide()
+  emit('delete', template)
+}
+
+/**
+ * Drops a deleted template from the loaded ones without loading them again. When
+ * it isn't loaded, for example because a refresh dropped the later pages, the first
+ * page is loaded again so that the count is right. It's loaded again too while a
+ * page loads, because that page's offset doesn't account for the deleted
+ * template.
+ */
+function remove(templateId) {
+  const index = templates.value.findIndex(({ id }) => id === templateId)
+  const reload = index === -1 || loading.value
+  if (index !== -1) {
+    templates.value.splice(index, 1)
+    count.value = Math.max(count.value - 1, 0)
+  }
+  if (reload) {
+    refresh()
+  }
+}
+
 const searchChanged = debounce(() => fetchPage(0), 300)
 
 watch(search, searchChanged)
@@ -351,5 +386,5 @@ onBeforeUnmount(() => {
   $priorityBus.$off('start-search', searchStarted)
 })
 
-defineExpose({ refresh })
+defineExpose({ refresh, remove })
 </script>

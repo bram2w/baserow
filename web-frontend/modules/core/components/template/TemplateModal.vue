@@ -24,6 +24,7 @@
         @back="selectTemplate(null)"
         @installed="hide()"
         @edit="openUpdateModal(selectedTemplate, $event)"
+        @delete="openDeleteModal"
       ></TemplateDetails>
       <TemplateList
         v-show="selectedTemplate === null && tab === 'official'"
@@ -50,12 +51,14 @@
           selectedTemplate === null &&
           tab === 'own' &&
           !creating &&
-          !updating
+          !updating &&
+          !deleting
         "
         class="templates__body"
         @selected="selectTemplate($event, true)"
         @create="openCreateModal"
         @edit="openUpdateModal"
+        @delete="openDeleteModal"
       >
         <template #head>
           <SegmentControl
@@ -91,6 +94,15 @@
       @hidden="updating = false"
       @updated="templateUpdated"
     ></UpdateUserTemplateModal>
+    <!-- Not keyed, so that a running deletion is still handled after the modal
+    is opened for another template. -->
+    <DeleteUserTemplateModal
+      v-if="showTabs && deletedTemplate !== null"
+      ref="deleteUserTemplateModal"
+      :template="deletedTemplate"
+      @hidden="deleting = false"
+      @deleted="templateDeleted"
+    ></DeleteUserTemplateModal>
   </Modal>
 </template>
 
@@ -101,6 +113,7 @@ import { notifyIf } from '@baserow/modules/core/utils/error'
 import { FF_USER_TEMPLATES } from '@baserow/modules/core/plugins/featureFlags'
 
 import CreateUserTemplateModal from '@baserow/modules/core/components/template/CreateUserTemplateModal'
+import DeleteUserTemplateModal from '@baserow/modules/core/components/template/DeleteUserTemplateModal'
 import TemplateDetails from '@baserow/modules/core/components/template/TemplateDetails'
 import TemplateList from '@baserow/modules/core/components/template/TemplateList'
 import UpdateUserTemplateModal from '@baserow/modules/core/components/template/UpdateUserTemplateModal'
@@ -110,6 +123,7 @@ export default {
   name: 'TemplateModal',
   components: {
     CreateUserTemplateModal,
+    DeleteUserTemplateModal,
     TemplateDetails,
     TemplateList,
     UpdateUserTemplateModal,
@@ -145,6 +159,11 @@ export default {
       updateMode: 'details',
       // While a template is updated, its modal takes the search shortcut.
       updating: false,
+      // The user's template that is or was last asked to be deleted.
+      deletedTemplate: null,
+      // While a template is asked to be deleted, its modal takes the search
+      // shortcut.
+      deleting: false,
     }
   },
   computed: {
@@ -287,6 +306,33 @@ export default {
         }
       } catch (error) {
         notifyIf(error, 'templates')
+      }
+    },
+    async openDeleteModal(template) {
+      this.deletedTemplate = template
+      this.deleting = true
+      // Mounts the modal the first time.
+      await this.$nextTick()
+      this.$refs.deleteUserTemplateModal.show()
+    },
+    /**
+     * The deleted template disappears from the list, its preview and its update
+     * modal, which stops following a job of the template. A template that was
+     * already deleted may be left out of the list's count already, so the list is
+     * loaded again instead.
+     */
+    templateDeleted(templateId, alreadyDeleted) {
+      if (alreadyDeleted) {
+        this.$refs.userTemplateList?.refresh()
+      } else {
+        this.$refs.userTemplateList?.remove(templateId)
+      }
+      if (this.selectedIsOwn && this.selectedTemplate?.id === templateId) {
+        this.selectTemplate(null)
+      }
+      if (this.updatedTemplate?.id === templateId) {
+        this.updatedTemplate = null
+        this.updating = false
       }
     },
     /**

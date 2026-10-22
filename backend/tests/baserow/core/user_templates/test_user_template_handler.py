@@ -10,7 +10,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
 from django.db import IntegrityError, connection, transaction
-from django.test.utils import override_settings
+from django.test.utils import CaptureQueriesContext, override_settings
 from django.utils import timezone
 
 import pytest
@@ -18,6 +18,10 @@ import pytest
 from baserow.core.exceptions import TemplateDoesNotExist
 from baserow.core.handler import CoreHandler
 from baserow.core.import_export.handler import ImportExportHandler
+from baserow.core.jobs.constants import JOB_CANCELLED, JOB_PENDING, JOB_STARTED
+from baserow.core.jobs.exceptions import JobNotCancellable
+from baserow.core.jobs.handler import JobHandler
+from baserow.core.jobs.models import JOB_STATES_ENDED
 from baserow.core.models import Template, Workspace
 from baserow.core.user.exceptions import UserNotFound
 from baserow.core.user_templates.constants import (
@@ -34,6 +38,7 @@ from baserow.core.user_templates.handler import (
     UserTemplateHandler,
     generate_template_slug,
 )
+from baserow.core.user_templates.models import CreateUserTemplateJob
 
 TEST_TEMPLATES_DIR = os.path.join(settings.BASE_DIR, "../../../tests/templates")
 SLUG_SUFFIX_PATH = "baserow.core.user_templates.handler.generate_slug_suffix"
@@ -570,3 +575,132 @@ def test_get_template_state(data_fixture):
 
     template.blocked_reason = ""
     assert handler.get_template_state(template) == (UserTemplateState.BLOCKED, None)
+
+
+@pytest.mark.django_db
+def test_get_template_for_deletion(data_fixture):
+    owner = data_fixture.create_user()
+    staff = data_fixture.create_user(is_staff=True)
+    root = data_fixture.create_user_template(user=owner)
+    revision = data_fixture.create_user_template_revision(root)
+    blocked = data_fixture.create_user_template(user=owner, blocked_at=timezone.now())
+    marked = data_fixture.create_user_template(
+        user=owner, marked_for_deletion_at=timezone.now()
+    )
+    official = data_fixture.create_template()
+    handler = UserTemplateHandler()
+
+    with transaction.atomic():
+        assert handler.get_template_for_deletion(owner, root.id) == root
+        assert handler.get_template_for_deletion(owner, blocked.id) == blocked
+        # An instance admin can delete the templates of others.
+        assert handler.get_template_for_deletion(staff, root.id) == root
+
+    for user, template_id in [
+        (data_fixture.create_user(), root.id),
+        (owner, revision.id),
+        (staff, revision.id),
+        (owner, marked.id),
+        (staff, marked.id),
+        (owner, official.id),
+        (staff, official.id),
+        (staff, 0),
+    ]:
+        with transaction.atomic(), pytest.raises(TemplateDoesNotExist):
+            handler.get_template_for_deletion(user, template_id)
+
+
+@pytest.mark.django_db
+def test_get_template_for_deletion_locks_the_root(data_fixture):
+    owner = data_fixture.create_user()
+    root = data_fixture.create_user_template(user=owner)
+
+    with transaction.atomic(), CaptureQueriesContext(connection) as queries:
+        UserTemplateHandler().get_template_for_deletion(owner, root.id)
+
+    selects = [
+        query["sql"]
+        for query in queries.captured_queries
+        if 'FROM "core_template"' in query["sql"]
+    ]
+    assert len(selects) == 1
+    assert selects[0].endswith("FOR UPDATE")
+
+
+def create_update_job(root, state, **kwargs):
+    return CreateUserTemplateJob.objects.create(
+        user=root.owner,
+        state=state,
+        template=root,
+        base_revision=root,
+        name="Update",
+        icon="iconoir-view-grid",
+        **kwargs,
+    )
+
+
+@pytest.mark.django_db
+def test_mark_template_for_deletion_cancels_its_uncommitted_updates(data_fixture):
+    owner = data_fixture.create_user()
+    root = data_fixture.create_user_template(user=owner)
+    other_root = data_fixture.create_user_template(user=owner)
+    pending = create_update_job(root, JOB_PENDING)
+    running = create_update_job(root, JOB_STARTED)
+    committed = create_update_job(
+        root, JOB_STARTED, revision=data_fixture.create_user_template_revision(root)
+    )
+    ended = [create_update_job(root, state) for state in JOB_STATES_ENDED]
+    other_template = create_update_job(other_root, JOB_PENDING)
+    handler = UserTemplateHandler()
+
+    with (
+        patch.object(
+            JobHandler, "cancel_job", wraps=JobHandler.cancel_job
+        ) as cancel_job,
+        transaction.atomic(),
+    ):
+        handler.mark_template_for_deletion(
+            handler.get_template_for_deletion(owner, root.id)
+        )
+
+    # Only the updates that can still commit are cancelled, the others aren't
+    # even tried.
+    assert sorted(call.args[0].id for call in cancel_job.call_args_list) == sorted(
+        [pending.id, running.id]
+    )
+    states = dict(CreateUserTemplateJob.objects.values_list("id", "state"))
+    assert states[pending.id] == JOB_CANCELLED
+    assert states[running.id] == JOB_CANCELLED
+    assert states[committed.id] == JOB_STARTED
+    assert [states[job.id] for job in ended] == list(JOB_STATES_ENDED)
+    assert states[other_template.id] == JOB_PENDING
+
+    root.refresh_from_db()
+    assert root.marked_for_deletion_at is not None
+    other_root.refresh_from_db()
+    assert other_root.marked_for_deletion_at is None
+
+
+@pytest.mark.django_db
+def test_mark_template_for_deletion_ignores_an_update_that_ended_meanwhile(
+    data_fixture,
+):
+    owner = data_fixture.create_user()
+    root = data_fixture.create_user_template(user=owner)
+    job = create_update_job(root, JOB_STARTED)
+    handler = UserTemplateHandler()
+
+    # The job ended, or committed, between the query and its lock.
+    with (
+        patch.object(
+            JobHandler, "cancel_job", side_effect=JobNotCancellable()
+        ) as cancel_job,
+        transaction.atomic(),
+    ):
+        handler.mark_template_for_deletion(
+            handler.get_template_for_deletion(owner, root.id)
+        )
+
+    cancel_job.assert_called_once()
+    assert Template.objects.get(id=root.id).marked_for_deletion_at is not None
+    assert CreateUserTemplateJob.objects.get(id=job.id).state == JOB_STARTED

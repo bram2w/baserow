@@ -88,6 +88,15 @@
                   {{ $t('templateDetails.updateContent') }}
                 </a>
               </li>
+              <li class="context__menu-item context__menu-item--with-separator">
+                <a
+                  class="context__menu-item-link context__menu-item-link--delete"
+                  @click.prevent="askToDelete()"
+                >
+                  <i class="context__menu-item-icon iconoir-bin"></i>
+                  {{ $t('templateDetails.delete') }}
+                </a>
+              </li>
             </ul>
           </Context>
         </div>
@@ -113,7 +122,7 @@ import { useNuxtApp } from '#app'
 import TemplatePreview from '@baserow/modules/core/components/template/TemplatePreview'
 import TemplateInstall from '@baserow/modules/core/components/template/TemplateInstall'
 
-defineProps({
+const props = defineProps({
   template: {
     type: Object,
     required: true,
@@ -143,8 +152,9 @@ defineProps({
   },
 })
 
-// `edit` asks to update the details or the content of the user's template.
-const emit = defineEmits(['back', 'installed', 'edit'])
+// `edit` asks to update the details or the content of the user's template, and
+// `delete` to delete it.
+const emit = defineEmits(['back', 'installed', 'edit', 'delete'])
 
 const { $registry } = useNuxtApp()
 
@@ -154,6 +164,11 @@ const contextRef = ref(null)
 function edit(mode) {
   contextRef.value.hide()
   emit('edit', mode)
+}
+
+function askToDelete() {
+  contextRef.value.hide()
+  emit('delete', props.template)
 }
 
 function sortApplications(applications) {

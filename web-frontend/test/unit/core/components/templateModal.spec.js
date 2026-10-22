@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { TestApp } from '@baserow/test/helpers/testApp'
 import TemplateModal from '@baserow/modules/core/components/template/TemplateModal'
+import InfiniteScroll from '@baserow/modules/core/components/helpers/InfiniteScroll'
 
 const projectTracker = {
   id: 1,
@@ -82,6 +83,8 @@ describe('TemplateModal navigation', () => {
     refreshList = vi.fn()
     showCreateModal = vi.fn()
     showUpdateModal = vi.fn()
+    showDeleteModal = vi.fn()
+    removeFromList = vi.fn()
     await testApp.afterEach()
   })
 
@@ -92,11 +95,12 @@ describe('TemplateModal navigation', () => {
     TemplateDetails: defineComponent({
       name: 'TemplateDetails',
       props: ['template', 'categories', 'workspace', 'showBack', 'isOwn'],
-      emits: ['back', 'installed', 'edit'],
+      emits: ['back', 'installed', 'edit', 'delete'],
       template: `<div class="details">
         {{ template.name }}: {{ categories.map((c) => c.name).join(',') }}
         <a class="details__back" @click="$emit('back')" />
         <a class="details__edit" @click="$emit('edit', 'details')" />
+        <a class="details__delete" @click="$emit('delete', template)" />
       </div>`,
     }),
     TemplateList: defineComponent({
@@ -111,17 +115,21 @@ describe('TemplateModal navigation', () => {
     UserTemplateList: defineComponent({
       name: 'UserTemplateList',
       props: ['active'],
-      emits: ['selected', 'create', 'edit'],
+      emits: ['selected', 'create', 'edit', 'delete'],
       template: `<div class="own-list">
         <slot name="head" />
         <a class="own-list__sprint-tracker" @click="$emit('selected', sprintTracker)" />
         <a class="own-list__create" @click="$emit('create')" />
         <a class="own-list__edit" @click="$emit('edit', sprintTracker, 'content')" />
+        <a class="own-list__delete" @click="$emit('delete', sprintTracker)" />
       </div>`,
       setup: () => ({ sprintTracker }),
       methods: {
         refresh() {
           refreshList()
+        },
+        remove(templateId) {
+          removeFromList(templateId)
         },
       },
     }),
@@ -148,11 +156,24 @@ describe('TemplateModal navigation', () => {
       },
       template: '<div class="update-modal" />',
     }),
+    DeleteUserTemplateModal: defineComponent({
+      name: 'DeleteUserTemplateModal',
+      props: ['template'],
+      emits: ['deleted', 'hidden'],
+      methods: {
+        show() {
+          showDeleteModal(this.template)
+        },
+      },
+      template: '<div class="delete-modal" />',
+    }),
   }
 
   let refreshList = vi.fn()
   let showCreateModal = vi.fn()
   let showUpdateModal = vi.fn()
+  let showDeleteModal = vi.fn()
+  let removeFromList = vi.fn()
 
   const mountAndShow = async (...args) => {
     const wrapper = await testApp.mount(TemplateModal, {
@@ -469,6 +490,186 @@ describe('TemplateModal navigation', () => {
       await flushPromises()
 
       expect(showUpdateModal).toHaveBeenLastCalledWith(recipeTracker, 'details')
+    })
+
+    describe('delete', () => {
+      const deleteModal = (wrapper) =>
+        wrapper.findComponent({ name: 'DeleteUserTemplateModal' })
+      const ownListComponent = (wrapper) =>
+        wrapper.findComponent({ name: 'UserTemplateList' })
+
+      it('an own template from the list and drop it', async () => {
+        testApp.authenticate({ id: 1 })
+        const wrapper = await mountAndShow()
+        await openOwnTab(wrapper)
+
+        expect(deleteModal(wrapper).exists()).toBe(false)
+
+        await wrapper.find('.own-list__delete').trigger('click')
+        await flushPromises()
+
+        expect(showDeleteModal).toHaveBeenCalledWith(sprintTracker)
+        // The delete modal takes the search shortcut.
+        expect(ownListComponent(wrapper).props('active')).toBe(false)
+
+        deleteModal(wrapper).vm.$emit('deleted', sprintTracker.id)
+        deleteModal(wrapper).vm.$emit('hidden')
+        await flushPromises()
+
+        expect(removeFromList).toHaveBeenCalledWith(sprintTracker.id)
+        expect(refreshList).not.toHaveBeenCalled()
+        expect(ownListComponent(wrapper).props('active')).toBe(true)
+      })
+
+      it('an own template from its preview, which closes', async () => {
+        testApp.authenticate({ id: 1 })
+        const wrapper = await mountAndShow()
+        await openOwnTab(wrapper)
+        await wrapper.find('.own-list__sprint-tracker').trigger('click')
+
+        await wrapper.find('.details__delete').trigger('click')
+        await flushPromises()
+
+        expect(showDeleteModal).toHaveBeenCalledWith(sprintTracker)
+
+        deleteModal(wrapper).vm.$emit('deleted', sprintTracker.id)
+        await flushPromises()
+
+        expect(removeFromList).toHaveBeenCalledWith(sprintTracker.id)
+        expect(wrapper.find('.details').exists()).toBe(false)
+        expect(ownList(wrapper).isVisible()).toBe(true)
+      })
+
+      it('keep the preview of another template open', async () => {
+        testApp.authenticate({ id: 1 })
+        const ownRecipe = { ...sprintTracker, id: 3, name: 'Recipe Tracker' }
+        const wrapper = await mountAndShow()
+        await openOwnTab(wrapper)
+        await wrapper.find('.own-list__delete').trigger('click')
+        await flushPromises()
+
+        // Another own template is previewed while the deletion runs.
+        wrapper.vm.selectTemplate(ownRecipe, true)
+        await flushPromises()
+        deleteModal(wrapper).vm.$emit('deleted', sprintTracker.id)
+        await flushPromises()
+
+        expect(wrapper.find('.details').text()).toBe('Recipe Tracker: Agile')
+
+        // An official template with the same id isn't the deleted one.
+        await wrapper.find('.details__back').trigger('click')
+        await tabs(wrapper)[0].trigger('click')
+        await wrapper.find('.list__recipe-book').trigger('click')
+        deleteModal(wrapper).vm.$emit('deleted', recipeBook.id)
+        await flushPromises()
+
+        expect(wrapper.find('.details').text()).toBe('Recipe Book: Personal')
+      })
+
+      it('close the update modal of the deleted template', async () => {
+        testApp.authenticate({ id: 1 })
+        const wrapper = await mountAndShow()
+        await openOwnTab(wrapper)
+        await wrapper.find('.own-list__edit').trigger('click')
+        await flushPromises()
+
+        expect(
+          wrapper.findComponent({ name: 'UpdateUserTemplateModal' }).exists()
+        ).toBe(true)
+
+        await wrapper.find('.own-list__delete').trigger('click')
+        await flushPromises()
+        deleteModal(wrapper).vm.$emit('deleted', 3)
+        await flushPromises()
+
+        // Another template's deletion leaves it.
+        expect(
+          wrapper.findComponent({ name: 'UpdateUserTemplateModal' }).exists()
+        ).toBe(true)
+
+        deleteModal(wrapper).vm.$emit('deleted', sprintTracker.id)
+        deleteModal(wrapper).vm.$emit('hidden')
+        await flushPromises()
+
+        expect(
+          wrapper.findComponent({ name: 'UpdateUserTemplateModal' }).exists()
+        ).toBe(false)
+        expect(wrapper.vm.updating).toBe(false)
+        expect(ownListComponent(wrapper).props('active')).toBe(true)
+      })
+
+      it('an own template that was already deleted, which loads the list again', async () => {
+        testApp.authenticate({ id: 1 })
+        const wrapper = await mountAndShow()
+        await openOwnTab(wrapper)
+        await wrapper.find('.own-list__sprint-tracker').trigger('click')
+        await wrapper.find('.details__delete').trigger('click')
+        await flushPromises()
+
+        deleteModal(wrapper).vm.$emit('deleted', sprintTracker.id, true)
+        await flushPromises()
+
+        expect(refreshList).toHaveBeenCalledTimes(1)
+        expect(removeFromList).not.toHaveBeenCalled()
+        expect(wrapper.find('.details').exists()).toBe(false)
+        expect(ownList(wrapper).isVisible()).toBe(true)
+      })
+
+      // Review r3: the count of a page loaded after the template was deleted in
+      // another tab already leaves it out, so it must not be decremented again.
+      it('keeps the count of the server when the template was deleted elsewhere before a page load', async () => {
+        testApp.authenticate({ id: 1 })
+        const templates = Array.from({ length: 22 }, (_, i) => ({
+          ...sprintTracker,
+          id: i + 1,
+          slug: `template-${i + 1}`,
+          name: `Template ${i + 1}`,
+          state: 'private',
+        }))
+        const remaining = templates.filter(({ id }) => id !== 5)
+        const ownPages = [
+          { count: 22, results: templates.slice(0, 20) },
+          // Template 5 was deleted in another tab before this page loaded.
+          { count: 21, results: remaining.slice(20) },
+          { count: 21, results: remaining.slice(0, 20) },
+        ]
+        testApp.mock.resetHandlers()
+        testApp.mock
+          .onGet('/templates/')
+          .reply((config) =>
+            config.params?.type === 'user'
+              ? [200, ownPages.shift()]
+              : [200, categories]
+          )
+        const realListStubs = Object.fromEntries(
+          Object.entries(stubs).filter(([name]) => name !== 'UserTemplateList')
+        )
+        const wrapper = await testApp.mount(TemplateModal, {
+          props: { workspace: { id: 1 } },
+          global: { stubs: realListStubs, mocks },
+        })
+        await wrapper.vm.show()
+        await flushPromises()
+        await openOwnTab(wrapper)
+        wrapper.findComponent(InfiniteScroll).vm.$emit('load-next-page', 2)
+        await flushPromises()
+        const title = () => wrapper.find('.user-template-list__title').text()
+
+        expect(title()).toBe('userTemplateList.count - 21')
+
+        // The deletion in this tab answers 404.
+        await wrapper.vm.openDeleteModal(templates[4])
+        deleteModal(wrapper).vm.$emit('deleted', 5, true)
+        await flushPromises()
+
+        const names = wrapper
+          .findAll('.user-template-list__name-title')
+          .map((el) => el.text())
+        expect(names).not.toContain('Template 5')
+        // 21 templates are left on the server.
+        expect(title()).toBe('userTemplateList.count - 21')
+        expect(ownPages).toHaveLength(0)
+      })
     })
 
     it("don't update an official template", async () => {

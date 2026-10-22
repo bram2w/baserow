@@ -6,20 +6,28 @@ from typing import Callable, Iterable, List, Optional, Tuple
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
+from django.core.cache import cache
 from django.core.files import File
 from django.db import IntegrityError, transaction
 from django.db.models import Q
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.text import slugify
 
+from celery.exceptions import SoftTimeLimitExceeded
 from loguru import logger
 
 from baserow.core.exceptions import TemplateDoesNotExist
 from baserow.core.import_export.handler import ImportExportHandler
+from baserow.core.jobs.cache import job_progress_key
 from baserow.core.jobs.constants import JOB_CANCELLED, JOB_FAILED
+from baserow.core.jobs.exceptions import JobNotCancellable
+from baserow.core.jobs.handler import JobHandler
+from baserow.core.jobs.models import JOB_STATES_ENDED, Job
 from baserow.core.models import (
     Application,
     ImportExportResource,
+    InstallTemplateJob,
     Template,
     TemplateCategory,
     Workspace,
@@ -30,8 +38,10 @@ from baserow.core.storage import get_default_storage
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.user.exceptions import UserNotFound
 from baserow.core.user_templates.constants import (
+    USER_TEMPLATE_DELETION_GRACE_PERIOD,
     USER_TEMPLATE_ICON_MAX_LENGTH,
     USER_TEMPLATE_ICON_REGEX,
+    USER_TEMPLATE_PURGE_BATCH_SIZE,
     UserTemplateState,
 )
 from baserow.core.user_templates.exceptions import (
@@ -463,6 +473,68 @@ class UserTemplateHandler:
                 f"The template {template_id} does not exist."
             ) from exc
 
+    def get_template_for_deletion(
+        self, user: AbstractUser, template_id: int
+    ) -> Template:
+        """
+        Returns a user template the user can delete, locked until the end of the
+        transaction. Its owner can delete it in any state, blocked included, and an
+        instance admin can delete any user template. This is the rule the admin
+        templates page (#6322) reuses.
+
+        :param user: The user who deletes the template.
+        :param template_id: The id of the template, which is its root.
+        :raises TemplateDoesNotExist: If the template doesn't exist, isn't the root
+            of a user template, is marked for deletion already, or the user is
+            neither its owner nor an instance admin.
+        :return: The locked root of the template.
+        """
+
+        queryset = Template.objects.user().filter(
+            id=template_id,
+            root__isnull=True,
+            marked_for_deletion_at__isnull=True,
+        )
+        if not user.is_staff:
+            queryset = queryset.filter(owner=user)
+
+        try:
+            return queryset.select_for_update().get()
+        except Template.DoesNotExist as exc:
+            raise TemplateDoesNotExist(
+                f"The template {template_id} does not exist."
+            ) from exc
+
+    def mark_template_for_deletion(self, root: Template) -> None:
+        """
+        Marks a user template for deletion, which hides it from everybody right
+        away. The template is removed later. The updates of it that didn't commit
+        yet are cancelled, so that none of them runs once the template is gone. A
+        job created right before the mark is refused when it commits instead.
+
+        Must run in the transaction that locked the root with
+        `get_template_for_deletion`, so that an update can't commit in between.
+
+        :param root: The root of the template, locked.
+        """
+
+        from baserow.core.user_templates.models import CreateUserTemplateJob
+
+        root.marked_for_deletion_at = timezone.now()
+        Template.objects.filter(id=root.id).update(
+            marked_for_deletion_at=root.marked_for_deletion_at
+        )
+
+        jobs = CreateUserTemplateJob.objects.filter(
+            template=root, revision__isnull=True
+        ).is_pending_or_running()
+        for job in jobs:
+            try:
+                JobHandler.cancel_job(job)
+            except JobNotCancellable:
+                # It ended, or committed, between the query and the lock.
+                pass
+
     def get_latest_revision(self, root: Template) -> Template:
         """
         Returns the latest revision of a template, which is the root itself until
@@ -585,10 +657,180 @@ class UserTemplateHandler:
             self.delete_content_without_template(
                 content.workspace_id, content.archive_name
             )
+        except SoftTimeLimitExceeded:
+            raise
         except Exception:
             logger.exception(f"Deleting the user template content {content.id} failed.")
             return
         content.delete()
+
+    def delete_marked_templates(self) -> None:
+        """
+        Permanently removes the user templates marked for deletion longer than
+        `USER_TEMPLATE_DELETION_GRACE_PERIOD` ago, with their revisions, their
+        ended jobs, and then their workspaces and archives. It runs whether or not
+        user templates are enabled, because the templates of deleted users are
+        marked too.
+
+        At most `USER_TEMPLATE_PURGE_BATCH_SIZE` templates are removed per call,
+        the ones deleted first first, so that the sweep running after it isn't
+        starved. A template with a pending or running job is left out until the
+        job ends. One that fails goes to the back, and is tried again after
+        another grace period, so that it doesn't hold up the others.
+        """
+
+        from baserow.core.user_templates.models import CreateUserTemplateJob
+
+        # Only leaves out what `_delete_marked_template` would skip, which checks
+        # the jobs again once they're locked. The families with a pending or
+        # running job are read once, rather than per template.
+        create_jobs = CreateUserTemplateJob.objects.is_pending_or_running()
+        install_jobs = InstallTemplateJob.objects.is_pending_or_running()
+        busy_root_ids = (
+            Template.objects.filter(
+                Q(id__in=create_jobs.values("template_id"))
+                | Q(id__in=create_jobs.values("base_revision_id"))
+                | Q(id__in=create_jobs.values("revision_id"))
+                | Q(id__in=install_jobs.values("template_id"))
+            )
+            .annotate(family_root_id=Coalesce("root_id", "id"))
+            .values("family_root_id")
+        )
+        cutoff = timezone.now() - USER_TEMPLATE_DELETION_GRACE_PERIOD
+        root_ids = list(
+            Template.objects.user()
+            .filter(root__isnull=True, marked_for_deletion_at__lte=cutoff)
+            .exclude(id__in=busy_root_ids)
+            .order_by("marked_for_deletion_at", "id")
+            .values_list("id", flat=True)[:USER_TEMPLATE_PURGE_BATCH_SIZE]
+        )
+        for root_id in root_ids:
+            # One template that can't be removed must not block the others, but
+            # running out of time must stop the task.
+            try:
+                self._delete_marked_template(root_id)
+            except SoftTimeLimitExceeded:
+                raise
+            except Exception:
+                logger.exception(f"Deleting the user template {root_id} failed.")
+                Template.objects.filter(
+                    id=root_id, marked_for_deletion_at__isnull=False
+                ).update(marked_for_deletion_at=timezone.now())
+
+    def _delete_marked_template(self, root_id: int) -> bool:
+        """
+        Permanently removes one user template marked for deletion longer than the
+        grace period ago, in one transaction: its root, its revisions and the jobs
+        that created, updated or installed any of them. Its workspaces and
+        archives are deleted once that commits, and kept track of until their
+        deletion succeeds, so that the sweep retries a failed one.
+
+        The template is kept while one of its jobs is pending or running, so that
+        an install or an update finishes first, and while another transaction
+        holds its root.
+
+        :param root_id: The id of the root of the template.
+        :return: Whether the template was removed.
+        """
+
+        from baserow.core.user_templates.models import (
+            CreateUserTemplateJob,
+            UserTemplateContentToDelete,
+        )
+
+        cutoff = timezone.now() - USER_TEMPLATE_DELETION_GRACE_PERIOD
+        with transaction.atomic():
+            root = (
+                Template.objects.user()
+                .select_for_update(skip_locked=True)
+                .filter(
+                    id=root_id,
+                    root__isnull=True,
+                    marked_for_deletion_at__lte=cutoff,
+                )
+                .first()
+            )
+            if root is None:
+                return False
+
+            family = list(
+                Template.objects.filter(Q(id=root.id) | Q(root=root)).values_list(
+                    "id", "workspace_id", "archive"
+                )
+            )
+            family_ids = [template_id for template_id, _, _ in family]
+            create_job_ids = list(
+                CreateUserTemplateJob.objects.filter(
+                    Q(template_id__in=family_ids)
+                    | Q(base_revision_id__in=family_ids)
+                    | Q(revision_id__in=family_ids)
+                ).values_list("id", flat=True)
+            )
+            install_job_ids = list(
+                InstallTemplateJob.objects.filter(
+                    template_id__in=family_ids
+                ).values_list("id", flat=True)
+            )
+            job_ids = create_job_ids + install_job_ids
+
+            # The states are read from the locked rows, because a job that was
+            # failed can still be started by its late task until it's locked.
+            job_states = (
+                Job._base_manager.select_for_update()
+                .filter(id__in=job_ids)
+                .order_by("id")
+                .values_list("state", flat=True)
+            )
+            if any(state not in JOB_STATES_ENDED for state in job_states):
+                return False
+
+            # Deleted one by one, so that what an unfinished job left is tracked by
+            # its `pre_delete` receiver, and before the template, so that a late
+            # task of an update finds no job instead of running as a create.
+            CreateUserTemplateJob.objects.filter(id__in=create_job_ids).delete()
+
+            # The protected revisions can only be deleted once nothing points at
+            # them.
+            Template.objects.filter(id=root.id).update(
+                public_revision=None, shared_revision=None
+            )
+
+            # Revisions that only differ in their details share their content.
+            distinct_contents = {
+                (workspace_id, archive_name or "")
+                for _, workspace_id, archive_name in family
+                if workspace_id is not None or archive_name
+            }
+            contents = UserTemplateContentToDelete.objects.bulk_create(
+                [
+                    UserTemplateContentToDelete(
+                        workspace_id=workspace_id, archive_name=archive_name
+                    )
+                    for workspace_id, archive_name in distinct_contents
+                ]
+            )
+
+            # Deletes the revisions and the install jobs too, and unsets
+            # `installed_from_template` of the installed applications.
+            root.delete()
+
+            def delete_content():
+                # The jobs were deleted without `JobHandler.delete_job`. First,
+                # because the outbox retries the content, but not this.
+                try:
+                    cache.delete_many([job_progress_key(job_id) for job_id in job_ids])
+                except SoftTimeLimitExceeded:
+                    raise
+                except Exception:
+                    logger.exception(
+                        f"Clearing the job cache of the user template {root_id} failed."
+                    )
+                for content in contents:
+                    self._delete_tracked_content(content)
+
+            transaction.on_commit(delete_content)
+
+        return True
 
     def delete_content_of_unfinished_jobs(self) -> None:
         """

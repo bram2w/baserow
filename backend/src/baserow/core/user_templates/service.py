@@ -124,3 +124,24 @@ class UserTemplateService:
             raise TemplateHasNoContent("The template has no content anymore.")
 
         return base_revision.workspace, base_revision.archive.name or None
+
+    def delete_template(self, user: AbstractUser, template_id: int) -> Template:
+        """
+        Marks a user template for deletion, so that it's gone for everybody right
+        away and removed later. See `UserTemplateHandler.get_template_for_deletion`
+        for who can delete it. Must run in a transaction.
+
+        :param user: The user who deletes the template, its owner or an instance
+            admin.
+        :param template_id: The id of the template, which is its root.
+        :raises FeatureDisabledException: If user templates are disabled.
+        :raises TemplateDoesNotExist: If the user can't delete the template.
+        :return: The marked root of the template.
+        """
+
+        feature_flag_is_enabled(FF_USER_TEMPLATES, raise_if_disabled=True)
+
+        handler = UserTemplateHandler()
+        root = handler.get_template_for_deletion(user, template_id)
+        handler.mark_template_for_deletion(root)
+        return root
