@@ -13,6 +13,7 @@ from baserow.contrib.database.api.fields.serializers import (
     serialize_public_field,
 )
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.table.models import GeneratedTableModel
 from baserow.contrib.database.views.exceptions import AggregationTypeDoesNotExist
 from baserow.contrib.database.views.models import DEFAULT_SORT_TYPE_KEY
 from baserow.contrib.database.views.utils import AnnotatedAggregation
@@ -145,6 +146,13 @@ class LocalBaserowGroupedAggregateRowsUserServiceType(
             if pk is not None
         }
         related_model = model_field.remote_field.model
+        if issubclass(related_model, GeneratedTableModel):
+            # A table model reached through a relation is generated without its
+            # `after_model_generation` hooks, so a linked primary that only exists
+            # through such a hook (e.g. Multiple collaborators) is not on the class
+            # yet and prefetching it raises. The standalone model of the linked
+            # table has every field attached.
+            related_model = related_model.baserow_table.get_model()
         queryset = related_model.objects.filter(pk__in=related_ids)
         if hasattr(queryset, "enhance_by_fields"):
             queryset = queryset.enhance_by_fields(

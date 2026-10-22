@@ -5543,6 +5543,7 @@ def test_grouped_aggregate_rows_service_public_schema_with_row_id_group_by(
         ("multiple_collaborators", False),
         ("created_by", True),
         ("last_modified_by", True),
+        ("multiple_collaborators", True),
     ],
 )
 def test_group_labels_do_not_expose_user_emails(data_fixture, field_type, linked):
@@ -5586,7 +5587,9 @@ def test_group_labels_do_not_expose_user_emails(data_fixture, field_type, linked
     assert user.email not in str(rows)
     model = table.get_model()
     field_object = model.get_field_object(primary.db_column)
-    value = getattr(model.objects.first(), primary.db_column)
+    # Enhancing resolves the linked table's primary on the related model, which
+    # the link row human readable value needs for a Multiple collaborators primary.
+    value = getattr(model.objects.all().enhance_by_fields().first(), primary.db_column)
     assert user.email in primary.get_type().get_human_readable_value(
         value, field_object
     )
@@ -5596,8 +5599,14 @@ def test_group_labels_do_not_expose_user_emails(data_fixture, field_type, linked
 
 
 @pytest.mark.django_db
-def test_link_row_group_values_use_display_safe_labels(data_fixture):
-    """Linked rows in group values carry the primary's group label, not its e-mail."""
+@pytest.mark.parametrize("with_sort", [False, True])
+def test_link_row_group_values_use_display_safe_labels(data_fixture, with_sort):
+    """
+    Linked rows in group values carry the primary's group label, not its e-mail.
+
+    Without a sort nothing resolves the linked table's primary before the dispatch
+    prefetches it, which used to raise for a Multiple collaborators primary.
+    """
     user = data_fixture.create_user(first_name="Alice")
     people = data_fixture.create_database_table(user=user)
     member = data_fixture.create_multiple_collaborators_field(
@@ -5623,15 +5632,14 @@ def test_link_row_group_values_use_display_safe_labels(data_fixture):
     LocalBaserowTableServiceAggregationGroupBy.objects.create(
         service=service, field=owner, order=0
     )
-    # Sort on the group by so the related primary is resolved before the dispatch
-    # serializes the linked rows.
-    LocalBaserowTableServiceAggregationSortBy.objects.create(
-        service=service,
-        sort_on="GROUP_BY",
-        reference=owner.db_column,
-        direction="ASC",
-        order=0,
-    )
+    if with_sort:
+        LocalBaserowTableServiceAggregationSortBy.objects.create(
+            service=service,
+            sort_on="GROUP_BY",
+            reference=owner.db_column,
+            direction="ASC",
+            order=0,
+        )
 
     rows = (
         ServiceHandler()
