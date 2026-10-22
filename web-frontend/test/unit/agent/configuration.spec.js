@@ -568,19 +568,13 @@ describe('Agent configuration', () => {
     const wrapper = await mount()
 
     const [instructionsSection, settingsSection] = wrapper.findAll(
-      '.agent-configuration__section'
+      '.menu-list__item-button'
     )
 
-    expect(
-      instructionsSection
-        .find('.agent-configuration__section-caret--error')
-        .exists()
-    ).toBe(false)
-    expect(
-      settingsSection
-        .get('.agent-configuration__section-caret--error')
-        .attributes('aria-label')
-    ).toBe('agent.fieldError')
+    expect(instructionsSection.find('.icon--error').exists()).toBe(false)
+    expect(settingsSection.get('.icon--error').attributes('aria-label')).toBe(
+      'agent.fieldError'
+    )
   })
 
   test('renames the Agent through the application with the trimmed name', async () => {
@@ -708,14 +702,14 @@ describe('Agent configuration', () => {
     mockConfiguration(testApp, [500, {}], completeConfiguration())
     const wrapper = await mount()
     expect(wrapper.text()).toContain('agent.configurationLoadError')
-    expect(wrapper.findAll('.agent-configuration__section')).toHaveLength(0)
+    expect(wrapper.findAll('.menu-list__item-button')).toHaveLength(0)
 
     await wrapper
       .get('.agent-configuration__body .alert button')
       .trigger('click')
     await flushPromises()
 
-    expect(wrapper.findAll('.agent-configuration__section')).toHaveLength(2)
+    expect(wrapper.findAll('.menu-list__item-button')).toHaveLength(2)
   })
 
   test('warns when model availability cannot be loaded until retry', async () => {

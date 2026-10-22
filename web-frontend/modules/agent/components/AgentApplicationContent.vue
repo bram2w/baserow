@@ -53,15 +53,17 @@
                 >{{ $t('action.retry') }}</Button
               >
               <template v-else>
-                <button
+                <ButtonText
                   v-for="field in warningFields"
                   :key="field"
-                  type="button"
+                  button-type="button"
+                  type="secondary"
+                  size="small"
                   class="alert__actions-button-text alert__actions-button-text--normal agent-chat__warning-link"
                   @click="focusConfiguration(field)"
                 >
                   {{ $t(fieldLabels[field]) }}
-                </button>
+                </ButtonText>
               </template>
             </template>
           </Alert>

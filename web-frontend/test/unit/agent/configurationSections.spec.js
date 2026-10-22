@@ -88,18 +88,14 @@ describe('Agent configuration sections', () => {
       configuration: completeConfiguration({ plugin_option: 'Existing value' }),
       errors: { plugin_option: 'required' },
     })
-    const sections = wrapper.findAll('.agent-configuration__section')
+    const sections = wrapper.findAll('.menu-list__item-button')
 
     expect(
-      sections.map((section) =>
-        section.get('.agent-configuration__section-title').text()
-      )
+      sections.map((section) => section.get('.menu-list__item-label').text())
     ).toEqual(['agent.instructions', 'Plugin settings', 'agent.agentSettings'])
-    expect(
-      sections[1]
-        .get('.agent-configuration__section-caret--error')
-        .attributes('aria-label')
-    ).toBe('agent.fieldError')
+    expect(sections[1].get('.icon--error').attributes('aria-label')).toBe(
+      'agent.fieldError'
+    )
     expect(
       sections.every((section) => section.attributes('type') === 'button')
     ).toBe(true)
@@ -119,7 +115,7 @@ describe('Agent configuration sections', () => {
     const back = wrapper.get('button[aria-label="action.back"]')
     expect(back.attributes('type')).toBe('button')
     await back.trigger('click')
-    expect(wrapper.findAll('.agent-configuration__section')).toHaveLength(3)
+    expect(wrapper.findAll('.menu-list__item-button')).toHaveLength(3)
     const close = wrapper.get('button[aria-label="action.close"]')
     expect(close.attributes('type')).toBe('button')
     await close.trigger('click')
@@ -135,6 +131,6 @@ describe('Agent configuration sections', () => {
       2
     )
     expect(wrapper.findAll('.skeleton-block')).toHaveLength(6)
-    expect(wrapper.find('.agent-configuration__section').exists()).toBe(false)
+    expect(wrapper.find('.menu-list__item-button').exists()).toBe(false)
   })
 })

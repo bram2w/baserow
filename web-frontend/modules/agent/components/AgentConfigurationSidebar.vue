@@ -1,15 +1,15 @@
 <template>
   <aside class="agent-configuration" :aria-busy="loading">
     <div class="agent-configuration__header">
-      <button
+      <Button
         v-if="selectedSection"
-        type="button"
-        class="agent-configuration__icon-button"
+        type="secondary"
+        size="small"
+        button-type="button"
+        icon="iconoir-nav-arrow-left"
         :aria-label="$t('action.back')"
         @click="section = null"
-      >
-        <i class="iconoir-nav-arrow-left" />
-      </button>
+      />
       <h2>{{ selectedSection?.name || $t('agent.configuration') }}</h2>
       <span class="agent-configuration__save-indicator">
         <span
@@ -19,14 +19,14 @@
           :aria-label="$t('agent.saving')"
         />
       </span>
-      <button
-        type="button"
-        class="agent-configuration__icon-button"
+      <Button
+        type="secondary"
+        size="small"
+        button-type="button"
+        icon="iconoir-cancel"
         :aria-label="$t('action.close')"
         @click="$emit('close')"
-      >
-        <i class="iconoir-cancel" />
-      </button>
+      />
     </div>
     <div
       v-if="loading"
@@ -56,42 +56,34 @@
       </Alert>
     </div>
     <template v-else>
-      <div v-if="!selectedSection" class="agent-configuration__sections">
-        <button
-          v-for="registeredSection in registeredSections"
-          :key="registeredSection.type"
-          type="button"
-          class="agent-configuration__section"
-          @click="section = registeredSection.type"
-        >
-          <i
-            class="agent-configuration__section-icon"
-            :class="registeredSection.icon"
-          />
-          <span class="agent-configuration__section-content"
-            ><strong class="agent-configuration__section-title">{{
-              registeredSection.name
-            }}</strong
-            ><span
-              class="agent-configuration__section-description"
-              :title="registeredSection.description"
-              >{{ registeredSection.description }}</span
-            ></span
-          >
-          <i
-            v-if="sectionErrors[registeredSection.type]"
-            v-tooltip="sectionErrors[registeredSection.type]"
+      <MenuList
+        v-if="!selectedSection"
+        class="agent-configuration__sections"
+        :items="sectionItems"
+        @select="section = $event.id"
+      >
+        <template #item-meta="{ item }">
+          <Icon
+            v-if="item.error"
+            v-tooltip="item.error"
             tooltip-position="bottom-left"
-            class="agent-configuration__section-caret agent-configuration__section-caret--error iconoir-warning-circle"
+            class="agent-configuration__section-status"
+            icon="iconoir-warning-circle"
+            type="error"
+            size="small"
             role="img"
-            :aria-label="sectionErrors[registeredSection.type]"
+            :aria-label="item.error"
           />
-          <i
+          <Icon
             v-else
-            class="agent-configuration__section-caret iconoir-nav-arrow-right"
+            class="agent-configuration__section-status"
+            icon="iconoir-nav-arrow-right"
+            type="secondary"
+            size="small"
+            aria-hidden="true"
           />
-        </button>
-      </div>
+        </template>
+      </MenuList>
       <ReadOnlyForm
         v-else
         :read-only="!editable"
@@ -133,6 +125,8 @@
 <script setup>
 import { computed, nextTick, ref } from 'vue'
 import ReadOnlyForm from '@baserow/modules/core/components/ReadOnlyForm'
+import MenuList from '@baserow/modules/core/components/MenuList'
+import Icon from '@baserow/modules/core/components/Icon'
 
 const props = defineProps({
   name: { type: String, required: true },
@@ -159,13 +153,14 @@ const selectedSection = computed(() =>
     (registered) => registered.type === section.value
   )
 )
-const sectionErrors = computed(() =>
-  Object.fromEntries(
-    registeredSections.value.map((registered) => [
-      registered.type,
-      registered.getErrorMessage(props.errors),
-    ])
-  )
+const sectionItems = computed(() =>
+  registeredSections.value.map((registered) => ({
+    id: registered.type,
+    label: registered.name,
+    description: registered.description,
+    icon: registered.icon,
+    error: registered.getErrorMessage(props.errors),
+  }))
 )
 
 async function focusField(field) {

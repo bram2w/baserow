@@ -142,7 +142,7 @@ export const saving = (wrapper) =>
 
 export const openSection = (wrapper, key) =>
   wrapper
-    .findAll('.agent-configuration__section')
+    .findAll('.menu-list__item-button')
     .find((button) => button.text().includes(key))
     .trigger('click')
 
