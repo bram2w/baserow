@@ -33,6 +33,10 @@ export class EnterpriseBuilderRoleType extends MemberRoleType {
     return 'BUILDER'
   }
 
+  getIconClass() {
+    return 'iconoir-tools'
+  }
+
   getName() {
     const { $i18n } = this.app
     return $i18n.t('roles.builder.name')
@@ -80,6 +84,10 @@ export class EnterpriseEditorRoleType extends MemberRoleType {
     return 'EDITOR'
   }
 
+  getIconClass() {
+    return 'iconoir-edit-pencil'
+  }
+
   getName() {
     const { $i18n } = this.app
     return $i18n.t('roles.editor.name')
@@ -117,6 +125,10 @@ export class EnterpriseCommenterRoleType extends MemberRoleType {
 
   getUid() {
     return 'COMMENTER'
+  }
+
+  getIconClass() {
+    return 'iconoir-chat-bubble'
   }
 
   getName() {
@@ -162,6 +174,10 @@ export class EnterpriseViewerRoleType extends MemberRoleType {
     return 'VIEWER'
   }
 
+  getIconClass() {
+    return 'iconoir-eye-empty'
+  }
+
   getName() {
     const { $i18n } = this.app
     return $i18n.t('roles.viewer.name')
@@ -199,6 +215,10 @@ export class NoAccessRoleType extends MemberRoleType {
 
   getUid() {
     return 'NO_ACCESS'
+  }
+
+  getIconClass() {
+    return 'iconoir-eye-off'
   }
 
   getName() {
@@ -242,6 +262,10 @@ export class NoRoleLowPriorityRoleType extends MemberRoleType {
 
   getUid() {
     return 'NO_ROLE_LOW_PRIORITY'
+  }
+
+  getIconClass() {
+    return 'iconoir-minus'
   }
 
   getName() {
