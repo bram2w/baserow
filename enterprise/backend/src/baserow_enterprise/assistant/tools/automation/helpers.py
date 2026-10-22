@@ -13,10 +13,15 @@ from django.utils.translation import gettext as _
 from baserow.contrib.automation.models import Automation
 from baserow.contrib.automation.nodes.registries import automation_node_type_registry
 from baserow.contrib.automation.nodes.service import AutomationNodeService
+from baserow.contrib.automation.tools.nodes import nodes_in_order
+from baserow.contrib.automation.tools.workflows import (
+    get_automation_in_workspace,
+    get_workflow_in_workspace,
+)
 from baserow.contrib.automation.workflows.models import AutomationWorkflow
 from baserow.contrib.automation.workflows.service import AutomationWorkflowService
 from baserow.core.models import Workspace
-from baserow.core.service import CoreService
+from baserow.core.tools import ToolContext
 
 from .types import NodeUpdate, WorkflowCreate
 
@@ -31,77 +36,24 @@ def get_automation(
 ) -> Automation:
     """Fetch an automation scoped to the user's workspace."""
 
-    base_queryset = Automation.objects.filter(workspace=workspace)
-    return CoreService().get_application(
-        user, automation_id, base_queryset=base_queryset
-    )
+    return get_automation_in_workspace(ToolContext(user, workspace), automation_id)
 
 
 def get_workflow(
     workflow_id: int, user: AbstractUser, workspace: Workspace
 ) -> AutomationWorkflow:
-    """Fetch a workflow with a workspace-level permission check."""
+    """Fetch a workflow scoped to the user's workspace."""
 
-    workflow = AutomationWorkflowService().get_workflow(user, workflow_id)
-    if workflow.automation.workspace_id != workspace.id:
-        raise ValueError("Workflow not in workspace")
-    return workflow
+    return get_workflow_in_workspace(ToolContext(user, workspace), workflow_id)
 
 
 def get_nodes_in_order(user: AbstractUser, workflow: AutomationWorkflow) -> list[dict]:
-    """
-    Return the nodes of a workflow in graph traversal order.
+    """Return the nodes of a workflow in execution order, with id, label and type."""
 
-    Walks the workflow graph starting from the trigger, following ``next``
-    edges (all outputs) and ``children`` to produce a flat, ordered list.
-    """
-
-    nodes = AutomationNodeService().get_nodes(user, workflow)
-    node_map = {n.id: n for n in nodes}
-    graph = workflow.get_graph().graph
-
-    trigger_id = graph.get("0")
-    if trigger_id is None:
-        return []
-
-    ordered_ids: list[int] = []
-    visited: set[int] = set()
-
-    def walk(node_id: int):
-        if node_id in visited or node_id not in node_map:
-            return
-        visited.add(node_id)
-        ordered_ids.append(node_id)
-        info = graph.get(str(node_id), {})
-        # Follow children first (for container nodes like iterators)
-        raw_children = info.get("children")
-        if isinstance(raw_children, list):
-            child_ids = raw_children
-        elif isinstance(raw_children, dict):
-            child_ids = [nid for ids in raw_children.values() for nid in ids]
-        else:
-            child_ids = []
-        for child_id in child_ids:
-            walk(child_id)
-        # Then follow next edges in order
-        for output_uid, next_ids in info.get("next", {}).items():
-            for nid in next_ids:
-                walk(nid)
-
-    walk(trigger_id)
-
-    result = []
-    for nid in ordered_ids:
-        node = node_map[nid]
-        node_type = node.get_type()
-        entry = {
-            "id": node.id,
-            "label": node.label,
-            "type": node_type.type,
-        }
-        result.append(entry)
-
-    return result
+    return [
+        {"id": node.id, "label": node.label, "type": node.get_type().type}
+        for node, _previous, _output in nodes_in_order(user, workflow)
+    ]
 
 
 def add_nodes_to_workflow(

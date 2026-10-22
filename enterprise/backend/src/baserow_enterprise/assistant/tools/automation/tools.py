@@ -9,6 +9,8 @@ from pydantic_ai import ModelRetry, RunContext
 from pydantic_ai.toolsets import FunctionToolset
 
 from baserow.contrib.automation.models import Automation
+from baserow.contrib.automation.tools import nodes as shared_nodes
+from baserow.contrib.automation.tools import workflows as shared_workflows
 from baserow.contrib.automation.workflows.models import AutomationWorkflow
 from baserow.contrib.automation.workflows.service import AutomationWorkflowService
 from baserow.core.exceptions import PermissionException
@@ -44,18 +46,12 @@ def list_workflows(
     DO NOT USE when: You already have the workflow IDs you need.
     """
 
-    user = ctx.deps.user
-    workspace = ctx.deps.workspace
-    tool_helpers = ctx.deps.tool_helpers
+    ctx.deps.tool_helpers.update_status(_("Listing workflows..."))
 
-    tool_helpers.update_status(_("Listing workflows..."))
-
-    automation = helpers.get_automation(automation_id, user, workspace)
-    workflows = AutomationWorkflowService().list_workflows(user, automation.id)
-
-    return {
-        "workflows": [{"id": w.id, "name": w.name, "state": w.state} for w in workflows]
-    }
+    (automation,) = shared_workflows.list_workflows(
+        ctx.deps.tool_context(), automation_id
+    )["automations"]
+    return {"workflows": automation["workflows"]}
 
 
 def list_nodes(
@@ -76,15 +72,12 @@ def list_nodes(
     DO NOT USE when: You already have the node IDs you need.
     """
 
-    user = ctx.deps.user
-    workspace = ctx.deps.workspace
-    tool_helpers = ctx.deps.tool_helpers
+    ctx.deps.tool_helpers.update_status(_("Listing nodes..."))
 
-    tool_helpers.update_status(_("Listing nodes..."))
-
-    workflow = helpers.get_workflow(workflow_id, user, workspace)
-    nodes = helpers.get_nodes_in_order(user, workflow)
-
+    nodes = shared_nodes.list_nodes(ctx.deps.tool_context(), workflow_id)["nodes"]
+    # The output schemas are long, and Kuma's formula generator reads them itself.
+    for node in nodes:
+        node.pop("output_schema")
     return {"nodes": nodes}
 
 
