@@ -392,9 +392,7 @@ class BuilderApplicationType(ApplicationType):
     def _is_external_import_export(config: ImportExportConfig) -> bool:
         """Portable copies require trust; internal copies retain their restriction."""
 
-        return config.is_user_template or not (
-            config.is_duplicate or config.is_publishing or config.is_template
-        )
+        return not (config.is_duplicate or config.is_publishing or config.is_template)
 
     def import_serialized(
         self,

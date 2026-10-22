@@ -374,6 +374,9 @@ def test_enhance_queryset(data_fixture, django_assert_num_queries):
     [
         ({}, True),
         ({"is_user_template": True}, True),
+        ({"is_user_template": True, "is_duplicate": True}, False),
+        ({"is_user_template": True, "is_publishing": True}, False),
+        ({"is_user_template": True, "is_template": True}, False),
         ({"is_duplicate": True}, False),
         ({"is_publishing": True}, False),
         ({"is_template": True}, False),

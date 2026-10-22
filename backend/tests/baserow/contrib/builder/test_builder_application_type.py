@@ -2396,6 +2396,9 @@ def test_get_application_id_for_url(data_fixture, settings):
     [
         ({}, True),
         ({"is_user_template": True}, True),
+        ({"is_user_template": True, "is_duplicate": True}, False),
+        ({"is_user_template": True, "is_publishing": True}, False),
+        ({"is_user_template": True, "is_template": True}, False),
         ({"is_duplicate": True}, False),
         ({"is_publishing": True}, False),
         ({"is_template": True}, False),
