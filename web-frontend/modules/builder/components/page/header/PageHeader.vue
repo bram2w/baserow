@@ -12,12 +12,17 @@
         :device-type-selected="deviceTypeSelected"
         @selected="actionSetDeviceTypeSelected"
       />
+      <ApplicationUntrustedContentAlert
+        :application="builder"
+        :message="$t('builderUntrustedContent.warning')"
+      />
       <PageActions />
     </template>
   </header>
 </template>
 
 <script>
+import ApplicationUntrustedContentAlert from '@baserow/modules/core/components/application/ApplicationUntrustedContentAlert'
 import DeviceSelector from '@baserow/modules/builder/components/page/header/DeviceSelector'
 import PageHeaderMenuItems from '@baserow/modules/builder/components/page/header/PageHeaderMenuItems'
 import PageActions from '@baserow/modules/builder/components/page/header/PageActions'
@@ -26,10 +31,12 @@ import { mapActions, mapGetters } from 'vuex'
 export default {
   name: 'PageHeader',
   components: {
+    ApplicationUntrustedContentAlert,
     PageHeaderMenuItems,
     DeviceSelector,
     PageActions,
   },
+  inject: ['builder'],
   props: {
     loading: {
       type: Boolean,

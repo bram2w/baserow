@@ -288,3 +288,31 @@
   gap: 12px;
   padding-right: 24px;
 }
+
+.header__alert {
+  align-self: center;
+  min-width: 44px;
+  margin: 0 12px;
+
+  .alert__wrapper {
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+  }
+
+  .alert__icon {
+    flex-shrink: 0;
+  }
+
+  .alert__content {
+    min-width: 0;
+  }
+
+  .alert__message {
+    overflow: hidden;
+    margin-top: 0;
+    line-height: 18px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

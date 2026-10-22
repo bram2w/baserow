@@ -1,4 +1,7 @@
 {
+  "applicationUntrustedContentAlert": {
+    "title": "Untrusted content blocked"
+  },
   "mcpAuthorize": {
     "title": "Connect {client}",
     "titleFrom": "Connect {client} from {host}",

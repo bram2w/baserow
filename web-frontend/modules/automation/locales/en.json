@@ -80,6 +80,7 @@
     "integrationMessage": "You can create new integrations by adding data source, action or user authentication."
   },
   "automationHeader": {
+    "untrustedContentWarning": "Custom code nodes are blocked. Review the code before enabling it in the automation’s General settings.",
     "startTestRun": "Start test run",
     "stopTestRun": "Stop test run",
     "publishBtn": "Publish",

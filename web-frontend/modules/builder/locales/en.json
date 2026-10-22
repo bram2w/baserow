@@ -1,4 +1,8 @@
 {
+  "builderUntrustedContent": {
+    "warning": "Custom code and embedded content are blocked. Review the content before enabling it in the application’s General settings.",
+    "blockLabel": "Block custom code and embedded content"
+  },
   "common": {
     "dateFormatTitle": "Date format",
     "dateFormatEU": "European",
@@ -398,7 +402,6 @@
     "titleOverview": "Theme"
   },
   "generalSettings": {
-    "blockUntrustedContent": "Block custom code and embedded content",
     "titleOverview": "General",
     "labelForm": "Favicon",
     "labelDescription": "Pick a 128x128px ICO, PNG, GIF, or JPEG.",

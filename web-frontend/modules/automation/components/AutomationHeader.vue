@@ -75,6 +75,12 @@
       </li>
     </ul>
 
+    <ApplicationUntrustedContentAlert
+      v-if="!loading"
+      :application="automation"
+      :message="$t('automationHeader.untrustedContentWarning')"
+    />
+
     <div
       v-if="
         !loading &&
@@ -150,6 +156,7 @@
 
 <script>
 import { useStore } from 'vuex'
+import ApplicationUntrustedContentAlert from '@baserow/modules/core/components/application/ApplicationUntrustedContentAlert'
 import moment from '@baserow/modules/core/moment'
 import { getUserTimeZone } from '@baserow/modules/core/utils/date'
 import { defineComponent, ref, computed, inject } from 'vue'
@@ -162,7 +169,7 @@ import WorkflowSettingsModal from '@baserow/modules/automation/components/settin
 
 export default defineComponent({
   name: 'AutomationHeader',
-  components: { WorkflowSettingsModal },
+  components: { WorkflowSettingsModal, ApplicationUntrustedContentAlert },
   props: {
     automation: {
       type: Object,

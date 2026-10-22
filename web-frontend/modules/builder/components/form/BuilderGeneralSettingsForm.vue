@@ -29,7 +29,7 @@
     </FormGroup>
     <FormGroup class="margin-top-4">
       <Checkbox v-model="values.untrusted_content">
-        {{ $t('generalSettings.blockUntrustedContent') }}
+        {{ $t('builderUntrustedContent.blockLabel') }}
       </Checkbox>
     </FormGroup>
   </form>
