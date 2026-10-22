@@ -2,6 +2,7 @@ from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from unittest.mock import patch
 
+from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django.db.models import prefetch_related_objects
 from django.test import override_settings
@@ -1713,6 +1714,23 @@ def test_get_public_view_by_slug(data_fixture):
     form3 = handler.get_public_view_by_slug(user_2, form.slug, view_model=FormView)
     assert form.id == form3.id
     assert isinstance(form3, FormView)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("template_type", ["official", "user"])
+@pytest.mark.parametrize("public", [True, False])
+def test_get_public_view_by_slug_of_template(data_fixture, template_type, public):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace()
+    owner = data_fixture.create_user() if template_type == "user" else None
+    data_fixture.create_template(workspace=workspace, type=template_type, owner=owner)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+    form = data_fixture.create_form_view(table=table, public=public)
+
+    for actor in [user, AnonymousUser()]:
+        with pytest.raises(ViewDoesNotExist):
+            ViewHandler().get_public_view_by_slug(actor, form.slug)
 
 
 @pytest.mark.django_db

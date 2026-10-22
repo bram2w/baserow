@@ -3821,8 +3821,12 @@ class ViewHandler:
             view_model = View
 
         try:
-            view = view_model.objects.select_related("table__database__workspace").get(
-                slug=slug
+            # Views of a template are only shown in the template preview, never as
+            # shared views or forms of their own.
+            view = (
+                view_model.objects.select_related("table__database__workspace")
+                .filter(table__database__workspace__template__isnull=True)
+                .get(slug=slug)
             )
         except (view_model.DoesNotExist, ValidationError) as exc:
             raise ViewDoesNotExist("The view does not exist.") from exc
