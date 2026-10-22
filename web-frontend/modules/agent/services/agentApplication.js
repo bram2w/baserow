@@ -2,6 +2,9 @@ export default (client) => ({
   get(agentId) {
     return client.get(`/agent/${agentId}/`)
   },
+  recordView(agentId) {
+    return client.post(`/agent/${agentId}/`)
+  },
   getConfiguration(agentId) {
     return client.get(`/agent/${agentId}/configuration/`)
   },

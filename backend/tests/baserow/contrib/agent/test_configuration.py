@@ -3,8 +3,15 @@ from django.urls import reverse
 import pytest
 from rest_framework.exceptions import ValidationError
 
+from baserow.api.applications.serializers import (
+    PolymorphicApplicationResponseSerializer,
+)
 from baserow.contrib.agent.actions import UpdateAgentConfigurationActionType
 from baserow.contrib.agent.handler import AgentHandler
+from baserow.core.ai_provider.resolution import (
+    clear_ai_provider_state_cache,
+    load_ai_provider_state,
+)
 from baserow.core.models import Application
 
 
@@ -40,6 +47,40 @@ def test_configuration_reports_missing_and_unavailable_fields(
         readiness,
         errors,
     )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("workspace_count", [1, 5])
+def test_application_readiness_uses_bulk_provider_state(
+    configured_agent, django_assert_num_queries, workspace_count
+):
+    agents = []
+    for _ in range(workspace_count):
+        ready = configured_agent()
+        agents.extend(
+            [
+                ready,
+                configured_agent(workspace=ready.workspace, instructions=""),
+                configured_agent(
+                    workspace=ready.workspace, model_identifier="unavailable-model"
+                ),
+            ]
+        )
+    clear_ai_provider_state_cache()
+
+    # The provider/model/override/feature-setting load is fixed, and serializing
+    # readiness must not fetch provider state again for any Agent or workspace.
+    with django_assert_num_queries(4):
+        provider_states = load_ai_provider_state(agent.workspace for agent in agents)
+        payload = PolymorphicApplicationResponseSerializer(
+            agents, many=True, context={"ai_provider_states": provider_states}
+        ).data
+
+    assert [agent["readiness"] for agent in payload] == [
+        "ready",
+        "incomplete",
+        "unavailable",
+    ] * workspace_count
 
 
 @pytest.mark.django_db

@@ -4,6 +4,7 @@ from django.db import transaction
 from baserow.core.handler import CoreHandler
 from baserow.core.operations import UpdateApplicationOperationType
 from baserow.core.signals import application_updated
+from baserow.core.types import PermissionCheck
 
 from .handler import AgentHandler
 from .models import AgentApplication
@@ -25,10 +26,11 @@ class AgentService:
         """Fetch the Agent and check each operation on it."""
 
         agent = self.handler.get_agent(agent_id, for_update=for_update)
-        for operation in operations:
-            CoreHandler().check_permissions(
-                user, operation, workspace=agent.workspace, context=agent
-            )
+        CoreHandler().check_multiple_permissions(
+            [PermissionCheck(user, operation, agent) for operation in operations],
+            workspace=agent.workspace,
+            raise_exception=True,
+        )
         return agent
 
     def get_configuration(

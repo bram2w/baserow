@@ -883,6 +883,7 @@ export class RealTimeHandler {
         store.dispatch('application/forceUpdate', {
           application,
           data: data.application,
+          viaRealtime: true,
         })
       }
     })

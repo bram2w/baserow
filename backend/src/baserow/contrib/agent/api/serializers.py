@@ -4,11 +4,10 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from baserow.api.mixins import UnknownFieldRaisesExceptionSerializerMixin
-
-from ..handler import AgentHandler
-from ..models import AgentApplication
-from ..types import AgentReadinessState
-from ..validators import AGENT_TEXT_MAX_LENGTH
+from baserow.contrib.agent.handler import AgentHandler
+from baserow.contrib.agent.models import AgentApplication
+from baserow.contrib.agent.types import AgentReadinessState
+from baserow.contrib.agent.validators import AGENT_TEXT_MAX_LENGTH
 
 READINESS_CHOICES = get_args(AgentReadinessState)
 
@@ -41,6 +40,8 @@ class AgentApplicationSerializer(serializers.ModelSerializer):
 
 
 class AgentConfigurationSerializer(serializers.Serializer):
+    # Settings readers need readiness from the same snapshot as the editable values,
+    # including after PATCH. Application payloads expose readiness to all readers.
     readiness = serializers.ChoiceField(choices=READINESS_CHOICES)
     instructions = serializers.CharField(allow_blank=True, trim_whitespace=False)
     provider_type = serializers.CharField(allow_null=True)

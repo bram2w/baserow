@@ -4,7 +4,7 @@
     "configuration": "Configuration",
     "instructions": "Instructions",
     "instructionsDescription": "Describe your agent’s behavior.",
-    "instructionsHelper": "Write plain-text instructions for this agent.",
+    "instructionsHelper": "Plain language is fine. Describe the goal, where the data lives and what a good result looks like.",
     "agentSettings": "Agent settings",
     "agentSettingsDescription": "Name and AI provider/model.",
     "name": "Name",

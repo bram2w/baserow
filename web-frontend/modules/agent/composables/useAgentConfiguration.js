@@ -40,13 +40,25 @@ export function useAgentConfiguration(agent) {
   )
 
   const name = ref(agent.value?.name ?? '')
-  const readiness = computed(() => agent.value?.readiness ?? null)
+  const savingName = ref(false)
+  const readiness = computed(() => {
+    if (canReadConfiguration.value && savedConfiguration.value) {
+      const errors = Object.values(fieldErrors.value)
+      return errors.includes('required')
+        ? 'incomplete'
+        : errors.length
+          ? 'unavailable'
+          : 'ready'
+    }
+    return agent.value?.readiness ?? null
+  })
   const readinessError = ref(false)
   // The first load starts on mount, so the server renders the same pending state.
   const availabilityLoading = ref(canReadConfiguration.value)
   const availabilityError = ref(false)
   const configuration = reactive(emptyConfiguration())
   const savedConfiguration = ref(null)
+  const configurationLoaded = computed(() => savedConfiguration.value !== null)
   const configurationErrors = ref({})
   const configurationLoading = ref(canReadConfiguration.value)
   const configurationLoadError = ref(false)
@@ -61,6 +73,7 @@ export function useAgentConfiguration(agent) {
   let refreshPending = false
   let inFlightConfiguration = {}
   let configurationSavePromise = null
+  let nameSavePromise = null
 
   const workspace = computed(() =>
     agent.value
@@ -115,20 +128,50 @@ export function useAgentConfiguration(agent) {
   }
 
   async function renameAgent() {
+    if (!canUpdateConfiguration.value) return true
+    if (savingName.value) {
+      return nameSavePromise.then((saved) => saved && renameAgent())
+    }
     const trimmed = name.value.trim()
     if (!trimmed || trimmed === agent.value.name) {
       name.value = agent.value.name
-      return
+      return true
     }
-    try {
-      await store.dispatch('application/update', {
-        application: agent.value,
-        values: { name: trimmed },
-      })
-    } catch (error) {
-      name.value = agent.value.name
-      notifyIf(error, 'application')
-    }
+    const currentScope = scope
+    const application = agent.value
+    const previousName = application.name
+    const submittedName = name.value
+    savingName.value = true
+    // Use the normal application rename, with the same optimistic value in all
+    // navigation and headings while the request is in flight.
+    updateApplication({ name: trimmed })
+    nameSavePromise = (async () => {
+      try {
+        await store.dispatch('application/update', {
+          application,
+          values: { name: trimmed },
+        })
+        if (scopeIsCurrent(currentScope) && name.value === submittedName) {
+          name.value = application.name
+        }
+        return true
+      } catch (error) {
+        if (application.name === trimmed) {
+          await store.dispatch('application/forceUpdate', {
+            application,
+            data: { name: previousName },
+          })
+        }
+        if (scopeIsCurrent(currentScope) && name.value === submittedName) {
+          name.value = application.name
+        }
+        notifyIf(error, 'application')
+        return false
+      } finally {
+        if (scopeIsCurrent(currentScope)) savingName.value = false
+      }
+    })()
+    return nameSavePromise
   }
 
   async function fetchAgentReadiness() {
@@ -141,7 +184,7 @@ export function useAgentConfiguration(agent) {
       // Use the ordinary application read so agent_loaded stays once per visit.
       const { data } = await applicationService.get(agentId)
       if (scopeIsCurrent(currentScope) && request === readinessRequest) {
-        await updateApplication({ name: data.name, readiness: data.readiness })
+        await updateApplication({ readiness: data.readiness })
       }
     } catch {
       if (scopeIsCurrent(currentScope) && request === readinessRequest) {
@@ -175,6 +218,16 @@ export function useAgentConfiguration(agent) {
       CONFIGURATION_FIELDS.map((field) => [field, data[field]])
     )
     savedConfiguration.value = saved
+    const modelFields = ['provider_type', 'model_identifier']
+    if (modelFields.some((field) => field in pendingConfiguration)) {
+      // A model selection belongs to its provider. Preserve the whole selection
+      // when a remote update changes either half while a local edit is pending.
+      for (const field of modelFields) {
+        if (configuration[field] !== saved[field]) {
+          pendingConfiguration[field] = configuration[field]
+        }
+      }
+    }
     for (const field of CONFIGURATION_FIELDS) {
       if (!(field in pendingConfiguration)) configuration[field] = saved[field]
       if (configuration[field] === saved[field]) {
@@ -190,7 +243,7 @@ export function useAgentConfiguration(agent) {
 
   async function fetchConfiguration() {
     if (!canReadConfiguration.value) return
-    if (hasPendingConfiguration.value || savingConfiguration.value) {
+    if (savingConfiguration.value) {
       refreshPending = true
       return
     }
@@ -278,13 +331,9 @@ export function useAgentConfiguration(agent) {
           if (!canReadConfiguration.value) fetchAgentReadiness()
           savingConfiguration.value = false
           inFlightConfiguration = {}
-          if (
-            refreshPending &&
-            !hasPendingConfiguration.value &&
-            !configurationSaveError.value
-          ) {
+          if (refreshPending) {
             refreshPending = false
-            refreshConfiguration()
+            fetchConfiguration()
           }
         }
       }
@@ -294,6 +343,7 @@ export function useAgentConfiguration(agent) {
 
   async function flushConfiguration() {
     const currentScope = scope
+    if (!(await renameAgent())) return false
     while (scopeIsCurrent(currentScope) && hasPendingConfiguration.value) {
       const saved = await saveConfiguration()
       if (!saved || configurationSaveError.value) break
@@ -331,6 +381,7 @@ export function useAgentConfiguration(agent) {
 
   function reset() {
     ++scope
+    name.value = agent.value?.name ?? ''
     clearConfiguration()
     readinessError.value = false
     availabilityLoading.value = false
@@ -339,6 +390,8 @@ export function useAgentConfiguration(agent) {
     savingConfiguration.value = false
     inFlightConfiguration = {}
     configurationSavePromise = null
+    nameSavePromise = null
+    savingName.value = false
     refreshPending = false
   }
 
@@ -349,7 +402,14 @@ export function useAgentConfiguration(agent) {
   })
   watch(
     () => agent.value?.name,
-    (value) => (name.value = value ?? '')
+    (value, previous) => {
+      // Remote renames update clean inputs, while a local name draft stays put.
+      if (name.value === previous) name.value = value ?? ''
+    }
+  )
+  watch(
+    () => agent.value?._?.realtimeVersion,
+    () => fetchConfiguration()
   )
   watch(
     () => JSON.stringify(enabledModels.value),
@@ -376,6 +436,7 @@ export function useAgentConfiguration(agent) {
     canReadConfiguration,
     canUpdateConfiguration,
     name,
+    savingName,
     readiness,
     readinessError,
     availabilityLoading,
@@ -384,6 +445,7 @@ export function useAgentConfiguration(agent) {
     configuration,
     fieldErrors,
     configurationLoading,
+    configurationLoaded,
     configurationLoadError,
     savingConfiguration,
     configurationSaveError,

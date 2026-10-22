@@ -83,6 +83,252 @@ describe('Agent configuration', () => {
     expect(instructions(wrapper).element.value).toBe('Unsaved instructions')
   })
 
+  const remoteUpdate = async (testApp, agent, data = {}) => {
+    await testApp.store.dispatch('application/forceUpdate', {
+      application: agent,
+      data: { readiness: 'ready', ...data },
+      viaRealtime: true,
+    })
+    await flushPromises()
+  }
+
+  test('refreshes remote instructions in place without losing focus', async () => {
+    const wrapper = await mount()
+    await openSection(wrapper, 'agent.instructions')
+    const textarea = instructions(wrapper).element
+    textarea.focus()
+    mockConfiguration(
+      testApp,
+      completeConfiguration({ instructions: 'Remote edit' })
+    )
+
+    await remoteUpdate(testApp, agent)
+
+    expect(instructions(wrapper).element.value).toBe('Remote edit')
+    expect(instructions(wrapper).element).toBe(textarea)
+    expect(document.activeElement).toBe(textarea)
+    expect(agent).not.toHaveProperty('instructions')
+  })
+
+  test('keeps a local draft while refreshing other configuration fields', async () => {
+    const wrapper = await mount()
+    await openSection(wrapper, 'agent.instructions')
+    await instructions(wrapper).setValue('My unfinished instructions')
+    mockConfiguration(
+      testApp,
+      completeConfiguration({
+        instructions: 'Another user wrote this',
+        model_identifier: 'model-two',
+      })
+    )
+
+    await remoteUpdate(testApp, agent)
+    expect(instructions(wrapper).element.value).toBe(
+      'My unfinished instructions'
+    )
+    await wrapper.get('button[aria-label="action.back"]').trigger('click')
+    await openSection(wrapper, 'agent.agentSettings')
+    expect(modelDropdown(wrapper).get('.dropdown__selected-text').text()).toBe(
+      'model-two'
+    )
+  })
+
+  test('refreshes remote changes received during a save without replacing a newer draft', async () => {
+    const patch = deferredReply()
+    mockSaves(testApp, patch.reply)
+    const wrapper = await mount()
+    await openSection(wrapper, 'agent.instructions')
+    await editInstructions(wrapper, 'First edit')
+    await instructions(wrapper).setValue('Still writing')
+    mockConfiguration(
+      testApp,
+      completeConfiguration({
+        instructions: 'Remote edit',
+        model_identifier: 'model-two',
+      })
+    )
+    await remoteUpdate(testApp, agent)
+    patch.resolve(200, completeConfiguration({ instructions: 'First edit' }))
+    await flushPromises()
+
+    expect(instructions(wrapper).element.value).toBe('Still writing')
+    await wrapper.get('button[aria-label="action.back"]').trigger('click')
+    await openSection(wrapper, 'agent.agentSettings')
+    expect(modelDropdown(wrapper).get('.dropdown__selected-text').text()).toBe(
+      'model-two'
+    )
+  })
+
+  test('clears the warning as soon as an incomplete draft is fixed', async () => {
+    agent.readiness = 'incomplete'
+    mockConfiguration(testApp, incompleteConfiguration('instructions'))
+    const wrapper = await mount()
+    await openSection(wrapper, 'agent.instructions')
+    expect(warning(wrapper).exists()).toBe(true)
+
+    await instructions(wrapper).setValue('Ready now')
+
+    expect(warning(wrapper).exists()).toBe(false)
+    expect(savedValues(testApp)).toEqual([])
+  })
+
+  test('keeps an unfinished name when another member renames the Agent', async () => {
+    const wrapper = await mount()
+    await openSection(wrapper, 'agent.agentSettings')
+    await nameInput(wrapper).setValue('My unfinished name')
+
+    await remoteUpdate(testApp, agent, { name: 'Remote name' })
+
+    expect(nameInput(wrapper).element.value).toBe('My unfinished name')
+  })
+
+  test('updates the name optimistically and shows saving until the request finishes', async () => {
+    const patch = deferredReply()
+    mockRename(testApp, patch.reply)
+    const wrapper = await mount()
+    await openSection(wrapper, 'agent.agentSettings')
+    await nameInput(wrapper).setValue('Renamed agent')
+    await nameInput(wrapper).trigger('blur')
+    await flushPromises()
+
+    expect(agent.name).toBe('Renamed agent')
+    expect(saving(wrapper).exists()).toBe(true)
+    patch.resolve(200, { ...agentData, name: 'Renamed agent' })
+    await flushPromises()
+    expect(saving(wrapper).exists()).toBe(false)
+  })
+
+  test('does not fetch private configuration for a remote update without access', async () => {
+    allowed.value = withoutConfiguration
+    const wrapper = await mount()
+
+    await remoteUpdate(testApp, agent, { readiness: 'incomplete' })
+
+    expect(
+      testApp.mock.history.get.filter(({ url }) =>
+        url.includes('/configuration/')
+      )
+    ).toEqual([])
+    expect(wrapper.find('.agent-configuration').exists()).toBe(false)
+    expect(warning(wrapper).exists()).toBe(true)
+  })
+
+  test('keeps the focused draft mounted when a background refresh fails', async () => {
+    testApp.dontFailOnErrorResponses()
+    const wrapper = await mount()
+    await openSection(wrapper, 'agent.instructions')
+    await instructions(wrapper).setValue('Still writing')
+    const textarea = instructions(wrapper).element
+    textarea.focus()
+    mockConfiguration(testApp, [500, {}])
+
+    await remoteUpdate(testApp, agent)
+
+    expect(instructions(wrapper).element).toBe(textarea)
+    expect(instructions(wrapper).element.value).toBe('Still writing')
+    expect(document.activeElement).toBe(textarea)
+    expect(warning(wrapper).text()).toContain('agent.readinessLoadError')
+  })
+
+  test('keeps a pending model with its provider when another member changes providers', async () => {
+    testApp.dontFailOnErrorResponses()
+    mockAvailability(testApp, [
+      {
+        ...workspace,
+        ai_features: {
+          ai_agent: {
+            models: {
+              openai: ['model-one', 'model-two'],
+              anthropic: ['claude'],
+            },
+          },
+        },
+      },
+    ])
+    mockSaves(
+      testApp,
+      [500, {}],
+      completeConfiguration({ model_identifier: 'model-two' })
+    )
+    const wrapper = await mount()
+    await openSection(wrapper, 'agent.agentSettings')
+    await choose(modelDropdown(wrapper), 'model-two')
+    await flushPromises()
+    mockConfiguration(
+      testApp,
+      completeConfiguration({
+        provider_type: 'anthropic',
+        model_identifier: 'claude',
+      })
+    )
+
+    await remoteUpdate(testApp, agent)
+
+    expect(
+      providerDropdown(wrapper).get('.dropdown__selected-text').text()
+    ).toBe('generativeAIModelType.openai')
+    expect(modelDropdown(wrapper).get('.dropdown__selected-text').text()).toBe(
+      'model-two'
+    )
+    await wrapper
+      .get('.agent-configuration__save-status button')
+      .trigger('click')
+    await flushPromises()
+    expect(savedValues(testApp).at(-1)).toEqual({
+      provider_type: 'openai',
+      model_identifier: 'model-two',
+    })
+  })
+
+  test('does not restore an old name from a pending readiness refresh', async () => {
+    const wrapper = await mount()
+    await openSection(wrapper, 'agent.agentSettings')
+    const readiness = deferredReply()
+    const configuration = deferredReply()
+    const rename = deferredReply()
+    mockAgent(testApp, readiness.reply)
+    mockConfiguration(testApp, configuration.reply)
+    mockRename(testApp, rename.reply)
+    await testApp.store.dispatch('workspace/forceUpdateGenerativeAIModels', {
+      workspaceId: 1,
+      generativeAIModelsEnabled: {},
+      aiFeatures: {
+        ai_agent: {
+          models: { openai: ['model-one', 'model-two', 'model-three'] },
+        },
+      },
+    })
+    await flushPromises()
+    await nameInput(wrapper).setValue('New name')
+    await nameInput(wrapper).trigger('blur')
+    await flushPromises()
+
+    readiness.resolve(200, agentData)
+    await flushPromises()
+
+    expect(agent.name).toBe('New name')
+    expect(nameInput(wrapper).element.value).toBe('New name')
+    configuration.resolve(200, completeConfiguration())
+    rename.resolve(200, { ...agentData, name: 'New name' })
+    await flushPromises()
+  })
+
+  test('stays on the Agent when a rename already in flight fails during navigation', async () => {
+    testApp.dontFailOnErrorResponses()
+    const rename = deferredReply()
+    mockRename(testApp, rename.reply)
+    const wrapper = await mount()
+    await openSection(wrapper, 'agent.agentSettings')
+    await nameInput(wrapper).setValue('New name')
+    await nameInput(wrapper).trigger('blur')
+    await flushPromises()
+    const leaving = leave()
+
+    rename.resolve(500, {})
+
+    expect(await leaving).toBe(false)
+  })
+
   test('saves typed text on blur and shows only the header spinner while saving', async () => {
     useFakeTimers()
     const patch = deferredReply()

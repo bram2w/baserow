@@ -30,11 +30,9 @@ useHead(() => ({ title: agent.value?.name }))
 
 await usePageAsyncData(`agent-${agentId}`, async () => {
   try {
-    const { data } = await AgentApplicationService($client).get(agentId)
-    await $store.dispatch('application/forceUpdate', {
-      application: agent.value,
-      data: { name: data.name, readiness: data.readiness },
-    })
+    // Applications are already loaded by middleware. Record this visit without
+    // fetching the same public data again.
+    await AgentApplicationService($client).recordView(agentId)
     return true
   } catch (error) {
     if (!error.response) {

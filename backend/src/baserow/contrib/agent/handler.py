@@ -23,6 +23,8 @@ class AgentHandler:
         :return: The Agent.
         """
 
+        # Snapshots keep workspace-less copies of applications. Exclude them because
+        # editor permissions need a workspace scope.
         queryset = AgentApplication.objects.filter(workspace__isnull=False)
         if for_update:
             # Lock the parent first to match normal application updates.
@@ -92,6 +94,7 @@ class AgentHandler:
         """
 
         values = extract_allowed(values, self.configuration_fields)
+        # Non-API callers bypass the request serializer's validation.
         validate_configuration_values(values)
         changed_fields = []
         for field, value in values.items():

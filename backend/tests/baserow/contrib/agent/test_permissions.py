@@ -38,10 +38,12 @@ def test_each_call_checks_its_operation_on_the_agent(
 ):
     user = data_fixture.create_user()
     agent = configured_agent(user=user)
-    check = mocker.spy(CoreHandler, "check_permissions")
+    check = mocker.spy(CoreHandler, "check_multiple_permissions")
 
     call(name, user, agent)
 
     assert [
-        (args[2], kwargs["context"].id) for args, kwargs in check.call_args_list
+        (permission.operation_name, permission.context.id)
+        for args, _ in check.call_args_list
+        for permission in args[1]
     ] == [(operation.type, agent.id) for operation in operations]

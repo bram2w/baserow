@@ -22,14 +22,8 @@ describe('Agent page', () => {
     await testApp.afterEach()
   })
 
-  test('loads the agent once and stores its returned public data', async () => {
-    testApp.mock.onGet('/agent/10/').reply(200, {
-      id: 10,
-      type: 'agent',
-      name: 'Loaded agent',
-      readiness: 'incomplete',
-      workspace: { id: 1 },
-    })
+  test('uses the loaded application and records the visit without refetching it', async () => {
+    testApp.mock.onPost('/agent/10/').reply(204)
 
     await testApp.mount(AgentPage, {
       global: {
@@ -40,11 +34,12 @@ describe('Agent page', () => {
     await flushPromises()
 
     expect(
-      testApp.mock.history.get.filter(({ url }) => url === '/agent/10/')
+      testApp.mock.history.post.filter(({ url }) => url === '/agent/10/')
     ).toHaveLength(1)
+    expect(testApp.mock.history.get).toHaveLength(0)
     expect(testApp.store.getters['application/get'](10)).toMatchObject({
-      name: 'Loaded agent',
-      readiness: 'incomplete',
+      name: 'Agent',
+      readiness: 'ready',
     })
   })
 })

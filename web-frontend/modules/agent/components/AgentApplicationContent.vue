@@ -56,6 +56,7 @@
                 <button
                   v-for="field in warningFields"
                   :key="field"
+                  type="button"
                   class="alert__actions-button-text alert__actions-button-text--normal agent-chat__warning-link"
                   @click="focusConfiguration(field)"
                 >
@@ -75,9 +76,10 @@
         :enabled-models="state.enabledModels"
         :editable="state.canUpdateConfiguration"
         :loading="state.configurationLoading"
-        :load-error="state.configurationLoadError"
+        :load-error="state.configurationLoadError && !state.configurationLoaded"
         :availability-loading="state.availabilityLoading"
-        :saving="state.savingConfiguration"
+        :saving="state.savingConfiguration || state.savingName"
+        :name-saving="state.savingName"
         :save-error="state.configurationSaveError"
         @close="configurationOpen = false"
         @rename="state.renameAgent"
