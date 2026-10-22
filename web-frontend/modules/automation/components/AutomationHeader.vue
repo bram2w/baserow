@@ -77,7 +77,7 @@
 
     <ApplicationUntrustedContentAlert
       v-if="!loading"
-      :application="automation"
+      :untrusted="Boolean(workflow?.untrusted_content)"
       :message="$t('automationHeader.untrustedContentWarning')"
     />
 

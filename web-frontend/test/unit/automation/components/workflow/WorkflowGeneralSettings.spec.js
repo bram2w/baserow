@@ -49,3 +49,43 @@ describe('WorkflowGeneralSettings', () => {
     )
   })
 })
+
+test('trusts only the workflow shown in settings', async () => {
+  WorkspaceService.mockReturnValue({
+    fetchAllUsers: vi.fn().mockResolvedValue({ data: [] }),
+  })
+  const automation = { id: 10, workspace: { id: 12 } }
+  const workflow = {
+    id: 20,
+    name: 'Code',
+    notification_recipient_ids: [],
+    untrusted_content: true,
+  }
+  const { $store } = useNuxtApp()
+  const dispatch = vi.spyOn($store, 'dispatch').mockResolvedValue(undefined)
+  const wrapper = await mountSuspended(WorkflowGeneralSettings, {
+    props: { automation, workflow, defaultValues: workflow },
+    global: { stubs: { MemberAssignmentModal: true } },
+  })
+  await flushPromises()
+  const checkbox = wrapper
+    .findAllComponents({ name: 'Checkbox' })
+    .find((component) =>
+      component.text().includes('workflowGeneralSettings.blockUntrustedContent')
+    )
+  expect(checkbox.html()).toMatchSnapshot()
+  await checkbox.find('input').setValue(false)
+  await vi.waitFor(() =>
+    expect(dispatch).toHaveBeenCalledWith('automationWorkflow/update', {
+      automation,
+      workflow,
+      values: {
+        name: 'Code',
+        notification_recipient_ids: [],
+        untrusted_content: false,
+      },
+    })
+  )
+  wrapper.unmount()
+  dispatch.mockRestore()
+})

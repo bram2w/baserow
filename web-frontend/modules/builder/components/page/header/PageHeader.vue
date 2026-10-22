@@ -13,7 +13,7 @@
         @selected="actionSetDeviceTypeSelected"
       />
       <ApplicationUntrustedContentAlert
-        :application="builder"
+        :untrusted="builder.untrusted_content"
         :message="$t('builderUntrustedContent.warning')"
       />
       <PageActions />

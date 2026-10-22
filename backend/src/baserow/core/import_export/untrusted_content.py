@@ -2,7 +2,7 @@ from baserow.core.deferred_callbacks import register_deferred_callback
 
 
 class UntrustedContentTypeMixin:
-    """Marks active content in the cache belonging to one application copy."""
+    """Marks active content in the cache belonging to one content owner copy."""
 
     def export_serialized(self, *args, **kwargs):
         if (cache := kwargs.get("cache")) is not None:
@@ -19,7 +19,7 @@ class UntrustedContentTypeMixin:
         cache=None,
         **kwargs,
     ):
-        """Import active content and mark the current application's cache."""
+        """Import active content and mark the current content owner's cache."""
 
         if cache is not None:
             cache["has_untrusted_content"] = True
@@ -34,10 +34,10 @@ class UntrustedContentTypeMixin:
         )
 
 
-def defer_untrusted_content_update(application, cache, import_export_config):
-    """Finalize an external application's restriction after detecting active content.
+def defer_untrusted_content_update(content_owner, cache, import_export_config):
+    """Finalize an external content owner's restriction after detecting active content.
 
-    The closure retains this application's cache even when other applications are
+    The closure retains this content owner's cache even when other content owners are
     imported before deferred callbacks run. Update the returned model instance too,
     so API responses and subsequent publication see the persisted restriction.
     """
@@ -51,8 +51,8 @@ def defer_untrusted_content_update(application, cache, import_export_config):
 
     def update_untrusted_content():
         untrusted_content = cache.get("has_untrusted_content", False)
-        if application.untrusted_content != untrusted_content:
-            application.untrusted_content = untrusted_content
-            application.save(update_fields=["untrusted_content"])
+        if content_owner.untrusted_content != untrusted_content:
+            content_owner.untrusted_content = untrusted_content
+            content_owner.save(update_fields=["untrusted_content"])
 
     register_deferred_callback(update_untrusted_content)

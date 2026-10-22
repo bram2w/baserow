@@ -19,12 +19,6 @@
       </template>
     </FormGroup>
 
-    <FormGroup class="margin-bottom-2">
-      <Checkbox v-model="values.untrusted_content">
-        {{ $t('generalSettings.blockUntrustedContent') }}
-      </Checkbox>
-    </FormGroup>
-
     <div class="separator"></div>
 
     <FormGroup
@@ -66,9 +60,8 @@ export default {
       values: {
         name: '',
         notification: false,
-        untrusted_content: false,
       },
-      allowedValues: ['name', 'notification', 'untrusted_content'],
+      allowedValues: ['name', 'notification'],
     }
   },
   validations() {
@@ -81,7 +74,6 @@ export default {
           ),
         },
         notification: {},
-        untrusted_content: {},
       },
     }
   },

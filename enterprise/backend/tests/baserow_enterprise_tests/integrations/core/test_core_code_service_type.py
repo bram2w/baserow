@@ -241,10 +241,10 @@ def test_untrusted_automation_code_nodes_require_consent(
 
     from baserow.contrib.automation.workflows.handler import AutomationWorkflowHandler
 
-    automation = enterprise_data_fixture.create_automation_application(
-        untrusted_content=True
+    automation = enterprise_data_fixture.create_automation_application()
+    workflow = enterprise_data_fixture.create_automation_workflow(
+        automation=automation, untrusted_content=True
     )
-    workflow = enterprise_data_fixture.create_automation_workflow(automation=automation)
     service = enterprise_data_fixture.create_enterprise_core_code_service(
         code="function main(context) { return { newValue: 4 } }"
     )
@@ -258,7 +258,7 @@ def test_untrusted_automation_code_nodes_require_consent(
         node = type(node).objects.get(
             id=mapping["automation_workflow_nodes"][original_node.id]
         )
-        assert clone.untrusted_content is True
+        assert clone.workflows.get().untrusted_content is True
 
     runner = FakeCodeRunnerType()
     monkeypatch.setattr(
@@ -269,14 +269,14 @@ def test_untrusted_automation_code_nodes_require_consent(
         node.get_type().dispatch(node, FakeDispatchContext())
     assert runner.calls == []
 
-    automation.untrusted_content = False
-    automation.save(update_fields=["untrusted_content"])
+    workflow.untrusted_content = False
+    workflow.save(update_fields=["untrusted_content"])
     if state:
         clone, mapping = handler._clone_workflow(workflow, state)
         node = type(node).objects.get(
             id=mapping["automation_workflow_nodes"][original_node.id]
         )
-        assert clone.untrusted_content is False
+        assert clone.workflows.get().untrusted_content is False
     else:
         node = type(node).objects.get(id=original_node.id)
     result = node.get_type().dispatch(node, FakeDispatchContext())
@@ -323,10 +323,47 @@ def test_code_action_and_node_detect_untrusted_content_during_copy(
     application_type = application.get_type()
     config = ImportExportConfig(include_permission_data=False, **config_values)
     serialized = application_type.export_serialized(application, config)
-    assert serialized["untrusted_content"] is external
-    serialized["untrusted_content"] = False
+    serialized_owner = (
+        serialized if application_kind == "builder" else serialized["workflows"][0]
+    )
+    assert serialized_owner["untrusted_content"] is external
+    serialized_owner["untrusted_content"] = False
     imported = application_type.import_serialized(
         application.workspace, serialized, config, {}
     )
     imported.refresh_from_db()
-    assert imported.untrusted_content is external
+    owner = imported if application_kind == "builder" else imported.workflows.get()
+    assert owner.untrusted_content is external
+
+
+def test_workflow_content_detection_does_not_leak_to_siblings(
+    enterprise_data_fixture, code_runner_registered
+):
+    """One Automation can contain a blocked code workflow and a trusted clean one."""
+
+    from baserow.core.deferred_callbacks import deferred_callback_context
+    from baserow.core.registries import ImportExportConfig
+
+    fixture = enterprise_data_fixture
+    automation = fixture.create_automation_application()
+    unsafe = fixture.create_automation_workflow(automation=automation, name="Code")
+    safe = fixture.create_automation_workflow(automation=automation, name="Clean")
+    fixture.create_automation_node(workflow=unsafe, type="code")
+    config = ImportExportConfig(include_permission_data=False)
+    application_type = automation.get_type()
+    serialized = application_type.export_serialized(automation, config)
+    assert "untrusted_content" not in serialized
+    assert {w["name"]: w["untrusted_content"] for w in serialized["workflows"]} == {
+        "Code": True,
+        "Clean": False,
+    }
+    for workflow in serialized["workflows"]:
+        workflow["untrusted_content"] = False
+    with deferred_callback_context():
+        imported = application_type.import_serialized(
+            automation.workspace, serialized, config, {}
+        )
+    assert dict(imported.workflows.values_list("name", "untrusted_content")) == {
+        "Code": True,
+        "Clean": False,
+    }

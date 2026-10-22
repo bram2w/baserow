@@ -7,6 +7,7 @@ from baserow.core.integrations.types import IntegrationDictSubClass
 
 
 class AutomationWorkflowDict(TypedDict):
+    untrusted_content: bool
     id: int
     name: str
     order: int
@@ -17,7 +18,6 @@ class AutomationWorkflowDict(TypedDict):
 
 
 class AutomationDict(TypedDict):
-    untrusted_content: bool
     id: int
     name: str
     order: int

@@ -53,6 +53,11 @@ class AutomationWorkflow(
     OrderableMixin,
     GraphModelMixin,
 ):
+    untrusted_content = models.BooleanField(
+        default=False,
+        db_default=False,
+        help_text="Blocks custom code nodes until explicitly trusted.",
+    )
     supports_edges = True
 
     automation = models.ForeignKey(

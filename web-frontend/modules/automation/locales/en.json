@@ -53,7 +53,6 @@
     "automation": "automation"
   },
   "generalSettings": {
-    "blockUntrustedContent": "Block custom code nodes",
     "titleOverview": "General",
     "nameLabel": "Automation name",
     "notificationLabel": "Notifications",
@@ -62,6 +61,7 @@
     "cantUpdateAutomationDescription": "Sorry, could not update the automation."
   },
   "workflowGeneralSettings": {
+    "blockUntrustedContent": "Block custom code nodes",
     "titleOverview": "Workflow settings",
     "nameLabel": "Workflow name",
     "workflowDisabledRecipientsLabel": "Notification recipients",
@@ -80,7 +80,7 @@
     "integrationMessage": "You can create new integrations by adding data source, action or user authentication."
   },
   "automationHeader": {
-    "untrustedContentWarning": "Custom code nodes are blocked. Review the code before enabling it in the automation’s General settings.",
+    "untrustedContentWarning": "Custom code nodes are blocked. Review the code before enabling it in this workflow’s General settings.",
     "startTestRun": "Start test run",
     "stopTestRun": "Stop test run",
     "publishBtn": "Publish",

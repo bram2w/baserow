@@ -1,6 +1,6 @@
 <template>
   <Alert
-    v-if="application.untrusted_content"
+    v-if="untrusted"
     v-tooltip="message"
     type="warning"
     role="alert"
@@ -15,8 +15,8 @@
 import Alert from '@baserow/modules/core/components/Alert'
 
 defineProps({
-  application: {
-    type: Object,
+  untrusted: {
+    type: Boolean,
     required: true,
   },
   message: {

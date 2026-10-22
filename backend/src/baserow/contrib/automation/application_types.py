@@ -20,9 +20,7 @@ from baserow.contrib.automation.nodes.models import AutomationNode
 from baserow.contrib.automation.operations import ListAutomationWorkflowsOperationType
 from baserow.contrib.automation.types import AutomationDict
 from baserow.contrib.automation.workflows.handler import AutomationWorkflowHandler
-from baserow.core.deferred_callbacks import deferred_callback_context
 from baserow.core.handler import CoreHandler
-from baserow.core.import_export.untrusted_content import defer_untrusted_content_update
 from baserow.core.integrations.handler import IntegrationHandler
 from baserow.core.integrations.models import Integration
 from baserow.core.models import Application, Workspace
@@ -40,13 +38,12 @@ class AutomationApplicationType(ApplicationType):
     type = "automation"
     model_class = Automation
     serializer_field_names = [
-        "untrusted_content",
         "name",
         "workflows",
     ]
-    allowed_fields = ["untrusted_content"]
+    allowed_fields = []
     supports_integrations = True
-    request_serializer_field_names = ["untrusted_content"]
+    request_serializer_field_names = []
     serializer_mixins = [lazy_get_instance_serializer_class]
     data_provider_type_registry = automation_data_provider_type_registry
 
@@ -131,11 +128,6 @@ class AutomationApplicationType(ApplicationType):
         return AutomationDict(
             workflows=serialized_workflows,
             integrations=serialized_integrations,
-            untrusted_content=(
-                cache.get("has_untrusted_content", False)
-                if self._is_external_import_export(import_export_config)
-                else automation.untrusted_content
-            ),
             **serialized_automation,
         )
 
@@ -189,13 +181,6 @@ class AutomationApplicationType(ApplicationType):
 
         return imported_integrations
 
-    @staticmethod
-    def _is_external_import_export(config: ImportExportConfig) -> bool:
-        """Portable copies require trust; internal copies retain their restriction."""
-
-        return not (config.is_duplicate or config.is_publishing or config.is_template)
-
-    @deferred_callback_context()
     def import_serialized(
         self,
         workspace: Workspace,
@@ -214,10 +199,6 @@ class AutomationApplicationType(ApplicationType):
         if cache is None:
             cache = {}
 
-        untrusted_content = serialized_values.pop("untrusted_content", False)
-        if self._is_external_import_export(import_export_config):
-            # Keep partial imports blocked until deferred content detection finishes.
-            untrusted_content = True
         serialized_workflows = serialized_values.pop("workflows")
         serialized_integrations = serialized_values.pop("integrations")
 
@@ -241,9 +222,6 @@ class AutomationApplicationType(ApplicationType):
         )
 
         automation = application.specific
-        automation.untrusted_content = untrusted_content
-        automation.save(update_fields=["untrusted_content"])
-        defer_untrusted_content_update(automation, cache, import_export_config)
 
         if not serialized_integrations:
             progress.increment(

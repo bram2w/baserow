@@ -86,7 +86,6 @@ def test_automation_export_serialized(data_fixture):
     serialized = json.loads(json.dumps(serialized))
 
     reference = {
-        "untrusted_content": False,
         "id": automation.id,
         "name": automation.name,
         "order": automation.order,
@@ -107,6 +106,7 @@ def test_automation_export_serialized(data_fixture):
                 "name": workflow.name,
                 "order": workflow.order,
                 "state": workflow.state,
+                "untrusted_content": False,
                 "notification_recipient_emails": [],
                 "nodes": [
                     {
@@ -388,22 +388,23 @@ def test_automation_content_trust_export_import(
 ):
     """Empty external copies stay trusted; internal copies preserve existing restrictions."""
 
-    automation = data_fixture.create_automation_application(
-        untrusted_content=already_untrusted
+    automation = data_fixture.create_automation_application()
+    workflow = data_fixture.create_automation_workflow(
+        automation=automation, untrusted_content=already_untrusted
     )
     config = ImportExportConfig(include_permission_data=False, **config_values)
     expected_untrusted = already_untrusted and not expected_untrusted
     application_type = AutomationApplicationType()
     serialized = application_type.export_serialized(automation, config)
-    assert serialized["untrusted_content"] is expected_untrusted
-    automation.refresh_from_db()
-    assert automation.untrusted_content is already_untrusted
+    assert serialized["workflows"][0]["untrusted_content"] is expected_untrusted
+    workflow.refresh_from_db()
+    assert workflow.untrusted_content is already_untrusted
 
     imported = application_type.import_serialized(
         automation.workspace, serialized, config, {}
     )
     imported.refresh_from_db()
-    assert imported.untrusted_content is expected_untrusted
+    assert imported.workflows.get().untrusted_content is expected_untrusted
 
 
 @pytest.mark.django_db
@@ -414,14 +415,15 @@ def test_external_automation_import_without_code_stays_trusted(
     """Applications without custom code do not require content consent."""
 
     automation = data_fixture.create_automation_application()
+    data_fixture.create_automation_workflow(automation=automation)
     application_type = AutomationApplicationType()
     config = ImportExportConfig(include_permission_data=False)
     serialized = application_type.export_serialized(automation, config)
     if serialized_flag is None:
-        serialized.pop("untrusted_content")
+        serialized["workflows"][0].pop("untrusted_content")
     else:
-        serialized["untrusted_content"] = serialized_flag
+        serialized["workflows"][0]["untrusted_content"] = serialized_flag
     imported = application_type.import_serialized(
         automation.workspace, serialized, config, {}
     )
-    assert imported.untrusted_content is False
+    assert imported.workflows.get().untrusted_content is False

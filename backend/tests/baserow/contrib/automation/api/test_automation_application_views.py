@@ -38,7 +38,6 @@ def test_get_automation_application(api_client, data_fixture):
             "+00:00", "Z"
         ),
         "type": "automation",
-        "untrusted_content": False,
         "workspace": {
             "id": workspace.id,
             "name": workspace.name,
@@ -50,6 +49,7 @@ def test_get_automation_application(api_client, data_fixture):
                 "automation_id": automation.id,
                 "id": workflow.id,
                 "name": "test",
+                "untrusted_content": False,
                 "order": 1,
                 "allow_test_run_until": None,
                 "simulate_until_node_id": None,
@@ -96,7 +96,6 @@ def test_list_automation_applications(api_client, data_fixture):
             "name": automation.name,
             "order": automation.order,
             "type": "automation",
-            "untrusted_content": False,
             "workspace": {
                 "id": workspace.id,
                 "name": workspace.name,
@@ -108,6 +107,7 @@ def test_list_automation_applications(api_client, data_fixture):
                     "automation_id": automation.id,
                     "id": workflow.id,
                     "name": "test",
+                    "untrusted_content": False,
                     "order": 1,
                     "allow_test_run_until": None,
                     "simulate_until_node_id": None,
@@ -159,30 +159,3 @@ def test_list_automation_applications_serializes_published_workflow_data(
 
     assert listed_workflow["published_on"] == single_workflow["published_on"]
     assert listed_workflow["state"] == single_workflow["state"]
-
-
-@pytest.mark.django_db
-def test_automation_custom_code_requires_authorized_consent(api_client, data_fixture):
-    """The existing application permission controls who can enable custom code."""
-
-    user, token = data_fixture.create_user_and_token()
-    workspace = data_fixture.create_workspace(user=user)
-    automation = data_fixture.create_automation_application(
-        workspace=workspace, untrusted_content=True
-    )
-    url = reverse("api:applications:item", kwargs={"application_id": automation.id})
-    response = api_client.patch(url, {"untrusted_content": False}, format="json")
-    assert response.status_code == 401
-    automation.refresh_from_db()
-    assert automation.untrusted_content is True
-
-    response = api_client.patch(
-        url,
-        {"untrusted_content": False},
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-    assert response.status_code == 200
-    assert response.json()["untrusted_content"] is False
-    automation.refresh_from_db()
-    assert automation.untrusted_content is False

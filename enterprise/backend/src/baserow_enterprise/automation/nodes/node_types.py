@@ -30,9 +30,9 @@ class CoreCodeActionNodeType(UntrustedContentTypeMixin, AutomationActionNodeType
         LicenseHandler.raise_if_workspace_doesnt_have_feature(CODE_RUNNER, workspace)
 
     def dispatch(self, automation_node, dispatch_context):
-        if automation_node.workflow.automation.untrusted_content:
+        if automation_node.workflow.untrusted_content:
             raise ServiceImproperlyConfiguredDispatchException(
-                "Custom code is disabled until the application content is trusted."
+                "Custom code is disabled until the workflow content is trusted."
             )
         return super().dispatch(automation_node, dispatch_context)
 

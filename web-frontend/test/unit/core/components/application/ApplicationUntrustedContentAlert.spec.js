@@ -14,12 +14,14 @@ describe.each([
       workspace: { id: 1 },
       untrusted_content: true,
     })
+    const workflow = ref({ id: 1, nodes: [], untrusted_content: true })
+    const owner = type === 'builder' ? application : workflow.value
     const wrapper = await mountSuspended(header, {
       props: type === 'automation' ? { automation: application } : {},
       global: {
         provide: {
           builder: application,
-          workflow: ref({ id: 1, nodes: [] }),
+          workflow,
           workspace: ref(application.workspace),
           isDev: false,
         },
@@ -39,13 +41,21 @@ describe.each([
     expect(wrapper.find('[role="alert"]').html()).toMatchSnapshot()
     expect(wrapper.find('.alert__close').exists()).toBe(false)
 
-    application.untrusted_content = false
+    owner.untrusted_content = false
     await nextTick()
     expect(wrapper.find('[role="alert"]').exists()).toBe(false)
 
-    application.untrusted_content = true
+    owner.untrusted_content = true
     await nextTick()
     expect(wrapper.find('[role="alert"]').exists()).toBe(true)
+    if (type === 'automation') {
+      workflow.value = { id: 2, nodes: [], untrusted_content: false }
+      await nextTick()
+      expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+      workflow.value = owner
+      await nextTick()
+      expect(wrapper.find('[role="alert"]').exists()).toBe(true)
+    }
     wrapper.unmount()
   })
 })
