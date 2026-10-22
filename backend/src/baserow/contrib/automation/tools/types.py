@@ -51,11 +51,16 @@ class ServiceValues:
     ``invalid``, a value that can't be set at all in ``errors``.
     """
 
-    def __init__(self, table_field_ids: Callable[[int], set[int]]):
+    def __init__(
+        self, table_field_ids: Callable[[int], set[int]], as_formulas: bool = False
+    ):
         """
         :param table_field_ids: Returns the ids of the fields of a table.
+        :param as_formulas: Take every value as a formula, for values a caller
+            knows are formulas.
         """
 
+        self.as_formulas = as_formulas
         self.invalid: list[tuple[InvalidAutomationFormula, dict[str, Any]]] = []
         self.errors: list[str] = []
         self._table_field_ids = table_field_ids
@@ -85,7 +90,7 @@ class ServiceValues:
 
         if not value:
             return EMPTY_FORMULA
-        if needs_formula(value):
+        if self.as_formulas or needs_formula(value):
             return self.formula(field, value, **target)
         return wrap_static_string(value)
 
@@ -209,6 +214,11 @@ class NodeRefs:
 
     def __init__(self):
         self._nodes: dict[str, tuple[int | None, dict[str, str] | None]] = {}
+
+    def copy(self) -> "NodeRefs":
+        refs = NodeRefs()
+        refs._nodes = dict(self._nodes)
+        return refs
 
     def add(
         self, ref: str, node_id: int | None, edges: dict[str, str] | None = None

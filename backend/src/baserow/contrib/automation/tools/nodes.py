@@ -2,21 +2,51 @@
 Node tools shared by the clients that act for a user.
 """
 
-from typing import Annotated, Any
+from dataclasses import dataclass, field
+from typing import Annotated, Any, Callable
 
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import transaction
+from django.utils.translation import gettext as _
 
+from loguru import logger
 from pydantic import Field
 
+from baserow.contrib.automation.nodes.actions import (
+    CreateAutomationNodeActionType,
+    DeleteAutomationNodeActionType,
+    UpdateAutomationNodeActionType,
+)
+from baserow.contrib.automation.nodes.exceptions import AutomationNodeDoesNotExist
 from baserow.contrib.automation.nodes.handler import AutomationNodeHandler
 from baserow.contrib.automation.nodes.models import AutomationNode
 from baserow.contrib.automation.nodes.operations import (
     ReadAutomationNodeOperationType,
 )
+from baserow.contrib.automation.nodes.registries import automation_node_type_registry
 from baserow.contrib.automation.nodes.service import AutomationNodeService
+from baserow.contrib.automation.tools.formulas import formula_error
+from baserow.contrib.automation.tools.types import (
+    ActionNodeCreate,
+    NodeRefs,
+    NodeUpdate,
+    ServiceValues,
+    TriggerNodeCreate,
+)
 from baserow.contrib.automation.tools.workflows import get_workflow_in_workspace
 from baserow.contrib.automation.workflows.models import AutomationWorkflow
+from baserow.contrib.database.fields.models import Field as DatabaseField
+from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.table.models import Table
+from baserow.core.exceptions import PermissionException
 from baserow.core.handler import CoreHandler
+from baserow.core.mcp.exceptions import (
+    INTERNAL_ERROR_MESSAGE,
+    NOT_FOUND_MESSAGE,
+    to_mcp_error,
+)
 from baserow.core.tools import ToolContext
 
 
@@ -186,3 +216,369 @@ def list_nodes(
             for node, previous, output in nodes_in_order(ctx.user, workflow)
         ]
     }
+
+
+# ---------------------------------------------------------------------------
+# Writing nodes
+# ---------------------------------------------------------------------------
+
+
+def item_error_message(exc: Exception) -> str:
+    """
+    The message for one node that failed while the others go on. Call it from the
+    ``except`` block, so an unexpected error is logged with its traceback.
+    """
+
+    message = to_mcp_error(exc)
+    if message is None and not isinstance(exc, AttributeError):
+        if isinstance(exc, ObjectDoesNotExist):
+            message = NOT_FOUND_MESSAGE
+        elif type(exc).__module__.startswith("baserow"):
+            # Baserow's own errors (AutomationNodeNotDeletable, ...) say what the
+            # caller did wrong.
+            message = str(exc) or type(exc).__name__
+    if message is None:
+        logger.exception("Unexpected error in an automation tool item: {}", exc)
+        return INTERNAL_ERROR_MESSAGE
+    return message
+
+
+def check_tables_in_workspace(ctx: ToolContext, table_ids: set[int]) -> None:
+    """
+    Check that the tables of row triggers and row actions are tables of the
+    context's workspace the user can see.
+
+    :raises Table.DoesNotExist: When one is not.
+    """
+
+    if not table_ids:
+        return
+    found = set(
+        TableHandler()
+        .list_workspace_tables(ctx.user, ctx.workspace)
+        .filter(id__in=table_ids)
+        .values_list("id", flat=True)
+    )
+    missing = sorted(table_ids - found)
+    if missing:
+        raise Table.DoesNotExist(f"Table {missing[0]} does not exist.")
+
+
+def table_field_ids() -> Callable[[int], set[int]]:
+    """Returns the ids of a table's fields, reading each table once."""
+
+    cache: dict[int, set[int]] = {}
+
+    def field_ids(table_id: int) -> set[int]:
+        if table_id not in cache:
+            cache[table_id] = set(
+                DatabaseField.objects.filter(table_id=table_id).values_list(
+                    "id", flat=True
+                )
+            )
+        return cache[table_id]
+
+    return field_ids
+
+
+def node_refs(user: AbstractUser, workflow: AutomationWorkflow) -> NodeRefs:
+    """The nodes of a workflow that a new node can follow, by their ID."""
+
+    refs = NodeRefs()
+    for node in AutomationNodeService().get_nodes(user, workflow):
+        edges = router_edges(node)
+        refs.add(
+            str(node.id),
+            node.id,
+            {edge["label"]: edge["uid"] for edge in edges}
+            if node.get_type().type == "router"
+            else None,
+        )
+    return refs
+
+
+def check_node_refs(refs: NodeRefs, nodes: list[ActionNodeCreate]) -> None:
+    """
+    Check that every node follows a known node, before anything is written.
+
+    :raises DjangoValidationError: Naming the first unknown ref or branch.
+    """
+
+    for node in nodes:
+        refs.resolve(node.previous_node_ref, node.router_edge_label)
+        refs.add(node.ref, None, node.router_edges())
+
+
+@dataclass
+class NodeCreation:
+    """The nodes a call created, and the values it could not set."""
+
+    nodes: list[tuple[str, AutomationNode]] = field(default_factory=list)
+    formula_errors: list[dict[str, Any]] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+
+    def describe(self) -> list[dict[str, Any]]:
+        return [
+            {
+                "ref": ref,
+                "id": node.id,
+                "label": node.label,
+                "type": node.get_type().type,
+            }
+            for ref, node in self.nodes
+        ]
+
+    def add_values(self, node: AutomationNode, values: ServiceValues) -> None:
+        self.formula_errors.extend(
+            formula_error(node, exc, **target) for exc, target in values.invalid
+        )
+        self.errors.extend(
+            f"Node {node.id} ({node.label}): {error}" for error in values.errors
+        )
+
+
+def create_node(
+    ctx: ToolContext,
+    workflow: AutomationWorkflow,
+    spec: TriggerNodeCreate | ActionNodeCreate,
+    refs: NodeRefs,
+    creation: NodeCreation,
+    field_ids: Callable[[int], set[int]],
+) -> AutomationNode:
+    """
+    Create a node after the node its definition names, and note it in ``refs`` so
+    later nodes can follow it.
+    """
+
+    ctx.update_status(_("Creating node %(label)s...") % {"label": spec.label})
+    values = ServiceValues(field_ids)
+    data: dict[str, Any] = {"label": spec.label}
+    if isinstance(spec, TriggerNodeCreate):
+        data["service"] = spec.to_orm_service_dict()
+    else:
+        data["reference_node_id"], data["output"] = refs.resolve(
+            spec.previous_node_ref, spec.router_edge_label
+        )
+        data["service"] = spec.to_orm_service_dict(values)
+    node = CreateAutomationNodeActionType.do(
+        ctx.user, automation_node_type_registry.get(spec.type), workflow, data
+    )
+    edges = spec.router_edges() if isinstance(spec, ActionNodeCreate) else None
+    refs.add(spec.ref, node.id, edges)
+    creation.nodes.append((spec.ref, node))
+    creation.add_values(node, values)
+    return node
+
+
+def node_table_ids(nodes: list[TriggerNodeCreate | ActionNodeCreate]) -> set[int]:
+    table_ids = set()
+    for node in nodes:
+        table_id = (
+            node.table_id() if isinstance(node, TriggerNodeCreate) else node.table_id
+        )
+        if table_id is not None:
+            table_ids.add(table_id)
+    return table_ids
+
+
+def add_nodes(
+    ctx: ToolContext,
+    workflow_id: Annotated[
+        int, Field(description="The ID of the workflow to add nodes to.")
+    ],
+    nodes: Annotated[
+        list[ActionNodeCreate],
+        Field(
+            description="The nodes to add, in order. previous_node_ref is the ID of "
+            "a node of the workflow, as a string, or the ref of a node earlier in "
+            "this list."
+        ),
+    ],
+) -> dict[str, Any]:
+    """
+    Add action and router nodes to a workflow, after existing nodes or after each
+    other. Use list_nodes to find the IDs of the nodes to attach to, and
+    router_edge_label to attach to a router branch. A value that takes a formula
+    is a formula when it looks like one (get(...), concat(...), ...), otherwise a
+    literal. A valid formula is stored as written. An invalid one leaves that
+    value empty and is returned in formula_errors with the parser's message: fix
+    it with update_nodes. Nothing is written when a previous_node_ref or branch is
+    unknown.
+    """
+
+    if not nodes:
+        raise DjangoValidationError("nodes must hold at least one node to add.")
+
+    workflow = get_workflow_in_workspace(ctx, workflow_id)
+    check_tables_in_workspace(ctx, node_table_ids(nodes))
+    refs = node_refs(ctx.user, workflow)
+    check_node_refs(refs.copy(), nodes)
+
+    creation = NodeCreation()
+    field_ids = table_field_ids()
+    with transaction.atomic():
+        for node in nodes:
+            create_node(ctx, workflow, node, refs, creation, field_ids)
+
+    result: dict[str, Any] = {"created_nodes": creation.describe()}
+    if creation.errors:
+        result["errors"] = creation.errors
+    if creation.formula_errors:
+        result["formula_errors"] = creation.formula_errors
+    return result
+
+
+def update_node(
+    ctx: ToolContext,
+    workflow: AutomationWorkflow,
+    node_update: NodeUpdate,
+    field_ids: Callable[[int], set[int]],
+    as_formulas: bool = False,
+) -> tuple[AutomationNode, ServiceValues]:
+    """
+    Update a node of the workflow.
+
+    :param as_formulas: Take every value as a formula, for a caller that wrote
+        them as formulas.
+
+    :returns: The node as it is now, and the values that could not be set.
+    :raises AutomationNodeDoesNotExist: When the node is not in the workflow.
+    """
+
+    node = get_node_in_workspace(ctx, node_update.node_id)
+    if node.workflow_id != workflow.id:
+        raise AutomationNodeDoesNotExist(node_update.node_id)
+    if node_update.table_id is not None:
+        check_tables_in_workspace(ctx, {node_update.table_id})
+
+    values = ServiceValues(field_ids, as_formulas)
+    data: dict[str, Any] = {}
+    if node_update.label is not None:
+        data["label"] = node_update.label
+    service = node_update.to_update_service_dict(node, values)
+    if service is not None:
+        data["service"] = service
+    if data:
+        node = UpdateAutomationNodeActionType.do(ctx.user, node.id, data)
+    return node, values
+
+
+def _lock_nodes(workflow: AutomationWorkflow, node_ids: list[int]) -> None:
+    """
+    Lock the requested nodes of the workflow before the first change, in id
+    order, so concurrent calls take the locks in one order.
+    """
+
+    list(
+        AutomationNode.objects.filter(id__in=node_ids, workflow=workflow)
+        .select_for_update(of=("self",))
+        .order_by("id")
+        .values_list("id", flat=True)
+    )
+
+
+def update_nodes(
+    ctx: ToolContext,
+    workflow_id: Annotated[
+        int, Field(description="The ID of the workflow the nodes are in.")
+    ],
+    nodes: Annotated[
+        list[NodeUpdate],
+        Field(
+            description="The node updates, each with a node_id and the values to change."
+        ),
+    ],
+) -> dict[str, Any]:
+    """
+    Update nodes of a workflow: their label and settings, a row action's table
+    and field values, and the conditions of a router's branches. A node's type and
+    a trigger's settings cannot change. Values not given keep theirs. Formulas
+    work as in add_nodes: an invalid one leaves that value empty and is returned
+    in formula_errors. A node that fails is reported in errors and the others are
+    still updated.
+    """
+
+    if not nodes:
+        raise DjangoValidationError("nodes must hold at least one node update.")
+
+    workflow = get_workflow_in_workspace(ctx, workflow_id)
+    updated = []
+    errors = []
+    formula_errors = []
+    field_ids = table_field_ids()
+
+    with transaction.atomic():
+        _lock_nodes(workflow, [node_update.node_id for node_update in nodes])
+        for node_update in nodes:
+            ctx.update_status(
+                _("Updating node %(node_id)s...") % {"node_id": node_update.node_id}
+            )
+            try:
+                # A savepoint, so a failed node leaves the transaction usable.
+                with transaction.atomic():
+                    node, values = update_node(ctx, workflow, node_update, field_ids)
+            except PermissionException:
+                raise
+            except Exception as exc:
+                errors.append(
+                    f"Error updating node {node_update.node_id}: "
+                    f"{item_error_message(exc)}"
+                )
+                continue
+            updated.append({"node_id": node.id, "label": node.label})
+            creation = NodeCreation()
+            creation.add_values(node, values)
+            errors.extend(creation.errors)
+            formula_errors.extend(creation.formula_errors)
+
+    result: dict[str, Any] = {"updated_nodes": updated}
+    if errors:
+        result["errors"] = errors
+    if formula_errors:
+        result["formula_errors"] = formula_errors
+    return result
+
+
+def delete_nodes(
+    ctx: ToolContext,
+    node_ids: Annotated[
+        list[int], Field(description="The IDs of the nodes to delete.")
+    ],
+) -> dict[str, Any]:
+    """
+    Move nodes to the trash, from where they can be restored. A router with nodes
+    on its branches cannot be deleted. A node that fails is reported in errors and
+    the others are still deleted.
+    """
+
+    deleted = []
+    errors = []
+
+    with transaction.atomic():
+        for node_id in node_ids:
+            ctx.update_status(_("Deleting node %(node_id)s...") % {"node_id": node_id})
+            try:
+                # Not found whether the node is missing, elsewhere or hidden, so
+                # the result doesn't tell which.
+                try:
+                    get_node_in_workspace(ctx, node_id)
+                except PermissionException:
+                    raise AutomationNodeDoesNotExist(node_id)
+                with transaction.atomic():
+                    DeleteAutomationNodeActionType.do(ctx.user, node_id)
+            except PermissionException:
+                errors.append(
+                    f"Permission denied for node {node_id}; it was not deleted."
+                )
+                continue
+            except Exception as exc:
+                errors.append(
+                    f"Error deleting node {node_id}: {item_error_message(exc)}"
+                )
+                continue
+            deleted.append(node_id)
+
+    result: dict[str, Any] = {"deleted_node_ids": deleted}
+    if errors:
+        result["errors"] = errors
+    return result
