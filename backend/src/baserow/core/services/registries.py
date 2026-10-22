@@ -100,9 +100,13 @@ class ServiceType(
     # used across modules.
     dispatch_types: List[DispatchTypes] = []
 
-    # By default all service data should be hidden
+    # By default all service data should be hidden. The serializer mixins are
+    # excluded as well because the filterable and sortable mixins add the service
+    # `filters`, `filter_groups` and `sortings` in `to_representation`, regardless
+    # of the field names.
     public_serializer_field_names = []
     public_serializer_field_overrides = {}
+    public_serializer_mixins = []
 
     def is_deactivated(self, workspace: Workspace) -> bool:
         """Return whether this service type is unavailable in the workspace."""
@@ -286,6 +290,22 @@ class ServiceType(
         """
 
         return None
+
+    def get_public_context_data(
+        self, service: ServiceSubClass, allowed_fields: Optional[List[str]] = None
+    ):
+        """
+        Return the context data of this service for anonymous visitors, for
+        example of a publicly shared dashboard or a published application. It
+        defaults to the regular context data, service types whose context data
+        includes something visitors must not see, like the configuration of a
+        field, override it.
+
+        :param service: The service we want the public context data for.
+        :param allowed_fields: The properties which are allowed to be included.
+        """
+
+        return self.get_context_data(service, allowed_fields=allowed_fields)
 
     def get_sample_data(
         self, service: ServiceSubClass, dispatch_context: DispatchContext
@@ -633,6 +653,23 @@ class ServiceType(
         """
 
         return None
+
+    def generate_public_schema(
+        self, service: Service, allowed_fields: Optional[List[str]] = None
+    ) -> Optional[Dict[str, Any]]:
+        """
+        The JSON Schema of this service for anonymous visitors, for example of a
+        publicly shared dashboard or a published application. It defaults to the
+        regular schema, service types whose schema embeds something visitors must
+        not see override it.
+
+        :param service: The service we want to generate the public schema for.
+        :param allowed_fields: A list of fields that are allowed to be included in the
+            schema.
+        :return: None, or a dictionary representing the schema.
+        """
+
+        return self.generate_schema(service, allowed_fields=allowed_fields)
 
     def enhance_queryset(self, queryset):
         """

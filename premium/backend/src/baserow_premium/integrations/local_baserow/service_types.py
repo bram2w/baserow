@@ -8,7 +8,10 @@ from django.db.models import F
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
-from baserow.contrib.database.api.fields.serializers import FieldSerializer
+from baserow.contrib.database.api.fields.serializers import (
+    FieldSerializer,
+    serialize_public_field,
+)
 from baserow.contrib.database.fields.exceptions import FieldTypeDoesNotExist
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.views.exceptions import AggregationTypeDoesNotExist
@@ -186,10 +189,27 @@ class LocalBaserowGroupedAggregateRowsUserServiceType(
         service: LocalBaserowGroupedAggregateRows,
         allowed_fields: list[str] | None = None,
     ) -> dict | None:
+        return self._generate_schema(service, allowed_fields, public=False)
+
+    def generate_public_schema(
+        self,
+        service: LocalBaserowGroupedAggregateRows,
+        allowed_fields: list[str] | None = None,
+    ) -> dict | None:
+        # Anonymous visitors get the same schema, but the metadata of the grouped
+        # fields is limited to what's needed to format their values.
+        return self._generate_schema(service, allowed_fields, public=True)
+
+    def _generate_schema(
+        self,
+        service: LocalBaserowGroupedAggregateRows,
+        allowed_fields: list[str] | None,
+        public: bool,
+    ) -> dict | None:
         if not service.table_id:
             return None
 
-        result_properties = self._get_result_properties(service)
+        result_properties = self._get_result_properties(service, public=public)
         if result_properties is None:
             return None
 
@@ -213,18 +233,25 @@ class LocalBaserowGroupedAggregateRowsUserServiceType(
     def _get_result_properties(
         self,
         service: LocalBaserowGroupedAggregateRows,
+        public: bool = False,
     ) -> dict | None:
         table_properties = self.get_table_properties(service)
         if table_properties is None:
             return None
 
-        def grouped_field_property(field_db_column):
-            return {
-                **table_properties[field_db_column],
+        def grouped_field_property(field):
+            field_property = {
+                **table_properties[field.db_column],
                 "sortable": False,
                 "filterable": False,
                 "searchable": False,
             }
+            if public:
+                # The cached table properties hold the regular serialization of
+                # the field, anonymous visitors only get what they need to
+                # format its values.
+                field_property["metadata"] = serialize_public_field(field)
+            return field_property
 
         properties = {
             GROUPED_AGGREGATE_ROW_ID: {
@@ -240,11 +267,11 @@ class LocalBaserowGroupedAggregateRowsUserServiceType(
             if group_by.field_id is None:
                 primary_field = service.table.get_model().get_primary_field()
                 properties[primary_field.db_column] = grouped_field_property(
-                    primary_field.db_column
+                    primary_field
                 )
             elif group_by.field.db_column in table_properties:
                 properties[group_by.field.db_column] = grouped_field_property(
-                    group_by.field.db_column
+                    group_by.field
                 )
 
         for aggregation_series in service.service_aggregation_series.all():
@@ -426,6 +453,23 @@ class LocalBaserowGroupedAggregateRowsUserServiceType(
             "aggregation_sorts": LocalBaserowTableServiceAggregationSortBySerializer(
                 many=True, source="service_aggregation_sorts", required=False
             ),
+        }
+
+    @property
+    def public_serializer_field_names(self):
+        # Visitors of a publicly shared dashboard need the series and the group
+        # bys to label the chart, the sorts and filters stay private.
+        return super().public_serializer_field_names + [
+            "aggregation_series",
+            "aggregation_group_bys",
+        ]
+
+    @property
+    def public_serializer_field_overrides(self):
+        overrides = self.serializer_field_overrides
+        return {
+            "aggregation_series": overrides["aggregation_series"],
+            "aggregation_group_bys": overrides["aggregation_group_bys"],
         }
 
     class SerializedDict(
@@ -901,6 +945,20 @@ class LocalBaserowGroupedAggregateRowsUserServiceType(
         service: LocalBaserowGroupedAggregateRows,
         allowed_fields: list[str] | None = None,
     ) -> dict:
+        return self._get_fields_context_data(service, public=False)
+
+    def get_public_context_data(
+        self,
+        service: LocalBaserowGroupedAggregateRows,
+        allowed_fields: list[str] | None = None,
+    ) -> dict:
+        # Anonymous visitors only need the grouped fields to format the grouped
+        # values, never their configuration.
+        return self._get_fields_context_data(service, public=True)
+
+    def _get_fields_context_data(
+        self, service: LocalBaserowGroupedAggregateRows, public: bool
+    ) -> dict:
         context_data = {}
 
         if service.table:
@@ -910,6 +968,8 @@ class LocalBaserowGroupedAggregateRowsUserServiceType(
                 return model.get_primary_field() if field is None else field
 
             def serialize_field(field):
+                if public:
+                    return serialize_public_field(field)
                 return field_type_registry.get_serializer(field, FieldSerializer).data
 
             fields = [

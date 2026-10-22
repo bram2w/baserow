@@ -75,6 +75,12 @@ class DashboardConfig(AppConfig):
         operation_type_registry.register(ReadDashboardDataSourceOperationType())
         operation_type_registry.register(DispatchDashboardDataSourceOperationType())
 
+        from baserow.contrib.dashboard.operations import (
+            UpdateDashboardSlugOperationType,
+        )
+
+        operation_type_registry.register(UpdateDashboardSlugOperationType())
+
         from baserow.contrib.dashboard.widgets.registries import widget_type_registry
         from baserow.contrib.dashboard.widgets.widget_types import SummaryWidgetType
 
@@ -89,6 +95,14 @@ class DashboardConfig(AppConfig):
         from .ws.pages import DashboardPageType
 
         page_registry.register(DashboardPageType())
+
+        from baserow.core.abuse_reports.registries import (
+            abuse_report_resource_type_registry,
+        )
+
+        from .abuse_reports import DashboardAbuseReportResourceType
+
+        abuse_report_resource_type_registry.register(DashboardAbuseReportResourceType())
 
         from baserow.core.registries import permission_manager_type_registry
 
@@ -105,6 +119,10 @@ class DashboardConfig(AppConfig):
         )
 
         import baserow.contrib.dashboard.receivers  # noqa: F401
+        from baserow.contrib.dashboard.actions import (
+            RotateDashboardSlugActionType,
+            UpdateDashboardSharingActionType,
+        )
         from baserow.contrib.dashboard.data_sources.actions import (
             UpdateDashboardDataSourceActionType,
         )
@@ -128,6 +146,8 @@ class DashboardConfig(AppConfig):
         action_type_registry.register(UpdateWidgetLayoutActionType())
         action_type_registry.register(DeleteWidgetActionType())
         action_type_registry.register(UpdateDashboardDataSourceActionType())
+        action_type_registry.register(RotateDashboardSlugActionType())
+        action_type_registry.register(UpdateDashboardSharingActionType())
 
         from baserow.core.search.registries import workspace_search_registry
 

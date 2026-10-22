@@ -262,3 +262,28 @@ def test_can_undo_redo_duplicate_simple_application(data_fixture):
     assert list(Application.objects.values_list("name", flat=True)) == unordered(
         [application_name, f"{application_name} 2"]
     )
+
+
+def test_update_application_action_long_description():
+    params = {
+        "workspace_id": 1,
+        "workspace_name": "Workspace",
+        "application_type": "dashboard",
+        "application_id": 2,
+        "application_name": "Dashboard",
+        "original_application_name": "Dashboard",
+        "data": {"description": "New"},
+        "original_data": {"description": "Old"},
+    }
+
+    # Nothing was renamed, so the description must not claim it was.
+    assert UpdateApplicationActionType.get_long_description(params) == (
+        'Application (2) of type dashboard "Dashboard" updated '
+        'in group "Workspace" (1).'
+    )
+
+    params["original_application_name"] = "Old dashboard"
+    assert UpdateApplicationActionType.get_long_description(params) == (
+        'Application (2) of type dashboard renamed from "Old dashboard" to '
+        '"Dashboard" in group "Workspace" (1).'
+    )

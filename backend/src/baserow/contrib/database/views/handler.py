@@ -7,7 +7,6 @@ from copy import deepcopy
 from hashlib import shake_128
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Type, Union
 
-from django.conf import settings
 from django.contrib.auth.models import AbstractUser, AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
@@ -33,7 +32,6 @@ from django.db.models import (
 from django.db.models.expressions import OrderBy
 from django.db.models.query import QuerySet
 
-import jwt
 from loguru import logger
 from opentelemetry import trace
 from redis.exceptions import LockNotOwnedError
@@ -121,6 +119,10 @@ from baserow.core.db import specific_iterator, sql, transaction_atomic
 from baserow.core.exceptions import PermissionDenied
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Workspace
+from baserow.core.public_sharing import (
+    encode_public_access_token,
+    is_public_access_token_valid,
+)
 from baserow.core.registries import ImportExportConfig
 from baserow.core.telemetry.utils import baserow_trace, baserow_trace_handler
 from baserow.core.trash.handler import TrashHandler
@@ -696,8 +698,6 @@ class ViewIndexingHandler:
 
 @baserow_trace_handler
 class ViewHandler:
-    PUBLIC_VIEW_TOKEN_ALGORITHM = "HS256"  # nosec
-
     def list_views(
         self,
         user: AbstractUser,
@@ -4029,59 +4029,29 @@ class ViewHandler:
                 restricted_rows.append(row_copy)
         return restricted_rows
 
-    def _get_public_view_jwt_secret(self, view: View) -> str:
-        """
-        This method provides the secret to encode and decode the (non-expiring) JWT
-        token used in password protected public views.
-        By changing the `slug` or the `public_view_password`, previous tokens cannot
-        be decoded anymore so the user will be forced to the password input page.
-        Server's SECRET_KEY is used to be sure that the JWT cannot be guessed.
-        :param view: The public view to restrict access to.
-        :return: A string to use as secret to encode/decode JWT for the view.
-        """
-
-        return f"{view.slug}-{view.public_view_password}-{settings.SECRET_KEY}"
-
     def encode_public_view_token(self, view: View) -> str:
         """
-        Create a non-expiring JWT token that authorize public requests for this view.
-        :param view: The public view to restrict access to.
-        :return: A string to use as JWT token to authorize the access for the view.
+        Creates the non-expiring token that grants access to the password
+        protected public view. Rotating the slug or changing the password
+        invalidates it.
+
+        :param view: The password protected public view.
+        :return: The encoded token.
         """
 
-        secret = self._get_public_view_jwt_secret(view)
-        return jwt.encode(
-            {"slug_id": view.slug},
-            key=secret,
-            algorithm=self.PUBLIC_VIEW_TOKEN_ALGORITHM,
-        )
-
-    def decode_public_view_token(self, view: View, token: str) -> Dict[str, Any]:
-        """
-        Decode the token using the view's secret.
-        :param view: The public view to restrict access to.
-        :param token: The JWT token to decode.
-        :return: The payload decoded or, if invalid, a jwt.InvalidTokenError is raised.
-        """
-
-        secret = self._get_public_view_jwt_secret(view)
-        return jwt.decode(
-            token, key=secret, algorithms=[self.PUBLIC_VIEW_TOKEN_ALGORITHM]
-        )
+        return encode_public_access_token(view.slug, view.public_view_password)
 
     def is_public_view_token_valid(self, view: View, token: str) -> bool:
         """
-        Verify if the token provided is valid for the public view or not.
-        :param view: The public view to restrict access to.
-        :param token: The JWT token to decode.
+        Checks whether the token grants access to the password protected public
+        view.
+
+        :param view: The password protected public view.
+        :param token: The token to check.
         :return: True if the token is valid for the view, False otherwise.
         """
 
-        try:
-            self.decode_public_view_token(view, token)
-            return True
-        except jwt.InvalidTokenError:
-            return False
+        return is_public_access_token_valid(view.slug, view.public_view_password, token)
 
     @baserow_trace(tracer, allow_nested=True)
     def get_public_rows_queryset_and_field_ids(

@@ -556,6 +556,7 @@ class LongTextFieldType(CollationSortMixin, FieldType):
     model_class = LongTextField
     allowed_fields = ["long_text_enable_rich_text"]
     serializer_field_names = ["long_text_enable_rich_text"]
+    public_serializer_field_names = serializer_field_names
     api_exceptions_map = {
         RichTextImageLimitExceeded: ERROR_RICH_TEXT_IMAGE_LIMIT_EXCEEDED,
     }
@@ -1199,6 +1200,13 @@ class NumberFieldType(FieldType):
         "number_separator",
         "number_default",
     ]
+    public_serializer_field_names = [
+        "number_decimal_places",
+        "number_negative",
+        "number_prefix",
+        "number_suffix",
+        "number_separator",
+    ]
     serializer_field_overrides = {
         "number_type": MustBeEmptyField(
             "The number_type option has been removed and can no longer be provided. "
@@ -1507,6 +1515,7 @@ class RatingFieldType(FieldType):
     model_class = RatingField
     allowed_fields = ["max_value", "color", "style"]
     serializer_field_names = ["max_value", "color", "style"]
+    public_serializer_field_names = serializer_field_names
     _can_group_by = True
     _db_column_fields = []
     _can_have_db_index = True
@@ -1736,6 +1745,7 @@ class DateFieldType(FieldType):
         "date_show_tzinfo",
         "date_force_timezone",
     ]
+    public_serializer_field_names = serializer_field_names
     request_serializer_field_names = serializer_field_names + [
         "date_force_timezone_offset",
     ]
@@ -2726,6 +2736,7 @@ class DurationFieldType(FieldType):
     model_class = DurationField
     allowed_fields = ["duration_format"]
     serializer_field_names = ["duration_format"]
+    public_serializer_field_names = serializer_field_names
     _can_group_by = True
     _db_column_fields = []
     can_upsert = True
@@ -4756,6 +4767,8 @@ class SelectOptionBaseFieldType(FieldType):
     can_have_select_options = True
     allowed_fields = ["select_options"]
     serializer_field_names = ["select_options"]
+    # The defaults of the select field types stay private.
+    public_serializer_field_names = ["select_options"]
     serializer_field_overrides = {
         "select_options": SelectOptionSerializer(many=True, required=False),
     }
@@ -6278,6 +6291,25 @@ class FormulaFieldType(FormulaFieldTypeArrayFilterSupport, ReadOnlyFieldType):
     serializer_field_names = (
         BASEROW_FORMULA_TYPE_SERIALIZER_FIELD_NAMES + CORE_FORMULA_FIELDS
     )
+    private_serializer_field_names = [
+        "formula",
+        "error",
+        "nullable",
+        "available_collaborators",
+    ]
+    """
+    The serializer field names anonymous visitors never get. The other ones are
+    the formatting attributes of the formula's result type.
+    """
+
+    @property
+    def public_serializer_field_names(self):
+        private_field_names = set(self.private_serializer_field_names)
+        return [
+            name
+            for name in self.serializer_field_names
+            if name not in private_field_names
+        ]
 
     @property
     def serializer_field_overrides(self):
@@ -6937,6 +6969,9 @@ class CountFieldType(FormulaFieldType):
         "through_field_id",
         "formula_type",
     ]
+    private_serializer_field_names = FormulaFieldType.private_serializer_field_names + [
+        "through_field_id"
+    ]
     serializer_field_overrides = {
         "through_field_id": serializers.IntegerField(
             required=False,
@@ -7119,6 +7154,11 @@ class RollupFieldType(FormulaFieldType):
         "target_field_id",
         "rollup_function",
         "formula_type",
+    ]
+    private_serializer_field_names = FormulaFieldType.private_serializer_field_names + [
+        "through_field_id",
+        "target_field_id",
+        "rollup_function",
     ]
     request_serializer_field_overrides = {
         "through_field_id": serializers.IntegerField(
@@ -7349,6 +7389,12 @@ class LookupFieldType(FormulaFieldType):
         "target_field_id",
         "target_field_name",
         "formula_type",
+    ]
+    private_serializer_field_names = FormulaFieldType.private_serializer_field_names + [
+        "through_field_id",
+        "through_field_name",
+        "target_field_id",
+        "target_field_name",
     ]
     request_serializer_field_overrides = {
         "through_field_name": serializers.CharField(

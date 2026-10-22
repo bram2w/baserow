@@ -10,6 +10,7 @@ from baserow.core.action.registries import (
     ActionType,
     ActionTypeDescription,
     UndoableActionType,
+    render_action_type_description,
 )
 from baserow.core.action.scopes import (
     WORKSPACE_ACTION_CONTEXT,
@@ -616,6 +617,24 @@ class UpdateApplicationActionType(UndoableActionType):
         CoreHandler().update_application(
             user, application, name=params.application_name, **params.data
         )
+
+    @classmethod
+    def get_long_description(cls, params_dict: Dict[str, Any], *args, **kwargs) -> str:
+        if params_dict.get("application_name") == params_dict.get(
+            "original_application_name"
+        ):
+            # Only attributes of the application type changed, like the
+            # description of a dashboard, so reporting a rename would be wrong.
+            description = ActionTypeDescription(
+                cls.description.short,
+                _(
+                    "Application (%(application_id)s) of type %(application_type)s "
+                    '"%(application_name)s" updated'
+                ),
+                cls.description.context,
+            )
+            return render_action_type_description(description, params_dict)
+        return super().get_long_description(params_dict, *args, **kwargs)
 
 
 class DuplicateApplicationActionType(UndoableActionType):

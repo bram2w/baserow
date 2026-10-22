@@ -23,7 +23,10 @@ from django.utils.translation import gettext as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
-from baserow.contrib.database.api.fields.serializers import FieldSerializer
+from baserow.contrib.database.api.fields.serializers import (
+    FieldSerializer,
+    serialize_public_field,
+)
 from baserow.contrib.database.api.rows.serializers import (
     RowSerializer,
     get_row_serializer_class,
@@ -1423,13 +1426,33 @@ class LocalBaserowAggregateRowsUserServiceType(
         service: LocalBaserowAggregateRows,
         allowed_fields: Optional[List[str]] = None,
     ) -> dict:
+        return self._get_field_context_data(service, allowed_fields, public=False)
+
+    def get_public_context_data(
+        self,
+        service: LocalBaserowAggregateRows,
+        allowed_fields: Optional[List[str]] = None,
+    ) -> dict:
+        # Anonymous visitors only need the field to format the result, never its
+        # configuration.
+        return self._get_field_context_data(service, allowed_fields, public=True)
+
+    def _get_field_context_data(
+        self,
+        service: LocalBaserowAggregateRows,
+        allowed_fields: Optional[List[str]],
+        public: bool,
+    ) -> dict:
         context_data = {}
         if service.field and not (
             allowed_fields is not None and "result" not in allowed_fields
         ):
-            serialized_field = field_type_registry.get_serializer(
-                service.field, FieldSerializer
-            ).data
+            if public:
+                serialized_field = serialize_public_field(service.field)
+            else:
+                serialized_field = field_type_registry.get_serializer(
+                    service.field, FieldSerializer
+                ).data
             context_data["field"] = serialized_field
         return context_data
 
@@ -1468,6 +1491,13 @@ class LocalBaserowAggregateRowsUserServiceType(
             + LocalBaserowTableServiceFilterableMixin.mixin_serializer_field_names
             + LocalBaserowTableServiceSearchableMixin.mixin_serializer_field_names
         ) + ["field_id", "aggregation_type"]
+
+    @property
+    def public_serializer_field_names(self):
+        # Visitors of a publicly shared dashboard need the aggregation type to
+        # format the result. The field is part of the context data already, the
+        # view, filters and search query stay private.
+        return super().public_serializer_field_names + ["aggregation_type"]
 
     @property
     def serializer_field_overrides(self):
