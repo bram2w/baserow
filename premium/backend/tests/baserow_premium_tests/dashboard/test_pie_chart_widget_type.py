@@ -125,7 +125,11 @@ def test_dashboard_export_serialized_with_pie_chart_widget_config(premium_data_f
     )
 
     serialized = DashboardApplicationType().export_serialized(
-        dashboard, ImportExportConfig(include_permission_data=True)
+        dashboard,
+        ImportExportConfig(
+            include_permission_data=True,
+            exclude_sensitive_data=False,
+        ),
     )
 
     serialized = json.loads(json.dumps(serialized))
@@ -137,8 +141,8 @@ def test_dashboard_export_serialized_with_pie_chart_widget_config(premium_data_f
         "type": "dashboard",
         "integrations": [
             {
-                "authorized_subject_type": None,
-                "authorized_subject_id": None,
+                "authorized_subject_type": "auth.User",
+                "authorized_subject_id": user.id,
                 "id": integration.id,
                 "name": "",
                 "order": "1.00000000000000000000",

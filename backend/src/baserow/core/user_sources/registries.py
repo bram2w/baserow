@@ -224,10 +224,40 @@ class UserSourceType(
             )
         ]
 
+    def export_serialized(
+        self,
+        instance: UserSource,
+        import_export_config=None,
+        files_zip=None,
+        storage=None,
+        cache=None,
+    ) -> Dict[str, Any]:
+        """Serialize a user source and pass export settings to auth providers."""
+
+        exclude_sensitive_data = getattr(
+            import_export_config, "exclude_sensitive_data", False
+        )
+        return {
+            key: (
+                None
+                if exclude_sensitive_data and key in self.sensitive_fields
+                else self.serialize_property(
+                    instance,
+                    key,
+                    import_export_config=import_export_config,
+                    files_zip=files_zip,
+                    storage=storage,
+                    cache=cache,
+                )
+            )
+            for key in self.get_property_names()
+        }
+
     def serialize_property(
         self,
         instance: UserSource,
         prop_name: str,
+        import_export_config=None,
         files_zip=None,
         storage=None,
         cache=None,
@@ -238,7 +268,9 @@ class UserSourceType(
         if prop_name == "auth_providers":
             return [
                 ap.get_type().export_serialized(
-                    ap, files_zip=files_zip, storage=storage, cache=cache
+                    ap,
+                    import_export_config=import_export_config,
+                    files_zip=files_zip,
                 )
                 for ap in AppAuthProviderHandler.list_app_auth_providers_for_user_source(
                     instance

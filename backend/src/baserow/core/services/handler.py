@@ -263,12 +263,14 @@ class ServiceHandler:
     def export_service(
         self,
         service,
+        import_export_config: Optional[ImportExportConfig] = None,
         files_zip: Optional[ExportZipFile] = None,
         storage: Optional[Storage] = None,
         cache: Optional[Dict] = None,
     ):
         return service.get_type().export_serialized(
             service,
+            import_export_config=import_export_config,
             files_zip=files_zip,
             storage=storage,
             cache=cache,

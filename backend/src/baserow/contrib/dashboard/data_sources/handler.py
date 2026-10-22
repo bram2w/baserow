@@ -15,6 +15,7 @@ from baserow.contrib.dashboard.data_sources.models import DashboardDataSource
 from baserow.contrib.dashboard.models import Dashboard
 from baserow.core.integrations.models import Integration
 from baserow.core.integrations.registries import integration_type_registry
+from baserow.core.registries import ImportExportConfig
 from baserow.core.services.handler import ServiceHandler
 from baserow.core.services.models import Service
 from baserow.core.services.registries import ServiceType, service_type_registry
@@ -315,6 +316,7 @@ class DashboardDataSourceHandler:
     def export_data_source(
         self,
         data_source: DashboardDataSource,
+        import_export_config: ImportExportConfig | None = None,
         files_zip: ExportZipFile | None = None,
         storage: Storage | None = None,
         cache: dict[str, any] | None = None,
@@ -333,7 +335,11 @@ class DashboardDataSourceHandler:
 
         if data_source.service:
             serialized_service = ServiceHandler().export_service(
-                data_source.service, files_zip=files_zip, storage=storage, cache=cache
+                data_source.service,
+                import_export_config=import_export_config,
+                files_zip=files_zip,
+                storage=storage,
+                cache=cache,
             )
 
         return DashboardDataSourceDict(
@@ -365,19 +371,20 @@ class DashboardDataSourceHandler:
         :return: the new data source instance.
         """
 
-        if "dashboard_data_sources" not in id_mapping:
-            id_mapping["dashboard_data_sources"] = {}
-
         service = None
         serialized_service = serialized_data_source.get("service", None)
         if serialized_service:
             integration = None
             integration_id = serialized_service.pop("integration_id", None)
             if integration_id:
-                integration_id = id_mapping["integrations"].get(
-                    integration_id, integration_id
-                )
-                integration = Integration.objects.get(id=integration_id)
+                integration_id = id_mapping["integrations"].get(integration_id, None)
+                try:
+                    integration = Integration.objects_and_trash.get(id=integration_id)
+                except Integration.DoesNotExist:
+                    integration = None
+                else:
+                    if integration.application_id != dashboard.id:
+                        integration = None
 
             service = ServiceHandler().import_service(
                 integration,

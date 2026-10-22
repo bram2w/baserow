@@ -48,6 +48,45 @@ def test_dashboard_export_serialized(data_fixture):
 
 
 @pytest.mark.django_db
+def test_dashboard_export_serialized_passes_config_to_integrations(data_fixture):
+    dashboard = data_fixture.create_dashboard_application()
+    data_fixture.create_smtp_integration(
+        application=dashboard,
+        host="smtp.example.com",
+        port=587,
+        username="username",
+        password="password",
+    )
+
+    sanitized_export = DashboardApplicationType().export_serialized(
+        dashboard,
+        ImportExportConfig(
+            include_permission_data=False,
+            exclude_sensitive_data=True,
+        ),
+    )
+    normal_export = DashboardApplicationType().export_serialized(
+        dashboard,
+        ImportExportConfig(
+            include_permission_data=False,
+            exclude_sensitive_data=False,
+        ),
+    )
+
+    sanitized_integration = sanitized_export["integrations"][0]
+    normal_integration = normal_export["integrations"][0]
+
+    assert sanitized_integration["host"] is None
+    assert sanitized_integration["port"] is None
+    assert sanitized_integration["username"] is None
+    assert sanitized_integration["password"] is None
+    assert normal_integration["host"] == "smtp.example.com"
+    assert normal_integration["port"] == 587
+    assert normal_integration["username"] == "username"
+    assert normal_integration["password"] == "password"
+
+
+@pytest.mark.django_db
 def test_dashboard_export_serialized_with_widgets(data_fixture):
     user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)
@@ -86,7 +125,11 @@ def test_dashboard_export_serialized_with_widgets(data_fixture):
     integration = Integration.objects.filter(application=dashboard).first()
 
     serialized = DashboardApplicationType().export_serialized(
-        dashboard, ImportExportConfig(include_permission_data=True)
+        dashboard,
+        ImportExportConfig(
+            include_permission_data=True,
+            exclude_sensitive_data=False,
+        ),
     )
 
     serialized = json.loads(json.dumps(serialized))
@@ -98,8 +141,8 @@ def test_dashboard_export_serialized_with_widgets(data_fixture):
         "type": "dashboard",
         "integrations": [
             {
-                "authorized_subject_type": None,
-                "authorized_subject_id": None,
+                "authorized_subject_type": "auth.User",
+                "authorized_subject_id": user.id,
                 "id": integration.id,
                 "name": "",
                 "order": "1.00000000000000000000",
@@ -247,6 +290,31 @@ def test_dashboard_import_serialized(data_fixture):
     assert dashboard.name == "Dashboard 1"
     assert dashboard.description == "Description 1"
     assert dashboard.order == 99
+
+
+@pytest.mark.django_db()
+def test_dashboard_import_without_integrations_clears_service_reference(data_fixture):
+    source = data_fixture.create_dashboard_application()
+    source_data_source = (
+        data_fixture.create_dashboard_local_baserow_aggregate_rows_data_source(
+            dashboard=source
+        )
+    )
+    config = ImportExportConfig(include_permission_data=False)
+    serialized = DashboardApplicationType().export_serialized(source, config)
+    serialized["integrations"] = []
+    id_mapping = {}
+
+    imported_dashboard = DashboardApplicationType().import_serialized(
+        source.workspace, serialized, config, id_mapping
+    )
+
+    imported_data_source = DashboardDataSource.objects.get(dashboard=imported_dashboard)
+    assert imported_data_source.service.integration_id is None
+    assert (
+        id_mapping["dashboard_data_sources"][source_data_source.id]
+        == imported_data_source.id
+    )
 
 
 @pytest.mark.django_db()

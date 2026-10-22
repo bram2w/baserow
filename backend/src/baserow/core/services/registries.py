@@ -23,6 +23,7 @@ from baserow.core.integrations.exceptions import IntegrationDoesNotExist
 from baserow.core.integrations.handler import IntegrationHandler
 from baserow.core.integrations.models import Integration
 from baserow.core.models import Workspace
+from baserow.core.registries import ImportExportConfig
 from baserow.core.registry import (
     APIUrlsInstanceMixin,
     APIUrlsRegistryMixin,
@@ -82,6 +83,37 @@ class ServiceType(
     id_mapping_name = "services"
 
     default_serializer_field_names = ["sample_data"]
+
+    def export_serialized(
+        self,
+        instance: ServiceSubClass,
+        import_export_config: Optional[ImportExportConfig] = None,
+        files_zip=None,
+        storage=None,
+        cache=None,
+    ) -> Dict[str, Any]:
+        """Redact sensitive values, retaining named rows for reconfiguration."""
+
+        serialized = {
+            key: self.serialize_property(
+                instance, key, files_zip=files_zip, storage=storage, cache=cache
+            )
+            for key in self.get_property_names()
+        }
+        if getattr(import_export_config, "exclude_sensitive_data", False):
+            for prop_name in self.sensitive_fields:
+                if prop_name not in serialized:
+                    continue
+                value = serialized[prop_name]
+                serialized[prop_name] = (
+                    [
+                        {**row, "value": None} if isinstance(row, dict) else row
+                        for row in value
+                    ]
+                    if isinstance(value, list)
+                    else None
+                )
+        return serialized
 
     # Does this service return a list of record?
     returns_list = False

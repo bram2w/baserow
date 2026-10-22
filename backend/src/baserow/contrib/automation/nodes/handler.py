@@ -299,6 +299,7 @@ class AutomationNodeHandler:
     def export_node(
         self,
         node: AutomationNode,
+        import_export_config: Optional[ImportExportConfig] = None,
         files_zip: Optional[ExportZipFile] = None,
         storage: Optional[Storage] = None,
         cache: Optional[Dict] = None,
@@ -314,7 +315,11 @@ class AutomationNodeHandler:
         """
 
         return node.get_type().export_serialized(
-            node, files_zip=files_zip, storage=storage, cache=cache
+            node,
+            import_export_config=import_export_config,
+            files_zip=files_zip,
+            storage=storage,
+            cache=cache,
         )
 
     def import_node(

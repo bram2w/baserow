@@ -124,7 +124,11 @@ class DashboardApplicationType(ApplicationType):
 
         serialized_data_sources = [
             DashboardDataSourceHandler().export_data_source(
-                data_source, files_zip=files_zip, storage=storage, cache=self.cache
+                data_source,
+                import_export_config=import_export_config,
+                files_zip=files_zip,
+                storage=storage,
+                cache=self.cache,
             )
             for data_source in data_sources
         ]
@@ -164,6 +168,12 @@ class DashboardApplicationType(ApplicationType):
         serialized_integrations = serialized_values.pop("integrations")
         serialized_data_sources = serialized_values.pop("data_sources")
         serialized_widgets = serialized_values.pop("widgets")
+
+        # A full application import must remap integrations and data sources,
+        # including when none were exported. Copies within the same dashboard
+        # supply MirrorDict mappings for references that should be preserved.
+        id_mapping.setdefault("integrations", {})
+        id_mapping.setdefault("dashboard_data_sources", {})
 
         progress = ChildProgressBuilder.build(progress_builder, child_total=100)
         application_progress = progress.create_child_builder(represents_progress=20)

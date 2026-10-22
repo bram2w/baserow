@@ -1996,6 +1996,34 @@ def test_builder_application_imports_login_page(data_fixture):
 
 
 @pytest.mark.django_db
+def test_builder_application_passes_export_config_to_login_page(data_fixture):
+    builder = data_fixture.create_builder_application()
+    login_page = data_fixture.create_builder_page(builder=builder)
+    builder.login_page = login_page
+    builder.save()
+    config = ImportExportConfig(
+        include_permission_data=False,
+        exclude_sensitive_data=True,
+    )
+
+    with (
+        patch(
+            "baserow.contrib.builder.application_types.PageHandler.get_pages",
+            return_value=[],
+        ),
+        patch(
+            "baserow.contrib.builder.application_types.PageHandler.export_page",
+            return_value={},
+        ) as export_page,
+    ):
+        BuilderApplicationType().export_serialized(builder, config)
+
+    export_page.assert_called_once()
+    assert export_page.call_args.args[0] == login_page
+    assert export_page.call_args.kwargs["import_export_config"] is config
+
+
+@pytest.mark.django_db
 def test_builder_is_published(data_fixture):
     builder = data_fixture.create_builder_application()
     published_builder = data_fixture.create_builder_application(workspace=None)
