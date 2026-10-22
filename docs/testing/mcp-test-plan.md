@@ -111,7 +111,7 @@ The following tools are currently enabled:
 
 | Tool | Description |
 |---|---|
-| `list_applications` | List databases, application builders, automations and dashboards |
+| `list_applications` | List the workspace's databases |
 | `list_databases` | List all databases in the workspace |
 | `list_tables` | List tables, optionally filtered by database or table name |
 | `get_table_schema` | Get field names and types for one or more tables |

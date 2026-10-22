@@ -40,7 +40,8 @@ def list_database_applications(
 
 
 class ListApplicationsMcpTool(FunctionMCPTool):
-    # Only databases until the tool groups cover the other application types.
+    # Databases only: the tool is in the database read group. Other application
+    # types are listed by their own groups' tools.
     type = "list_applications"
     group = GROUP_DATABASE_READ
     title = "List applications"
