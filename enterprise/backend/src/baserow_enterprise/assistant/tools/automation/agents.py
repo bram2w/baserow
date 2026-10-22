@@ -212,26 +212,49 @@ def repair_formula_errors(
     for error in formula_errors:
         by_node.setdefault(error["node_id"], []).append(error)
     for node_id, node_errors in by_node.items():
-        node = shared_nodes.get_node_in_workspace(tool_context, node_id)
-        tool_context.update_status(
-            _("Generating formulas for node '%(label)s'...") % {"label": node.label}
-        )
         try:
-            context = workflow_formula_context(tool_context.user, node.workflow, refs)
-            generated = generate_formula(formula_requests(node, node_errors), context)
-        except Exception as exc:
-            raise_if_permission_denied(exc)
-            logger.exception(
-                "Failed to generate formulas for node {}: {}", node_id, exc
+            remaining.extend(
+                _repair_node(
+                    tool_context,
+                    generate_formula,
+                    field_ids,
+                    node_id,
+                    node_errors,
+                    refs,
+                )
             )
+        except Exception as exc:
+            # The nodes are committed, so a failed repair only leaves its errors.
+            raise_if_permission_denied(exc)
+            logger.exception("Failed to repair formulas of node {}: {}", node_id, exc)
             remaining.extend({**error, "error": str(exc)} for error in node_errors)
-            continue
+    return remaining
 
-        generated = generated or {}
-        repaired = [e for e in node_errors if _request_key(e) in generated]
-        remaining.extend(e for e in node_errors if _request_key(e) not in generated)
-        if not repaired:
-            continue
+
+def _repair_node(
+    tool_context: ToolContext,
+    generate_formula: Callable,
+    field_ids: Callable[[int], set[int]],
+    node_id: int,
+    node_errors: list[dict[str, Any]],
+    refs: dict[int, str] | None,
+) -> list[dict[str, Any]]:
+    """
+    Generate one node's formulas and write them in their own transaction.
+
+    :return: The node's formula errors that remain.
+    """
+
+    node = shared_nodes.get_node_in_workspace(tool_context, node_id)
+    tool_context.update_status(
+        _("Generating formulas for node '%(label)s'...") % {"label": node.label}
+    )
+    context = workflow_formula_context(tool_context.user, node.workflow, refs)
+    generated = generate_formula(formula_requests(node, node_errors), context) or {}
+
+    repaired = [e for e in node_errors if _request_key(e) in generated]
+    remaining = [e for e in node_errors if _request_key(e) not in generated]
+    if repaired:
         with transaction.atomic():
             node, values = shared_nodes.update_node(
                 tool_context,

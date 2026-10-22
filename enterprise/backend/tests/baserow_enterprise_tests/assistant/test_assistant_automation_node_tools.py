@@ -1117,3 +1117,46 @@ def test_formulas_are_never_generated_inside_a_transaction(
     service = AutomationNode.objects.get(id=first["id"]).specific.service.specific
     assert service.subject["formula"] == "'generated'"
     assert service.body["formula"] == "'generated'"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_failed_repair_keeps_the_created_nodes(
+    data_fixture, monkeypatch, real_formula_pass
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    automation, workflow_id = _create_test_workflow(data_fixture, user, workspace)
+    ctx = make_test_ctx(user, workspace)
+    previous = list_nodes(ctx, workflow_id=workflow_id, thought="inspect")["nodes"][-1]
+
+    def delete_then_generate(formulas, context):
+        # The node disappears between the write and the repair.
+        AutomationNode.objects.filter(label="Formula Email").update(trashed=True)
+        return {key: "'x'" for key in formulas}
+
+    monkeypatch.setattr(
+        automation_agents,
+        "get_generate_formulas_tool",
+        lambda _model_profile: delete_then_generate,
+    )
+
+    result = add_nodes(
+        ctx,
+        workflow_id=workflow_id,
+        nodes=[
+            ActionNodeCreate(
+                ref="email2",
+                label="Formula Email",
+                previous_node_ref=str(previous["id"]),
+                type="smtp_email",
+                to_emails="test@example.com",
+                subject="$formula: the trigger name",
+                body="Hello",
+            )
+        ],
+        thought="add",
+    )
+
+    assert result["created_nodes"][0]["label"] == "Formula Email"
+    (error,) = result["formula_errors"]
+    assert error["field"] == "subject"

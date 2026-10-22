@@ -314,3 +314,61 @@ def test_delete_nodes_reports_a_router_with_nodes_on_a_branch(automation_ctx):
     assert error.startswith(f"Error deleting node {router.id}: ")
     assert "branch" in error.lower() or "output" in error.lower()
     assert AutomationNode.objects.filter(id=router.id).exists()
+
+
+@pytest.mark.django_db
+def test_update_nodes_reports_values_for_a_row_node_without_a_table(automation_ctx):
+    ctx, automation, table, name = automation_ctx
+    workflow, trigger = create_workflow(ctx.user, automation, "Flow", table)
+    store = create_node(
+        ctx.user, workflow, "local_baserow_create_row", reference_node_id=trigger.id
+    )
+
+    result = update_nodes(
+        ctx,
+        workflow.id,
+        [NodeUpdate(node_id=store.id, values=[{"field_id": name.id, "value": "B"}])],
+    )
+
+    assert result["errors"] == [
+        f"Node {store.id} ({store.label}): The node has no table, so its values "
+        "were not set. Give a table_id with them."
+    ]
+    assert not store.service.specific.field_mappings.exists()
+
+
+@pytest.mark.django_db
+def test_add_nodes_refuses_a_ref_that_names_another_node(automation_ctx):
+    ctx, automation, table, _ = automation_ctx
+    workflow, trigger = create_workflow(ctx.user, automation, "Flow", table)
+
+    for refs in ([str(trigger.id)], ["a", "a"]):
+        nodes = [_email(ref=ref, previous=str(trigger.id)) for ref in refs]
+        with pytest.raises(DjangoValidationError, match="already the ref or ID"):
+            add_nodes(ctx, workflow.id, nodes)
+
+    assert AutomationNode.objects.filter(workflow=workflow).count() == 1
+
+
+@pytest.mark.django_db
+def test_delete_nodes_rejects_an_empty_list(automation_ctx):
+    ctx, *_ = automation_ctx
+
+    with pytest.raises(DjangoValidationError, match="at least one node ID"):
+        delete_nodes(ctx, [])
+
+
+@pytest.mark.django_db
+def test_update_nodes_explains_a_deactivated_node_type(automation_ctx):
+    ctx, automation, table, _ = automation_ctx
+    workflow, trigger = create_workflow(ctx.user, automation, "Flow", table)
+    mail = _email_node(ctx, workflow, trigger, "Mail")
+
+    with patch.object(type(mail.get_type()), "is_deactivated", return_value=True):
+        result = update_nodes(
+            ctx, workflow.id, [NodeUpdate(node_id=mail.id, label="Renamed")]
+        )
+
+    assert result["errors"] == [
+        f"Error updating node {mail.id}: This automation node type is deactivated."
+    ]

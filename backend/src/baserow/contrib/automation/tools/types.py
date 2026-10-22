@@ -229,6 +229,9 @@ class NodeRefs:
 
         self._nodes[str(ref)] = (node_id, edges)
 
+    def __contains__(self, ref: str) -> bool:
+        return str(ref) in self._nodes
+
     def resolve(self, ref: str, edge_label: str = "") -> tuple[int | None, str]:
         """
         The node a ref names, and the output of it to attach to.
@@ -717,6 +720,11 @@ def _row_action_update_service(
         if table_id is not None:
             for mapping in values.field_mappings(table_id, n.values or []):
                 mappings[mapping["field_id"]] = mapping
+        elif n.values:
+            values.errors.append(
+                "The node has no table, so its values were not set. Give a "
+                "table_id with them."
+            )
         d["field_mappings"] = list(mappings.values())
     return d
 

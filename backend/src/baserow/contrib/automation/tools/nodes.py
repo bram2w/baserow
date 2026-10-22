@@ -306,6 +306,11 @@ def check_node_refs(refs: NodeRefs, nodes: list[ActionNodeCreate]) -> None:
 
     for node in nodes:
         refs.resolve(node.previous_node_ref, node.router_edge_label)
+        if node.ref in refs:
+            raise DjangoValidationError(
+                f"ref '{node.ref}' is already the ref or ID of another node. Give "
+                "each new node its own ref."
+            )
         refs.add(node.ref, None, node.router_edges())
 
 
@@ -550,6 +555,9 @@ def delete_nodes(
     on its branches cannot be deleted. A node that fails is reported in errors and
     the others are still deleted.
     """
+
+    if not node_ids:
+        raise DjangoValidationError("node_ids must hold at least one node ID.")
 
     deleted = []
     errors = []
