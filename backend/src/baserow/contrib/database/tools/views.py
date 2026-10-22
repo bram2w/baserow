@@ -669,7 +669,7 @@ def _number_orm_value(f, field, **kwargs):
     """
 
     if f.operator in ("empty", "not_empty"):
-        return str(f.value)
+        return ""
     if isinstance(f.value, (str, int, float)) and not isinstance(f.value, bool):
         value = str(f.value).strip()
         try:

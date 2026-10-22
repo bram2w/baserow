@@ -833,7 +833,8 @@ def test_create_view_filters_takes_no_number_for_empty(
     entry = create(type="number", operator=operator)
 
     assert "skipped_filters" not in entry
-    assert ViewFilter.objects.get(view=view).type == operator
+    view_filter = ViewFilter.objects.get(view=view)
+    assert (view_filter.type, view_filter.value) == (operator, "")
 
 
 @pytest.mark.django_db
