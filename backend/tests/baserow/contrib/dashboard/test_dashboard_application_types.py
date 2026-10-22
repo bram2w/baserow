@@ -141,8 +141,8 @@ def test_dashboard_export_serialized_with_widgets(data_fixture):
         "type": "dashboard",
         "integrations": [
             {
-                "authorized_subject_type": None,
-                "authorized_subject_id": None,
+                "authorized_subject_type": "auth.User",
+                "authorized_subject_id": user.id,
                 "id": integration.id,
                 "name": "",
                 "order": "1.00000000000000000000",
