@@ -781,6 +781,7 @@ def test_builder_application_export(data_fixture):
         "name": builder.name,
         "order": builder.order,
         "type": "builder",
+        "untrusted_content": True,
         "favicon_file": None,
         "login_page": page_2_serialized,
         "breakpoints": {"mobile": 640, "tablet": 1024},
@@ -2387,3 +2388,59 @@ def test_get_application_id_for_url(data_fixture, settings):
         )
         == builder_to.id
     )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "config_values,expected_untrusted",
+    [
+        ({}, True),
+        ({"is_user_template": True}, True),
+        ({"is_duplicate": True}, False),
+        ({"is_publishing": True}, False),
+        ({"is_template": True}, False),
+    ],
+)
+@pytest.mark.parametrize("already_untrusted", [False, True])
+def test_application_content_trust_export_import(
+    data_fixture, config_values, expected_untrusted, already_untrusted
+):
+    """External copies require consent; internal copies retain existing restrictions."""
+
+    builder = data_fixture.create_builder_application(
+        untrusted_content=already_untrusted
+    )
+    config = ImportExportConfig(include_permission_data=False, **config_values)
+    application_type = BuilderApplicationType()
+    serialized = application_type.export_serialized(builder, config)
+    assert serialized["untrusted_content"] is (expected_untrusted or already_untrusted)
+    builder.refresh_from_db()
+    assert builder.untrusted_content is already_untrusted
+
+    imported = application_type.import_serialized(
+        builder.workspace, serialized, config, {}
+    )
+    imported.refresh_from_db()
+    assert imported.untrusted_content is (expected_untrusted or already_untrusted)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("serialized_flag", [None, False])
+def test_external_import_cannot_bypass_content_restrictions(
+    data_fixture, serialized_flag
+):
+    """Both legacy files and files claiming trust need explicit installer consent."""
+
+    builder = data_fixture.create_builder_application()
+    application_type = BuilderApplicationType()
+    config = ImportExportConfig(include_permission_data=False)
+    serialized = application_type.export_serialized(builder, config)
+    if serialized_flag is None:
+        serialized.pop("untrusted_content")
+    else:
+        serialized["untrusted_content"] = serialized_flag
+
+    imported = application_type.import_serialized(
+        builder.workspace, serialized, config, {}
+    )
+    assert imported.untrusted_content is True

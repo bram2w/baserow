@@ -322,3 +322,50 @@ def test_get_enterprise_builder_custom_code_public_application_not_found(
     response = api_client.get(url)
 
     assert response.status_code == HTTP_404_NOT_FOUND
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("mode", ["preview", "public"])
+@pytest.mark.parametrize("code_type", ["js", "css"])
+def test_untrusted_custom_code_requires_explicit_consent(
+    enable_enterprise, api_client, data_fixture, mode, code_type
+):
+    """Preview and public asset URLs refuse untrusted code, retaining it for review."""
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    builder = data_fixture.create_builder_application(
+        workspace=workspace, untrusted_content=True
+    )
+    builder.custom_code.js = "alert(1)"
+    builder.custom_code.css = "body { color: red }"
+    builder.custom_code.save()
+    if mode == "preview":
+        authenticate_builder_preview(api_client, builder, user)
+        route = f"api:enterprise:builder_preview_custom_code:{code_type}"
+    else:
+        domain = data_fixture.create_builder_custom_domain(builder=builder)
+        builder = DomainHandler().publish(domain).published_to
+        assert builder.untrusted_content is True
+        route = f"api:enterprise:custom_code:public_{code_type}"
+
+    from baserow.api.applications.serializers import (
+        PublicPolymorphicApplicationResponseSerializer,
+    )
+
+    assert (
+        PublicPolymorphicApplicationResponseSerializer(builder).data[
+            "untrusted_content"
+        ]
+        is True
+    )
+    url = reverse(route, kwargs={"builder_id": builder.id})
+    assert api_client.get(url).status_code == HTTP_404_NOT_FOUND
+
+    builder.untrusted_content = False
+    builder.save(update_fields=["untrusted_content"])
+    response = api_client.get(url)
+    assert response.status_code == HTTP_200_OK
+    assert response.content.decode() == (
+        "alert(1)" if code_type == "js" else "body { color: red }"
+    )

@@ -542,6 +542,11 @@ class Application(
         related_name="applications",
         on_delete=models.SET(get_default_application_content_type),
     )
+    untrusted_content = models.BooleanField(
+        default=False,
+        db_default=False,
+        help_text="Blocks custom code and embedded content until explicitly trusted.",
+    )
     installed_from_template = models.ForeignKey(
         "Template",
         on_delete=models.SET_NULL,

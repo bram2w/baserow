@@ -46,6 +46,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
             "workspace",
             "created_on",
             "last_viewed",
+            "untrusted_content",
         )
         extra_kwargs = {"id": {"read_only": True}}
 
@@ -95,7 +96,7 @@ class PolymorphicApplicationCreateSerializer(PolymorphicRequestSerializer):
 class BaseApplicationUpdatePolymorphicSerializer(serializers.ModelSerializer):
     class Meta:
         model = Application
-        fields = ("name",)
+        fields = ("name", "untrusted_content")
 
 
 class PolymorphicApplicationUpdateSerializer(PolymorphicRequestSerializer):

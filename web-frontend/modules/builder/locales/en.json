@@ -350,6 +350,7 @@
     "uploadFileButton": "Upload file"
   },
   "iframeElementForm": {
+    "untrustedContent": "Embedded content is blocked. Enable it in the application’s General settings after reviewing its source.",
     "missingValue": "Missing IFrame source...",
     "emptyValue": "Empty IFrame source...",
     "editorPreviewPlaceholder": "This iframe isn't displayed in the editor.\nUse Preview to check how it appears in your application.",
@@ -397,6 +398,7 @@
     "titleOverview": "Theme"
   },
   "generalSettings": {
+    "blockUntrustedContent": "Block custom code and embedded content",
     "titleOverview": "General",
     "labelForm": "Favicon",
     "labelDescription": "Pick a 128x128px ICO, PNG, GIF, or JPEG.",

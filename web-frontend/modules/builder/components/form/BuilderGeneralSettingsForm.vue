@@ -27,6 +27,11 @@
         />
       </Dropdown>
     </FormGroup>
+    <FormGroup class="margin-top-4">
+      <Checkbox v-model="values.untrusted_content">
+        {{ $t('generalSettings.blockUntrustedContent') }}
+      </Checkbox>
+    </FormGroup>
   </form>
 </template>
 
@@ -47,8 +52,12 @@ export default {
   },
   data() {
     return {
-      values: { favicon_file: null, login_page_id: null },
-      allowedValues: ['favicon_file', 'login_page_id'],
+      values: {
+        favicon_file: null,
+        login_page_id: null,
+        untrusted_content: false,
+      },
+      allowedValues: ['favicon_file', 'login_page_id', 'untrusted_content'],
     }
   },
   computed: {
