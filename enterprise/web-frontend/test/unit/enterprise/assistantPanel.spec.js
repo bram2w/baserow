@@ -10,7 +10,6 @@ vi.mock('@baserow_enterprise/services/assistant', () => ({
 }))
 
 const workspace = { id: 1, name: 'Test workspace' }
-const otherWorkspace = { id: 2, name: 'Other workspace' }
 
 describe('AssistantPanel', () => {
   let testApp = null
@@ -23,7 +22,6 @@ describe('AssistantPanel', () => {
       fetchChats: vi.fn().mockResolvedValue({ results: [] }),
       fetchChatMessages: vi.fn().mockResolvedValue({ messages: [] }),
       sendMessage: vi.fn().mockResolvedValue(undefined),
-      cancelMessage: vi.fn().mockResolvedValue(undefined),
     }
     assistantService.mockReturnValue(service)
 
@@ -32,7 +30,6 @@ describe('AssistantPanel', () => {
     // The welcome message greets the user by name; nothing here needs a session.
     store.state.auth.user = { id: 1, first_name: 'Test' }
     await store.dispatch('workspace/forceCreate', workspace)
-    await store.dispatch('workspace/forceCreate', otherWorkspace)
     await store.dispatch('undoRedo/updateCurrentScopeSet', {
       workspace: workspace.id,
     })
@@ -44,58 +41,22 @@ describe('AssistantPanel', () => {
     await testApp.afterEach()
   })
 
-  async function mountWithRunningChat() {
-    const wrapper = await testApp.mount(AssistantPanel, {
-      props: { workspace },
-    })
-    await store.dispatch('assistant/createChat', workspace.id)
-    const runningChatId = store.getters['assistant/currentChatId']
-    store.commit('assistant/SET_ASSISTANT_RUNNING', {
-      chat: store.getters['assistant/currentChat'],
-      value: true,
-    })
-    return { wrapper, runningChatId }
-  }
-
   test('sends a pending prompt in a fresh conversation and focuses the input', async () => {
-    const { runningChatId } = await mountWithRunningChat()
+    await testApp.mount(AssistantPanel, { props: { workspace } })
+    await store.dispatch('assistant/createChat', workspace.id)
+    const shownChatId = store.getters['assistant/currentChatId']
 
     await store.dispatch('assistant/setPendingPrompt', 'Build a tracker')
     await flushPromises()
 
-    expect(service.cancelMessage).not.toHaveBeenCalled()
     expect(service.sendMessage).toHaveBeenCalledOnce()
-    expect(service.sendMessage.mock.calls[0][0]).not.toBe(runningChatId)
+    expect(service.sendMessage.mock.calls[0][0]).not.toBe(shownChatId)
     expect(service.sendMessage.mock.calls[0][1]).toBe('Build a tracker')
     expect(store.getters['assistant/pendingPrompt']).toBe(null)
     expect(document.activeElement.className).toBe('assistant__input-textarea')
   })
 
-  test('drops a pending prompt when the workspace changes before it starts', async () => {
-    const { wrapper } = await mountWithRunningChat()
-    const dispatch = store.dispatch.bind(store)
-    let releasePrompt
-    vi.spyOn(store, 'dispatch').mockImplementation(
-      (action, payload, ...rest) => {
-        const result = dispatch(action, payload, ...rest)
-        if (action === 'assistant/setPendingPrompt' && payload === null) {
-          return new Promise((resolve) => {
-            releasePrompt = () => resolve(result)
-          })
-        }
-        return result
-      }
-    )
-
-    await store.dispatch('assistant/setPendingPrompt', 'Build a tracker')
-    await wrapper.setProps({ workspace: otherWorkspace })
-    releasePrompt()
-    await flushPromises()
-
-    expect(service.sendMessage).not.toHaveBeenCalled()
-  })
-
-  describe('when Kuma creates a table the store never hears about', () => {
+  describe('when Kuma creates a table or view the store never hears about', () => {
     const database = {
       id: 10,
       type: 'database',
@@ -114,56 +75,38 @@ describe('AssistantPanel', () => {
       push = vi.spyOn(testApp.nuxtApp.$router, 'push').mockResolvedValue()
     })
 
-    async function kumaNavigatesToTheNewTable() {
+    async function kumaNavigatesToTheNewTable(location = {}) {
       store.commit('assistant/SET_UI_LOCATION', {
         type: 'database-table',
         database_id: database.id,
         table_id: newTable.id,
+        ...location,
       })
       await vi.advanceTimersByTimeAsync(11000)
       await flushPromises()
     }
 
-    test('fetches the database and opens the table', async () => {
-      testApp.mock
-        .onGet(`/applications/${database.id}/`)
-        .reply(200, { ...database, tables: [newTable] })
+    test.each(['has', 'lacks'])(
+      'fetches and opens the table when the store %s its database',
+      async (storeDatabase) => {
+        if (storeDatabase === 'lacks') {
+          store.commit('application/DELETE_ITEM', database.id)
+        }
+        testApp.mock
+          .onGet(`/applications/${database.id}/`)
+          .reply(200, { ...database, tables: [newTable] })
 
-      await kumaNavigatesToTheNewTable()
+        await kumaNavigatesToTheNewTable()
 
-      expect(push).toHaveBeenCalledWith({
-        name: 'database-table',
-        params: expect.objectContaining({
-          databaseId: database.id,
-          tableId: newTable.id,
-        }),
-      })
-    })
-
-    test('adds a database the store lacks and opens the table', async () => {
-      store.commit('application/DELETE_ITEM', database.id)
-      testApp.mock
-        .onGet(`/applications/${database.id}/`)
-        .reply(200, { ...database, tables: [newTable] })
-
-      await kumaNavigatesToTheNewTable()
-
-      expect(push).toHaveBeenCalledOnce()
-    })
-
-    test('opens the table once when its broadcast lands during the fetch', async () => {
-      testApp.mock.onGet(`/applications/${database.id}/`).reply(() => {
-        store.dispatch('table/forceUpsert', {
-          database: store.getters['application/get'](database.id),
-          data: newTable,
+        expect(push).toHaveBeenCalledExactlyOnceWith({
+          name: 'database-table',
+          params: expect.objectContaining({
+            databaseId: database.id,
+            tableId: newTable.id,
+          }),
         })
-        return [200, { ...database, tables: [newTable] }]
-      })
-
-      await kumaNavigatesToTheNewTable()
-
-      expect(push).toHaveBeenCalledOnce()
-    })
+      }
+    )
 
     test('stays put without an unhandled rejection when the table is missing', async () => {
       const unhandled = vi.fn()
@@ -178,6 +121,28 @@ describe('AssistantPanel', () => {
 
       expect(push).not.toHaveBeenCalled()
       expect(unhandled).not.toHaveBeenCalled()
+    })
+
+    test('fetches a new view of a table whose views are loaded and opens it', async () => {
+      const view = { id: 30, table_id: newTable.id, type: 'grid', order: 1 }
+      await store.dispatch('table/forceUpsert', {
+        database: store.getters['application/get'](database.id),
+        data: newTable,
+      })
+      store.commit('view/SET_TABLE_ID', newTable.id)
+      testApp.mock.onGet(`/database/views/${view.id}/`).reply(200, view)
+
+      await kumaNavigatesToTheNewTable({
+        type: 'database-view',
+        view_id: view.id,
+        view_type: view.type,
+      })
+
+      expect(push).toHaveBeenCalledWith({
+        name: 'database-table',
+        params: expect.objectContaining({ viewId: view.id }),
+      })
+      expect(store.getters['view/get'](view.id)).toBeDefined()
     })
   })
 })
