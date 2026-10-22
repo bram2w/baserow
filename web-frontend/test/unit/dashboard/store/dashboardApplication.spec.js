@@ -1191,14 +1191,16 @@ describe('Dashboard application store public mode', () => {
   test('dispatchDataSource uses the public endpoint of the slug', async () => {
     const dashboardState = createState()
     const commit = openPublicDashboard(dashboardState, {
+      widgets: [{ id: 1, data_source_id: 7 }],
       dataSources: [{ id: 7 }],
     })
     const publicDispatch = vi.fn().mockResolvedValue({ data: { result: '60' } })
     PublicDashboardService.mockReturnValue({ dispatch: publicDispatch })
     const privateDispatch = vi.fn()
     DataSourceService.mockReturnValue({ dispatch: privateDispatch })
+    WidgetService.mockReturnValue({ dispatch: privateDispatch })
 
-    await actions.dispatchDataSource.call(
+    await dispatchSourceWidgets(
       { $client: {} },
       { state: dashboardState, commit },
       { dataSourceId: 7 }
@@ -1210,7 +1212,7 @@ describe('Dashboard application store public mode', () => {
       'public-token'
     )
     expect(privateDispatch).not.toHaveBeenCalled()
-    expect(dashboardState.data).toEqual({ 7: { result: '60' } })
+    expect(dashboardState.data).toEqual({ 1: { result: '60' } })
   })
 
   test('fetchInitial leaves the public mode', async () => {
