@@ -376,3 +376,14 @@ def test_a_workflow_that_fails_keeps_the_ones_saved_before(automation_ctx):
         "Workflow Second was not created: Invalid value. No more workflows."
     ]
     assert result["formula_errors"][0]["field"] == "subject"
+
+
+@pytest.mark.django_db
+def test_the_email_body_type_is_stored_as_a_choice(automation_ctx):
+    ctx, automation, table, _ = automation_ctx
+    workflow = _workflow(table, _email(label="Mail", body_type="html"))
+
+    result = create_workflows(ctx, automation.id, [workflow])
+
+    mail = _nodes(result["created_workflows"][0]["id"])["Mail"].service.specific
+    assert mail.body_type == "html"

@@ -477,3 +477,16 @@ def test_update_nodes_refuses_a_label_that_names_several_branches(automation_ctx
     )
 
     assert "names several branches" in result["errors"][0]
+
+
+@pytest.mark.django_db
+def test_update_nodes_stores_the_email_body_type_as_a_choice(automation_ctx):
+    ctx, automation, table, _ = automation_ctx
+    workflow, trigger = create_workflow(ctx.user, automation, "Flow", table)
+    mail = _email_node(ctx, workflow, trigger, "Mail")
+
+    update_nodes(ctx, workflow.id, [NodeUpdate(node_id=mail.id, body_type="html")])
+
+    service = mail.service.specific
+    service.refresh_from_db()
+    assert service.body_type == "html"

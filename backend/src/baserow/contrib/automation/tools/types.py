@@ -584,7 +584,7 @@ def _email_to_orm(n: ActionNodeCreate, values: ServiceValues) -> dict[str, Any]:
         "bcc_emails": values.value("bcc_emails", n.bcc_emails),
         "subject": values.value("subject", n.subject),
         "body": values.value("body", n.body),
-        "body_type": f"'{n.body_type}'",
+        "body_type": n.body_type,
     }
 
 
@@ -708,7 +708,7 @@ def _email_update_service(
         if getattr(n, name) is not None:
             d[name] = values.value(name, getattr(n, name))
     if n.body_type is not None:
-        d["body_type"] = f"'{n.body_type}'"
+        d["body_type"] = n.body_type
     return d
 
 
