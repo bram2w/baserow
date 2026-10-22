@@ -92,6 +92,7 @@ import {
   RBACPaidFeature,
   SSOPaidFeature,
   SupportPaidFeature,
+  SemanticSearchPaidFeature,
   XLSFileReaderPaidFeature,
 } from '@baserow_enterprise/paidFeatures'
 import { FieldPermissionsContextItemType } from '@baserow_enterprise/fieldContextItemTypes'
@@ -116,6 +117,18 @@ import {
   CoreCodeActionNodeType,
   CoreXLSFileReaderActionNodeType,
 } from '@baserow_enterprise/automation/nodeTypes'
+import { SemanticSearchFieldFormAdvancedSettingType } from '@baserow_enterprise/fieldFormAdvancedSettingTypes'
+import {
+  AISemanticSearchFieldType,
+  EmailSemanticSearchFieldType,
+  FormulaSemanticSearchFieldType,
+  LongTextSemanticSearchFieldType,
+  LookupSemanticSearchFieldType,
+  PhoneNumberSemanticSearchFieldType,
+  RollupSemanticSearchFieldType,
+  TextSemanticSearchFieldType,
+  URLSemanticSearchFieldType,
+} from '@baserow_enterprise/semanticSearchFieldTypes'
 import { KumaAIProviderModelFeatureType } from '@baserow_enterprise/aiProviderModelFeatureTypes'
 
 export default defineNuxtPlugin({
@@ -217,6 +230,28 @@ export default defineNuxtPlugin({
     )
     $registry.register('node', new CoreXLSFileReaderActionNodeType(context))
 
+    $registry.registerNamespace('semanticSearchFieldType')
+    for (const SemanticSearchFieldType of [
+      TextSemanticSearchFieldType,
+      LongTextSemanticSearchFieldType,
+      URLSemanticSearchFieldType,
+      EmailSemanticSearchFieldType,
+      PhoneNumberSemanticSearchFieldType,
+      FormulaSemanticSearchFieldType,
+      LookupSemanticSearchFieldType,
+      RollupSemanticSearchFieldType,
+      AISemanticSearchFieldType,
+    ]) {
+      $registry.register(
+        'semanticSearchFieldType',
+        new SemanticSearchFieldType(context)
+      )
+    }
+    $registry.register(
+      'fieldFormAdvancedSetting',
+      new SemanticSearchFieldFormAdvancedSettingType(context)
+    )
+
     $registry.register(
       'appAuthProvider',
       new LocalBaserowPasswordAppAuthProviderType(context)
@@ -303,6 +338,7 @@ export default defineNuxtPlugin({
     )
     $registry.register('paidFeature', new CodeRunnerPaidFeature(context))
     $registry.register('paidFeature', new XLSFileReaderPaidFeature(context))
+    $registry.register('paidFeature', new SemanticSearchPaidFeature(context))
 
     $registry.register('paidFeature', new DataScannerPaidFeature(context))
     $registry.register('paidFeature', new DateDependencyPaidFeature(context))
