@@ -93,6 +93,15 @@ describe('TemplateDetails', () => {
     expect(selectedTables(wrapper)).toEqual(['First table'])
   })
 
+  test('hides the install of a user template', async () => {
+    const wrapper = await mountComponent({
+      template: { ...template, type: 'user' },
+    })
+
+    expect(wrapper.find('.template-details__foot').exists()).toBe(false)
+    expect(wrapper.find('.template-install').exists()).toBe(false)
+  })
+
   test('shows the back link only when asked and emits back', async () => {
     const withoutBack = await mountComponent()
     expect(withoutBack.find('.template-details__back-link').exists()).toBe(

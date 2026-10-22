@@ -103,6 +103,13 @@ class ImportExportConfig:
     it that were not remapped are collisions rather than references.
     """
 
+    is_user_template: bool = False
+    """
+    Indicates that a user is creating a template from applications of their
+    workspace. References to applications outside of the selection are cleared
+    instead of kept, because the template is installed without them.
+    """
+
     is_publishing: bool = False
     """
     Indicates whether or not we are currently publishing. This class is used

@@ -57,7 +57,7 @@
             ></component>
           </ul>
         </div>
-        <div class="template-details__foot">
+        <div v-if="template.type !== 'user'" class="template-details__foot">
           <TemplateInstall
             :template="template"
             :workspace="workspace"

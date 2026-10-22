@@ -249,6 +249,17 @@ export class InstallTemplateJobType extends JobType {
   }
 }
 
+export class CreateUserTemplateJobType extends JobType {
+  static getType() {
+    return 'create_user_template'
+  }
+
+  getName() {
+    const { $i18n: i18n } = this.app
+    return i18n.t('createUserTemplateJobType.name')
+  }
+}
+
 export class CreateSnapshotJobType extends JobType {
   static getType() {
     return 'create_snapshot'

@@ -10,3 +10,18 @@ ERROR_TEMPLATE_FILE_DOES_NOT_EXIST = (
     HTTP_400_BAD_REQUEST,
     "The requested template file does not exist anymore.",
 )
+ERROR_INVALID_TEMPLATE_ICON = (
+    "ERROR_INVALID_TEMPLATE_ICON",
+    HTTP_400_BAD_REQUEST,
+    "The icon of the template is not allowed.",
+)
+ERROR_INVALID_TEMPLATE_CATEGORY = (
+    "ERROR_INVALID_TEMPLATE_CATEGORY",
+    HTTP_400_BAD_REQUEST,
+    "The categories of the template are missing or do not exist.",
+)
+ERROR_NO_APPLICATIONS_SELECTED = (
+    "ERROR_NO_APPLICATIONS_SELECTED",
+    HTTP_400_BAD_REQUEST,
+    "At least one application must be selected.",
+)

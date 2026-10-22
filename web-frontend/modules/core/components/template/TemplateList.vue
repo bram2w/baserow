@@ -1,9 +1,14 @@
 <template>
   <div class="template-list">
-    <div class="template-list__head">
-      <div class="template-list__title">
-        {{ $t('templateCategories.title') }}
-      </div>
+    <div
+      class="template-list__head"
+      :class="{ 'template-list__head--centered': $slots.head }"
+    >
+      <slot name="head">
+        <div class="template-list__title">
+          {{ $t('templateCategories.title') }}
+        </div>
+      </slot>
     </div>
     <div class="template-list__body">
       <div class="template-list__sidebar">

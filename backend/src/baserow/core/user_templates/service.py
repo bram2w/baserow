@@ -1,0 +1,84 @@
+from typing import Callable, List, Optional, Tuple
+
+from django.contrib.auth.models import AbstractUser
+
+from baserow.core.exceptions import PermissionDenied
+from baserow.core.feature_flags import FF_USER_TEMPLATES, feature_flag_is_enabled
+from baserow.core.job_types import ExportApplicationsJobType
+from baserow.core.jobs.registries import job_type_registry
+from baserow.core.models import Application, Workspace
+from baserow.core.user_templates.exceptions import NoApplicationsSelected
+from baserow.core.user_templates.handler import UserTemplateHandler
+from baserow.core.utils import ChildProgressBuilder
+
+
+class UserTemplateService:
+    def get_exportable_applications(
+        self, user: AbstractUser, workspace: Workspace, application_ids: List[int]
+    ) -> List[Application]:
+        """
+        Returns the applications the user can copy into a template. Copying needs
+        the same permission as exporting the workspace.
+
+        :param user: The user creating the template.
+        :param workspace: The workspace the applications are copied from.
+        :param application_ids: The ids of the selected applications.
+        :raises FeatureDisabledException: If user templates are disabled.
+        :raises NoApplicationsSelected: If no application is selected.
+        :raises PermissionDenied: If the user can't export the workspace, the
+            workspace holds a template, or one of the applications doesn't exist
+            or isn't visible to the user.
+        :return: The selected applications.
+        """
+
+        feature_flag_is_enabled(FF_USER_TEMPLATES, raise_if_disabled=True)
+
+        if not application_ids:
+            raise NoApplicationsSelected("At least one application must be selected.")
+
+        applications = job_type_registry.get(
+            ExportApplicationsJobType.type
+        ).fetch_applications(user, workspace, list(set(application_ids)))
+
+        if workspace.has_template():
+            raise PermissionDenied("A template can't be created from a template.")
+
+        return list(applications)
+
+    def copy_applications(
+        self,
+        user: AbstractUser,
+        workspace: Workspace,
+        application_ids: List[int],
+        *,
+        name: str,
+        progress_builder: Optional[ChildProgressBuilder] = None,
+        track_content: Optional[Callable[..., None]] = None,
+    ) -> Tuple[Workspace, str]:
+        """
+        Copies applications of the workspace into the content of a new user
+        template. See `UserTemplateHandler.copy_applications` for further details.
+
+        :param user: The user creating the template.
+        :param workspace: The workspace the applications are copied from.
+        :param application_ids: The ids of the selected applications.
+        :param name: The name of the template.
+        :param progress_builder: A progress builder that allows for publishing
+            progress.
+        :param track_content: Called with the content created so far.
+        :raises FeatureDisabledException: If user templates are disabled.
+        :raises NoApplicationsSelected: If no application is selected.
+        :raises PermissionDenied: If the user can't copy the applications.
+        :return: The workspace holding the copy and the name of the stored archive.
+        """
+
+        applications = self.get_exportable_applications(
+            user, workspace, application_ids
+        )
+        return UserTemplateHandler().copy_applications(
+            user,
+            applications,
+            name=name,
+            progress_builder=progress_builder,
+            track_content=track_content,
+        )

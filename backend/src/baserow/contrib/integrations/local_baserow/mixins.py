@@ -1,4 +1,14 @@
-from typing import TYPE_CHECKING, Dict, Generator, List, Optional, Tuple, Type, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    Union,
+)
 
 from django.db.models import OrderBy, Prefetch, QuerySet
 
@@ -53,6 +63,32 @@ if TYPE_CHECKING:
         LocalBaserowTableService,
     )
     from baserow.core.workflow_actions.models import WorkflowAction
+
+
+def import_refinement_field_id(
+    field_id: int, id_mapping: Dict[str, Any], import_export_config=None
+) -> Optional[int]:
+    """
+    The id the field of an imported filter or sort should point at.
+
+    A field outside the imported databases is only kept for a duplicate, an installed
+    template or a snapshot (`is_duplicate`), which keep the ids they always kept.
+    Otherwise the import can land in another workspace, where a kept id would reach a
+    field the importer can't see. Without a config, nothing is kept.
+
+    :param field_id: The field id the filter or sort was exported with.
+    :param id_mapping: The id mapping dict.
+    :param import_export_config: The config of the import.
+    :return: The field id to point at, or None to drop the filter or sort.
+    """
+
+    if "database_fields" not in id_mapping:
+        return field_id
+
+    is_duplicate = getattr(import_export_config, "is_duplicate", False)
+    return id_mapping["database_fields"].get(
+        field_id, field_id if is_duplicate else None
+    )
 
 
 class LocalBaserowTableServiceFilterableMixin:
@@ -181,29 +217,34 @@ class LocalBaserowTableServiceFilterableMixin:
             service, prop_name, files_zip=files_zip, storage=storage, cache=cache
         )
 
-    def deserialize_filters(self, value, id_mapping):
+    def deserialize_filters(self, value, id_mapping, import_export_config=None):
         """
         Deserializes the filters by mapping the field_id to the new field_id if it
         exists in the id_mapping. If the value is a digit, try and map the value to
-        the new field select option id.
+        the new field select option id. A filter on a field that can't be mapped is
+        dropped, see `import_refinement_field_id`.
 
         :param value: the value of this property.
         :param id_mapping: the id mapping dict.
+        :param import_export_config: The config of the import.
         :return: the deserialized version for the filter.
         """
 
         result = []
 
         for f in value:
+            field_id = import_refinement_field_id(
+                f["field_id"], id_mapping, import_export_config
+            )
+            if field_id is None:
+                continue
+
             formula = BaserowFormulaObject.to_formula(f["value"])
             value_is_formula = f.get(
                 "value_is_formula", formula["mode"] != BASEROW_FORMULA_MODE_RAW
             )
             if not value_is_formula:
                 formula["mode"] = BASEROW_FORMULA_MODE_RAW
-            field_id = id_mapping.get("database_fields", {}).get(
-                f["field_id"], f["field_id"]
-            )
 
             if (
                 value_is_formula
@@ -291,7 +332,9 @@ class LocalBaserowTableServiceFilterableMixin:
                     service=service,
                 )
                 for index, service_filter in enumerate(
-                    self.deserialize_filters(filters, id_mapping)
+                    self.deserialize_filters(
+                        filters, id_mapping, kwargs.get("import_export_config")
+                    )
                 )
             ]
         )
@@ -711,27 +754,26 @@ class LocalBaserowTableServiceSortableMixin:
             service, prop_name, files_zip=files_zip, storage=storage, cache=cache
         )
 
-    def deserialize_sorts(self, value, id_mapping):
+    def deserialize_sorts(self, value, id_mapping, import_export_config=None):
         """
         Deserializes the sorts by mapping the field_id to the new field_id if it
-        exists in the id_mapping.
+        exists in the id_mapping. A sort on a field that can't be mapped is dropped,
+        see `import_refinement_field_id`.
 
         :param value: the value of this property.
         :param id_mapping: the id mapping dict.
+        :param import_export_config: The config of the import.
         :return: the deserialized version for the sort.
         """
 
-        return [
-            {
-                **f,
-                "field_id": (
-                    id_mapping["database_fields"][f["field_id"]]
-                    if "database_fields" in id_mapping
-                    else f["field_id"]
-                ),
-            }
-            for f in value
-        ]
+        result = []
+        for f in value:
+            field_id = import_refinement_field_id(
+                f["field_id"], id_mapping, import_export_config
+            )
+            if field_id is not None:
+                result.append({**f, "field_id": field_id})
+        return result
 
     def create_instance_from_serialized(
         self,
@@ -770,7 +812,9 @@ class LocalBaserowTableServiceSortableMixin:
                     service=service,
                 )
                 for index, service_sorting in enumerate(
-                    self.deserialize_sorts(sortings, id_mapping)
+                    self.deserialize_sorts(
+                        sortings, id_mapping, kwargs.get("import_export_config")
+                    )
                 )
             ]
         )

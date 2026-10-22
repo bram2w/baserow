@@ -178,6 +178,9 @@ export default {
     onJobCancelled() {
       this.createLoading = false
     },
+    getJobNotCancellableMessage() {
+      return this.$t('job.errorJobCannotBeCancelledDescription')
+    },
     async loadSnapshots() {
       this.snapshotsLoading = true
 

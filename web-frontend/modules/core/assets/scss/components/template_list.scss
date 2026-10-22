@@ -14,6 +14,12 @@
   border-bottom: solid 1px $palette-neutral-200;
 }
 
+// The padding on the left evens out the one of the close button.
+.template-list__head--centered {
+  justify-content: center;
+  padding-left: 56px;
+}
+
 .template-list__title {
   font-size: 16px;
   font-weight: 600;

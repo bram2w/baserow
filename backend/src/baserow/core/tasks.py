@@ -32,6 +32,10 @@ from .user.tasks import (
     check_pending_account_deletion,
     share_onboarding_details_with_baserow,
 )
+from .user_templates.tasks import (
+    delete_orphaned_user_template_workspaces,
+    setup_periodic_user_template_tasks,
+)
 
 
 @app.task(
@@ -69,4 +73,6 @@ __all__ = [
     "mark_item_viewed",
     "clean_up_stale_last_viewed_items",
     "setup_periodic_last_viewed_tasks",
+    "delete_orphaned_user_template_workspaces",
+    "setup_periodic_user_template_tasks",
 ]

@@ -152,7 +152,8 @@ class StaffOnlyPermissionManagerType(PermissionManagerType):
 
 class AllowIfTemplatePermissionManagerType(PermissionManagerType):
     """
-    Allows read operations on official templates.
+    Allows read operations on the templates the actor can open, see
+    `Template.is_openable_by`.
     """
 
     type = "allow_if_template"
@@ -168,26 +169,35 @@ class AllowIfTemplatePermissionManagerType(PermissionManagerType):
     ]
 
     def check_multiple_permissions(self, checks, workspace=None, include_trash=False):
+        allowed_checks = [
+            check
+            for check in checks
+            if check.operation_name in self.OPERATION_ALLOWED_ON_TEMPLATES
+        ]
+        if not allowed_checks or not workspace:
+            return {}
+
+        # Checked once per actor, because it can need a query for a user template.
+        openable_by = {}
         result = {}
-
-        def has_official_template():
-            return workspace and workspace.has_official_template()
-
-        for check in checks:
-            if (
-                check.operation_name in self.OPERATION_ALLOWED_ON_TEMPLATES
-                and has_official_template()
-            ):
+        for check in allowed_checks:
+            if check.actor not in openable_by:
+                openable_by[check.actor] = workspace.has_openable_template(check.actor)
+            if openable_by[check.actor]:
                 result[check] = True
-
         return result
 
     def get_permissions_object(self, actor, workspace=None):
+        # Not every template the actor can open, so that the list doesn't grow with
+        # the public templates of other users.
+        workspace_template_ids = (
+            Template.objects.official_or_owned(actor)
+            .openable(actor)
+            .values_list("workspace_id", flat=True)
+        )
         return {
             "allowed_operations_on_templates": self.OPERATION_ALLOWED_ON_TEMPLATES,
-            "workspace_template_ids": list(
-                Template.objects.official().values_list("workspace_id", flat=True)
-            ),
+            "workspace_template_ids": list(workspace_template_ids),
         }
 
     def filter_queryset(
@@ -197,12 +207,12 @@ class AllowIfTemplatePermissionManagerType(PermissionManagerType):
         queryset,
         workspace=None,
     ):
-        def has_official_template():
-            return workspace and workspace.has_official_template()
+        def has_openable_template():
+            return workspace and workspace.has_openable_template(actor)
 
         if (
             operation_name in self.OPERATION_ALLOWED_ON_TEMPLATES
-            and has_official_template()
+            and has_openable_template()
         ):
             return queryset, True
 
@@ -215,7 +225,7 @@ class AllowIfTemplatePermissionManagerType(PermissionManagerType):
         return {
             workspace.id: WORKSPACE_FILTER_ALLOW_ALL
             for workspace in workspaces
-            if workspace.has_official_template()
+            if workspace.has_openable_template(actor)
         }
 
 

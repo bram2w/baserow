@@ -25,7 +25,7 @@ class TemplateFixtures:
             kwargs["name"] = self.fake.name()
 
         if "slug" not in kwargs:
-            kwargs["slug"] = self.fake.slug()
+            kwargs["slug"] = self.fake.unique.slug()
 
         if "icon" not in kwargs:
             kwargs["icon"] = "document"
@@ -37,6 +37,9 @@ class TemplateFixtures:
             kwargs["type"] = Template.Type.OFFICIAL
 
         template = Template.objects.create(**kwargs)
+        # Like the handlers, so that the cached template types of the workspace are
+        # read again.
+        template.workspace.save(update_fields=["updated_on"])
 
         if not categories:
             categories = []

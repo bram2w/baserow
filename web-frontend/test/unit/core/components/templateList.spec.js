@@ -102,7 +102,9 @@ describe('TemplateList', () => {
 
     await wrapper.find('input').setValue('nothing matches')
     expect(cardNames(wrapper)).toStrictEqual([])
-    expect(wrapper.find('.template-list__empty').exists()).toBe(true)
+    expect(wrapper.find('.template-list__empty').text()).toBe(
+      'templateCategories.noResults'
+    )
   })
 
   test('collapses a section', async () => {

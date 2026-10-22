@@ -7,6 +7,7 @@
       'segment-control--small': size === 'small',
       'segment-control--large': size === 'large',
       'segment-control--rounded': type === 'rounded',
+      'segment-control--pills': type === 'pills',
     }"
   >
     <button
@@ -86,7 +87,7 @@ export default {
       required: false,
       default: 'regular',
       validator: function (value) {
-        return ['regular', 'rounded'].includes(value)
+        return ['regular', 'rounded', 'pills'].includes(value)
       },
     },
   },

@@ -137,8 +137,8 @@ def test_dashboard_export_serialized_with_pie_chart_widget_config(premium_data_f
         "type": "dashboard",
         "integrations": [
             {
-                "authorized_subject_type": "auth.User",
-                "authorized_subject_id": user.id,
+                "authorized_subject_type": None,
+                "authorized_subject_id": None,
                 "id": integration.id,
                 "name": "",
                 "order": "1.00000000000000000000",

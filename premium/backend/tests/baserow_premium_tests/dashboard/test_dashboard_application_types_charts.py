@@ -81,8 +81,8 @@ def test_dashboard_export_serialized_with_chart_widget(premium_data_fixture):
         "type": "dashboard",
         "integrations": [
             {
-                "authorized_subject_type": "auth.User",
-                "authorized_subject_id": user.id,
+                "authorized_subject_type": None,
+                "authorized_subject_id": None,
                 "id": integration.id,
                 "name": "",
                 "order": "1.00000000000000000000",
@@ -343,8 +343,8 @@ def test_dashboard_export_serialized_with_chart_widget_config(premium_data_fixtu
         "type": "dashboard",
         "integrations": [
             {
-                "authorized_subject_type": "auth.User",
-                "authorized_subject_id": user.id,
+                "authorized_subject_type": None,
+                "authorized_subject_id": None,
                 "id": integration.id,
                 "name": "",
                 "order": "1.00000000000000000000",
@@ -587,8 +587,8 @@ def test_dashboard_export_serialized_with_default_chart_type(premium_data_fixtur
         "type": "dashboard",
         "integrations": [
             {
-                "authorized_subject_type": "auth.User",
-                "authorized_subject_id": user.id,
+                "authorized_subject_type": None,
+                "authorized_subject_id": None,
                 "id": integration.id,
                 "name": "",
                 "order": "1.00000000000000000000",

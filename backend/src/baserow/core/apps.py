@@ -371,6 +371,10 @@ class CoreConfig(AppConfig):
         action_type_registry.register(DeleteSnapshotActionType())
         action_type_registry.register(RestoreSnapshotActionType())
 
+        from baserow.core.user_templates.actions import CreateUserTemplateActionType
+
+        action_type_registry.register(CreateUserTemplateActionType())
+
         from baserow.core.trash.actions import (
             EmptyTrashActionType,
             RestoreFromTrashActionType,
@@ -463,6 +467,7 @@ class CoreConfig(AppConfig):
             InstallTemplateJobType,
         )
         from .snapshots.job_types import CreateSnapshotJobType, RestoreSnapshotJobType
+        from .user_templates.job_types import CreateUserTemplateJobType
 
         job_type_registry.register(DuplicateApplicationJobType())
         job_type_registry.register(InstallTemplateJobType())
@@ -470,6 +475,7 @@ class CoreConfig(AppConfig):
         job_type_registry.register(RestoreSnapshotJobType())
         job_type_registry.register(ExportApplicationsJobType())
         job_type_registry.register(ImportApplicationsJobType())
+        job_type_registry.register(CreateUserTemplateJobType())
 
         from baserow.api.notifications.user_data_types import (
             UnreadUserNotificationsCountPermissionsDataType,
@@ -598,6 +604,7 @@ class CoreConfig(AppConfig):
         import baserow.core.last_viewed.receivers  # noqa: F401
         import baserow.core.mcp.receivers  # noqa: F401
         import baserow.core.receivers  # noqa: F401
+        import baserow.core.user_templates.receivers  # noqa: F401
         from baserow.core.telemetry.telemetry import setup_logging
 
         setup_logging()
