@@ -289,6 +289,8 @@ def _repair_node(
                 _formula_update(node_id, repaired, generated),
                 field_ids,
                 as_formulas=True,
+                # The generator sees each node's ref and may name it by it.
+                refs={ref: node_id for node_id, ref in examples.refs.items()},
             )
         for error in repaired:
             # A branch label the update couldn't match leaves that condition

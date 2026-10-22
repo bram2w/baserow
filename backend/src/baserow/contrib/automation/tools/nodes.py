@@ -454,12 +454,15 @@ def update_node(
     node_update: NodeUpdate,
     field_ids: Callable[[int], set[int]],
     as_formulas: bool = False,
+    refs: dict[str, int] | None = None,
 ) -> tuple[AutomationNode, ServiceValues]:
     """
     Update a node of the workflow.
 
     :param as_formulas: Take every value as a formula, for a caller that wrote
         them as formulas.
+    :param refs: The ID of nodes by the ref they were created under, for
+        formulas that name them by ref.
 
     :returns: The node as it is now, and the values that could not be set.
     :raises AutomationNodeDoesNotExist: When the node is not in the workflow.
@@ -475,7 +478,7 @@ def update_node(
     if node_update.table_id is not None:
         check_tables_in_workspace(ctx, {node_update.table_id})
 
-    values = ServiceValues(field_ids, as_formulas, updating=True)
+    values = ServiceValues(field_ids, as_formulas, refs=refs, updating=True)
     data: dict[str, Any] = {}
     if node_update.label is not None:
         data["label"] = node_update.label

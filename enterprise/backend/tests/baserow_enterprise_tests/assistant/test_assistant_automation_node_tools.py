@@ -1265,3 +1265,59 @@ def test_a_repair_the_update_refuses_stays_in_formula_errors(
     (error,) = result["formula_errors"]
     assert error["edge_label"] == "Yes"
     assert "'Yes' is not a branch" in error["error"]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_repaired_formula_can_name_a_node_by_its_ref(
+    data_fixture, monkeypatch, real_formula_pass
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    automation = data_fixture.create_automation_application(workspace=workspace)
+    ctx = make_test_ctx(user, workspace)
+    monkeypatch.setattr(
+        automation_agents,
+        "get_generate_formulas_tool",
+        lambda profile: (
+            lambda formulas, context: {
+                key: "get('previous_node.trigger.0.id')" for key in formulas
+            }
+        ),
+    )
+
+    result = create_workflows(
+        ctx,
+        automation_id=automation.id,
+        workflows=[
+            WorkflowCreate(
+                name="Flow",
+                trigger=TriggerNodeCreate(
+                    ref="trigger",
+                    type="periodic",
+                    periodic_interval={"interval": "DAY"},
+                ),
+                nodes=[
+                    ActionNodeCreate(
+                        ref="mail",
+                        label="Mail",
+                        previous_node_ref="trigger",
+                        type="smtp_email",
+                        to_emails="a@example.com",
+                        subject="$formula: the trigger id",
+                        body="Hello",
+                    )
+                ],
+            )
+        ],
+        thought="create",
+    )
+
+    assert "formula_errors" not in result
+    workflow = AutomationWorkflowHandler().get_workflow(
+        result["created_workflows"][0]["id"]
+    )
+    mail = workflow.automation_workflow_nodes.get(label="Mail").specific
+    trigger_id = workflow.get_trigger().id
+    assert mail.service.specific.subject["formula"] == (
+        f"get('previous_node.{trigger_id}.0.id')"
+    )
