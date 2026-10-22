@@ -81,7 +81,6 @@
         :load-error="state.configurationLoadError && !state.configurationLoaded"
         :availability-loading="state.availabilityLoading"
         :saving="state.savingConfiguration || state.savingName"
-        :name-saving="state.savingName"
         :save-error="state.configurationSaveError"
         @close="configurationOpen = false"
         @rename="state.renameAgent"

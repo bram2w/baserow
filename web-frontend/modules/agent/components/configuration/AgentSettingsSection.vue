@@ -10,7 +10,6 @@
       :model-value="name"
       :error="!name.trim()"
       :disabled="!editable"
-      :loading="nameSaving"
       :maxlength="160"
       @update:model-value="$emit('update:name', $event)"
       @blur="$emit('rename')"
@@ -91,7 +90,6 @@ const props = defineProps({
   sectionType: { type: Object, required: true },
   editable: Boolean,
   availabilityLoading: Boolean,
-  nameSaving: Boolean,
 })
 const emit = defineEmits(['update:name', 'rename', 'change', 'flush'])
 const { $registry } = useNuxtApp()

@@ -103,7 +103,6 @@
             :enabled-models="enabledModels"
             :editable="editable"
             :availability-loading="availabilityLoading"
-            :name-saving="nameSaving"
             @update:name="$emit('update:name', $event)"
             @rename="$emit('rename')"
             @change="$emit('change', $event)"
@@ -142,7 +141,6 @@ const props = defineProps({
   loadError: Boolean,
   availabilityLoading: Boolean,
   saving: Boolean,
-  nameSaving: Boolean,
   saveError: Boolean,
 })
 defineEmits(['close', 'update:name', 'rename', 'change', 'flush', 'reload'])

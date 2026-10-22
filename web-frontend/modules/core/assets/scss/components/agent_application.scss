@@ -163,6 +163,7 @@
   .menu-list__item + .menu-list__item::before {
     content: '';
     display: block;
+
     // Align the divider with the text, leaving the leading icon outside it.
     margin: 0 10px 0 36px;
     border-top: 1px solid $palette-neutral-200;
