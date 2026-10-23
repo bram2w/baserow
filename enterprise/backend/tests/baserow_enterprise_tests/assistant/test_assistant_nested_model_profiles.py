@@ -49,7 +49,9 @@ def test_builder_formula_orchestrator_forwards_request_model_profile():
     """Builder formula generation must reuse the enclosing request profile."""
 
     model_profile = MagicMock()
-    tool_helpers = SimpleNamespace(model_profile=model_profile)
+    tool_helpers = SimpleNamespace(
+        model_profile=model_profile, raise_if_cancelled=lambda: None
+    )
     context = MagicMock()
 
     with (
@@ -79,7 +81,9 @@ def test_automation_formula_repair_forwards_request_model_profile():
     """Automation formula generation must reuse the enclosing request profile."""
 
     model_profile = MagicMock()
-    tool_helpers = SimpleNamespace(model_profile=model_profile)
+    tool_helpers = SimpleNamespace(
+        model_profile=model_profile, raise_if_cancelled=lambda: None
+    )
     error = {
         "node_id": 1,
         "node_label": "Mail",

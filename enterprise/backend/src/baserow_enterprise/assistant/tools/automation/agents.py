@@ -243,6 +243,7 @@ def repair_formula_errors(
             remaining.extend(
                 _repair_node(
                     tool_context,
+                    tool_helpers.raise_if_cancelled,
                     generate_formula,
                     field_ids,
                     examples,
@@ -260,6 +261,7 @@ def repair_formula_errors(
 
 def _repair_node(
     tool_context: ToolContext,
+    raise_if_cancelled: Callable[[], None],
     generate_formula: Callable,
     field_ids: Callable[[int], set[int]],
     examples: WorkflowExamples,
@@ -269,6 +271,7 @@ def _repair_node(
     """
     Generate one node's formulas and write them in their own transaction.
 
+    :param raise_if_cancelled: Raises when the user cancelled the request.
     :return: The node's formula errors that remain.
     """
 
@@ -277,7 +280,10 @@ def _repair_node(
         _("Generating formulas for node '%(label)s'...") % {"label": node.label}
     )
     context = examples.context_for(node)
+    raise_if_cancelled()
     generated = generate_formula(formula_requests(node, node_errors), context) or {}
+    # The user may cancel while the model runs; nothing is written then.
+    raise_if_cancelled()
 
     repaired = [e for e in node_errors if _request_key(e) in generated]
     remaining = [e for e in node_errors if _request_key(e) not in generated]

@@ -1,3 +1,5 @@
+import asyncio
+
 import pytest
 from asgiref.sync import async_to_sync
 from pydantic import ValidationError
@@ -1321,3 +1323,60 @@ def test_a_repaired_formula_can_name_a_node_by_its_ref(
     assert mail.service.specific.subject["formula"] == (
         f"get('previous_node.{trigger_id}.0.id')"
     )
+
+
+@pytest.mark.django_db
+def test_formula_repair_stops_when_cancelled(
+    data_fixture, monkeypatch, real_formula_pass
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    automation = data_fixture.create_automation_application(workspace=workspace)
+    ctx = make_test_ctx(user, workspace)
+    calls = []
+
+    def cancel_then_generate(formulas, context):
+        # The user cancels while the model is generating this node's formulas.
+        calls.append(formulas)
+        ctx.deps.tool_helpers.cancel()
+        return {key: "'fixed'" for key in formulas}
+
+    monkeypatch.setattr(
+        automation_agents,
+        "get_generate_formulas_tool",
+        lambda profile: cancel_then_generate,
+    )
+
+    with pytest.raises(asyncio.CancelledError):
+        create_workflows(
+            ctx,
+            automation_id=automation.id,
+            workflows=[
+                WorkflowCreate(
+                    name="Flow",
+                    trigger=TriggerNodeCreate(
+                        ref="trigger",
+                        type="periodic",
+                        periodic_interval={"interval": "DAY"},
+                    ),
+                    nodes=[
+                        ActionNodeCreate(
+                            ref=ref,
+                            label=ref,
+                            previous_node_ref=previous,
+                            type="smtp_email",
+                            to_emails="a@example.com",
+                            subject="$formula: the trigger id",
+                            body="Hello",
+                        )
+                        for ref, previous in [("one", "trigger"), ("two", "one")]
+                    ],
+                )
+            ],
+            thought="create",
+        )
+
+    assert len(calls) == 1
+    for node in AutomationNode.objects.filter(workflow__automation=automation):
+        if node.label in ("one", "two"):
+            assert node.specific.service.specific.subject["formula"] == ""
