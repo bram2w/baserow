@@ -931,6 +931,60 @@ def test_update_fields_repairs_a_formula_without_undoing_a_later_rename(
 
 
 @pytest.mark.django_db
+def test_update_fields_repairs_a_formula_a_later_update_leaves_unchanged(
+    data_fixture, monkeypatch
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+    field = data_fixture.create_formula_field(table=table, name="F", formula="'x'")
+    calls = _fake_fixer(monkeypatch, "'AI fix'")
+
+    update_fields(
+        make_test_ctx(user, workspace),
+        fields=[
+            FieldItemUpdate(field_id=field.id, formula="concat("),
+            FieldItemUpdate(field_id=field.id, name="H", formula=None),
+        ],
+        thought="test",
+    )
+
+    field.refresh_from_db()
+    assert (field.name, field.formula) == ("H", "'AI fix'")
+    assert calls == [(table.id, "F", "concat(")]
+
+
+@pytest.mark.django_db
+def test_update_fields_repairs_the_update_whose_formula_failed(
+    data_fixture, monkeypatch
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+    column = data_fixture.create_text_field(table=table, name="A")
+    field = data_fixture.create_formula_field(table=table, name="F", formula="'x'")
+    calls = _fake_fixer(monkeypatch, "field('B')")
+
+    # The same formula is valid in the first update and invalid in the last one,
+    # after A is renamed.
+    update_fields(
+        make_test_ctx(user, workspace),
+        fields=[
+            FieldItemUpdate(field_id=field.id, formula="field('A')"),
+            FieldItemUpdate(field_id=column.id, name="B"),
+            FieldItemUpdate(field_id=field.id, name="G", formula="field('A')"),
+        ],
+        thought="test",
+    )
+
+    field.refresh_from_db()
+    assert (field.name, field.formula) == ("G", "field('B')")
+    assert calls == [(table.id, "G", "field('A')")]
+
+
+@pytest.mark.django_db
 def test_create_fields_stops_repairing_formulas_when_cancelled(
     data_fixture, monkeypatch
 ):

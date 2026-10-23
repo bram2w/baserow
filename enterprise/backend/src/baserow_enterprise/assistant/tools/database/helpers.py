@@ -110,27 +110,23 @@ def _failed_updates(
     field_updates: list[FieldItemUpdate], formula_errors: list[dict]
 ) -> list[tuple[dict, FieldItemUpdate, set[str]]]:
     """
-    Pairs each formula error with the update that raised it, in request order,
-    with the properties a later update of the same field sets.
+    Pairs each formula error with the update that raised it, with the properties
+    a later update of the same field sets. A property set to None is left
+    unchanged, so it doesn't count.
     """
 
     pairs = []
-    start = 0
     for error in formula_errors:
-        same_field = [
-            i
-            for i in range(start, len(field_updates))
-            if field_updates[i].field_id == error["field_id"]
-        ]
-        index = next(
-            (i for i in same_field if field_updates[i].formula == error["formula"]),
-            same_field[0],
-        )
-        start = index + 1
+        index = error["index"]
         later = set().union(
             *(
-                update.model_fields_set - {"field_id"}
-                for update in field_updates[start:]
+                {
+                    name
+                    for name, value in update.model_dump(exclude_unset=True).items()
+                    if value is not None
+                }
+                - {"field_id"}
+                for update in field_updates[index + 1 :]
                 if update.field_id == error["field_id"]
             )
         )

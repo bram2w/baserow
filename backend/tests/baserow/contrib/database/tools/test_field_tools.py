@@ -421,6 +421,7 @@ def test_update_fields_reports_an_empty_formula(data_fixture, table_ctx):
     assert result["formula_errors"] == [
         {
             "field_id": field.id,
+            "index": 0,
             "table_id": table.id,
             "field_name": "F",
             "formula": "",

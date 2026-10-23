@@ -1203,7 +1203,7 @@ def update_fields(
     Update fields: rename them or change their settings and select options. A
     field's type and link_row target cannot change. Select options not listed stay
     as they are. A field with an invalid formula is left unchanged and returned in
-    formula_errors with the parser's message.
+    formula_errors with the parser's message and the index of its update in fields.
     """
 
     updated = []
@@ -1215,7 +1215,7 @@ def update_fields(
         _lock_fields(ctx, [field_update.field_id for field_update in fields])
         # Applied in the caller's order, so a rename can come before a formula
         # that uses the new name.
-        for field_update in fields:
+        for index, field_update in enumerate(fields):
             ctx.update_status(
                 _("Updating field %(field_id)s...")
                 % {"field_id": field_update.field_id}
@@ -1227,7 +1227,11 @@ def update_fields(
                 changed = changed or field_changed
             except InvalidFormulaFieldError as exc:
                 formula_errors.append(
-                    {"field_id": field_update.field_id, **_formula_error(exc)}
+                    {
+                        "field_id": field_update.field_id,
+                        "index": index,
+                        **_formula_error(exc),
+                    }
                 )
             except PermissionException:
                 raise
