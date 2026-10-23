@@ -22,7 +22,12 @@ from .exceptions import (
     AgentMessageConflict,
     AgentNotReady,
 )
-from .models import AgentApplication, AgentConversation, AgentMessage
+from .models import (
+    AgentApplication,
+    AgentConversation,
+    AgentMessage,
+    AgentReplyTranscript,
+)
 from .operations import (
     CreateAgentMessageOperationType,
     ReadAgentConversationsOperationType,
@@ -32,11 +37,13 @@ from .types import (
     AgentConfigurationUpdated,
     AgentMessageCreated,
     AgentReplyRequest,
+    AgentReplyResult,
 )
 
 
 class AgentHandler:
     configuration_fields = ["instructions", "provider_type", "model_identifier"]
+    transcript_fields = ["provider_type", "model_identifier", "model_messages", "usage"]
 
     def get_agent(self, agent_id: int, for_update: bool = False) -> AgentApplication:
         """
@@ -462,17 +469,18 @@ class AgentHandler:
         reply_id: int,
         status: str,
         error_code: str,
-        text: str | None,
+        result: AgentReplyResult | None,
     ) -> dict | None:
         """
-        Save how a reply ended, with its text. NUL characters are dropped because
-        PostgreSQL can't store them, and blank text is saved empty because some
-        providers reject blank replies in the history.
+        Save how a reply ended, with its text and, when the model ran, its
+        transcript. NUL characters are dropped because PostgreSQL can't store them,
+        and blank text is saved empty because some providers reject blank replies
+        in the history.
 
         :param reply_id: The id of the reply.
         :param status: The final status: completed, cancelled or failed.
         :param error_code: Why the reply failed, or an empty string.
-        :param text: What the reply produced, or None when it never started.
+        :param result: What the reply produced, or None when it never started.
         :return: The id of the reply, or None when it no longer exists.
         """
 
@@ -486,9 +494,19 @@ class AgentHandler:
             return None
         reply.status = AgentMessage.Status(status)
         reply.error_code = error_code
-        content = remove_null_characters(text or "")
+        content = remove_null_characters(result.text if result else "")
         reply.content = content if content.strip() else ""
         reply.save()
+        if result is not None and result.provider_type:
+            AgentReplyTranscript.objects.update_or_create(
+                reply=reply,
+                defaults={
+                    "provider_type": result.provider_type,
+                    "model_identifier": result.model_identifier,
+                    "model_messages": remove_null_characters(result.model_messages),
+                    "usage": result.usage,
+                },
+            )
         reply.conversation.save(update_fields=["updated_on"])
         return {"message_id": reply.id}
 
@@ -532,7 +550,8 @@ class AgentHandler:
 
     def export_conversations(self, agent: AgentApplication) -> list[dict]:
         """
-        Serialize the agent's conversations and messages for an internal copy.
+        Serialize the agent's conversations, messages and reply transcripts for an
+        internal copy.
 
         :param agent: The agent whose conversations are exported.
         :return: The conversations, oldest first, each with its messages in the order
@@ -543,7 +562,12 @@ class AgentHandler:
             AgentConversation.objects.filter(agent=agent)
             .order_by("id")
             .prefetch_related(
-                Prefetch("messages", queryset=AgentMessage.objects.order_by("id"))
+                Prefetch(
+                    "messages",
+                    queryset=AgentMessage.objects.order_by("id").select_related(
+                        "transcript"
+                    ),
+                )
             )
         )
         return [
@@ -558,6 +582,7 @@ class AgentHandler:
                         "content": message.content,
                         "status": message.status,
                         "error_code": message.error_code,
+                        "transcript": self._export_transcript(message),
                         "created_on": message.created_on.isoformat(),
                         "updated_on": message.updated_on.isoformat(),
                     }
@@ -566,6 +591,19 @@ class AgentHandler:
             }
             for conversation in conversations
         ]
+
+    def _export_transcript(self, message: AgentMessage) -> dict | None:
+        """
+        Serialize the transcript of a reply, if it has one.
+
+        :param message: The message, with its transcript selected.
+        :return: The serialized transcript, or None.
+        """
+
+        transcript = getattr(message, "transcript", None)
+        if transcript is None:
+            return None
+        return {field: getattr(transcript, field) for field in self.transcript_fields}
 
     @staticmethod
     def _import_message(conversation: AgentConversation, data: dict) -> AgentMessage:
@@ -595,9 +633,9 @@ class AgentHandler:
         self, agent: AgentApplication, serialized_conversations: list[dict]
     ) -> None:
         """
-        Copy conversations with their messages into the agent with new uuids.
-        Conversations of deleted owners are skipped, and a reply still being
-        written is ended as interrupted.
+        Copy conversations with their messages and reply transcripts into the
+        agent with new uuids. Conversations of deleted owners are skipped, and a
+        reply still being written is ended as interrupted.
 
         :param agent: The agent to copy the conversations into.
         :param serialized_conversations: The conversations from export_conversations.
@@ -640,6 +678,17 @@ class AgentHandler:
             conversations, ["created_on", "updated_on"], batch_size=1000
         )
         AgentMessage.objects.bulk_create(messages, batch_size=1000)
+        AgentReplyTranscript.objects.bulk_create(
+            [
+                AgentReplyTranscript(
+                    reply=message,
+                    **extract_allowed(data["transcript"], self.transcript_fields),
+                )
+                for message, data in zip(messages, message_data)
+                if data.get("transcript")
+            ],
+            batch_size=1000,
+        )
         for message, data in zip(messages, message_data):
             message.created_on = parse_datetime(data["created_on"])
             message.updated_on = parse_datetime(data["updated_on"])
