@@ -28,7 +28,6 @@ from typing import (
     Type,
     Union,
 )
-from urllib.parse import urljoin
 
 from django.conf import settings
 from django.db import transaction
@@ -40,7 +39,7 @@ from requests.utils import guess_json_utf
 
 from baserow.contrib.database.db.schema import optional_atomic
 
-from .exceptions import BaseURLHostnameNotAllowed, CannotCalculateIntermediateOrder
+from .exceptions import CannotCalculateIntermediateOrder
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
@@ -1514,34 +1513,22 @@ def are_kwargs_default(func, **kwargs):
     return True
 
 
-def join_frontend_base_url(base_url: str, path: str) -> str:
+def get_frontend_url(base_url: str, path: str) -> str:
     """
-    Appends `path` to `base_url` after checking that `base_url` points to the web
-    frontend or the embedded share URL. Used to build the links sent in emails.
-
-    The check compares the raw string against the configured URLs instead of
-    comparing the parsed hostname, because Python and browsers parse some URLs
-    differently. For `http://evil.com\\@baserow.io`, `urlparse` reports the
-    hostname `baserow.io`, while a browser reads `\\` as `/` and opens `evil.com`.
+    Builds a web frontend URL to send in an email, for example a password reset
+    link. The URL always starts with `BASEROW_EMBEDDED_SHARE_URL` when `base_url`
+    starts with it, and with `PUBLIC_WEB_FRONTEND_URL` otherwise. Nothing else from
+    `base_url` ends up in the URL.
 
     :param base_url: The base URL provided by the client.
-    :param path: The path, usually a signed token, to append to the base URL.
-    :raises BaseURLHostnameNotAllowed: When `base_url` does not start with one of
-        the allowed frontend URLs.
-    :return: The base URL with the path appended.
+    :param path: The frontend path, including the token, without a leading slash.
+    :return: The frontend URL.
     """
 
-    allowed_urls = (
-        settings.PUBLIC_WEB_FRONTEND_URL.rstrip("/"),
-        settings.BASEROW_EMBEDDED_SHARE_URL.rstrip("/"),
-    )
-    if not any(
-        base_url == allowed_url or base_url.startswith(f"{allowed_url}/")
-        for allowed_url in allowed_urls
-    ):
-        raise BaseURLHostnameNotAllowed(f"The base URL {base_url} is not allowed.")
+    embedded_share_url = settings.BASEROW_EMBEDDED_SHARE_URL.rstrip("/")
+    if base_url == embedded_share_url or base_url.startswith(f"{embedded_share_url}/"):
+        frontend_url = embedded_share_url
+    else:
+        frontend_url = settings.PUBLIC_WEB_FRONTEND_URL.rstrip("/")
 
-    if not base_url.endswith("/"):
-        base_url += "/"
-
-    return urljoin(base_url, path)
+    return f"{frontend_url}/{path}"

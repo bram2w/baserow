@@ -50,7 +50,7 @@ from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import (
     generate_hash,
     get_baserow_saas_base_url,
-    join_frontend_base_url,
+    get_frontend_url,
 )
 from baserow.throttling.handler import consume_rate_limit
 
@@ -477,9 +477,8 @@ class UserHandler:
         were sent to the user recently.
 
         :param user: The user instance.
-        :param base_url: The base url of the frontend, where the user can reset his
-            password. The reset token is appended to the URL (base_url + '/TOKEN').
-            Only the PUBLIC_WEB_FRONTEND_HOSTNAME is allowed as domain name.
+        :param base_url: The base url of the frontend. Only used to choose between
+            the embedded share URL and the web frontend URL, see `get_frontend_url`.
         :raises: ResetPasswordDisabledError: If the reset password is disabled.
         :return: Whether the email was sent.
         """
@@ -489,7 +488,7 @@ class UserHandler:
 
         signer = self.get_reset_password_signer()
         signed_token = signer.dumps([user.id, self._get_password_state_hash(user)])
-        reset_url = join_frontend_base_url(base_url, signed_token)
+        reset_url = get_frontend_url(base_url, f"reset-password/{signed_token}")
 
         if not consume_rate_limit(
             settings.BASEROW_SEND_RESET_PASSWORD_EMAIL_RATE_LIMIT,
@@ -627,14 +626,10 @@ class UserHandler:
         :param user: The user where to change the email for.
         :param new_email: The new email address to change to.
         :param password: The current password of the user for verification.
-        :param base_url: The base url of the frontend, where the user can confirm the
-            email change. The confirmation token is appended to the URL
-            (base_url + '/TOKEN'). Only the PUBLIC_WEB_FRONTEND_HOSTNAME is allowed
-            as domain name.
+        :param base_url: The base url of the frontend. Only used to choose between
+            the embedded share URL and the web frontend URL, see `get_frontend_url`.
         :raises InvalidPassword: When the provided password is incorrect.
         :raises UserAlreadyExist: When a user with the new email already exists.
-        :raises BaseURLHostnameNotAllowed: When the provided base_url hostname is not
-            allowed.
         :raises AuthProviderDisabled: When the password provider is disabled and the
             user is not staff.
         :raises ChangeEmailNotAllowed: When the user does not have a password set.
@@ -659,7 +654,7 @@ class UserHandler:
 
         signer = self.get_change_email_signer()
         signed_payload = signer.dumps({"user_id": user.id, "new_email": new_email})
-        confirmation_url = join_frontend_base_url(base_url, signed_payload)
+        confirmation_url = get_frontend_url(base_url, f"change-email/{signed_payload}")
 
         with translation.override(user.profile.language):
             email = ChangeEmailConfirmationEmail(

@@ -129,7 +129,7 @@ from .utils import (
     atomic_if_not_already,
     extract_allowed,
     find_unused_name,
-    join_frontend_base_url,
+    get_frontend_url,
     set_allowed_attrs,
 )
 
@@ -1188,17 +1188,16 @@ class CoreHandler:
 
         :param invitation: The invitation instance for which the email must be send.
         :type invitation: WorkspaceInvitation
-        :param base_url: The base url of the frontend, where the user can accept his
-            invitation. The signed invitation id is appended to the URL (base_url +
-            '/TOKEN'). Only the PUBLIC_WEB_FRONTEND_HOSTNAME is allowed as domain name.
+        :param base_url: The base url of the frontend. Only used to choose between
+            the embedded share URL and the web frontend URL, see `get_frontend_url`.
         :type base_url: str
-        :raises BaseURLHostnameNotAllowed: When the host name of the base_url is not
-            allowed.
         """
 
         signer = self.get_workspace_invitation_signer()
         signed_invitation_id = signer.dumps(invitation.id)
-        public_accept_url = join_frontend_base_url(base_url, signed_invitation_id)
+        public_accept_url = get_frontend_url(
+            base_url, f"workspace-invitation/{signed_invitation_id}"
+        )
 
         # Send the email in the language of the user that has send the invitation.
         with translation.override(invitation.invited_by.profile.language):
@@ -1293,9 +1292,8 @@ class CoreHandler:
             Can be an existing or not existing user.
         :param permissions: The workspace permissions that the user will get once they
             have accepted the invitation.
-        :param base_url: The base url of the frontend, where the user can accept his
-            invitation. The signed invitation id is appended to the URL (base_url +
-            '/TOKEN'). Only the PUBLIC_WEB_FRONTEND_HOSTNAME is allowed as domain name.
+        :param base_url: The base url of the frontend. Only used to choose between
+            the embedded share URL and the web frontend URL, see `get_frontend_url`.
         :raises ValueError: If the provided permissions are not allowed.
         :raises UserInvalidWorkspacePermissionsError: If the user does not belong to the
             workspace or doesn't have right permissions in the workspace.

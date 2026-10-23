@@ -27,7 +27,6 @@ from baserow.core.exceptions import (
     ApplicationDoesNotExist,
     ApplicationNotInWorkspace,
     ApplicationTypeDoesNotExist,
-    BaseURLHostnameNotAllowed,
     CannotChangeYourOwnWorkspaceRole,
     DuplicateApplicationMaxLocksExceededException,
     IsNotAdminError,
@@ -553,18 +552,6 @@ def test_send_workspace_invitation_email(data_fixture, mailoutbox):
     )
     handler = CoreHandler()
 
-    with pytest.raises(BaseURLHostnameNotAllowed):
-        handler.send_workspace_invitation_email(
-            invitation=workspace_invitation, base_url="http://test.nl/workspace-invite"
-        )
-
-    # Browsers send this to `test.nl` even though urlparse reports `localhost`.
-    with pytest.raises(BaseURLHostnameNotAllowed):
-        handler.send_workspace_invitation_email(
-            invitation=workspace_invitation,
-            base_url="http://test.nl\\@localhost:3000/workspace-invite",
-        )
-
     signer = handler.get_workspace_invitation_signer()
     handler.send_workspace_invitation_email(
         invitation=workspace_invitation,
@@ -590,7 +577,7 @@ def test_send_workspace_invitation_email(data_fixture, mailoutbox):
     )
     assert "Nikolas" in email.body
     assert "(inviter@example.\u200bcom)" in email.body
-    search_url = "http://localhost:3000/workspace-invite/"
+    search_url = "http://localhost:3000/workspace-invitation/"
     start_url_index = html_body.index(search_url)
 
     assert start_url_index != -1

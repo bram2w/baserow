@@ -154,22 +154,6 @@ def test_create_workspace_invitation(api_client, data_fixture):
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json["error"] == "ERROR_USER_INVALID_GROUP_PERMISSIONS"
 
-    response = api_client.post(
-        reverse(
-            "api:workspaces:invitations:list", kwargs={"workspace_id": workspace_1.id}
-        ),
-        {
-            "email": "test@test.nl",
-            "permissions": "ADMIN",
-            "base_url": "http://test.nl:3000/invite",
-        },
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token_1}",
-    )
-    response_json = response.json()
-    assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json["error"] == "ERROR_HOSTNAME_IS_NOT_ALLOWED"
-
     # Custom messages are no longer supported: any `message` in the request body is
     # silently ignored and neither persisted nor returned.
     response = api_client.post(

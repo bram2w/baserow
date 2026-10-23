@@ -16,7 +16,6 @@ from responses.matchers import json_params_matcher
 from baserow.contrib.database.fields.models import SelectOption
 from baserow.contrib.database.models import Database, Table
 from baserow.core.exceptions import (
-    BaseURLHostnameNotAllowed,
     WorkspaceInvitationDoesNotExist,
     WorkspaceInvitationEmailMismatch,
 )
@@ -283,9 +282,6 @@ def test_create_user_with_template_different_language(data_fixture):
 def test_send_reset_password_email(data_fixture, mailoutbox):
     user = data_fixture.create_user(email="test@localhost")
     handler = UserHandler()
-
-    with pytest.raises(BaseURLHostnameNotAllowed):
-        handler.send_reset_password_email(user, "http://test.nl/reset-password")
 
     signer = handler.get_reset_password_signer()
     handler.send_reset_password_email(user, "http://localhost:3000/reset-password")
@@ -954,21 +950,6 @@ def test_send_change_email_confirmation(data_fixture, mailoutbox):
     valid_password = "thisIsAValidPassword"
     user = data_fixture.create_user(email="test@localhost", password=valid_password)
     handler = UserHandler()
-
-    # Test with invalid hostname
-    with pytest.raises(BaseURLHostnameNotAllowed):
-        handler.send_change_email_confirmation(
-            user, "newemail@localhost", valid_password, "http://test.nl/change-email"
-        )
-
-    # Browsers send this to `test.nl` even though urlparse reports `localhost`.
-    with pytest.raises(BaseURLHostnameNotAllowed):
-        handler.send_change_email_confirmation(
-            user,
-            "newemail@localhost",
-            valid_password,
-            "http://test.nl\\@localhost:3000/change-email",
-        )
 
     # Test with incorrect password
     with pytest.raises(InvalidPassword):

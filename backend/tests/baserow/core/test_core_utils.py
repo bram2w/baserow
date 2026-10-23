@@ -25,6 +25,7 @@ from baserow.core.utils import (
     find_unused_name,
     get_all_ips,
     get_baserow_saas_base_url,
+    get_frontend_url,
     get_value_at_path,
     grouper,
     is_hostname_safe,
@@ -886,3 +887,40 @@ def test_resolve_and_validate_hostname():
 def test_are_hostnames_same():
     assert are_hostnames_same("localhost", "localhost") is True
     assert are_hostnames_same("baserow.io", "localhost") is False
+
+
+@override_settings(
+    PUBLIC_WEB_FRONTEND_URL="https://baserow.example.com",
+    BASEROW_EMBEDDED_SHARE_URL="https://intranet.example.com/baserow/",
+)
+@pytest.mark.parametrize(
+    "base_url,expected",
+    [
+        (
+            "https://baserow.example.com/reset-password",
+            "https://baserow.example.com/reset-password/TOKEN",
+        ),
+        (
+            "https://intranet.example.com/baserow/reset-password",
+            "https://intranet.example.com/baserow/reset-password/TOKEN",
+        ),
+        (
+            "https://intranet.example.com/baserow/../uploads/page",
+            "https://intranet.example.com/baserow/reset-password/TOKEN",
+        ),
+        (
+            "https://intranet.example.com/baserowevil/reset-password",
+            "https://baserow.example.com/reset-password/TOKEN",
+        ),
+        (
+            "https://evil.com\\@intranet.example.com/baserow/reset-password",
+            "https://baserow.example.com/reset-password/TOKEN",
+        ),
+        (
+            "https://evil.com/reset-password",
+            "https://baserow.example.com/reset-password/TOKEN",
+        ),
+    ],
+)
+def test_get_frontend_url(base_url, expected):
+    assert get_frontend_url(base_url, "reset-password/TOKEN") == expected
