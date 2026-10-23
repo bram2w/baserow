@@ -546,6 +546,107 @@ def test_list_tables_tool(data_fixture):
 
 
 @pytest.mark.django_db
+def test_list_tables_hint_names_and_counts_only_what_the_user_can_see(
+    data_fixture, enable_enterprise, synced_roles
+):
+    admin = data_fixture.create_user()
+    member = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=admin, members=[member])
+    visible = data_fixture.create_database_application(
+        workspace=workspace, name="Visible"
+    )
+    hidden = data_fixture.create_database_application(
+        workspace=workspace, name="Hidden"
+    )
+    data_fixture.create_database_table(database=visible, name="Orders")
+    data_fixture.create_database_table(database=hidden, name="Salaries")
+    data_fixture.create_database_table(database=hidden, name="Reviews")
+    RoleAssignmentHandler().assign_role(
+        member, workspace, role=Role.objects.get(uid="BUILDER")
+    )
+    RoleAssignmentHandler().assign_role(
+        member,
+        workspace,
+        role=Role.objects.get(uid="NO_ACCESS"),
+        scope=hidden.application_ptr,
+    )
+    ctx = make_test_ctx(member, workspace)
+
+    for database_ref in (hidden.id, "Hidden"):
+        response = list_tables(
+            ctx,
+            thought="test",
+            filters=ListTablesFilterArg(
+                database_id_or_name=database_ref, table_ids_or_names=None
+            ),
+        )
+
+        assert response["tables"] == []
+        info = response["_info"]
+        assert f"No database matching '{database_ref}' exists" in info
+        assert "1 table(s) across 1 database(s)" in info
+        assert "Salaries" not in info
+        assert "Reviews" not in info
+
+
+@pytest.mark.django_db
+def test_get_tables_schema_hides_the_formulas_of_lookup_count_and_rollup(
+    data_fixture,
+):
+    from baserow.contrib.database.fields.handler import FieldHandler
+    from baserow_enterprise.assistant.tools.database.helpers import (
+        get_tables_schema as table_items,
+    )
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    customers = data_fixture.create_database_table(database=database, name="Customers")
+    data_fixture.create_text_field(table=customers, name="Name", primary=True)
+    data_fixture.create_number_field(table=customers, name="Spent")
+    orders = data_fixture.create_database_table(database=database, name="Orders")
+    data_fixture.create_text_field(table=orders, name="Order", primary=True)
+    handler = FieldHandler()
+    link = handler.create_field(
+        user, orders, "link_row", name="Customer", link_row_table=customers
+    )
+    handler.create_field(
+        user,
+        orders,
+        "lookup",
+        name="Customer name",
+        through_field_id=link.id,
+        target_field_name="Name",
+    )
+    handler.create_field(user, orders, "count", name="Count", through_field_id=link.id)
+    handler.create_field(
+        user,
+        orders,
+        "rollup",
+        name="Total",
+        through_field_id=link.id,
+        target_field_id=customers.field_set.get(name="Spent").id,
+        rollup_function="sum",
+    )
+    handler.create_field(user, orders, "formula", name="Double", formula="1 + 1")
+
+    result = get_tables_schema(
+        make_test_ctx(user, workspace),
+        table_ids=[orders.id],
+        full_schema=True,
+        thought="inspect",
+    )
+
+    [schema] = result["tables_schema"]
+    assert schema == table_items([orders], full_schema=True)[0].model_dump()
+    fields = {field["name"]: field for field in schema["fields"]}
+    for name in ("Customer name", "Count", "Total"):
+        assert "formula" not in fields[name]
+        assert "formula_type" not in fields[name]
+    assert fields["Double"]["formula"] == "1 + 1"
+
+
+@pytest.mark.django_db
 def test_create_simple_table_tool(data_fixture):
     user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)
@@ -1369,8 +1470,8 @@ def test_formula_field_validation_passes_for_valid_formula(data_fixture):
 
 
 @pytest.mark.django_db
-def test_formula_field_validation_passes_for_empty_formula(data_fixture):
-    """Empty formula string skips validation."""
+def test_formula_field_validation_raises_for_empty_formula(data_fixture):
+    """An empty formula is an invalid formula, so the fixer can write one."""
 
     table = data_fixture.create_database_table(name="Test")
 
@@ -1379,12 +1480,17 @@ def test_formula_field_validation_passes_for_empty_formula(data_fixture):
         type="formula",
         formula="",
     )
-    result = item.to_django_orm_kwargs(table)
-    assert result == {"name": "Empty Formula", "formula": ""}
+    with pytest.raises(InvalidFormulaFieldError) as exc_info:
+        item.to_django_orm_kwargs(table)
+
+    assert exc_info.value.field_name == "Empty Formula"
+    assert exc_info.value.formula == ""
+    assert exc_info.value.error == "'Empty Formula' needs a formula."
 
 
 @pytest.mark.django_db
-def test_create_fields_tool_with_invalid_formula_auto_fixes(data_fixture):
+@pytest.mark.parametrize("formula", ["invalid_stuff!!!", "$formula: the name"])
+def test_create_fields_tool_with_invalid_formula_auto_fixes(data_fixture, formula):
     """
     When a formula field has an invalid formula, create_fields
     auto-fixes it via the formula generation pipeline.
@@ -1418,7 +1524,7 @@ def test_create_fields_tool_with_invalid_formula_auto_fixes(data_fixture):
                 FieldItemCreate(
                     name="Bad Formula",
                     type="formula",
-                    formula="invalid_stuff!!!",
+                    formula=formula,
                 ),
             ],
         )
@@ -1431,6 +1537,7 @@ def test_create_fields_tool_with_invalid_formula_auto_fixes(data_fixture):
     # Verify the formula field was created with the original name and fixed formula
     formula_field = table.field_set.filter(name="Bad Formula").first()
     assert formula_field is not None
+    assert formula_field.specific.formula == "field('Name')"
 
 
 @pytest.mark.django_db
@@ -1576,3 +1683,97 @@ def test_create_tables_with_invalid_formula_auto_fixes(data_fixture):
     assert len(result["created_tables"]) == 1
     # No formula error notes since auto-fix succeeded
     assert result["notes"] == []
+
+
+@pytest.mark.django_db(transaction=True)
+def test_create_tables_repairs_formulas_after_the_transaction_commits(data_fixture):
+    from django.db import connection
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    calls = []
+
+    def fixer_run(_agent, prompt, **kwargs):
+        calls.append(connection.in_atomic_block)
+        table = database.table_set.get(name="Orders")
+        # The table and its other fields are committed before the model runs.
+        assert table.field_set.filter(name="Notes").exists()
+        return _make_mock_formula_result(
+            table_id=table.id, field_name="Total", formula="'fixed'"
+        )
+
+    with patch(
+        "baserow_enterprise.assistant.tools.database.agents.run_agent_sync_with_model",
+        side_effect=fixer_run,
+    ):
+        result = create_tables(
+            make_test_ctx(user, workspace),
+            database_id=database.id,
+            tables=[
+                TableItemCreate(
+                    name="Orders",
+                    primary_field_name="Order",
+                    fields=[
+                        FieldItemCreate(name="Notes", type="text"),
+                        FieldItemCreate(
+                            name="Total", type="formula", formula="bad formula!!!"
+                        ),
+                    ],
+                )
+            ],
+            add_sample_rows=False,
+            thought="create Orders",
+        )
+
+    assert calls == [False]
+    assert result["notes"] == []
+    assert "formula_errors" not in result
+    total = FormulaField.objects.get(table__database=database, name="Total")
+    assert total.formula == "'fixed'"
+
+
+@pytest.mark.django_db
+def test_create_tables_ignores_a_table_of_the_same_name_the_user_cannot_see(
+    data_fixture, enable_enterprise, synced_roles
+):
+    from baserow.contrib.database.fields.models import LinkRowField
+    from baserow.contrib.database.tools.tables import create_tables as shared_create
+    from baserow.core.tools import ToolContext
+
+    admin = data_fixture.create_user()
+    member = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=admin, members=[member])
+    database = data_fixture.create_database_application(workspace=workspace)
+    hidden, visible = [
+        data_fixture.create_database_table(database=database, name="Tags")
+        for _ in range(2)
+    ]
+    for table in (hidden, visible):
+        data_fixture.create_text_field(table=table, name="Name", primary=True)
+    RoleAssignmentHandler().assign_role(
+        member, workspace, role=Role.objects.get(uid="BUILDER")
+    )
+    RoleAssignmentHandler().assign_role(
+        member, workspace, role=Role.objects.get(uid="NO_ACCESS"), scope=hidden
+    )
+
+    result = shared_create(
+        ToolContext(member, workspace),
+        database.id,
+        [
+            TableItemCreate(name="Tags", primary_field_name="Name", fields=[]),
+            TableItemCreate(
+                name="Posts",
+                primary_field_name="Title",
+                fields=[
+                    FieldItemCreate(name="Tags", type="link_row", linked_table="Tags")
+                ],
+            ),
+        ],
+    )
+
+    assert result["notes"] == []
+    assert [t["id"] for t in result["reused_tables"]] == [visible.id]
+    link = LinkRowField.objects.get(table__name="Posts", name="Tags")
+    assert link.link_row_table_id == visible.id

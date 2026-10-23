@@ -102,21 +102,23 @@ Some tools are currently disabled (`enabled = False`) and hidden from MCP client
 
 | Tool | Status | Description |
 |---|---|---|
-| `list_databases` | enabled | List all databases in the workspace |
-| `list_tables` | enabled | List tables, optionally filtered by database |
-| `get_table_schema` | enabled | Get field definitions for one or more tables |
+| `list_applications` | enabled | List the workspace's databases, a page at a time (shared with Kuma) |
+| `list_databases` | enabled | List all databases in the workspace (kept for existing connections, until 2.6) |
+| `list_tables` | enabled | List tables, optionally filtered by database or table name (shared with Kuma) |
+| `get_table_schema` | enabled | Get field definitions for one or more tables (shared with Kuma) |
 | `list_table_rows` | enabled | List rows with optional search and pagination |
 | `create_rows` | enabled | Create one or more rows using field names |
 | `update_rows` | enabled | Update rows by ID using field names |
 | `delete_rows` | enabled | Delete rows by ID |
 | `list_views` | enabled | List the views of a table (shared with Kuma) |
-| `create_database` | disabled | Create a new database |
-| `create_table` | disabled | Create a table with optional initial fields |
+| `create_tables` | enabled | Create tables with their fields (shared with Kuma) |
+| `create_fields` | enabled | Add fields to a table (shared with Kuma) |
+| `update_fields` | enabled | Rename fields or change their settings (shared with Kuma) |
+| `delete_fields` | enabled | Delete (trash) fields (shared with Kuma) |
+| `create_views` | enabled | Create views in a table (shared with Kuma) |
+| `create_view_filters` | enabled | Add filters to views (shared with Kuma) |
 | `update_table` | disabled | Rename a table |
 | `delete_table` | disabled | Delete (trash) a table |
-| `create_fields` | disabled | Add fields to an existing table |
-| `update_fields` | disabled | Update existing fields |
-| `delete_fields` | disabled | Delete (trash) fields |
 
 ### Typical LLM workflow
 

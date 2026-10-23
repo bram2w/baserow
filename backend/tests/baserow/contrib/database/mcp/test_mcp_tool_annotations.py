@@ -6,6 +6,7 @@ from baserow.core.mcp.registries import mcp_tool_registry
 # name: (read_only, destructive)
 EXPECTED = {
     "list_databases": (True, False),
+    "list_applications": (True, False),
     "list_tables": (True, False),
     "get_table_schema": (True, False),
     "list_table_rows": (True, False),
@@ -13,14 +14,15 @@ EXPECTED = {
     "update_rows": (False, True),
     "delete_rows": (False, True),
     "list_views": (True, False),
-    # Disabled tools, annotated so they are ready when enabled.
-    "create_database": (False, False),
-    "create_table": (False, False),
+    "create_tables": (False, False),
     "create_fields": (False, False),
-    "update_table": (False, True),
     "update_fields": (False, True),
-    "delete_table": (False, True),
     "delete_fields": (False, True),
+    "create_views": (False, False),
+    "create_view_filters": (False, False),
+    # Disabled tools, annotated so they are ready when enabled.
+    "update_table": (False, True),
+    "delete_table": (False, True),
 }
 
 

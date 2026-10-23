@@ -247,7 +247,7 @@ def test_chain_build_a_database_from_nothing(data_fixture):
         thought="chain",
     )["created_view_filters"]
     assert len(per_view) == 1 and per_view[0]["view_id"] == grid_view_id
-    # create_view_filters logs and skips filters it cannot build, hence the count.
+    # create_view_filters skips filters it cannot build, hence the count.
     assert len(per_view[0]["filters"]) == 2, (
         f"only {len(per_view[0]['filters'])} of 2 filters were created; the rest "
         f"were skipped because the field ids or types no longer match what the "

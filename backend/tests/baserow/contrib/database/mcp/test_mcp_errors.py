@@ -3,6 +3,7 @@ Database tool input mistakes reach the client as readable error results and are 
 logged as errors.
 """
 
+import json
 import logging
 
 from django.db import transaction
@@ -16,18 +17,6 @@ from mcp.shared.memory import (
 
 from baserow.core.mcp import BaserowMCPServer, current_key
 from baserow.core.mcp.constants import LEGACY_DEFAULT_TOOLS
-from baserow.core.mcp.registries import mcp_tool_registry
-
-WRITE_TOOLS = ["create_fields", "create_rows", "update_rows", "delete_rows"]
-
-
-@pytest.fixture(autouse=True)
-def enable_field_tools(monkeypatch):
-    monkeypatch.setattr(mcp_tool_registry.get("create_fields"), "enabled", True)
-    monkeypatch.setattr(
-        "baserow.core.mcp.registries.LEGACY_DEFAULT_TOOLS",
-        [*LEGACY_DEFAULT_TOOLS, "create_fields"],
-    )
 
 
 @pytest.fixture
@@ -65,11 +54,24 @@ def _assert_readable_error(result, caplog, error_records, *expected):
     assert error_records == []
 
 
+def _assert_field_error(result, caplog, error_records, expected):
+    # create_fields reports a field it could not create and goes on with the rest.
+    assert result.isError is False
+    (error,) = json.loads(result.content[0].text)["field_errors"]
+    assert expected in error.lower(), error
+    assert [r for r in caplog.records if r.levelno >= logging.ERROR] == []
+    assert error_records == []
+
+
 @pytest.fixture
 def table_setup(data_fixture):
     user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)
-    endpoint = data_fixture.create_mcp_endpoint(user=user, workspace=workspace)
+    endpoint = data_fixture.create_mcp_endpoint(
+        user=user,
+        workspace=workspace,
+        allowed_tools=[*LEGACY_DEFAULT_TOOLS, "create_fields"],
+    )
     database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     return data_fixture, endpoint, table
@@ -101,7 +103,7 @@ def test_unknown_field_type(table_setup, caplog, error_records):
         {"table_id": table.id, "fields": [{"name": "X", "type": "nonsense"}]},
     )
 
-    _assert_readable_error(result, caplog, error_records, "nonsense")
+    _assert_readable_error(result, caplog, error_records, "fields.0.type")
 
 
 @pytest.mark.django_db
@@ -115,9 +117,7 @@ def test_duplicate_field_name(table_setup, caplog, error_records):
         {"table_id": table.id, "fields": [{"name": "Name", "type": "text"}]},
     )
 
-    _assert_readable_error(
-        result, caplog, error_records, "two fields with the same name"
-    )
+    _assert_field_error(result, caplog, error_records, "already exists")
 
 
 @pytest.mark.django_db
@@ -130,7 +130,7 @@ def test_reserved_field_name(table_setup, caplog, error_records):
         {"table_id": table.id, "fields": [{"name": "id", "type": "text"}]},
     )
 
-    _assert_readable_error(result, caplog, error_records, "reserved")
+    _assert_field_error(result, caplog, error_records, "reserved")
 
 
 @pytest.mark.django_db

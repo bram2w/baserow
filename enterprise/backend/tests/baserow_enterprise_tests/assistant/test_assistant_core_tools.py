@@ -72,8 +72,62 @@ def test_list_builders_truncation(data_fixture):
     ctx = make_test_ctx(user, workspace)
     result = list_builders(ctx, builder_types=None, thought="list all")
 
-    assert "_info" in result
+    assert "page=2" in result["_info"]
     assert len(result["database"]) == 20
+
+    result = list_builders(ctx, builder_types=None, thought="list all", page=2)
+
+    assert "_info" not in result
+    assert [b["name"] for b in result["database"]] == [f"DB {i}" for i in range(20, 25)]
+
+
+@pytest.mark.django_db
+def test_list_builders_names_applications_with_kuma_types(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    builder = data_fixture.create_builder_application(workspace=workspace, name="App")
+
+    ctx = make_test_ctx(user, workspace)
+    result = list_builders(ctx, builder_types=["application"], thought="apps", size=5)
+
+    assert result == {
+        "application": [{"id": builder.id, "name": "App", "type": "application"}]
+    }
+
+
+@pytest.mark.django_db
+def test_list_builders_leaves_out_applications_the_user_cannot_see(
+    data_fixture, enable_enterprise, synced_roles
+):
+    from baserow_enterprise.role.handler import RoleAssignmentHandler
+    from baserow_enterprise.role.models import Role
+
+    admin = data_fixture.create_user()
+    member = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=admin, members=[member])
+    visible = data_fixture.create_database_application(
+        workspace=workspace, name="Visible"
+    )
+    hidden = data_fixture.create_database_application(
+        workspace=workspace, name="Hidden"
+    )
+    RoleAssignmentHandler().assign_role(
+        member, workspace, role=Role.objects.get(uid="BUILDER")
+    )
+    RoleAssignmentHandler().assign_role(
+        member,
+        workspace,
+        role=Role.objects.get(uid="NO_ACCESS"),
+        scope=hidden.application_ptr,
+    )
+
+    result = list_builders(
+        make_test_ctx(member, workspace), builder_types=None, thought="list all"
+    )
+
+    assert result == {
+        "database": [{"id": visible.id, "name": "Visible", "type": "database"}]
+    }
 
 
 @pytest.mark.django_db

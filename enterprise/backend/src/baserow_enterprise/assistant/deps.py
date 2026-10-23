@@ -162,8 +162,16 @@ class AssistantDeps:
 
         from baserow.core.tools import ToolContext
 
+        tool_helpers = self.tool_helpers
+
+        # Shared tools report status between steps, so a cancelled chat stops there.
+        def update_status(message: str) -> None:
+            tool_helpers.raise_if_cancelled()
+            tool_helpers.update_status(message)
+
         return ToolContext(
             user=self.user,
             workspace=self.workspace,
-            update_status=self.tool_helpers.update_status,
+            update_status=update_status,
+            timezone=self.user.profile.timezone,
         )

@@ -155,7 +155,9 @@ class MCPTool(Instance):
         raise NotImplementedError("Implement _sync_call or override call.")
 
 
-def _input_model_for(function: Callable, name: str) -> type[BaseModel]:
+def _input_model_for(
+    function: Callable, name: str, extra: str = "forbid"
+) -> type[BaseModel]:
     """
     Builds the input model of a shared tool from its signature. The first
     parameter is the ``ToolContext`` and isn't part of the input.
@@ -170,9 +172,7 @@ def _input_model_for(function: Callable, name: str) -> type[BaseModel]:
         )
         for parameter in parameters
     }
-    return create_model(
-        f"{name}_input", __config__=ConfigDict(extra="forbid"), **fields
-    )
+    return create_model(f"{name}_input", __config__=ConfigDict(extra=extra), **fields)
 
 
 class FunctionMCPTool(MCPTool):
@@ -185,9 +185,16 @@ class FunctionMCPTool(MCPTool):
 
     function: Callable[..., Any]
 
+    ignore_extra_arguments: bool = False
+    """True to drop unknown arguments instead of rejecting the call."""
+
     def __init__(self):
         super().__init__()
-        self.input_schema = _input_model_for(type(self).function, self.type)
+        self.input_schema = _input_model_for(
+            type(self).function,
+            self.type,
+            extra="ignore" if self.ignore_extra_arguments else "forbid",
+        )
 
     def get_description(self) -> str | None:
         return type(self).function.__doc__
@@ -197,7 +204,12 @@ class FunctionMCPTool(MCPTool):
 
         kwargs = {name: getattr(args, name) for name in type(args).model_fields}
         return type(self).function(
-            ToolContext(user=endpoint.user, workspace=endpoint.workspace), **kwargs
+            ToolContext(
+                user=endpoint.user,
+                workspace=endpoint.workspace,
+                timezone=endpoint.user.profile.timezone,
+            ),
+            **kwargs,
         )
 
 

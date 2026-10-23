@@ -9,11 +9,21 @@ from pydantic_ai.toolsets import FunctionToolset
 
 from baserow.core.actions import CreateApplicationActionType
 from baserow.core.service import CoreService
+from baserow.core.tools import applications as shared_applications
 from baserow_enterprise.assistant.deps import AgentMode, AssistantDeps
 from baserow_enterprise.assistant.tools.shared import require_payload
 
 from . import helpers
 from .types import BuilderItem, BuilderItemCreate, BuilderUpdate
+
+# Kuma's builder types and the application types they are.
+_APPLICATION_TYPES = {
+    "database": "database",
+    "application": "builder",
+    "automation": "automation",
+    "dashboard": "dashboard",
+}
+_BUILDER_TYPES = {value: key for key, value in _APPLICATION_TYPES.items()}
 
 
 def list_builders(
@@ -27,21 +37,26 @@ def list_builders(
     thought: Annotated[
         str, Field(description="Brief reasoning for calling this tool.")
     ],
+    page: Annotated[int, Field(ge=1, description="The page to return.")] = 1,
+    size: Annotated[
+        int,
+        Field(
+            ge=1,
+            le=shared_applications.MAX_PAGE_SIZE,
+            description="The number of builders a page.",
+        ),
+    ] = 20,
 ) -> dict[str, Any]:
     """\
     List databases, applications, automations, dashboards in the workspace.
 
     WHEN to use: You need to find databases, applications, automations, or dashboards in the workspace. Call this before creating builders to avoid duplicates.
-    WHAT it does: Lists all builders the user can access, optionally filtered by type. Max 20 results.
-    RETURNS: Dict of builders grouped by type, each with id, name, type.
+    WHAT it does: Lists the builders the user can access, optionally filtered by type, one page at a time (20 by default).
+    RETURNS: Dict of builders grouped by type, each with id, name, type. _info says when more pages follow.
     DO NOT USE when: You already know the builder ID you need.
     """
 
-    user = ctx.deps.user
-    workspace = ctx.deps.workspace
-    tool_helpers = ctx.deps.tool_helpers
-
-    tool_helpers.update_status(
+    ctx.deps.tool_helpers.update_status(
         _("Listing %(builder_types)ss...")
         % {
             "builder_types": builder_types[0]
@@ -50,29 +65,27 @@ def list_builders(
         }
     )
 
+    result = shared_applications.list_applications(
+        ctx.deps.tool_context(),
+        types=[_APPLICATION_TYPES[t] for t in builder_types or _APPLICATION_TYPES],
+        page=page,
+        size=size,
+    )
+
     builders_by_type = {}
-    for builder in helpers.list_builder_items(user, workspace):
-        if not builder_types or builder.type in builder_types:
-            builders_by_type.setdefault(builder.type, []).append(builder.model_dump())
+    for application in result["applications"]:
+        builder_type = _BUILDER_TYPES[application["type"]]
+        builders_by_type.setdefault(builder_type, []).append(
+            {**application, "type": builder_type}
+        )
 
-    if not builders_by_type:
-        return {}
-
-    total = sum(len(builders) for builders in builders_by_type.values())
-    max_items = 20
-    if total > max_items:
-        truncated = {}
-        remaining = max_items
-        for builder_type, builders in builders_by_type.items():
-            truncated[builder_type] = builders[:remaining]
-            remaining -= len(truncated[builder_type])
-            if remaining <= 0:
-                break
-        return {
-            **truncated,
-            "_info": f"Showing {max_items} of {total} builders. "
-            "Use builder_types to filter.",
-        }
+    if result["has_more"]:
+        shown = len(result["applications"])
+        builders_by_type["_info"] = (
+            f"Showing {shown} of {result['total']} builders. "
+            f"Call again with page={page + 1} for more, or use builder_types to "
+            "filter."
+        )
 
     return builders_by_type
 
