@@ -55,7 +55,7 @@ def test_cimd_other_host_is_rejected(client, settings):
     # Re-adding the server wouldn't help, so the page says the app can't sign in.
     assert response.status_code == 302
     location = response["Location"]
-    assert location.startswith(f"{settings.BASEROW_EMBEDDED_SHARE_URL}/mcp-authorize?")
+    assert location.startswith(f"{settings.PUBLIC_WEB_FRONTEND_URL}/mcp-authorize?")
     assert parse_qs(urlparse(location).query) == {"error": ["client_rejected"]}
     assert EVIL_REDIRECT not in location
     assert "code=" not in location

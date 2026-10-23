@@ -197,7 +197,6 @@ async function mountRoute(
           }
           return true
         },
-        $config: { public: { baserowEmbeddedShareUrl: 'http://localhost' } },
         $store: { getters: { 'auth/getUserId': 7 } },
         $registry: createRegistry(app),
       },

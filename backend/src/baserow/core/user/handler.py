@@ -49,7 +49,7 @@ from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import (
     generate_hash,
     get_baserow_saas_base_url,
-    get_frontend_url,
+    get_embedded_share_url,
 )
 from baserow.throttling.handler import consume_rate_limit
 
@@ -483,10 +483,6 @@ class UserHandler:
         if not CoreHandler().get_settings().allow_reset_password:
             raise ResetPasswordDisabledError("Reset password is disabled")
 
-        signer = self.get_reset_password_signer()
-        signed_token = signer.dumps([user.id, self._get_password_state_hash(user)])
-        reset_url = get_frontend_url(f"reset-password/{signed_token}")
-
         if not consume_rate_limit(
             settings.BASEROW_SEND_RESET_PASSWORD_EMAIL_RATE_LIMIT,
             "send_reset_password_email",
@@ -498,6 +494,10 @@ class UserHandler:
                 user_id=user.id,
             )
             return False
+
+        signer = self.get_reset_password_signer()
+        signed_token = signer.dumps([user.id, self._get_password_state_hash(user)])
+        reset_url = get_embedded_share_url(f"reset-password/{signed_token}")
 
         with translation.override(user.profile.language):
             email = ResetPasswordEmail(user, reset_url, to=[user.email])
@@ -649,7 +649,7 @@ class UserHandler:
 
         signer = self.get_change_email_signer()
         signed_payload = signer.dumps({"user_id": user.id, "new_email": new_email})
-        confirmation_url = get_frontend_url(f"change-email/{signed_payload}")
+        confirmation_url = get_embedded_share_url(f"change-email/{signed_payload}")
 
         with translation.override(user.profile.language):
             email = ChangeEmailConfirmationEmail(
@@ -1023,10 +1023,6 @@ class UserHandler:
         if user.profile.email_verified:
             raise EmailAlreadyVerified()
 
-        token = self.create_email_verification_token(user)
-
-        confirm_url = get_frontend_url(f"verify-email-address/{token}")
-
         if not consume_rate_limit(
             settings.BASEROW_SEND_VERIFY_EMAIL_RATE_LIMIT,
             "send_verify_email",
@@ -1038,6 +1034,9 @@ class UserHandler:
                 user_id=user.id,
             )
             return False
+
+        token = self.create_email_verification_token(user)
+        confirm_url = get_embedded_share_url(f"verify-email-address/{token}")
 
         with translation.override(user.profile.language):
             email = EmailPendingVerificationEmail(

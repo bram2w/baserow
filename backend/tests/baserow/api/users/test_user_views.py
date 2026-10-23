@@ -729,30 +729,22 @@ def test_send_reset_password_email(data_fixture, client, mailoutbox):
 
 
 @pytest.mark.django_db(transaction=True)
-@pytest.mark.parametrize(
-    "base_url",
-    [
-        "http://localhost:3000/reset-password",
-        "http://evil.com/reset-password",
-        "http://evil.com\\9300cf65\\@localhost:3000/reset-password",
-        "http://evil.com%5C@localhost:3000/reset-password",
-        "http://localhost:3000/\\evil.com",
-        "http://localhost:3000/../uploads/page",
-        "http://localhost:3000/reset-password?next=1",
-        None,
-    ],
+@override_settings(
+    PUBLIC_WEB_FRONTEND_URL="https://baserow.example",
+    BASEROW_EMBEDDED_SHARE_URL="https://embed.example/baserow",
 )
-def test_send_reset_password_email_link_points_to_web_frontend(
-    data_fixture, client, mailoutbox, base_url
+@pytest.mark.parametrize(
+    "extra_body", [{}, {"base_url": "http://evil.com\\@baserow.example/reset"}]
+)
+def test_send_reset_password_email_link_points_to_embedded_share_url(
+    data_fixture, client, mailoutbox, extra_body
 ):
     data_fixture.create_password_provider()
     user = data_fixture.create_user(email="test@localhost.nl")
 
     response = client.post(
         reverse("api:user:send_reset_password_email"),
-        {"email": "test@localhost.nl"}
-        if base_url is None
-        else {"email": "test@localhost.nl", "base_url": base_url},
+        {"email": "test@localhost.nl", **extra_body},
         format="json",
     )
 
@@ -761,11 +753,11 @@ def test_send_reset_password_email_link_points_to_web_frontend(
     links = re.findall(
         r'href="([^"]*reset-password[^"]*)"', mailoutbox[0].alternatives[0][0]
     )
-    signer = UserHandler().get_reset_password_signer()
+    prefix = "https://embed.example/baserow/reset-password/"
     assert len(links) == 1
-    assert links[0].startswith("http://localhost:3000/reset-password/")
-    token = links[0].removeprefix("http://localhost:3000/reset-password/")
-    assert signer.loads(token)[0] == user.id
+    assert links[0].startswith(prefix)
+    token = links[0].removeprefix(prefix)
+    assert UserHandler().get_reset_password_signer().loads(token)[0] == user.id
 
 
 @pytest.mark.django_db
@@ -1396,14 +1388,10 @@ def test_send_verify_email_address(client, data_fixture, mailoutbox):
     BASEROW_ANONYMOUS_EMAIL_IP_RATE_LIMITS=(RateLimit.from_string("2/m"),),
 )
 @pytest.mark.parametrize(
-    "url_name,body",
-    [
-        ("api:user:send_reset_password_email", {}),
-        ("api:user:send_verify_email", {}),
-    ],
+    "url_name", ["api:user:send_reset_password_email", "api:user:send_verify_email"]
 )
 def test_anonymous_email_endpoints_are_rate_limited_per_ip(
-    client, data_fixture, mailoutbox, url_name, body
+    client, data_fixture, mailoutbox, url_name
 ):
     data_fixture.create_password_provider()
     user = data_fixture.create_user()
@@ -1411,7 +1399,7 @@ def test_anonymous_email_endpoints_are_rate_limited_per_ip(
     def send(email, ip):
         return client.post(
             reverse(url_name),
-            {"email": email, **body},
+            {"email": email},
             format="json",
             HTTP_X_FORWARDED_FOR=ip,
         )

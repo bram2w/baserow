@@ -856,7 +856,7 @@ def test_verify_email_address_already_verified(data_fixture):
 
 
 @pytest.mark.django_db(transaction=True)
-@override_settings(BASEROW_EMBEDDED_SHARE_HOSTNAME="http://test/")
+@override_settings(BASEROW_EMBEDDED_SHARE_URL="https://embed.example/baserow")
 def test_send_email_pending_verification(data_fixture, mailoutbox):
     user = data_fixture.create_user()
 
@@ -870,7 +870,11 @@ def test_send_email_pending_verification(data_fixture, mailoutbox):
     assert user.email in email.to
 
     html_body = email.alternatives[0][0]
-    f"http://test/auth/verify-email/" in html_body
+    search_url = "https://embed.example/baserow/verify-email-address/"
+    assert search_url in html_body
+    start = html_body.index(search_url) + len(search_url)
+    token = html_body[start : html_body.index('"', start)]
+    assert UserHandler().verify_email_address(token).id == user.id
 
 
 @pytest.mark.django_db

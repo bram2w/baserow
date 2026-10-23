@@ -129,7 +129,7 @@ from .utils import (
     atomic_if_not_already,
     extract_allowed,
     find_unused_name,
-    get_frontend_url,
+    get_embedded_share_url,
     set_allowed_attrs,
 )
 
@@ -1192,7 +1192,7 @@ class CoreHandler:
 
         signer = self.get_workspace_invitation_signer()
         signed_invitation_id = signer.dumps(invitation.id)
-        public_accept_url = get_frontend_url(
+        public_accept_url = get_embedded_share_url(
             f"workspace-invitation/{signed_invitation_id}"
         )
 

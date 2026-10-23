@@ -48,7 +48,7 @@ def test_authorize_redirects_to_frontend_consent(client):
     response = client.get(f"/oauth/authorize/?{query}")
     assert response.status_code == 302
     location = urlparse(response["Location"])
-    assert response["Location"].startswith(settings.BASEROW_EMBEDDED_SHARE_URL)
+    assert response["Location"].startswith(settings.PUBLIC_WEB_FRONTEND_URL)
     # The query travels base64url-encoded, unpadded, in the path: SSO sign-in only
     # keeps the path, and the login round trip (encodeURI + router) can't
     # re-encode it.
@@ -74,7 +74,7 @@ def assert_consent_page_error(response, error):
 
     assert response.status_code == 302
     location = urlparse(response["Location"])
-    assert response["Location"].startswith(settings.BASEROW_EMBEDDED_SHARE_URL)
+    assert response["Location"].startswith(settings.PUBLIC_WEB_FRONTEND_URL)
     assert location.path == "/mcp-authorize"
     assert parse_qs(location.query) == {"error": [error]}
     assert REDIRECT_URI not in response["Location"]
@@ -192,7 +192,7 @@ def test_authorize_unknown_client_shows_the_error_on_the_consent_page(client):
     response = client.get(f"/oauth/authorize/?{authorize_query('nope', challenge)}")
     assert response.status_code == 302
     location = urlparse(response["Location"])
-    assert response["Location"].startswith(settings.BASEROW_EMBEDDED_SHARE_URL)
+    assert response["Location"].startswith(settings.PUBLIC_WEB_FRONTEND_URL)
     assert location.path == "/mcp-authorize"
     # Only a code: the page maps it to its own text, so the URL can't inject any.
     assert parse_qs(location.query) == {"error": ["unknown_client"]}
@@ -575,30 +575,12 @@ def test_consent_get_manual_client_is_not_verified(api_client, data_fixture):
 
 @pytest.mark.django_db
 def test_authorize_redirect_has_no_double_slash(client, settings):
-    settings.BASEROW_EMBEDDED_SHARE_URL = "https://br.example/"
+    settings.PUBLIC_WEB_FRONTEND_URL = "https://br.example/"
     _, challenge = pkce_pair()
     query = authorize_query(cimd_client(client), challenge)
     response = client.get(f"/oauth/authorize/?{query}")
     assert response.status_code == 302
     assert response["Location"].startswith("https://br.example/mcp-authorize/")
-
-
-@pytest.mark.django_db
-def test_authorize_redirects_go_to_the_embedded_share_url(client, settings):
-    settings.PUBLIC_WEB_FRONTEND_URL = "https://br.example"
-    settings.BASEROW_EMBEDDED_SHARE_URL = "https://embed.example/baserow"
-    _, challenge = pkce_pair()
-
-    query = authorize_query(cimd_client(client), challenge)
-    response = client.get(f"/oauth/authorize/?{query}")
-    assert response["Location"].startswith(
-        "https://embed.example/baserow/mcp-authorize/"
-    )
-
-    response = client.get(f"/oauth/authorize/?{authorize_query('nope', challenge)}")
-    assert response["Location"] == (
-        "https://embed.example/baserow/mcp-authorize?error=unknown_client"
-    )
 
 
 @pytest.mark.django_db
