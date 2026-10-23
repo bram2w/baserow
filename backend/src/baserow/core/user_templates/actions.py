@@ -12,9 +12,11 @@ from baserow.core.action.registries import (
 )
 from baserow.core.action.scopes import (
     WORKSPACE_ACTION_CONTEXT,
+    RootActionScopeType,
     WorkspaceActionScopeType,
 )
 from baserow.core.models import Template, Workspace
+from baserow.core.user_templates.exceptions import TemplateChangedDuringUpdate
 from baserow.core.user_templates.handler import UserTemplateHandler
 from baserow.core.user_templates.service import UserTemplateService
 from baserow.core.utils import ChildProgressBuilder
@@ -102,6 +104,9 @@ class CreateUserTemplateActionType(ActionType):
                 category_ids=category_ids,
                 workspace=template_workspace,
                 archive=archive_name,
+                metadata=UserTemplateHandler().build_template_metadata(
+                    workspace, application_ids
+                ),
             )
             params = cls.Params(
                 template_id=template.id,
@@ -121,4 +126,152 @@ class CreateUserTemplateActionType(ActionType):
 
     @classmethod
     def scope(cls, workspace_id: int) -> ActionScopeStr:
+        return WorkspaceActionScopeType.value(workspace_id)
+
+
+class UpdateUserTemplateActionType(ActionType):
+    type = "update_user_template"
+    # A details-only update has no workspace, so the description has no workspace
+    # context.
+    description = ActionTypeDescription(
+        _("Update template"),
+        _('Template "%(template_name)s" (%(template_id)s) updated'),
+    )
+    analytics_params = [
+        "template_id",
+        "revision_id",
+        "version",
+        "workspace_id",
+        "application_ids",
+    ]
+
+    @dataclasses.dataclass
+    class Params:
+        template_id: int
+        template_name: str
+        revision_id: int
+        version: int
+        # Only set when the content is copied from a workspace.
+        workspace_id: Optional[int] = None
+        workspace_name: Optional[str] = None
+        application_ids: Optional[List[int]] = None
+
+    @classmethod
+    def do(
+        cls,
+        user: AbstractUser,
+        root: Template,
+        base_revision: Optional[Template],
+        source_workspace: Optional[Workspace],
+        application_ids: List[int],
+        *,
+        name: str,
+        description: str,
+        icon: str,
+        category_ids: Iterable[int],
+        progress_builder: Optional[ChildProgressBuilder] = None,
+        track_content: Optional[Callable[..., None]] = None,
+        before_commit: Optional[Callable[[Template], None]] = None,
+    ) -> Template:
+        """
+        Creates the next revision of a user template owned by the user. With a
+        source workspace, the content is copied from its applications. Otherwise
+        the revision shares the content of `base_revision`, so that only the
+        details change. This action is not undoable.
+
+        Copied content is copied first, in transactions of its own, see
+        `UserTemplateHandler.copy_applications`. The revision and the action are
+        then created in one transaction, which a cancellation of the job noticed
+        before it commits rolls back.
+
+        :param user: The user updating the template.
+        :param root: The root of the template.
+        :param base_revision: The latest revision when the update was scheduled.
+        :param source_workspace: The workspace the applications are copied from,
+            or None to share the content of `base_revision`.
+        :param application_ids: The ids of the selected applications of the
+            source workspace.
+        :param name: The name of the revision.
+        :param description: The description of the revision.
+        :param icon: The icon class name, an iconoir class.
+        :param category_ids: The ids of the existing categories of the revision.
+        :param progress_builder: A progress builder that allows for publishing
+            progress.
+        :param track_content: Called with the content copied so far. Shared
+            content isn't tracked, so that the cleanup of the job never deletes
+            it.
+        :param before_commit: Called with the revision as the last step of its
+            transaction, and can still roll it back by raising.
+        :raises TemplateChangedDuringUpdate: If the template got a new revision
+            since `base_revision`.
+        :return: The created revision.
+        """
+
+        if base_revision is None:
+            raise TemplateChangedDuringUpdate(
+                "The template was changed while it was being updated."
+            )
+
+        handler = UserTemplateHandler()
+        service = UserTemplateService()
+        progress = ChildProgressBuilder.build(progress_builder, child_total=100)
+        if source_workspace is not None:
+            template_workspace, archive_name = service.copy_applications(
+                user,
+                source_workspace,
+                application_ids,
+                name=name,
+                progress_builder=progress.create_child_builder(represents_progress=99),
+                track_content=track_content,
+            )
+            metadata = handler.build_template_metadata(
+                source_workspace, application_ids
+            )
+        else:
+            template_workspace, archive_name = service.get_template_content(
+                base_revision
+            )
+            metadata = handler.get_source_metadata(base_revision)
+            progress.increment(by=99)
+
+        with transaction.atomic():
+            revision = handler.create_template_revision(
+                user=user,
+                root=root,
+                base_revision=base_revision,
+                name=name,
+                description=description,
+                icon=icon,
+                category_ids=category_ids,
+                workspace=template_workspace,
+                archive=archive_name,
+                metadata=metadata,
+            )
+            params = cls.Params(
+                template_id=root.id,
+                template_name=revision.name,
+                revision_id=revision.id,
+                version=revision.version,
+            )
+            if source_workspace is not None:
+                params.workspace_id = source_workspace.id
+                params.workspace_name = source_workspace.name
+                params.application_ids = list(application_ids)
+            # A details-only update isn't related to any workspace of the user.
+            cls.register_action(
+                user,
+                params,
+                cls.scope(params.workspace_id),
+                workspace=source_workspace,
+            )
+            progress.increment()
+            if before_commit is not None:
+                before_commit(revision)
+
+        return revision
+
+    @classmethod
+    def scope(cls, workspace_id: Optional[int] = None) -> ActionScopeStr:
+        if workspace_id is None:
+            return RootActionScopeType.value()
         return WorkspaceActionScopeType.value(workspace_id)

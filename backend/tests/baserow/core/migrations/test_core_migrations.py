@@ -468,3 +468,41 @@ def test_0130_freezes_mcp_endpoints_without_an_allow_list(
     assert NewMCPEndpoint.objects.get(id=limited.id).allowed_tools == ["list_tables"]
 
     NewMCPEndpoint.objects.all().delete()
+
+
+@pytest.mark.once_per_day_in_ci
+def test_0133_adds_template_metadata_and_lets_revisions_share_a_workspace(
+    migrator, teardown_table_metadata
+):
+    def insert_template_like_the_previous_code(workspace_id, slug):
+        # The previous code version doesn't know `metadata`.
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO core_template (name, slug, icon, keywords, workspace_id,
+                    export_hash, type, version, review_state, reject_reason,
+                    install_count, created_on, updated_on, description)
+                VALUES ('T', %s, 'file', '', %s, '', 'official', 1, 'draft', '', 0,
+                    now(), now(), '')
+                RETURNING id
+                """,
+                [slug, workspace_id],
+            )
+            return cursor.fetchone()[0]
+
+    old_state = migrator.migrate([("core", "0132_createusertemplatejob")])
+    Workspace = old_state.apps.get_model("core", "Workspace")
+    workspace = Workspace.objects.create(name="ws")
+    existing_id = insert_template_like_the_previous_code(workspace.id, "existing")
+
+    new_state = migrator.migrate([("core", "0133_template_shared_content")])
+    NewTemplate = new_state.apps.get_model("core", "Template")
+
+    # A row written by the previous code during the deploy shares the workspace.
+    written_id = insert_template_like_the_previous_code(workspace.id, "written")
+    assert NewTemplate.objects.get(id=existing_id).metadata == {}
+    assert NewTemplate.objects.get(id=written_id).metadata == {}
+    assert NewTemplate.objects.filter(workspace_id=workspace.id).count() == 2
+
+    NewTemplate.objects.update(public_revision=None)
+    NewTemplate.objects.all().delete()

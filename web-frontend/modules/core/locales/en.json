@@ -555,7 +555,10 @@
   },
   "templateDetails": {
     "back": "Back to Templates",
-    "contents": "What’s inside"
+    "contents": "What’s inside",
+    "actions": "Actions",
+    "editDetails": "Edit details",
+    "updateContent": "Update template content"
   },
   "templateModal": {
     "officialTemplates": "Official templates",
@@ -564,6 +567,26 @@
   "createUserTemplateModal": {
     "detailsTitle": "New template",
     "detailsDescription": "Save a reusable copy of your work as a private template.",
+    "continue": "Continue",
+    "contentTitle": "Choose template content",
+    "contentDescription": "Choose the workspace to take the content from, then pick what the template should include.",
+    "create": "Create template",
+    "cannotBeCancelled": "It’s not possible to cancel, because the template has already been created.",
+    "failedAfterCreated": "The template was created, but something went wrong afterwards."
+  },
+  "updateUserTemplateModal": {
+    "detailsTitle": "Edit template",
+    "detailsDescription": "Change how your template is presented. The template content stays as it is.",
+    "contentTitle": "Update content",
+    "contentDescription": "Replace the content of your template with applications from one of your workspaces. Its details, link and access stay the same.",
+    "save": "Save changes",
+    "update": "Update template",
+    "updated": "Template updated",
+    "failedAfterUpdated": "The template was updated, but something went wrong afterwards.",
+    "cannotBeCancelled": "It’s not possible to cancel, because the template has already been updated.",
+    "invalidKeptDetails": "The icon or a category of the template can’t be used anymore. Change them with “Edit details” first, then update the content."
+  },
+  "userTemplateDetailsForm": {
     "name": "Name",
     "namePlaceholder": "Template name",
     "nameRequired": "A name is required.",
@@ -571,10 +594,9 @@
     "description": "Description",
     "descriptionPlaceholder": "What is this template for?",
     "categories": "Categories",
-    "categoriesRequired": "Choose at least one category.",
-    "continue": "Continue",
-    "contentTitle": "Choose template content",
-    "contentDescription": "Choose the workspace to take the content from, then pick what the template should include.",
+    "categoriesRequired": "Choose at least one category."
+  },
+  "userTemplateContentForm": {
     "workspace": "Workspace",
     "workspaceEmpty": "There is nothing to copy in this workspace.",
     "workspaceNoPermission": "You don't have permission to copy this workspace.",
@@ -585,10 +607,7 @@
     "noticePersonalViews": "Personal views.",
     "noticeReferences": "Connections to databases that are not included. Data sources, filters and triggers using them need to be set up again.",
     "noticeRest": "Everything else is shared as it is.",
-    "selectedApplications": "0 applications selected | 1 application selected | {count} applications selected",
-    "create": "Create template",
-    "cannotBeCancelled": "It’s not possible to cancel, because the template has already been created.",
-    "failedAfterCreated": "The template was created, but something went wrong afterwards."
+    "selectedApplications": "0 applications selected | 1 application selected | {count} applications selected"
   },
   "templateIconSelectContext": {
     "search": "Search icons",
@@ -613,7 +632,10 @@
     "statePublic": "Public",
     "errorTitle": "Your templates couldn't be loaded",
     "errorDescription": "Something went wrong while loading your templates.",
-    "retry": "Retry"
+    "retry": "Retry",
+    "actions": "Actions",
+    "editDetails": "Edit details",
+    "updateContent": "Update template content"
   },
   "trashSidebar": {
     "unnamedWorkspace": "Unnamed workspace {id}",

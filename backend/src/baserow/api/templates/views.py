@@ -2,12 +2,7 @@ from django.db import transaction
 from django.db.models import Exists, OuterRef, Prefetch
 
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
-from drf_spectacular.utils import (
-    OpenApiExample,
-    OpenApiResponse,
-    PolymorphicProxySerializer,
-    extend_schema,
-)
+from drf_spectacular.utils import PolymorphicProxySerializer, extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -53,24 +48,6 @@ from baserow.core.jobs.registries import job_type_registry
 from baserow.core.models import Template, TemplateCategory
 
 from .errors import ERROR_TEMPLATE_DOES_NOT_EXIST, ERROR_TEMPLATE_FILE_DOES_NOT_EXIST
-
-TEMPLATE_LIST_EXAMPLE = {
-    "id": 1,
-    "type": "user",
-    "name": "Sales pipeline",
-    "slug": "sales-pipeline-a1b2c3",
-    "description": "Track deals from lead to close.",
-    "icon": "iconoir-coins",
-    "keywords": "",
-    "workspace_id": 10,
-    "is_default": False,
-    "open_application": None,
-    "categories": [{"id": 2, "name": "Sales"}],
-    "state": "private",
-    "reason": None,
-    "created_on": "2026-10-01T10:00:00Z",
-    "updated_on": "2026-10-01T10:00:00Z",
-}
 
 
 class TemplatesView(APIView, SearchableViewMixin):
@@ -134,60 +111,26 @@ class TemplatesView(APIView, SearchableViewMixin):
             "The `view` query parameter selects the shape of the response:\n\n"
             "- `view=flat`: a paginated list of the official templates and the user "
             "templates the caller can open, most recently updated first, filtered "
-            "with `type`, `owned` and `search`. `state` and `reason` are only set "
-            "for the owner of a user template.\n"
+            "with `type`, `owned` and `search`. A user template shows its latest "
+            "revision. `state`, `reason`, `source_workspace_id` and "
+            "`source_application_ids` are only set for the owner of a user "
+            "template.\n"
             "- Any other or no `view` (deprecated): a list of the template "
             "categories, each with its official templates, ignoring the other query "
             "parameters. Categories holding only user templates are left out."
         ),
         responses={
-            200: OpenApiResponse(
-                response=PolymorphicProxySerializer(
-                    component_name="TemplatesListResponse",
-                    serializers=[
-                        get_example_pagination_serializer_class(
-                            TemplateListItemSerializer,
-                            serializer_name="TemplatePagination",
-                        ),
-                        TemplateCategoriesSerializer(many=True),
-                    ],
-                    resource_type_field_name=None,
-                    many=False,
-                ),
-                examples=[
-                    OpenApiExample(
-                        "view=flat",
-                        value={
-                            "count": 1,
-                            "next": None,
-                            "previous": None,
-                            "results": [TEMPLATE_LIST_EXAMPLE],
-                        },
+            200: PolymorphicProxySerializer(
+                component_name="TemplatesListResponse",
+                serializers=[
+                    get_example_pagination_serializer_class(
+                        TemplateListItemSerializer,
+                        serializer_name="TemplatePagination",
                     ),
-                    OpenApiExample(
-                        "No view (deprecated)",
-                        value=[
-                            {
-                                "id": 2,
-                                "name": "Sales",
-                                "templates": [
-                                    {
-                                        "id": 3,
-                                        "type": "official",
-                                        "name": "CRM",
-                                        "slug": "crm",
-                                        "description": "Manage customers.",
-                                        "icon": "iconoir-user",
-                                        "keywords": "crm,sales",
-                                        "workspace_id": 11,
-                                        "is_default": False,
-                                        "open_application": None,
-                                    }
-                                ],
-                            }
-                        ],
-                    ),
+                    TemplateCategoriesSerializer(many=True),
                 ],
+                resource_type_field_name=None,
+                many=False,
             ),
             400: get_error_schema(["ERROR_QUERY_PARAMETER_VALIDATION"]),
         },
@@ -246,11 +189,13 @@ class TemplateView(APIView):
         the provided template slug.
         """
 
+        # A user template shows the latest revision the user can open.
         try:
             template = (
                 Template.objects.openable(request.user)
-                .prefetch_related("categories")
-                .get(slug=slug)
+                .filter_by_root(slug=slug)
+                .latest_revisions()
+                .get()
             )
         except Template.DoesNotExist as exc:
             raise TemplateDoesNotExist(

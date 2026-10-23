@@ -17,9 +17,17 @@ class ListTemplatesQueryParamSerializer(serializers.Serializer):
 
 
 class TemplateSerializer(serializers.ModelSerializer):
+    """
+    Serializes a template revision. The id, slug and keywords are the template's,
+    so they are read from its root.
+    """
+
+    id = serializers.IntegerField(source="family_id", read_only=True)
     type = serializers.SerializerMethodField(
         help_text="Whether it's an official or a user template."
     )
+    slug = serializers.SlugField(source="get_root.slug", read_only=True)
+    keywords = serializers.CharField(source="get_root.keywords", read_only=True)
     is_default = serializers.SerializerMethodField(
         help_text="Indicates if the template must be selected by default. The "
         "web-frontend automatically selects the first `is_default` template "
@@ -48,7 +56,7 @@ class TemplateSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_is_default(self, instance):
-        return instance.slug == settings.DEFAULT_APPLICATION_TEMPLATES[0]
+        return instance.get_root().slug == settings.DEFAULT_APPLICATION_TEMPLATES[0]
 
 
 class TemplateCategoriesSerializer(serializers.ModelSerializer):
@@ -67,10 +75,13 @@ class TemplateCategorySerializer(serializers.ModelSerializer):
 
 class TemplateListItemSerializer(TemplateSerializer):
     """
-    A template of the flat list. `state` and `reason` are only shown to the owner
-    of a user template, and are null otherwise.
+    The latest revision of a template in the flat list. The dates are the
+    template's, so they are read from its root. `state`, `reason` and the source
+    are only shown to the owner of a user template, and are null otherwise.
     """
 
+    created_on = serializers.DateTimeField(source="get_root.created_on", read_only=True)
+    updated_on = serializers.DateTimeField(source="get_root.updated_on", read_only=True)
     categories = TemplateCategorySerializer(read_only=True, many=True)
     state = serializers.SerializerMethodField(
         help_text="The state of the template as shown to its owner. Null for "
@@ -80,25 +91,43 @@ class TemplateListItemSerializer(TemplateSerializer):
         help_text="Why the template was rejected or blocked, if given. Only shown "
         "to its owner."
     )
+    source_workspace_id = serializers.SerializerMethodField(
+        help_text="The workspace the applications of the latest revision were "
+        "copied from, if known. Only shown to its owner."
+    )
+    source_application_ids = serializers.SerializerMethodField(
+        help_text="The applications the latest revision was copied from. Only shown "
+        "to its owner."
+    )
 
     class Meta(TemplateSerializer.Meta):
         fields = TemplateSerializer.Meta.fields + (
             "categories",
             "state",
             "reason",
+            "source_workspace_id",
+            "source_application_ids",
             "created_on",
             "updated_on",
         )
 
-    def _get_owner_state(self, instance):
+    def _is_owner(self, instance) -> bool:
         request = self.context.get("request")
-        if (
-            instance.type != Template.Type.USER
-            or request is None
-            or instance.owner_id != request.user.id
-        ):
+        return (
+            instance.type == Template.Type.USER
+            and request is not None
+            and instance.get_root().owner_id == request.user.id
+        )
+
+    def _get_owner_state(self, instance):
+        if not self._is_owner(instance):
             return None, None
         return UserTemplateHandler().get_template_state(instance)
+
+    def _get_owner_metadata(self, instance):
+        if not self._is_owner(instance):
+            return None
+        return UserTemplateHandler().get_template_metadata(instance)
 
     @extend_schema_field(
         serializers.ChoiceField(choices=UserTemplateState.choices, allow_null=True)
@@ -111,3 +140,15 @@ class TemplateListItemSerializer(TemplateSerializer):
     def get_reason(self, instance):
         _, reason = self._get_owner_state(instance)
         return reason
+
+    @extend_schema_field(OpenApiTypes.INT)
+    def get_source_workspace_id(self, instance):
+        metadata = self._get_owner_metadata(instance)
+        return None if metadata is None else metadata.get("source_workspace_id")
+
+    @extend_schema_field(
+        serializers.ListField(child=serializers.IntegerField(), allow_null=True)
+    )
+    def get_source_application_ids(self, instance):
+        metadata = self._get_owner_metadata(instance)
+        return None if metadata is None else metadata.get("source_application_ids", [])

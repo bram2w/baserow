@@ -29,8 +29,9 @@ def delete_create_user_template_job_content(sender, instance, **kwargs):
     track of the workspace and archive it copied, so they're deleted along.
     """
 
-    # What a finished job created is its template's.
-    if instance.template_id is None:
+    # What a finished job created is its template's. An update job has its
+    # template from the start, the commit sets its revision.
+    if instance.revision_id is None:
         UserTemplateHandler().delete_content_of_deleted_job(
             instance.template_workspace_id, instance.archive_name
         )

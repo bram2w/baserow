@@ -82,6 +82,7 @@
             <div class="user-template-list__cell">
               {{ $t('userTemplateList.lastUpdated') }}
             </div>
+            <div class="user-template-list__cell"></div>
           </div>
           <InfiniteScroll
             class="user-template-list__scroll"
@@ -92,17 +93,21 @@
             :render-end="false"
             @load-next-page="fetchNextPage"
           >
-            <a
+            <div
               v-for="template in templates"
               :key="template.id"
               class="user-template-list__row"
-              role="button"
-              tabindex="0"
               @click="emit('selected', template)"
-              @keydown.enter.prevent="emit('selected', template)"
-              @keydown.space.prevent="emit('selected', template)"
             >
-              <div class="user-template-list__cell user-template-list__name">
+              <!-- The name takes the keyboard, so that the actions button isn't
+              nested in another interactive element. -->
+              <div
+                class="user-template-list__cell user-template-list__name"
+                role="button"
+                tabindex="0"
+                @keydown.enter.prevent="emit('selected', template)"
+                @keydown.space.prevent="emit('selected', template)"
+              >
                 <div class="user-template-list__icon">
                   <i :class="template.icon || 'iconoir-view-grid'"></i>
                 </div>
@@ -129,8 +134,39 @@
               <div class="user-template-list__cell user-template-list__updated">
                 {{ getHumanAgoLabel($i18n.t, template.updated_on) }}
               </div>
-            </a>
+              <div class="user-template-list__cell user-template-list__actions">
+                <ButtonIcon
+                  type="secondary"
+                  size="small"
+                  icon="iconoir-more-vert"
+                  :title="$t('userTemplateList.actions')"
+                  @click.stop="toggleActions($event, template)"
+                ></ButtonIcon>
+              </div>
+            </div>
           </InfiniteScroll>
+          <Context ref="actionsContext" @hidden="focusedTemplate = null">
+            <ul class="context__menu">
+              <li class="context__menu-item">
+                <a
+                  class="context__menu-item-link"
+                  @click.prevent="edit('details')"
+                >
+                  <i class="context__menu-item-icon iconoir-edit-pencil"></i>
+                  {{ $t('userTemplateList.editDetails') }}
+                </a>
+              </li>
+              <li class="context__menu-item">
+                <a
+                  class="context__menu-item-link"
+                  @click.prevent="edit('content')"
+                >
+                  <i class="context__menu-item-icon iconoir-refresh-double"></i>
+                  {{ $t('userTemplateList.updateContent') }}
+                </a>
+              </li>
+            </ul>
+          </Context>
         </div>
       </template>
     </div>
@@ -182,11 +218,14 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['selected', 'create'])
+const emit = defineEmits(['selected', 'create', 'edit'])
 
 const { $client, $i18n, $priorityBus, $store } = useNuxtApp()
 
 const searchInput = ref(null)
+const actionsContext = ref(null)
+// The template whose actions are shown.
+const focusedTemplate = ref(null)
 const search = ref('')
 const templates = ref([])
 const count = ref(0)
@@ -259,6 +298,30 @@ function fetchNextPage() {
  */
 function refresh() {
   return fetchPage(0)
+}
+
+/**
+ * Opens the actions of a template next to the clicked button, or closes them when
+ * they're already open for it.
+ */
+function toggleActions(event, template) {
+  const open =
+    actionsContext.value.isOpen() && focusedTemplate.value?.id === template.id
+  focusedTemplate.value = template
+  actionsContext.value.toggle(
+    event.currentTarget,
+    'bottom',
+    'right',
+    4,
+    0,
+    !open
+  )
+}
+
+function edit(mode) {
+  const template = focusedTemplate.value
+  actionsContext.value.hide()
+  emit('edit', template, mode)
 }
 
 const searchChanged = debounce(() => fetchPage(0), 300)

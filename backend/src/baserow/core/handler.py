@@ -15,7 +15,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser, AnonymousUser
 from django.core.files.storage import Storage
 from django.db import OperationalError, transaction
-from django.db.models import Count, F, Model, Prefetch, Q, QuerySet
+from django.db.models import Count, Model, Prefetch, Q, QuerySet
+from django.db.models.functions import Coalesce
 from django.utils import translation
 from django.utils.translation import gettext as _
 
@@ -739,7 +740,9 @@ class CoreHandler:
         if queryset is None:
             queryset = Workspace.objects.all()
 
-        queryset = queryset.prefetch_related("workspaceuser_set", "template_set")
+        queryset = queryset.prefetch_related(
+            "workspaceuser_set", "template_set", "template_set__root"
+        )
 
         for plugin in plugin_registry.registry.values():
             queryset = plugin.enhance_workspace_queryset(queryset)
@@ -2072,8 +2075,9 @@ class CoreHandler:
         owned: bool = False,
     ) -> QuerySet[Template]:
         """
-        Returns the templates the actor can open, most recently updated first.
-        Revisions are left out.
+        Returns the latest revision the actor can open of every template, most
+        recently updated template first. The fields of the template as a whole are
+        on the selected `root`, or on the row itself when it's the root.
 
         :param actor: The user or anonymous user listing the templates.
         :param template_type: Only the templates of this `Template.Type`.
@@ -2081,19 +2085,24 @@ class CoreHandler:
         :return: The templates.
         """
 
-        templates = Template.objects.openable(actor).filter(root__isnull=True)
+        templates = Template.objects.openable(actor)
         if template_type == Template.Type.OFFICIAL:
             templates = templates.official()
         elif template_type == Template.Type.USER:
             templates = templates.user()
         if owned:
             templates = (
-                templates.filter(owner=actor)
+                templates.filter_by_root(owner_id=actor.id)
                 if actor.is_authenticated
                 else templates.none()
             )
-        return templates.prefetch_related("categories").order_by(
-            F("updated_on").desc(nulls_last=True), "-id"
+        return (
+            templates.latest_revisions()
+            .prefetch_related("categories")
+            .order_by(
+                Coalesce("root__updated_on", "updated_on").desc(nulls_last=True),
+                Coalesce("root_id", "id").desc(),
+            )
         )
 
     # This single function generates a huge number of spans and events, we know it

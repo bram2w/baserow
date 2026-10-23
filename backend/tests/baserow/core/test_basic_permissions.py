@@ -1449,6 +1449,7 @@ def create_templates_of_each_state(data_fixture, owner):
     legacy = data_fixture.create_template(type=None)
     private = data_fixture.create_user_template(user=owner)
     revision = data_fixture.create_user_template_revision(private)
+    latest_revision = data_fixture.create_user_template_revision(private)
     pending = data_fixture.create_user_template(
         user=owner, review_state=Template.ReviewState.PENDING
     )
@@ -1462,19 +1463,32 @@ def create_templates_of_each_state(data_fixture, owner):
     )
     public.refresh_from_db()
     blocked.refresh_from_db()
+    public_revision = data_fixture.create_user_template_revision(public)
     marked = data_fixture.create_user_template(
         user=owner, marked_for_deletion_at=timezone.now()
     )
+    marked_revision = data_fixture.create_user_template_revision(marked)
+    public_marked = data_fixture.create_user_template(
+        user=owner, marked_for_deletion_at=timezone.now()
+    )
+    Template.objects.filter(id=public_marked.id).update(public_revision_id=F("id"))
+    public_marked.refresh_from_db()
     return [
         (official, True, True),
         (legacy, True, True),
         (private, False, True),
-        (revision, False, False),
+        # A revision is opened like its root.
+        (revision, False, True),
+        (latest_revision, False, True),
         (pending, False, True),
         (rejected, False, True),
         (public, True, True),
+        # Others only open the public revision.
+        (public_revision, False, True),
         (blocked, False, True),
         (marked, False, False),
+        (marked_revision, False, False),
+        (public_marked, False, False),
     ]
 
 
@@ -1611,7 +1625,9 @@ def test_openable_template_check_uses_prefetched_templates(
     templates = create_templates_of_each_state(data_fixture, owner)
     workspace_ids = [template.workspace_id for template, _, _ in templates]
     workspaces = list(
-        Workspace.objects.filter(id__in=workspace_ids).prefetch_related("template_set")
+        CoreHandler().get_enhanced_workspace_queryset(
+            Workspace.objects.filter(id__in=workspace_ids)
+        )
     )
 
     with django_assert_num_queries(0):
@@ -1640,6 +1656,40 @@ def test_workspace_template_types_cache_drops_the_workspace(
     workspace = Workspace.objects.get(id=workspace_id)
     with django_assert_num_queries(0):
         assert workspace.get_template_types() == {Template.Type.USER}
+
+
+@pytest.mark.django_db
+def test_allow_if_template_permissions_object_lists_a_shared_workspace_once(
+    data_fixture,
+):
+    owner = data_fixture.create_user()
+    user_template = data_fixture.create_user_template(user=owner)
+    # Details-only revisions share the workspace of the revision before them.
+    data_fixture.create_user_template_revision(
+        user_template, workspace=user_template.workspace
+    )
+    data_fixture.create_user_template_revision(
+        user_template, workspace=user_template.workspace
+    )
+
+    permissions = AllowIfTemplatePermissionManagerType().get_permissions_object(owner)
+
+    assert permissions["workspace_template_ids"] == [user_template.workspace_id]
+
+
+@pytest.mark.django_db
+def test_openable_template_check_selects_the_root_of_a_revision(
+    data_fixture, django_assert_num_queries
+):
+    owner = data_fixture.create_user()
+    user_template = data_fixture.create_user_template(user=owner)
+    revision = data_fixture.create_user_template_revision(user_template)
+    workspace = Workspace.objects.get(id=revision.workspace_id)
+    # The template types of the workspace are cached by the first check.
+    workspace.get_template_types()
+
+    with django_assert_num_queries(1):
+        assert workspace.has_openable_template(owner)
 
 
 @pytest.mark.django_db

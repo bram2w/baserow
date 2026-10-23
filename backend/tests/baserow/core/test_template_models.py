@@ -32,6 +32,36 @@ def test_template_querysets_split_official_and_user_templates(data_fixture):
 
 
 @pytest.mark.django_db
+def test_template_latest_revisions_returns_one_row_per_template(
+    data_fixture, django_assert_num_queries
+):
+    official = data_fixture.create_template()
+    root = data_fixture.create_user_template()
+    data_fixture.create_user_template_revision(root)
+    latest = data_fixture.create_user_template_revision(root)
+    root_only = data_fixture.create_user_template()
+    other_root = data_fixture.create_user_template()
+    other_latest = data_fixture.create_user_template_revision(other_root)
+
+    with django_assert_num_queries(1):
+        rows = list(Template.objects.latest_revisions())
+        roots = {row.id: row.get_root() for row in rows}
+
+    assert set(rows) == {official, latest, root_only, other_latest}
+    assert roots == {
+        official.id: official,
+        latest.id: root,
+        root_only.id: root_only,
+        other_latest.id: other_root,
+    }
+    # The latest revision among the rows in the queryset.
+    assert set(
+        Template.objects.filter(id__in=[root.id, root_only.id]).latest_revisions()
+    ) == {root, root_only}
+    assert list(Template.objects.filter(id=latest.id).latest_revisions()) == [latest]
+
+
+@pytest.mark.django_db
 def test_template_checks_reject_root_fields_on_a_revision(data_fixture):
     user = data_fixture.create_user()
     root = data_fixture.create_user_template(user=user)
@@ -72,7 +102,6 @@ def test_template_checks_reject_invalid_rows(data_fixture):
     assert_rejected(pk=official.pk, author=user)
     assert_rejected(pk=legacy.pk, owner=user)
     assert_rejected(pk=legacy.pk, author=user)
-    assert_rejected(pk=official.pk, workspace=root.workspace)
     assert_rejected(pk=root.pk, owner=None)
     assert_rejected(pk=root.pk, private_link_token="")
     assert_rejected(pk=revision.pk, version=0)
@@ -140,6 +169,43 @@ def test_template_clean_rejects_rows_breaking_the_family(data_fixture):
     with pytest.raises(ValidationError) as exc:
         root.clean()
     assert set(exc.value.message_dict) == {"public_revision", "shared_revision"}
+
+
+@pytest.mark.django_db
+def test_template_clean_allows_sharing_the_workspace_within_the_family_only(
+    data_fixture,
+):
+    root = data_fixture.create_user_template()
+    other_root = data_fixture.create_user_template()
+    # A details-only revision shares the content of the revision it's based on.
+    revision = data_fixture.create_user_template_revision(
+        root, workspace=root.workspace
+    )
+    later_revision = data_fixture.create_user_template_revision(
+        root, workspace=root.workspace
+    )
+
+    root.clean()
+    revision.clean()
+    later_revision.clean()
+
+    for template in (
+        data_fixture.create_user_template_revision(
+            other_root, workspace=root.workspace
+        ),
+        Template(
+            type=Template.Type.USER,
+            name="New",
+            slug="new-abc123",
+            owner=root.owner,
+            author=root.author,
+            workspace=root.workspace,
+        ),
+        data_fixture.create_template(workspace=root.workspace),
+    ):
+        with pytest.raises(ValidationError) as exc:
+            template.clean()
+        assert "workspace" in exc.value.message_dict
 
 
 @pytest.mark.django_db

@@ -102,6 +102,29 @@ describe('TemplateDetails', () => {
     expect(wrapper.find('.template-install').exists()).toBe(false)
   })
 
+  test('updates only an own template', async () => {
+    const userTemplate = { ...template, type: 'user' }
+    let wrapper = await mountComponent({ template: userTemplate })
+    expect(wrapper.find('.template-details__own-actions').exists()).toBe(false)
+
+    wrapper = await mountComponent({ template: userTemplate, isOwn: true })
+    expect(wrapper.find('.template-install').exists()).toBe(false)
+
+    await wrapper
+      .find('.template-details__own-actions .button-icon')
+      .trigger('click')
+    const links = wrapper.findAll('.context__menu-item-link')
+    expect(links.map((link) => link.text())).toStrictEqual([
+      'templateDetails.editDetails',
+      'templateDetails.updateContent',
+    ])
+
+    await links[0].trigger('click')
+    await links[1].trigger('click')
+
+    expect(wrapper.emitted('edit')).toStrictEqual([['details'], ['content']])
+  })
+
   test('shows the back link only when asked and emits back', async () => {
     const withoutBack = await mountComponent()
     expect(withoutBack.find('.template-details__back-link').exists()).toBe(

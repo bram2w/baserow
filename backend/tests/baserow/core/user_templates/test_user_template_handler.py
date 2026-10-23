@@ -15,6 +15,7 @@ from django.utils import timezone
 
 import pytest
 
+from baserow.core.exceptions import TemplateDoesNotExist
 from baserow.core.handler import CoreHandler
 from baserow.core.import_export.handler import ImportExportHandler
 from baserow.core.models import Template, Workspace
@@ -26,6 +27,7 @@ from baserow.core.user_templates.constants import (
 from baserow.core.user_templates.exceptions import (
     InvalidTemplateCategory,
     InvalidTemplateIcon,
+    TemplateChangedDuringUpdate,
     TemplateSlugGenerationFailed,
 )
 from baserow.core.user_templates.handler import (
@@ -291,6 +293,79 @@ def test_create_template_root_reraises_other_integrity_errors(data_fixture):
     assert save.call_count == 1
 
 
+def revision_kwargs(data_fixture, root, **kwargs):
+    kwargs.setdefault("user", root.owner)
+    kwargs.setdefault("base_revision", root)
+    kwargs.setdefault("name", "Next")
+    kwargs.setdefault("description", "")
+    kwargs.setdefault("icon", "iconoir-view-grid")
+    kwargs.setdefault("category_ids", [data_fixture.create_template_category().id])
+    kwargs.setdefault("workspace", data_fixture.create_workspace())
+    return {"root": root, **kwargs}
+
+
+@pytest.mark.django_db
+def test_create_template_revision_runs_full_clean(data_fixture):
+    root = data_fixture.create_user_template()
+    handler = UserTemplateHandler()
+
+    with pytest.raises(ValidationError) as exc_info:
+        handler.create_template_revision(
+            **revision_kwargs(data_fixture, root, name="a" * 65)
+        )
+    assert "name" in exc_info.value.message_dict
+
+    with pytest.raises(ValidationError):
+        handler.create_template_revision(**revision_kwargs(data_fixture, root, name=""))
+
+    assert not Template.objects.filter(root=root).exists()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_create_template_revision_waits_for_a_concurrent_commit(
+    data_fixture, test_thread
+):
+    root = data_fixture.create_user_template()
+    handler = UserTemplateHandler()
+    first = revision_kwargs(data_fixture, root, name="First")
+    concurrent = revision_kwargs(data_fixture, root, name="Concurrent")
+    validate_icon_and_categories = UserTemplateHandler.validate_icon_and_categories
+    calls = []
+    outcome = {}
+
+    def commit_concurrently():
+        try:
+            handler.create_template_revision(**concurrent)
+            outcome["concurrent"] = "committed"
+        except TemplateChangedDuringUpdate:
+            outcome["concurrent"] = "changed"
+        finally:
+            connection.close()
+
+    with test_thread(commit_concurrently) as thread:
+
+        def validate_with_a_concurrent_commit(self, *args, **kwargs):
+            calls.append(args)
+            if len(calls) == 1:
+                thread.start()
+                # It waits for the lock on the root, held until the first commits,
+                # and then sees that the template changed.
+                assert not thread.thread_stopped.wait(0.3)
+            return validate_icon_and_categories(self, *args, **kwargs)
+
+        with patch.object(
+            UserTemplateHandler,
+            "validate_icon_and_categories",
+            validate_with_a_concurrent_commit,
+        ):
+            handler.create_template_revision(**first)
+
+    assert outcome == {"concurrent": "changed"}
+    assert list(Template.objects.filter(root=root).values_list("name", flat=True)) == [
+        "First"
+    ]
+
+
 @pytest.mark.django_db
 def test_store_archive_tracks_the_name_given_by_the_storage(data_fixture, tmpdir):
     storage = FileSystemStorage(location=str(tmpdir))
@@ -349,15 +424,23 @@ def test_list_own_templates(data_fixture):
     Template.objects.filter(id__in=[newer.id, same_time.id]).update(updated_on=now)
 
     data_fixture.create_user_template_revision(newer)
+    newer_latest = data_fixture.create_user_template_revision(newer)
     data_fixture.create_user_template(user=other_user)
-    data_fixture.create_user_template(user=user, marked_for_deletion_at=now)
+    marked = data_fixture.create_user_template(user=user, marked_for_deletion_at=now)
+    data_fixture.create_user_template_revision(marked)
     data_fixture.create_template()
 
     templates = list(
         CoreHandler().list_templates(user, template_type="user", owned=True)
     )
 
-    assert templates == [same_time, newer, older]
+    # The latest revision of each template, ordered by the template itself.
+    assert templates == [same_time, newer_latest, older]
+    assert [template.get_root() for template in templates] == [
+        same_time,
+        newer,
+        older,
+    ]
 
 
 @pytest.mark.django_db
@@ -378,6 +461,80 @@ def test_list_templates_owned_by_an_anonymous_user(data_fixture):
     data_fixture.create_template()
 
     assert list(CoreHandler().list_templates(AnonymousUser(), owned=True)) == []
+
+
+@pytest.mark.django_db
+def test_get_own_template(data_fixture):
+    user = data_fixture.create_user()
+    root = data_fixture.create_user_template(user=user)
+    revision = data_fixture.create_user_template_revision(root)
+    blocked = data_fixture.create_user_template(user=user, blocked_at=timezone.now())
+    marked = data_fixture.create_user_template(
+        user=user, marked_for_deletion_at=timezone.now()
+    )
+    staff = data_fixture.create_user(is_staff=True)
+    handler = UserTemplateHandler()
+
+    assert handler.get_own_template(user, root.id) == root
+    assert handler.get_own_template(user, blocked.id) == blocked
+
+    for template_user, template_id in [
+        (data_fixture.create_user(), root.id),
+        (staff, root.id),
+        (user, revision.id),
+        (user, marked.id),
+        (user, data_fixture.create_template().id),
+        (user, 0),
+    ]:
+        with pytest.raises(TemplateDoesNotExist):
+            handler.get_own_template(template_user, template_id)
+
+
+@pytest.mark.django_db
+def test_get_latest_revision(data_fixture):
+    handler = UserTemplateHandler()
+    root = data_fixture.create_user_template()
+    assert handler.get_latest_revision(root) == root
+
+    data_fixture.create_user_template_revision(root)
+    latest = data_fixture.create_user_template_revision(root)
+    data_fixture.create_user_template_revision(data_fixture.create_user_template())
+
+    assert handler.get_latest_revision(root) == latest
+
+
+@pytest.mark.django_db
+def test_get_template_state_of_a_revision(data_fixture):
+    handler = UserTemplateHandler()
+    root = data_fixture.create_user_template(
+        review_state=Template.ReviewState.REJECTED, reject_reason="Not useful"
+    )
+    revision = data_fixture.create_user_template_revision(
+        root, review_state=Template.ReviewState.PENDING
+    )
+
+    # The review is the revision's own.
+    assert handler.get_template_state(root) == (
+        UserTemplateState.REJECTED,
+        "Not useful",
+    )
+    assert handler.get_template_state(revision) == (UserTemplateState.IN_REVIEW, None)
+
+    # Whether it's public or blocked is the template's, so its root's.
+    root.review_state = Template.ReviewState.APPROVED
+    root.public_revision = root
+    root.save()
+    revision = Template.objects.get(id=revision.id)
+    assert handler.get_template_state(revision) == (UserTemplateState.PUBLIC, None)
+
+    root.blocked_at = timezone.now()
+    root.blocked_reason = "Spam"
+    root.save()
+    revision = Template.objects.get(id=revision.id)
+    assert handler.get_template_state(revision) == (
+        UserTemplateState.BLOCKED,
+        "Spam",
+    )
 
 
 @pytest.mark.django_db

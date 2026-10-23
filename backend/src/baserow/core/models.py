@@ -10,7 +10,15 @@ from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
-from django.db.models import Q, QuerySet, UniqueConstraint
+from django.db.models import (
+    Exists,
+    F,
+    OuterRef,
+    Q,
+    QuerySet,
+    UniqueConstraint,
+)
+from django.db.models.functions import Coalesce
 from django.db.models.manager import BaseManager
 
 from baserow.core.feature_flags import FF_USER_TEMPLATES, feature_flag_is_enabled
@@ -374,7 +382,8 @@ class Workspace(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOn
     def has_openable_template(self, actor) -> bool:
         """
         Whether the actor can open this workspace as a template, see
-        `Template.is_openable_by`.
+        `Template.is_openable_by`. Prefetch `template_set__root` to check many
+        workspaces without a query each.
         """
 
         template_types = self.get_template_types()
@@ -384,10 +393,12 @@ class Workspace(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOn
             FF_USER_TEMPLATES
         ):
             return False
-        # Not cached, because the state of a user template changes.
-        return any(
-            template.is_openable_by(actor) for template in self.template_set.all()
-        )
+        # Not cached, because the state of a user template changes. The roots of the
+        # revisions are selected along when the templates aren't prefetched.
+        templates = self.template_set.all()
+        if "template_set" not in getattr(self, "_prefetched_objects_cache", {}):
+            templates = templates.select_related("root")
+        return any(template.is_openable_by(actor) for template in templates)
 
     def get_workspace_user(
         self, user: User, include_trash: bool = False
@@ -597,6 +608,18 @@ def _get_user_id(actor) -> int | None:
     return actor.id if isinstance(actor, User) else None
 
 
+def _root_q(**lookups) -> Q:
+    """
+    Matches the rows whose root matches the lookups: the root itself, which also
+    holds revision 1, and every later revision pointing at it.
+    """
+
+    return Q(root__isnull=True, **lookups) | Q(
+        root__isnull=False,
+        **{f"root__{lookup}": value for lookup, value in lookups.items()},
+    )
+
+
 class TemplateQuerySet(QuerySet):
     def official(self):
         return self.filter(_official_template_q())
@@ -604,37 +627,62 @@ class TemplateQuerySet(QuerySet):
     def user(self):
         return self.filter(type=Template.Type.USER)
 
+    def latest_revisions(self):
+        """
+        The latest revision of every template in this queryset: the row with the
+        highest `version` among the rows of the template in this queryset. A
+        revision filtered out, like one the actor can't open, is skipped. The root is
+        selected too, because it holds the fields of the template as a whole.
+        """
+
+        family_id = Coalesce("root_id", "id")
+        newer_revision = self.filter(
+            Q(id=OuterRef("family_id")) | Q(root_id=OuterRef("family_id")),
+            version__gt=OuterRef("version"),
+        )
+        return (
+            self.alias(family_id=family_id)
+            .filter(~Exists(newer_revision))
+            .select_related("root")
+        )
+
+    def filter_by_root(self, **lookups):
+        """
+        The rows of the templates whose root matches the lookups: the root itself
+        and every later revision pointing at it.
+        """
+
+        return self.filter(_root_q(**lookups))
+
     def official_or_owned(self, actor):
         """
-        The official templates and the user templates owned by the actor.
+        The official templates and every revision of the user templates owned by
+        the actor.
         """
 
         q = _official_template_q()
         if (user_id := _get_user_id(actor)) is not None:
-            q |= Q(type=Template.Type.USER, owner_id=user_id)
+            q |= Q(type=Template.Type.USER) & _root_q(owner_id=user_id)
         return self.filter(q)
 
     def openable(self, actor):
         """
-        The templates the actor can open. Matches `Template.is_openable_by`.
+        The templates the actor can open: every revision of the own ones, only the
+        public revision of the others. Matches `Template.is_openable_by`.
         """
 
         official = _official_template_q()
         if not feature_flag_is_enabled(FF_USER_TEMPLATES):
             return self.filter(official)
 
-        visible = Q(public_revision__isnull=False, blocked_at__isnull=True)
-        if (user_id := _get_user_id(actor)) is not None:
-            visible |= Q(owner_id=user_id)
-        return self.filter(
-            official
-            | Q(
-                visible,
-                type=Template.Type.USER,
-                root__isnull=True,
-                marked_for_deletion_at__isnull=True,
-            )
+        visible = _root_q(
+            public_revision=F("id"),
+            blocked_at__isnull=True,
+            marked_for_deletion_at__isnull=True,
         )
+        if (user_id := _get_user_id(actor)) is not None:
+            visible |= _root_q(owner_id=user_id, marked_for_deletion_at__isnull=True)
+        return self.filter(official | Q(type=Template.Type.USER) & visible)
 
 
 class Template(models.Model):
@@ -706,14 +754,15 @@ class Template(models.Model):
         null=True,
         help_text="The group containing the applications related to the template. The "
         "read endpoints related to that group are publicly accessible for "
-        "preview purposes.",
+        "preview purposes. Revisions of the same template that only differ in "
+        "their details share it.",
     )
     archive = models.FileField(
         upload_to=template_archive_upload_to,
         max_length=255,
         null=True,
         blank=True,
-        help_text="The downloadable file of this revision.",
+        help_text="The downloadable file of this revision, shared like `workspace`.",
     )
     export_hash = models.CharField(
         max_length=64,
@@ -804,6 +853,12 @@ class Template(models.Model):
         db_default=0,
         help_text="How many times any revision of the template was installed. Only "
         "counted on roots.",
+    )
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+        db_default={},
+        help_text="Private, owner-only revision metadata.",
     )
     review_state = models.CharField(
         max_length=16,
@@ -930,12 +985,6 @@ class Template(models.Model):
                 condition=Q(root__isnull=True),
                 name="core_template_unique_root_slug",
             ),
-            # Every revision has its own copy of the workspace.
-            models.UniqueConstraint(
-                fields=["workspace"],
-                condition=Q(workspace__isnull=False),
-                name="core_template_unique_workspace",
-            ),
         ]
 
     def __str__(self):
@@ -951,23 +1000,22 @@ class Template(models.Model):
     def is_openable_by(self, actor) -> bool:
         """
         Whether the actor can open this template: an official one or, while user
-        templates are enabled, a user template not marked for deletion that is
-        public and not blocked, or owned by the actor. Matches
-        `Template.objects.openable`.
+        templates are enabled, a revision of a user template not marked for
+        deletion that is owned by the actor, or is the public revision of a template
+        that isn't blocked. Matches `Template.objects.openable`.
         """
 
         if self.type in (None, Template.Type.OFFICIAL):
             return True
-        if (
-            self.root_id is not None
-            or self.marked_for_deletion_at is not None
-            or not feature_flag_is_enabled(FF_USER_TEMPLATES)
+        root = self.get_root()
+        if root.marked_for_deletion_at is not None or not feature_flag_is_enabled(
+            FF_USER_TEMPLATES
         ):
             return False
-        if self.public_revision_id is not None and self.blocked_at is None:
+        if root.public_revision_id == self.id and root.blocked_at is None:
             return True
         user_id = _get_user_id(actor)
-        return user_id is not None and self.owner_id == user_id
+        return user_id is not None and root.owner_id == user_id
 
     def clean(self):
         """
@@ -985,6 +1033,16 @@ class Template(models.Model):
                 errors["root"] = "A revision must point directly at a root."
             elif self.type != root.type:
                 errors["type"] = "A revision must have the same type as its root."
+
+        # Only the revisions of one template share their content.
+        if self.workspace_id is not None:
+            others = templates.filter(workspace_id=self.workspace_id)
+            if self.family_id is not None:
+                others = others.exclude(
+                    Q(pk=self.family_id) | Q(root_id=self.family_id)
+                )
+            if others.exists():
+                errors["workspace"] = "The workspace belongs to another template."
 
         for field_name in ("public_revision", "shared_revision"):
             revision_id = getattr(self, f"{field_name}_id")

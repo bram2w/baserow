@@ -103,6 +103,11 @@
   border-top: solid 1px $palette-neutral-200;
 }
 
+.template-details__own-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .template-install {
   display: flex;
   flex-direction: column;

@@ -20,6 +20,11 @@ ERROR_INVALID_TEMPLATE_CATEGORY = (
     HTTP_400_BAD_REQUEST,
     "The categories of the template are missing or do not exist.",
 )
+ERROR_TEMPLATE_HAS_NO_CONTENT = (
+    "ERROR_TEMPLATE_HAS_NO_CONTENT",
+    HTTP_400_BAD_REQUEST,
+    "The content of the template was removed.",
+)
 ERROR_NO_APPLICATIONS_SELECTED = (
     "ERROR_NO_APPLICATIONS_SELECTED",
     HTTP_400_BAD_REQUEST,

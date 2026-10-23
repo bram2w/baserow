@@ -11,6 +11,7 @@
         <button
           type="button"
           class="application-selector__action-btn"
+          :disabled="disabled"
           @click="selectAll"
         >
           {{ $t('exportWorkspaceForm.selectAll') }}
@@ -18,6 +19,7 @@
         <button
           type="button"
           class="application-selector__action-btn"
+          :disabled="disabled"
           @click="deselectAll"
         >
           {{ $t('exportWorkspaceForm.deselectAll') }}
@@ -36,6 +38,7 @@
             <Checkbox
               :checked="isGroupSelected(group)"
               :indeterminate="isGroupIndeterminate(group)"
+              :disabled="disabled"
               @input="(value) => handleGroupToggle(group, value)"
               @click.stop
             />
@@ -69,6 +72,7 @@
             <div class="application-selector__item-main">
               <Checkbox
                 :checked="selectedApplicationIds.includes(application.id)"
+                :disabled="disabled"
                 @input="(value) => handleApplicationToggle(application, value)"
                 @click.stop
               />
