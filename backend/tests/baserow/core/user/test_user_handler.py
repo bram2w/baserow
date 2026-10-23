@@ -945,6 +945,10 @@ def test_share_onboarding_details_with_baserow_valid_response(data_fixture):
 
 
 @pytest.mark.django_db(transaction=True)
+@override_settings(
+    PUBLIC_WEB_FRONTEND_URL="https://baserow.example",
+    BASEROW_EMBEDDED_SHARE_URL="https://embed.example/baserow",
+)
 def test_send_change_email_confirmation(data_fixture, mailoutbox):
     data_fixture.create_password_provider()
     valid_password = "thisIsAValidPassword"
@@ -980,7 +984,7 @@ def test_send_change_email_confirmation(data_fixture, mailoutbox):
     assert "newemail@localhost" in email.to
 
     html_body = email.alternatives[0][0]
-    search_url = "http://localhost:3000/change-email/"
+    search_url = "https://embed.example/baserow/change-email/"
     start_url_index = html_body.index(search_url)
 
     assert start_url_index != -1

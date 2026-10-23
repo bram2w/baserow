@@ -733,18 +733,15 @@ def test_send_reset_password_email(data_fixture, client, mailoutbox):
     PUBLIC_WEB_FRONTEND_URL="https://baserow.example",
     BASEROW_EMBEDDED_SHARE_URL="https://embed.example/baserow",
 )
-@pytest.mark.parametrize(
-    "extra_body", [{}, {"base_url": "http://evil.com\\@baserow.example/reset"}]
-)
 def test_send_reset_password_email_link_points_to_embedded_share_url(
-    data_fixture, client, mailoutbox, extra_body
+    data_fixture, client, mailoutbox
 ):
     data_fixture.create_password_provider()
     user = data_fixture.create_user(email="test@localhost.nl")
 
     response = client.post(
         reverse("api:user:send_reset_password_email"),
-        {"email": "test@localhost.nl", **extra_body},
+        {"email": "test@localhost.nl"},
         format="json",
     )
 
@@ -758,6 +755,48 @@ def test_send_reset_password_email_link_points_to_embedded_share_url(
     assert links[0].startswith(prefix)
     token = links[0].removeprefix(prefix)
     assert UserHandler().get_reset_password_signer().loads(token)[0] == user.id
+
+
+# The browser opens evil.com for this URL while urlparse sees localhost:3000. The
+# endpoints used to accept it as base_url and put it in the emailed link.
+DECEPTIVE_BASE_URL = "http://evil.com\\@localhost:3000"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize("route", ["reset-password", "change-email"])
+def test_emailed_links_ignore_a_deceptive_base_url(
+    data_fixture, client, mailoutbox, route
+):
+    data_fixture.create_password_provider()
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="thisIsAValidPassword"
+    )
+
+    if route == "reset-password":
+        response = client.post(
+            reverse("api:user:send_reset_password_email"),
+            {"email": user.email, "base_url": f"{DECEPTIVE_BASE_URL}/{route}"},
+            format="json",
+        )
+    else:
+        response = client.post(
+            reverse("api:user:send_change_email_confirmation"),
+            {
+                "new_email": "new@test.nl",
+                "password": "thisIsAValidPassword",
+                "base_url": f"{DECEPTIVE_BASE_URL}/{route}",
+            },
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+    assert response.status_code == 204
+    assert len(mailoutbox) == 1
+    html_body = mailoutbox[0].alternatives[0][0]
+    assert "evil.com" not in html_body
+    links = re.findall(rf'href="([^"]*{route}/[^"]*)"', html_body)
+    assert len(links) == 1
+    assert links[0].startswith(f"http://localhost:3000/{route}/")
 
 
 @pytest.mark.django_db
@@ -1612,6 +1651,43 @@ def test_send_change_email_confirmation(data_fixture, client, mailoutbox):
     assert len(mailoutbox) == 1
     assert mailoutbox[0].to[0] == "newemail@test.nl"
     assert "Confirm email address change" in mailoutbox[0].subject
+
+
+@pytest.mark.django_db(transaction=True)
+@override_settings(
+    PUBLIC_WEB_FRONTEND_URL="https://baserow.example",
+    BASEROW_EMBEDDED_SHARE_URL="https://embed.example/baserow",
+)
+def test_send_change_email_confirmation_link_points_to_embedded_share_url(
+    data_fixture, client, mailoutbox
+):
+    data_fixture.create_password_provider()
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="thisIsAValidPassword"
+    )
+
+    response = client.post(
+        reverse("api:user:send_change_email_confirmation"),
+        {
+            "new_email": "new@test.nl",
+            "password": "thisIsAValidPassword",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == 204
+    assert len(mailoutbox) == 1
+    links = re.findall(
+        r'href="([^"]*change-email[^"]*)"', mailoutbox[0].alternatives[0][0]
+    )
+    prefix = "https://embed.example/baserow/change-email/"
+    assert len(links) == 1
+    assert links[0].startswith(prefix)
+    payload = (
+        UserHandler().get_change_email_signer().loads(links[0].removeprefix(prefix))
+    )
+    assert payload == {"user_id": user.id, "new_email": "new@test.nl"}
 
 
 @pytest.mark.django_db(transaction=True)

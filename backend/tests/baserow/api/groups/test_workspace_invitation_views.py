@@ -86,6 +86,36 @@ def test_list_workspace_invitations(api_client, data_fixture):
 
 
 @pytest.mark.django_db(transaction=True)
+def test_create_workspace_invitation_ignores_a_deceptive_base_url(
+    api_client, data_fixture, mailoutbox
+):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+
+    # The browser opens evil.com for this URL while urlparse sees localhost:3000.
+    response = api_client.post(
+        reverse(
+            "api:workspaces:invitations:list", kwargs={"workspace_id": workspace.id}
+        ),
+        {
+            "email": "test@test.nl",
+            "permissions": "ADMIN",
+            "base_url": "http://evil.com\\@localhost:3000/workspace-invitation",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    assert len(mailoutbox) == 1
+    html_body = mailoutbox[0].alternatives[0][0]
+    assert "evil.com" not in html_body
+    links = re.findall(r'href="([^"]*workspace-invitation/[^"]*)"', html_body)
+    assert len(links) == 1
+    assert links[0].startswith("http://localhost:3000/workspace-invitation/")
+
+
+@pytest.mark.django_db(transaction=True)
 @override_settings(BASEROW_EMBEDDED_SHARE_URL="https://embed.example/baserow")
 def test_create_workspace_invitation_link_points_to_embedded_share_url(
     api_client, data_fixture, mailoutbox
@@ -100,7 +130,6 @@ def test_create_workspace_invitation_link_points_to_embedded_share_url(
         {
             "email": "test@test.nl",
             "permissions": "ADMIN",
-            "base_url": "http://evil.com\\@localhost:3000/workspace-invitation",
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
