@@ -18,8 +18,6 @@ from baserow_enterprise.role.models import (
 )
 from baserow_premium.license.exceptions import FeaturesNotAvailableError
 
-BASE_URL = "http://localhost:3000/invite"
-
 
 @pytest.fixture(autouse=True)
 def enable_enterprise_and_roles_for_all_tests_here(enable_enterprise, synced_roles):
@@ -47,11 +45,11 @@ def test_create_scoped_invitation_creates_invitation_without_workspace_role(
 
     with patch.object(CoreHandler, "send_workspace_invitation_email") as send_email:
         scoped_invitation = RoleAssignmentHandler().create_scoped_invitation(
-            user, workspace, "Foo@Bar.com", role("EDITOR"), table_a, BASE_URL
+            user, workspace, "Foo@Bar.com", role("EDITOR"), table_a
         )
 
     invitation = scoped_invitation.invitation
-    send_email.assert_called_once_with(invitation, BASE_URL)
+    send_email.assert_called_once_with(invitation)
     assert invitation.workspace == workspace
     assert invitation.email == "foo@bar.com"
     assert invitation.invited_by == user
@@ -69,10 +67,10 @@ def test_create_scoped_invitation_reuses_invitation_for_another_scope(
 
     with patch.object(CoreHandler, "send_workspace_invitation_email") as send_email:
         first = handler.create_scoped_invitation(
-            user, workspace, "foo@bar.com", role("EDITOR"), table_a, BASE_URL
+            user, workspace, "foo@bar.com", role("EDITOR"), table_a
         )
         second = handler.create_scoped_invitation(
-            user, workspace, "foo@bar.com", role("VIEWER"), table_b, BASE_URL
+            user, workspace, "foo@bar.com", role("VIEWER"), table_b
         )
 
     assert first.invitation_id == second.invitation_id
@@ -85,7 +83,7 @@ def test_create_scoped_invitation_reuses_invitation_for_another_scope(
     # and the invitation email is sent again.
     with patch.object(CoreHandler, "send_workspace_invitation_email") as send_email:
         again = handler.create_scoped_invitation(
-            user, workspace, "foo@bar.com", role("BUILDER"), table_a, BASE_URL
+            user, workspace, "foo@bar.com", role("BUILDER"), table_a
         )
 
     assert again.id == first.id
@@ -105,7 +103,7 @@ def test_create_scoped_invitation_keeps_existing_workspace_role(data_fixture):
     )
 
     scoped_invitation = RoleAssignmentHandler().create_scoped_invitation(
-        user, workspace, "foo@bar.com", role("VIEWER"), table_a, BASE_URL
+        user, workspace, "foo@bar.com", role("VIEWER"), table_a
     )
 
     assert scoped_invitation.invitation_id == invitation.id
@@ -130,17 +128,17 @@ def test_create_scoped_invitation_checks_scope_and_permissions(data_fixture):
     with patch.object(CoreHandler, "send_workspace_invitation_email") as send_email:
         with pytest.raises(PermissionDenied):
             handler.create_scoped_invitation(
-                viewer, workspace, "foo@bar.com", role("EDITOR"), table_a, BASE_URL
+                viewer, workspace, "foo@bar.com", role("EDITOR"), table_a
             )
 
         with pytest.raises(ScopeNotExist):
             handler.create_scoped_invitation(
-                user, workspace, "foo@bar.com", role("EDITOR"), workspace, BASE_URL
+                user, workspace, "foo@bar.com", role("EDITOR"), workspace
             )
 
         with pytest.raises(ScopeNotExist):
             handler.create_scoped_invitation(
-                user, workspace, "foo@bar.com", role("EDITOR"), other_table, BASE_URL
+                user, workspace, "foo@bar.com", role("EDITOR"), other_table
             )
 
     assert WorkspaceInvitation.objects.count() == 0
@@ -156,7 +154,7 @@ def test_create_scoped_invitation_requires_license(
 
     with pytest.raises(FeaturesNotAvailableError):
         RoleAssignmentHandler().create_scoped_invitation(
-            user, workspace, "foo@bar.com", role("EDITOR"), table_a, BASE_URL
+            user, workspace, "foo@bar.com", role("EDITOR"), table_a
         )
 
 
@@ -170,7 +168,7 @@ def test_create_scoped_invitation_for_existing_member_fails(data_fixture):
 
     with pytest.raises(WorkspaceUserAlreadyExists):
         RoleAssignmentHandler().create_scoped_invitation(
-            user, workspace, "member@bar.com", role("EDITOR"), table_a, BASE_URL
+            user, workspace, "member@bar.com", role("EDITOR"), table_a
         )
 
     assert WorkspaceScopedInvitation.objects.count() == 0
@@ -182,10 +180,10 @@ def test_accepting_invitation_assigns_scoped_roles(data_fixture):
     table_c = data_fixture.create_database_table(database=database, user=user)
     handler = RoleAssignmentHandler()
     scoped_invitation = handler.create_scoped_invitation(
-        user, workspace, "foo@bar.com", role("EDITOR"), table_a, BASE_URL
+        user, workspace, "foo@bar.com", role("EDITOR"), table_a
     )
     handler.create_scoped_invitation(
-        user, workspace, "foo@bar.com", role("VIEWER"), table_b, BASE_URL
+        user, workspace, "foo@bar.com", role("VIEWER"), table_b
     )
     invitee = data_fixture.create_user(email="foo@bar.com")
 
@@ -221,10 +219,10 @@ def test_accepting_invitation_skips_trashed_scope(data_fixture):
     user, workspace, database, table_a, table_b = setup_workspace(data_fixture)
     handler = RoleAssignmentHandler()
     scoped_invitation = handler.create_scoped_invitation(
-        user, workspace, "foo@bar.com", role("EDITOR"), table_a, BASE_URL
+        user, workspace, "foo@bar.com", role("EDITOR"), table_a
     )
     handler.create_scoped_invitation(
-        user, workspace, "foo@bar.com", role("VIEWER"), table_b, BASE_URL
+        user, workspace, "foo@bar.com", role("VIEWER"), table_b
     )
     TrashHandler.trash(user, workspace, database, table_b)
     invitee = data_fixture.create_user(email="foo@bar.com")
@@ -241,7 +239,7 @@ def test_accepting_invitation_skips_trashed_scope(data_fixture):
 def test_signup_with_invitation_token_assigns_scoped_roles(data_fixture):
     user, workspace, _, table_a, _ = setup_workspace(data_fixture)
     scoped_invitation = RoleAssignmentHandler().create_scoped_invitation(
-        user, workspace, "foo@bar.com", role("EDITOR"), table_a, BASE_URL
+        user, workspace, "foo@bar.com", role("EDITOR"), table_a
     )
     token = (
         CoreHandler()
@@ -272,10 +270,10 @@ def test_update_and_delete_scoped_invitation(data_fixture):
     )
     handler = RoleAssignmentHandler()
     first = handler.create_scoped_invitation(
-        user, workspace, "foo@bar.com", role("EDITOR"), table_a, BASE_URL
+        user, workspace, "foo@bar.com", role("EDITOR"), table_a
     )
     second = handler.create_scoped_invitation(
-        user, workspace, "foo@bar.com", role("VIEWER"), table_b, BASE_URL
+        user, workspace, "foo@bar.com", role("VIEWER"), table_b
     )
 
     with pytest.raises(PermissionDenied):
@@ -303,7 +301,7 @@ def test_scoped_invitation_of_trashed_scope_cannot_be_managed(data_fixture):
     user, workspace, database, table_a, _ = setup_workspace(data_fixture)
     handler = RoleAssignmentHandler()
     scoped_invitation = handler.create_scoped_invitation(
-        user, workspace, "foo@bar.com", role("EDITOR"), table_a, BASE_URL
+        user, workspace, "foo@bar.com", role("EDITOR"), table_a
     )
     TrashHandler.trash(user, workspace, database, table_a)
 
@@ -319,10 +317,10 @@ def test_deleting_scope_deletes_its_scoped_invitations(data_fixture):
     user, workspace, _, table_a, table_b = setup_workspace(data_fixture)
     handler = RoleAssignmentHandler()
     handler.create_scoped_invitation(
-        user, workspace, "foo@bar.com", role("EDITOR"), table_a, BASE_URL
+        user, workspace, "foo@bar.com", role("EDITOR"), table_a
     )
     handler.create_scoped_invitation(
-        user, workspace, "foo@bar.com", role("VIEWER"), table_b, BASE_URL
+        user, workspace, "foo@bar.com", role("VIEWER"), table_b
     )
 
     table_a.delete()

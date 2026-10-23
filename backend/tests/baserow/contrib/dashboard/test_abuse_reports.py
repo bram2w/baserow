@@ -1,4 +1,5 @@
 from django.shortcuts import reverse
+from django.test.utils import override_settings
 
 import pytest
 from rest_framework.status import (
@@ -33,6 +34,7 @@ def submit_report(api_client, dashboard, **kwargs):
 
 
 @pytest.mark.django_db
+@override_settings(BASEROW_EMBEDDED_SHARE_URL="https://embed.example/baserow/")
 def test_anonymous_user_can_report_public_dashboard(api_client, data_fixture):
     user = data_fixture.create_user()
     dashboard = data_fixture.create_dashboard_application(
@@ -48,7 +50,9 @@ def test_anonymous_user_can_report_public_dashboard(api_client, data_fixture):
     assert report.resource_name == "Shared dashboard"
     assert report.workspace_id == dashboard.workspace_id
     assert report.workspace_name == dashboard.workspace.name
-    assert report.public_url.endswith(f"/public/dashboard/{dashboard.slug}")
+    assert report.public_url == (
+        f"https://embed.example/baserow/public/dashboard/{dashboard.slug}"
+    )
     assert report.reporter_name == "John Doe"
     assert report.reporter_email == "john@example.com"
     assert report.description == VALID_DESCRIPTION

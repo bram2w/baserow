@@ -197,7 +197,6 @@ async function mountRoute(
           }
           return true
         },
-        $config: { public: { baserowEmbeddedShareUrl: 'http://localhost' } },
         $store: { getters: { 'auth/getUserId': 7 } },
         $registry: createRegistry(app),
       },
@@ -425,12 +424,11 @@ test('adds picked subjects in one request and invites emails one by one', async 
         },
       ],
     })
-    expect(targetType.sendInvitation).toHaveBeenCalledWith(
-      workspace,
-      target,
-      { email: 'new@x.com', permissions: 'EDITOR', captchaToken: '' },
-      'http://localhost/workspace-invitation'
-    )
+    expect(targetType.sendInvitation).toHaveBeenCalledWith(workspace, target, {
+      email: 'new@x.com',
+      permissions: 'EDITOR',
+      captchaToken: '',
+    })
     expect(wrapper.find('.access').text()).toBe(
       'invitation:1,invitation:2,auth.User:8,baserow_enterprise.Team:3'
     )

@@ -43,15 +43,14 @@ describe('WorkspaceInvitationTargetType', () => {
           email: 'test@example.com',
           permissions: 'ADMIN',
           captchaToken: 'a-token',
-        },
-        'http://localhost/workspace-invitation'
+        }
       )
 
       expect(result).toEqual(invitation)
       const body = JSON.parse(mockServer.mock.history.post[0].data)
       expect(body.email).toBe('test@example.com')
       expect(body.permissions).toBe('ADMIN')
-      expect(body.base_url).toBe('http://localhost/workspace-invitation')
+      expect(body).not.toHaveProperty('base_url')
       expect(body.captcha_token).toBe('a-token')
       expect(busEmit).toHaveBeenCalledWith('invite-submitted', invitation)
     } finally {

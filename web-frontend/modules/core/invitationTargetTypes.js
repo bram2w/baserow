@@ -44,9 +44,8 @@ export class InvitationTargetType extends Registerable {
    * @param {Object} workspace The workspace the modal was opened in.
    * @param {Object} target The target the modal was opened with.
    * @param {Object} values The submitted form values.
-   * @param {string} acceptUrl The public page where the invitation is accepted.
    */
-  async sendInvitation(workspace, target, values, acceptUrl) {
+  async sendInvitation(workspace, target, values) {
     throw new Error(
       'The send invitation of an invitation target type must be set.'
     )
@@ -62,10 +61,9 @@ export class WorkspaceInvitationTargetType extends InvitationTargetType {
     return workspace._.roles.filter((role) => role.isVisible)
   }
 
-  async sendInvitation(workspace, target, values, acceptUrl) {
+  async sendInvitation(workspace, target, values) {
     const { data } = await WorkspaceService(this.app.$client).sendInvitation(
       workspace.id,
-      acceptUrl,
       values
     )
     // Lets the pending invitations table pick up the new row.

@@ -246,7 +246,6 @@ class CreateScopedInvitationActionType(ActionType):
         email: str,
         role: Role,
         scope: ScopeObject,
-        base_url: str,
     ) -> WorkspaceScopedInvitation:
         """
         Invites an email address to one scope of the workspace and sends the
@@ -255,7 +254,7 @@ class CreateScopedInvitationActionType(ActionType):
         """
 
         scoped_invitation = RoleAssignmentHandler().create_scoped_invitation(
-            user, workspace, email, role, scope, base_url
+            user, workspace, email, role, scope
         )
         scope_type = object_scope_type_registry.get_by_model(scope)
 

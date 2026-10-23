@@ -1416,7 +1416,6 @@ class RoleAssignmentHandler:
         email: str,
         role: Role,
         scope: ScopeObject,
-        base_url: str,
     ) -> WorkspaceScopedInvitation:
         """
         Invites the given email address to one scope of the workspace. The person
@@ -1431,8 +1430,6 @@ class RoleAssignmentHandler:
         :param email: The email address of the person that is invited.
         :param role: The role granted on the scope once the invitation is accepted.
         :param scope: The application, table or view the role is granted on.
-        :param base_url: The base url of the frontend where the invitation can be
-            accepted, passed on to the workspace invitation email.
         :raises ScopeNotExist: If the scope can't carry a scoped invitation.
         :raises WorkspaceUserAlreadyExists: If the address already belongs to a
             member of the workspace, who should be given a role directly instead.
@@ -1451,7 +1448,7 @@ class RoleAssignmentHandler:
             else NO_ROLE_LOW_PRIORITY_ROLE_UID
         )
         invitation = CoreHandler().create_workspace_invitation(
-            user, workspace, email, permissions, base_url
+            user, workspace, email, permissions
         )
 
         scoped_invitation, _ = WorkspaceScopedInvitation.objects.update_or_create(

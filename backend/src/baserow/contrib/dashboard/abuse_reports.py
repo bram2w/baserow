@@ -1,7 +1,3 @@
-from urllib.parse import urljoin
-
-from django.conf import settings
-
 from rest_framework.request import Request
 
 from baserow.contrib.dashboard.api.errors import (
@@ -21,6 +17,7 @@ from baserow.core.abuse_reports.registries import (
     AbuseReportResourceType,
     ReportedResource,
 )
+from baserow.core.utils import get_embedded_share_url
 
 
 class DashboardAbuseReportResourceType(AbuseReportResourceType):
@@ -53,6 +50,4 @@ class DashboardAbuseReportResourceType(AbuseReportResourceType):
         )
 
     def _get_public_url(self, dashboard: Dashboard) -> str:
-        return urljoin(
-            settings.BASEROW_EMBEDDED_SHARE_URL, f"/public/dashboard/{dashboard.slug}"
-        )
+        return get_embedded_share_url(f"public/dashboard/{dashboard.slug}")

@@ -287,11 +287,6 @@ class CreateScopedInvitationSerializer(serializers.Serializer):
         help_text="The scope object type.",
         choices=lazy(object_scope_type_registry.get_types, list)(),
     )
-    base_url = serializers.URLField(
-        help_text="The base URL where the user can publicly accept the invitation. "
-        "The accept token is going to be appended to the base_url (base_url + "
-        "'/token')."
-    )
     captcha_token = serializers.CharField(
         required=False,
         allow_blank=True,
