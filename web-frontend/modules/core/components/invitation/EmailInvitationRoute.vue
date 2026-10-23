@@ -132,6 +132,7 @@ export default {
           // Only the address matters when inviting by email.
           search: user.email,
           disabledReason: this.$t('inviteInput.alreadyMember'),
+          disabledHint: this.$t('inviteInput.memberHint'),
         })),
         ...this.pendingEmails.map((email) => ({
           key: `invitation:${email}`,
@@ -143,6 +144,7 @@ export default {
           icon: 'iconoir-mail',
           color: 'neutral',
           disabledReason: this.$t('inviteInput.alreadyInvited'),
+          disabledHint: this.$t('inviteInput.invitedHint'),
         })),
       ]
     },

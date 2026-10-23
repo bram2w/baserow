@@ -21,6 +21,7 @@ const member = {
   icon: 'iconoir-user',
   color: 'blue',
   disabledReason: 'Already a member',
+  disabledHint: 'Member',
 }
 // An address with an invitation, listed the same way.
 const pending = {
@@ -32,6 +33,7 @@ const pending = {
   icon: 'iconoir-mail',
   color: 'neutral',
   disabledReason: 'Already invited',
+  disabledHint: 'Invited',
 }
 // Someone who can be picked.
 const pickable = {
@@ -267,14 +269,14 @@ test('lists every option on focus in place of what is below the input', async ()
     expect(belowShown()).toBe(true)
 
     // Nothing has to be typed to see who can be picked, and who can't be is
-    // listed with the reason.
+    // listed with the hint.
     const input = wrapper.find('input')
     await input.trigger('focus')
     expect(resultsOpen(wrapper)).toBe(true)
     expect(belowShown()).toBe(false)
     expect(itemTitles(wrapper)).toEqual(['Mark Delgado', 'Foo Bar Viewer'])
     expect(wrapper.find('.invite-input__item--disabled').text()).toContain(
-      'Already a member'
+      'Member'
     )
 
     await input.trigger('blur')
@@ -285,7 +287,7 @@ test('lists every option on focus in place of what is below the input', async ()
   }
 })
 
-test('lists what cannot be picked with its reason and makes an error chip of it', async () => {
+test('lists what cannot be picked with a hint and makes an error chip of it', async () => {
   const wrapper = await mountInput()
   try {
     const input = wrapper.find('input')
@@ -295,9 +297,10 @@ test('lists what cannot be picked with its reason and makes an error chip of it'
     const row = wrapper.find('.invite-input__item')
     expect(row.classes()).toContain('invite-input__item--disabled')
     expect(itemTitles(wrapper)).toEqual(['Mark Delgado'])
-    expect(row.find('.invite-input__item-subtitle').text()).toBe(
-      'Already a member'
-    )
+    // The row keeps its subtitle, and the hint takes the place of the
+    // checkbox, with the reason as its tooltip.
+    expect(row.find('.invite-input__item-subtitle').exists()).toBe(false)
+    expect(row.find('.invite-input__item-hint').text()).toBe('Member')
     expect(row.find('input').exists()).toBe(false)
 
     // The row can't be picked, and the enter key only makes an error chip.
@@ -315,9 +318,7 @@ test('lists what cannot be picked with its reason and makes an error chip of it'
     // An address with an invitation is handled the same way.
     await input.setValue('Olga@x.com')
     expect(itemTitles(wrapper)).toEqual(['olga@x.com'])
-    expect(wrapper.find('.invite-input__item-subtitle').text()).toBe(
-      'Already invited'
-    )
+    expect(wrapper.find('.invite-input__item-hint').text()).toBe('Invited')
     await input.trigger('keydown', { key: 'Enter' })
     expect(errorChips(wrapper)).toEqual(['Mark Delgado', 'olga@x.com'])
   } finally {

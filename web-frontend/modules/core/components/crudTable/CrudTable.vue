@@ -422,7 +422,11 @@ export default {
     /**
      * Fetches the rows of a given page and adds them to the state.
      */
-    async fetch(page = null) {
+    /**
+     * Fetches the rows of a page. A `silent` fetch keeps showing the current
+     * rows until the new ones arrive, for when they were only changed in place.
+     */
+    async fetch(page = null, { silent = false } = {}) {
       if (page == null && this.service.options.isPaginated) {
         page = 1
       }
@@ -434,7 +438,9 @@ export default {
       // A newer request can resolve before an older one, so the response of an
       // older request must never overwrite the state of a newer one.
       const fetchId = ++this.lastFetchId
-      this.loading = true
+      if (!silent) {
+        this.loading = true
+      }
       try {
         const { data } = await this.service.fetch(
           this.service.options.baseUrl,
@@ -498,8 +504,8 @@ export default {
         this.totalCount = Math.max(0, this.totalCount - 1)
       }
     },
-    refresh() {
-      return this.fetch(this.page)
+    refresh({ silent = false } = {}) {
+      return this.fetch(this.page, { silent })
     },
   },
 }

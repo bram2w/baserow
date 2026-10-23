@@ -94,8 +94,9 @@ export default {
       const newMember = clone(member)
       newMember.role_uid = permissionsNew
       this.$emit('row-update', newMember)
-      // The table refreshes once the role is saved, until then the button
-      // shows that the change is on its way.
+      // The button shows that the change is on its way until it is saved. Other
+      // columns, like the highest role, depend on it, so the rows are fetched
+      // again, quietly as they only change in place.
       this.saving = true
 
       try {
@@ -107,7 +108,7 @@ export default {
           'workspace',
           permissionsNew
         )
-        this.$emit('refresh')
+        this.$emit('refresh', { silent: true })
       } catch (error) {
         this.$emit('row-update', oldMember)
         notifyIf(error)

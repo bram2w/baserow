@@ -120,7 +120,8 @@
 }
 
 .invite-input__list {
-  max-height: 400px;
+  // Six rows, so that the results take about the room of what they replace.
+  max-height: 336px;
   margin: 0;
   padding: 0;
   overflow-y: auto;
@@ -168,6 +169,13 @@
   line-height: 20px;
   color: $palette-neutral-900;
   white-space: pre-line;
+}
+
+// Why a row can't be picked, in short, where its checkbox would be.
+.invite-input__item-hint {
+  flex-shrink: 0;
+  font-size: 13px;
+  color: $palette-neutral-900;
 }
 
 .invite-input__empty {

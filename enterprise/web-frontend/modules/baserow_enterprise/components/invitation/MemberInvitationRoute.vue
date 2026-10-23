@@ -7,7 +7,7 @@
         :workspace="workspace"
         :scope-type-name="scopeTypeName"
         :subjects="pickableSubjects"
-        :assigned-keys="assignedKeys"
+        :assigned-roles="assignedRoles"
         :pending-emails="pendingEmails"
         :inherited-admins="inheritedAdmins"
         :roles="assignableRoles"
@@ -184,13 +184,18 @@ export default {
       )
     },
     /**
-     * The keys of the members, teams and agents that already hold a role on
-     * the object, which the picker lists as such rather than offers.
+     * The roles of the members, teams and agents that already hold a role on
+     * the object by their key, which the picker lists as such rather than
+     * offers.
      */
-    assignedKeys() {
-      return this.roleAssignments.map(
-        ({ subject_type: subjectType, subject }) =>
-          `${subjectType}:${subject.id}`
+    assignedRoles() {
+      return Object.fromEntries(
+        this.roleAssignments.map(
+          ({ subject_type: subjectType, subject, role }) => [
+            `${subjectType}:${subject.id}`,
+            role,
+          ]
+        )
       )
     },
     pendingEmails() {

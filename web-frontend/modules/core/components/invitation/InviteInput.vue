@@ -121,15 +121,19 @@
           />
           <div class="invite-input__item-text">
             <div class="invite-input__item-title">{{ option.name }}</div>
-            <div
-              v-if="option.disabledReason || option.subtitle"
-              class="invite-input__item-subtitle"
-            >
-              {{ option.disabledReason || option.subtitle }}
+            <div v-if="option.subtitle" class="invite-input__item-subtitle">
+              {{ option.subtitle }}
             </div>
           </div>
+          <span
+            v-if="option.disabledReason"
+            v-tooltip:[chipTooltipOptions]="option.disabledReason"
+            class="invite-input__item-hint"
+          >
+            {{ option.disabledHint }}
+          </span>
           <Checkbox
-            v-if="!option.disabledReason"
+            v-else
             :checked="isSelected(option)"
             @click.stop
             @update:model-value="toggle(option)"
@@ -180,7 +184,9 @@ export function extractEmails(text) {
  * initials, icon, color }` with an optional `email` for someone who can be
  * found by their address. One that can't be picked, because it already has a
  * role, an invitation or whatever else, carries the reason in
- * `disabledReason`: it is listed with that reason instead of a checkbox, and an
+ * `disabledReason` and a short version of it, like "Editor here", in
+ * `disabledHint`: it is listed with the hint in place of a checkbox and the
+ * reason as its tooltip, so that every row keeps the same height, and an
  * address that belongs to it turns into a chip marked as an error that is left
  * out of what is submitted. The same happens to every new address while a role
  * outside `emailRoleUids` is chosen, for a role that can be given to a member
@@ -191,7 +197,7 @@ export function extractEmails(text) {
  *
  * `tabs` are `{ value, label }` matching the option types, and an "All" tab is
  * added in front. With tabs the list opens on focus and shows every option,
- * including those that can't be picked with their reason, so nobody has to be
+ * including those that can't be picked with their hint, so nobody has to be
  * remembered by name. Without tabs it only opens once something is typed.
  *
  * A result row toggles on click, and so does its checkbox. The checkbox is a

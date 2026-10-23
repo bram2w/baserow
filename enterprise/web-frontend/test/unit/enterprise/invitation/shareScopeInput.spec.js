@@ -28,9 +28,16 @@ async function mountInput(props = {}) {
     },
     global: {
       mocks: {
-        // Shows the subject types the placeholder and empty text list.
-        $t: (key, params) =>
-          params?.subjects === undefined ? key : `${key}: ${params.subjects}`,
+        // Shows the subject types the placeholder and empty text list, and the
+        // role of a subject that already has one.
+        $t: (key, params) => {
+          if (key === 'shareScope.roleHere') {
+            return `${params.role} here`
+          }
+          return params?.subjects === undefined
+            ? key
+            : `${key}: ${params.subjects}`
+        },
       },
       stubs: {
         WorkspaceRoleSelector: { template: '<div class="role"></div>' },
@@ -109,9 +116,9 @@ test('blocks new email invitations while still allowing existing members', async
   }
 })
 
-test('lists an invited address and an assigned subject with the reason', async () => {
+test('lists an invited address and an assigned subject with a hint', async () => {
   const wrapper = await mountInput({
-    assignedKeys: ['baserow_enterprise.Team:3'],
+    assignedRoles: { 'baserow_enterprise.Team:3': 'EDITOR' },
   })
   try {
     const input = wrapper.find('input')
@@ -121,7 +128,10 @@ test('lists an invited address and an assigned subject with the reason', async (
     const row = wrapper.find('.invite-input__item')
     expect(row.classes()).toContain('invite-input__item--disabled')
     expect(itemTitles(wrapper)).toEqual(['olga@x.com'])
-    expect(wrapper.find('.invite-input__item-subtitle').text()).toBe(
+    expect(row.find('.invite-input__item-hint').text()).toBe(
+      'inviteInput.invitedHint'
+    )
+    expect(wrapper.vm.$refs.input.visibleOptions[0].disabledReason).toBe(
       'shareScope.alreadyInvited'
     )
     expect(row.find('input').exists()).toBe(false)
@@ -146,7 +156,12 @@ test('lists an invited address and an assigned subject with the reason', async (
     expect(wrapper.find('.invite-input__item').classes()).toContain(
       'invite-input__item--disabled'
     )
+    // It keeps its subtitle, and its role on the object is the hint.
     expect(wrapper.find('.invite-input__item-subtitle').text()).toBe(
+      'subjectType.teamMembers - 2'
+    )
+    expect(wrapper.find('.invite-input__item-hint').text()).toBe('Editor here')
+    expect(wrapper.vm.$refs.input.visibleOptions[0].disabledReason).toBe(
       'shareScope.alreadyAssigned'
     )
   } finally {
@@ -166,7 +181,10 @@ test('lists an admin of a level above with the reason instead of offering them',
     const row = wrapper.find('.invite-input__item')
     expect(itemTitles(wrapper)).toEqual(['Mark Delgado'])
     expect(row.classes()).toContain('invite-input__item--disabled')
-    expect(wrapper.find('.invite-input__item-subtitle').text()).toBe(
+    expect(wrapper.find('.invite-input__item-hint').text()).toBe(
+      'shareScope.adminHint'
+    )
+    expect(wrapper.vm.$refs.input.visibleOptions[0].disabledReason).toBe(
       'shareScope.alreadyAdmin'
     )
     await row.trigger('click')
