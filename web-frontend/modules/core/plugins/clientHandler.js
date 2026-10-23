@@ -159,6 +159,10 @@ export class ClientErrorMap {
         $i18n.t('clientHandler.templateHasNoContentTitle'),
         $i18n.t('clientHandler.templateHasNoContentDescription')
       ),
+      ERROR_TEMPLATE_FILE_DOES_NOT_EXIST: new ResponseErrorMessage(
+        $i18n.t('clientHandler.templateFileDoesNotExistTitle'),
+        $i18n.t('clientHandler.templateFileDoesNotExistDescription')
+      ),
       ERROR_LAST_ADMIN_OF_GROUP: new ResponseErrorMessage(
         $i18n.t('clientHandler.lastAdminTitle'),
         $i18n.t('clientHandler.lastAdminMessage')

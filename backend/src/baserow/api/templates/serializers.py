@@ -4,7 +4,9 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from baserow.core.context import clear_current_workspace_id, set_current_workspace_id
 from baserow.core.models import Template, TemplateCategory
+from baserow.core.storage import get_default_storage
 from baserow.core.user_templates.constants import UserTemplateState
 from baserow.core.user_templates.handler import UserTemplateHandler
 
@@ -168,3 +170,27 @@ class TemplateListItemSerializer(TemplateSerializer):
             return None
         # Counted on the root, which the list selects with every revision.
         return instance.get_root().install_count
+
+
+class UserTemplateDownloadSerializer(serializers.Serializer):
+    """
+    The stored archive of a user template, handed out as a storage URL like the
+    file of a workspace export.
+    """
+
+    url = serializers.SerializerMethodField(
+        help_text="The URL of the archive, which imports like a workspace export."
+    )
+    file_name = serializers.CharField(
+        read_only=True, help_text="The name to save the file as."
+    )
+
+    @extend_schema_field(OpenApiTypes.URI)
+    def get_url(self, instance):
+        # Like `FileURLSerializerMixin`: the storage backend may sign the URL with
+        # the current workspace, so that access is checked at download time.
+        try:
+            set_current_workspace_id(instance.url_workspace_id)
+            return get_default_storage().url(instance.archive_name)
+        finally:
+            clear_current_workspace_id()

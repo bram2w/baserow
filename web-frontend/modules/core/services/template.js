@@ -27,5 +27,9 @@ export default (client) => {
     delete(slug) {
       return client.delete(`/templates/${slug}/`)
     },
+    download(slug, { latest = false } = {}) {
+      const params = latest ? { latest: true } : {}
+      return client.get(`/templates/${slug}/download/`, { params })
+    },
   }
 }

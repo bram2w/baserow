@@ -94,6 +94,15 @@ describe('TemplateDetails', () => {
     expect(selectedTables(wrapper)).toEqual(['First table'])
   })
 
+  const menuTexts = async (wrapper) => {
+    await wrapper
+      .find('.template-install__actions .button-icon')
+      .trigger('click')
+    return wrapper
+      .findAll('.context__menu-item-link')
+      .map((link) => link.text())
+  }
+
   test('installs a user template', async () => {
     const wrapper = await mountComponent({
       template: { ...template, type: 'user' },
@@ -102,12 +111,18 @@ describe('TemplateDetails', () => {
     expect(wrapper.find('.template-details__foot').exists()).toBe(true)
     expect(wrapper.find('.template-install').exists()).toBe(true)
 
-    await wrapper
-      .find('.template-install__actions .button-icon')
-      .trigger('click')
-    const links = wrapper.findAll('.context__menu-item-link')
-    expect(links).toHaveLength(1)
-    expect(links[0].text()).toContain('templateInstall.copyLink')
+    expect(await menuTexts(wrapper)).toStrictEqual([
+      expect.stringContaining('templateInstall.copyLink'),
+      'templateInstall.download',
+    ])
+  })
+
+  test('only offers the copy link of an official template', async () => {
+    const wrapper = await mountComponent()
+
+    expect(await menuTexts(wrapper)).toStrictEqual([
+      expect.stringContaining('templateInstall.copyLink'),
+    ])
   })
 
   test('adds the owner actions to the install menu of an own template', async () => {
@@ -125,6 +140,7 @@ describe('TemplateDetails', () => {
     expect(links.map((link) => link.text())).toStrictEqual([
       'templateDetails.editDetails',
       'templateDetails.updateContent',
+      'templateInstall.download',
       'templateDetails.delete',
     ])
 

@@ -209,7 +209,8 @@ class TemplateDoesNotExist(Exception):
 class TemplateFileDoesNotExist(Exception):
     """
     Raised when the JSON template file does not exist in the
-    APPLICATION_TEMPLATE_DIRS directory.
+    APPLICATION_TEMPLATE_DIRS directory, or when the stored archive of a user
+    template revision is missing.
     """
 
 

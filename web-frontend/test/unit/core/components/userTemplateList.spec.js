@@ -4,6 +4,13 @@ import { flushPromises } from '@vue/test-utils'
 import { TestApp } from '@baserow/test/helpers/testApp'
 import UserTemplateList from '@baserow/modules/core/components/template/UserTemplateList'
 import InfiniteScroll from '@baserow/modules/core/components/helpers/InfiniteScroll'
+import { triggerDownload } from '@baserow/modules/core/utils/download'
+
+// Saving the file is replaced, so that nothing navigates.
+vi.mock('@baserow/modules/core/utils/download', async (importOriginal) => {
+  const original = await importOriginal()
+  return { ...original, triggerDownload: vi.fn() }
+})
 
 const userTemplate = (id, name, state = 'private', extra = {}) => ({
   id,
@@ -67,6 +74,7 @@ describe('UserTemplateList', () => {
 
   afterEach(async () => {
     vi.useRealTimers()
+    vi.mocked(triggerDownload).mockReset()
     await testApp.afterEach()
   })
 
@@ -404,6 +412,7 @@ describe('UserTemplateList', () => {
     expect(links.map((link) => link.text())).toStrictEqual([
       'userTemplateList.editDetails',
       'userTemplateList.updateContent',
+      'userTemplateList.download',
       'userTemplateList.delete',
     ])
 
@@ -414,6 +423,197 @@ describe('UserTemplateList', () => {
     await wrapper.findAll('.context__menu-item-link')[0].trigger('click')
     expect(wrapper.emitted('edit')[1]).toStrictEqual([templates[0], 'details'])
     expect(wrapper.emitted('selected')).toBeUndefined()
+  })
+
+  test('downloads the file of a row, then closes its actions', async () => {
+    const templates = [
+      userTemplate(1, 'Sprint Tracker'),
+      userTemplate(2, 'Growth Playbook', 'blocked'),
+    ]
+    mockPages(page(templates))
+    const file = {
+      url: 'http://localhost:8000/media/template-revisions/abc.zip',
+      file_name: 'growth-playbook.zip',
+    }
+    let reply = null
+    testApp.mock.onGet('/templates/growth-playbook-a1b2c3/download/').reply(
+      () =>
+        new Promise((resolve) => {
+          reply = resolve
+        })
+    )
+    const downloadRequests = () =>
+      testApp.mock.history.get.filter((request) =>
+        request.url.endsWith('/download/')
+      )
+    const wrapper = await mountComponent()
+    const context = wrapper.findComponent({ name: 'Context' }).vm
+    // Loading the list doesn't fetch the URL of any file.
+    expect(downloadRequests()).toHaveLength(0)
+
+    await wrapper
+      .findAll('.user-template-list__actions .button-icon')[1]
+      .trigger('click')
+    const downloadLink = () =>
+      wrapper
+        .findAll('.context__menu-item-link')
+        .find((link) => link.text() === 'userTemplateList.download')
+    const link = downloadLink()
+    expect(link.find('i').classes()).toContain('iconoir-download')
+    expect(link.element.parentElement.classList).toContain(
+      'context__menu-item--with-separator'
+    )
+
+    // The click doesn't bubble, so that only the item handles it. In the tests the
+    // menu is rendered again with a new element, which its check of the clicks
+    // outside of it would take as one.
+    link.element.dispatchEvent(
+      new MouseEvent('click', { bubbles: false, cancelable: true })
+    )
+    await flushPromises()
+
+    // While the URL is fetched the item shows it, and the actions stay open.
+    // The user's own template, so its latest revision.
+    expect(
+      downloadRequests().map((request) => [request.url, request.params])
+    ).toStrictEqual([
+      ['/templates/growth-playbook-a1b2c3/download/', { latest: true }],
+    ])
+    expect(downloadLink().classes()).toContain(
+      'context__menu-item-link--loading'
+    )
+    expect(context.isOpen()).toBe(true)
+
+    reply([200, file])
+    await flushPromises()
+
+    expect(triggerDownload).toHaveBeenCalledTimes(1)
+    expect(triggerDownload).toHaveBeenCalledWith(file.url, file.file_name, {
+      viaXhr: false,
+    })
+    expect(context.isOpen()).toBe(false)
+    expect(wrapper.emitted('selected')).toBeUndefined()
+  })
+
+  test('keeps the actions of another row open when a download finishes', async () => {
+    const templates = [
+      userTemplate(1, 'Sprint Tracker'),
+      userTemplate(2, 'Growth Playbook'),
+    ]
+    mockPages(page(templates))
+    let reply = null
+    testApp.mock.onGet('/templates/growth-playbook-a1b2c3/download/').reply(
+      () =>
+        new Promise((resolve) => {
+          reply = resolve
+        })
+    )
+    const wrapper = await mountComponent()
+    const context = wrapper.findComponent({ name: 'Context' }).vm
+    const actionButtons = wrapper.findAll(
+      '.user-template-list__actions .button-icon'
+    )
+    const link = (text) =>
+      wrapper
+        .findAll('.context__menu-item-link')
+        .find((element) => element.text() === text)
+
+    await actionButtons[1].trigger('click')
+    // Doesn't bubble, like in the test above.
+    link('userTemplateList.download').element.dispatchEvent(
+      new MouseEvent('click', { bubbles: false, cancelable: true })
+    )
+    await flushPromises()
+
+    // While the URL is fetched, the actions of the other row are opened.
+    await actionButtons[0].trigger('click')
+    expect(context.isOpen()).toBe(true)
+
+    reply([
+      200,
+      {
+        url: 'http://localhost:8000/media/template-revisions/abc.zip',
+        file_name: 'growth-playbook.zip',
+      },
+    ])
+    await flushPromises()
+
+    expect(triggerDownload).toHaveBeenCalledTimes(1)
+    expect(context.isOpen()).toBe(true)
+    await link('userTemplateList.editDetails').trigger('click')
+    expect(wrapper.emitted('edit')).toStrictEqual([[templates[0], 'details']])
+  })
+
+  test('downloads another row while a download runs', async () => {
+    const templates = [
+      userTemplate(1, 'Sprint Tracker'),
+      userTemplate(2, 'Growth Playbook'),
+    ]
+    mockPages(page(templates))
+    const replies = {}
+    for (const template of templates) {
+      testApp.mock.onGet(`/templates/${template.slug}/download/`).reply(
+        () =>
+          new Promise((resolve) => {
+            replies[template.id] = resolve
+          })
+      )
+    }
+    const wrapper = await mountComponent()
+    const context = wrapper.findComponent({ name: 'Context' }).vm
+    const actionButtons = wrapper.findAll(
+      '.user-template-list__actions .button-icon'
+    )
+    const downloadLink = () =>
+      wrapper
+        .findAll('.context__menu-item-link')
+        .find((element) => element.text() === 'userTemplateList.download')
+    // Doesn't bubble, like in the tests above.
+    const clickDownload = async () => {
+      downloadLink().element.dispatchEvent(
+        new MouseEvent('click', { bubbles: false, cancelable: true })
+      )
+      await flushPromises()
+    }
+    const file = (name) => ({
+      url: `http://localhost:8000/media/template-revisions/${name}`,
+      file_name: name,
+    })
+
+    await actionButtons[1].trigger('click')
+    await clickDownload()
+
+    // The other row's item isn't loading, and its click downloads it too.
+    await actionButtons[0].trigger('click')
+    expect(downloadLink().classes()).not.toContain(
+      'context__menu-item-link--loading'
+    )
+    await clickDownload()
+    expect(
+      testApp.mock.history.get
+        .filter((request) => request.url.endsWith('/download/'))
+        .map((request) => request.url)
+    ).toStrictEqual([
+      '/templates/growth-playbook-a1b2c3/download/',
+      '/templates/sprint-tracker-a1b2c3/download/',
+    ])
+    expect(downloadLink().classes()).toContain(
+      'context__menu-item-link--loading'
+    )
+    expect(context.isOpen()).toBe(true)
+
+    // The first download finishing leaves the open menu of the other row.
+    replies[2]([200, file('growth-playbook.zip')])
+    await flushPromises()
+    expect(context.isOpen()).toBe(true)
+
+    replies[1]([200, file('sprint-tracker.zip')])
+    await flushPromises()
+    expect(triggerDownload.mock.calls.map(([url]) => url)).toStrictEqual([
+      file('growth-playbook.zip').url,
+      file('sprint-tracker.zip').url,
+    ])
+    expect(context.isOpen()).toBe(false)
   })
 
   test('asks to delete a template with the last action', async () => {
