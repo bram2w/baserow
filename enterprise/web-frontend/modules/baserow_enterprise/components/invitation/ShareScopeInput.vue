@@ -24,6 +24,7 @@
         $t('shareScope.inviteEmailDescription', { role, type: scopeTypeName })
       }}
     </template>
+    <slot></slot>
   </InviteInput>
 </template>
 
@@ -39,7 +40,8 @@ import InviteInput from '@baserow/modules/core/components/invitation/InviteInput
  * are listed with that reason rather than offered. So is a subject in
  * `inheritedAdmins`, who has full access to the object already. Submitting emits `add` with
  * the picked items and the chosen role uid; the parent calls `remove()` and
- * `reset()` once they were added.
+ * `reset()` once they were added. The default slot is what the dialog shows
+ * below the input while no results are open.
  */
 export default {
   name: 'ShareScopeInput',

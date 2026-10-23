@@ -46,8 +46,9 @@ const pickable = {
   color: 'blue',
 }
 
-async function mountInput(props = {}, batchLimit) {
+async function mountInput(props = {}, batchLimit, slots = {}) {
   return await mountSuspended(InviteInput, {
+    slots,
     props: {
       workspace,
       roles,
@@ -84,7 +85,7 @@ function itemTitles(wrapper) {
 }
 
 function resultsOpen(wrapper) {
-  return wrapper.findComponent({ name: 'Context' }).vm.isOpen()
+  return wrapper.find('.invite-input__results').exists()
 }
 
 function paste(input, text) {
@@ -244,6 +245,41 @@ test('only takes email addresses when there is nothing to pick', async () => {
     const [picked, roleUid] = wrapper.emitted('add')[0]
     expect(picked.map(({ email }) => email)).toEqual(['new@x.com'])
     expect(roleUid).toBe('VIEWER')
+  } finally {
+    wrapper.unmount()
+  }
+})
+
+test('lists every option on focus in place of what is below the input', async () => {
+  const wrapper = await mountInput(
+    {
+      options: [member, pickable],
+      tabs: [{ value: 'auth.User', label: 'Members' }],
+    },
+    undefined,
+    { default: '<p class="below">Direct access</p>' }
+  )
+  try {
+    // Hidden rather than removed, so that it keeps its state.
+    const belowShown = () =>
+      wrapper.find('.below').element.parentElement.style.display !== 'none'
+    expect(resultsOpen(wrapper)).toBe(false)
+    expect(belowShown()).toBe(true)
+
+    // Nothing has to be typed to see who can be picked, and who can't be is
+    // listed with the reason.
+    const input = wrapper.find('input')
+    await input.trigger('focus')
+    expect(resultsOpen(wrapper)).toBe(true)
+    expect(belowShown()).toBe(false)
+    expect(itemTitles(wrapper)).toEqual(['Mark Delgado', 'Foo Bar Viewer'])
+    expect(wrapper.find('.invite-input__item--disabled').text()).toContain(
+      'Already a member'
+    )
+
+    await input.trigger('blur')
+    expect(resultsOpen(wrapper)).toBe(false)
+    expect(belowShown()).toBe(true)
   } finally {
     wrapper.unmount()
   }

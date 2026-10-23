@@ -9,24 +9,25 @@
       :options="options"
       :disabled="inviting"
       @add="invite"
-    />
-    <CaptchaWidget
-      ref="captchaWidget"
-      class="margin-top-2"
-      context="workspace_invitation"
-      @token="onCaptchaToken"
-    />
-    <h3 class="invite-list__title">{{ $t('inviteModal.pendingTitle') }}</h3>
-    <div v-if="loading" class="loading"></div>
-    <ScopeAccessList
-      v-else
-      :items="accessItems"
-      :roles="roles"
-      :workspace="workspace"
-      :empty-title="$t('inviteModal.pendingEmptyTitle')"
-      :empty-description="$t('inviteModal.pendingEmptyDescription')"
-      @role-updated="updateItemRole"
-    />
+    >
+      <CaptchaWidget
+        ref="captchaWidget"
+        class="margin-top-2"
+        context="workspace_invitation"
+        @token="onCaptchaToken"
+      />
+      <h3 class="invite-list__title">{{ $t('inviteModal.pendingTitle') }}</h3>
+      <div v-if="loading" class="loading"></div>
+      <ScopeAccessList
+        v-else
+        :items="accessItems"
+        :roles="roles"
+        :workspace="workspace"
+        :empty-title="$t('inviteModal.pendingEmptyTitle')"
+        :empty-description="$t('inviteModal.pendingEmptyDescription')"
+        @role-updated="updateItemRole"
+      />
+    </InviteInput>
   </div>
 </template>
 

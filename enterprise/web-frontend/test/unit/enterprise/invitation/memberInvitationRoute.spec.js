@@ -222,7 +222,9 @@ async function mountRoute(
             '<div class="picker-assigned">{{ assignedKeys.join(",") }}</div>' +
             '<div class="picker-admins">{{ JSON.stringify(inheritedAdmins) }}</div>' +
             '<div class="picker-roles">{{ roles.map((r) => r.uid).join(",") }}' +
-            '|{{ emailRoleUids.join(",") }}</div>',
+            '|{{ emailRoleUids.join(",") }}</div>' +
+            // What the dialog shows below the input.
+            '<slot />',
           methods: {
             reset() {
               picker.resets += 1

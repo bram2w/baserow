@@ -1,9 +1,12 @@
 // The lists below the invite input: who already has access, or which
 // invitations are pending.
-.invite-list__title {
+.invite-list__title,
+// Keeps its distance from the input it follows, also as the first heading
+// below it, where headings otherwise lose their top margin.
+.invite-list__title:first-child {
   margin: 24px 0 8px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   color: $palette-neutral-1200;
 }
 
@@ -50,12 +53,14 @@
   display: flex;
   align-items: center;
   font-size: 14px;
-  font-weight: 500;
+  line-height: 20px;
+  font-weight: 400;
   color: $palette-neutral-1200;
 }
 
 .invite-list__subtitle {
   font-size: 13px;
+  line-height: 20px;
   color: $palette-neutral-900;
 }
 
@@ -69,11 +74,6 @@
   .invite-list__item {
     min-height: 65px;
   }
-
-  .invite-list__name,
-  .invite-list__subtitle {
-    line-height: 20px;
-  }
 }
 
 .invite-list__empty {
@@ -82,7 +82,7 @@
   font-size: 13px;
   line-height: 20px;
   color: $palette-neutral-900;
-  border: 1px dashed $palette-neutral-200;
+  border: 1px dashed $palette-neutral-400;
 
   @include rounded($rounded-md);
 }

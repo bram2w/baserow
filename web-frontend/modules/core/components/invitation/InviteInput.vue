@@ -5,7 +5,7 @@
         $t('inviteInput.batchLimitExceeded', { limit: invitationBatchLimit })
       }}
     </p>
-    <div ref="row" class="invite-input__row">
+    <div class="invite-input__row">
       <div class="invite-input__field" @click="focus">
         <span
           v-for="item in selected"
@@ -67,13 +67,7 @@
         </slot>
       </Button>
     </div>
-    <Context
-      ref="results"
-      class="invite-input__results"
-      :style="{ width: resultsWidth }"
-      :hide-on-click-outside="false"
-      @mousedown.prevent
-    >
+    <div v-if="showResults" class="invite-input__results" @mousedown.prevent>
       <div v-if="tabs.length > 0" class="invite-input__tabs">
         <a
           v-for="tab in allTabs"
@@ -145,7 +139,10 @@
       <div v-if="nothingToShow" class="invite-input__empty">
         {{ noResultsTextOrDefault }}
       </div>
-    </Context>
+    </div>
+    <div v-show="!showResults">
+      <slot></slot>
+    </div>
   </div>
 </template>
 
@@ -193,14 +190,17 @@ export function extractEmails(text) {
  * why, so the input needs to know nothing about members, agents or invitations.
  *
  * `tabs` are `{ value, label }` matching the option types, and an "All" tab is
- * added in front. Without tabs the list only opens once something is typed.
+ * added in front. With tabs the list opens on focus and shows every option,
+ * including those that can't be picked with their reason, so nobody has to be
+ * remembered by name. Without tabs it only opens once something is typed.
  *
  * A result row toggles on click, and so does its checkbox. The checkbox is a
  * label around a native input, whose click would bubble to the row and toggle
  * it back, so the checkbox keeps its click to itself and toggles through its
  * own change event instead. The list stays open while the chips and the list
  * itself are clicked, because neither takes the focus away from the input. It
- * opens in a context below the input, as wide as it, over what follows.
+ * opens right below the input and takes the place of the default slot, which
+ * holds whatever the parent shows below the input otherwise.
  */
 export default {
   name: 'InviteInput',
@@ -267,7 +267,6 @@ export default {
       activeTab: TAB_ALL,
       selected: [],
       roleUid: this.initialRoleUid(this.roles),
-      resultsWidth: null,
     }
   },
   computed: {
@@ -320,8 +319,9 @@ export default {
     /**
      * The options matching the tab and the search. An address row is about an
      * address rather than a kind of subject, so it shows under every tab. What
-     * can't be picked only shows up when it is searched for, to explain why it
-     * isn't offered, and stays out of the way otherwise.
+     * can't be picked is listed with the reason why it isn't offered, but an
+     * address that can't be picked only shows up when it is searched for, as
+     * it isn't someone to browse for.
      */
     visibleOptions() {
       return this.options.filter(
@@ -329,7 +329,9 @@ export default {
           (this.activeTab === TAB_ALL ||
             option.type === 'email' ||
             option.type === this.activeTab) &&
-          (!option.disabledReason || this.normalizedQuery !== '') &&
+          (option.type !== 'email' ||
+            !option.disabledReason ||
+            this.normalizedQuery !== '') &&
           option.search.toLowerCase().includes(this.normalizedQuery)
       )
     },
@@ -367,12 +369,7 @@ export default {
      * nothing to show until something is typed.
      */
     showResults() {
-      return (
-        this.open &&
-        (this.tabs.length > 0 ||
-          this.options.some((option) => !option.disabledReason) ||
-          this.normalizedQuery !== '')
-      )
+      return this.open && (this.tabs.length > 0 || this.normalizedQuery !== '')
     },
     nothingToShow() {
       return this.emailOptions.length === 0 && this.visibleOptions.length === 0
@@ -397,22 +394,6 @@ export default {
     },
   },
   watch: {
-    showResults(show) {
-      if (show) {
-        this.showResultsContext()
-      } else {
-        this.$refs.results.hide()
-      }
-    },
-    /**
-     * The chips can wrap onto another line, which moves the bottom of the
-     * input that the results sit below.
-     */
-    'selected.length'() {
-      if (this.showResults) {
-        this.$nextTick(() => this.showResultsContext())
-      }
-    },
     roles(roles) {
       if (!roles.some((role) => role.uid === this.roleUid)) {
         this.roleUid = this.initialRoleUid(roles)
@@ -438,11 +419,6 @@ export default {
     },
     focus() {
       this.$refs.input.focus()
-    },
-    showResultsContext() {
-      const row = this.$refs.row
-      this.resultsWidth = `${row.offsetWidth}px`
-      this.$refs.results.show(row, 'bottom', 'left', 8)
     },
     optionWithEmail(email) {
       return this.options.find(

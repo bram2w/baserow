@@ -10,22 +10,19 @@
   gap: 8px;
 }
 
+// Looks like a form input, but grows with the chips that wrap inside it.
 .invite-input__field {
-  display: flex;
+  @extend %form-input;
+
   flex: 1 1 auto;
   flex-wrap: wrap;
   align-items: center;
   gap: 4px;
-  min-height: 40px;
-  padding: 4px 8px;
-  border: 1px solid $palette-neutral-200;
+  height: auto;
+  min-height: 36px;
+  padding: 3px 12px;
+  overflow: visible;
   cursor: text;
-
-  @include rounded($rounded-md);
-
-  &:focus-within {
-    border-color: $palette-blue-500;
-  }
 }
 
 .invite-input__chip {
@@ -82,20 +79,24 @@
   background: transparent;
   font-size: 13px;
   color: $palette-neutral-1200;
+
+  &::placeholder {
+    color: $palette-neutral-700;
+  }
 }
 
 .invite-input__role {
   flex: 0 0 170px;
 }
 
+// Takes the place of what is below the input while it is searched.
 .invite-input__results {
-  overflow: hidden;
+  margin-top: 16px;
 }
 
 .invite-input__tabs {
   display: flex;
   gap: 20px;
-  padding: 0 12px;
   border-bottom: 1px solid $palette-neutral-200;
 }
 
@@ -119,9 +120,9 @@
 }
 
 .invite-input__list {
-  max-height: 260px;
+  max-height: 400px;
   margin: 0;
-  padding: 4px 0;
+  padding: 0;
   overflow-y: auto;
   list-style: none;
 }
@@ -130,8 +131,13 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 12px;
+  min-height: 56px;
+  padding: 8px;
   cursor: pointer;
+
+  & + & {
+    border-top: 1px solid $palette-neutral-200;
+  }
 
   &:hover {
     background-color: rgba($palette-neutral-1300, 0.04);
@@ -152,19 +158,20 @@
 }
 
 .invite-input__item-title {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
   color: $palette-neutral-1200;
 }
 
 .invite-input__item-subtitle {
-  font-size: 12px;
+  font-size: 13px;
+  line-height: 20px;
   color: $palette-neutral-900;
   white-space: pre-line;
 }
 
 .invite-input__empty {
-  padding: 16px 12px;
+  padding: 16px 0;
   font-size: 13px;
   color: $palette-neutral-900;
 }

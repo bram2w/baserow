@@ -241,7 +241,7 @@ test('opens the tabs on focus even when there is nobody left to pick', async () 
   try {
     await wrapper.find('input').trigger('focus')
     await flushPromises()
-    expect(wrapper.findComponent({ name: 'Context' }).vm.isOpen()).toBe(true)
+    expect(wrapper.find('.invite-input__results').exists()).toBe(true)
     expect(tabLabels(wrapper)).toEqual([
       'inviteInput.tabAll',
       'subjectType.members',

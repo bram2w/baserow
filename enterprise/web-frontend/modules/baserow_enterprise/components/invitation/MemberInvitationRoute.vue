@@ -15,40 +15,42 @@
         :email-disabled-reason="emailDisabledReason"
         :disabled="loading || adding"
         @add="add"
-      />
-      <p v-if="emailDisabledReason" class="margin-top-1">
-        {{ emailDisabledReason }}
-      </p>
-      <CaptchaWidget
-        v-if="canInviteNewUsers"
-        ref="captchaWidget"
-        class="margin-top-2"
-        context="workspace_invitation"
-        @token="onCaptchaToken"
-      />
-      <h3 class="invite-list__title">
-        {{ $t('shareScope.directAccess', { type: scopeTypeName }) }}
-      </h3>
-      <div v-if="loading" class="loading"></div>
-      <ScopeAccessList
-        v-else
-        :items="accessItems"
-        :roles="assignableRoles"
-        :empty-title="$t('shareScope.emptyTitle', { type: scopeTypeName })"
-        :empty-description="$t('shareScope.emptyDescription')"
-        :workspace="workspace"
-        @role-updated="updateItemRole"
-      />
-      <h3 class="invite-list__title">
-        {{ $t('shareScope.inheritedAccess') }}
-        <span class="invite-list__title-muted">
-          {{ $t('shareScope.inherited') }}
-        </span>
-      </h3>
-      <ScopeInheritedAccess
-        :workspace="workspace"
-        :scope-type-name="scopeTypeName"
-      />
+      >
+        <p v-if="emailDisabledReason" class="margin-top-1">
+          {{ emailDisabledReason }}
+        </p>
+        <CaptchaWidget
+          v-if="canInviteNewUsers"
+          ref="captchaWidget"
+          class="margin-top-2"
+          context="workspace_invitation"
+          @token="onCaptchaToken"
+        />
+        <h3 class="invite-list__title">
+          {{ $t('shareScope.directAccess', { type: scopeTypeName }) }}
+        </h3>
+        <div v-if="loading" class="loading"></div>
+        <ScopeAccessList
+          v-else
+          :items="accessItems"
+          :roles="assignableRoles"
+          :empty-title="$t('shareScope.emptyTitle', { type: scopeTypeName })"
+          :empty-description="$t('shareScope.emptyDescription')"
+          :workspace="workspace"
+          @role-updated="updateItemRole"
+        />
+        <h3 class="invite-list__title">
+          {{ $t('shareScope.inheritedAccess') }}
+          <span class="invite-list__title-muted">
+            {{ $t('shareScope.inherited') }}
+          </span>
+        </h3>
+        <ScopeInheritedAccess
+          :workspace="workspace"
+          :scope-type-name="scopeTypeName"
+          @close="$emit('close')"
+        />
+      </ShareScopeInput>
     </template>
   </div>
 </template>
@@ -82,6 +84,9 @@ import { filterRoles } from '@baserow_enterprise/utils/roles'
  * with an explanation, and the picker lists them with that reason instead of
  * offering them. A team's admin role never protects its members, so it is
  * shown as any other role.
+ *
+ * Following a link out of the dialog, such as to the members page, emits
+ * `close` so that the modal doesn't stay open over that page.
  */
 export default {
   name: 'MemberInvitationRoute',
@@ -106,6 +111,7 @@ export default {
       required: true,
     },
   },
+  emits: ['close'],
   data() {
     return {
       loading: false,

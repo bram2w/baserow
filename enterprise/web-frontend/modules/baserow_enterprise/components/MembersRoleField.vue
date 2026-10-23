@@ -3,6 +3,7 @@
     <RoleSelectorButton
       :icon="selectedRole?.icon"
       :role-name="selectedRole?.name || ''"
+      :loading="saving"
       :read-only="
         userId === row.user_id ||
         !$hasPermission(
@@ -60,6 +61,11 @@ export default {
       required: true,
     },
   },
+  data() {
+    return {
+      saving: false,
+    }
+  },
   computed: {
     selectedRole() {
       return this.roles.find((role) => role.uid === this.row.role_uid)
@@ -88,6 +94,9 @@ export default {
       const newMember = clone(member)
       newMember.role_uid = permissionsNew
       this.$emit('row-update', newMember)
+      // The table refreshes once the role is saved, until then the button
+      // shows that the change is on its way.
+      this.saving = true
 
       try {
         await RoleAssignmentsService(this.$client).assignRole(
@@ -102,6 +111,8 @@ export default {
       } catch (error) {
         this.$emit('row-update', oldMember)
         notifyIf(error)
+      } finally {
+        this.saving = false
       }
     },
   },
