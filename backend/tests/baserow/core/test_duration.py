@@ -4,8 +4,10 @@ from datetime import timedelta
 import pytest
 
 from baserow.core.duration import (
+    DURATION_REGEXPS,
     format_value_with_duration_format,
     is_valid_duration_format,
+    parse_duration_value,
     parse_value_with_duration_format,
     tokenize_duration_format,
 )
@@ -428,3 +430,18 @@ class TestFormatValueWithDurationFormat:
     def test_parsed_format_returns_correct_duration(self, duration, format_str):
         formatted = format_value_with_duration_format(duration, format_str)
         assert parse_value_with_duration_format(formatted, format_str) == duration
+
+
+class TestParseDurationValue:
+    @pytest.mark.parametrize("value", ["1x5", "1:1x5", "1:1:1x5", "1d 1x5", "1 1x5s"])
+    def test_fraction_separator_must_be_a_dot(self, value):
+        assert not any(regex.match(value) for regex in DURATION_REGEXPS)
+
+    @pytest.mark.parametrize(
+        "value",
+        ["1" * 1000 + ":1:1." + "1" * 1000, "1" * 2000 + "x", " " * 2000 + "1"],
+        ids=["colons", "digits", "spaces"],
+    )
+    def test_rejects_oversized_values(self, value):
+        with pytest.raises(ValueError):
+            parse_duration_value(value, "h:mm:ss.s")

@@ -382,6 +382,10 @@ def postgres_interval_to_seconds(interval_str: str) -> Optional[float]:
     return timedelta(**params).total_seconds() if valid else None
 
 
+# Legitimate duration strings are short. Longer values are rejected before matching
+# because the regexps below and the postgres interval fallback backtrack on long input.
+MAX_DURATION_STRING_LENGTH = 255
+
 # These regexps are supposed to tokenize the provided duration value and to return a
 # proper number of seconds based on format and the tokens. NOTE: Keep these in sync with
 # web-frontend/modules/core/utils/duration.js:DURATION_REGEXPS
@@ -396,7 +400,7 @@ DURATION_REGEXPS = {
         # optionally capture 1m
         r"((?P<mins>\d+)(?:m\s*|\s+))?"
         # optionally capture 1.2s
-        r"((?P<secs>\d+|\d+.\d+)?(?:s\s*))?$"
+        r"((?P<secs>\d+|\d+\.\d+)?(?:s\s*))?$"
     ): {
         "default": lambda days, hours, mins, secs: total_secs(
             days=days, hours=hours, mins=mins, secs=secs
@@ -404,11 +408,11 @@ DURATION_REGEXPS = {
     },
     # 1d 11:12:13.14
     # 1 11:12:13.14
-    re.compile(r"^(\d+)(?:d\s*|\s+)(\d+):(\d+):(\d+|\d+.\d+)$"): {
+    re.compile(r"^(\d+)(?:d\s*|\s+)(\d+):(\d+):(\d+|\d+\.\d+)$"): {
         "default": lambda d, h, m, s: total_secs(days=d, hours=h, mins=m, secs=s),
     },
     # 11:12:13.14
-    re.compile(r"^(\d+):(\d+):(\d+|\d+.\d+)$"): {
+    re.compile(r"^(\d+):(\d+):(\d+|\d+\.\d+)$"): {
         "default": lambda h, m, s: total_secs(hours=h, mins=m, secs=s),
     },
     # 1d 12h
@@ -435,7 +439,7 @@ DURATION_REGEXPS = {
     },
     # 1d 11:12.23
     # 1 11:12.23
-    re.compile(r"^(\d+)(?:d\s*|\s+)(\d+):(\d+.\d+)$"): {
+    re.compile(r"^(\d+)(?:d\s*|\s+)(\d+):(\d+\.\d+)$"): {
         "default": lambda d, m, s: total_secs(days=d, mins=m, secs=s),
     },
     # 11:12
@@ -446,7 +450,7 @@ DURATION_REGEXPS = {
         "default": lambda m, s: total_secs(mins=m, secs=s),
     },
     # 11:12.134
-    re.compile(r"^(\d+):(\d+.\d+)$"): {
+    re.compile(r"^(\d+):(\d+\.\d+)$"): {
         "default": lambda m, s: total_secs(mins=m, secs=s),
     },
     # 1d 123
@@ -460,7 +464,7 @@ DURATION_REGEXPS = {
     },
     # 1d 12.134
     # 1 12.134
-    re.compile(r"^(\d+)(?:d\s*|\s+)(\d+.\d+)$"): {
+    re.compile(r"^(\d+)(?:d\s*|\s+)(\d+\.\d+)$"): {
         "default": lambda d, s: total_secs(days=d, secs=s),
     },
     # 123
@@ -472,7 +476,7 @@ DURATION_REGEXPS = {
         "default": lambda s: total_secs(secs=s),
     },
     # 11.123
-    re.compile(r"^(\d+.\d+)$"): {
+    re.compile(r"^(\d+\.\d+)$"): {
         "default": lambda s: total_secs(secs=s),
     },
 }
@@ -489,6 +493,9 @@ def parse_duration_value(formatted_value: str, format: str) -> float:
     :return: The total number of seconds for the given formatted duration.
     :raises ValueError: If the format is invalid.
     """
+
+    if len(formatted_value) > MAX_DURATION_STRING_LENGTH:
+        raise ValueError("The duration string is too long.")
 
     # support for negative values
     multiplier = 1
