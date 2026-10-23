@@ -3,7 +3,6 @@ from typing import Callable, List, Optional, Tuple
 from django.contrib.auth.models import AbstractUser
 
 from baserow.core.exceptions import PermissionDenied
-from baserow.core.feature_flags import FF_USER_TEMPLATES, feature_flag_is_enabled
 from baserow.core.job_types import ExportApplicationsJobType
 from baserow.core.jobs.registries import job_type_registry
 from baserow.core.models import Application, Template, Workspace
@@ -26,15 +25,12 @@ class UserTemplateService:
         :param user: The user creating the template.
         :param workspace: The workspace the applications are copied from.
         :param application_ids: The ids of the selected applications.
-        :raises FeatureDisabledException: If user templates are disabled.
         :raises NoApplicationsSelected: If no application is selected.
         :raises PermissionDenied: If the user can't export the workspace, the
             workspace holds a template, or one of the applications doesn't exist
             or isn't visible to the user.
         :return: The selected applications.
         """
-
-        feature_flag_is_enabled(FF_USER_TEMPLATES, raise_if_disabled=True)
 
         if not application_ids:
             raise NoApplicationsSelected("At least one application must be selected.")
@@ -69,7 +65,6 @@ class UserTemplateService:
         :param progress_builder: A progress builder that allows for publishing
             progress.
         :param track_content: Called with the content created so far.
-        :raises FeatureDisabledException: If user templates are disabled.
         :raises NoApplicationsSelected: If no application is selected.
         :raises PermissionDenied: If the user can't copy the applications.
         :return: The workspace holding the copy and the name of the stored archive.
@@ -93,12 +88,9 @@ class UserTemplateService:
 
         :param user: The user who must own the template.
         :param template_id: The id of the template, which is its root.
-        :raises FeatureDisabledException: If user templates are disabled.
         :raises TemplateDoesNotExist: If the user doesn't own the template.
         :return: The root of the template.
         """
-
-        feature_flag_is_enabled(FF_USER_TEMPLATES, raise_if_disabled=True)
 
         return UserTemplateHandler().get_own_template(user, template_id)
 
@@ -113,14 +105,29 @@ class UserTemplateService:
         checked by the caller.
 
         :param base_revision: The revision whose content is reused.
-        :raises FeatureDisabledException: If user templates are disabled.
         :raises TemplateHasNoContent: If the content of the revision was removed.
         :return: The workspace and the name of the archive of the revision.
         """
-
-        feature_flag_is_enabled(FF_USER_TEMPLATES, raise_if_disabled=True)
 
         if base_revision.workspace_id is None or base_revision.pruned_at:
             raise TemplateHasNoContent("The template has no content anymore.")
 
         return base_revision.workspace, base_revision.archive.name or None
+
+    def delete_template(self, user: AbstractUser, template_id: int) -> Template:
+        """
+        Marks a user template for deletion, so that it's gone for everybody right
+        away and removed later. See `UserTemplateHandler.get_template_for_deletion`
+        for who can delete it. Must run in a transaction.
+
+        :param user: The user who deletes the template, its owner or an instance
+            admin.
+        :param template_id: The id of the template, which is its root.
+        :raises TemplateDoesNotExist: If the user can't delete the template.
+        :return: The marked root of the template.
+        """
+
+        handler = UserTemplateHandler()
+        root = handler.get_template_for_deletion(user, template_id)
+        handler.mark_template_for_deletion(root)
+        return root

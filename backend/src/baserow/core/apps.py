@@ -373,11 +373,13 @@ class CoreConfig(AppConfig):
 
         from baserow.core.user_templates.actions import (
             CreateUserTemplateActionType,
+            DeleteUserTemplateActionType,
             UpdateUserTemplateActionType,
         )
 
         action_type_registry.register(CreateUserTemplateActionType())
         action_type_registry.register(UpdateUserTemplateActionType())
+        action_type_registry.register(DeleteUserTemplateActionType())
 
         from baserow.core.trash.actions import (
             EmptyTrashActionType,

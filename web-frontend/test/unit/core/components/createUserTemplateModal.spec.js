@@ -1,8 +1,8 @@
-import { defineComponent } from 'vue'
 import { flushPromises } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { TestApp } from '@baserow/test/helpers/testApp'
+import { ModalStub } from '@baserow/test/helpers/modalStub'
 import CreateUserTemplateModal from '@baserow/modules/core/components/template/CreateUserTemplateModal'
 import UserTemplateContentForm from '@baserow/modules/core/components/template/UserTemplateContentForm'
 
@@ -28,23 +28,6 @@ const categories = [
   { id: 1, name: 'Business' },
   { id: 2, name: 'Personal' },
 ]
-
-const ModalStub = defineComponent({
-  name: 'Modal',
-  emits: ['show', 'hidden'],
-  data: () => ({ open: false }),
-  methods: {
-    show() {
-      this.open = true
-      this.$emit('show')
-    },
-    hide() {
-      this.open = false
-      this.$emit('hidden')
-    },
-  },
-  template: '<div v-if="open"><slot /></div>',
-})
 
 const runningJob = (values = {}) => ({
   id: 7,

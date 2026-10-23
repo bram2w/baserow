@@ -46,6 +46,7 @@ from baserow.core.jobs.exceptions import MaxJobCountExceeded
 from baserow.core.jobs.handler import JobHandler
 from baserow.core.jobs.registries import job_type_registry
 from baserow.core.models import Template, TemplateCategory
+from baserow.core.user_templates.actions import DeleteUserTemplateActionType
 
 from .errors import ERROR_TEMPLATE_DOES_NOT_EXIST, ERROR_TEMPLATE_FILE_DOES_NOT_EXIST
 
@@ -175,7 +176,13 @@ class TemplatesView(APIView, SearchableViewMixin):
 
 
 class TemplateView(APIView):
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [AllowAny()]
+
+        return super().get_permissions()
 
     @extend_schema(exclude=True)
     @map_exceptions(
@@ -203,6 +210,53 @@ class TemplateView(APIView):
             ) from exc
 
         return Response(TemplateSerializer(template).data)
+
+    @extend_schema(
+        tags=["Templates"],
+        operation_id="delete_template",
+        parameters=[
+            OpenApiParameter(
+                name="slug",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.STR,
+                description="The slug of the template to delete.",
+            ),
+        ],
+        description=(
+            "Deletes a user template. Its owner can delete it in any state, and an "
+            "instance admin can delete any user template. It's gone for everybody "
+            "right away, and its revisions and content are removed later. The "
+            "applications installed from it are kept. This can't be undone."
+        ),
+        request=None,
+        responses={
+            204: None,
+            401: None,
+            404: get_error_schema(["ERROR_TEMPLATE_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            TemplateDoesNotExist: ERROR_TEMPLATE_DOES_NOT_EXIST,
+        }
+    )
+    @transaction.atomic
+    def delete(self, request, slug):
+        """Deletes a user template owned by the user, or any one by an admin."""
+
+        # Only the root of a template has a slug.
+        template_id = (
+            Template.objects.filter(slug=slug, root__isnull=True)
+            .values_list("id", flat=True)
+            .first()
+        )
+        if template_id is None:
+            raise TemplateDoesNotExist(f"The template with slug {slug} does not exist.")
+
+        action_type_registry.get_by_type(DeleteUserTemplateActionType).do(
+            request.user, template_id
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class InstallTemplateView(APIView):

@@ -34,7 +34,8 @@ describe('UserTemplateList', () => {
   let requests = []
 
   // Replies with the given pages in order and records the paging and search of
-  // each request, which always asks for the user's own templates.
+  // each request, which always asks for the user's own templates. A page can be
+  // a function returning the reply, for example a promise of it.
   const mockPages = (...pages) => {
     pages.forEach((data) => {
       testApp.mock.onGet('/templates/').replyOnce((config) => {
@@ -45,7 +46,7 @@ describe('UserTemplateList', () => {
           owned: true,
         })
         requests.push(query)
-        return [200, data]
+        return typeof data === 'function' ? data() : [200, data]
       })
     })
   }
@@ -385,6 +386,7 @@ describe('UserTemplateList', () => {
     expect(links.map((link) => link.text())).toStrictEqual([
       'userTemplateList.editDetails',
       'userTemplateList.updateContent',
+      'userTemplateList.delete',
     ])
 
     await links[1].trigger('click')
@@ -394,6 +396,216 @@ describe('UserTemplateList', () => {
     await wrapper.findAll('.context__menu-item-link')[0].trigger('click')
     expect(wrapper.emitted('edit')[1]).toStrictEqual([templates[0], 'details'])
     expect(wrapper.emitted('selected')).toBeUndefined()
+  })
+
+  test('asks to delete a template with the last action', async () => {
+    const templates = [
+      userTemplate(1, 'Sprint Tracker'),
+      userTemplate(2, 'Growth Playbook', 'blocked'),
+    ]
+    mockPages(page(templates))
+    const wrapper = await mountComponent()
+
+    await wrapper
+      .findAll('.user-template-list__actions .button-icon')[1]
+      .trigger('click')
+    const items = wrapper.findAll('.context__menu-item')
+    const last = items[items.length - 1]
+
+    expect(last.classes()).toContain('context__menu-item--with-separator')
+    const link = last.find('.context__menu-item-link')
+    expect(link.classes()).toContain('context__menu-item-link--delete')
+    expect(link.find('i').classes()).toContain('iconoir-bin')
+    expect(link.text()).toBe('userTemplateList.delete')
+
+    await link.trigger('click')
+
+    // Any state, blocked included, can be deleted.
+    expect(wrapper.emitted('delete')).toStrictEqual([[templates[1]]])
+    expect(wrapper.emitted('selected')).toBeUndefined()
+  })
+
+  test('drops only the removed template without loading again', async () => {
+    mockPages(
+      page(
+        [
+          userTemplate(1, 'Sprint Tracker'),
+          userTemplate(2, 'Growth Playbook'),
+          userTemplate(3, 'Launch Plan'),
+        ],
+        3
+      ),
+      // Only recorded when the list is loaded again.
+      page([userTemplate(1, 'Sprint Tracker')], 1)
+    )
+    const wrapper = await mountComponent()
+
+    wrapper.vm.remove(2)
+    await flushPromises()
+
+    expect(requests).toHaveLength(1)
+    expect(rowNames(wrapper)).toStrictEqual(['Sprint Tracker', 'Launch Plan'])
+    expect(wrapper.find('.user-template-list__title').text()).toBe(
+      'userTemplateList.count - 2'
+    )
+  })
+
+  test('reloads the first page when the removed template is not loaded', async () => {
+    mockPages(
+      page(
+        [userTemplate(1, 'Sprint Tracker'), userTemplate(2, 'Growth Playbook')],
+        25
+      ),
+      page([userTemplate(1, 'Sprint Tracker')], 24)
+    )
+    const wrapper = await mountComponent()
+
+    // For example a template of a later page that is no longer loaded.
+    wrapper.vm.remove(25)
+    await flushPromises()
+
+    expect(requests).toStrictEqual([
+      { offset: 0, limit: 20 },
+      { offset: 0, limit: 20 },
+    ])
+    expect(rowNames(wrapper)).toStrictEqual(['Sprint Tracker'])
+    expect(wrapper.find('.user-template-list__title').text()).toBe(
+      'userTemplateList.count - 24'
+    )
+  })
+
+  describe('when a template is removed while a page loads', () => {
+    const templates = Array.from({ length: 22 }, (_, i) =>
+      userTemplate(i + 1, `Template ${i + 1}`)
+    )
+    const remaining = templates.filter(({ id }) => id !== 5)
+
+    // A reply that is sent only when the test says so.
+    const heldBack = () => {
+      let send = null
+      const reply = () =>
+        new Promise((resolve) => {
+          send = resolve
+        })
+      return { reply, send: (value) => send(value) }
+    }
+
+    const removeWhileLoading = async (...reloads) => {
+      const nextPage = heldBack()
+      mockPages(page(templates.slice(0, 20), 22), nextPage.reply, ...reloads)
+      const wrapper = await mountComponent()
+
+      wrapper.findComponent(InfiniteScroll).vm.$emit('load-next-page', 2)
+      await flushPromises()
+      wrapper.vm.remove(5)
+      await flushPromises()
+      return { wrapper, nextPage }
+    }
+
+    test('drops it at once and pages on from the reloaded first page', async () => {
+      const reload = heldBack()
+      const { wrapper, nextPage } = await removeWhileLoading(
+        reload.reply,
+        page(remaining.slice(20), 21)
+      )
+
+      expect(rowNames(wrapper)).not.toContain('Template 5')
+      expect(wrapper.find('.user-template-list__title').text()).toBe(
+        'userTemplateList.count - 21'
+      )
+
+      // The next page was asked for before the delete, but the server answers
+      // after it, so template 21 moved to the first page.
+      nextPage.send([200, page(remaining.slice(20), 21)])
+      reload.send([200, page(remaining.slice(0, 20), 21)])
+      await flushPromises()
+
+      expect(requests).toStrictEqual([
+        { offset: 0, limit: 20 },
+        { offset: 20, limit: 20 },
+        { offset: 0, limit: 20 },
+      ])
+      expect(rowNames(wrapper)).toStrictEqual(
+        remaining.slice(0, 20).map(({ name }) => name)
+      )
+
+      wrapper.findComponent(InfiniteScroll).vm.$emit('load-next-page', 2)
+      await flushPromises()
+
+      expect(requests[3]).toStrictEqual({ offset: 20, limit: 20 })
+      expect(rowNames(wrapper)).toStrictEqual(remaining.map(({ name }) => name))
+      expect(wrapper.find('.user-template-list__title').text()).toBe(
+        'userTemplateList.count - 21'
+      )
+    })
+
+    test('keeps it dropped when the reload fails', async () => {
+      const { wrapper, nextPage } = await removeWhileLoading(() => [500, {}])
+      nextPage.send([200, page(remaining.slice(20), 21)])
+      await flushPromises()
+
+      expect(requests).toStrictEqual([
+        { offset: 0, limit: 20 },
+        { offset: 20, limit: 20 },
+        { offset: 0, limit: 20 },
+      ])
+      expect(rowNames(wrapper)).toStrictEqual(
+        templates
+          .slice(0, 20)
+          .filter(({ id }) => id !== 5)
+          .map(({ name }) => name)
+      )
+      expect(wrapper.find('.user-template-list__title').text()).toBe(
+        'userTemplateList.count - 21'
+      )
+    })
+
+    test('reloads the first page when a page loaded after the deletion was asked for', async () => {
+      mockPages(
+        page(templates.slice(0, 20), 22),
+        // Answered after the server deleted template 5, but before the client
+        // got the answer to the delete.
+        page(remaining.slice(20), 21),
+        page(remaining.slice(0, 20), 21),
+        page(remaining.slice(20), 21)
+      )
+      const wrapper = await mountComponent()
+
+      const requestedAt = performance.now()
+      wrapper.findComponent(InfiniteScroll).vm.$emit('load-next-page', 2)
+      await flushPromises()
+      wrapper.vm.remove(5, requestedAt)
+      await flushPromises()
+
+      expect(requests).toStrictEqual([
+        { offset: 0, limit: 20 },
+        { offset: 20, limit: 20 },
+        { offset: 0, limit: 20 },
+      ])
+      expect(rowNames(wrapper)).toStrictEqual(
+        remaining.slice(0, 20).map(({ name }) => name)
+      )
+
+      wrapper.findComponent(InfiniteScroll).vm.$emit('load-next-page', 2)
+      await flushPromises()
+
+      expect(rowNames(wrapper)).toStrictEqual(remaining.map(({ name }) => name))
+      expect(wrapper.find('.user-template-list__title').text()).toBe(
+        'userTemplateList.count - 21'
+      )
+    })
+  })
+
+  test('shows the empty state when the last template is removed', async () => {
+    mockPages(page([userTemplate(1, 'Sprint Tracker')]))
+    const wrapper = await mountComponent()
+
+    wrapper.vm.remove(1)
+    await flushPromises()
+
+    expect(wrapper.find('.template-empty-state__title').text()).toBe(
+      'userTemplateList.emptyTitle'
+    )
   })
 
   test('reloads the first page on refresh', async () => {

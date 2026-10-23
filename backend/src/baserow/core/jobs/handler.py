@@ -12,6 +12,7 @@ from celery.exceptions import SoftTimeLimitExceeded
 
 from baserow.core.utils import Progress
 
+from .constants import JOB_CANCELLED
 from .exceptions import JobCancelled, JobDoesNotExist, JobNotCancellable
 from .models import Job
 from .registries import job_type_registry
@@ -45,9 +46,11 @@ class JobHandler:
                 raise JobNotCancellable()
 
             # Only the state is saved, so that what the job saved in the meantime
-            # is kept.
-            job.set_state_cancelled()
+            # is kept. The task checks the cache, so it's only updated once the
+            # cancellation commits: a rolled back one mustn't drop the task.
+            job.state = JOB_CANCELLED
             job.save(update_fields=["state", "updated_on"])
+            transaction.on_commit(job.set_cached_state)
         return job
 
     @classmethod

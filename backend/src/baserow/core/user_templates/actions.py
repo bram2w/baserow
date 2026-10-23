@@ -275,3 +275,49 @@ class UpdateUserTemplateActionType(ActionType):
         if workspace_id is None:
             return RootActionScopeType.value()
         return WorkspaceActionScopeType.value(workspace_id)
+
+
+class DeleteUserTemplateActionType(ActionType):
+    type = "delete_user_template"
+    description = ActionTypeDescription(
+        _("Delete template"),
+        _('Template "%(template_name)s" (%(template_id)s) deleted'),
+    )
+    analytics_params = ["template_id", "owner_id"]
+
+    @dataclasses.dataclass
+    class Params:
+        template_id: int
+        template_name: str
+        owner_id: Optional[int]
+        owner_email: Optional[str]
+
+    @classmethod
+    def do(cls, user: AbstractUser, template_id: int) -> Template:
+        """
+        Deletes a user template, by its owner or by an instance admin. It's gone
+        for everybody right away and removed later. This action is not undoable.
+
+        :param user: The user deleting the template.
+        :param template_id: The id of the template, which is its root.
+        :return: The root of the template, marked for deletion.
+        """
+
+        with transaction.atomic():
+            root = UserTemplateService().delete_template(user, template_id)
+            # The name of the template is the name of its latest revision.
+            latest_revision = UserTemplateHandler().get_latest_revision(root)
+            owner = root.owner
+            params = cls.Params(
+                template_id=root.id,
+                template_name=latest_revision.name,
+                owner_id=owner.id if owner else None,
+                owner_email=owner.email if owner else None,
+            )
+            cls.register_action(user, params, cls.scope())
+
+        return root
+
+    @classmethod
+    def scope(cls) -> ActionScopeStr:
+        return RootActionScopeType.value()

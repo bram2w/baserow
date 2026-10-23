@@ -26,7 +26,7 @@
         </h2>
         <button
           type="button"
-          class="user-template-modal__head-action"
+          class="user-template-modal__head-action user-template-modal__close"
           :title="$t('action.close')"
           @click="hide()"
         >

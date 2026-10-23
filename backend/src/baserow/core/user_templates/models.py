@@ -84,8 +84,8 @@ class CreateUserTemplateJob(
 class UserTemplateContentToDelete(models.Model):
     """
     The workspace and archive copied by a create job that was deleted before they
-    were. It keeps track of them until their deletion succeeds, so that the sweep
-    retries a failed one.
+    were, or of a user template that was removed permanently. It keeps track of
+    them until their deletion succeeds, so that the sweep retries a failed one.
     """
 
     workspace_id = models.PositiveIntegerField(

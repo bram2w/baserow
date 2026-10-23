@@ -1,4 +1,5 @@
 import re
+from datetime import timedelta
 
 from django.db import models
 
@@ -9,6 +10,15 @@ USER_TEMPLATE_DESCRIPTION_MAX_LENGTH = 80
 # `Template.icon`, so that the list is kept in one place.
 USER_TEMPLATE_ICON_MAX_LENGTH = 32
 USER_TEMPLATE_ICON_REGEX = re.compile(r"iconoir-[a-z0-9]+(-[a-z0-9]+)*")
+
+# How long a deleted user template is kept before it's removed permanently. It must
+# be longer than a job can run, `BASEROW_JOB_SOFT_TIME_LIMIT` + 30 seconds, so that
+# an install or an update that started before the deletion finishes first.
+USER_TEMPLATE_DELETION_GRACE_PERIOD = timedelta(days=1)
+# How many deleted user templates one run of the cleanup task removes at most, so
+# that a backlog doesn't keep it from cleaning up the rest. The next run takes the
+# next ones.
+USER_TEMPLATE_PURGE_BATCH_SIZE = 20
 
 
 class UserTemplateState(models.TextChoices):

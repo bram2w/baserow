@@ -49,6 +49,7 @@ from baserow.core.models import (
 from baserow.core.operations import ExportWorkspaceOperationType
 from baserow.core.storage import get_default_storage
 from baserow.core.user_templates.actions import CreateUserTemplateActionType
+from baserow.core.user_templates.constants import USER_TEMPLATE_DELETION_GRACE_PERIOD
 from baserow.core.user_templates.exceptions import NoApplicationsSelected
 from baserow.core.user_templates.handler import UserTemplateHandler
 from baserow.core.user_templates.job_types import CreateUserTemplateJobType
@@ -992,3 +993,41 @@ def test_create_user_template_job_max_count(data_fixture):
         sync=True,
     )
     assert export_job.state == JOB_FINISHED
+
+
+def test_purge_waits_for_a_create_job_that_committed_its_template(data_fixture):
+    source = create_source(data_fixture)
+    user, workspace = source["user"], source["workspace"]
+    run = JobHandler.run
+    skipped = []
+
+    # Right after the commit the job is still running: it saves that it finished
+    # after `JobHandler.run` returns.
+    def run_then_purge(job):
+        result = run(job)
+        Template.objects.filter(id=job.template_id).update(
+            marked_for_deletion_at=datetime.now(tz=timezone.utc)
+            - USER_TEMPLATE_DELETION_GRACE_PERIOD
+            - timedelta(hours=1)
+        )
+        UserTemplateHandler().delete_marked_templates()
+        skipped.append(Template.objects.filter(id=job.template_id).exists())
+        return result
+
+    with patch.object(JobHandler, "run", side_effect=run_then_purge):
+        job = start_job(user, workspace, [source["database"]])
+
+    assert skipped == [True]
+    job = CreateUserTemplateJob.objects.get(id=job.id)
+    assert job.state == JOB_FINISHED, job.error
+    template_workspace_id = job.template.workspace_id
+    archive_name = job.template.archive.name
+
+    UserTemplateHandler().delete_marked_templates()
+
+    assert not Template.objects.filter(id=job.template_id).exists()
+    assert not CreateUserTemplateJob.objects.filter(id=job.id).exists()
+    assert not Workspace.objects_and_trash.filter(id=template_workspace_id).exists()
+    assert not get_default_storage().exists(archive_name)
+    # The workspace the template was created from is kept.
+    assert Workspace.objects.filter(id=workspace.id).exists()

@@ -8,7 +8,6 @@ from loguru import logger
 from rest_framework import serializers
 
 from baserow.api.errors import (
-    ERROR_FEATURE_DISABLED,
     ERROR_GROUP_DOES_NOT_EXIST,
     ERROR_PERMISSION_DENIED,
     ERROR_USER_NOT_IN_GROUP,
@@ -23,12 +22,12 @@ from baserow.api.templates.errors import (
 )
 from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import (
-    FeatureDisabledException,
     PermissionException,
     TemplateDoesNotExist,
     UserNotInWorkspace,
     WorkspaceDoesNotExist,
 )
+from baserow.core.feature_flags import FF_USER_TEMPLATES, feature_flag_is_enabled
 from baserow.core.handler import CoreHandler
 from baserow.core.jobs.constants import JOB_CANCELLED
 from baserow.core.jobs.exceptions import JobCancelled
@@ -134,7 +133,6 @@ class CreateUserTemplateJobType(JobType):
     job_exceptions_map = {
         # Covers losing access to the workspace after the job was created too.
         PermissionException: ERROR_PERMISSION_DENIED[2],
-        FeatureDisabledException: ERROR_FEATURE_DISABLED[2],
         WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST[2],
         InvalidTemplateIcon: ERROR_INVALID_TEMPLATE_ICON[2],
         InvalidTemplateCategory: ERROR_INVALID_TEMPLATE_CATEGORY[2],
@@ -236,6 +234,9 @@ class CreateUserTemplateJobType(JobType):
         if values.get("template_id") is not None:
             return self._prepare_update_values(values, user)
 
+        # Only creating a template checks the flag: without one, there's nothing to
+        # update or delete.
+        feature_flag_is_enabled(FF_USER_TEMPLATES, raise_if_disabled=True)
         self._validate_mode(values, CREATE_REQUIRED_FIELDS)
         workspace = CoreHandler().get_workspace(values["workspace_id"])
         application_ids = values.get("application_ids") or []

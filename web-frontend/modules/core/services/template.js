@@ -21,5 +21,8 @@ export default (client) => {
         `/templates/install/${workspaceId}/${templateId}/async/`
       )
     },
+    delete(slug) {
+      return client.delete(`/templates/${slug}/`)
+    },
   }
 }

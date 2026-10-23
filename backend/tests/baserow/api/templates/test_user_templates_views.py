@@ -847,3 +847,153 @@ def test_template_by_slug_has_its_type(api_client, data_fixture):
 
         assert response.status_code == HTTP_200_OK
         assert response.json()["type"] == template_type
+
+
+def delete_template(api_client, token, slug):
+    headers = {"HTTP_AUTHORIZATION": f"JWT {token}"} if token else {}
+    return api_client.delete(
+        reverse("api:templates:item", kwargs={"slug": slug}), **headers
+    )
+
+
+def is_marked(template):
+    return Template.objects.get(id=template.id).marked_for_deletion_at is not None
+
+
+def create_template_in_state(data_fixture, owner, state):
+    template = create_own_template(data_fixture, owner)
+    if state == "shared":
+        Template.objects.filter(id=template.id).update(shared_revision_id=F("id"))
+    elif state == "public":
+        revision = data_fixture.create_user_template_revision(template)
+        Template.objects.filter(id=template.id).update(public_revision=revision)
+    elif state == "blocked":
+        Template.objects.filter(id=template.id).update(blocked_at=django_timezone.now())
+    return template
+
+
+@pytest.mark.parametrize("state", ["private", "shared", "public", "blocked"])
+@pytest.mark.parametrize("as_staff", [False, True])
+def test_delete_user_template(api_client, data_fixture, state, as_staff):
+    owner, owner_token = data_fixture.create_user_and_token()
+    _, staff_token = data_fixture.create_user_and_token(is_staff=True)
+    template = create_template_in_state(data_fixture, owner, state)
+    other = create_own_template(data_fixture, owner)
+
+    response = delete_template(
+        api_client, staff_token if as_staff else owner_token, template.slug
+    )
+
+    assert response.status_code == 204
+    assert is_marked(template)
+    assert not is_marked(other)
+
+
+def test_delete_user_template_refused(api_client, data_fixture):
+    owner, owner_token = data_fixture.create_user_and_token()
+    _, other_token = data_fixture.create_user_and_token()
+    _, staff_token = data_fixture.create_user_and_token(is_staff=True)
+    template = create_own_template(data_fixture, owner)
+    official = data_fixture.create_template()
+
+    for token, slug, status in [
+        (None, template.slug, HTTP_401_UNAUTHORIZED),
+        (other_token, template.slug, HTTP_404_NOT_FOUND),
+        (staff_token, official.slug, HTTP_404_NOT_FOUND),
+        (staff_token, "unknown", HTTP_404_NOT_FOUND),
+    ]:
+        response = delete_template(api_client, token, slug)
+
+        assert response.status_code == status
+        if status == HTTP_404_NOT_FOUND:
+            assert response.json()["error"] == "ERROR_TEMPLATE_DOES_NOT_EXIST"
+
+    assert not Template.objects.filter(marked_for_deletion_at__isnull=False).exists()
+
+
+def test_delete_user_template_twice(api_client, data_fixture):
+    owner, owner_token = data_fixture.create_user_and_token()
+    _, staff_token = data_fixture.create_user_and_token(is_staff=True)
+    template = create_own_template(data_fixture, owner)
+
+    assert delete_template(api_client, owner_token, template.slug).status_code == 204
+    marked_at = Template.objects.get(id=template.id).marked_for_deletion_at
+
+    for token in [owner_token, staff_token]:
+        response = delete_template(api_client, token, template.slug)
+
+        assert response.status_code == HTTP_404_NOT_FOUND
+        assert response.json()["error"] == "ERROR_TEMPLATE_DOES_NOT_EXIST"
+    assert Template.objects.get(id=template.id).marked_for_deletion_at == marked_at
+
+
+@pytest.mark.parametrize("deleted_by", ["owner", "staff"])
+def test_deleted_user_template_is_gone_for_everybody(
+    api_client, data_fixture, deleted_by
+):
+    owner, owner_token = data_fixture.create_user_and_token()
+    _, other_token = data_fixture.create_user_and_token()
+    _, staff_token = data_fixture.create_user_and_token(is_staff=True)
+    tokens = [owner_token, other_token, staff_token]
+    template = create_own_template(data_fixture, owner)
+    # Revisions have no slug: the root's slug opens the public revision for others.
+    revision = data_fixture.create_user_template_revision(template)
+    Template.objects.filter(id=template.id).update(public_revision=revision)
+    root_grid = create_template_with_rows(data_fixture, template)
+    revision_grid = create_template_with_rows(data_fixture, revision)
+    url = reverse("api:templates:item", kwargs={"slug": template.slug})
+    assert get_as_anonymous_stranger_and_owner(api_client, tokens, url) == (
+        (HTTP_200_OK,) * 4
+    )
+    for token in tokens:
+        results = list_templates(api_client, token).json()["results"]
+        assert [t["id"] for t in results] == [template.id]
+
+    token = owner_token if deleted_by == "owner" else staff_token
+    assert delete_template(api_client, token, template.slug).status_code == 204
+
+    url = reverse("api:templates:item", kwargs={"slug": template.slug})
+    assert get_as_anonymous_stranger_and_owner(api_client, tokens, url) == (
+        (HTTP_404_NOT_FOUND,) * 4
+    )
+    for token in tokens:
+        assert list_templates(api_client, token).json()["results"] == []
+    assert list_own_templates(api_client, owner_token).json()["results"] == []
+
+    # The owner, a stranger and an instance admin aren't members of the template
+    # workspaces.
+    refused = (HTTP_401_UNAUTHORIZED,) + (HTTP_400_BAD_REQUEST,) * 3
+    for workspace_id, grid in [
+        (template.workspace_id, root_grid),
+        (revision.workspace_id, revision_grid),
+    ]:
+        url = reverse("api:applications:list", kwargs={"workspace_id": workspace_id})
+        assert get_as_anonymous_stranger_and_owner(api_client, tokens, url) == refused
+        url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
+        assert get_as_anonymous_stranger_and_owner(api_client, tokens, url) == refused
+
+
+def test_delete_user_template_query_count_is_linear_in_its_jobs(
+    api_client, data_fixture
+):
+    owner, token = data_fixture.create_user_and_token()
+    query_counts = []
+    for job_count in [0, 1, 3]:
+        template = create_own_template(data_fixture, owner)
+        for _ in range(job_count):
+            CreateUserTemplateJob.objects.create(
+                user=owner,
+                template=template,
+                base_revision=template,
+                name="Update",
+                icon="iconoir-view-grid",
+            )
+
+        with CaptureQueriesContext(connection) as queries:
+            assert delete_template(api_client, token, template.slug).status_code == 204
+        query_counts.append(len(queries.captured_queries))
+
+    assert CreateUserTemplateJob.objects.filter(state="cancelled").count() == 4
+    # Each update job is locked and cancelled on its own, the rest is constant.
+    no_job, one_job, three_jobs = query_counts
+    assert three_jobs - no_job == 3 * (one_job - no_job)

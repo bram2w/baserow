@@ -102,7 +102,7 @@ describe('TemplateDetails', () => {
     expect(wrapper.find('.template-install').exists()).toBe(false)
   })
 
-  test('updates only an own template', async () => {
+  test('updates and deletes only an own template', async () => {
     const userTemplate = { ...template, type: 'user' }
     let wrapper = await mountComponent({ template: userTemplate })
     expect(wrapper.find('.template-details__own-actions').exists()).toBe(false)
@@ -117,12 +117,23 @@ describe('TemplateDetails', () => {
     expect(links.map((link) => link.text())).toStrictEqual([
       'templateDetails.editDetails',
       'templateDetails.updateContent',
+      'templateDetails.delete',
     ])
 
     await links[0].trigger('click')
     await links[1].trigger('click')
 
     expect(wrapper.emitted('edit')).toStrictEqual([['details'], ['content']])
+
+    const items = wrapper.findAll('.context__menu-item')
+    const last = items[items.length - 1]
+    expect(last.classes()).toContain('context__menu-item--with-separator')
+    const link = last.find('.context__menu-item-link--delete')
+    expect(link.find('i').classes()).toContain('iconoir-bin')
+
+    await link.trigger('click')
+
+    expect(wrapper.emitted('delete')).toStrictEqual([[userTemplate]])
   })
 
   test('shows the back link only when asked and emits back', async () => {

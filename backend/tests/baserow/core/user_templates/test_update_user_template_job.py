@@ -1,8 +1,9 @@
 from contextlib import ExitStack
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 from django.core.files.base import ContentFile
+from django.db import transaction
 from django.utils import timezone as django_timezone
 
 import pytest
@@ -14,21 +15,32 @@ from baserow.contrib.integrations.local_baserow.models import (
     LocalBaserowAggregateRows,
     LocalBaserowIntegration,
 )
+from baserow.core.action.registries import action_type_registry
 from baserow.core.cache import local_cache
 from baserow.core.exceptions import (
-    FeatureDisabledException,
     PermissionDenied,
     TemplateDoesNotExist,
     UserNotInWorkspace,
 )
 from baserow.core.handler import CoreHandler
-from baserow.core.jobs.constants import JOB_CANCELLED, JOB_FAILED, JOB_FINISHED
+from baserow.core.jobs.constants import (
+    JOB_CANCELLED,
+    JOB_FAILED,
+    JOB_FINISHED,
+    JOB_PENDING,
+)
 from baserow.core.jobs.exceptions import JobNotCancellable
 from baserow.core.jobs.handler import JobHandler
+from baserow.core.jobs.models import Job
+from baserow.core.jobs.tasks import run_async_job
 from baserow.core.models import Template, TemplateCategory, Workspace, WorkspaceUser
 from baserow.core.operations import ExportWorkspaceOperationType
 from baserow.core.storage import get_default_storage
-from baserow.core.user_templates.actions import UpdateUserTemplateActionType
+from baserow.core.user_templates.actions import (
+    DeleteUserTemplateActionType,
+    UpdateUserTemplateActionType,
+)
+from baserow.core.user_templates.constants import USER_TEMPLATE_DELETION_GRACE_PERIOD
 from baserow.core.user_templates.exceptions import (
     InvalidTemplateCategory,
     InvalidTemplateIcon,
@@ -364,18 +376,6 @@ def test_update_user_template_refuses_templates_not_owned(data_fixture):
     assert revisions_of(root) == [2]
 
 
-@pytest.mark.django_db
-def test_update_user_template_with_flag_off(data_fixture, settings):
-    settings.FEATURE_FLAGS = []
-    user = data_fixture.create_user()
-    root = create_template(data_fixture, user)
-
-    with pytest.raises(FeatureDisabledException):
-        update_details(user, root)
-
-    assert not CreateUserTemplateJob.objects.exists()
-
-
 DETAILS = {"name": "Renamed", "description": "", "icon": ICON, "category_ids": [1]}
 
 
@@ -572,32 +572,6 @@ def test_update_user_template_content_fails_when_access_is_lost_before_it_runs(
 
     assert job.state == JOB_FAILED
     assert job.error_code == "PermissionException"
-    assert revisions_of(root) == []
-    assert_no_job_content_left(job)
-
-
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
-@pytest.mark.parametrize("mode", ["details", "content"])
-def test_update_user_template_fails_when_the_flag_is_turned_off_before_it_runs(
-    data_fixture, use_tmp_media_root, settings, mode
-):
-    user = data_fixture.create_user()
-    root = create_template(data_fixture, user)
-    workspace = data_fixture.create_workspace(user=user)
-    database = data_fixture.create_database_application(workspace=workspace)
-
-    def turn_the_flag_off():
-        settings.FEATURE_FLAGS = []
-
-    with change_before_the_job_runs(turn_the_flag_off):
-        if mode == "details":
-            job = update_details(user, root)
-        else:
-            job = update_content(user, root, workspace, [database])
-
-    assert job.state == JOB_FAILED
-    assert job.error_code == "FeatureDisabledException"
     assert revisions_of(root) == []
     assert_no_job_content_left(job)
 
@@ -920,3 +894,154 @@ def test_deleting_an_update_job_deletes_its_uncommitted_content_only(
     # The committed content is the revision's.
     assert Workspace.objects.filter(id=committed.template_workspace_id).exists()
     assert storage.exists(committed.archive_name)
+
+
+def delete_the_template(user, root):
+    with transaction.atomic():
+        UserTemplateService().delete_template(user, root.id)
+
+
+@pytest.mark.import_export_workspace
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize("mode", ["details", "content"])
+def test_update_user_template_queued_before_the_template_is_deleted(
+    data_fixture, use_tmp_media_root, mode
+):
+    user = data_fixture.create_user()
+    root = create_template(data_fixture, user)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    template_ids = set(Template.objects.values_list("id", flat=True))
+    workspace_ids = set(Workspace.objects_and_trash.values_list("id", flat=True))
+
+    # The job waits for a worker: the task isn't run yet.
+    with patch("baserow.core.jobs.handler.run_async_job") as queued:
+        if mode == "details":
+            job = update_details(user, root)
+        else:
+            job = update_content(user, root, workspace, [database])
+    queued.assert_called_once_with(job.id)
+    assert job.state == JOB_PENDING
+
+    delete_the_template(user, root)
+    run_async_job(job.id)
+
+    job = CreateUserTemplateJob.objects.get(id=job.id)
+    assert job.state == JOB_CANCELLED
+    assert job.revision_id is None
+    assert job.template_id == root.id
+    # Nothing is created: no revision, and no new template as if it were a create.
+    assert set(Template.objects.values_list("id", flat=True)) == template_ids
+    assert set(Workspace.objects_and_trash.values_list("id", flat=True)) == (
+        workspace_ids
+    )
+    assert_no_job_content_left(job)
+    assert Template.objects.get(id=root.id).marked_for_deletion_at is not None
+
+
+@pytest.mark.import_export_workspace
+@pytest.mark.django_db(transaction=True)
+def test_update_user_template_runs_when_the_deletion_of_its_template_rolls_back(
+    data_fixture, use_tmp_media_root
+):
+    user = data_fixture.create_user()
+    root = create_template(data_fixture, user)
+
+    with patch("baserow.core.jobs.handler.run_async_job") as queued:
+        job = update_details(user, root)
+    queued.assert_called_once_with(job.id)
+
+    # The deletion cancels the job, then fails when it's registered.
+    with (
+        patch.object(
+            DeleteUserTemplateActionType, "register_action", side_effect=RuntimeError
+        ),
+        pytest.raises(RuntimeError),
+    ):
+        action_type_registry.get_by_type(DeleteUserTemplateActionType).do(user, root.id)
+    assert Template.objects.get(id=root.id).marked_for_deletion_at is None
+
+    run_async_job(job.id)
+
+    job = CreateUserTemplateJob.objects.get(id=job.id)
+    assert job.state == JOB_FINISHED, job.error
+    assert revisions_of(root) == [2]
+
+
+@pytest.mark.import_export_workspace
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize("mode", ["details", "content"])
+def test_update_user_template_running_when_the_template_is_deleted(
+    data_fixture, use_tmp_media_root, mode
+):
+    user = data_fixture.create_user()
+    root = create_template(data_fixture, user)
+    template_ids = set(Template.objects.values_list("id", flat=True))
+    cancel_job = JobHandler.cancel_job
+
+    with patch.object(
+        JobHandler, "cancel_job", side_effect=cancel_job
+    ) as cancel_job_spy:
+        job = update_while_changing(
+            data_fixture, user, root, mode, lambda: delete_the_template(user, root)
+        )
+
+    job = CreateUserTemplateJob.objects.get(id=job.id)
+    # The delete cancels the running job in both modes.
+    cancel_job_spy.assert_called_once()
+    assert cancel_job_spy.call_args.args[0].id == job.id
+    if mode == "details":
+        # The next progress update notices the cancel.
+        assert job.state == JOB_CANCELLED, job.error
+    else:
+        # The commit refuses the marked template before any cancel check, and the
+        # job runner saves that failure over the accepted cancel (U-003).
+        assert job.state == JOB_FAILED
+        assert job.error_code == "TemplateDoesNotExist"
+        assert job.error == f"The template {root.id} does not exist."
+    assert job.revision_id is None
+    assert set(Template.objects.values_list("id", flat=True)) == template_ids
+    assert_no_job_content_left(job)
+    assert Template.objects.get(id=root.id).marked_for_deletion_at is not None
+
+
+@pytest.mark.import_export_workspace
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize("mode", ["details", "content"])
+def test_update_user_template_task_running_after_the_template_is_removed(
+    data_fixture, use_tmp_media_root, mode
+):
+    user = data_fixture.create_user()
+    root = create_template(data_fixture, user)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+
+    with patch("baserow.core.jobs.handler.run_async_job") as queued:
+        if mode == "details":
+            job = update_details(user, root)
+        else:
+            job = update_content(user, root, workspace, [database])
+    queued.assert_called_once_with(job.id)
+
+    delete_the_template(user, root)
+    Template.objects.filter(id=root.id).update(
+        marked_for_deletion_at=django_timezone.now()
+        - USER_TEMPLATE_DELETION_GRACE_PERIOD
+        - timedelta(hours=1)
+    )
+    delete_orphaned_user_template_workspaces()
+
+    assert not Template.objects.filter(id=root.id).exists()
+    assert not Job.objects.filter(id=job.id).exists()
+    template_count = Template.objects.count()
+    workspace_ids = set(Workspace.objects_and_trash.values_list("id", flat=True))
+
+    # The task of the job, picked up by a worker after the purge.
+    with pytest.raises(Job.DoesNotExist):
+        run_async_job(job.id)
+
+    # Nothing is created, no new template as if it were a create.
+    assert Template.objects.count() == template_count
+    assert set(Workspace.objects_and_trash.values_list("id", flat=True)) == (
+        workspace_ids
+    )
