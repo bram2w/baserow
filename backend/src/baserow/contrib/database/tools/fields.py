@@ -985,7 +985,7 @@ def _item_error_message(exc: Exception) -> str:
         # Baserow's own errors (FieldWithSameNameAlreadyExists, FieldDoesNotExist,
         # ...) say what the caller did wrong. Django's RelatedObjectDoesNotExist is
         # also an AttributeError, and a server bug.
-        message = str(exc) or type(exc).__name__
+        message = str(exc) or user_error_message(exc) or type(exc).__name__
     else:
         message = None
     if message is None:

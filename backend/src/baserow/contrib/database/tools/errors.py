@@ -35,6 +35,8 @@ def _user_error_mapping() -> dict[type[Exception], Any]:
             fe.ERROR_SELF_REFERENCING_LINK_ROW_CANNOT_HAVE_RELATED_FIELD
         ),
         f.FieldNotInTable: fe.ERROR_FIELD_NOT_IN_TABLE,
+        f.InvalidLookupThroughField: fe.ERROR_INVALID_LOOKUP_THROUGH_FIELD,
+        f.InvalidLookupTargetField: fe.ERROR_INVALID_LOOKUP_TARGET_FIELD,
         f.FieldIsAlreadyPrimary: fe.ERROR_FIELD_IS_ALREADY_PRIMARY,
         f.CannotDeletePrimaryField: fe.ERROR_CANNOT_DELETE_PRIMARY_FIELD,
         f.PrimaryFieldAlreadyExists: fe.ERROR_PRIMARY_FIELD_ALREADY_EXISTS,

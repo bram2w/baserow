@@ -682,3 +682,50 @@ def test_reused_table_skips_a_field_named_like_the_primary_in_another_case():
     )
 
     assert table_schema_conflict(requested, actual) is None
+
+
+@pytest.mark.django_db
+def test_create_tables_explains_a_lookup_to_a_formula_of_a_later_table(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+
+    result = create_tables(
+        ToolContext(user=user, workspace=workspace),
+        database.id,
+        [
+            TableItemCreate(
+                name="Orders",
+                primary_field_name="Order",
+                fields=[
+                    FieldItemCreate(
+                        name="Customer", type="link_row", linked_table="Customers"
+                    ),
+                    FieldItemCreate(
+                        name="Customer total",
+                        type="lookup",
+                        through_field="Customer",
+                        target_field="Total",
+                    ),
+                ],
+            ),
+            TableItemCreate(
+                name="Customers",
+                primary_field_name="Name",
+                fields=[
+                    FieldItemCreate(name="Amount", type="number"),
+                    FieldItemCreate(
+                        name="Total", type="formula", formula="field('Amount') * 2"
+                    ),
+                ],
+            ),
+        ],
+    )
+
+    (note,) = result["notes"]
+    assert "Error creating field Customer total" in note
+    assert "The provided target field does not exist" in note
+    orders = Table.objects.get(database=database, name="Orders")
+    assert not orders.field_set.filter(name="Customer total").exists()

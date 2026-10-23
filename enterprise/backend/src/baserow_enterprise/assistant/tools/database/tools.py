@@ -534,6 +534,7 @@ def create_tables(
     RETURNS: Created and reused table schemas with all field IDs. Notes on any errors.
     HOW: Pass ALL related tables in a single call — link_row fields can reference other tables in the same call by name (they are created internally before fields are added). Choose appropriate field types for each column.
         Use single_select/multiple_select with select_options for categorical data. The primary field is always text — pick a meaningful name for it.
+        A lookup whose target is a formula or lookup of a table listed after it fails, as that target doesn't exist yet: list that table first, or add the lookup with create_fields after this call.
     REQUIRED: `database_id` and `tables` must arrive in the same call. The ID says where to act; the payload says what to create. A call carrying only the ID creates nothing and is rejected.
     """
 

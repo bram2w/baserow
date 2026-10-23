@@ -964,7 +964,9 @@ def create_tables(
     and returned with its actual schema, plus the differences when it lacks what
     was requested. A formula is stored as written. An invalid formula is not
     created: it is returned in formula_errors with the parser's message, to
-    correct and add with create_fields.
+    correct and add with create_fields. A lookup whose target is a formula or
+    lookup of a table listed after it fails, as that target doesn't exist yet: list
+    that table first, or add the lookup with create_fields after this call.
     """
 
     database = get_database(ctx, database_id)
