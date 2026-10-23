@@ -1,10 +1,10 @@
 from concurrent.futures import ThreadPoolExecutor
-from threading import Barrier
+from threading import Barrier, Event
 from unittest.mock import ANY
 from uuid import UUID, uuid4
 
 from django.contrib.auth import get_user_model
-from django.db import close_old_connections
+from django.db import close_old_connections, connection, transaction
 
 import pytest
 from freezegun import freeze_time
@@ -14,10 +14,15 @@ from baserow.contrib.agent.actions import (
     CreateAgentConversationActionType,
     CreateAgentMessageActionType,
 )
-from baserow.contrib.agent.exceptions import AgentConversationDoesNotExist
+from baserow.contrib.agent.exceptions import (
+    AgentConversationDoesNotExist,
+    AgentMessageConflict,
+    AgentNotReady,
+)
 from baserow.contrib.agent.handler import AgentHandler
 from baserow.contrib.agent.models import AgentConversation, AgentMessage
 from baserow.contrib.agent.service import AgentService
+from baserow.contrib.agent.signals import agent_conversation_updated
 from baserow.core.action.models import Action
 
 from .utils import agent_url
@@ -320,3 +325,140 @@ def test_deleting_a_user_removes_their_conversations(data_fixture, configured_ag
     participant.delete()
 
     assert list(AgentConversation.objects.all()) == [retained]
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize("view", ["conversations", "messages"])
+def test_independent_conversations_accept_messages_concurrently(
+    data_fixture, configured_agent, mocker, view
+):
+    user = data_fixture.create_user()
+    agent = configured_agent(user=user)
+    conversations = [
+        data_fixture.create_agent_conversation(user=user, agent=agent) for _ in range(2)
+    ]
+    barrier = Barrier(2)
+    original = AgentService._require_ready
+
+    def both_reach_readiness(service, target):
+        original(service, target)
+        barrier.wait(timeout=5)
+
+    mocker.patch.object(AgentService, "_require_ready", both_reach_readiness)
+
+    def send(index):
+        close_old_connections()
+        try:
+            actor = get_user_model().objects.get(id=user.id)
+            service = AgentService()
+            if view == "conversations":
+                return service.create_conversation(
+                    actor, agent.id, uuid4(), uuid4(), "Hello"
+                ).message.id
+            return service.create_message(
+                actor, agent.id, conversations[index].uuid, uuid4(), "Hello"
+            ).message.id
+        finally:
+            close_old_connections()
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        message_ids = list(pool.map(send, range(2)))
+
+    assert len(set(message_ids)) == 2
+    assert AgentMessage.objects.count() == 2
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize("view", ["conversations", "messages"])
+@pytest.mark.parametrize("conflicting_content", [False, True])
+def test_concurrent_retries_accept_one_message(
+    data_fixture, configured_agent, mocker, view, conflicting_content
+):
+    user = data_fixture.create_user()
+    agent = configured_agent(user=user)
+    conversation_uuid, message_uuid = uuid4(), uuid4()
+    if view == "messages":
+        data_fixture.create_agent_conversation(
+            user=user, agent=agent, uuid=conversation_uuid
+        )
+    barrier = Barrier(2)
+    updated = mocker.spy(agent_conversation_updated, "send")
+    if view == "conversations":
+        original = AgentService._require_ready
+
+        def both_reach_creation(service, target):
+            original(service, target)
+            barrier.wait(timeout=5)
+
+        mocker.patch.object(AgentService, "_require_ready", both_reach_creation)
+
+    def send(index):
+        close_old_connections()
+        try:
+            actor = get_user_model().objects.get(id=user.id)
+            service = AgentService()
+            content = "Different" if conflicting_content and index else "Hello"
+            if view == "conversations":
+                result = service.create_conversation(
+                    actor, agent.id, conversation_uuid, message_uuid, content
+                )
+            else:
+                barrier.wait(timeout=5)
+                result = service.create_message(
+                    actor, agent.id, conversation_uuid, message_uuid, content
+                )
+            return "created" if result.created else "retried"
+        except AgentMessageConflict:
+            return "conflict"
+        finally:
+            close_old_connections()
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(send, range(2)))
+
+    assert sorted(results) == (
+        ["conflict", "created"] if conflicting_content else ["created", "retried"]
+    )
+    assert AgentConversation.objects.count() == AgentMessage.objects.count() == 1
+    updated.assert_called_once()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_message_rechecks_readiness_after_waiting_for_the_conversation(
+    data_fixture, configured_agent, mocker
+):
+    user = data_fixture.create_user()
+    agent = configured_agent(user=user)
+    conversation = data_fixture.create_agent_conversation(user=user, agent=agent)
+    waiting = Event()
+    original = AgentHandler.get_conversation
+
+    def get_conversation(handler, *args, **kwargs):
+        if kwargs.get("for_update"):
+            waiting.set()
+        return original(handler, *args, **kwargs)
+
+    mocker.patch.object(AgentHandler, "get_conversation", get_conversation)
+
+    def send():
+        close_old_connections()
+        try:
+            actor = get_user_model().objects.get(id=user.id)
+            AgentService().create_message(
+                actor, agent.id, conversation.uuid, uuid4(), "Hello"
+            )
+        finally:
+            close_old_connections()
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        with transaction.atomic():
+            AgentConversation.objects.select_for_update().get(id=conversation.id)
+            future = pool.submit(send)
+            assert waiting.wait(timeout=5)
+            with connection.cursor() as cursor:
+                cursor.execute("SET LOCAL lock_timeout = '2s'")
+            AgentService().update_configuration(user, agent.id, instructions="")
+        with pytest.raises(AgentNotReady):
+            future.result(timeout=5)
+
+    assert not AgentMessage.objects.exists()

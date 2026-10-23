@@ -73,12 +73,19 @@ describe('Agent conversation list', () => {
       props: { items: [], loading: true, canCreate: true, readyToSend: true },
     })
     const create = wrapper.get('.agent-conversations__footer button')
+    const header = wrapper.get('.agent-conversations__header')
+    const content = wrapper.get('.agent-conversations__content')
     create.element.focus()
     expect(wrapper.find('.skeleton').exists()).toBe(true)
 
     await wrapper.setProps({ loading: false })
-    expect(wrapper.find('.agent-conversations__header').exists()).toBe(false)
-    expect(wrapper.find('.agent-conversations__content').exists()).toBe(false)
+    expect(wrapper.get('.agent-conversations__header').element).toBe(
+      header.element
+    )
+    expect(wrapper.get('.agent-conversations__content').element).toBe(
+      content.element
+    )
+    expect(wrapper.find('.skeleton').exists()).toBe(false)
     expect(document.activeElement).toBe(create.element)
 
     await wrapper.setProps({ error: true })
@@ -101,5 +108,18 @@ describe('Agent conversation list', () => {
     expect(document.activeElement).toBe(create.element)
     create.element.click()
     expect(wrapper.emitted('create')).toHaveLength(1)
+  })
+
+  test('keeps an empty Recent section visible without creation permission', async () => {
+    const wrapper = await testApp.mount(AgentConversationList, {
+      props: { items: [] },
+    })
+
+    expect(wrapper.get('.agent-conversations__header').text()).toBe(
+      'agent.recent'
+    )
+    expect(wrapper.get('.agent-conversations__content').isVisible()).toBe(true)
+    expect(wrapper.get('aside').attributes('aria-hidden')).toBeUndefined()
+    expect(wrapper.find('.agent-conversations__footer').exists()).toBe(false)
   })
 })

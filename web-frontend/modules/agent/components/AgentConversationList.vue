@@ -1,17 +1,9 @@
 <template>
-  <aside
-    class="agent-conversations"
-    :class="{
-      'agent-conversations--empty': empty,
-      'agent-conversations--with-create': canCreate,
-    }"
-    :aria-busy="loading"
-    :aria-hidden="empty && !canCreate ? true : undefined"
-  >
-    <div v-if="!empty" class="agent-conversations__header">
+  <aside class="agent-conversations" :aria-busy="loading">
+    <div class="agent-conversations__header">
       {{ $t('agent.recent') }}
     </div>
-    <div v-if="!empty" class="agent-conversations__content">
+    <div class="agent-conversations__content">
       <div
         v-if="!error && loading && !items.length"
         class="skeleton"
@@ -93,10 +85,9 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
 import Icon from '@baserow/modules/core/components/Icon'
 
-const props = defineProps({
+defineProps({
   items: { type: Array, required: true },
   selected: { type: String, default: null },
   loading: Boolean,
@@ -106,7 +97,4 @@ const props = defineProps({
   readyToSend: Boolean,
 })
 defineEmits(['select', 'retry', 'load-more', 'create'])
-const empty = computed(
-  () => !props.loading && !props.error && !props.items.length
-)
 </script>

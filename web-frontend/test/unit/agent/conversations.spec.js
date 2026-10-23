@@ -95,15 +95,17 @@ describe('Agent conversations', () => {
     expect(document.activeElement).toBe(composer(wrapper).element)
   })
 
-  test('keeps the focused composer and draft when typing reveals the first conversation', async () => {
+  test('keeps the Recent section and focused composer when typing the first draft', async () => {
     const wrapper = await mount()
     const input = composer(wrapper)
     input.element.focus()
-    expect(wrapper.find('.agent-conversations__header').exists()).toBe(false)
+    const header = wrapper.get('.agent-conversations__header')
 
     await input.setValue('Unfinished first conversation')
 
-    expect(wrapper.find('.agent-conversations__header').exists()).toBe(true)
+    expect(wrapper.get('.agent-conversations__header').element).toBe(
+      header.element
+    )
     expect(composer(wrapper).element).toBe(input.element)
     expect(document.activeElement).toBe(input.element)
     expect(input.element.value).toBe('Unfinished first conversation')

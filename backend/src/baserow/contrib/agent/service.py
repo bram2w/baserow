@@ -170,7 +170,6 @@ class AgentService:
             agent_id,
             CreateAgentConversationOperationType.type,
             CreateAgentMessageOperationType.type,
-            for_update=True,
         )
         validate_message_content(content)
         retry = self.handler.get_creation_retry(
@@ -216,13 +215,17 @@ class AgentService:
         """
 
         agent = self._get_authorized_agent(
-            user, agent_id, CreateAgentMessageOperationType.type, for_update=True
+            user, agent_id, CreateAgentMessageOperationType.type
         )
-        conversation = self.handler.get_conversation(agent, user, conversation_uuid)
+        conversation = self.handler.get_conversation(
+            agent, user, conversation_uuid, for_update=True
+        )
         validate_message_content(content)
         retry = self.handler.get_message_retry(conversation, uuid, content)
         if retry is not None:
             return retry
+        # Configuration may have changed while waiting for the conversation lock.
+        agent = self.handler.get_agent(agent_id)
         self._require_ready(agent)
         result = self.handler.create_message(conversation, uuid, content)
         if result.created:

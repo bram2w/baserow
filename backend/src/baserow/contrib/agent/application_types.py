@@ -99,7 +99,6 @@ class AgentApplicationType(ApplicationType):
             )
         return serialized
 
-    @transaction.atomic
     def import_serialized(
         self,
         workspace: Workspace | None,

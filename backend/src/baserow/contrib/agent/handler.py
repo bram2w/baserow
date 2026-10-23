@@ -129,7 +129,11 @@ class AgentHandler:
         return AgentConversation.objects.filter(agent=agent, owner_user=owner)
 
     def get_conversation(
-        self, agent: AgentApplication, owner: AbstractUser, uuid: UUID
+        self,
+        agent: AgentApplication,
+        owner: AbstractUser,
+        uuid: UUID,
+        for_update: bool = False,
     ) -> AgentConversation:
         """
         Return one of the owner's conversations with the agent.
@@ -137,15 +141,17 @@ class AgentHandler:
         :param agent: The agent the conversation belongs to.
         :param owner: The user who owns the conversation.
         :param uuid: The uuid of the conversation.
+        :param for_update: Whether to lock the conversation until the transaction ends.
         :raises AgentConversationDoesNotExist: When the conversation doesn't exist,
             also when it belongs to another owner or agent.
         :return: The conversation.
         """
 
+        queryset = AgentConversation.objects.all()
+        if for_update:
+            queryset = queryset.select_for_update(of=("self",))
         try:
-            return AgentConversation.objects.get(
-                uuid=uuid, agent=agent, owner_user=owner
-            )
+            return queryset.get(uuid=uuid, agent=agent, owner_user=owner)
         except AgentConversation.DoesNotExist as exc:
             raise AgentConversationDoesNotExist from exc
 

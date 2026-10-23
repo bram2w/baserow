@@ -10,6 +10,8 @@ from baserow.contrib.agent.models import (
     AgentMessage,
 )
 from baserow.core.handler import CoreHandler
+from baserow.core.job_types import DuplicateApplicationJobType
+from baserow.core.jobs.handler import JobHandler
 from baserow.core.registries import ImportExportConfig
 
 INTERNAL_COPY = {"is_duplicate": True, "exclude_sensitive_data": False}
@@ -117,20 +119,27 @@ def test_internal_copy_skips_conversations_of_deleted_owners(
     assert copied.conversations.get().owner_user_id == owner.id
 
 
-@pytest.mark.django_db
-def test_failed_conversation_import_rolls_back_the_whole_agent(
+@pytest.mark.django_db(transaction=True)
+def test_duplicate_agent_job_rolls_back_failed_conversation_import(
     data_fixture, configured_agent, mocker
 ):
     user = data_fixture.create_user()
     agent = configured_agent(user=user)
     data_fixture.create_agent_message(user=user, agent=agent)
-    serialized = export_internal(agent)
-    mocker.patch.object(AgentMessage.objects, "bulk_create", side_effect=RuntimeError)
+    mocker.patch.object(
+        AgentMessage.objects,
+        "bulk_create",
+        side_effect=RuntimeError("Message import failed"),
+    )
 
-    with pytest.raises(RuntimeError):
-        AgentApplicationType().import_serialized(
-            agent.workspace, serialized, INTERNAL_CONFIG, {}
+    with pytest.raises(RuntimeError, match="Message import failed"):
+        JobHandler().create_and_start_job(
+            user,
+            DuplicateApplicationJobType.type,
+            application_id=agent.id,
+            sync=True,
         )
 
     assert list(AgentApplication.objects.all()) == [agent]
     assert AgentConversation.objects.count() == 1
+    assert AgentMessage.objects.count() == 1

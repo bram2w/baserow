@@ -14,13 +14,7 @@
         @click="configurationOpen = !configurationOpen"
       />
     </header>
-    <div
-      class="layout__col-2-2 agent-application__content"
-      :class="{
-        'agent-application__content--configuration-open':
-          state.canReadConfiguration && configurationOpen,
-      }"
-    >
+    <div class="layout__col-2-2 agent-application__content">
       <AgentConversationList
         v-if="state.canReadConversations"
         :items="state.conversationItems"
