@@ -2,6 +2,7 @@ import os
 from unittest.mock import patch
 
 from django.conf import settings
+from django.core.files.base import ContentFile
 from django.db import connection
 from django.shortcuts import reverse
 from django.test import override_settings
@@ -17,10 +18,14 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
+from baserow.api.templates.serializers import UserTemplateDownloadSerializer
+from baserow.core.context import get_current_workspace_id
 from baserow.core.handler import CoreHandler
 from baserow.core.job_types import InstallTemplateJobType
 from baserow.core.jobs.handler import JobHandler
 from baserow.core.models import Application, InstallTemplateJob, Template
+from baserow.core.storage import get_default_storage
+from baserow.core.user_templates.types import TemplateDownload
 
 TEST_TEMPLATES_DIR = os.path.join(settings.BASE_DIR, "../../../tests/templates")
 
@@ -763,3 +768,216 @@ def test_async_install_user_template_query_count_is_constant(
     assert response_json["template"]["slug"] == user_template.slug
 
     assert len(four_revisions.captured_queries) == len(one_revision.captured_queries)
+
+
+def _create_downloadable_user_template(data_fixture, owner, state="private"):
+    """
+    Like `_create_installable_user_template`, with an archive in the storage
+    unless the state says otherwise.
+    """
+
+    user_template = _create_installable_user_template(data_fixture, owner, state)
+    if state != "no_archive":
+        archive_name = get_default_storage().save(
+            "template-revisions/archive.zip", ContentFile(b"archive")
+        )
+        Template.objects.filter(id=user_template.id).update(archive=archive_name)
+        user_template.refresh_from_db()
+    return user_template
+
+
+def _download_url(slug, latest=None):
+    url = reverse("api:templates:download", kwargs={"slug": slug})
+    return url if latest is None else f"{url}?latest={latest}"
+
+
+@pytest.mark.django_db
+def test_download_user_template(api_client, data_fixture, use_tmp_media_root):
+    owner, owner_token = data_fixture.create_user_and_token()
+    other, other_token = data_fixture.create_user_and_token()
+    user_template = _create_downloadable_user_template(data_fixture, owner, "public")
+    Template.objects.filter(id=user_template.id).update(name="Sales pipeline")
+
+    for token in [owner_token, other_token]:
+        response = api_client.get(
+            _download_url(user_template.slug), HTTP_AUTHORIZATION=f"JWT {token}"
+        )
+
+        assert response.status_code == HTTP_200_OK, response.json()
+        response_json = response.json()
+        assert set(response_json) == {"url", "file_name"}
+        assert response_json["url"].endswith(user_template.archive.name)
+        assert "template-revisions/" in response_json["url"]
+        assert response_json["file_name"] == "sales-pipeline.zip"
+
+
+@pytest.mark.django_db
+def test_download_user_template_latest(api_client, data_fixture, use_tmp_media_root):
+    owner, owner_token = data_fixture.create_user_and_token()
+    _, other_token = data_fixture.create_user_and_token()
+    user_template = _create_downloadable_user_template(data_fixture, owner, "public")
+    latest = data_fixture.create_user_template_revision(user_template)
+    data_fixture.create_database_application(workspace=latest.workspace)
+    latest_archive = get_default_storage().save(
+        "template-revisions/latest.zip", ContentFile(b"latest")
+    )
+    Template.objects.filter(id=latest.id).update(archive=latest_archive)
+
+    def download(token, latest_param=None):
+        return api_client.get(
+            _download_url(user_template.slug, latest_param),
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+    # The public revision for everyone, and the latest one for the owner when asked.
+    for token in [owner_token, other_token]:
+        response = download(token)
+        assert response.status_code == HTTP_200_OK, response.json()
+        assert response.json()["url"].endswith(user_template.archive.name)
+    response = download(owner_token, "true")
+    assert response.status_code == HTTP_200_OK, response.json()
+    assert response.json()["url"].endswith(latest_archive)
+
+    response = download(other_token, "true")
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_TEMPLATE_DOES_NOT_EXIST"
+
+    response = download(owner_token, "maybe")
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_QUERY_PARAMETER_VALIDATION"
+
+
+@pytest.mark.django_db
+def test_download_user_template_anonymous(api_client, data_fixture, use_tmp_media_root):
+    owner = data_fixture.create_user()
+    user_template = _create_downloadable_user_template(data_fixture, owner, "public")
+
+    response = api_client.get(_download_url(user_template.slug))
+
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.django_db
+def test_download_user_template_without_access_is_like_unknown(
+    api_client, data_fixture, use_tmp_media_root
+):
+    owner = data_fixture.create_user()
+    _, token = data_fixture.create_user_and_token()
+    user_template = _create_downloadable_user_template(data_fixture, owner)
+    # Only a user template has an archive.
+    official = data_fixture.create_template()
+
+    responses = [
+        api_client.get(_download_url(slug), HTTP_AUTHORIZATION=f"JWT {token}")
+        for slug in [user_template.slug, official.slug, "unknown"]
+    ]
+
+    for response in responses:
+        assert response.status_code == HTTP_404_NOT_FOUND
+        assert response.json()["error"] == "ERROR_TEMPLATE_DOES_NOT_EXIST"
+    assert responses[0].json() == responses[2].json()
+
+
+@pytest.mark.django_db
+def test_download_blocked_user_template(api_client, data_fixture, use_tmp_media_root):
+    owner, owner_token = data_fixture.create_user_and_token()
+    _, other_token = data_fixture.create_user_and_token()
+    user_template = _create_downloadable_user_template(data_fixture, owner, "blocked")
+
+    response = api_client.get(
+        _download_url(user_template.slug), HTTP_AUTHORIZATION=f"JWT {owner_token}"
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "error": "ERROR_TEMPLATE_BLOCKED",
+        "detail": "The template is blocked and can't be installed or downloaded.",
+    }
+
+    # Anyone else has no access to a blocked template.
+    response = api_client.get(
+        _download_url(user_template.slug), HTTP_AUTHORIZATION=f"JWT {other_token}"
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_TEMPLATE_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "state,expected_error",
+    [
+        ("pruned", "ERROR_TEMPLATE_HAS_NO_CONTENT"),
+        ("no_archive", "ERROR_TEMPLATE_FILE_DOES_NOT_EXIST"),
+    ],
+)
+def test_download_user_template_without_content_or_archive(
+    api_client, data_fixture, use_tmp_media_root, state, expected_error
+):
+    owner, token = data_fixture.create_user_and_token()
+    user_template = _create_downloadable_user_template(data_fixture, owner, state)
+
+    response = api_client.get(
+        _download_url(user_template.slug), HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == expected_error
+
+
+@pytest.mark.django_db
+def test_download_user_template_query_count_is_the_same_for_everyone(
+    api_client, data_fixture, use_tmp_media_root
+):
+    owner, owner_token = data_fixture.create_user_and_token()
+    _, other_token = data_fixture.create_user_and_token()
+    user_template = _create_downloadable_user_template(data_fixture, owner, "public")
+    url = _download_url(user_template.slug)
+
+    def download(token):
+        with CaptureQueriesContext(connection) as queries:
+            response = api_client.get(url, HTTP_AUTHORIZATION=f"JWT {token}")
+        assert response.status_code == HTTP_200_OK, response.json()
+        return len(queries.captured_queries)
+
+    # The first requests fill the caches that the others find filled.
+    download(owner_token)
+    download(other_token)
+
+    assert download(owner_token) == download(other_token)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("fails", [False, True])
+def test_user_template_download_serializer_signs_the_url_with_the_workspace(
+    fails,
+):
+    seen_workspace_ids = []
+
+    def url(name):
+        seen_workspace_ids.append(get_current_workspace_id())
+        if fails:
+            raise RuntimeError("The storage is down.")
+        return f"http://localhost/media/{name}"
+
+    for url_workspace_id in [7, 8]:
+        download = TemplateDownload(
+            archive_name="template-revisions/archive.zip",
+            file_name="archive.zip",
+            url_workspace_id=url_workspace_id,
+        )
+        with patch(
+            "baserow.api.templates.serializers.get_default_storage"
+        ) as get_storage:
+            get_storage.return_value.url.side_effect = url
+            serializer = UserTemplateDownloadSerializer(download)
+            if fails:
+                with pytest.raises(RuntimeError):
+                    serializer.data
+            else:
+                assert serializer.data == {
+                    "url": "http://localhost/media/template-revisions/archive.zip",
+                    "file_name": "archive.zip",
+                }
+        # Cleared even when the storage fails, outside of a request too.
+        assert get_current_workspace_id() is None
+
+    assert seen_workspace_ids == [7, 8]

@@ -240,12 +240,8 @@ class InstallTemplateJobType(JobType):
         )
 
         # Only the root is looked up, so the id of a revision is unknown too.
-        root = Template.objects.filter(
-            id=values["template_id"],
-            root__isnull=True,
-            marked_for_deletion_at__isnull=True,
-        ).first()
-        if root is not None and root.type == Template.Type.USER:
+        root = UserTemplateHandler().get_user_template_root(values["template_id"])
+        if root is not None:
             # The resolved revision is pinned, so that an update of the template
             # before the job runs doesn't change what's installed.
             template = UserTemplateHandler().get_installable_revision(

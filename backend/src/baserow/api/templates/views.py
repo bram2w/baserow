@@ -32,6 +32,7 @@ from baserow.api.templates.serializers import (
     TemplateCategoriesSerializer,
     TemplateListItemSerializer,
     TemplateSerializer,
+    UserTemplateDownloadSerializer,
 )
 from baserow.core.action.registries import action_type_registry
 from baserow.core.actions import InstallTemplateActionType
@@ -52,6 +53,7 @@ from baserow.core.user_templates.exceptions import (
     TemplateBlocked,
     TemplateHasNoContent,
 )
+from baserow.core.user_templates.service import UserTemplateService
 
 from .errors import (
     ERROR_TEMPLATE_BLOCKED,
@@ -185,6 +187,24 @@ class TemplatesView(APIView, SearchableViewMixin):
         )
 
 
+def get_template_root_id(slug: str) -> int:
+    """
+    Returns the id of the template with the slug, which only the root of a
+    template has.
+
+    :raises TemplateDoesNotExist: If no template has the slug.
+    """
+
+    template_id = (
+        Template.objects.filter(slug=slug, root__isnull=True)
+        .values_list("id", flat=True)
+        .first()
+    )
+    if template_id is None:
+        raise TemplateDoesNotExist(f"The template with slug {slug} does not exist.")
+    return template_id
+
+
 class TemplateView(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -251,19 +271,74 @@ class TemplateView(APIView):
     def delete(self, request, slug):
         """Deletes a user template owned by the user, or any one by an admin."""
 
-        # Only the root of a template has a slug.
-        template_id = (
-            Template.objects.filter(slug=slug, root__isnull=True)
-            .values_list("id", flat=True)
-            .first()
-        )
-        if template_id is None:
-            raise TemplateDoesNotExist(f"The template with slug {slug} does not exist.")
-
         action_type_registry.get_by_type(DeleteUserTemplateActionType).do(
-            request.user, template_id
+            request.user, get_template_root_id(slug)
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TemplateDownloadView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        tags=["Templates"],
+        operation_id="download_template",
+        parameters=[
+            OpenApiParameter(
+                name="slug",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.STR,
+                description="The slug of the user template to download.",
+            ),
+            OpenApiParameter(
+                name="latest",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.BOOL,
+                description="Whether to download the latest revision of the user "
+                "template, which only its owner may.",
+            ),
+        ],
+        description=(
+            "Responds with the URL of the stored archive of a user template, which "
+            "imports like a workspace export. Whoever may install the template may "
+            "download it: its owner, unless it's blocked, and anyone signed in while "
+            "it's public and not blocked. Everyone gets the archive of its public "
+            "revision, and the owner of its latest one while it isn't public or with "
+            "`latest`. "
+            "The URL is a storage URL, like the file of a workspace export. "
+            "Downloading doesn't count as an install."
+        ),
+        request=None,
+        responses={
+            200: UserTemplateDownloadSerializer,
+            400: get_error_schema(
+                [
+                    "ERROR_TEMPLATE_BLOCKED",
+                    "ERROR_TEMPLATE_HAS_NO_CONTENT",
+                    "ERROR_TEMPLATE_FILE_DOES_NOT_EXIST",
+                    "ERROR_QUERY_PARAMETER_VALIDATION",
+                ]
+            ),
+            401: None,
+            404: get_error_schema(["ERROR_TEMPLATE_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            TemplateDoesNotExist: ERROR_TEMPLATE_DOES_NOT_EXIST,
+            TemplateBlocked: ERROR_TEMPLATE_BLOCKED,
+            TemplateHasNoContent: ERROR_TEMPLATE_HAS_NO_CONTENT,
+            TemplateFileDoesNotExist: ERROR_TEMPLATE_FILE_DOES_NOT_EXIST,
+        }
+    )
+    @validate_query_parameters(InstallTemplateQueryParamSerializer)
+    def get(self, request, slug, query_params):
+        """Responds with the archive of a user template the user may install."""
+
+        download = UserTemplateService().get_template_download(
+            request.user, get_template_root_id(slug), latest=query_params["latest"]
+        )
+        return Response(UserTemplateDownloadSerializer(download).data)
 
 
 class InstallTemplateView(APIView):

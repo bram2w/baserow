@@ -11,6 +11,7 @@ from baserow.core.user_templates.exceptions import (
     TemplateHasNoContent,
 )
 from baserow.core.user_templates.handler import UserTemplateHandler
+from baserow.core.user_templates.types import TemplateDownload
 from baserow.core.utils import ChildProgressBuilder
 
 
@@ -93,6 +94,23 @@ class UserTemplateService:
         """
 
         return UserTemplateHandler().get_own_template(user, template_id)
+
+    def get_template_download(
+        self, user: AbstractUser, template_id: int, latest: bool = False
+    ) -> TemplateDownload:
+        """
+        Returns the stored archive of a user template that the user may download.
+        See `UserTemplateHandler.get_template_download` for the rules and the
+        errors.
+
+        :param user: The user who downloads the template.
+        :param template_id: The id of the template, which is its root.
+        :param latest: Whether to download the latest revision, which only the
+            owner may.
+        :return: The archive and how to hand it out.
+        """
+
+        return UserTemplateHandler().get_template_download(user, template_id, latest)
 
     def get_template_content(
         self, base_revision: Template

@@ -33,5 +33,5 @@ ERROR_NO_APPLICATIONS_SELECTED = (
 ERROR_TEMPLATE_BLOCKED = (
     "ERROR_TEMPLATE_BLOCKED",
     HTTP_400_BAD_REQUEST,
-    "The template is blocked and can't be installed.",
+    "The template is blocked and can't be installed or downloaded.",
 )

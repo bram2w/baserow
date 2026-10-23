@@ -19,7 +19,7 @@ from django.utils.text import slugify
 from celery.exceptions import SoftTimeLimitExceeded
 from loguru import logger
 
-from baserow.core.exceptions import TemplateDoesNotExist
+from baserow.core.exceptions import TemplateDoesNotExist, TemplateFileDoesNotExist
 from baserow.core.import_export.handler import ImportExportHandler
 from baserow.core.jobs.cache import job_progress_key
 from baserow.core.jobs.constants import JOB_CANCELLED, JOB_FAILED
@@ -55,7 +55,7 @@ from baserow.core.user_templates.exceptions import (
     TemplateHasNoContent,
     TemplateSlugGenerationFailed,
 )
-from baserow.core.user_templates.types import TemplateMetadata
+from baserow.core.user_templates.types import TemplateDownload, TemplateMetadata
 from baserow.core.utils import ChildProgressBuilder
 
 User = get_user_model()
@@ -658,6 +658,27 @@ class UserTemplateHandler:
                 # It ended, or committed, between the query and the lock.
                 pass
 
+    def get_user_template_root(self, template_id: int) -> Optional[Template]:
+        """
+        Returns the root of a user template that isn't marked for deletion, which
+        is what the id of a user template refers to when it's installed or
+        downloaded. Access isn't checked here.
+
+        :param template_id: The id of the template.
+        :return: The root, or None for the id of a revision, of an official
+            template, of a template marked for deletion, or an unknown id.
+        """
+
+        return (
+            Template.objects.user()
+            .filter(
+                id=template_id,
+                root__isnull=True,
+                marked_for_deletion_at__isnull=True,
+            )
+            .first()
+        )
+
     def get_latest_revision(self, root: Template) -> Template:
         """
         Returns the latest revision of a template, which is the root itself until
@@ -755,6 +776,50 @@ class UserTemplateHandler:
             raise TemplateHasNoContent(f"The template {root.id} has no content.")
 
         return revision
+
+    def get_template_download(
+        self, user: AbstractUser, template_id: int, latest: bool = False
+    ) -> TemplateDownload:
+        """
+        Returns the stored archive of the revision of a user template that the user
+        would install, so that it can be imported into another workspace. Whoever
+        may install the template may download it, see `get_installable_revision`.
+        Nothing is written, so a download doesn't count as an install.
+
+        :param user: The user who downloads the template.
+        :param template_id: The id of the template, which is its root.
+        :param latest: Whether to download the latest revision, which only the
+            owner may.
+        :raises TemplateDoesNotExist: If the template doesn't exist, isn't the root
+            of a user template, is marked for deletion, or the user has no access
+            to it.
+        :raises TemplateBlocked: If the user owns the template and it's blocked.
+        :raises TemplateHasNoContent: If the revision has no application to copy.
+        :raises TemplateFileDoesNotExist: If the revision has no stored archive.
+        :return: The archive and how to hand it out.
+        """
+
+        root = self.get_user_template_root(template_id)
+        if root is None:
+            raise TemplateDoesNotExist(f"The template {template_id} does not exist.")
+
+        revision = self.get_installable_revision(user, root, latest)
+
+        # Checked only once access is decided, so that nobody without access learns
+        # whether a file exists. An empty name would point at the storage root.
+        archive_name = revision.archive.name or ""
+        if not archive_name or not get_default_storage().exists(archive_name):
+            raise TemplateFileDoesNotExist(
+                f"The archive of the template {root.id} does not exist."
+            )
+
+        return TemplateDownload(
+            archive_name=archive_name,
+            file_name=f"{slugify(revision.name) or 'template'}.zip",
+            # Whoever may install the revision may open it, which grants reading its
+            # workspace, so that enterprise secure file serve lets them through.
+            url_workspace_id=revision.workspace_id,
+        )
 
     def check_install_access(self, user: AbstractUser, revision: Template) -> None:
         """
