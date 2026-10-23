@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from io import BufferedReader, BytesIO
 from pathlib import Path
 from typing import IO, Any, Callable, Dict, List, NewType, Optional, Tuple, Union, cast
-from urllib.parse import urljoin, urlparse
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from django.conf import settings
@@ -37,7 +36,6 @@ from .emails import WorkspaceInvitationEmail
 from .exceptions import (
     ApplicationDoesNotExist,
     ApplicationNotInWorkspace,
-    BaseURLHostnameNotAllowed,
     CannotChangeYourOwnWorkspaceRole,
     CannotDeleteYourselfFromWorkspace,
     DuplicateApplicationMaxLocksExceededException,
@@ -131,6 +129,7 @@ from .utils import (
     atomic_if_not_already,
     extract_allowed,
     find_unused_name,
+    join_frontend_base_url,
     set_allowed_attrs,
 )
 
@@ -1197,22 +1196,9 @@ class CoreHandler:
             allowed.
         """
 
-        parsed_base_url = urlparse(base_url)
-        if parsed_base_url.hostname not in (
-            settings.PUBLIC_WEB_FRONTEND_HOSTNAME,
-            settings.BASEROW_EMBEDDED_SHARE_HOSTNAME,
-        ):
-            raise BaseURLHostnameNotAllowed(
-                f"The hostname {parsed_base_url.netloc} is not allowed."
-            )
-
         signer = self.get_workspace_invitation_signer()
         signed_invitation_id = signer.dumps(invitation.id)
-
-        if not base_url.endswith("/"):
-            base_url += "/"
-
-        public_accept_url = urljoin(base_url, signed_invitation_id)
+        public_accept_url = join_frontend_base_url(base_url, signed_invitation_id)
 
         # Send the email in the language of the user that has send the invitation.
         with translation.override(invitation.invited_by.profile.language):

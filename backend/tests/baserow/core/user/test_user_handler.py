@@ -961,6 +961,15 @@ def test_send_change_email_confirmation(data_fixture, mailoutbox):
             user, "newemail@localhost", valid_password, "http://test.nl/change-email"
         )
 
+    # Browsers send this to `test.nl` even though urlparse reports `localhost`.
+    with pytest.raises(BaseURLHostnameNotAllowed):
+        handler.send_change_email_confirmation(
+            user,
+            "newemail@localhost",
+            valid_password,
+            "http://test.nl\\@localhost:3000/change-email",
+        )
+
     # Test with incorrect password
     with pytest.raises(InvalidPassword):
         handler.send_change_email_confirmation(

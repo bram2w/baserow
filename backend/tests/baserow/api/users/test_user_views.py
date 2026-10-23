@@ -737,6 +737,59 @@ def test_send_reset_password_email(data_fixture, client, mailoutbox):
     assert response.status_code == HTTP_400_BAD_REQUEST
 
 
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize(
+    "base_url",
+    [
+        # Python's urlparse reports `localhost` as the hostname for these, but
+        # browsers treat `\` as `/` and send the token to `evil.com`.
+        "http://evil.com\\@localhost:3000/reset-password",
+        "http://evil.com\\abc\\@localhost:3000/reset-password",
+        "http://evil.com%5C@localhost:3000/reset-password",
+        "http://evil.com@localhost:3000/reset-password",
+        "http://localhost:30001/reset-password",
+        "http://localhost:3001/reset-password",
+        "https://localhost:3000/reset-password",
+    ],
+)
+def test_send_reset_password_email_rejects_base_url_on_other_origin(
+    data_fixture, client, mailoutbox, base_url
+):
+    data_fixture.create_password_provider()
+    data_fixture.create_user(email="test@localhost.nl")
+
+    response = client.post(
+        reverse("api:user:send_reset_password_email"),
+        {"email": "test@localhost.nl", "base_url": base_url},
+        format="json",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_HOSTNAME_IS_NOT_ALLOWED"
+    assert len(mailoutbox) == 0
+
+
+@pytest.mark.django_db(transaction=True)
+def test_send_reset_password_email_link_uses_frontend_origin(
+    data_fixture, client, mailoutbox
+):
+    data_fixture.create_password_provider()
+    data_fixture.create_user(email="test@localhost.nl")
+
+    response = client.post(
+        reverse("api:user:send_reset_password_email"),
+        {
+            "email": "test@localhost.nl",
+            "base_url": "http://localhost:3000/reset-password",
+        },
+        format="json",
+    )
+
+    assert response.status_code == 204
+    assert len(mailoutbox) == 1
+    assert "http://localhost:3000/reset-password/" in mailoutbox[0].body
+
+
 @pytest.mark.django_db
 def test_send_reset_password_email_password_auth_disabled(
     api_client, data_fixture, mailoutbox

@@ -2,7 +2,7 @@ import hashlib
 import hmac as hmac_module
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional, Tuple
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -26,7 +26,6 @@ from baserow.core.auth_provider.handler import PasswordProviderHandler
 from baserow.core.auth_provider.models import AuthProviderModel
 from baserow.core.emails import EmailPendingVerificationEmail
 from baserow.core.exceptions import (
-    BaseURLHostnameNotAllowed,
     WorkspaceInvitationEmailMismatch,
 )
 from baserow.core.handler import CoreHandler
@@ -48,7 +47,11 @@ from baserow.core.signals import (
     user_updated,
 )
 from baserow.core.trash.handler import TrashHandler
-from baserow.core.utils import generate_hash, get_baserow_saas_base_url
+from baserow.core.utils import (
+    generate_hash,
+    get_baserow_saas_base_url,
+    join_frontend_base_url,
+)
 from baserow.throttling.handler import consume_rate_limit
 
 from ..telemetry.utils import baserow_trace, baserow_trace_handler
@@ -484,22 +487,9 @@ class UserHandler:
         if not CoreHandler().get_settings().allow_reset_password:
             raise ResetPasswordDisabledError("Reset password is disabled")
 
-        parsed_base_url = urlparse(base_url)
-        if parsed_base_url.hostname not in (
-            settings.PUBLIC_WEB_FRONTEND_HOSTNAME,
-            settings.BASEROW_EMBEDDED_SHARE_HOSTNAME,
-        ):
-            raise BaseURLHostnameNotAllowed(
-                f"The hostname {parsed_base_url.netloc} is not allowed."
-            )
-
         signer = self.get_reset_password_signer()
         signed_token = signer.dumps([user.id, self._get_password_state_hash(user)])
-
-        if not base_url.endswith("/"):
-            base_url += "/"
-
-        reset_url = urljoin(base_url, signed_token)
+        reset_url = join_frontend_base_url(base_url, signed_token)
 
         if not consume_rate_limit(
             settings.BASEROW_SEND_RESET_PASSWORD_EMAIL_RATE_LIMIT,
@@ -667,22 +657,9 @@ class UserHandler:
         if User.objects.filter(Q(email=new_email) | Q(username=new_email)).exists():
             raise UserAlreadyExist(f"A user with email {new_email} already exists.")
 
-        parsed_base_url = urlparse(base_url)
-        if parsed_base_url.hostname not in (
-            settings.PUBLIC_WEB_FRONTEND_HOSTNAME,
-            settings.BASEROW_EMBEDDED_SHARE_HOSTNAME,
-        ):
-            raise BaseURLHostnameNotAllowed(
-                f"The hostname {parsed_base_url.netloc} is not allowed."
-            )
-
         signer = self.get_change_email_signer()
         signed_payload = signer.dumps({"user_id": user.id, "new_email": new_email})
-
-        if not base_url.endswith("/"):
-            base_url += "/"
-
-        confirmation_url = urljoin(base_url, signed_payload)
+        confirmation_url = join_frontend_base_url(base_url, signed_payload)
 
         with translation.override(user.profile.language):
             email = ChangeEmailConfirmationEmail(

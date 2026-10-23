@@ -558,6 +558,13 @@ def test_send_workspace_invitation_email(data_fixture, mailoutbox):
             invitation=workspace_invitation, base_url="http://test.nl/workspace-invite"
         )
 
+    # Browsers send this to `test.nl` even though urlparse reports `localhost`.
+    with pytest.raises(BaseURLHostnameNotAllowed):
+        handler.send_workspace_invitation_email(
+            invitation=workspace_invitation,
+            base_url="http://test.nl\\@localhost:3000/workspace-invite",
+        )
+
     signer = handler.get_workspace_invitation_signer()
     handler.send_workspace_invitation_email(
         invitation=workspace_invitation,
