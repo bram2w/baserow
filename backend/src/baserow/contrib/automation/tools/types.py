@@ -597,9 +597,16 @@ def _slack_to_orm(n: ActionNodeCreate, values: ServiceValues) -> dict[str, Any]:
 
 def _row_action_to_orm(n: ActionNodeCreate, values: ServiceValues) -> dict[str, Any]:
     service: dict[str, Any] = {"table_id": n.table_id}
-    if n.type != "delete_row":
+    if n.type == "delete_row":
+        if n.values:
+            values.errors.append("A delete_row node takes no values.")
+    else:
         service["field_mappings"] = values.field_mappings(n.table_id, n.values or [])
-    if n.type != "create_row" and n.row_id:
+    if n.type == "create_row":
+        if n.row_id:
+            # A row id would make the node update that row instead.
+            values.errors.append("A create_row node takes no row_id.")
+    elif n.row_id:
         service["row_id"] = values.value("row_id", n.row_id)
     return service
 

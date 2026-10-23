@@ -69,6 +69,46 @@ def test_add_nodes_after_an_existing_node_and_each_other(automation_ctx):
 
 
 @pytest.mark.django_db
+def test_add_nodes_reports_values_a_row_node_type_takes_no(automation_ctx):
+    ctx, automation, table, name = automation_ctx
+    workflow, trigger = create_workflow(ctx.user, automation, "Flow", table)
+
+    result = add_nodes(
+        ctx,
+        workflow.id,
+        [
+            ActionNodeCreate(
+                ref="store",
+                type="create_row",
+                previous_node_ref=str(trigger.id),
+                table_id=table.id,
+                row_id="5",
+                values=[{"field_id": name.id, "value": "done"}],
+            ),
+            ActionNodeCreate(
+                ref="remove",
+                type="delete_row",
+                previous_node_ref="store",
+                table_id=table.id,
+                row_id="5",
+                values=[{"field_id": name.id, "value": "done"}],
+            ),
+        ],
+    )
+
+    store, remove = result["created_nodes"]
+    assert result["errors"] == [
+        f"Node {store['id']} ({store['label']}): A create_row node takes no row_id.",
+        f"Node {remove['id']} ({remove['label']}): A delete_row node takes no values.",
+    ]
+    service = AutomationNode.objects.get(id=store["id"]).service.specific
+    assert not service.row_id["formula"]
+    assert service.field_mappings.get(field=name).value["formula"] == "'done'"
+    service = AutomationNode.objects.get(id=remove["id"]).service.specific
+    assert not service.field_mappings.exists()
+
+
+@pytest.mark.django_db
 def test_add_nodes_to_an_existing_router_branch(automation_ctx):
     ctx, automation, table, _ = automation_ctx
     workflow, trigger = create_workflow(ctx.user, automation, "Flow", table)

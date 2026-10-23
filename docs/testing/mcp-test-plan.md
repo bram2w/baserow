@@ -213,7 +213,7 @@ the email node on it.
 
 Ask Claude to set the email subject to `concat('Big order ', ` (an unfinished
 formula). Expected: `update_nodes` returns it in `formula_errors` with the
-parser's message, the subject stays empty, and Claude fixes it with another
+parser's message, the subject keeps its previous value, and Claude fixes it with another
 `update_nodes` call after reading the node's output paths with `list_nodes`.
 
 Ask Claude to delete the email node. Expected: `delete_nodes` moves it to the
