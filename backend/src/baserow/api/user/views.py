@@ -58,6 +58,7 @@ from baserow.core.exceptions import (
 )
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Settings, Template, WorkspaceInvitation
+from baserow.core.two_factor_auth.handler import TwoFactorAuthHandler
 from baserow.core.user.actions import (
     ChangeEmailActionType,
     ChangeUserPasswordActionType,
@@ -750,7 +751,11 @@ class VerifyEmailAddressView(APIView):
             data["token"]
         )
 
-        if request.user.is_anonymous:
+        # Users with two-factor authentication must sign in through the regular login
+        # flow, so they are not signed in automatically here.
+        if request.user.is_anonymous and not TwoFactorAuthHandler().is_enabled_for_user(
+            user
+        ):
             data = log_in_user(request, user)
             return Response(status=200, data=data)
         else:
