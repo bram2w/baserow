@@ -8,6 +8,7 @@ from baserow.contrib.agent.models import (
     AgentApplication,
     AgentConversation,
     AgentMessage,
+    AgentReplyTranscript,
 )
 from baserow.core.chat_runs.models import ChatRun
 from baserow.core.handler import CoreHandler
@@ -22,6 +23,16 @@ INTERNAL_CONFIG = ImportExportConfig(include_permission_data=False, **INTERNAL_C
 def export_internal(agent: AgentApplication) -> dict:
     serialized = AgentApplicationType().export_serialized(agent, INTERNAL_CONFIG)
     return json.loads(json.dumps(serialized))
+
+
+def transcript_values(message: AgentMessage) -> tuple | None:
+    transcript = getattr(message, "transcript", None)
+    return transcript and (
+        transcript.provider_type,
+        transcript.model_identifier,
+        transcript.model_messages,
+        transcript.usage,
+    )
 
 
 def conversation_values(agent: AgentApplication) -> list[tuple]:
@@ -39,6 +50,7 @@ def conversation_values(agent: AgentApplication) -> list[tuple]:
                         message.content,
                         message.status,
                         message.error_code,
+                        transcript_values(message),
                         message.created_on,
                         message.updated_on,
                     )
@@ -70,11 +82,18 @@ def test_duplicate_copies_conversations_with_new_identifiers(
         conversation = data_fixture.create_agent_conversation(user=owner, agent=agent)
         for role in AgentMessage.Role.values:
             data_fixture.create_agent_message(conversation=conversation, role=role)
-        data_fixture.create_agent_message(
+        reply = data_fixture.create_agent_message(
             conversation=conversation,
             role=AgentMessage.Role.ASSISTANT,
             status=AgentMessage.Status.FAILED,
             error_code="timeout",
+        )
+        AgentReplyTranscript.objects.create(
+            reply=reply,
+            provider_type="openai",
+            model_identifier="test-model",
+            model_messages=[{"kind": "request"}],
+            usage={"requests": 1},
         )
 
     copied = CoreHandler().duplicate_application(copier, agent).specific
@@ -145,7 +164,7 @@ def test_internal_copy_imports_messages_copied_before_replies(
     serialized = export_internal(agent)
     for data in serialized["conversations"]:
         for message in data["messages"]:
-            del message["status"], message["error_code"]
+            del message["status"], message["error_code"], message["transcript"]
 
     copied = AgentApplicationType().import_serialized(
         agent.workspace, serialized, INTERNAL_CONFIG, {}

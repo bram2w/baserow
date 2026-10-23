@@ -11,6 +11,7 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from pydantic_ai import Agent
 from pydantic_ai.exceptions import ModelHTTPError
+from pydantic_ai.messages import ModelMessagesTypeAdapter
 from pydantic_ai.models.function import FunctionModel
 from pydantic_ai.models.instrumented import InstrumentationSettings
 from pydantic_ai.models.openai import OpenAIResponsesModel
@@ -26,6 +27,7 @@ from baserow.contrib.agent.models import (
     AgentApplication,
     AgentConversation,
     AgentMessage,
+    AgentReplyTranscript,
 )
 from baserow.contrib.agent.operations import ReadAgentConversationsOperationType
 from baserow.contrib.agent.replies import create_reply_model
@@ -83,6 +85,17 @@ def test_a_message_is_answered_privately_and_saved_without_null_characters(
         {"reply_id": reply.id},
     )
     assert reply_state(reply.id) == ("completed", "", "Hello from the agent")
+    transcript = reply.transcript
+    assert (transcript.provider_type, transcript.model_identifier) == (
+        "openai",
+        "test-model",
+    )
+    messages = ModelMessagesTypeAdapter.validate_python(transcript.model_messages)
+    assert [message.parts[0].content for message in messages] == [
+        "Hi",
+        "Hello from the agent",
+    ]
+    assert transcript.usage["requests"] == 1
     assert exporter.get_finished_spans() == ()
 
 
@@ -186,6 +199,13 @@ def test_unfinished_replies_persist_partial_text_without_private_error_details(
     reply_id = reply_run.context["reply_id"]
     reply_run.refresh_from_db()
     assert reply_state(reply_id) == (status, error_code, "Hel")
+    transcript = AgentReplyTranscript.objects.get(reply_id=reply_id)
+    assert (
+        transcript.provider_type,
+        transcript.model_identifier,
+        transcript.model_messages,
+        transcript.usage,
+    ) == ("openai", "test-model", None, None)
     assert (reply_run.status, reply_run.error_code) == (status, error_code)
     assert [log.record["message"] for log in logs] == (
         [f"Agent reply {reply_id} could not be written (ModelHTTPError, status 429)"]
@@ -246,6 +266,7 @@ def test_lost_and_unstarted_runs_end_their_reply(reply_run):
 
     assert reply_state(lost.context["reply_id"]) == ("failed", "interrupted", "Hello")
     assert reply_state(unstarted.context["reply_id"]) == ("failed", "not_started", "")
+    assert not AgentReplyTranscript.objects.exists()
 
 
 @pytest.mark.django_db
