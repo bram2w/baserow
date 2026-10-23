@@ -102,7 +102,8 @@ class WorkspaceAgentsView(APIView, SearchableViewMixin, SortableViewMixin):
         responses={
             200: get_example_pagination_serializer_class(
                 AgentSerializer, serializer_name="AgentPagination"
-            )
+            ),
+            400: get_error_schema(["ERROR_PAGE_SIZE_LIMIT"]),
         },
     )
     @validate_query_parameters(AgentListParamsSerializer)
@@ -123,7 +124,7 @@ class WorkspaceAgentsView(APIView, SearchableViewMixin, SortableViewMixin):
         # Duplicate sort values need a unique tie-breaker for stable page boundaries.
         if "id" not in queryset.query.order_by:
             queryset = queryset.order_by(*queryset.query.order_by, "id")
-        paginator = PageNumberPagination()
+        paginator = PageNumberPagination(limit_page_size=200)
         page = paginator.paginate_queryset(queryset, request, view=self)
         return paginator.get_paginated_response(AgentSerializer(page, many=True).data)
 

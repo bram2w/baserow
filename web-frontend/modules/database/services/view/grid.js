@@ -103,6 +103,39 @@ export default (client) => {
       const url = publicUrl ? 'public/rows/' : ''
       return client.get(`/database/views/grid/${gridId}/${url}`, config)
     },
+    /**
+     * Same as `fetchRows`, but splits a `limit` above `chunkSize` into several
+     * requests because the backend rejects page sizes above the row page size
+     * limit. The responses are merged into one, as if a single request was made.
+     */
+    async fetchRowsInChunks({ chunkSize, ...params }) {
+      const { offset = 0, limit = 100 } = params
+      if (!chunkSize || limit <= chunkSize) {
+        return await this.fetchRows(params)
+      }
+
+      const requests = []
+      for (let start = 0; start < limit; start += chunkSize) {
+        requests.push(
+          this.fetchRows({
+            ...params,
+            offset: (offset ?? 0) + start,
+            limit: Math.min(chunkSize, limit - start),
+            includeFieldOptions: start === 0 && params.includeFieldOptions,
+          })
+        )
+      }
+      const responses = await Promise.all(requests)
+      const data = { ...responses[0].data }
+      data.results = responses.flatMap((response) => response.data.results)
+      if (data.row_metadata) {
+        data.row_metadata = Object.assign(
+          {},
+          ...responses.map((response) => response.data.row_metadata)
+        )
+      }
+      return { ...responses[0], data }
+    },
     fetchCount({
       gridId,
       search = '',
