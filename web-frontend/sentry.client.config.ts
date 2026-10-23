@@ -24,10 +24,6 @@ if (dsn && dsn !== '') {
       Sentry.browserTracingIntegration({
         router: useRouter(),
       }),
-      Sentry.replayIntegration({
-        maskAllText: true,
-        blockAllMedia: true,
-      }),
     ],
     // Sample rate for performance tracing, configurable via the
     // SENTRY_TRACES_SAMPLE_RATE env var (shared with the backend).
@@ -86,4 +82,14 @@ if (dsn && dsn !== '') {
   }
 
   Sentry.init(finalConfig)
+
+  // Session replay is large, so it's only downloaded when replays are recorded,
+  // and loaded after init so that it doesn't block the page.
+  if (finalConfig.replaysOnErrorSampleRate > 0) {
+    import('@sentry/replay').then(({ replayIntegration }) => {
+      Sentry.addIntegration(
+        replayIntegration({ maskAllText: true, blockAllMedia: true })
+      )
+    })
+  }
 }
