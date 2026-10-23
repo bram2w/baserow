@@ -6,7 +6,6 @@ from baserow.core.utils import extract_allowed
 
 from .models import AgentApplication
 from .types import AgentConfiguration, AgentConfigurationUpdated
-from .validators import validate_configuration_values
 
 
 class AgentHandler:
@@ -87,15 +86,14 @@ class AgentHandler:
         Save part of the configuration, accepting blank values as a draft.
 
         :param agent: The Agent to update.
-        :param values: The configuration values to set, by field name. Other names
+        :param values: The configuration values to set, by field name. The caller
+            must validate their types and lengths beforehand. Unknown field names
             are ignored.
-        :return: The Agent, the names of the fields that changed and the resulting
-            configuration.
+        :return: The Agent, the names of the fields that changed and the
+            resulting configuration.
         """
 
         values = extract_allowed(values, self.configuration_fields)
-        # Non-API callers bypass the request serializer's validation.
-        validate_configuration_values(values)
         changed_fields = []
         for field, value in values.items():
             if field in ("provider_type", "model_identifier"):

@@ -1,7 +1,6 @@
 from django.urls import reverse
 
 import pytest
-from rest_framework.exceptions import ValidationError
 
 from baserow.api.applications.serializers import (
     PolymorphicApplicationResponseSerializer,
@@ -109,18 +108,70 @@ def test_configuration_update_saves_drafts_and_records_changed_field_names(
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
-    "values",
+    "values,error_field,error_code",
     [
-        {"instructions": "x" * 100001},
-        {"provider_type": "x" * 256},
-        {"model_identifier": 12},
+        pytest.param(
+            {"instructions": "x" * 100001},
+            "instructions",
+            "max_length",
+            id="instructions-too-long",
+        ),
+        pytest.param(
+            {"provider_type": "x" * 256},
+            "provider_type",
+            "max_length",
+            id="provider-too-long",
+        ),
+        pytest.param(
+            {"model_identifier": "x" * 256},
+            "model_identifier",
+            "max_length",
+            id="model-too-long",
+        ),
+        pytest.param(
+            {"model_identifier": {}},
+            "model_identifier",
+            "invalid",
+            id="model-object",
+        ),
+        pytest.param(
+            {"model_identifier": []},
+            "model_identifier",
+            "invalid",
+            id="model-list",
+        ),
+        pytest.param(
+            {"instructions": None},
+            "instructions",
+            "null",
+            id="instructions-null",
+        ),
+        pytest.param(
+            {"unknown": "value"},
+            "non_field_errors",
+            "invalid",
+            id="unknown-field",
+        ),
     ],
 )
-def test_configuration_update_rejects_invalid_values(data_fixture, values):
-    agent = data_fixture.create_agent_application()
+def test_configuration_update_rejects_invalid_values(
+    configured_agent, api_client, api_user, values, error_field, error_code
+):
+    agent = configured_agent(user=api_user)
+    original = (agent.instructions, agent.provider_type, agent.model_identifier)
 
-    with pytest.raises(ValidationError):
-        AgentHandler().update_configuration(agent, **values)
+    response = api_client.patch(
+        agent_url(agent, "configuration"),
+        {"instructions": "Changed", "provider_type": "anthropic", **values},
+    )
+
+    assert response.status_code == 400
+    payload = response.json()
+    assert payload["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert payload["detail"][error_field][0]["code"] == error_code
+
+    agent.refresh_from_db()
+    assert (agent.instructions, agent.provider_type, agent.model_identifier) == original
 
 
 @pytest.mark.django_db

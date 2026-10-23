@@ -7,8 +7,8 @@ from baserow.api.mixins import UnknownFieldRaisesExceptionSerializerMixin
 from baserow.contrib.agent.handler import AgentHandler
 from baserow.contrib.agent.models import AgentApplication
 from baserow.contrib.agent.types import AgentReadinessState
-from baserow.contrib.agent.validators import AGENT_TEXT_MAX_LENGTH
 
+AGENT_TEXT_MAX_LENGTH = 100000
 READINESS_CHOICES = get_args(AgentReadinessState)
 
 
