@@ -1,7 +1,12 @@
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
-from baserow.contrib.agent.operations import ReadAgentConfigurationOperationType
+from baserow.contrib.agent.operations import (
+    CreateAgentConversationOperationType,
+    CreateAgentMessageOperationType,
+    ReadAgentConfigurationOperationType,
+    ReadAgentConversationsOperationType,
+)
 from baserow.contrib.automation.nodes.operations import (
     CreateAutomationNodeOperationType,
     DeleteAutomationNodeOperationType,
@@ -406,6 +411,7 @@ default_roles[VIEWER_ROLE_UID].extend(
         UpdateMCPEndpointOperationType,
         DeleteMCPEndpointOperationType,
         ChatAssistantChatOperationType,
+        ReadAgentConversationsOperationType,
         ReadFieldRuleOperationType,
         ExportTableOperationType,
         DispatchDashboardDataSourceOperationType,
@@ -459,6 +465,8 @@ default_roles[COMMENTER_ROLE_UID].extend(
 default_roles[EDITOR_ROLE_UID].extend(
     default_roles[COMMENTER_ROLE_UID]
     + [
+        CreateAgentConversationOperationType,
+        CreateAgentMessageOperationType,
         CreateRowDatabaseTableOperationType,
         UpdateDatabaseRowOperationType,
         DeleteDatabaseRowOperationType,

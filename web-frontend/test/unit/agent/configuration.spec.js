@@ -634,7 +634,9 @@ describe('Agent configuration', () => {
       const wrapper = await mount()
 
       expect(warning(wrapper).exists()).toBe(readiness !== 'ready')
-      expect(testApp.mock.history.get.map(({ url }) => url)).toEqual([])
+      expect(testApp.mock.history.get.map(({ url }) => url)).toEqual([
+        '/agent/10/conversations/',
+      ])
     }
   )
 

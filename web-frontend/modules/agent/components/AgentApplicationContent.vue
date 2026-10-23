@@ -15,9 +15,74 @@
       />
     </header>
     <div class="layout__col-2-2 agent-application__content">
-      <main class="agent-chat">
-        <div class="agent-chat__history">
-          <div class="agent-chat__intro">
+      <AgentConversationList
+        v-if="state.canReadConversations"
+        :items="state.conversationItems"
+        :selected="state.selectedUuid"
+        :loading="state.conversationsLoading"
+        :error="state.conversationsError"
+        :has-more="state.conversationsNext"
+        :can-create="state.canCreateConversation"
+        :ready-to-send="state.readyToSend"
+        @select="state.selectConversation"
+        @create="startConversation"
+        @retry="state.retryConversations"
+        @load-more="state.loadMoreConversations"
+      />
+      <main class="agent-chat" :class="{ 'agent-chat--empty': showChatIntro }">
+        <div ref="historyElement" class="agent-chat__history">
+          <div
+            v-if="
+              state.currentHistory?.loading &&
+              !state.currentHistory.items.length
+            "
+            class="agent-chat__loading skeleton"
+            role="status"
+            :aria-label="$t('agent.loadingMessages')"
+          >
+            <div
+              v-for="row in 3"
+              :key="row"
+              class="agent-chat__message"
+              aria-hidden="true"
+            >
+              <SkeletonBlock :width="`${row % 2 ? 60 : 40}%`" height="44px" />
+            </div>
+          </div>
+          <Alert v-if="state.currentHistory?.error" type="error">
+            {{ $t('agent.messagesLoadError') }}
+            <template #actions
+              ><Button
+                type="secondary"
+                size="small"
+                button-type="button"
+                @click="loadMoreMessages"
+                >{{ $t('action.retry') }}</Button
+              ></template
+            >
+          </Alert>
+          <template v-if="state.currentHistory?.items.length">
+            <Button
+              v-if="state.currentHistory.next"
+              type="secondary"
+              size="small"
+              button-type="button"
+              :loading="state.currentHistory.loading"
+              class="agent-chat__older"
+              @click="loadMoreMessages"
+              >{{ $t('agent.olderMessages') }}</Button
+            >
+            <div
+              v-for="message in state.currentHistory.items"
+              :key="message.uuid"
+              class="agent-chat__message"
+            >
+              <div class="agent-chat__message-content">
+                {{ message.content }}
+              </div>
+            </div>
+          </template>
+          <div v-else-if="showChatIntro" class="agent-chat__intro">
             <div class="agent-chat__avatar">
               <img :src="agentOrb" alt="" />
             </div>
@@ -67,6 +132,56 @@
               </template>
             </template>
           </Alert>
+          <Alert
+            v-if="state.currentDraft?.error"
+            id="agent-chat-send-error"
+            type="error"
+            role="alert"
+            class="margin-bottom-2"
+          >
+            {{
+              $t(
+                state.currentDraft.error === 'conflict'
+                  ? 'agent.messageConflict'
+                  : 'agent.messageSaveError'
+              )
+            }}
+          </Alert>
+          <form
+            v-if="showComposer"
+            class="agent-chat__composer"
+            @submit.prevent="submitMessage"
+          >
+            <FormTextarea
+              ref="messageInput"
+              :model-value="state.currentDraft?.content || ''"
+              :readonly="Boolean(state.currentDraft?.submission)"
+              :placeholder="$t('agent.messagePlaceholder')"
+              :aria-label="$t('agent.messagePlaceholder')"
+              :aria-describedby="
+                state.currentDraft?.error ? 'agent-chat-send-error' : undefined
+              "
+              auto-expandable
+              :min-rows="1"
+              :max-rows="6"
+              :maxlength="100000"
+              @update:model-value="state.updateMessage"
+              @keydown="handleEnter"
+            />
+            <Button
+              button-type="submit"
+              class="agent-chat__send"
+              icon="iconoir-arrow-up"
+              :aria-label="
+                $t(state.currentDraft?.error ? 'action.retry' : 'agent.send')
+              "
+              :title="
+                $t(state.currentDraft?.error ? 'action.retry' : 'agent.send')
+              "
+              :loading="Boolean(state.currentDraft?.sending)"
+              :disabled="!state.canSend || !state.currentDraft?.content.trim()"
+            />
+          </form>
         </div>
       </main>
       <AgentConfigurationSidebar
@@ -93,15 +208,38 @@
 </template>
 
 <script setup>
-import { computed, nextTick, reactive, ref, toRef } from 'vue'
+import { computed, nextTick, reactive, ref, toRef, watch } from 'vue'
 import agentOrb from '@baserow/modules/agent/assets/images/agent-orb.svg?url'
+import AgentConversationList from '@baserow/modules/agent/components/AgentConversationList'
 import AgentConfigurationSidebar from '@baserow/modules/agent/components/AgentConfigurationSidebar'
 import { useAgentConfiguration } from '@baserow/modules/agent/composables/useAgentConfiguration'
+import { useAgentConversations } from '@baserow/modules/agent/composables/useAgentConversations'
 
 const props = defineProps({ agent: { type: Object, required: true } })
-const state = reactive(useAgentConfiguration(toRef(props, 'agent')))
+const agent = toRef(props, 'agent')
+const configuration = useAgentConfiguration(agent)
+const state = reactive({
+  ...configuration,
+  ...useAgentConversations(agent, configuration),
+})
 const configurationOpen = ref(true)
+const showChatIntro = computed(
+  () =>
+    !state.currentHistory?.items.length &&
+    !state.currentHistory?.loading &&
+    !state.currentHistory?.error
+)
 const configurationSidebar = ref(null)
+const historyElement = ref(null)
+// Any selection change, even away and back, invalidates a pending scroll anchor.
+let historySelectionRevision = 0
+watch(
+  [() => props.agent.id, () => state.selectedUuid],
+  () => {
+    ++historySelectionRevision
+  },
+  { flush: 'sync' }
+)
 const fieldLabels = {
   instructions: 'agent.instructions',
   provider_type: 'agent.provider',
@@ -129,6 +267,13 @@ const warningAction = computed(() => {
   if (warningFields.value.length) return 'fields'
   return state.configurationSaveError ? 'save' : null
 })
+// Transient requests only block sending, so saving never moves the chat.
+const showComposer = computed(
+  () =>
+    state.readiness === 'ready' &&
+    !showConfigurationWarning.value &&
+    state.canWriteSelected
+)
 const warningTitle = computed(() =>
   hasLoadError.value
     ? 'agent.readinessLoadError'
@@ -150,5 +295,76 @@ async function focusConfiguration(field) {
   configurationOpen.value = true
   await nextTick()
   await configurationSidebar.value?.focusField(field)
+}
+function handleEnter(event) {
+  // Safari sends the Enter that commits an IME composition with keyCode 229.
+  if (event.isComposing || event.keyCode === 229) return
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault()
+    submitMessage()
+  }
+}
+async function loadMoreMessages() {
+  const container = historyElement.value
+  const loadingOlder =
+    state.currentHistory?.page > 0 && !state.currentHistory.refreshError
+  const selectionRevision = historySelectionRevision
+  const anchor = container.querySelector('.agent-chat__message')
+  const previousOffset = anchor?.offsetTop
+  await state.loadMoreMessages()
+  await nextTick()
+  if (
+    !loadingOlder ||
+    !anchor ||
+    selectionRevision !== historySelectionRevision ||
+    historyElement.value !== container ||
+    !container.contains(anchor)
+  ) {
+    return
+  }
+  container.scrollTop += anchor.offsetTop - previousOffset
+}
+watch(
+  () => [state.selectedUuid, state.currentHistory?.items.at(-1)?.uuid],
+  async ([selection], [previousSelection, previousLast]) => {
+    const container = historyElement.value
+    if (!container) return
+    const revision = historySelectionRevision
+    const followLatest =
+      selection !== previousSelection ||
+      !previousLast ||
+      container.scrollHeight - container.scrollTop - container.clientHeight < 40
+    await nextTick()
+    if (
+      followLatest &&
+      revision === historySelectionRevision &&
+      historyElement.value === container
+    ) {
+      container.scrollTop = container.scrollHeight
+    }
+  }
+)
+const messageInput = ref(null)
+async function submitMessage() {
+  if (!state.canSend || !state.currentDraft?.content.trim()) return
+  // Move focus before the send button becomes disabled, keeping the composer
+  // ready for the next message without stealing focus after an async response.
+  messageInput.value?.focus()
+  const revision = historySelectionRevision
+  await state.sendMessage()
+  await nextTick()
+  if (
+    revision === historySelectionRevision &&
+    !state.currentDraft?.error &&
+    !state.currentDraft?.content &&
+    historyElement.value
+  ) {
+    historyElement.value.scrollTop = historyElement.value.scrollHeight
+  }
+}
+async function startConversation() {
+  state.newConversation()
+  await nextTick()
+  messageInput.value?.focus()
 }
 </script>

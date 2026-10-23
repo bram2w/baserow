@@ -1,20 +1,30 @@
 import pytest
 
-from baserow.contrib.agent.operations import ReadAgentConfigurationOperationType
+from baserow.contrib.agent.operations import (
+    CreateAgentConversationOperationType,
+    CreateAgentMessageOperationType,
+    ReadAgentConfigurationOperationType,
+    ReadAgentConversationsOperationType,
+)
 from baserow.core.handler import CoreHandler
 from baserow_enterprise.role.handler import RoleAssignmentHandler
 from baserow_enterprise.role.models import Role
 
-CONFIGURE = {ReadAgentConfigurationOperationType.type}
+READ = {ReadAgentConversationsOperationType.type}
+WRITE = READ | {
+    CreateAgentConversationOperationType.type,
+    CreateAgentMessageOperationType.type,
+}
+CONFIGURE = WRITE | {ReadAgentConfigurationOperationType.type}
 
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
     "role_uid,granted",
     [
-        ("VIEWER", set()),
-        ("COMMENTER", set()),
-        ("EDITOR", set()),
+        ("VIEWER", READ),
+        ("COMMENTER", READ),
+        ("EDITOR", WRITE),
         ("BUILDER", CONFIGURE),
         ("ADMIN", CONFIGURE),
     ],
