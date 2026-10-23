@@ -34,6 +34,7 @@ from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.elements.service import ElementService
 from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.operations import ListPagesBuilderOperationType
+from baserow.contrib.builder.pages.actions import CreatePageActionType
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.builder.pages.operations import ReadPageOperationType
@@ -50,13 +51,16 @@ from baserow.contrib.builder.workflow_actions.service import (
     BuilderWorkflowActionService,
 )
 from baserow.contrib.database.fields.models import Field
+from baserow.core.actions import UpdateApplicationActionType
 from baserow.core.handler import CoreHandler
+from baserow.core.integrations.actions import CreateIntegrationActionType
 from baserow.core.integrations.models import Integration
 from baserow.core.integrations.registries import integration_type_registry
 from baserow.core.integrations.service import IntegrationService
 from baserow.core.models import Workspace
 from baserow.core.service import CoreService
 from baserow.core.services.registries import service_type_registry
+from baserow.core.user_sources.actions import CreateUserSourceActionType
 from baserow_enterprise.assistant.tools.shared import (
     ToolInputError,
     raise_if_permission_denied,
@@ -219,7 +223,7 @@ def get_local_baserow_integration(user: AbstractUser, builder: Builder) -> Integ
             return integration.specific
 
     local_baserow_type = integration_type_registry.get("local_baserow")
-    return IntegrationService().create_integration(
+    return CreateIntegrationActionType.do(
         user, local_baserow_type, builder, name="Local Baserow"
     )
 
@@ -1315,7 +1319,6 @@ def create_user_source(
     """
 
     from baserow.core.user_sources.registries import user_source_type_registry
-    from baserow.core.user_sources.service import UserSourceService
 
     us_type = user_source_type_registry.get("local_baserow")
 
@@ -1336,7 +1339,7 @@ def create_user_source(
     if "role" in field_map:
         kwargs["role_field_id"] = field_map["role"].id
 
-    return UserSourceService().create_user_source(user, us_type, application, **kwargs)
+    return CreateUserSourceActionType.do(user, us_type, application, **kwargs)
 
 
 def create_login_page(
@@ -1347,13 +1350,13 @@ def create_login_page(
     builder's login page.
     """
 
-    page = PageService().create_page(user, builder, "Login", "/login")
+    page = CreatePageActionType.do(user, builder, "Login", "/login")
 
     auth_form_type = element_type_registry.get("auth_form")
     CreateElementActionType.do(
         user, auth_form_type, page, {"user_source_id": user_source_id}
     )
 
-    CoreHandler().update_application(user, builder, login_page_id=page.id)
+    UpdateApplicationActionType.do(user, builder, login_page_id=page.id)
     builder.refresh_from_db()
     return page
