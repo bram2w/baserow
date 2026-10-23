@@ -50,12 +50,14 @@
   display: flex;
   align-items: center;
   font-size: 14px;
+  line-height: 20px;
   font-weight: 500;
   color: $palette-neutral-1200;
 }
 
 .invite-list__subtitle {
   font-size: 13px;
+  line-height: 20px;
   color: $palette-neutral-900;
 }
 
@@ -68,11 +70,6 @@
 
   .invite-list__item {
     min-height: 65px;
-  }
-
-  .invite-list__name,
-  .invite-list__subtitle {
-    line-height: 20px;
   }
 }
 
