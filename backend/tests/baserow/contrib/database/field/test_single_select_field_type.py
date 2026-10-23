@@ -1405,7 +1405,14 @@ def test_single_select_equal_filter_type(field_name, data_fixture):
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 0
 
-    for invalid_value in ["Test", f"{option_a.id}%", f"{option_a.id}_"]:
+    fullwidth_id = "".join(chr(ord(c) + 0xFEE0) for c in str(option_a.id))
+    for invalid_value in [
+        "Test",
+        f"{option_a.id}%",
+        f"{option_a.id}_",
+        f"+{option_a.id}",
+        fullwidth_id,
+    ]:
         view_filter.value = invalid_value
         view_filter.save()
         ids = [
@@ -1470,7 +1477,14 @@ def test_single_select_not_equal_filter_type(field_name, data_fixture):
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
 
-    for invalid_value in ["Test", f"{option_a.id}%", f"{option_a.id}_"]:
+    fullwidth_id = "".join(chr(ord(c) + 0xFEE0) for c in str(option_a.id))
+    for invalid_value in [
+        "Test",
+        f"{option_a.id}%",
+        f"{option_a.id}_",
+        f"+{option_a.id}",
+        fullwidth_id,
+    ]:
         view_filter.value = invalid_value
         view_filter.save()
         ids = [
