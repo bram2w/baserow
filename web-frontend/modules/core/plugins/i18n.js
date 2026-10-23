@@ -1,4 +1,4 @@
-import { setMomentLocale } from '@baserow/modules/core/moment'
+import moment from '@baserow/modules/core/moment'
 
 export default defineNuxtPlugin({
   name: 'i18n',
@@ -8,6 +8,8 @@ export default defineNuxtPlugin({
     // options, and those must come from the `NuxtLoadingIndicator` in `app.vue`.
     const getLoadingIndicator = () =>
       nuxtApp.runWithContext(() => useLoadingIndicator())
+
+    moment.locale($i18n.locale.value)
 
     const loadFallbackIfNeeded = async (locale) => {
       if (locale !== 'en') {
@@ -20,36 +22,31 @@ export default defineNuxtPlugin({
       }
     }
 
+    // Use watch to react to client side locale switch
+    watch($i18n.locale, (newLocale) => {
+      moment.locale(newLocale)
+    })
+
     // Switching the language downloads the messages of the new locale, which can
     // take a while on a slow connection, so the progress bar is shown until
     // everything of the new locale has been loaded.
-    let momentLocaleLoaded = null
-    nuxtApp.hook('i18n:beforeLocaleSwitch', ({ newLocale }) => {
+    nuxtApp.hook('i18n:beforeLocaleSwitch', () => {
       // `initialSetup` can't be used to skip the first page load, because it's
       // never reset with the `no_prefix` strategy.
       if (import.meta.client && !nuxtApp.isHydrating) {
         getLoadingIndicator().start()
-        // Started here, so that it downloads in parallel with the messages.
-        momentLocaleLoaded = setMomentLocale(newLocale)
       }
     })
     nuxtApp.hook('i18n:localeSwitched', async ({ newLocale }) => {
       try {
-        await Promise.all([
-          momentLocaleLoaded || setMomentLocale(newLocale),
-          loadFallbackIfNeeded(newLocale),
-        ])
+        await loadFallbackIfNeeded(newLocale)
       } finally {
-        momentLocaleLoaded = null
         if (import.meta.client) {
           getLoadingIndicator().finish()
         }
       }
     })
 
-    await Promise.all([
-      setMomentLocale($i18n.locale.value),
-      loadFallbackIfNeeded($i18n.locale.value),
-    ])
+    await loadFallbackIfNeeded($i18n.locale.value)
   },
 })
