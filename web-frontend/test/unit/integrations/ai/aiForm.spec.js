@@ -63,7 +63,7 @@ describe('AI integration form', () => {
     ])
   })
 
-  test('keeps the saved API key when it is not retyped', async () => {
+  async function mountWithSavedKey() {
     const wrapper = await mountComponent({
       defaultValues: {
         ai_settings: {
@@ -84,7 +84,36 @@ describe('AI integration form', () => {
     await card.find('a').trigger('click')
     await flushPromises()
 
-    const apiKey = card.find('.form-input__input')
+    const inputs = card.findAll('.form-input__input')
+    return { wrapper, apiKey: inputs.at(0), baseUrl: inputs.at(2) }
+  }
+
+  test('requires the API key again when a connection setting changes', async () => {
+    const { wrapper, baseUrl } = await mountWithSavedKey()
+
+    await baseUrl.setValue('https://other.example')
+    wrapper.vm.submit()
+    await flushPromises()
+
+    expect(wrapper.findAll('.control__messages--error')).toHaveLength(1)
+    expect(wrapper.emitted('submitted')).toBeUndefined()
+  })
+
+  test('does not keep the saved API key once the field is cleared', async () => {
+    const { wrapper, apiKey } = await mountWithSavedKey()
+
+    await apiKey.setValue('sk-typed')
+    await apiKey.setValue('')
+    wrapper.vm.submit()
+    await flushPromises()
+
+    expect(wrapper.findAll('.control__messages--error')).toHaveLength(1)
+    expect(wrapper.emitted('submitted')).toBeUndefined()
+  })
+
+  test('keeps the saved API key when it is not retyped', async () => {
+    const { wrapper, apiKey } = await mountWithSavedKey()
+
     expect(apiKey.attributes('type')).toBe('password')
     expect(apiKey.element.value).toBe('')
 

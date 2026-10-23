@@ -82,7 +82,7 @@
                     ? {
                         type: 'password',
                         autocomplete: 'new-password',
-                        placeholder: hasStoredApiKey(providerType.type)
+                        placeholder: canKeepStoredApiKey(providerType.type)
                           ? $t('aiForm.apiKeyKeepPlaceholder')
                           : '',
                       }
@@ -175,6 +175,11 @@ export default {
           type,
           this.values.ai_settings[type]
         )
+        if (this.hasStoredApiKey(type) && 'api_key' in parsedValues) {
+          // Untouched (`null`) is dropped on submit to keep the stored key; an
+          // empty string clears it.
+          parsedValues.api_key = null
+        }
         this.values.ai_settings[type] = parsedValues
       }
     })
@@ -194,8 +199,26 @@ export default {
         this.defaultValues.ai_settings?.[providerType]?.has_api_key === true
       )
     },
+    /**
+     * Mirrors the backend: the stored key is only kept while every connection
+     * setting other than the key and `models` is unchanged.
+     */
+    canKeepStoredApiKey(providerType) {
+      if (!this.hasStoredApiKey(providerType)) {
+        return false
+      }
+      const stored = this.defaultValues.ai_settings[providerType]
+      const current = this.values.ai_settings[providerType] || {}
+      return this.getProviderSettings(providerType)
+        .filter(({ key }) => key !== 'api_key' && key !== 'models')
+        .every(({ key }) => (current[key] || '') === (stored[key] || ''))
+    },
     isSettingRequired(providerType, setting) {
-      if (setting.key === 'api_key' && this.hasStoredApiKey(providerType)) {
+      if (
+        setting.key === 'api_key' &&
+        this.values.ai_settings[providerType]?.api_key === null &&
+        this.canKeepStoredApiKey(providerType)
+      ) {
         return false
       }
       return !setting.optional
@@ -229,10 +252,7 @@ export default {
 
           settings.forEach((setting) => {
             const value = this.values.ai_settings[type][setting.key]
-            // An empty key is dropped so the backend keeps the saved one.
-            const keepsStoredApiKey =
-              setting.key === 'api_key' && !value && this.hasStoredApiKey(type)
-            if (value !== undefined && !keepsStoredApiKey) {
+            if (value !== undefined && value !== null) {
               const serialize = setting.serialize || ((value) => value)
               serializedSettings[type][setting.key] = serialize(value)
             }
