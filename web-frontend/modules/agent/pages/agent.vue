@@ -21,17 +21,18 @@ definePageMeta({
 })
 
 const { $store, $client } = useNuxtApp()
+const agentId = Number(useRoute().params.agentId)
 const agent = computed(() => {
-  const selected = $store.getters['application/getSelected']
-  return selected?.type === 'agent' ? selected : null
+  const application = $store.getters['application/get'](agentId)
+  return application?.type === 'agent' ? application : null
 })
 useHead(() => ({ title: agent.value?.name }))
 
-// Read once: the next route selects its application before this page unmounts.
-const agentId = agent.value.id
 await usePageAsyncData(`agent-${agentId}`, async () => {
   try {
-    await AgentApplicationService($client).get(agentId)
+    // Applications are already loaded by middleware. Record this visit without
+    // fetching the same public data again.
+    await AgentApplicationService($client).recordView(agentId)
     return true
   } catch (error) {
     if (!error.response) {

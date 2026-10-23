@@ -6,6 +6,7 @@ from django.utils import timezone
 import pytest
 
 from baserow.contrib.agent.models import AgentApplication
+from baserow.core.ai_provider.models import AIProviderConfig, AIProviderModel
 from baserow.core.exceptions import FeatureDisabledException
 from baserow.core.feature_flags import FF_AGENT_BUILDER
 from baserow.core.handler import CoreHandler
@@ -61,20 +62,80 @@ def test_agent_creation_requires_feature_flag(data_fixture, settings, enabled):
     )
 
 
+@pytest.mark.django_db
+@pytest.mark.parametrize("models_available", [True, False])
+def test_new_agent_selects_the_first_enabled_model(data_fixture, models_available):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    provider = AIProviderConfig.objects.create(
+        workspace=workspace, provider_type="openai", api_key="test-key"
+    )
+    AIProviderModel.objects.create(
+        provider_config=provider, model_identifier="disabled", is_enabled=False
+    )
+    AIProviderModel.objects.create(
+        provider_config=provider, model_identifier="ineligible", feature_types=[]
+    )
+    if models_available:
+        AIProviderModel.objects.create(
+            provider_config=provider, model_identifier="first-enabled"
+        )
+        AIProviderModel.objects.create(
+            provider_config=provider, model_identifier="second-enabled"
+        )
+
+    agent = CoreHandler().create_application(user, workspace, "agent", name="Agent")
+
+    assert (agent.provider_type, agent.model_identifier) == (
+        ("openai", "first-enabled") if models_available else (None, None)
+    )
+    assert agent.instructions == ""
+
+
 @pytest.mark.import_export_workspace
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize(
+    "configuration", [{}, {"provider_type": None, "model_identifier": None}]
+)
+@pytest.mark.parametrize(
     "copy_agent", [duplicate, restore_snapshot, import_workspace_archive]
 )
-def test_agent_copy_is_a_new_agent(data_fixture, use_tmp_media_root, copy_agent):
+def test_agent_copy_is_a_new_agent_with_the_same_configuration(
+    data_fixture, use_tmp_media_root, configured_agent, copy_agent, configuration
+):
     user = data_fixture.create_user()
-    agent = data_fixture.create_agent_application(user=user)
+    agent = configured_agent(user=user, **configuration)
 
     copied = copy_agent(data_fixture, user, agent).specific
 
     assert isinstance(copied, AgentApplication)
     assert copied.id != agent.id
     assert AgentApplication.objects.filter(id=agent.id).exists()
+    assert (copied.instructions, copied.provider_type, copied.model_identifier) == (
+        agent.instructions,
+        agent.provider_type,
+        agent.model_identifier,
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("can_read", [True, False])
+def test_record_agent_visit_checks_read_permission(
+    data_fixture, api_client, api_user, mocker, can_read
+):
+    agent = data_fixture.create_agent_application(user=api_user if can_read else None)
+    loaded = mocker.patch("baserow.contrib.agent.api.views.agent_loaded.send")
+
+    response = api_client.post(reverse("api:agent:item", kwargs={"agent_id": agent.id}))
+
+    assert response.status_code == (204 if can_read else 400)
+    if can_read:
+        assert response.content == b""
+        loaded.assert_called_once_with(
+            sender=mocker.ANY, agent_id=agent.id, user=api_user
+        )
+    else:
+        loaded.assert_not_called()
 
 
 @pytest.mark.django_db

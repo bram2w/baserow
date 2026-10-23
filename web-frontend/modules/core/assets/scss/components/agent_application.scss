@@ -6,34 +6,236 @@
 .agent-application__header-name {
   @extend %ellipsis;
 
-  font-weight: 600;
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 500;
+  color: $palette-neutral-1200;
 }
 
 .agent-application__content {
   display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  container-type: inline-size;
+}
+
+.agent-chat {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 260px;
+  background: $palette-neutral-0;
+}
+
+.agent-chat__history {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.agent-chat__intro {
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  overflow: auto;
-  padding: 32px;
-}
-
-.agent-application__empty {
-  max-width: 440px;
+  min-height: 100%;
   text-align: center;
+
+  h1 {
+    margin: 24px 0 12px;
+    font-size: 20px;
+    line-height: 28px;
+    font-weight: 600;
+    color: $palette-neutral-700;
+  }
+
+  p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 20px;
+    font-weight: 400;
+    color: $palette-neutral-900;
+  }
 }
 
-.agent-application__empty-icon {
-  font-size: 40px;
-  color: $palette-purple-500;
+.agent-chat__intro-name {
+  color: $palette-neutral-1200;
 }
 
-.agent-application__title {
-  margin: 24px 0 12px;
-  font-size: 24px;
+.agent-chat__avatar {
+  position: relative;
+  width: 96px;
+  height: 96px;
+
+  img {
+    position: absolute;
+    left: -8px;
+    top: 0;
+    width: 112px;
+    height: 120px;
+  }
 }
 
-.agent-application__description {
-  margin-bottom: 24px;
+.agent-chat__footer {
+  width: 100%;
+  max-width: 760px;
+  padding: 8px 24px 24px;
+  margin: 0 auto;
+}
+
+.agent-chat__warning {
+  margin-bottom: 16px;
+}
+
+.agent-configuration {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 400px;
+  min-width: 0;
+  background: $palette-neutral-0;
+  border-left: 1px solid $palette-neutral-200;
+}
+
+.agent-configuration__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 56px;
+  flex-shrink: 0;
+  padding: 0 12px 0 16px;
+  border-bottom: 1px solid $palette-neutral-200;
+
+  h2 {
+    flex: 1;
+    font-size: 13px;
+    line-height: 20px;
+    font-weight: 500;
+    color: $palette-neutral-1200;
+    margin: 0;
+  }
+}
+
+.agent-configuration__header--section {
+  padding-left: 8px;
+}
+
+.agent-configuration__header-button {
+  width: 28px;
+  height: 28px;
+  justify-content: center;
+
+  @include rounded($rounded-md);
+
+  &:hover,
+  &:focus-visible {
+    background: $palette-neutral-100;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $palette-blue-500;
+    outline-offset: -2px;
+  }
+
+  .button-text__icon {
+    font-size: 16px;
+  }
+}
+
+.agent-configuration__save-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 14px;
+  height: 14px;
+}
+
+.agent-configuration__saving {
+  display: flex;
+
+  @include loading-spinner($palette-neutral-700, 14px);
+}
+
+.agent-configuration__sections {
+  min-width: 0;
+  padding: 8px;
+
+  .menu-list__item + .menu-list__item::before {
+    content: '';
+    display: block;
+
+    // Align the divider with the text, leaving the leading icon outside it.
+    margin: 0 10px 0 36px;
+    border-top: 1px solid $palette-neutral-200;
+  }
+}
+
+.agent-configuration__skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 60px;
+  padding: 8px 14px;
+}
+
+.agent-configuration__section-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.agent-configuration__section-status {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.agent-configuration__form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.agent-configuration__body {
+  flex: 1;
+  min-height: 0;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.agent-configuration__save-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+  padding: 20px;
+  font-size: 12px;
   color: $palette-neutral-600;
-  line-height: 1.5;
+}
+
+@container (max-width: 900px) {
+  .agent-configuration {
+    flex-basis: 300px;
+  }
+}
+
+@container (max-width: 760px) {
+  .agent-configuration {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    width: 320px;
+    max-width: 100%;
+    box-shadow: 0 0 12px $palette-neutral-200;
+  }
+
+  .agent-chat__history {
+    padding: 16px;
+  }
+
+  .agent-chat__footer {
+    padding: 0 16px 16px;
+  }
 }

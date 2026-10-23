@@ -71,6 +71,27 @@ function fire(handler, type, data) {
   )
 }
 
+describe('RealTimeHandler application updates', () => {
+  test('marks application updates as external, including unchanged public metadata', async () => {
+    const { handler, store } = makeHandler()
+    const application = { id: 3, type: 'agent', readiness: 'ready' }
+    store.getters['application/get'] = (id) =>
+      application.id === id ? application : undefined
+
+    await fire(handler, 'application_updated', {
+      application_id: 3,
+      application: { ...application },
+    })
+
+    expect(store._dispatched).toEqual([
+      [
+        'application/forceUpdate',
+        { application, data: application, viaRealtime: true },
+      ],
+    ])
+  })
+})
+
 describe('RealTimeHandler agent events', () => {
   test('create and update events upsert the serialized agent', () => {
     const { handler, store } = makeHandler()

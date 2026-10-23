@@ -1222,6 +1222,7 @@ class ExportApplicationsActionType(ActionType):
             include_permission_data=False,
             reduce_disk_space_usage=False,
             only_structure=only_structure,
+            exported_by=user,
         )
 
         resource = ImportExportHandler().export_workspace_applications(

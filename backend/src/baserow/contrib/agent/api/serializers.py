@@ -1,0 +1,65 @@
+from typing import get_args
+
+from drf_spectacular.utils import extend_schema_field
+from rest_framework import serializers
+
+from baserow.api.mixins import UnknownFieldRaisesExceptionSerializerMixin
+from baserow.contrib.agent.handler import AgentHandler
+from baserow.contrib.agent.models import AgentApplication
+from baserow.contrib.agent.types import AgentReadinessState
+
+AGENT_TEXT_MAX_LENGTH = 100000
+READINESS_CHOICES = get_args(AgentReadinessState)
+
+
+class AgentApplicationSerializer(serializers.ModelSerializer):
+    readiness = serializers.SerializerMethodField(
+        help_text="Whether the agent's configuration is complete and its model is enabled."
+    )
+
+    class Meta:
+        model = AgentApplication
+        fields = ("name", "readiness")
+
+    @extend_schema_field(serializers.ChoiceField(choices=READINESS_CHOICES))
+    def get_readiness(self, instance: AgentApplication) -> AgentReadinessState:
+        """
+        Compute the readiness without exposing the configuration values.
+
+        :param instance: The Agent being serialized.
+        :return: The readiness of the Agent.
+        """
+
+        # List views pass provider states so they aren't loaded per workspace.
+        provider_state = self.context.get("ai_provider_states", {}).get(
+            instance.workspace_id
+        )
+        return AgentHandler().get_configuration(
+            instance, provider_state=provider_state
+        )["readiness"]
+
+
+class AgentConfigurationSerializer(serializers.Serializer):
+    # Settings readers need readiness from the same snapshot as the editable values,
+    # including after PATCH. Application payloads expose readiness to all readers.
+    readiness = serializers.ChoiceField(choices=READINESS_CHOICES)
+    instructions = serializers.CharField(allow_blank=True, trim_whitespace=False)
+    provider_type = serializers.CharField(allow_null=True)
+    model_identifier = serializers.CharField(allow_null=True)
+    errors = serializers.DictField(
+        child=serializers.ChoiceField(choices=["required", "unavailable"])
+    )
+
+
+class AgentConfigurationUpdateSerializer(
+    UnknownFieldRaisesExceptionSerializerMixin, serializers.ModelSerializer
+):
+    class Meta:
+        model = AgentApplication
+        fields = ("instructions", "provider_type", "model_identifier")
+        extra_kwargs = {
+            "instructions": {
+                "max_length": AGENT_TEXT_MAX_LENGTH,
+                "trim_whitespace": False,
+            },
+        }
