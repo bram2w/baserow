@@ -571,12 +571,15 @@ def test_delete_primary_field_fails(data_fixture):
     assert refreshed.primary is True
 
 
-def _fake_fixer(monkeypatch, fixed_formula):
+def _fake_fixer(monkeypatch, fixed_formula, cancel=False):
     calls = []
 
     def make_fixer(user, workspace, tool_helpers):
         def fix(table, field_name, formula):
             calls.append((table.id, field_name, formula))
+            if cancel:
+                # The user cancels while the model is fixing this formula.
+                tool_helpers.cancel()
             return fixed_formula
 
         return fix
@@ -876,3 +879,138 @@ def test_create_fields_drops_the_model_cached_in_a_failed_repair(
     assert result["created_fields"] == []
     model = Table.objects.get(id=table.id).get_model()
     assert [f["field"].name for f in model._field_objects.values()] == ["Name"]
+
+
+@pytest.mark.django_db
+def test_update_fields_keeps_a_later_formula_for_the_same_field(
+    data_fixture, monkeypatch
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+    field = data_fixture.create_formula_field(table=table, name="F", formula="'x'")
+    calls = _fake_fixer(monkeypatch, "'AI fix'")
+
+    update_fields(
+        make_test_ctx(user, workspace),
+        fields=[
+            FieldItemUpdate(field_id=field.id, name="G", formula="concat("),
+            FieldItemUpdate(field_id=field.id, formula="'Final value'"),
+        ],
+        thought="test",
+    )
+
+    field.refresh_from_db()
+    assert (field.name, field.formula) == ("G", "'Final value'")
+    assert calls == []
+
+
+@pytest.mark.django_db
+def test_update_fields_repairs_a_formula_without_undoing_a_later_rename(
+    data_fixture, monkeypatch
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+    field = data_fixture.create_formula_field(table=table, name="F", formula="'x'")
+    _fake_fixer(monkeypatch, "'AI fix'")
+
+    update_fields(
+        make_test_ctx(user, workspace),
+        fields=[
+            FieldItemUpdate(field_id=field.id, name="G", formula="concat("),
+            FieldItemUpdate(field_id=field.id, name="H"),
+        ],
+        thought="test",
+    )
+
+    field.refresh_from_db()
+    assert (field.name, field.formula) == ("H", "'AI fix'")
+
+
+@pytest.mark.django_db
+def test_create_fields_stops_repairing_formulas_when_cancelled(
+    data_fixture, monkeypatch
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+    data_fixture.create_text_field(table=table, name="Name", primary=True)
+    calls = _fake_fixer(monkeypatch, "'fixed'", cancel=True)
+
+    with pytest.raises(asyncio.CancelledError):
+        create_fields(
+            make_test_ctx(user, workspace),
+            table_id=table.id,
+            fields=[
+                FieldItemCreate(name="A", type="formula", formula="concat("),
+                FieldItemCreate(name="B", type="formula", formula="concat("),
+            ],
+            thought="test",
+        )
+
+    assert len(calls) == 1
+    assert not table.field_set.filter(name__in=["A", "B"]).exists()
+
+
+@pytest.mark.django_db
+def test_update_fields_stops_repairing_formulas_when_cancelled(
+    data_fixture, monkeypatch
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+    a = data_fixture.create_formula_field(table=table, name="A", formula="'a'")
+    b = data_fixture.create_formula_field(table=table, name="B", formula="'b'")
+    calls = _fake_fixer(monkeypatch, "'fixed'", cancel=True)
+
+    with pytest.raises(asyncio.CancelledError):
+        update_fields(
+            make_test_ctx(user, workspace),
+            fields=[
+                FieldItemUpdate(field_id=a.id, formula="concat("),
+                FieldItemUpdate(field_id=b.id, formula="concat("),
+            ],
+            thought="test",
+        )
+
+    assert len(calls) == 1
+    a.refresh_from_db()
+    b.refresh_from_db()
+    assert (a.formula, b.formula) == ("'a'", "'b'")
+
+
+@pytest.mark.django_db
+def test_create_tables_stops_repairing_formulas_when_cancelled(
+    data_fixture, monkeypatch
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    calls = _fake_fixer(monkeypatch, "'fixed'", cancel=True)
+
+    with pytest.raises(asyncio.CancelledError):
+        create_tables(
+            make_test_ctx(user, workspace),
+            database_id=database.id,
+            tables=[
+                TableItemCreate(
+                    name="T",
+                    primary_field_name="Name",
+                    fields=[
+                        FieldItemCreate(name="A", type="formula", formula="concat("),
+                        FieldItemCreate(name="B", type="formula", formula="concat("),
+                    ],
+                )
+            ],
+            add_sample_rows=False,
+            thought="test",
+        )
+
+    assert len(calls) == 1
+    table = Table.objects.get(database=database, name="T")
+    assert not table.field_set.filter(name__in=["A", "B"]).exists()

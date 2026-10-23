@@ -62,6 +62,7 @@ def create_repaired_formula_fields(
     table: Table,
     formula_fixer: FormulaFixer,
     formula_errors: list[dict],
+    raise_if_cancelled: Callable[[], None],
 ) -> tuple[list[FieldItem], list[dict]]:
     """
     Ask the formula fixer to repair each invalid formula the shared create step
@@ -72,6 +73,7 @@ def create_repaired_formula_fields(
     :param table: The table the fields belong to.
     :param formula_fixer: Callback ``(table, name, formula) -> fixed formula``.
     :param formula_errors: The invalid formulas from the shared create step.
+    :param raise_if_cancelled: Raises when the user cancelled the request.
     :returns: The created fields, and the formula errors that remain.
     """
 
@@ -81,8 +83,10 @@ def create_repaired_formula_fields(
         if not has_formula(error):
             remaining.append(error)
             continue
+        raise_if_cancelled()
         try:
             formula = formula_fixer(table, error["field_name"], error["formula"])
+            raise_if_cancelled()
             if formula:
                 with transaction.atomic():
                     new_field = CreateFieldActionType.do(
@@ -102,11 +106,44 @@ def create_repaired_formula_fields(
     return created, remaining
 
 
+def _failed_updates(
+    field_updates: list[FieldItemUpdate], formula_errors: list[dict]
+) -> list[tuple[dict, FieldItemUpdate, set[str]]]:
+    """
+    Pairs each formula error with the update that raised it, in request order,
+    with the properties a later update of the same field sets.
+    """
+
+    pairs = []
+    start = 0
+    for error in formula_errors:
+        same_field = [
+            i
+            for i in range(start, len(field_updates))
+            if field_updates[i].field_id == error["field_id"]
+        ]
+        index = next(
+            (i for i in same_field if field_updates[i].formula == error["formula"]),
+            same_field[0],
+        )
+        start = index + 1
+        later = set().union(
+            *(
+                update.model_fields_set - {"field_id"}
+                for update in field_updates[start:]
+                if update.field_id == error["field_id"]
+            )
+        )
+        pairs.append((error, field_updates[index], later))
+    return pairs
+
+
 def apply_repaired_formula_updates(
     tool_context: ToolContext,
     formula_fixer: FormulaFixer,
     field_updates: list[FieldItemUpdate],
     formula_errors: list[dict],
+    raise_if_cancelled: Callable[[], None],
 ) -> tuple[list[FieldItem], bool, list[str]]:
     """
     Ask the formula fixer to repair each invalid formula the shared update step
@@ -117,29 +154,41 @@ def apply_repaired_formula_updates(
     :param formula_fixer: Callback ``(table, name, formula) -> fixed formula``.
     :param field_updates: The updates the shared step received.
     :param formula_errors: The invalid formulas from the shared update step.
+    :param raise_if_cancelled: Raises when the user cancelled the request.
     :returns: The updated fields, whether any changed, and an error message for
         each update that could not be repaired.
     """
 
-    updates_by_id = {update.field_id: update for update in field_updates}
     updated: list[FieldItem] = []
     changed = False
     errors: list[str] = []
-    for error in formula_errors:
+    for error, failed, later in _failed_updates(field_updates, formula_errors):
         field_id = error["field_id"]
-        if not has_formula(error):
+        # The update rolled back as a whole. Its other properties are applied with
+        # the repaired formula, except those a later update of the field set.
+        values = failed.model_dump(exclude_unset=True, exclude=later)
+        if "formula" in later:
+            # A later update replaced the formula, so it isn't repaired.
+            values.pop("formula", None)
+            if values.keys() == {"field_id"}:
+                continue
+        elif not has_formula(error):
             errors.append(f"Error updating field {field_id}: {error['error']}")
             continue
+        raise_if_cancelled()
         try:
-            table = filter_tables(tool_context.user, tool_context.workspace).get(
-                id=error["table_id"]
-            )
-            formula = formula_fixer(table, error["field_name"], error["formula"])
-            if not formula:
-                raise InvalidFormulaFieldError(
-                    error["field_name"], error["formula"], table, error["error"]
+            if "formula" in values:
+                table = filter_tables(tool_context.user, tool_context.workspace).get(
+                    id=error["table_id"]
                 )
-            update = updates_by_id[field_id].model_copy(update={"formula": formula})
+                formula = formula_fixer(table, error["field_name"], error["formula"])
+                raise_if_cancelled()
+                if not formula:
+                    raise InvalidFormulaFieldError(
+                        error["field_name"], error["formula"], table, error["error"]
+                    )
+                values["formula"] = formula
+            update = FieldItemUpdate(**values)
             with transaction.atomic():
                 field_item, field_changed = shared_fields.update_field(
                     tool_context, update

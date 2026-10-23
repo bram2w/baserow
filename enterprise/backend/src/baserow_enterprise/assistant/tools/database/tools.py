@@ -417,7 +417,11 @@ def _repair_table_formulas(
             continue
         try:
             _, remaining = helpers.create_repaired_formula_fields(
-                tool_context.user, table, formula_fixer, errors
+                tool_context.user,
+                table,
+                formula_fixer,
+                errors,
+                ctx.deps.tool_helpers.raise_if_cancelled,
             )
         except PermissionException:
             creation.notes.append(
@@ -631,7 +635,11 @@ def create_fields(
     if formula_errors:
         formula_fixer = make_formula_fixer(user, workspace, ctx.deps.tool_helpers)
         repaired, formula_errors = helpers.create_repaired_formula_fields(
-            user, table, formula_fixer, formula_errors
+            user,
+            table,
+            formula_fixer,
+            formula_errors,
+            ctx.deps.tool_helpers.raise_if_cancelled,
         )
         result["created_fields"].extend(field.model_dump() for field in repaired)
     if formula_errors:
@@ -688,7 +696,11 @@ def update_fields(
             ctx.deps.user, ctx.deps.workspace, ctx.deps.tool_helpers
         )
         repaired, changed, errors = helpers.apply_repaired_formula_updates(
-            tool_context, formula_fixer, fields, formula_errors
+            tool_context,
+            formula_fixer,
+            fields,
+            formula_errors,
+            ctx.deps.tool_helpers.raise_if_cancelled,
         )
         result["updated_fields"].extend(field.model_dump() for field in repaired)
         result["changed"] = result["changed"] or changed
