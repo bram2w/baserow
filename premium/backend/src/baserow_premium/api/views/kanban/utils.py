@@ -1,6 +1,13 @@
 from baserow_premium.api.views.exceptions import InvalidSelectOptionParameter
 
 
+def _non_negative_int(value: str) -> int:
+    number = int(value)
+    if number < 0:
+        raise ValueError("The value must be non-negative.")
+    return number
+
+
 def prepare_kanban_view_parameters(request):
     # Parse the provided select options from the query parameters. It's possible
     # to only fetch the rows of specific field options and also filter on them.
@@ -11,9 +18,13 @@ def prepare_kanban_view_parameters(request):
         try:
             included_select_options[splitted[0]] = {}
             if 1 < len(splitted):
-                included_select_options[splitted[0]]["limit"] = int(splitted[1])
+                included_select_options[splitted[0]]["limit"] = _non_negative_int(
+                    splitted[1]
+                )
             if 2 < len(splitted):
-                included_select_options[splitted[0]]["offset"] = int(splitted[2])
+                included_select_options[splitted[0]]["offset"] = _non_negative_int(
+                    splitted[2]
+                )
         except ValueError:
             raise InvalidSelectOptionParameter(splitted[0])
 
@@ -21,12 +32,12 @@ def prepare_kanban_view_parameters(request):
     default_offset = 0
 
     try:
-        default_limit = int(request.GET["limit"])
+        default_limit = _non_negative_int(request.GET["limit"])
     except (KeyError, ValueError):
         pass
 
     try:
-        default_offset = int(request.GET["offset"])
+        default_offset = _non_negative_int(request.GET["offset"])
     except (KeyError, ValueError):
         pass
 

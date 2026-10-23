@@ -96,6 +96,17 @@ class Paginator(DjangoPaginator):
         return max(number, 1)
 
 
+def raise_page_size_limit_exceeded(limit_page_size: int):
+    exception = APIException(
+        {
+            "error": "ERROR_PAGE_SIZE_LIMIT",
+            "detail": f"The page size is limited to {limit_page_size}.",
+        }
+    )
+    exception.status_code = HTTP_400_BAD_REQUEST
+    raise exception
+
+
 class PageNumberPagination(RestFrameworkPageNumberPagination):
     # Please keep the default page size in sync with the default prop pageSize in
     # web-frontend/modules/core/components/helpers/InfiniteScroll.vue
@@ -111,14 +122,7 @@ class PageNumberPagination(RestFrameworkPageNumberPagination):
         page_size = super().get_page_size(request)
 
         if self.limit_page_size and page_size > self.limit_page_size:
-            exception = APIException(
-                {
-                    "error": "ERROR_PAGE_SIZE_LIMIT",
-                    "detail": f"The page size is limited to {self.limit_page_size}.",
-                }
-            )
-            exception.status_code = HTTP_400_BAD_REQUEST
-            raise exception
+            raise_page_size_limit_exceeded(self.limit_page_size)
 
         return page_size
 
@@ -161,6 +165,18 @@ class PageNumberPaginationWithoutCount(PageNumberPagination):
 
 class LimitOffsetPagination(RestFrameworkLimitOffsetPagination):
     default_limit = 100
+
+    def __init__(self, limit_page_size=None, *args, **kwargs):
+        self.limit_page_size = limit_page_size
+        super().__init__(*args, **kwargs)
+
+    def get_limit(self, request):
+        limit = super().get_limit(request)
+
+        if self.limit_page_size and limit and limit > self.limit_page_size:
+            raise_page_size_limit_exceeded(self.limit_page_size)
+
+        return limit
 
     def paginate_queryset(self, queryset, request, view=None):
         return super().paginate_queryset(queryset, request, view)

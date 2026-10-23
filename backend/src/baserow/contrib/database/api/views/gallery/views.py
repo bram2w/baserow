@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import transaction
 
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
@@ -249,7 +250,9 @@ class GalleryViewView(APIView):
         if ONLY_COUNT_API_PARAM.name in request.GET:
             return Response({"count": queryset.count()})
 
-        paginator = GalleryLimitOffsetPagination()
+        paginator = GalleryLimitOffsetPagination(
+            limit_page_size=settings.ROW_PAGE_SIZE_LIMIT
+        )
         page = paginator.paginate_queryset(queryset, request, self)
 
         limit_linked_items = parse_limit_linked_items_params(request)
@@ -504,7 +507,9 @@ class PublicGalleryViewRowsView(APIView):
         if count:
             return Response({"count": queryset.count()})
 
-        paginator = GalleryLimitOffsetPagination()
+        paginator = GalleryLimitOffsetPagination(
+            limit_page_size=settings.ROW_PAGE_SIZE_LIMIT
+        )
         page = paginator.paginate_queryset(queryset, request, self)
 
         limit_linked_items = parse_limit_linked_items_params(request)
