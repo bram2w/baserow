@@ -3,11 +3,15 @@ import zipfile
 from contextlib import contextmanager
 from unittest.mock import patch
 
+from django.contrib.auth.hashers import make_password
+
 from baserow.contrib.automation.nodes.node_types import (
     LocalBaserowFieldsUpdatedTriggerNodeType,
 )
 from baserow.contrib.builder.elements.models import ChoiceElement
+from baserow.contrib.database.fields.models import PasswordField
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.views.models import ViewDefaultValue
 from baserow.contrib.integrations.local_baserow.models import LocalBaserowAggregateRows
 from baserow.core.cache import local_cache
 from baserow.core.jobs.handler import JobHandler
@@ -208,3 +212,69 @@ def another_run_after_the_copy(error=None):
 
     with patch.object(UserTemplateService, "copy_applications", copy_then_run_again):
         yield other_runs
+
+
+PASSWORD_DEFAULT = "default secret"
+NOTE_DEFAULT = "keep me"
+
+
+def add_password_data(data_fixture, table, view):
+    """
+    Adds a password field to the table with a hash in every row, and gives the view
+    a default value for it and for the primary field.
+    """
+
+    password_field = data_fixture.create_password_field(table=table, name="Password")
+    password = make_password("source secret")
+    table.get_model().objects.update(**{password_field.db_column: password})
+    primary_field = table.field_set.get(primary=True)
+    ViewDefaultValue.objects.create(
+        view=view, field=password_field, value=PASSWORD_DEFAULT, field_type="password"
+    )
+    ViewDefaultValue.objects.create(
+        view=view, field=primary_field, value=NOTE_DEFAULT, field_type="text"
+    )
+    return password_field, password
+
+
+def assert_password_data_left_out(table):
+    """
+    Asserts that the copied table kept its password field, with every cell empty,
+    and that no view of it has a default value for that field.
+    """
+
+    password_field = table.field_set.get(name="Password").specific
+    assert isinstance(password_field, PasswordField)
+    values = list(
+        table.get_model().objects.values_list(password_field.db_column, flat=True)
+    )
+    assert values and all(value is None for value in values)
+    primary_field = table.field_set.get(primary=True)
+    defaults = ViewDefaultValue.objects.filter(view__table=table)
+    assert [(default.field_id, default.value) for default in defaults] == [
+        (primary_field.id, NOTE_DEFAULT)
+    ]
+
+
+def assert_archive_has_no_password_data(template, password):
+    """
+    Asserts that the template's archive has no password hash and no default value
+    for the copied password field. The archive is exported from the template
+    workspace, so its field ids are the ids of the copied fields.
+    """
+
+    copied_password_field = (
+        copied_applications(template)["database"]
+        .table_set.get()
+        .field_set.get(name="Password")
+    )
+    archive = read_archive(template.archive.name)
+    for _, default_row_values in find_values(archive, {"default_row_values"}):
+        assert all(
+            entry["field_id"] != copied_password_field.id
+            for entry in default_row_values.values()
+        )
+    archive_text = json.dumps(archive)
+    assert password not in archive_text
+    assert PASSWORD_DEFAULT not in archive_text
+    assert NOTE_DEFAULT in archive_text
