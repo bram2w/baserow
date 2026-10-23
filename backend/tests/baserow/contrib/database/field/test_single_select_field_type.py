@@ -1405,10 +1405,13 @@ def test_single_select_equal_filter_type(field_name, data_fixture):
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 0
 
-    view_filter.value = "Test"
-    view_filter.save()
-    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
-    assert len(ids) == 3
+    for invalid_value in ["Test", f"{option_a.id}%", f"{option_a.id}_"]:
+        view_filter.value = invalid_value
+        view_filter.save()
+        ids = [
+            r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
+        ]
+        assert len(ids) == 0
 
 
 @pytest.mark.django_db
@@ -1467,10 +1470,13 @@ def test_single_select_not_equal_filter_type(field_name, data_fixture):
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
 
-    view_filter.value = "Test"
-    view_filter.save()
-    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
-    assert len(ids) == 3
+    for invalid_value in ["Test", f"{option_a.id}%", f"{option_a.id}_"]:
+        view_filter.value = invalid_value
+        view_filter.save()
+        ids = [
+            r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
+        ]
+        assert len(ids) == 3
 
 
 @pytest.mark.django_db

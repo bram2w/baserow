@@ -1133,11 +1133,13 @@ class SingleSelectEqualViewFilterType(ViewFilterType):
 
     def get_filter(self, field_name, value, model_field, field):
         value = value.strip()
+        if not value:
+            return Q()
 
         try:
             int(value)
         except ValueError:
-            return Q()
+            return self.default_filter_on_exception()
 
         field_type = field_type_registry.get_by_model(field)
         effective_field_type = field_type.get_compatible_filter_field_type(field)
