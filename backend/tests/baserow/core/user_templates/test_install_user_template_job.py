@@ -39,6 +39,10 @@ from baserow.core.user_templates.exceptions import (
     TemplateHasNoContent,
 )
 from baserow.core.user_templates.handler import UserTemplateHandler
+from tests.baserow.core.user_templates.utils import (
+    add_password_data,
+    assert_password_data_left_out,
+)
 
 TEST_TEMPLATES_DIR = os.path.join(settings.BASE_DIR, "../../../tests/templates")
 # The install exports and imports, so it runs outside a test transaction.
@@ -281,6 +285,33 @@ def test_install_user_template_job(data_fixture):
     # The count is bumped without saving the root, which orders the lists.
     assert root.updated_on == updated_on
     assert not ImportExportResource.objects.filter(marked_for_deletion=False).exists()
+
+
+@install_marks
+def test_install_user_template_empties_password_fields(data_fixture):
+    owner = data_fixture.create_user()
+    target = data_fixture.create_workspace(user=owner)
+    root = _create_template(data_fixture, owner, names=["First"])
+    template_table = root.workspace.application_set.get().specific.table_set.get()
+    # Set in the template workspace directly, like a template made before its
+    # passwords were left out.
+    password_field, password = add_password_data(
+        data_fixture,
+        template_table,
+        data_fixture.create_grid_view(table=template_table),
+    )
+
+    job = _install(owner, target, root)
+
+    assert job.state == JOB_FINISHED
+    installed = Application.objects.get(workspace=target).specific
+    assert_password_data_left_out(installed.table_set.get())
+    # The template keeps what it holds.
+    assert list(
+        template_table.get_model().objects.values_list(
+            password_field.db_column, flat=True
+        )
+    ) == [password]
 
 
 @install_marks
