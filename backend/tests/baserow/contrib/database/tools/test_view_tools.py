@@ -25,6 +25,7 @@ from baserow.contrib.database.tools.views import (
 from baserow.contrib.database.views.models import FormView, View, ViewFilter
 from baserow.core.exceptions import PermissionException
 from baserow.core.mcp import BaserowMCPServer, current_key
+from baserow.core.models import Agent
 from baserow.core.tools import ToolContext
 
 VIEW_TOOLS = ["create_views", "create_view_filters"]
@@ -141,10 +142,10 @@ def test_create_view_filters_writes_nothing_when_a_later_view_fails(
     second_view = data_fixture.create_grid_view(table=table)
     original = views_module.create_view_filter
 
-    def create_view_filter(user, view, fields, item):
+    def create_view_filter(user, view, fields, item, timezone=None):
         if view.id == second_view.id:
             raise error
-        return original(user, view, fields, item)
+        return original(user, view, fields, item, timezone)
 
     filters = [
         ViewFilterItemCreate(
@@ -838,19 +839,42 @@ def test_create_view_filters_takes_no_number_for_empty(
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("timezone", [None, ""])
-def test_create_view_filters_uses_utc_without_a_profile_timezone(
-    data_fixture, table_ctx, timezone
+@pytest.mark.parametrize(
+    "timezone,stored",
+    [
+        (None, "UTC??today"),
+        ("", "UTC??today"),
+        ("Europe/Amsterdam", "Europe/Amsterdam??today"),
+    ],
+)
+def test_create_view_filters_uses_the_context_timezone(
+    data_fixture, table_ctx, timezone, stored
 ):
     ctx, table = table_ctx
-    ctx.user.profile.timezone = timezone
-    ctx.user.profile.save()
+    ctx.timezone = timezone
     field = data_fixture.create_date_field(table=table, name="Due")
     view, create = _filter_view(data_fixture, table_ctx, field)
 
     create(type="date", operator="equal", mode="today")
 
-    assert ViewFilter.objects.get(view=view).value == "UTC??today"
+    assert ViewFilter.objects.get(view=view).value == stored
+
+
+@pytest.mark.django_db
+def test_create_view_filters_works_for_an_actor_without_a_profile(
+    data_fixture, table_ctx
+):
+    ctx, table = table_ctx
+    agent = Agent.objects.create(workspace=ctx.workspace, name="Bot", role_uid="ADMIN")
+    field = table.field_set.get(name="Name")
+    view, create = _filter_view(
+        data_fixture, (ToolContext(user=agent, workspace=ctx.workspace), table), field
+    )
+
+    entry = create(type="text", operator="equal", value="x")
+
+    assert "skipped_filters" not in entry
+    assert ViewFilter.objects.get(view=view).value == "x"
 
 
 @pytest.mark.django_db
@@ -869,3 +893,37 @@ def test_create_views_over_mcp_rejects_a_name_longer_than_the_column(data_fixtur
     assert result.isError is True
     assert "at most 255 characters" in result.content[0].text
     assert not View.objects.filter(table=table).exists()
+
+
+@pytest.mark.django_db
+def test_create_view_filters_over_mcp_uses_the_user_timezone(data_fixture):
+    endpoint = data_fixture.create_mcp_endpoint(allowed_tools=VIEW_TOOLS)
+    endpoint.user.profile.timezone = "Europe/Amsterdam"
+    endpoint.user.profile.save()
+    database = data_fixture.create_database_application(workspace=endpoint.workspace)
+    table = data_fixture.create_database_table(database=database)
+    field = data_fixture.create_date_field(table=table, name="Due")
+    view = data_fixture.create_grid_view(table=table)
+
+    result = _call(
+        endpoint,
+        "create_view_filters",
+        {
+            "view_filters": [
+                {
+                    "view_id": view.id,
+                    "filters": [
+                        {
+                            "field_id": field.id,
+                            "type": "date",
+                            "operator": "equal",
+                            "mode": "today",
+                        }
+                    ],
+                }
+            ]
+        },
+    )
+
+    assert result.isError is False
+    assert ViewFilter.objects.get(view=view).value == "Europe/Amsterdam??today"

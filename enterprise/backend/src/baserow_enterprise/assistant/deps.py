@@ -173,4 +173,5 @@ class AssistantDeps:
             user=self.user,
             workspace=self.workspace,
             update_status=update_status,
+            timezone=self.user.profile.timezone,
         )

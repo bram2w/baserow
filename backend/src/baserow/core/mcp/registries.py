@@ -204,7 +204,12 @@ class FunctionMCPTool(MCPTool):
 
         kwargs = {name: getattr(args, name) for name in type(args).model_fields}
         return type(self).function(
-            ToolContext(user=endpoint.user, workspace=endpoint.workspace), **kwargs
+            ToolContext(
+                user=endpoint.user,
+                workspace=endpoint.workspace,
+                timezone=endpoint.user.profile.timezone,
+            ),
+            **kwargs,
         )
 
 

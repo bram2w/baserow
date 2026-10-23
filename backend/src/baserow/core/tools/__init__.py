@@ -27,3 +27,6 @@ class ToolContext:
     user: AbstractUser
     workspace: Workspace
     update_status: Callable[[str], None] = field(default=_ignore_status)
+    timezone: str | None = None
+    """The timezone date values are in, UTC when None. Not read from ``user``,
+    because an actor such as an Agent has no profile."""

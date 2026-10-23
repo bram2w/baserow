@@ -801,6 +801,7 @@ def create_view_filter(
     orm_view: View,
     table_fields: dict[int, Any],
     view_filter_item: ViewFilterItemCreate,
+    timezone: str | None = None,
 ) -> ViewFilter:
     """
     Create a single view filter after validating the field type matches.
@@ -809,6 +810,7 @@ def create_view_filter(
     :param orm_view: The view to add the filter to.
     :param table_fields: Mapping of field ID → field instance for the table.
     :param view_filter_item: The filter definition to create.
+    :param timezone: The timezone of a date filter's value, UTC when None.
     :raises ValueError: If the field is not found or its type doesn't match.
     """
 
@@ -826,9 +828,7 @@ def create_view_filter(
         )
 
     filter_type = view_filter_item.get_django_orm_type(field)
-    filter_value = view_filter_item.get_django_orm_value(
-        field, timezone=user.profile.timezone
-    )
+    filter_value = view_filter_item.get_django_orm_value(field, timezone=timezone)
 
     return CreateViewFilterActionType.do(
         user,
@@ -1006,7 +1006,9 @@ def create_view_filters(
             skipped_filters = []
             for item in view_filter.filters:
                 try:
-                    orm_filter = create_view_filter(ctx.user, orm_view, fields, item)
+                    orm_filter = create_view_filter(
+                        ctx.user, orm_view, fields, item, ctx.timezone
+                    )
                 # The handler raises ViewFilterNotSupported before it writes.
                 except (ValueError, ViewFilterNotSupported) as exc:
                     skipped_filters.append({**item.model_dump(), "error": str(exc)})

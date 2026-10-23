@@ -63,7 +63,11 @@ class ListDatabasesMcpTool(MCPTool):
     input_schema = ListDatabasesInput
 
     def _sync_call(self, endpoint: MCPEndpoint, args: ListDatabasesInput) -> list[dict]:
-        ctx = ToolContext(user=endpoint.user, workspace=endpoint.workspace)
+        ctx = ToolContext(
+            user=endpoint.user,
+            workspace=endpoint.workspace,
+            timezone=endpoint.user.profile.timezone,
+        )
         databases = applications.visible_applications(ctx, ["database"])
         return [{"id": db.id, "name": db.name, "order": db.order} for db in databases]
 
