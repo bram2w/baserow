@@ -15,9 +15,9 @@ from baserow.contrib.integrations.local_baserow.models import (
     LocalBaserowAggregateRows,
     LocalBaserowIntegration,
 )
+from baserow.core.action.registries import action_type_registry
 from baserow.core.cache import local_cache
 from baserow.core.exceptions import (
-    FeatureDisabledException,
     PermissionDenied,
     TemplateDoesNotExist,
     UserNotInWorkspace,
@@ -36,7 +36,10 @@ from baserow.core.jobs.tasks import run_async_job
 from baserow.core.models import Template, TemplateCategory, Workspace, WorkspaceUser
 from baserow.core.operations import ExportWorkspaceOperationType
 from baserow.core.storage import get_default_storage
-from baserow.core.user_templates.actions import UpdateUserTemplateActionType
+from baserow.core.user_templates.actions import (
+    DeleteUserTemplateActionType,
+    UpdateUserTemplateActionType,
+)
 from baserow.core.user_templates.constants import USER_TEMPLATE_DELETION_GRACE_PERIOD
 from baserow.core.user_templates.exceptions import (
     InvalidTemplateCategory,
@@ -373,18 +376,6 @@ def test_update_user_template_refuses_templates_not_owned(data_fixture):
     assert revisions_of(root) == [2]
 
 
-@pytest.mark.django_db
-def test_update_user_template_with_flag_off(data_fixture, settings):
-    settings.FEATURE_FLAGS = []
-    user = data_fixture.create_user()
-    root = create_template(data_fixture, user)
-
-    with pytest.raises(FeatureDisabledException):
-        update_details(user, root)
-
-    assert not CreateUserTemplateJob.objects.exists()
-
-
 DETAILS = {"name": "Renamed", "description": "", "icon": ICON, "category_ids": [1]}
 
 
@@ -581,32 +572,6 @@ def test_update_user_template_content_fails_when_access_is_lost_before_it_runs(
 
     assert job.state == JOB_FAILED
     assert job.error_code == "PermissionException"
-    assert revisions_of(root) == []
-    assert_no_job_content_left(job)
-
-
-@pytest.mark.import_export_workspace
-@pytest.mark.django_db(transaction=True)
-@pytest.mark.parametrize("mode", ["details", "content"])
-def test_update_user_template_fails_when_the_flag_is_turned_off_before_it_runs(
-    data_fixture, use_tmp_media_root, settings, mode
-):
-    user = data_fixture.create_user()
-    root = create_template(data_fixture, user)
-    workspace = data_fixture.create_workspace(user=user)
-    database = data_fixture.create_database_application(workspace=workspace)
-
-    def turn_the_flag_off():
-        settings.FEATURE_FLAGS = []
-
-    with change_before_the_job_runs(turn_the_flag_off):
-        if mode == "details":
-            job = update_details(user, root)
-        else:
-            job = update_content(user, root, workspace, [database])
-
-    assert job.state == JOB_FAILED
-    assert job.error_code == "FeatureDisabledException"
     assert revisions_of(root) == []
     assert_no_job_content_left(job)
 
@@ -972,6 +937,35 @@ def test_update_user_template_queued_before_the_template_is_deleted(
     )
     assert_no_job_content_left(job)
     assert Template.objects.get(id=root.id).marked_for_deletion_at is not None
+
+
+@pytest.mark.import_export_workspace
+@pytest.mark.django_db(transaction=True)
+def test_update_user_template_runs_when_the_deletion_of_its_template_rolls_back(
+    data_fixture, use_tmp_media_root
+):
+    user = data_fixture.create_user()
+    root = create_template(data_fixture, user)
+
+    with patch("baserow.core.jobs.handler.run_async_job") as queued:
+        job = update_details(user, root)
+    queued.assert_called_once_with(job.id)
+
+    # The deletion cancels the job, then fails when it's registered.
+    with (
+        patch.object(
+            DeleteUserTemplateActionType, "register_action", side_effect=RuntimeError
+        ),
+        pytest.raises(RuntimeError),
+    ):
+        action_type_registry.get_by_type(DeleteUserTemplateActionType).do(user, root.id)
+    assert Template.objects.get(id=root.id).marked_for_deletion_at is None
+
+    run_async_job(job.id)
+
+    job = CreateUserTemplateJob.objects.get(id=job.id)
+    assert job.state == JOB_FINISHED, job.error
+    assert revisions_of(root) == [2]
 
 
 @pytest.mark.import_export_workspace

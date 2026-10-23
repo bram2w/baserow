@@ -1,29 +1,13 @@
-import { defineComponent } from 'vue'
 import { flushPromises } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 
 import { TestApp } from '@baserow/test/helpers/testApp'
+import { ModalStub } from '@baserow/test/helpers/modalStub'
 import DeleteUserTemplateModal from '@baserow/modules/core/components/template/DeleteUserTemplateModal'
-
-const ModalStub = defineComponent({
-  name: 'Modal',
-  emits: ['show', 'hidden'],
-  data: () => ({ open: false }),
-  methods: {
-    show() {
-      this.open = true
-      this.$emit('show')
-    },
-    hide() {
-      this.open = false
-      this.$emit('hidden')
-    },
-  },
-  template: '<div v-if="open"><slot /></div>',
-})
 
 const userTemplate = (values = {}) => ({
   id: 3,
+  slug: 'sprint-tracker',
   type: 'user',
   name: 'Sprint Tracker',
   state: 'public',
@@ -68,9 +52,9 @@ describe('DeleteUserTemplateModal', () => {
     wrapper.findComponent({ name: 'Modal' }).vm.open
 
   // Replies to the deletion only when `reply` is called.
-  const holdDeletion = (templateId = 3) => {
+  const holdDeletion = (slug = 'sprint-tracker') => {
     const held = { reply: null }
-    testApp.mock.onDelete(`/templates/user/${templateId}/`).reply(
+    testApp.mock.onDelete(`/templates/${slug}/`).reply(
       () =>
         new Promise((resolve) => {
           held.reply = resolve
@@ -93,16 +77,18 @@ describe('DeleteUserTemplateModal', () => {
   })
 
   test('deletes the template and closes', async () => {
-    testApp.mock.onDelete('/templates/user/3/').reply(204)
+    testApp.mock.onDelete('/templates/sprint-tracker/').reply(204)
     const wrapper = await mountAndShow()
 
     await deleteButton(wrapper).trigger('click')
     await flushPromises()
 
     expect(testApp.mock.history.delete.map((r) => r.url)).toStrictEqual([
-      '/templates/user/3/',
+      '/templates/sprint-tracker/',
     ])
-    expect(wrapper.emitted('deleted')).toStrictEqual([[3, false]])
+    expect(wrapper.emitted('deleted')).toStrictEqual([
+      [3, false, expect.any(Number)],
+    ])
     expect(isModalOpen(wrapper)).toBe(false)
   })
 
@@ -126,11 +112,13 @@ describe('DeleteUserTemplateModal', () => {
     held.reply([204])
     await flushPromises()
 
-    expect(wrapper.emitted('deleted')).toStrictEqual([[3, false]])
+    expect(wrapper.emitted('deleted')).toStrictEqual([
+      [3, false, expect.any(Number)],
+    ])
   })
 
   test('keeps the modal open and shows the error when it fails', async () => {
-    testApp.mock.onDelete('/templates/user/3/').reply(500)
+    testApp.mock.onDelete('/templates/sprint-tracker/').reply(500)
     const wrapper = await mountAndShow()
 
     await deleteButton(wrapper).trigger('click')
@@ -144,7 +132,7 @@ describe('DeleteUserTemplateModal', () => {
   })
 
   test('treats a template that is already deleted as deleted and says so', async () => {
-    testApp.mock.onDelete('/templates/user/3/').reply(404, {
+    testApp.mock.onDelete('/templates/sprint-tracker/').reply(404, {
       error: 'ERROR_TEMPLATE_DOES_NOT_EXIST',
       detail: 'The requested template does not exist.',
     })
@@ -154,7 +142,9 @@ describe('DeleteUserTemplateModal', () => {
     await flushPromises()
 
     // Says that it was already deleted.
-    expect(wrapper.emitted('deleted')).toStrictEqual([[3, true]])
+    expect(wrapper.emitted('deleted')).toStrictEqual([
+      [3, true, expect.any(Number)],
+    ])
     expect(isModalOpen(wrapper)).toBe(false)
     expect(testApp.store.state.toast.items).toHaveLength(0)
   })
@@ -177,7 +167,9 @@ describe('DeleteUserTemplateModal', () => {
 
     await deleteButton(wrapper).trigger('click')
     await wrapper.vm.hide()
-    await wrapper.setProps({ template: userTemplate({ id: 4, name: 'Other' }) })
+    await wrapper.setProps({
+      template: userTemplate({ id: 4, slug: 'other', name: 'Other' }),
+    })
     await wrapper.vm.show()
     await flushPromises()
 
@@ -187,7 +179,9 @@ describe('DeleteUserTemplateModal', () => {
     held.reply([204])
     await flushPromises()
 
-    expect(wrapper.emitted('deleted')).toStrictEqual([[3, false]])
+    expect(wrapper.emitted('deleted')).toStrictEqual([
+      [3, false, expect.any(Number)],
+    ])
     // Still asking about the other template.
     expect(isModalOpen(wrapper)).toBe(true)
   })

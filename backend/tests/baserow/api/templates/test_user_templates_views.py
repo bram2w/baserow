@@ -849,11 +849,10 @@ def test_template_by_slug_has_its_type(api_client, data_fixture):
         assert response.json()["type"] == template_type
 
 
-def delete_template(api_client, token, template_id):
+def delete_template(api_client, token, slug):
     headers = {"HTTP_AUTHORIZATION": f"JWT {token}"} if token else {}
     return api_client.delete(
-        reverse("api:templates:user_item", kwargs={"template_id": template_id}),
-        **headers,
+        reverse("api:templates:item", kwargs={"slug": slug}), **headers
     )
 
 
@@ -882,7 +881,7 @@ def test_delete_user_template(api_client, data_fixture, state, as_staff):
     other = create_own_template(data_fixture, owner)
 
     response = delete_template(
-        api_client, staff_token if as_staff else owner_token, template.id
+        api_client, staff_token if as_staff else owner_token, template.slug
     )
 
     assert response.status_code == 204
@@ -895,18 +894,15 @@ def test_delete_user_template_refused(api_client, data_fixture):
     _, other_token = data_fixture.create_user_and_token()
     _, staff_token = data_fixture.create_user_and_token(is_staff=True)
     template = create_own_template(data_fixture, owner)
-    revision = data_fixture.create_user_template_revision(template)
     official = data_fixture.create_template()
 
-    for token, template_id, status in [
-        (None, template.id, HTTP_401_UNAUTHORIZED),
-        (other_token, template.id, HTTP_404_NOT_FOUND),
-        (owner_token, revision.id, HTTP_404_NOT_FOUND),
-        (staff_token, revision.id, HTTP_404_NOT_FOUND),
-        (staff_token, official.id, HTTP_404_NOT_FOUND),
-        (staff_token, 0, HTTP_404_NOT_FOUND),
+    for token, slug, status in [
+        (None, template.slug, HTTP_401_UNAUTHORIZED),
+        (other_token, template.slug, HTTP_404_NOT_FOUND),
+        (staff_token, official.slug, HTTP_404_NOT_FOUND),
+        (staff_token, "unknown", HTTP_404_NOT_FOUND),
     ]:
-        response = delete_template(api_client, token, template_id)
+        response = delete_template(api_client, token, slug)
 
         assert response.status_code == status
         if status == HTTP_404_NOT_FOUND:
@@ -920,33 +916,15 @@ def test_delete_user_template_twice(api_client, data_fixture):
     _, staff_token = data_fixture.create_user_and_token(is_staff=True)
     template = create_own_template(data_fixture, owner)
 
-    assert delete_template(api_client, owner_token, template.id).status_code == 204
+    assert delete_template(api_client, owner_token, template.slug).status_code == 204
     marked_at = Template.objects.get(id=template.id).marked_for_deletion_at
 
     for token in [owner_token, staff_token]:
-        response = delete_template(api_client, token, template.id)
+        response = delete_template(api_client, token, template.slug)
 
         assert response.status_code == HTTP_404_NOT_FOUND
         assert response.json()["error"] == "ERROR_TEMPLATE_DOES_NOT_EXIST"
     assert Template.objects.get(id=template.id).marked_for_deletion_at == marked_at
-
-
-def test_delete_user_template_with_flag_off(api_client, data_fixture, settings):
-    settings.FEATURE_FLAGS = []
-    owner, owner_token = data_fixture.create_user_and_token()
-    _, staff_token = data_fixture.create_user_and_token(is_staff=True)
-    template = create_own_template(data_fixture, owner)
-
-    for token in [owner_token, staff_token]:
-        response = delete_template(api_client, token, template.id)
-
-        assert response.status_code == HTTP_403_FORBIDDEN
-        assert response.json()["error"] == "ERROR_FEATURE_DISABLED"
-    assert not is_marked(template)
-
-    assert delete_template(api_client, None, template.id).status_code == (
-        HTTP_401_UNAUTHORIZED
-    )
 
 
 @pytest.mark.parametrize("deleted_by", ["owner", "staff"])
@@ -972,7 +950,7 @@ def test_deleted_user_template_is_gone_for_everybody(
         assert [t["id"] for t in results] == [template.id]
 
     token = owner_token if deleted_by == "owner" else staff_token
-    assert delete_template(api_client, token, template.id).status_code == 204
+    assert delete_template(api_client, token, template.slug).status_code == 204
 
     url = reverse("api:templates:item", kwargs={"slug": template.slug})
     assert get_as_anonymous_stranger_and_owner(api_client, tokens, url) == (
@@ -1012,7 +990,7 @@ def test_delete_user_template_query_count_is_linear_in_its_jobs(
             )
 
         with CaptureQueriesContext(connection) as queries:
-            assert delete_template(api_client, token, template.id).status_code == 204
+            assert delete_template(api_client, token, template.slug).status_code == 204
         query_counts.append(len(queries.captured_queries))
 
     assert CreateUserTemplateJob.objects.filter(state="cancelled").count() == 4

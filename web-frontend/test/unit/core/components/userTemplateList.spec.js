@@ -474,51 +474,6 @@ describe('UserTemplateList', () => {
     )
   })
 
-  test('reloads the first page when a template is removed while a page loads', async () => {
-    const templates = Array.from({ length: 22 }, (_, i) =>
-      userTemplate(i + 1, `Template ${i + 1}`)
-    )
-    const remaining = templates.filter(({ id }) => id !== 5)
-    let sendNextPage = null
-    mockPages(
-      page(templates.slice(0, 20), 22),
-      // The next page is asked for before the delete, but the server answers
-      // after it, so template 21 moved to the first page.
-      () =>
-        new Promise((resolve) => {
-          sendNextPage = () => resolve([200, page(remaining.slice(20), 21)])
-        }),
-      page(remaining.slice(0, 20), 21),
-      page(remaining.slice(20), 21)
-    )
-    const wrapper = await mountComponent()
-
-    wrapper.findComponent(InfiniteScroll).vm.$emit('load-next-page', 2)
-    await flushPromises()
-    wrapper.vm.remove(5)
-    await flushPromises()
-    sendNextPage()
-    await flushPromises()
-
-    expect(requests).toStrictEqual([
-      { offset: 0, limit: 20 },
-      { offset: 20, limit: 20 },
-      { offset: 0, limit: 20 },
-    ])
-    expect(rowNames(wrapper)).toStrictEqual(
-      remaining.slice(0, 20).map(({ name }) => name)
-    )
-
-    wrapper.findComponent(InfiniteScroll).vm.$emit('load-next-page', 2)
-    await flushPromises()
-
-    expect(requests[3]).toStrictEqual({ offset: 20, limit: 20 })
-    expect(rowNames(wrapper)).toStrictEqual(remaining.map(({ name }) => name))
-    expect(wrapper.find('.user-template-list__title').text()).toBe(
-      'userTemplateList.count - 21'
-    )
-  })
-
   describe('when a template is removed while a page loads', () => {
     const templates = Array.from({ length: 22 }, (_, i) =>
       userTemplate(i + 1, `Template ${i + 1}`)
@@ -535,9 +490,9 @@ describe('UserTemplateList', () => {
       return { reply, send: (value) => send(value) }
     }
 
-    const removeWhileLoading = async (reload) => {
+    const removeWhileLoading = async (...reloads) => {
       const nextPage = heldBack()
-      mockPages(page(templates.slice(0, 20), 22), nextPage.reply, reload)
+      mockPages(page(templates.slice(0, 20), 22), nextPage.reply, ...reloads)
       const wrapper = await mountComponent()
 
       wrapper.findComponent(InfiniteScroll).vm.$emit('load-next-page', 2)
@@ -547,21 +502,40 @@ describe('UserTemplateList', () => {
       return { wrapper, nextPage }
     }
 
-    test('drops it before the reload answers', async () => {
+    test('drops it at once and pages on from the reloaded first page', async () => {
       const reload = heldBack()
-      const { wrapper, nextPage } = await removeWhileLoading(reload.reply)
+      const { wrapper, nextPage } = await removeWhileLoading(
+        reload.reply,
+        page(remaining.slice(20), 21)
+      )
 
       expect(rowNames(wrapper)).not.toContain('Template 5')
       expect(wrapper.find('.user-template-list__title').text()).toBe(
         'userTemplateList.count - 21'
       )
 
+      // The next page was asked for before the delete, but the server answers
+      // after it, so template 21 moved to the first page.
       nextPage.send([200, page(remaining.slice(20), 21)])
       reload.send([200, page(remaining.slice(0, 20), 21)])
       await flushPromises()
 
+      expect(requests).toStrictEqual([
+        { offset: 0, limit: 20 },
+        { offset: 20, limit: 20 },
+        { offset: 0, limit: 20 },
+      ])
       expect(rowNames(wrapper)).toStrictEqual(
         remaining.slice(0, 20).map(({ name }) => name)
+      )
+
+      wrapper.findComponent(InfiniteScroll).vm.$emit('load-next-page', 2)
+      await flushPromises()
+
+      expect(requests[3]).toStrictEqual({ offset: 20, limit: 20 })
+      expect(rowNames(wrapper)).toStrictEqual(remaining.map(({ name }) => name))
+      expect(wrapper.find('.user-template-list__title').text()).toBe(
+        'userTemplateList.count - 21'
       )
     })
 
@@ -581,6 +555,41 @@ describe('UserTemplateList', () => {
           .filter(({ id }) => id !== 5)
           .map(({ name }) => name)
       )
+      expect(wrapper.find('.user-template-list__title').text()).toBe(
+        'userTemplateList.count - 21'
+      )
+    })
+
+    test('reloads the first page when a page loaded after the deletion was asked for', async () => {
+      mockPages(
+        page(templates.slice(0, 20), 22),
+        // Answered after the server deleted template 5, but before the client
+        // got the answer to the delete.
+        page(remaining.slice(20), 21),
+        page(remaining.slice(0, 20), 21),
+        page(remaining.slice(20), 21)
+      )
+      const wrapper = await mountComponent()
+
+      const requestedAt = performance.now()
+      wrapper.findComponent(InfiniteScroll).vm.$emit('load-next-page', 2)
+      await flushPromises()
+      wrapper.vm.remove(5, requestedAt)
+      await flushPromises()
+
+      expect(requests).toStrictEqual([
+        { offset: 0, limit: 20 },
+        { offset: 20, limit: 20 },
+        { offset: 0, limit: 20 },
+      ])
+      expect(rowNames(wrapper)).toStrictEqual(
+        remaining.slice(0, 20).map(({ name }) => name)
+      )
+
+      wrapper.findComponent(InfiniteScroll).vm.$emit('load-next-page', 2)
+      await flushPromises()
+
+      expect(rowNames(wrapper)).toStrictEqual(remaining.map(({ name }) => name))
       expect(wrapper.find('.user-template-list__title').text()).toBe(
         'userTemplateList.count - 21'
       )

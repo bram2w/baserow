@@ -4,10 +4,18 @@
   }
 }
 
+.user-template-modal-wrapper--small {
+  div.modal__box {
+    max-width: 464px;
+  }
+}
+
 .user-template-modal__head {
   @include flex-align-items(8px);
 
-  padding: 16px 24px;
+  // The actions stay next to the first line of a long title.
+  align-items: flex-start;
+  padding: 18px 24px;
   border-bottom: 1px solid $palette-neutral-200;
 }
 
@@ -17,14 +25,17 @@
   margin: 0;
   font-size: 15px;
   font-weight: 600;
-  line-height: 24px;
+  line-height: 20px;
   color: $palette-neutral-1200;
 }
 
+// The actions overflow the title line and the padding of the head, so that they
+// don't make the head taller.
 .user-template-modal__head-action {
-  @include center-text(24px, 18px);
+  @include center-text(28px, 16px);
 
   flex: 0 0 auto;
+  margin: -4px 0;
   padding: 0;
   border: 0;
   background: none;
@@ -44,6 +55,14 @@
   }
 }
 
+.user-template-modal__back {
+  margin-left: -12px;
+}
+
+.user-template-modal__close {
+  margin-right: -12px;
+}
+
 .user-template-modal__body {
   padding: 24px;
 }
@@ -59,7 +78,7 @@
   @include flex-align-items(16px);
 
   justify-content: space-between;
-  padding: 16px 24px;
+  padding: 18px 24px;
   border-top: 1px solid $palette-neutral-200;
 }
 

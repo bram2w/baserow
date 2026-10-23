@@ -1,7 +1,7 @@
 <template>
   <Modal
     ref="modal"
-    small
+    class="user-template-modal-wrapper user-template-modal-wrapper--small"
     :box-padding="false"
     :close-button="false"
     @hidden="emit('hidden')"
@@ -13,7 +13,7 @@
         </h2>
         <button
           type="button"
-          class="user-template-modal__head-action"
+          class="user-template-modal__head-action user-template-modal__close"
           :title="$t('action.close')"
           @click="hide()"
         >
@@ -66,8 +66,9 @@ const props = defineProps({
 })
 
 // `deleted` is emitted with the id of the deleted template, also when the modal was
-// closed or opened for another template while the request ran, and whether it was
-// already deleted, for example in another tab.
+// closed or opened for another template while the request ran, whether it was
+// already deleted, for example in another tab, and the `performance.now()` at which
+// the deletion was requested.
 const emit = defineEmits(['deleted', 'hidden'])
 
 const { $client } = useNuxtApp()
@@ -86,27 +87,28 @@ function hide(...args) {
   modal.value.hide(...args)
 }
 
-function deleted(id, alreadyDeleted) {
-  emit('deleted', id, alreadyDeleted)
+function deleted(id, alreadyDeleted, requestedAt) {
+  emit('deleted', id, alreadyDeleted, requestedAt)
   if (props.template.id === id) {
     hide()
   }
 }
 
 async function confirm() {
-  const id = props.template.id
+  const { id, slug } = props.template
   if (pending.has(id)) {
     return
   }
   pending.add(id)
+  const requestedAt = performance.now()
   try {
-    await TemplateService($client).deleteUserTemplate(id)
-    deleted(id, false)
+    await TemplateService($client).delete(slug)
+    deleted(id, false, requestedAt)
   } catch (error) {
     // The template wasn't found, so it's already deleted, for example in another
     // tab.
     if (error.response?.status === 404) {
-      deleted(id, true)
+      deleted(id, true, requestedAt)
     } else {
       notifyIf(error, 'templates')
     }

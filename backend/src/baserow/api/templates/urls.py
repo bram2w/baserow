@@ -5,7 +5,6 @@ from .views import (
     InstallTemplateView,
     TemplatesView,
     TemplateView,
-    UserTemplateView,
 )
 
 app_name = "baserow.api.templates"
@@ -21,11 +20,6 @@ urlpatterns = [
         r"install/(?P<workspace_id>[0-9]+)/(?P<template_id>[0-9]+)/async/$",
         AsyncInstallTemplateView.as_view(),
         name="install_async",
-    ),
-    re_path(
-        r"user/(?P<template_id>[0-9]+)/$",
-        UserTemplateView.as_view(),
-        name="user_item",
     ),
     re_path(r"(?P<slug>[\w-]+)/$", TemplateView.as_view(), name="item"),
     re_path(r"$", TemplatesView.as_view(), name="list"),

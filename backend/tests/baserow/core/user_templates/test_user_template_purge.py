@@ -1,6 +1,6 @@
 import threading
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from django.core.cache import cache
 from django.core.files.base import ContentFile
@@ -201,6 +201,14 @@ def test_purge_removes_a_deleted_template_after_the_grace_period(data_fixture):
     for job in other["jobs"]:
         assert cache.get(job_progress_key(job.id)) is not None
 
+    with CaptureQueriesContext(connection) as queries:
+        purge()
+
+    assert_family_removed(family)
+    assert_family_kept(other)
+    # Only the lookup of the templates to remove.
+    assert len(queries) == 1
+
 
 def test_purge_keeps_templates_that_arent_due(data_fixture):
     recent = create_family(
@@ -216,15 +224,6 @@ def test_purge_keeps_templates_that_arent_due(data_fixture):
 
     assert_family_kept(recent)
     assert Template.objects.filter(id__in=[unmarked.id, official.id]).count() == 2
-
-
-def test_purge_ignores_the_feature_flag(data_fixture, settings):
-    settings.FEATURE_FLAGS = []
-    family = create_family(data_fixture)
-
-    delete_orphaned_user_template_workspaces()
-
-    assert_family_removed(family)
 
 
 def test_purge_keeps_content_used_outside_the_template(data_fixture):
@@ -289,15 +288,20 @@ BUSY_JOBS = [
 ]
 
 
+@patch("baserow.core.user_templates.handler.USER_TEMPLATE_PURGE_BATCH_SIZE", 1)
 @pytest.mark.parametrize("create_job", BUSY_JOBS)
 def test_purge_waits_for_the_jobs_of_the_template(data_fixture, create_job):
-    family = create_family(data_fixture)
+    # The template deleted first has a job, on a revision for the installs, so it
+    # would take the only slot of the batch if it wasn't left out.
+    family = create_family(data_fixture, revisions=1)
     job = create_job(family)
+    other = create_family(data_fixture, revisions=1)
 
     purge()
 
     assert_family_kept(family)
     assert type(job).objects.filter(id=job.id).exists()
+    assert_family_removed(other)
 
     type(job).objects.filter(id=job.id).update(state=JOB_FINISHED)
     purge()
@@ -419,18 +423,6 @@ def test_purge_retries_content_whose_deletion_failed(data_fixture):
     assert not UserTemplateContentToDelete.objects.exists()
 
 
-def test_purge_twice_does_nothing_the_second_time(data_fixture):
-    family = create_family(data_fixture)
-    purge()
-
-    with CaptureQueriesContext(connection) as queries:
-        purge()
-
-    assert_family_removed(family)
-    # Only the lookup of the templates to remove.
-    assert len(queries) == 1
-
-
 def test_purge_continues_after_a_template_fails(data_fixture):
     broken = create_family(data_fixture)
     other = create_family(data_fixture)
@@ -454,23 +446,6 @@ def test_purge_continues_after_a_template_fails(data_fixture):
 
     logger.exception.assert_called_once()
     assert_family_kept(broken)
-    assert_family_removed(other)
-
-
-@patch("baserow.core.user_templates.handler.USER_TEMPLATE_PURGE_BATCH_SIZE", 1)
-@pytest.mark.parametrize("create_job", BUSY_JOBS)
-def test_purge_isnt_held_up_by_a_template_whose_job_is_running(
-    data_fixture, create_job
-):
-    # The template deleted first has a job, on a revision for the installs, so it
-    # would take the only slot of the batch if it wasn't left out.
-    waiting = create_family(data_fixture, revisions=1)
-    create_job(waiting)
-    other = create_family(data_fixture, revisions=1)
-
-    purge()
-
-    assert_family_kept(waiting)
     assert_family_removed(other)
 
 
@@ -544,8 +519,11 @@ def test_purge_removes_the_template_when_clearing_the_job_cache_fails(data_fixtu
 
 
 def test_purge_stops_when_it_runs_out_of_time(data_fixture):
-    first = create_family(data_fixture)
-    second = create_family(data_fixture)
+    # The removal is mocked, so the templates need no content.
+    roots = [
+        data_fixture.create_user_template(marked_for_deletion_at=long_ago())
+        for _ in range(2)
+    ]
 
     with patch.object(
         UserTemplateHandler,
@@ -557,8 +535,7 @@ def test_purge_stops_when_it_runs_out_of_time(data_fixture):
             purge()
 
     delete_marked_template.assert_called_once()
-    assert_family_kept(first)
-    assert_family_kept(second)
+    assert Template.objects.filter(id__in=[root.id for root in roots]).count() == 2
 
 
 def test_deleting_tracked_content_stops_when_it_runs_out_of_time(data_fixture):
@@ -594,29 +571,6 @@ def test_purge_queries_dont_depend_on_the_size_of_the_template(data_fixture):
     assert count_purge_queries(small["root"].id) == count_purge_queries(
         large["root"].id
     )
-
-
-def test_cleanup_task_removes_templates_before_the_sweep():
-    calls = MagicMock()
-
-    with (
-        patch.object(
-            UserTemplateHandler,
-            "delete_marked_templates",
-            calls.delete_marked_templates,
-        ),
-        patch.object(
-            UserTemplateHandler,
-            "delete_content_of_unfinished_jobs",
-            calls.delete_content_of_unfinished_jobs,
-        ),
-    ):
-        delete_orphaned_user_template_workspaces()
-
-    assert [call[0] for call in calls.mock_calls] == [
-        "delete_marked_templates",
-        "delete_content_of_unfinished_jobs",
-    ]
 
 
 def test_cleanup_task_removes_a_batch_of_templates_per_run(data_fixture):

@@ -321,11 +321,11 @@ export default {
      * already deleted may be left out of the list's count already, so the list is
      * loaded again instead.
      */
-    templateDeleted(templateId, alreadyDeleted) {
+    templateDeleted(templateId, alreadyDeleted, requestedAt) {
       if (alreadyDeleted) {
         this.$refs.userTemplateList?.refresh()
       } else {
-        this.$refs.userTemplateList?.remove(templateId)
+        this.$refs.userTemplateList?.remove(templateId, requestedAt)
       }
       if (this.selectedIsOwn && this.selectedTemplate?.id === templateId) {
         this.selectTemplate(null)

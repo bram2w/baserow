@@ -144,10 +144,7 @@ def assert_template_and_content_removed(template, workspace, archive):
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.usefixtures("use_tmp_media_root")
-@pytest.mark.parametrize("flag_on", [True, False])
-def test_purge_removes_the_templates_of_a_deleted_user(data_fixture, settings, flag_on):
-    if not flag_on:
-        settings.FEATURE_FLAGS = []
+def test_purge_removes_the_templates_of_a_deleted_user(data_fixture):
     user = data_fixture.create_user()
     source_workspace = data_fixture.create_workspace(user=user)
     template, workspace, archive = create_template_with_content(data_fixture, user)

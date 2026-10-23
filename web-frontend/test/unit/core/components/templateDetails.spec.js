@@ -102,7 +102,7 @@ describe('TemplateDetails', () => {
     expect(wrapper.find('.template-install').exists()).toBe(false)
   })
 
-  test('updates only an own template', async () => {
+  test('updates and deletes only an own template', async () => {
     const userTemplate = { ...template, type: 'user' }
     let wrapper = await mountComponent({ template: userTemplate })
     expect(wrapper.find('.template-details__own-actions').exists()).toBe(false)
@@ -124,23 +124,9 @@ describe('TemplateDetails', () => {
     await links[1].trigger('click')
 
     expect(wrapper.emitted('edit')).toStrictEqual([['details'], ['content']])
-  })
 
-  test('deletes only an own template', async () => {
-    const userTemplate = { ...template, type: 'user' }
-    let wrapper = await mountComponent({ template: userTemplate })
-    expect(wrapper.find('.template-details__own-actions').exists()).toBe(false)
-    expect(wrapper.find('.context__menu-item-link--delete').exists()).toBe(
-      false
-    )
-
-    wrapper = await mountComponent({ template: userTemplate, isOwn: true })
-    await wrapper
-      .find('.template-details__own-actions .button-icon')
-      .trigger('click')
     const items = wrapper.findAll('.context__menu-item')
     const last = items[items.length - 1]
-
     expect(last.classes()).toContain('context__menu-item--with-separator')
     const link = last.find('.context__menu-item-link--delete')
     expect(link.find('i').classes()).toContain('iconoir-bin')

@@ -176,7 +176,13 @@ class TemplatesView(APIView, SearchableViewMixin):
 
 
 class TemplateView(APIView):
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [AllowAny()]
+
+        return super().get_permissions()
 
     @extend_schema(exclude=True)
     @map_exceptions(
@@ -205,19 +211,15 @@ class TemplateView(APIView):
 
         return Response(TemplateSerializer(template).data)
 
-
-class UserTemplateView(APIView):
-    permission_classes = (IsAuthenticated,)
-
     @extend_schema(
         tags=["Templates"],
-        operation_id="delete_user_template",
+        operation_id="delete_template",
         parameters=[
             OpenApiParameter(
-                name="template_id",
+                name="slug",
                 location=OpenApiParameter.PATH,
-                type=OpenApiTypes.INT,
-                description="The id of the user template to delete.",
+                type=OpenApiTypes.STR,
+                description="The slug of the template to delete.",
             ),
         ],
         description=(
@@ -230,7 +232,6 @@ class UserTemplateView(APIView):
         responses={
             204: None,
             401: None,
-            403: get_error_schema(["ERROR_FEATURE_DISABLED"]),
             404: get_error_schema(["ERROR_TEMPLATE_DOES_NOT_EXIST"]),
         },
     )
@@ -240,8 +241,17 @@ class UserTemplateView(APIView):
         }
     )
     @transaction.atomic
-    def delete(self, request, template_id):
+    def delete(self, request, slug):
         """Deletes a user template owned by the user, or any one by an admin."""
+
+        # Only the root of a template has a slug.
+        template_id = (
+            Template.objects.filter(slug=slug, root__isnull=True)
+            .values_list("id", flat=True)
+            .first()
+        )
+        if template_id is None:
+            raise TemplateDoesNotExist(f"The template with slug {slug} does not exist.")
 
         action_type_registry.get_by_type(DeleteUserTemplateActionType).do(
             request.user, template_id

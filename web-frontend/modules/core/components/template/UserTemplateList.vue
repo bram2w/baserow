@@ -249,6 +249,8 @@ const loadedSearch = ref('')
 // Only the response of the latest request is used, so that a slow response of an
 // older search can't replace the results of the current one.
 let lastRequest = 0
+// When the shown templates were last loaded, see `remove`.
+let loadedAt = 0
 
 // Nothing found without a search: the user hasn't created any template yet.
 const isEmpty = computed(() => count.value === 0 && loadedSearch.value === '')
@@ -285,6 +287,7 @@ async function fetchPage(offset, requestSearch = search.value) {
       offset === 0 ? data.results : [...templates.value, ...data.results]
     count.value = data.count
     loadedSearch.value = requestSearch
+    loadedAt = performance.now()
     failed.value = false
   } catch (error) {
     if (request === lastRequest) {
@@ -344,12 +347,16 @@ function askToDelete() {
  * Drops a deleted template from the loaded ones without loading them again. When
  * it isn't loaded, for example because a refresh dropped the later pages, the first
  * page is loaded again so that the count is right. It's loaded again too while a
- * page loads, because that page's offset doesn't account for the deleted
- * template.
+ * page loads, or when one was loaded after the deletion was requested, because that
+ * page's offset and count might already account for the deleted template.
+ *
+ * @param {number} templateId The id of the deleted template.
+ * @param {number} requestedAt The `performance.now()` at which the deletion was
+ *   requested.
  */
-function remove(templateId) {
+function remove(templateId, requestedAt = performance.now()) {
   const index = templates.value.findIndex(({ id }) => id === templateId)
-  const reload = index === -1 || loading.value
+  const reload = index === -1 || loading.value || loadedAt >= requestedAt
   if (index !== -1) {
     templates.value.splice(index, 1)
     count.value = Math.max(count.value - 1, 0)

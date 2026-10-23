@@ -128,8 +128,8 @@ describe('TemplateModal navigation', () => {
         refresh() {
           refreshList()
         },
-        remove(templateId) {
-          removeFromList(templateId)
+        remove(...args) {
+          removeFromList(...args)
         },
       },
     }),
@@ -512,11 +512,12 @@ describe('TemplateModal navigation', () => {
         // The delete modal takes the search shortcut.
         expect(ownListComponent(wrapper).props('active')).toBe(false)
 
-        deleteModal(wrapper).vm.$emit('deleted', sprintTracker.id)
+        deleteModal(wrapper).vm.$emit('deleted', sprintTracker.id, false, 12.5)
         deleteModal(wrapper).vm.$emit('hidden')
         await flushPromises()
 
-        expect(removeFromList).toHaveBeenCalledWith(sprintTracker.id)
+        // When the deletion was asked for, which the list compares with its pages.
+        expect(removeFromList).toHaveBeenCalledWith(sprintTracker.id, 12.5)
         expect(refreshList).not.toHaveBeenCalled()
         expect(ownListComponent(wrapper).props('active')).toBe(true)
       })
@@ -535,7 +536,7 @@ describe('TemplateModal navigation', () => {
         deleteModal(wrapper).vm.$emit('deleted', sprintTracker.id)
         await flushPromises()
 
-        expect(removeFromList).toHaveBeenCalledWith(sprintTracker.id)
+        expect(removeFromList).toHaveBeenCalledWith(sprintTracker.id, undefined)
         expect(wrapper.find('.details').exists()).toBe(false)
         expect(ownList(wrapper).isVisible()).toBe(true)
       })
@@ -598,26 +599,9 @@ describe('TemplateModal navigation', () => {
         expect(ownListComponent(wrapper).props('active')).toBe(true)
       })
 
+      // The count of a page loaded after the template was deleted in another tab
+      // already leaves it out, so it must not be decremented again.
       it('an own template that was already deleted, which loads the list again', async () => {
-        testApp.authenticate({ id: 1 })
-        const wrapper = await mountAndShow()
-        await openOwnTab(wrapper)
-        await wrapper.find('.own-list__sprint-tracker').trigger('click')
-        await wrapper.find('.details__delete').trigger('click')
-        await flushPromises()
-
-        deleteModal(wrapper).vm.$emit('deleted', sprintTracker.id, true)
-        await flushPromises()
-
-        expect(refreshList).toHaveBeenCalledTimes(1)
-        expect(removeFromList).not.toHaveBeenCalled()
-        expect(wrapper.find('.details').exists()).toBe(false)
-        expect(ownList(wrapper).isVisible()).toBe(true)
-      })
-
-      // Review r3: the count of a page loaded after the template was deleted in
-      // another tab already leaves it out, so it must not be decremented again.
-      it('keeps the count of the server when the template was deleted elsewhere before a page load', async () => {
         testApp.authenticate({ id: 1 })
         const templates = Array.from({ length: 22 }, (_, i) => ({
           ...sprintTracker,
@@ -657,10 +641,15 @@ describe('TemplateModal navigation', () => {
 
         expect(title()).toBe('userTemplateList.count - 21')
 
-        // The deletion in this tab answers 404.
-        await wrapper.vm.openDeleteModal(templates[4])
+        // Its preview is open and the deletion in this tab answers 404.
+        wrapper.vm.selectTemplate(templates[4], true)
+        await flushPromises()
+        await wrapper.find('.details__delete').trigger('click')
         deleteModal(wrapper).vm.$emit('deleted', 5, true)
         await flushPromises()
+
+        expect(wrapper.find('.details').exists()).toBe(false)
+        expect(wrapper.find('.user-template-list').isVisible()).toBe(true)
 
         const names = wrapper
           .findAll('.user-template-list__name-title')
