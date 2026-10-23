@@ -2451,4 +2451,40 @@ describe('Buffered rows search', () => {
     const rowsInStore = store.getters[`${storeName}/getRows`]
     expect(rowsInStore[0]).toBeUndefined()
   })
+
+  test('request size does not exceed the row page size limit', async () => {
+    const requestedLimits = []
+    const service = () => ({
+      fetchRows({ limit, offset }) {
+        requestedLimits.push(limit)
+        const results = Array.from({ length: limit }, (_, index) => ({
+          id: offset + index + 1,
+        }))
+        return { data: { count: 10, results } }
+      },
+    })
+    const populateRow = (row) => {
+      row._ = {}
+      return row
+    }
+    const store = createStore(
+      { service, populateRow },
+      { requestSize: 100, viewId: 1, rows: Array(10).fill(null) }
+    )
+    const originalLimit = store.$config.public.baserowRowPageSizeLimit
+    store.$config.public.baserowRowPageSizeLimit = 3
+    try {
+      await store.dispatch('test/fetchMissingRowsInNewRange', {
+        startIndex: 0,
+        endIndex: 1,
+      })
+    } finally {
+      store.$config.public.baserowRowPageSizeLimit = originalLimit
+    }
+
+    expect(requestedLimits).toEqual([3])
+    expect(store.getters['test/getRows'].slice(0, 4).map((r) => r?.id)).toEqual(
+      [1, 2, 3, undefined]
+    )
+  })
 })

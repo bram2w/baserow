@@ -2089,7 +2089,8 @@ export const actions = {
     }
     const requestKey = getGroupByRowsRequestKey(requestParams)
     const fetchRows = () =>
-      GridService($client).fetchRows({
+      GridService($client).fetchRowsInChunks({
+        chunkSize: $config.public.baserowRowPageSizeLimit,
         ...requestParams,
         signal,
       })
@@ -2161,7 +2162,8 @@ export const actions = {
   ) {
     const { $client, $config } = this
     const groupByGeneration = state.groupBy.generation || 0
-    const { data } = await GridService($client).fetchRows({
+    const { data } = await GridService($client).fetchRowsInChunks({
+      chunkSize: $config.public.baserowRowPageSizeLimit,
       gridId,
       offset: 0,
       limit: 0,
@@ -2606,7 +2608,8 @@ export const actions = {
       lastRequestLimit = requestLimit
       lastQueryController = new AbortController()
       lastRequest = GridService($client)
-        .fetchRows({
+        .fetchRowsInChunks({
+          chunkSize: $config.public.baserowRowPageSizeLimit,
           gridId,
           offset: requestOffset,
           limit: requestLimit,
@@ -2823,7 +2826,8 @@ export const actions = {
       return
     }
 
-    const { data } = await GridService($client).fetchRows({
+    const { data } = await GridService($client).fetchRowsInChunks({
+      chunkSize: $config.public.baserowRowPageSizeLimit,
       gridId,
       offset: 0,
       limit,
@@ -3005,7 +3009,8 @@ export const actions = {
       })
       .then(({ limit, offset, count }) =>
         GridService($client)
-          .fetchRows({
+          .fetchRowsInChunks({
+            chunkSize: $config.public.baserowRowPageSizeLimit,
             gridId,
             offset,
             limit,
@@ -3169,7 +3174,8 @@ export const actions = {
     // skeleton. Mixed/collapsed states tie their offsets to the tree, so they can't.
     const parallelExpandRows =
       scrollTop === 0 && effectiveExpandAll
-        ? GridService($client).fetchRows({
+        ? GridService($client).fetchRowsInChunks({
+            chunkSize: $config.public.baserowRowPageSizeLimit,
             gridId,
             offset: 0,
             limit: getters.getBufferRequestSize,
@@ -3297,7 +3303,8 @@ export const actions = {
       const limit = Math.max(0, endOffset - startOffset)
 
       if (limit > 0) {
-        const { data } = await GridService($client).fetchRows({
+        const { data } = await GridService($client).fetchRowsInChunks({
+          chunkSize: $config.public.baserowRowPageSizeLimit,
           gridId,
           offset: requestOffset,
           limit,
@@ -4144,7 +4151,8 @@ export const actions = {
 
     const results = []
     for (const range of ranges) {
-      const { data } = await GridService($client).fetchRows({
+      const { data } = await GridService($client).fetchRowsInChunks({
+        chunkSize: $config.public.baserowRowPageSizeLimit,
         gridId,
         offset: range.offset,
         limit: range.limit,

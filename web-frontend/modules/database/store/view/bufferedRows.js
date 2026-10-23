@@ -149,6 +149,10 @@ export default ({ service, customPopulateRow, fieldOptions }) => {
     return { offset, limit: Math.min(limit, maxRequestSize) }
   }
 
+  // The backend rejects page sizes above the configured row page size limit.
+  const getRequestSize = (getters, $config) =>
+    Math.min(getters.getRequestSize, $config.public.baserowRowPageSizeLimit)
+
   const state = () => ({
     // If another visible rows action has been dispatched whilst a previous action
     // is still fetching rows, the new action is temporarily delayed and its
@@ -336,7 +340,7 @@ export default ({ service, customPopulateRow, fieldOptions }) => {
       const { data } = await service($client).fetchRows({
         viewId,
         offset: 0,
-        limit: getters.getRequestSize,
+        limit: getRequestSize(getters, $config),
         search: getters.getServerSearchTerm,
         searchMode: getDefaultSearchModeFromEnv($config),
         publicUrl: rootGetters['page/view/public/getIsPublic'],
@@ -398,7 +402,7 @@ export default ({ service, customPopulateRow, fieldOptions }) => {
       // Check what the ideal range is to fetch with the backend.
       const rangeToFetch = getRangeToFetch(
         getters.getRows,
-        getters.getRequestSize,
+        getRequestSize(getters, $config),
         startIndex,
         endIndex
       )
@@ -520,7 +524,7 @@ export default ({ service, customPopulateRow, fieldOptions }) => {
           // rows that the user is going to look at.
           const rangeToFetch = getRangeToFetch(
             rows,
-            getters.getRequestSize,
+            getRequestSize(getters, $config),
             startIndex,
             endIndex
           )
