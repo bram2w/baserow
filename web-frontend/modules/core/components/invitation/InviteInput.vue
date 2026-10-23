@@ -28,7 +28,7 @@
           :placeholder="selected.length === 0 ? placeholderText : ''"
           :disabled="disabled"
           @focus="open = true"
-          @blur="open = false"
+          @blur="blur"
           @keydown.enter.prevent="pickEmails(query)"
           @keydown.escape="open = false"
           @keydown.delete="removeLastWhenEmpty"
@@ -67,7 +67,12 @@
         </slot>
       </Button>
     </div>
-    <div v-if="showResults" class="invite-input__results" @mousedown.prevent>
+    <div
+      v-if="showResults"
+      ref="results"
+      class="invite-input__results"
+      @mousedown.prevent
+    >
       <div v-if="tabs.length > 0" class="invite-input__tabs">
         <a
           v-for="tab in allTabs"
@@ -204,7 +209,9 @@ export function extractEmails(text) {
  * label around a native input, whose click would bubble to the row and toggle
  * it back, so the checkbox keeps its click to itself and toggles through its
  * own change event instead. The list stays open while the chips and the list
- * itself are clicked, because neither takes the focus away from the input. It
+ * itself are clicked, because neither takes the focus away from the input,
+ * except for the native input of a checkbox, which gets the focus when its
+ * label is clicked and hands it straight back. It
  * opens right below the input and takes the place of the default slot, which
  * holds whatever the parent shows below the input otherwise.
  */
@@ -425,6 +432,18 @@ export default {
     },
     focus() {
       this.$refs.input.focus()
+    },
+    /**
+     * Closes the results, unless the focus went to something inside them, like
+     * the native input of a checkbox, which would remove the checkbox before
+     * its change event toggles the row.
+     */
+    blur(event) {
+      if (this.$refs.results?.contains(event.relatedTarget)) {
+        this.focus()
+        return
+      }
+      this.open = false
     },
     optionWithEmail(email) {
       return this.options.find(

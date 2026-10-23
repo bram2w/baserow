@@ -287,6 +287,31 @@ test('lists every option on focus in place of what is below the input', async ()
   }
 })
 
+test('keeps the results open when a checkbox takes the focus', async () => {
+  const wrapper = await mountInput({
+    options: [pickable],
+    tabs: [{ value: 'auth.User', label: 'Members' }],
+  })
+  try {
+    const input = wrapper.find('input')
+    await input.trigger('focus')
+    const checkbox = wrapper.find('.invite-input__item input[type="checkbox"]')
+
+    // Clicking the label of a checkbox moves the focus to its native input,
+    // which must not close the list before the checkbox is toggled.
+    await input.trigger('blur', { relatedTarget: checkbox.element })
+    expect(resultsOpen(wrapper)).toBe(true)
+    await checkbox.setValue(true)
+    expect(chips(wrapper)).toEqual(['Foo Bar Viewer'])
+
+    // Leaving for anything else still closes it.
+    await input.trigger('blur', { relatedTarget: null })
+    expect(resultsOpen(wrapper)).toBe(false)
+  } finally {
+    wrapper.unmount()
+  }
+})
+
 test('lists what cannot be picked with a hint and makes an error chip of it', async () => {
   const wrapper = await mountInput()
   try {
