@@ -1377,6 +1377,85 @@ def test_formula_repair_stops_when_cancelled(
         )
 
     assert len(calls) == 1
-    for node in AutomationNode.objects.filter(workflow__automation=automation):
-        if node.label in ("one", "two"):
-            assert node.specific.service.specific.subject["formula"] == ""
+    nodes = AutomationNode.objects.filter(workflow__automation=automation)
+    for label in ("one", "two"):
+        node = nodes.get(label=label).specific
+        assert node.service.specific.subject["formula"] == ""
+
+
+@pytest.mark.django_db
+def test_formula_repair_stops_when_the_generator_fails_after_a_cancel(
+    data_fixture, monkeypatch, real_formula_pass
+):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    automation, workflow_id = _create_test_workflow(data_fixture, user, workspace)
+    ctx = make_test_ctx(user, workspace)
+    previous = list_nodes(ctx, workflow_id=workflow_id, thought="inspect")["nodes"][-1]
+
+    def cancel_then_fail(formulas, context):
+        ctx.deps.tool_helpers.cancel()
+        raise ValueError("Failed to generate any valid formulas")
+
+    monkeypatch.setattr(
+        automation_agents,
+        "get_generate_formulas_tool",
+        lambda profile: cancel_then_fail,
+    )
+
+    with pytest.raises(asyncio.CancelledError):
+        add_nodes(
+            ctx,
+            workflow_id=workflow_id,
+            nodes=[
+                ActionNodeCreate(
+                    ref="mail",
+                    label="Mail",
+                    previous_node_ref=str(previous["id"]),
+                    type="smtp_email",
+                    to_emails="a@example.com",
+                    subject="$formula: the trigger name",
+                    body="Hello",
+                )
+            ],
+            thought="add",
+        )
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_missing_field_only_keeps_its_own_value_in_formula_errors(
+    data_fixture, row_action_node, monkeypatch, real_formula_pass
+):
+    user, node, kept = row_action_node
+    deleted = data_fixture.create_text_field(table=kept.table, name="Gone")
+
+    def delete_then_generate(formulas, context):
+        # Someone deletes a field between the update and the repair.
+        deleted.delete()
+        return {key: "'fixed'" for key in formulas}
+
+    monkeypatch.setattr(
+        automation_agents,
+        "get_generate_formulas_tool",
+        lambda profile: delete_then_generate,
+    )
+
+    result = update_nodes(
+        make_test_ctx(user, node.workflow.automation.workspace),
+        workflow_id=node.workflow.id,
+        nodes=[
+            NodeUpdate(
+                node_id=node.id,
+                values=[
+                    AutomationFieldValue(field_id=kept.id, value="$formula: a name"),
+                    AutomationFieldValue(field_id=deleted.id, value="$formula: a name"),
+                ],
+            )
+        ],
+        thought="update",
+    )
+
+    (error,) = result["formula_errors"]
+    assert error["field_id"] == deleted.id
+    mapping = AutomationNode.objects.get(id=node.id).service.specific.field_mappings
+    assert mapping.get(field=kept).value["formula"] == "'fixed'"

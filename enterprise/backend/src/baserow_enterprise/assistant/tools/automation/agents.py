@@ -8,6 +8,7 @@ Contains:
   store, after their transaction.
 """
 
+import re
 from typing import TYPE_CHECKING, Any, Callable
 
 from django.db import transaction
@@ -89,6 +90,10 @@ _DESCRIPTIONS = {
     "row_id": "The ID of the row to act on.",
     "condition": "A boolean condition for the router branch.",
 }
+
+
+# The refusal of a row value whose field is not in the table.
+_REFUSED_FIELD_RE = re.compile(r"Field (\d+) is not in table ")
 
 
 def _request_key(error: dict[str, Any]) -> Any:
@@ -232,6 +237,7 @@ def repair_formula_errors(
         return []
 
     generate_formula = get_generate_formulas_tool(tool_helpers.model_profile)
+    raise_if_cancelled = tool_helpers.raise_if_cancelled
     field_ids = shared_nodes.table_field_ids()
     examples = WorkflowExamples(tool_context.user, refs)
     remaining: list[dict[str, Any]] = []
@@ -243,30 +249,47 @@ def repair_formula_errors(
             remaining.extend(
                 _repair_node(
                     tool_context,
-                    tool_helpers.raise_if_cancelled,
-                    generate_formula,
-                    field_ids,
-                    examples,
                     node_id,
                     node_errors,
+                    raise_if_cancelled=raise_if_cancelled,
+                    generate_formula=generate_formula,
+                    field_ids=field_ids,
+                    examples=examples,
                 )
             )
         except Exception as exc:
             # The nodes are committed, so a failed repair only leaves its errors.
+            raise_if_cancelled()
             raise_if_permission_denied(exc)
             logger.exception("Failed to repair formulas of node {}: {}", node_id, exc)
             remaining.extend({**error, "error": str(exc)} for error in node_errors)
     return remaining
 
 
+def _refuses(message: str, error: dict[str, Any]) -> bool:
+    """
+    Whether an update refusal left the value of a formula error unset. A branch
+    label or a field the update couldn't match only leaves that condition or
+    field unset.
+    """
+
+    if "edge_label" in error:
+        return f"'{error['edge_label']}'" in message
+    field = _REFUSED_FIELD_RE.match(message)
+    if field is None:
+        return True
+    return int(field.group(1)) == error.get("field_id")
+
+
 def _repair_node(
     tool_context: ToolContext,
+    node_id: int,
+    node_errors: list[dict[str, Any]],
+    *,
     raise_if_cancelled: Callable[[], None],
     generate_formula: Callable,
     field_ids: Callable[[int], set[int]],
     examples: WorkflowExamples,
-    node_id: int,
-    node_errors: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
     """
     Generate one node's formulas and write them in their own transaction.
@@ -280,7 +303,6 @@ def _repair_node(
         _("Generating formulas for node '%(label)s'...") % {"label": node.label}
     )
     context = examples.context_for(node)
-    raise_if_cancelled()
     generated = generate_formula(formula_requests(node, node_errors), context) or {}
     # The user may cancel while the model runs; nothing is written then.
     raise_if_cancelled()
@@ -299,12 +321,8 @@ def _repair_node(
                 refs={ref: node_id for node_id, ref in examples.refs.items()},
             )
         for error in repaired:
-            # A branch label the update couldn't match leaves that condition
-            # unset; any other refusal leaves the node's values unset.
             refusals = [
-                message
-                for message in values.errors
-                if "edge_label" not in error or f"'{error['edge_label']}'" in message
+                message for message in values.errors if _refuses(message, error)
             ]
             if refusals:
                 remaining.append({**error, "error": " ".join(refusals)})

@@ -49,9 +49,7 @@ def test_builder_formula_orchestrator_forwards_request_model_profile():
     """Builder formula generation must reuse the enclosing request profile."""
 
     model_profile = MagicMock()
-    tool_helpers = SimpleNamespace(
-        model_profile=model_profile, raise_if_cancelled=lambda: None
-    )
+    tool_helpers = SimpleNamespace(model_profile=model_profile)
     context = MagicMock()
 
     with (
