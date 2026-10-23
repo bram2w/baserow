@@ -2,6 +2,9 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useStore } from 'vuex'
 import { useNuxtApp } from '#app'
 import { uuid } from '@baserow/modules/core/utils/string'
+import { notifyIf } from '@baserow/modules/core/utils/error'
+import { isTerminalStatus } from '@baserow/modules/core/chatRuns/constants'
+import { AGENT_RUN_TYPE } from '@baserow/modules/agent/chatRunTypes'
 import AgentApplicationService from '@baserow/modules/agent/services/agentApplication'
 
 const uniqueBy = (items, key) => [
@@ -17,13 +20,22 @@ const mergeMessages = (...pages) =>
 const REJECTED_MESSAGE_ERRORS = [
   'ERROR_AGENT_NOT_READY',
   'ERROR_REQUEST_BODY_VALIDATION',
+  'ERROR_CHAT_RUN_IN_PROGRESS',
+  'ERROR_AGENT_BUSY',
 ]
+
+const SEND_ERRORS = {
+  ERROR_AGENT_MESSAGE_CONFLICT: 'conflict',
+  ERROR_CHAT_RUN_IN_PROGRESS: 'inProgress',
+  ERROR_AGENT_BUSY: 'busy',
+}
 
 /** Page-local private conversations, gated by the Agent configuration. */
 export function useAgentConversations(agent, configuration) {
   const store = useStore()
-  const { $client, $hasPermission } = useNuxtApp()
+  const { $client, $hasPermission, $registry } = useNuxtApp()
   const service = AgentApplicationService($client)
+  const runType = $registry.get('chatRunType', AGENT_RUN_TYPE)
   const permission = (operation) =>
     Boolean(
       agent.value &&
@@ -72,6 +84,53 @@ export function useAgentConversations(agent, configuration) {
   )
   const currentHistory = computed(() => histories[selectedUuid.value] || null)
   const currentDraft = computed(() => drafts[selectedUuid.value] || null)
+  const findConversation = (conversationUuid) =>
+    conversations.value.find((item) => item.uuid === conversationUuid)
+
+  /** The running reply, or a finished one until a refresh merged its saved outcome. */
+  const replyFollower = computed(() => {
+    const id = selectedConversation.value?.id
+    if (!id) return null
+    const followers = store.getters['chatRuns/getFollowersOfChat'](
+      AGENT_RUN_TYPE,
+      id
+    )
+    const settlingRunId = currentHistory.value?.settlingRunId
+    return (
+      followers.find((follower) => !follower.finished) ||
+      followers.find((follower) => follower.runId === settlingRunId) ||
+      null
+    )
+  })
+
+  /** The selected history, with unsaved replies read from the runs followed. */
+  const currentMessages = computed(() =>
+    (currentHistory.value?.items || []).map((message) => {
+      const follower =
+        message.run_id && store.getters['chatRuns/getFollower'](message.run_id)
+      // A follower that lost access can't say how the reply ended.
+      if (
+        !follower ||
+        isTerminalStatus(message.status) ||
+        (follower.finished && !isTerminalStatus(follower.view.status))
+      ) {
+        return { ...message, writing: false }
+      }
+      return {
+        ...message,
+        content: follower.view.text,
+        status: follower.view.status,
+        error_code: follower.view.errorCode,
+        writing: !follower.finished,
+      }
+    })
+  )
+
+  // A refusal expires with the running reply, including in an inactive chat.
+  const sendError = computed(() => {
+    const error = currentDraft.value?.error || null
+    return error === 'inProgress' && !replyFollower.value ? null : error
+  })
   const canWriteSelected = computed(
     () =>
       canReadConversations.value &&
@@ -85,9 +144,23 @@ export function useAgentConversations(agent, configuration) {
       canWriteSelected.value &&
       // Sending appends to the newest page, so only that page must be loaded.
       (!currentHistory.value || currentHistory.value.page > 0) &&
-      !currentDraft.value?.sending
+      !currentDraft.value?.sending &&
+      !replyFollower.value
   )
   const scopeIsCurrent = (currentScope) => scope === currentScope
+
+  const createHistory = (values = {}) => ({
+    items: [],
+    page: 0,
+    next: false,
+    loading: false,
+    error: false,
+    stale: false,
+    refreshError: false,
+    request: 0,
+    settlingRunId: null,
+    ...values,
+  })
 
   function ensureDraft(conversationUuid) {
     if (!drafts[conversationUuid]) {
@@ -173,6 +246,27 @@ export function useAgentConversations(agent, configuration) {
     return fetchConversations(1, true)
   }
 
+  /** Follow the newest reply, and resume replies a logout suspended. */
+  function followReplies(conversation, newestMessage) {
+    if (!conversation?.id) return
+    const runIds = new Set(
+      store.getters['chatRuns/getFollowersOfChat'](
+        AGENT_RUN_TYPE,
+        conversation.id
+      )
+        .filter((follower) => !follower.finished)
+        .map((follower) => follower.runId)
+    )
+    if (newestMessage?.run_id) runIds.add(newestMessage.run_id)
+    runIds.forEach((runId) =>
+      store.dispatch('chatRuns/follow', {
+        runId,
+        runType: AGENT_RUN_TYPE,
+        chatId: conversation.id,
+      })
+    )
+  }
+
   function loadMoreConversations() {
     return fetchConversations(conversationsPage.value + 1, true)
   }
@@ -186,16 +280,7 @@ export function useAgentConversations(agent, configuration) {
     const currentScope = scope
     const agentId = agent.value.id
     if (!histories[conversationUuid]) {
-      histories[conversationUuid] = {
-        items: [],
-        page: 0,
-        next: false,
-        loading: false,
-        error: false,
-        stale: false,
-        refreshError: false,
-        request: 0,
-      }
+      histories[conversationUuid] = createHistory()
     }
     const history = histories[conversationUuid]
     if (history.loading) return
@@ -217,6 +302,9 @@ export function useAgentConversations(agent, configuration) {
       history.items = mergeMessages(data.results, page > 1 ? history.items : [])
       history.page = page
       history.next = Boolean(data.next)
+      if (page === 1) {
+        followReplies(findConversation(conversationUuid), data.results.at(-1))
+      }
     } catch {
       if (scopeIsCurrent(currentScope) && history.request === request) {
         history.error = true
@@ -238,6 +326,7 @@ export function useAgentConversations(agent, configuration) {
     const currentScope = scope
     const agentId = agent.value.id
     const request = ++history.request
+    const settlingRunId = history.settlingRunId
     const knownMessages = new Set(history.items.map(({ uuid }) => uuid))
     history.stale = false
     history.loading = true
@@ -250,7 +339,8 @@ export function useAgentConversations(agent, configuration) {
         const { data } = await service.getMessages(
           agentId,
           conversationUuid,
-          page
+          page,
+          true
         )
         if (
           !scopeIsCurrent(currentScope) ||
@@ -264,11 +354,17 @@ export function useAgentConversations(agent, configuration) {
           !knownMessages.size ||
           data.results.some(({ uuid }) => knownMessages.has(uuid))
         ) {
-          // Immutable messages can be merged safely, retaining older pages and
-          // any send accepted while this refresh was in flight.
-          history.items = mergeMessages(latest, history.items)
+          // Refresh reply outcomes while retaining older pages and accepted sends.
+          history.items = mergeMessages(history.items, latest)
           history.page = page
           history.next = Boolean(data.next)
+          if (history.settlingRunId === settlingRunId) {
+            history.settlingRunId = null
+          }
+          followReplies(
+            findConversation(conversationUuid),
+            history.items.at(-1)
+          )
           break
         }
         page++
@@ -342,32 +438,27 @@ export function useAgentConversations(agent, configuration) {
       localConversations.value = localConversations.value.filter(
         (item) => item.uuid !== conversationUuid
       )
+      const sent = [data.message, data.reply].filter(Boolean)
       const history = histories[conversationUuid]
       if (history) {
-        history.items = mergeMessages(history.items, [data.message])
+        history.items = mergeMessages(history.items, sent)
       } else {
-        histories[conversationUuid] = {
-          items: [data.message],
-          page: 1,
-          next: false,
-          loading: false,
-          error: false,
-          stale: false,
-          refreshError: false,
-          request: 0,
-        }
+        histories[conversationUuid] = createHistory({ items: sent, page: 1 })
       }
       draft.content = ''
       draft.submission = null
+      followReplies(data.conversation, data.reply)
     } catch (error) {
       if (!scopeIsCurrent(currentScope)) return
       const code = error.response?.data?.error
-      draft.error =
-        code === 'ERROR_AGENT_MESSAGE_CONFLICT' ? 'conflict' : 'failed'
+      draft.error = SEND_ERRORS[code] || 'failed'
       // The server rejected the message outright, so it can be edited and resent.
       if (REJECTED_MESSAGE_ERRORS.includes(code)) draft.submission = null
       if (code === 'ERROR_AGENT_NOT_READY') {
         await configuration.refreshConfiguration()
+      }
+      if (code === 'ERROR_CHAT_RUN_IN_PROGRESS' && !conversation.local) {
+        await refreshMessages(conversationUuid)
       }
     } finally {
       if (scopeIsCurrent(currentScope)) {
@@ -375,6 +466,16 @@ export function useAgentConversations(agent, configuration) {
         if (histories[conversationUuid]?.stale)
           refreshMessages(conversationUuid)
       }
+    }
+  }
+
+  async function stopReply() {
+    const runId = replyFollower.value?.runId
+    if (!runId) return
+    try {
+      await store.dispatch('chatRuns/cancelRun', runId)
+    } catch (error) {
+      notifyIf(error)
     }
   }
 
@@ -423,7 +524,26 @@ export function useAgentConversations(agent, configuration) {
     // Each event marks its conversation, even if several arrive in one tick.
     { flush: 'sync' }
   )
+  watch(
+    () => selectedConversation.value?.id,
+    (id) => {
+      if (id) {
+        store.dispatch('chatRuns/subscribeToChat', {
+          runType: AGENT_RUN_TYPE,
+          chatId: id,
+        })
+      }
+    }
+  )
+  const removeRefreshListener = runType.onRefresh((chatId, finishedRunId) => {
+    const conversation = conversations.value.find((item) => item.id === chatId)
+    if (!conversation) return
+    const history = histories[conversation.uuid]
+    if (finishedRunId && history?.page) history.settlingRunId = finishedRunId
+    refreshMessages(conversation.uuid)
+  })
   onBeforeUnmount(reset)
+  onBeforeUnmount(removeRefreshListener)
 
   return {
     canReadConversations,
@@ -434,7 +554,10 @@ export function useAgentConversations(agent, configuration) {
     conversationsNext,
     selectedUuid,
     currentHistory,
+    currentMessages,
     currentDraft,
+    replyFollower,
+    sendError,
     canWriteSelected,
     canSend,
     newConversation,
@@ -444,5 +567,6 @@ export function useAgentConversations(agent, configuration) {
     loadMoreMessages,
     updateMessage,
     sendMessage,
+    stopReply,
   }
 }

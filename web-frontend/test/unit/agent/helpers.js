@@ -209,23 +209,49 @@ export const page = (results, next = null) => ({
   results,
 })
 
+const conversationIds = new Map()
+const conversationId = (uuid) => {
+  if (!conversationIds.has(uuid)) {
+    conversationIds.set(uuid, conversationIds.size + 1)
+  }
+  return conversationIds.get(uuid)
+}
+
 export const conversation = (
   uuid,
   title,
-  updatedOn = '2026-10-14T10:00:00Z'
+  updatedOn = '2026-10-14T10:00:00Z',
+  id = conversationId(uuid)
 ) => ({
+  id,
   uuid,
   title,
   created_on: '2026-10-14T10:00:00Z',
   updated_on: updatedOn,
 })
 
-export const message = (uuid, content) => ({
+export const message = (
   uuid,
-  role: 'user',
+  content,
+  { id, role = 'user', status = null, errorCode = '', runId = null } = {}
+) => ({
+  id,
+  uuid,
+  role,
   content,
   created_on: '2026-10-14T10:00:00Z',
+  status,
+  error_code: errorCode,
+  run_id: runId,
 })
+
+export const runningReply = (runId = 'run-1', id = 2) =>
+  message(`reply-${id}`, '', {
+    id,
+    role: 'assistant',
+    status: 'running',
+    runId,
+  })
 
 export const acceptConversation = (config) => {
   const body = JSON.parse(config.data)
@@ -242,6 +268,8 @@ export const composer = (wrapper) =>
   wrapper.get('.agent-chat__composer textarea')
 
 export const send = (wrapper) => wrapper.get('.agent-chat__composer button')
+
+export const stop = (wrapper) => wrapper.get('.chat-composer__button--stop')
 
 export async function sendMessage(wrapper, content) {
   await composer(wrapper).setValue(content)
@@ -264,7 +292,9 @@ export const selected = (wrapper) =>
   wrapper.get('.agent-conversations__item[aria-current="true"]')
 
 export const messages = (wrapper) =>
-  wrapper.findAll('.agent-chat__message-content').map((item) => item.text())
+  wrapper
+    .findAll('.chat-message__bubble:not(.chat-message__bubble--error)')
+    .map((item) => item.text())
 
 export const conversationTitles = (wrapper) =>
   wrapper.findAll('.agent-conversations__item').map((item) => item.text())

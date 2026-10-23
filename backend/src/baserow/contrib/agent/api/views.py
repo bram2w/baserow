@@ -11,8 +11,10 @@ from baserow.api.applications.errors import ERROR_APPLICATION_DOES_NOT_EXIST
 from baserow.api.applications.serializers import (
     PolymorphicApplicationResponseSerializer,
 )
+from baserow.api.chat_runs.errors import ERROR_CHAT_RUN_IN_PROGRESS
 from baserow.api.decorators import map_exceptions, validate_body
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
+from baserow.api.mixins import RealtimeRecoveryPrimaryReadMixin
 from baserow.api.schemas import get_error_schema
 from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.contrib.agent.actions import (
@@ -25,13 +27,17 @@ from baserow.contrib.agent.exceptions import (
     AgentMessageConflict,
     AgentNotReady,
 )
-from baserow.contrib.agent.models import AgentApplication
+from baserow.contrib.agent.handler import AgentHandler
+from baserow.contrib.agent.models import AgentApplication, AgentConversation
 from baserow.contrib.agent.service import AgentService
 from baserow.contrib.agent.signals import agent_loaded
+from baserow.contrib.agent.types import AgentMessageCreated
+from baserow.core.chat_runs.exceptions import ChatRunAlreadyActive, ChatRunLimitReached
 from baserow.core.exceptions import ApplicationDoesNotExist, UserNotInWorkspace
 from baserow.core.service import CoreService
 
 from .errors import (
+    ERROR_AGENT_BUSY,
     ERROR_AGENT_CONVERSATION_DOES_NOT_EXIST,
     ERROR_AGENT_MESSAGE_CONFLICT,
     ERROR_AGENT_NOT_READY,
@@ -59,6 +65,8 @@ AGENT_EXCEPTIONS = {
     AgentConversationDoesNotExist: ERROR_AGENT_CONVERSATION_DOES_NOT_EXIST,
     AgentNotReady: ERROR_AGENT_NOT_READY,
     AgentMessageConflict: ERROR_AGENT_MESSAGE_CONFLICT,
+    ChatRunAlreadyActive: ERROR_CHAT_RUN_IN_PROGRESS,
+    ChatRunLimitReached: ERROR_AGENT_BUSY,
 }
 READ_ERRORS = {
     401: get_error_schema(["ERROR_PERMISSION_DENIED"]),
@@ -74,7 +82,37 @@ CONVERSATION_WRITE_ERRORS = {
     **CONVERSATION_READ_ERRORS,
     400: get_error_schema(["ERROR_REQUEST_BODY_VALIDATION", "ERROR_AGENT_NOT_READY"]),
     409: get_error_schema(["ERROR_AGENT_MESSAGE_CONFLICT"]),
+    429: get_error_schema(["ERROR_AGENT_BUSY"]),
 }
+MESSAGE_WRITE_ERRORS = {
+    **CONVERSATION_WRITE_ERRORS,
+    409: get_error_schema(
+        ["ERROR_AGENT_MESSAGE_CONFLICT", "ERROR_CHAT_RUN_IN_PROGRESS"]
+    ),
+}
+
+
+def _active_runs_context(conversation: AgentConversation) -> dict[str, dict[int, UUID]]:
+    """
+    Build the serializer context that pairs the reply being written with its run.
+
+    :param conversation: The conversation whose messages are serialized.
+    :return: The context, with the run id by reply id under ``active_runs``.
+    """
+
+    return {"active_runs": AgentHandler().get_active_reply_runs(conversation)}
+
+
+def _accepted_context(result: AgentMessageCreated) -> dict[str, dict[int, UUID]]:
+    """
+    Build the serializer context of an accepted message from the run its send
+    started, because a fast reply can end before the response is built.
+
+    :param result: The accepted message with its reply and run.
+    :return: The context, with the run id by reply id under ``active_runs``.
+    """
+
+    return {"active_runs": {result.reply.id: result.run_id} if result.run_id else {}}
 
 
 class AgentApplicationView(APIView):
@@ -240,10 +278,14 @@ class AgentConversationsView(APIView):
         """Starts a private conversation with its first message."""
 
         result = CreateAgentConversationActionType.do(request.user, agent_id, **data)
-        return Response(AgentMessageCreatedSerializer(result).data)
+        return Response(
+            AgentMessageCreatedSerializer(
+                result, context=_accepted_context(result)
+            ).data
+        )
 
 
-class AgentMessagesView(APIView):
+class AgentMessagesView(RealtimeRecoveryPrimaryReadMixin, APIView):
     @extend_schema(
         tags=["Agent applications"],
         operation_id="list_agent_messages",
@@ -270,13 +312,19 @@ class AgentMessagesView(APIView):
     def get(self, request: Request, agent_id: int, conversation_uuid: UUID) -> Response:
         """Lists messages in pages from the newest, each in chronological order."""
 
-        messages = AgentService().list_messages(
+        conversation, messages = AgentService().list_messages(
             request.user, agent_id, conversation_uuid
         )
+        # Runs first, so a reply that ends between both reads is read as ended.
+        context = _active_runs_context(conversation)
         paginator = AgentMessagePagination(limit_page_size=100)
-        page = paginator.paginate_queryset(messages, request, self)
+        page = AgentHandler().refresh_unfinished_replies(
+            paginator.paginate_queryset(messages, request, self)
+        )
         return paginator.get_paginated_response(
-            AgentMessageSerializer(list(reversed(page)), many=True).data
+            AgentMessageSerializer(
+                list(reversed(page)), many=True, context=context
+            ).data
         )
 
     @extend_schema(
@@ -288,7 +336,7 @@ class AgentMessagesView(APIView):
             "accepted message, and reusing it with different content is rejected."
         ),
         request=AgentMessageCreateSerializer,
-        responses={200: AgentMessageCreatedSerializer, **CONVERSATION_WRITE_ERRORS},
+        responses={200: AgentMessageCreatedSerializer, **MESSAGE_WRITE_ERRORS},
     )
     @map_exceptions(AGENT_EXCEPTIONS)
     @validate_body(AgentMessageCreateSerializer, return_validated=True)
@@ -300,4 +348,8 @@ class AgentMessagesView(APIView):
         result = CreateAgentMessageActionType.do(
             request.user, agent_id, conversation_uuid, **data
         )
-        return Response(AgentMessageCreatedSerializer(result).data)
+        return Response(
+            AgentMessageCreatedSerializer(
+                result, context=_accepted_context(result)
+            ).data
+        )

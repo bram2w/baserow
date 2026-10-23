@@ -9,6 +9,7 @@ from baserow.contrib.agent.models import (
     AgentConversation,
     AgentMessage,
 )
+from baserow.core.chat_runs.models import ChatRun
 from baserow.core.handler import CoreHandler
 from baserow.core.job_types import DuplicateApplicationJobType
 from baserow.core.jobs.handler import JobHandler
@@ -24,19 +25,28 @@ def export_internal(agent: AgentApplication) -> dict:
 
 
 def conversation_values(agent: AgentApplication) -> list[tuple]:
-    return [
-        (
-            conversation.title,
-            conversation.owner_user_id,
-            conversation.created_on,
-            conversation.updated_on,
-            [
-                (message.role, message.content, message.created_on, message.updated_on)
-                for message in conversation.messages.order_by("id")
-            ],
+    values = []
+    for conversation in agent.conversations.order_by("id"):
+        values.append(
+            (
+                conversation.title,
+                conversation.owner_user_id,
+                conversation.created_on,
+                conversation.updated_on,
+                [
+                    (
+                        message.role,
+                        message.content,
+                        message.status,
+                        message.error_code,
+                        message.created_on,
+                        message.updated_on,
+                    )
+                    for message in conversation.messages.order_by("id")
+                ],
+            )
         )
-        for conversation in agent.conversations.order_by("id")
-    ]
+    return values
 
 
 def uuids(agent):
@@ -60,6 +70,12 @@ def test_duplicate_copies_conversations_with_new_identifiers(
         conversation = data_fixture.create_agent_conversation(user=owner, agent=agent)
         for role in AgentMessage.Role.values:
             data_fixture.create_agent_message(conversation=conversation, role=role)
+        data_fixture.create_agent_message(
+            conversation=conversation,
+            role=AgentMessage.Role.ASSISTANT,
+            status=AgentMessage.Status.FAILED,
+            error_code="timeout",
+        )
 
     copied = CoreHandler().duplicate_application(copier, agent).specific
 
@@ -119,6 +135,26 @@ def test_internal_copy_skips_conversations_of_deleted_owners(
     assert copied.conversations.get().owner_user_id == owner.id
 
 
+@pytest.mark.django_db
+def test_internal_copy_imports_messages_copied_before_replies(
+    data_fixture, configured_agent
+):
+    owner = data_fixture.create_user()
+    agent = configured_agent(user=owner)
+    data_fixture.create_agent_message(user=owner, agent=agent, content="Hi")
+    serialized = export_internal(agent)
+    for data in serialized["conversations"]:
+        for message in data["messages"]:
+            del message["status"], message["error_code"]
+
+    copied = AgentApplicationType().import_serialized(
+        agent.workspace, serialized, INTERNAL_CONFIG, {}
+    )
+
+    message = AgentMessage.objects.get(conversation__agent=copied)
+    assert (message.content, message.status, message.error_code) == ("Hi", None, "")
+
+
 @pytest.mark.django_db(transaction=True)
 def test_duplicate_agent_job_rolls_back_failed_conversation_import(
     data_fixture, configured_agent, mocker
@@ -143,3 +179,21 @@ def test_duplicate_agent_job_rolls_back_failed_conversation_import(
     assert list(AgentApplication.objects.all()) == [agent]
     assert AgentConversation.objects.count() == 1
     assert AgentMessage.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_a_copy_never_carries_a_reply_in_progress(data_fixture, configured_agent):
+    owner = data_fixture.create_user()
+    agent = configured_agent(user=owner)
+    data_fixture.create_agent_message(
+        user=owner,
+        agent=agent,
+        role=AgentMessage.Role.ASSISTANT,
+        status=AgentMessage.Status.RUNNING,
+    )
+
+    copied = CoreHandler().duplicate_application(owner, agent).specific
+
+    reply = AgentMessage.objects.get(conversation__agent=copied)
+    assert (reply.status, reply.error_code) == ("failed", "interrupted")
+    assert not ChatRun.objects.exists()
