@@ -439,12 +439,11 @@ describe('InviteModal', () => {
     await submitInvites(wrapper)
     await flushPromises()
 
-    expect(sendInvitation).toHaveBeenCalledWith(
-      workspace,
-      target,
-      { email: 'test@example.com', permissions: 'VIEWER', captchaToken: '' },
-      expect.stringContaining('/workspace-invitation')
-    )
+    expect(sendInvitation).toHaveBeenCalledWith(workspace, target, {
+      email: 'test@example.com',
+      permissions: 'VIEWER',
+      captchaToken: '',
+    })
     expect(wrapper.emitted('invite-submitted')).toEqual([[[{ id: 7 }]]])
   })
 

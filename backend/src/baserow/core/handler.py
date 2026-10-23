@@ -1181,22 +1181,19 @@ class CoreHandler:
 
         return URLSafeSerializer(settings.SECRET_KEY, "workspace-invite")
 
-    def send_workspace_invitation_email(self, invitation, base_url):
+    def send_workspace_invitation_email(self, invitation):
         """
         Sends out a workspace invitation email to the user based on the provided
         invitation instance.
 
         :param invitation: The invitation instance for which the email must be send.
         :type invitation: WorkspaceInvitation
-        :param base_url: The base url of the frontend. Only used to choose between
-            the embedded share URL and the web frontend URL, see `get_frontend_url`.
-        :type base_url: str
         """
 
         signer = self.get_workspace_invitation_signer()
         signed_invitation_id = signer.dumps(invitation.id)
         public_accept_url = get_frontend_url(
-            base_url, f"workspace-invitation/{signed_invitation_id}"
+            f"workspace-invitation/{signed_invitation_id}"
         )
 
         # Send the email in the language of the user that has send the invitation.
@@ -1280,7 +1277,6 @@ class CoreHandler:
         workspace: Workspace,
         email: str,
         permissions: str,
-        base_url: str,
     ) -> WorkspaceInvitation:
         """
         Creates a new workspace invitation for the given email address and sends out an
@@ -1292,8 +1288,6 @@ class CoreHandler:
             Can be an existing or not existing user.
         :param permissions: The workspace permissions that the user will get once they
             have accepted the invitation.
-        :param base_url: The base url of the frontend. Only used to choose between
-            the embedded share URL and the web frontend URL, see `get_frontend_url`.
         :raises ValueError: If the provided permissions are not allowed.
         :raises UserInvalidWorkspacePermissionsError: If the user does not belong to the
             workspace or doesn't have right permissions in the workspace.
@@ -1339,7 +1333,7 @@ class CoreHandler:
             created=created,
         )
 
-        self.send_workspace_invitation_email(invitation, base_url)
+        self.send_workspace_invitation_email(invitation)
 
         # Emit a sampling-independent metric observation without retaining another
         # application span in the trace. The Collector turns this short-lived span

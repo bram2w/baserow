@@ -893,34 +893,8 @@ def test_are_hostnames_same():
     PUBLIC_WEB_FRONTEND_URL="https://baserow.example.com",
     BASEROW_EMBEDDED_SHARE_URL="https://intranet.example.com/baserow/",
 )
-@pytest.mark.parametrize(
-    "base_url,expected",
-    [
-        (
-            "https://baserow.example.com/reset-password",
-            "https://baserow.example.com/reset-password/TOKEN",
-        ),
-        (
-            "https://intranet.example.com/baserow/reset-password",
-            "https://intranet.example.com/baserow/reset-password/TOKEN",
-        ),
-        (
-            "https://intranet.example.com/baserow/../uploads/page",
-            "https://intranet.example.com/baserow/reset-password/TOKEN",
-        ),
-        (
-            "https://intranet.example.com/baserowevil/reset-password",
-            "https://baserow.example.com/reset-password/TOKEN",
-        ),
-        (
-            "https://evil.com\\@intranet.example.com/baserow/reset-password",
-            "https://baserow.example.com/reset-password/TOKEN",
-        ),
-        (
-            "https://evil.com/reset-password",
-            "https://baserow.example.com/reset-password/TOKEN",
-        ),
-    ],
-)
-def test_get_frontend_url(base_url, expected):
-    assert get_frontend_url(base_url, "reset-password/TOKEN") == expected
+def test_get_frontend_url():
+    assert (
+        get_frontend_url("reset-password/TOKEN")
+        == "https://intranet.example.com/baserow/reset-password/TOKEN"
+    )

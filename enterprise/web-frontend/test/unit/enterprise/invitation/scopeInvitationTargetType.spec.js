@@ -113,8 +113,7 @@ describe('ScopeInvitationTargetType', () => {
     const result = await targetType.sendInvitation(
       workspace,
       { scopeType: 'database_table', scope: { id: 5 } },
-      { email: 'foo@bar.com', permissions: 'VIEWER', captchaToken: '' },
-      'http://localhost/workspace-invitation'
+      { email: 'foo@bar.com', permissions: 'VIEWER', captchaToken: '' }
     )
 
     expect(result).toEqual({ id: 3 })
@@ -123,7 +122,6 @@ describe('ScopeInvitationTargetType', () => {
       role: 'VIEWER',
       scope_id: 5,
       scope_type: 'database_table',
-      base_url: 'http://localhost/workspace-invitation',
     })
   })
 })

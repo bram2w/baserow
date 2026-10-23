@@ -57,16 +57,12 @@ export default {
      * Stops at the first failure and leaves it to the caller to handle.
      */
     async sendInvitations(picks, roleUid, onSent) {
-      // The public accept url is the page where the user can publicly navigate
-      // to, to accept the workspace invitation.
-      const acceptUrl = `${this.$config.public.baserowEmbeddedShareUrl}/workspace-invitation`
       for (const pick of picks) {
         const captchaToken = await this.nextCaptchaToken()
         const invitation = await this.targetType.sendInvitation(
           this.workspace,
           this.target,
-          { email: pick.email, permissions: roleUid, captchaToken },
-          acceptUrl
+          { email: pick.email, permissions: roleUid, captchaToken }
         )
         // The token was used up by this request, the widget solves a new one
         // for the next address.

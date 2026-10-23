@@ -18,7 +18,6 @@ from baserow.api.decorators import (
 )
 from baserow.api.errors import (
     ERROR_GROUP_DOES_NOT_EXIST,
-    ERROR_HOSTNAME_IS_NOT_ALLOWED,
     ERROR_USER_NOT_IN_GROUP,
 )
 from baserow.api.schemas import get_error_schema
@@ -27,7 +26,6 @@ from baserow.core.action.registries import action_type_registry
 from baserow.core.captcha.exceptions import CaptchaVerificationFailed
 from baserow.core.captcha.handler import CaptchaHandler
 from baserow.core.exceptions import (
-    BaseURLHostnameNotAllowed,
     LastAdminOfWorkspace,
     ObjectScopeTypeDoesNotExist,
     SubjectTypeNotExist,
@@ -483,7 +481,6 @@ class ScopedInvitationsView(APIView):
                     "ERROR_USER_NOT_IN_GROUP",
                     "ERROR_REQUEST_BODY_VALIDATION",
                     "ERROR_GROUP_USER_ALREADY_EXISTS",
-                    "ERROR_HOSTNAME_IS_NOT_ALLOWED",
                     "ERROR_CAPTCHA_VERIFICATION_FAILED",
                 ]
             ),
@@ -505,7 +502,6 @@ class ScopedInvitationsView(APIView):
             ScopeNotExist: ERROR_SCOPE_DOES_NOT_EXIST,
             RoleNotExist: ERROR_ROLE_DOES_NOT_EXIST,
             WorkspaceUserAlreadyExists: ERROR_GROUP_USER_ALREADY_EXISTS,
-            BaseURLHostnameNotAllowed: ERROR_HOSTNAME_IS_NOT_ALLOWED,
             CaptchaVerificationFailed: ERROR_CAPTCHA_VERIFICATION_FAILED,
         }
     )
@@ -529,7 +525,6 @@ class ScopedInvitationsView(APIView):
                 data["email"],
                 data["role"],
                 data["scope"],
-                data["base_url"],
             )
 
         return Response(ScopedInvitationSerializer(scoped_invitation).data)

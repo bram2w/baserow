@@ -1513,22 +1513,15 @@ def are_kwargs_default(func, **kwargs):
     return True
 
 
-def get_frontend_url(base_url: str, path: str) -> str:
+def get_frontend_url(path: str) -> str:
     """
-    Builds a web frontend URL to send in an email, for example a password reset
-    link. The URL always starts with `BASEROW_EMBEDDED_SHARE_URL` when `base_url`
-    starts with it, and with `PUBLIC_WEB_FRONTEND_URL` otherwise. Nothing else from
-    `base_url` ends up in the URL.
+    Builds a web frontend URL that is sent to a user, for example a password reset
+    link in an email. It always starts with `BASEROW_EMBEDDED_SHARE_URL`, which
+    defaults to `PUBLIC_WEB_FRONTEND_URL` and is only different when Baserow is
+    embedded in another website.
 
-    :param base_url: The base URL provided by the client.
-    :param path: The frontend path, including the token, without a leading slash.
+    :param path: The frontend path, without a leading slash.
     :return: The frontend URL.
     """
 
-    embedded_share_url = settings.BASEROW_EMBEDDED_SHARE_URL.rstrip("/")
-    if base_url == embedded_share_url or base_url.startswith(f"{embedded_share_url}/"):
-        frontend_url = embedded_share_url
-    else:
-        frontend_url = settings.PUBLIC_WEB_FRONTEND_URL.rstrip("/")
-
-    return f"{frontend_url}/{path}"
+    return f"{settings.BASEROW_EMBEDDED_SHARE_URL.rstrip('/')}/{path}"

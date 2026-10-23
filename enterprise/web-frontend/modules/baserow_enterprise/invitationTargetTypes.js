@@ -78,7 +78,7 @@ export class ScopeInvitationTargetType extends InvitationTargetType {
     return names[scopeType] || scopeType
   }
 
-  async sendInvitation(workspace, { scope, scopeType }, values, acceptUrl) {
+  async sendInvitation(workspace, { scope, scopeType }, values) {
     const { data } = await RoleAssignmentsService(
       this.app.$client
     ).createScopedInvitation(workspace.id, {
@@ -86,7 +86,6 @@ export class ScopeInvitationTargetType extends InvitationTargetType {
       roleUid: values.permissions,
       scopeId: scope.id,
       scopeType,
-      baseUrl: acceptUrl,
       captchaToken: values.captchaToken,
     })
     return data

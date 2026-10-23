@@ -22,8 +22,6 @@ from baserow_enterprise.role.constants import NO_ROLE_LOW_PRIORITY_ROLE_UID
 from baserow_enterprise.role.handler import RoleAssignmentHandler
 from baserow_enterprise.role.models import Role, WorkspaceScopedInvitation
 
-BASE_URL = "http://localhost:3000/invite"
-
 
 @pytest.fixture(autouse=True)
 def enable_enterprise_and_roles_for_all_tests_here(enable_enterprise, synced_roles):
@@ -42,7 +40,7 @@ def create_scoped_invitation(
     user, workspace, table, email="foo@bar.com", role="EDITOR"
 ):
     return RoleAssignmentHandler().create_scoped_invitation(
-        user, workspace, email, Role.objects.get(uid=role), table, BASE_URL
+        user, workspace, email, Role.objects.get(uid=role), table
     )
 
 
@@ -60,7 +58,6 @@ def test_create_scoped_invitation(api_client, data_fixture):
             "role": "EDITOR",
             "scope_id": table.id,
             "scope_type": "database_table",
-            "base_url": BASE_URL,
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -102,7 +99,6 @@ def test_create_scoped_invitation_errors(api_client, data_fixture):
         "role": "EDITOR",
         "scope_id": table.id,
         "scope_type": "database_table",
-        "base_url": BASE_URL,
     }
 
     response = api_client.post(

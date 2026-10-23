@@ -555,7 +555,6 @@ def test_send_workspace_invitation_email(data_fixture, mailoutbox):
     signer = handler.get_workspace_invitation_signer()
     handler.send_workspace_invitation_email(
         invitation=workspace_invitation,
-        base_url="http://localhost:3000/workspace-invite",
     )
 
     assert len(mailoutbox) == 1
@@ -602,7 +601,6 @@ def test_send_workspace_invitation_email_in_different_language(
     handler = CoreHandler()
     handler.send_workspace_invitation_email(
         invitation=workspace_invitation,
-        base_url="http://localhost:3000/workspace-invite",
     )
 
     assert len(mailoutbox) == 1
@@ -624,7 +622,6 @@ def test_send_workspace_invitation_email_truncates_long_names(data_fixture, mail
 
     CoreHandler().send_workspace_invitation_email(
         invitation=workspace_invitation,
-        base_url="http://localhost:3000/workspace-invite",
     )
 
     assert len(mailoutbox) == 1
@@ -653,7 +650,6 @@ def test_send_workspace_invitation_email_prevents_domain_linkification(
 
     CoreHandler().send_workspace_invitation_email(
         invitation=workspace_invitation,
-        base_url="http://localhost:3000/workspace-invite",
     )
 
     assert len(mailoutbox) == 1
@@ -689,7 +685,6 @@ def test_create_workspace_invitation(mock_send_email, data_fixture):
             workspace=workspace,
             email="test@test.nl",
             permissions="ADMIN",
-            base_url="http://localhost:3000/invite",
         )
 
     with pytest.raises(UserInvalidWorkspacePermissionsError):
@@ -698,7 +693,6 @@ def test_create_workspace_invitation(mock_send_email, data_fixture):
             workspace=workspace,
             email="test@test.nl",
             permissions="ADMIN",
-            base_url="http://localhost:3000/invite",
         )
 
     with pytest.raises(WorkspaceUserAlreadyExists):
@@ -707,7 +701,6 @@ def test_create_workspace_invitation(mock_send_email, data_fixture):
             workspace=workspace,
             email=user_3.email,
             permissions="ADMIN",
-            base_url="http://localhost:3000/invite",
         )
 
     invitation = handler.create_workspace_invitation(
@@ -715,7 +708,6 @@ def test_create_workspace_invitation(mock_send_email, data_fixture):
         workspace=workspace,
         email="test@test.nl",
         permissions="ADMIN",
-        base_url="http://localhost:3000/invite",
     )
     assert invitation.invited_by_id == user.id
     assert invitation.workspace_id == workspace.id
@@ -725,7 +717,6 @@ def test_create_workspace_invitation(mock_send_email, data_fixture):
 
     mock_send_email.assert_called_once()
     assert mock_send_email.call_args[0][0].id == invitation.id
-    assert mock_send_email.call_args[0][1] == "http://localhost:3000/invite"
 
     # Because there already is an invitation for this email and workspace, it must be
     # updated instead of having duplicates.
@@ -734,7 +725,6 @@ def test_create_workspace_invitation(mock_send_email, data_fixture):
         workspace=workspace,
         email="test@test.nl",
         permissions="MEMBER",
-        base_url="http://localhost:3000/invite",
     )
     assert invitation.invited_by_id == user.id
     assert invitation.workspace_id == workspace.id
@@ -747,7 +737,6 @@ def test_create_workspace_invitation(mock_send_email, data_fixture):
         workspace=workspace,
         email="test2@test.nl",
         permissions="ADMIN",
-        base_url="http://localhost:3000/invite",
     )
     assert invitation.invited_by_id == user.id
     assert invitation.workspace_id == workspace.id
@@ -760,7 +749,6 @@ def test_create_workspace_invitation(mock_send_email, data_fixture):
         workspace=workspace,
         email="test3@test.nl",
         permissions="ADMIN",
-        base_url="http://localhost:3000/invite",
     )
     assert invitation.invited_by_id == user.id
     assert invitation.workspace_id == workspace.id
@@ -782,7 +770,6 @@ def test_create_workspace_invitation_emits_per_user_metric_observation(
         workspace=user_workspace.workspace,
         email="test@example.com",
         permissions="MEMBER",
-        base_url="http://localhost:3000/invite",
     )
 
     mock_start_span.assert_called_once_with(

@@ -10,6 +10,8 @@ from oauth2_provider.exceptions import OAuthToolkitError
 from oauth2_provider.views import OAuthProtectedResourceMetadataView
 from oauthlib.oauth2.rfc6749.errors import InvalidClientIdError
 
+from baserow.core.utils import get_frontend_url
+
 from .authorize import validate_query
 from .throttling import MCPOAuthAuthorizeRateThrottle, rate_limited
 from .validators import MCP_SCOPE
@@ -38,8 +40,7 @@ def _consent_error_url(request, oauthlib_error) -> str:
             error = CLIENT_REJECTED_ERROR
         else:
             error = UNKNOWN_CLIENT_ERROR
-    frontend_url = settings.PUBLIC_WEB_FRONTEND_URL.rstrip("/")
-    return f"{frontend_url}/mcp-authorize?{urlencode({'error': error})}"
+    return get_frontend_url(f"mcp-authorize?{urlencode({'error': error})}")
 
 
 class MCPAuthorizeRedirectView(View):
@@ -69,8 +70,7 @@ class MCPAuthorizeRedirectView(View):
         # characters alone.
         query = request.META.get("QUERY_STRING", "")
         encoded = base64.urlsafe_b64encode(query.encode()).rstrip(b"=").decode()
-        frontend_url = settings.PUBLIC_WEB_FRONTEND_URL.rstrip("/")
-        return HttpResponseRedirect(f"{frontend_url}/mcp-authorize/{encoded}")
+        return HttpResponseRedirect(get_frontend_url(f"mcp-authorize/{encoded}"))
 
 
 class MCPProtectedResourceMetadataView(OAuthProtectedResourceMetadataView):

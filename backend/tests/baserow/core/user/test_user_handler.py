@@ -284,7 +284,7 @@ def test_send_reset_password_email(data_fixture, mailoutbox):
     handler = UserHandler()
 
     signer = handler.get_reset_password_signer()
-    handler.send_reset_password_email(user, "http://localhost:3000/reset-password")
+    handler.send_reset_password_email(user)
 
     assert len(mailoutbox) == 1
     email = mailoutbox[0]
@@ -311,7 +311,7 @@ def test_send_reset_password_email_in_different_language(data_fixture, mailoutbo
     user = data_fixture.create_user(email="test@localhost", language="fr")
     handler = UserHandler()
 
-    handler.send_reset_password_email(user, "http://localhost:3000/reset-password")
+    handler.send_reset_password_email(user)
 
     assert len(mailoutbox) == 1
     assert mailoutbox[0].subject == "Réinitialiser le mot de passe - Baserow"
@@ -326,12 +326,10 @@ def test_send_reset_password_email_is_rate_limited_per_user(data_fixture, mailou
     user = data_fixture.create_user(email="test@localhost")
     other_user = data_fixture.create_user(email="other@localhost")
     handler = UserHandler()
-    base_url = "http://localhost:3000/reset-password"
-
-    assert handler.send_reset_password_email(user, base_url) is True
-    assert handler.send_reset_password_email(user, base_url) is True
-    assert handler.send_reset_password_email(user, base_url) is False
-    assert handler.send_reset_password_email(other_user, base_url) is True
+    assert handler.send_reset_password_email(user) is True
+    assert handler.send_reset_password_email(user) is True
+    assert handler.send_reset_password_email(user) is False
+    assert handler.send_reset_password_email(other_user) is True
 
     assert [email.to for email in mailoutbox] == [
         ["test@localhost"],
@@ -351,9 +349,7 @@ def test_send_reset_password_email_reset_password_disabled(data_fixture):
     CoreHandler().update_settings(user, allow_reset_password=False)
 
     with pytest.raises(ResetPasswordDisabledError):
-        UserHandler().send_reset_password_email(
-            user, "http://localhost:3000/reset-password"
-        )
+        UserHandler().send_reset_password_email(user)
 
 
 @pytest.mark.django_db
@@ -957,7 +953,6 @@ def test_send_change_email_confirmation(data_fixture, mailoutbox):
             user,
             "newemail@localhost",
             "wrongpassword",
-            "http://localhost:3000/change-email",
         )
 
     # Test with existing email
@@ -967,14 +962,11 @@ def test_send_change_email_confirmation(data_fixture, mailoutbox):
             user,
             "existing@localhost",
             valid_password,
-            "http://localhost:3000/change-email",
         )
 
     # Test successful email change confirmation
     signer = handler.get_change_email_signer()
-    handler.send_change_email_confirmation(
-        user, "newemail@localhost", valid_password, "http://localhost:3000/change-email"
-    )
+    handler.send_change_email_confirmation(user, "newemail@localhost", valid_password)
 
     assert len(mailoutbox) == 1
     email = mailoutbox[0]
@@ -1006,9 +998,7 @@ def test_send_change_email_confirmation_in_different_language(data_fixture, mail
     )
     handler = UserHandler()
 
-    handler.send_change_email_confirmation(
-        user, "newemail@localhost", valid_password, "http://localhost:3000/change-email"
-    )
+    handler.send_change_email_confirmation(user, "newemail@localhost", valid_password)
 
     assert len(mailoutbox) == 1
     # The French translation for "Confirm email address change - Baserow"
@@ -1031,7 +1021,6 @@ def test_send_change_email_confirmation_auth_provider_disabled(data_fixture):
             user,
             "newemail@localhost",
             valid_password,
-            "http://localhost:3000/change-email",
         )
 
 
@@ -1050,7 +1039,6 @@ def test_send_change_email_confirmation_without_password(data_fixture):
             user,
             "newemail@localhost",
             "dummy_password",  # Provided but user has no password
-            "http://localhost:3000/change-email",
         )
 
 

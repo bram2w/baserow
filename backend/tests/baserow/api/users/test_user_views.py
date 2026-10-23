@@ -690,7 +690,7 @@ def test_send_reset_password_email(data_fixture, client, mailoutbox):
 
     response = client.post(
         reverse("api:user:send_reset_password_email"),
-        {"email": "unknown@localhost.nl", "base_url": "http://localhost:3000"},
+        {"email": "unknown@localhost.nl"},
         format="json",
     )
     assert response.status_code == 204
@@ -698,7 +698,7 @@ def test_send_reset_password_email(data_fixture, client, mailoutbox):
 
     response = client.post(
         reverse("api:user:send_reset_password_email"),
-        {"email": "test@localhost.nl", "base_url": "http://localhost:3000"},
+        {"email": "test@localhost.nl"},
         format="json",
     )
     assert response.status_code == 204
@@ -706,7 +706,7 @@ def test_send_reset_password_email(data_fixture, client, mailoutbox):
 
     response = client.post(
         reverse("api:user:send_reset_password_email"),
-        {"email": " teST@locAlhost.nl ", "base_url": "http://localhost:3000"},
+        {"email": " teST@locAlhost.nl "},
         format="json",
     )
     assert response.status_code == 204
@@ -721,7 +721,7 @@ def test_send_reset_password_email(data_fixture, client, mailoutbox):
 
     response = client.post(
         reverse("api:user:send_reset_password_email"),
-        {"email": " teST@locAlhost.nl ", "base_url": "http://localhost:3000"},
+        {"email": " teST@locAlhost.nl "},
         format="json",
     )
 
@@ -739,6 +739,7 @@ def test_send_reset_password_email(data_fixture, client, mailoutbox):
         "http://localhost:3000/\\evil.com",
         "http://localhost:3000/../uploads/page",
         "http://localhost:3000/reset-password?next=1",
+        None,
     ],
 )
 def test_send_reset_password_email_link_points_to_web_frontend(
@@ -749,7 +750,9 @@ def test_send_reset_password_email_link_points_to_web_frontend(
 
     response = client.post(
         reverse("api:user:send_reset_password_email"),
-        {"email": "test@localhost.nl", "base_url": base_url},
+        {"email": "test@localhost.nl"}
+        if base_url is None
+        else {"email": "test@localhost.nl", "base_url": base_url},
         format="json",
     )
 
@@ -774,7 +777,7 @@ def test_send_reset_password_email_password_auth_disabled(
 
     response = api_client.post(
         reverse("api:user:send_reset_password_email"),
-        {"email": "test@localhost.nl", "base_url": "http://localhost:3000"},
+        {"email": "test@localhost.nl"},
         format="json",
     )
 
@@ -795,7 +798,7 @@ def test_send_reset_password_email_password_auth_disabled_staff(
 
     response = api_client.post(
         reverse("api:user:send_reset_password_email"),
-        {"email": "test@localhost.nl", "base_url": "http://localhost:3000"},
+        {"email": "test@localhost.nl"},
         format="json",
     )
 
@@ -1395,7 +1398,7 @@ def test_send_verify_email_address(client, data_fixture, mailoutbox):
 @pytest.mark.parametrize(
     "url_name,body",
     [
-        ("api:user:send_reset_password_email", {"base_url": "http://localhost:3000"}),
+        ("api:user:send_reset_password_email", {}),
         ("api:user:send_verify_email", {}),
     ],
 )
@@ -1434,7 +1437,7 @@ def test_anonymous_email_ip_rate_limit_only_counts_post(client):
     assert client.get(url).status_code == 405
     response = client.post(
         url,
-        {"email": "unknown@example.com", "base_url": "http://localhost:3000"},
+        {"email": "unknown@example.com"},
         format="json",
     )
     assert response.status_code == HTTP_204_NO_CONTENT
@@ -1472,7 +1475,7 @@ def test_send_reset_password_email_rate_limited_per_recipient(
         for _ in range(3):
             response = client.post(
                 reverse("api:user:send_reset_password_email"),
-                {"email": user.email, "base_url": "http://localhost:3000"},
+                {"email": user.email},
                 format="json",
             )
             # Dropped requests look the same, so they don't reveal the account.
@@ -1586,7 +1589,6 @@ def test_send_change_email_confirmation(data_fixture, client, mailoutbox):
         {
             "new_email": "newemail@test.nl",
             "password": "wrongpassword",
-            "base_url": f"{settings.PUBLIC_WEB_FRONTEND_URL}/change-email",
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -1601,7 +1603,6 @@ def test_send_change_email_confirmation(data_fixture, client, mailoutbox):
         {
             "new_email": "existing@test.nl",
             "password": valid_password,
-            "base_url": f"{settings.PUBLIC_WEB_FRONTEND_URL}/change-email",
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -1615,7 +1616,6 @@ def test_send_change_email_confirmation(data_fixture, client, mailoutbox):
         {
             "new_email": "newemail@test.nl",
             "password": valid_password,
-            "base_url": f"{settings.PUBLIC_WEB_FRONTEND_URL}/change-email",
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -1641,7 +1641,6 @@ def test_send_change_email_confirmation_password_auth_disabled(
         {
             "new_email": "newemail@test.nl",
             "password": valid_password,
-            "base_url": f"{settings.PUBLIC_WEB_FRONTEND_URL}/change-email",
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -1669,7 +1668,6 @@ def test_send_change_email_confirmation_without_password(
         {
             "new_email": "newemail@test.nl",
             "password": "dummy_password",  # Provided but user has no password
-            "base_url": f"{settings.PUBLIC_WEB_FRONTEND_URL}/change-email",
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -1696,7 +1694,6 @@ def test_change_email(data_fixture, client, mailoutbox):
         {
             "new_email": "newemail@test.nl",
             "password": valid_password,
-            "base_url": f"{settings.PUBLIC_WEB_FRONTEND_URL}/change-email",
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",

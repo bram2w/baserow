@@ -31,14 +31,13 @@ export default (client) => {
     },
     createScopedInvitation(
       workspaceId,
-      { email, roleUid, scopeId, scopeType, baseUrl, captchaToken = '' }
+      { email, roleUid, scopeId, scopeType, captchaToken = '' }
     ) {
       const values = {
         email,
         role: roleUid,
         scope_id: scopeId,
         scope_type: scopeType,
-        base_url: baseUrl,
       }
       if (captchaToken) {
         values.captcha_token = captchaToken

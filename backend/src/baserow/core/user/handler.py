@@ -2,7 +2,6 @@ import hashlib
 import hmac as hmac_module
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional, Tuple
-from urllib.parse import urljoin
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -471,14 +470,12 @@ class UserHandler:
 
         return URLSafeTimedSerializer(settings.SECRET_KEY, "user-change-email")
 
-    def send_reset_password_email(self, user: AbstractUser, base_url: str) -> bool:
+    def send_reset_password_email(self, user: AbstractUser) -> bool:
         """
         Sends an email containing a password reset url to the user, unless too many
         were sent to the user recently.
 
         :param user: The user instance.
-        :param base_url: The base url of the frontend. Only used to choose between
-            the embedded share URL and the web frontend URL, see `get_frontend_url`.
         :raises: ResetPasswordDisabledError: If the reset password is disabled.
         :return: Whether the email was sent.
         """
@@ -488,7 +485,7 @@ class UserHandler:
 
         signer = self.get_reset_password_signer()
         signed_token = signer.dumps([user.id, self._get_password_state_hash(user)])
-        reset_url = get_frontend_url(base_url, f"reset-password/{signed_token}")
+        reset_url = get_frontend_url(f"reset-password/{signed_token}")
 
         if not consume_rate_limit(
             settings.BASEROW_SEND_RESET_PASSWORD_EMAIL_RATE_LIMIT,
@@ -617,7 +614,7 @@ class UserHandler:
         return user
 
     def send_change_email_confirmation(
-        self, user: AbstractUser, new_email: str, password: str, base_url: str
+        self, user: AbstractUser, new_email: str, password: str
     ):
         """
         Sends an email containing an email change confirmation url to the new email
@@ -626,8 +623,6 @@ class UserHandler:
         :param user: The user where to change the email for.
         :param new_email: The new email address to change to.
         :param password: The current password of the user for verification.
-        :param base_url: The base url of the frontend. Only used to choose between
-            the embedded share URL and the web frontend URL, see `get_frontend_url`.
         :raises InvalidPassword: When the provided password is incorrect.
         :raises UserAlreadyExist: When a user with the new email already exists.
         :raises AuthProviderDisabled: When the password provider is disabled and the
@@ -654,7 +649,7 @@ class UserHandler:
 
         signer = self.get_change_email_signer()
         signed_payload = signer.dumps({"user_id": user.id, "new_email": new_email})
-        confirmation_url = get_frontend_url(base_url, f"change-email/{signed_payload}")
+        confirmation_url = get_frontend_url(f"change-email/{signed_payload}")
 
         with translation.override(user.profile.language):
             email = ChangeEmailConfirmationEmail(
@@ -1030,13 +1025,7 @@ class UserHandler:
 
         token = self.create_email_verification_token(user)
 
-        base_url = (
-            settings.BASEROW_EMBEDDED_SHARE_URL or settings.PUBLIC_WEB_FRONTEND_URL
-        )
-        if not base_url.endswith("/"):
-            base_url += "/"
-
-        confirm_url = urljoin(base_url, f"verify-email-address/{token}")
+        confirm_url = get_frontend_url(f"verify-email-address/{token}")
 
         if not consume_rate_limit(
             settings.BASEROW_SEND_VERIFY_EMAIL_RATE_LIMIT,
