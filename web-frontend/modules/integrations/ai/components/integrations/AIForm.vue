@@ -70,12 +70,23 @@
                 v$.values.ai_settings?.[providerType.type]?.[setting.key]
                   ?.$errors[0]?.$message
               "
-              :required="!setting.optional"
+              :required="isSettingRequired(providerType.type, setting)"
               class="margin-bottom-2"
             >
               <FormInput
                 v-model.trim="
                   v$.values.ai_settings[providerType.type][setting.key].$model
+                "
+                v-bind="
+                  setting.key === 'api_key'
+                    ? {
+                        type: 'password',
+                        autocomplete: 'new-password',
+                        placeholder: hasStoredApiKey(providerType.type)
+                          ? $t('aiForm.apiKeyKeepPlaceholder')
+                          : '',
+                      }
+                    : {}
                 "
                 @blur="
                   v$.values.ai_settings[providerType.type][setting.key].$touch()
@@ -177,6 +188,18 @@ export default {
       const modelType = this.$registry.get('generativeAIModel', providerType)
       return modelType ? modelType.getSettings() : []
     },
+    hasStoredApiKey(providerType) {
+      // The API never returns the key itself, only whether one is saved.
+      return (
+        this.defaultValues.ai_settings?.[providerType]?.has_api_key === true
+      )
+    },
+    isSettingRequired(providerType, setting) {
+      if (setting.key === 'api_key' && this.hasStoredApiKey(providerType)) {
+        return false
+      }
+      return !setting.optional
+    },
     isProviderOverridden(providerType) {
       return this.providerOverrides[providerType] || false
     },
@@ -206,7 +229,10 @@ export default {
 
           settings.forEach((setting) => {
             const value = this.values.ai_settings[type][setting.key]
-            if (value !== undefined) {
+            // An empty key is dropped so the backend keeps the saved one.
+            const keepsStoredApiKey =
+              setting.key === 'api_key' && !value && this.hasStoredApiKey(type)
+            if (value !== undefined && !keepsStoredApiKey) {
               const serialize = setting.serialize || ((value) => value)
               serializedSettings[type][setting.key] = serialize(value)
             }
@@ -234,9 +260,12 @@ export default {
         const settings = this.getProviderSettings(type)
         const providerValidations = {}
         settings.forEach((setting) => {
-          providerValidations[setting.key] = setting.optional
-            ? {}
-            : { required }
+          providerValidations[setting.key] = this.isSettingRequired(
+            type,
+            setting
+          )
+            ? { required }
+            : {}
         })
 
         validations.values.ai_settings[type] = providerValidations
