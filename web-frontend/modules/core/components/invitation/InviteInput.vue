@@ -34,6 +34,14 @@
           @keydown.delete="removeLastWhenEmpty"
           @paste="paste"
         />
+        <a
+          v-if="query !== ''"
+          class="invite-input__clear"
+          @mousedown.prevent
+          @click.stop="clearQuery"
+        >
+          <i class="iconoir-cancel"></i>
+        </a>
       </div>
       <WorkspaceRoleSelector
         v-model="roleUid"
@@ -91,7 +99,7 @@
           class="invite-input__item"
           @click="toggle(option)"
         >
-          <Avatar icon="iconoir-mail" color="neutral" rounded size="medium" />
+          <Avatar icon="iconoir-mail" color="neutral" rounded size="large" />
           <div class="invite-input__item-text">
             <div class="invite-input__item-title">
               {{ $t('inviteInput.inviteEmail', { email: option.name }) }}
@@ -122,7 +130,7 @@
             :icon="option.initials ? '' : option.icon"
             :color="option.color"
             rounded
-            size="medium"
+            size="large"
           />
           <div class="invite-input__item-text">
             <div class="invite-input__item-title">{{ option.name }}</div>
@@ -436,14 +444,19 @@ export default {
     /**
      * Closes the results, unless the focus went to something inside them, like
      * the native input of a checkbox, which would remove the checkbox before
-     * its change event toggles the row.
+     * its change event toggles the row. Results of a search stay, so that what
+     * was typed isn't lost by clicking elsewhere.
      */
     blur(event) {
       if (this.$refs.results?.contains(event.relatedTarget)) {
         this.focus()
         return
       }
-      this.open = false
+      this.open = this.normalizedQuery !== ''
+    },
+    clearQuery() {
+      this.query = ''
+      this.focus()
     },
     optionWithEmail(email) {
       return this.options.find(

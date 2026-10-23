@@ -85,6 +85,17 @@
   }
 }
 
+.invite-input__clear {
+  display: inline-flex;
+  margin-left: auto;
+  color: $palette-neutral-900;
+
+  &:hover {
+    color: $palette-neutral-1200;
+    text-decoration: none;
+  }
+}
+
 .invite-input__role {
   flex: 0 0 170px;
 }
@@ -120,11 +131,8 @@
 }
 
 .invite-input__list {
-  // Six rows, so that the results take about the room of what they replace.
-  max-height: 336px;
-  margin: 0;
+  margin: 12px 0 0 0;
   padding: 0;
-  overflow-y: auto;
   list-style: none;
 }
 
@@ -133,15 +141,11 @@
   align-items: center;
   gap: 12px;
   min-height: 56px;
-  padding: 8px;
+  padding: 8px 0;
   cursor: pointer;
 
   & + & {
     border-top: 1px solid $palette-neutral-200;
-  }
-
-  &:hover {
-    background-color: rgba($palette-neutral-1300, 0.04);
   }
 }
 
@@ -159,13 +163,13 @@
 }
 
 .invite-input__item-title {
-  font-size: 14px;
+  font-size: 13px;
   line-height: 20px;
   color: $palette-neutral-1200;
 }
 
 .invite-input__item-subtitle {
-  font-size: 13px;
+  font-size: 12px;
   line-height: 20px;
   color: $palette-neutral-900;
   white-space: pre-line;
