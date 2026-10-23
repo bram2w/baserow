@@ -91,7 +91,7 @@
         "cancelledTitle": "Eksport nie powiódł się",
         "exportFilename": "Eksport logu audytu administratora z datą {date}",
         "cancelledDescription": "Eksport tego logu audytu nie powiódł się. Spróbuj ponownie.",
-        "exportWorkspaceFilename": " Eksport dziennika inspekcji obszaru roboczego ({workspaceId}) z datą {data}"
+        "exportWorkspaceFilename": " Eksport dziennika inspekcji obszaru roboczego ({workspaceId}) z datą {date}"
     },
     "authProviders": {
         "title": "Dostawcy usług uwierzytelniania",
