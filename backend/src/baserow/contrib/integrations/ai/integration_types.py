@@ -7,14 +7,16 @@ from rest_framework import serializers
 from baserow.api.utils import validate_data
 from baserow.api.workspaces.serializers import get_generative_ai_settings_serializer
 from baserow.contrib.integrations.ai.models import AIIntegration
-from baserow.core.integrations.exceptions import IntegrationCredentialRequired
-from baserow.core.integrations.registries import IntegrationType
+from baserow.core.generative_ai.registries import generative_ai_model_type_registry
+from baserow.core.integrations.registries import (
+    IntegrationType,
+    check_secret_targets_unchanged,
+)
 from baserow.core.integrations.types import IntegrationDict
 from baserow.core.models import Application
 
 AI_SETTINGS_SECRET = "api_key"
-# Settings that only shape requests to the provider. Every other setting may
-# choose where the stored `api_key` is sent.
+# Settings that only shape requests to the provider.
 AI_SETTINGS_NON_TARGETS = {AI_SETTINGS_SECRET, "models"}
 
 
@@ -129,8 +131,11 @@ class AIIntegrationType(IntegrationType):
         Copies the stored `api_key` into each provider whose new settings omit it,
         because the API never returns it for the caller to send back.
 
-        :raises IntegrationCredentialRequired: If any setting that may redirect
-            the key changed for that provider.
+        Every provider setting other than the key and `models` is a target that
+        may choose where the key is sent, as in `secret_field_dependencies`.
+
+        :raises IntegrationCredentialRequired: If a target of that provider
+            changed.
         """
 
         for provider_type, provider_settings in ai_settings.items():
@@ -142,16 +147,21 @@ class AIIntegrationType(IntegrationType):
             ):
                 continue
 
-            target_changed = any(
-                (provider_settings.get(key) or "") != (stored_settings.get(key) or "")
-                for key in {*provider_settings, *stored_settings}
-                if key not in AI_SETTINGS_NON_TARGETS
+            settings_serializer = generative_ai_model_type_registry.get(
+                provider_type
+            ).get_settings_serializer()
+            targets = [
+                name
+                for name in settings_serializer().fields
+                if name not in AI_SETTINGS_NON_TARGETS
+            ]
+            # A blank setting is stored as either "" or nothing at all.
+            check_secret_targets_unchanged(
+                f"{provider_type}.{AI_SETTINGS_SECRET}",
+                targets,
+                provider_settings,
+                lambda target: stored_settings.get(target, ""),
             )
-            if target_changed:
-                raise IntegrationCredentialRequired(
-                    f"The `{AI_SETTINGS_SECRET}` of `{provider_type}` must be "
-                    f"supplied again when its connection settings change."
-                )
 
             provider_settings[AI_SETTINGS_SECRET] = stored_settings[AI_SETTINGS_SECRET]
 
