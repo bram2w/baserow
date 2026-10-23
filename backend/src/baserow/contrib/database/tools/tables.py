@@ -398,8 +398,8 @@ def _relation_conflicts(
                 "actual": actual_through,
                 "requested": requested.through_field,
             }
-    # A lookup named by its link field may leave linked_table out.
-    if (requested.linked_table is not None or requested.through_field is None) and (
+    # A lookup may leave linked_table out, see FieldItemCreate.linked_table.
+    if requested.linked_table is not None and (
         requested_table_id is None or requested_table_id != actual_table_id
     ):
         conflicts["linked_table"] = {

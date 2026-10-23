@@ -808,3 +808,45 @@ def test_create_fields_rejects_options_that_share_a_value(table_ctx, field_type)
     assert "Error creating field Status" in error
     assert "the new option 'Open' and the new option ' open '" in error
     assert not table.field_set.filter(name="Status").exists()
+
+
+@pytest.mark.django_db
+def test_create_fields_looks_up_through_the_only_link_field(
+    data_fixture, linked_tables
+):
+    ctx, table, other = linked_tables
+    link = data_fixture.create_link_row_field(
+        table=table, name="Link", link_row_table=other
+    )
+
+    result = create_fields(
+        ctx,
+        table.id,
+        [FieldItemCreate(name="Titles", type="lookup", target_field="Title")],
+    )
+
+    assert "field_errors" not in result
+    assert [f["through_field"] for f in result["created_fields"]] == [link.id]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("links", [0, 2])
+def test_create_fields_needs_the_link_when_the_table_has_not_exactly_one(
+    data_fixture, linked_tables, links
+):
+    ctx, table, other = linked_tables
+    for name in ["First", "Second"][:links]:
+        data_fixture.create_link_row_field(table=table, name=name, link_row_table=other)
+
+    result = create_fields(
+        ctx,
+        table.id,
+        [FieldItemCreate(name="Titles", type="lookup", target_field="Title")],
+    )
+
+    assert result["created_fields"] == []
+    (error,) = result["field_errors"]
+    assert "Set linked_table or through_field" in error
+    if links:
+        assert "'First', 'Second'" in error
+    assert not table.field_set.filter(name="Titles").exists()

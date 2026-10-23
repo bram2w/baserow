@@ -358,11 +358,35 @@ def _named_link_field(f, table, user) -> LinkRowField:
     return through
 
 
+def _only_link_field(f, table) -> LinkRowField:
+    """
+    The table's link_row field, for a lookup that names neither ``linked_table``
+    nor ``through_field``.
+
+    :raises ValueError: When the table has no link_row field or several.
+    """
+
+    links = list(LinkRowField.objects.filter(table=table).order_by("id"))
+    if len(links) == 1:
+        return links[0]
+    found = (
+        f"has the link_row fields {', '.join(repr(x.name) for x in links)}"
+        if links
+        else "has no link_row field"
+    )
+    raise ValueError(
+        f"Table '{table.name}' {found}. Set linked_table or through_field for "
+        f"lookup '{f.name}'."
+    )
+
+
 def _lookup_link_field(f, table, user) -> LinkRowField | None:
     """The link_row field a lookup goes through, or None when there is none yet."""
 
     if f.through_field is not None:
         return _named_link_field(f, table, user)
+    if f.linked_table is None:
+        return _only_link_field(f, table)
     linked = _resolve_linked_table(f.linked_table, table, user)
     return (
         LinkRowField.objects.filter(table=table, link_row_table=linked)
@@ -489,7 +513,8 @@ class FieldItemCreate(BaseModel):
     # (link_row, lookup)
     linked_table: str | int | None = Field(
         None,
-        description="(link_row, lookup) ID or name of the linked table.",
+        description="(link_row, lookup) ID or name of the linked table. A lookup "
+        "may leave it out when its table has exactly one link_row field.",
     )
     # (single_select, multiple_select)
     options: list[SelectOptionCreate] | None = Field(
@@ -541,14 +566,14 @@ class FieldItemCreate(BaseModel):
         "link_row": [("linked_table", "linked_table")],
         "single_select": [("options", "options")],
         "multiple_select": [("options", "options")],
-        "lookup": [("linked_table", "linked_table"), ("target_field", "target_field")],
+        # The link comes from linked_table, through_field, or the table's only
+        # link_row field.
+        "lookup": [("target_field", "target_field")],
     }
 
     @model_validator(mode="after")
     def _validate_required_for_type(self):
         required = self._REQUIRED_FIELDS.get(self.type)
-        if self.type == "lookup" and self.through_field is not None:
-            required = [("target_field", "target_field")]
         if required:
             missing = [name for attr, name in required if not getattr(self, attr)]
             if missing:

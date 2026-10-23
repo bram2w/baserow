@@ -386,7 +386,8 @@ def _reused_table_with_a_lookup():
     )
 
 
-@pytest.mark.parametrize("through_field", ["Link", 11])
+# None: a lookup that names no link goes through the table's only link field.
+@pytest.mark.parametrize("through_field", ["Link", 11, None])
 def test_reused_table_matches_a_lookup_named_by_its_link_field(through_field):
     requested = TableItemCreate(
         name="Orders",
