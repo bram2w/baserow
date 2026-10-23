@@ -102,7 +102,8 @@ class WorkspaceAgentsView(APIView, SearchableViewMixin, SortableViewMixin):
         responses={
             200: get_example_pagination_serializer_class(
                 AgentSerializer, serializer_name="AgentPagination"
-            )
+            ),
+            400: get_error_schema(["ERROR_PAGE_SIZE_LIMIT"]),
         },
     )
     @validate_query_parameters(AgentListParamsSerializer)

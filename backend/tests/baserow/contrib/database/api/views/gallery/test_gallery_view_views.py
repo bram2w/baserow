@@ -914,6 +914,22 @@ def test_list_rows_limit_is_capped(api_client, data_fixture, settings):
 
 
 @pytest.mark.django_db
+def test_list_rows_default_limit_respects_limit(api_client, data_fixture, settings):
+    settings.ROW_PAGE_SIZE_LIMIT = 2
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    gallery = data_fixture.create_gallery_view(table=table)
+    model = table.get_model()
+    for _ in range(3):
+        model.objects.create()
+
+    url = reverse("api:database:views:gallery:list", kwargs={"view_id": gallery.id})
+    response = api_client.get(url, HTTP_AUTHORIZATION=f"JWT {token}")
+    assert response.status_code == HTTP_200_OK
+    assert len(response.json()["results"]) == 2
+
+
+@pytest.mark.django_db
 def test_list_public_rows_limit_is_capped(api_client, data_fixture, settings):
     settings.ROW_PAGE_SIZE_LIMIT = 200
     gallery = data_fixture.create_gallery_view(public=True)

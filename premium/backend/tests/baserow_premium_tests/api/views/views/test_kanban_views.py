@@ -1180,6 +1180,33 @@ def test_list_all_invalid_select_option_parameter(api_client, premium_data_fixtu
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
+@pytest.mark.parametrize(
+    "query", ["limit=201", "select_option=null,201", "select_option=null,201,0"]
+)
+def test_list_all_limit_is_capped(api_client, premium_data_fixture, settings, query):
+    settings.ROW_PAGE_SIZE_LIMIT = 200
+    user, token = premium_data_fixture.create_user_and_token(
+        has_active_premium_license=True
+    )
+    table = premium_data_fixture.create_database_table(user=user)
+    single_select_field = premium_data_fixture.create_single_select_field(table=table)
+    kanban = premium_data_fixture.create_kanban_view(
+        table=table, single_select_field=single_select_field
+    )
+
+    url = reverse("api:database:views:kanban:list", kwargs={"view_id": kanban.id})
+    response = api_client.get(f"{url}?{query}", HTTP_AUTHORIZATION=f"JWT {token}")
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_PAGE_SIZE_LIMIT"
+
+    response = api_client.get(
+        f"{url}?{query.replace('201', '200')}", HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
 def test_list_all_negative_limit_and_offset_fall_back_to_defaults(
     api_client, premium_data_fixture
 ):
@@ -2070,6 +2097,22 @@ def test_list_public_rows_with_query_param_filters_with_zero_results(
             }
         },
     }
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("query", ["limit=201", "select_option=null,201"])
+def test_list_public_rows_limit_is_capped(
+    api_client, premium_data_fixture, settings, query
+):
+    settings.ROW_PAGE_SIZE_LIMIT = 200
+    kanban_view = premium_data_fixture.create_kanban_view(public=True)
+
+    url = reverse(
+        "api:database:views:kanban:public_rows", kwargs={"slug": kanban_view.slug}
+    )
+    response = api_client.get(f"{url}?{query}")
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_PAGE_SIZE_LIMIT"
 
 
 @pytest.mark.django_db

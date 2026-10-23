@@ -167,6 +167,7 @@ class GalleryViewView(APIView):
                     "ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST",
                     "ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD",
                     "ERROR_FILTERS_PARAM_VALIDATION_ERROR",
+                    "ERROR_PAGE_SIZE_LIMIT",
                     "ERROR_ORDER_BY_FIELD_NOT_FOUND",
                     "ERROR_ORDER_BY_FIELD_NOT_POSSIBLE",
                 ]
@@ -434,6 +435,7 @@ class PublicGalleryViewRowsView(APIView):
                     "ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST",
                     "ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD",
                     "ERROR_FILTERS_PARAM_VALIDATION_ERROR",
+                    "ERROR_PAGE_SIZE_LIMIT",
                 ]
             ),
             401: get_error_schema(["ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW"]),

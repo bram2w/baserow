@@ -116,6 +116,8 @@ class PageNumberPagination(RestFrameworkPageNumberPagination):
 
     def __init__(self, limit_page_size=None, *args, **kwargs):
         self.limit_page_size = limit_page_size
+        if limit_page_size:
+            self.page_size = min(self.page_size, limit_page_size)
         super().__init__(*args, **kwargs)
 
     def get_page_size(self, request):
@@ -168,6 +170,8 @@ class LimitOffsetPagination(RestFrameworkLimitOffsetPagination):
 
     def __init__(self, limit_page_size=None, *args, **kwargs):
         self.limit_page_size = limit_page_size
+        if limit_page_size:
+            self.default_limit = min(self.default_limit, limit_page_size)
         super().__init__(*args, **kwargs)
 
     def get_limit(self, request):
