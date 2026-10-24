@@ -39,8 +39,9 @@ RAW_FORMULA_RE = re.compile(
     r"|\bif\(|\btoday\(|\bnow\("
 )
 
-# The node part of a previous_node path: previous_node.<node>.…
-PREVIOUS_NODE_RE = re.compile(r"(previous_node\.)([^.'\"\s)]+)")
+# The node part of the previous_node path a get() reads: get('previous_node.<node>…
+# Text such as concat('from previous_node.orders') is left alone.
+PREVIOUS_NODE_RE = re.compile(r"(\bget\(\s*['\"]previous_node\.)([^.'\"\s)]+)")
 
 # A get() of a literal previous_node path: get('previous_node.12.0.field_3').
 GET_PREVIOUS_NODE_RE = re.compile(

@@ -1461,3 +1461,63 @@ def test_a_missing_field_only_keeps_its_own_value_in_formula_errors(
     assert error["field_id"] == deleted.id
     mapping = AutomationNode.objects.get(id=node.id).service.specific.field_mappings
     assert mapping.get(field=kept).value["formula"] == "'fixed'"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_a_refused_branch_leaves_the_other_branches_repaired(
+    data_fixture, monkeypatch, real_formula_pass
+):
+    from uuid import uuid4
+
+    from baserow.contrib.automation.nodes.registries import (
+        automation_node_type_registry,
+    )
+    from baserow.contrib.automation.nodes.service import AutomationNodeService
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    automation, workflow_id = _create_test_workflow(data_fixture, user, workspace)
+    ctx = make_test_ctx(user, workspace)
+    workflow = AutomationWorkflowHandler().get_workflow(workflow_id)
+    router = AutomationNodeService().create_node(
+        user,
+        automation_node_type_registry.get("router"),
+        workflow,
+        reference_node_id=workflow.get_trigger().id,
+        service={
+            "edges": [
+                {"uid": str(uuid4()), "label": "A"},
+                {"uid": str(uuid4()), "label": "B"},
+            ]
+        },
+    )
+
+    def rename_then_generate(formulas, context):
+        # Someone renames branch A between the update and the repair.
+        router.service.specific.edges.filter(label="A").update(label="C")
+        return {key: "true" for key in formulas}
+
+    monkeypatch.setattr(
+        automation_agents,
+        "get_generate_formulas_tool",
+        lambda profile: rename_then_generate,
+    )
+
+    result = update_nodes(
+        ctx,
+        workflow_id=workflow_id,
+        nodes=[
+            NodeUpdate(
+                node_id=router.id,
+                edges=[
+                    {"label": "A", "condition": "$formula: always"},
+                    {"label": "B", "condition": "$formula: always"},
+                ],
+            )
+        ],
+        thought="update",
+    )
+
+    (error,) = result["formula_errors"]
+    assert error["edge_label"] == "A"
+    assert router.service.specific.edges.get(label="B").condition["formula"] == "true"

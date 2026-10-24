@@ -9,6 +9,7 @@ from baserow.contrib.automation.tools.formulas import (
     check_automation_formula,
     check_output_paths,
     needs_formula,
+    resolve_node_refs,
     wrap_static_string,
 )
 
@@ -189,3 +190,12 @@ def test_a_node_with_an_unknown_output_takes_any_path():
         "get('previous_node.9.anything')",
         lambda node_id: {"formula_path": "previous_node.9", "properties": {}},
     )
+
+
+def test_previous_node_in_text_is_not_a_node_path():
+    formula = "concat('Copied from previous_node.orders', get('previous_node.o.0.id'))"
+
+    assert resolve_node_refs(formula, {"orders": 4, "o": 5}) == (
+        "concat('Copied from previous_node.orders', get('previous_node.5.0.id'))"
+    )
+    check_automation_formula("subject", "concat('from previous_node.orders', 'x')")

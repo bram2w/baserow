@@ -8,7 +8,6 @@ from baserow.contrib.automation.models import Automation
 from baserow.contrib.automation.tools.nodes import nodes_in_order
 from baserow.contrib.automation.tools.workflows import (
     get_automation_in_workspace,
-    get_workflow_in_workspace,
 )
 from baserow.contrib.automation.workflows.models import AutomationWorkflow
 from baserow.core.models import Workspace
@@ -21,14 +20,6 @@ def get_automation(
     """Fetch an automation scoped to the user's workspace."""
 
     return get_automation_in_workspace(ToolContext(user, workspace), automation_id)
-
-
-def get_workflow(
-    workflow_id: int, user: AbstractUser, workspace: Workspace
-) -> AutomationWorkflow:
-    """Fetch a workflow scoped to the user's workspace."""
-
-    return get_workflow_in_workspace(ToolContext(user, workspace), workflow_id)
 
 
 def get_nodes_in_order(user: AbstractUser, workflow: AutomationWorkflow) -> list[dict]:

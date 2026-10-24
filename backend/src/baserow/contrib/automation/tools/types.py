@@ -124,11 +124,12 @@ class ServiceValues:
     ) -> list[dict[str, Any]]:
         """
         The field mappings of a row action. A field of another table and a field
-        with an invalid formula get no mapping.
+        with an invalid formula get no mapping. A field given twice takes the
+        last value, as on an update.
         """
 
         field_ids = self._table_field_ids(table_id)
-        mappings = []
+        mappings = {}
         for field_value in values:
             if field_value.field_id not in field_ids:
                 self.errors.append(
@@ -141,10 +142,12 @@ class ServiceValues:
                 "values", field_value.value, field_id=field_value.field_id
             )
             if len(self.invalid) == invalid:
-                mappings.append(
-                    {"field_id": field_value.field_id, "value": value, "enabled": True}
-                )
-        return mappings
+                mappings[field_value.field_id] = {
+                    "field_id": field_value.field_id,
+                    "value": value,
+                    "enabled": True,
+                }
+        return list(mappings.values())
 
 
 # ---------------------------------------------------------------------------
@@ -275,8 +278,13 @@ class NodeRefs:
                 "earlier in this call nor the ID of a node in the workflow."
             )
         node_id, edges = self._nodes[ref]
-        if not edge_label or edges is None:
+        if not edge_label:
             return node_id, ""
+        if edges is None:
+            raise DjangoValidationError(
+                f"router_edge_label '{edge_label}' is given, but node '{ref}' is "
+                "not a router. Leave it out to follow the node."
+            )
         uid = edges.get(edge_label)
         if uid is None:
             matches = [
@@ -558,6 +566,8 @@ class ActionNodeCreate(BaseModel):
         labels = [edge.label.lower() for edge in self.edges or []]
         if len(labels) != len(set(labels)):
             raise ValueError("Each router branch needs its own label.")
+        if self.type == "router" and self.edges is not None and not labels:
+            raise ValueError("router requires at least one branch in edges")
         required = self._REQUIRED_FIELDS.get(self.type)
         if required:
             missing = [
@@ -575,8 +585,12 @@ class ActionNodeCreate(BaseModel):
         return {edge.label: edge._uid for edge in self.edges or []}
 
     def to_orm_service_dict(self, values: ServiceValues) -> dict[str, Any]:
-        """The service values of the node, with its formulas checked."""
+        """
+        The service values of the node, with its formulas checked. Values its type
+        takes no part of are reported in ``values.errors``.
+        """
 
+        _report_unused(self, self.type, _CREATE_FIELDS.get(self.type, set()), values)
         return _TO_ORM_SERVICE[self.type](self, values)
 
 
@@ -707,7 +721,12 @@ class NodeUpdate(BaseModel):
         :return: The service kwargs, or None when no service value changes.
         """
 
-        builder = _TO_UPDATE_SERVICE.get(service_dispatch_type(node.service))
+        dispatch_type = service_dispatch_type(node.service)
+        node_type = CANONICAL_TO_SHORT_TYPE.get(node.get_type().type, dispatch_type)
+        _report_unused(
+            self, node_type, _UPDATE_FIELDS.get(dispatch_type, set()), values
+        )
+        builder = _TO_UPDATE_SERVICE.get(dispatch_type)
         if builder is None:
             return None
         service = builder(self, node, values)
@@ -787,6 +806,7 @@ def _router_update_service(
 ) -> dict[str, Any]:
     if not n.edges:
         return {}
+    changed = False
     edges = [
         {"uid": str(edge.uid), "label": edge.label, "condition": edge.condition}
         for edge in node.service.specific.edges.all()
@@ -811,7 +831,9 @@ def _router_update_service(
         )
         if condition is not UNCHANGED:
             matches[0]["condition"] = condition
-    return {"edges": edges}
+            changed = True
+    # The edges are written as a whole, so only when a condition changes.
+    return {"edges": edges} if changed else {}
 
 
 def _ai_agent_update_service(
@@ -825,6 +847,51 @@ def _ai_agent_update_service(
     if n.choices is not None:
         d["ai_choices"] = n.choices
     return d
+
+
+# The node values each type takes, beyond the ones every node has.
+_CREATE_FIELDS: dict[str, set[str]] = {
+    "router": {"edges"},
+    "smtp_email": {"to_emails", "cc_emails", "bcc_emails", "subject", "body"},
+    "slack_write_message": {"channel", "text"},
+    "create_row": {"table_id", "row_id", "values"},
+    "update_row": {"table_id", "row_id", "values"},
+    "delete_row": {"table_id", "row_id", "values"},
+    "ai_agent": {"prompt", "output_type", "choices"},
+}
+_UPDATE_FIELDS: dict[str, set[str]] = {
+    **_CREATE_FIELDS,
+    "smtp_email": _CREATE_FIELDS["smtp_email"] | {"body_type"},
+}
+# The values every node takes.
+_COMMON_FIELDS = {
+    "node_id",
+    "ref",
+    "label",
+    "type",
+    "previous_node_ref",
+    "router_edge_label",
+}
+
+
+def _report_unused(
+    n: BaseModel, node_type: str, fields: set[str], values: ServiceValues
+) -> None:
+    """Report the given values a node of ``node_type`` takes no part of."""
+
+    unused = [
+        name
+        for name, model_field in type(n).model_fields.items()
+        if name not in fields
+        and name not in _COMMON_FIELDS
+        and getattr(n, name) not in (None, [], "", model_field.default)
+    ]
+    if unused:
+        names = ", ".join(unused)
+        values.errors.append(
+            f"A {node_type} node takes no {names}, so "
+            f"{'it was' if len(unused) == 1 else 'they were'} not set."
+        )
 
 
 _TO_UPDATE_SERVICE: dict[str, Callable] = {

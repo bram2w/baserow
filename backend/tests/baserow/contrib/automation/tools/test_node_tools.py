@@ -12,9 +12,11 @@ from baserow.contrib.automation.nodes.models import AutomationNode
 from baserow.contrib.automation.tools.nodes import (
     add_nodes,
     delete_nodes,
+    list_nodes,
     update_nodes,
 )
 from baserow.contrib.automation.tools.types import ActionNodeCreate, NodeUpdate
+from baserow.core.action.models import Action
 from baserow.core.formula.types import BASEROW_FORMULA_MODE_ADVANCED
 
 from .conftest import create_node, create_workflow
@@ -530,3 +532,140 @@ def test_update_nodes_stores_the_email_body_type_as_a_choice(automation_ctx):
     service = mail.service.specific
     service.refresh_from_db()
     assert service.body_type == "html"
+
+
+@pytest.mark.django_db
+def test_add_nodes_maps_a_field_given_twice_once(automation_ctx):
+    ctx, automation, table, name = automation_ctx
+    workflow, trigger = create_workflow(ctx.user, automation, "Flow", table)
+
+    result = add_nodes(
+        ctx,
+        workflow.id,
+        [
+            ActionNodeCreate(
+                ref="store",
+                type="create_row",
+                previous_node_ref=str(trigger.id),
+                table_id=table.id,
+                values=[
+                    {"field_id": name.id, "value": "first"},
+                    {"field_id": name.id, "value": "second"},
+                ],
+            )
+        ],
+    )
+
+    service = AutomationNode.objects.get(
+        id=result["created_nodes"][0]["id"]
+    ).service.specific
+    assert [m.value["formula"] for m in service.field_mappings.all()] == ["'second'"]
+
+
+@pytest.mark.django_db
+def test_add_nodes_reports_values_the_node_type_takes_no(automation_ctx):
+    ctx, automation, table, _ = automation_ctx
+    workflow, trigger = create_workflow(ctx.user, automation, "Flow", table)
+
+    result = add_nodes(
+        ctx,
+        workflow.id,
+        [
+            ActionNodeCreate(
+                ref="slack",
+                type="slack_write_message",
+                previous_node_ref=str(trigger.id),
+                channel="general",
+                text="Hi",
+                subject="Ignored",
+                table_id=999999,
+            )
+        ],
+    )
+
+    (slack,) = result["created_nodes"]
+    assert result["errors"] == [
+        f"Node {slack['id']} ({slack['label']}): A slack_write_message node takes "
+        "no subject, table_id, so they were not set."
+    ]
+
+
+@pytest.mark.django_db
+def test_update_nodes_reports_values_the_node_type_takes_no(automation_ctx):
+    ctx, automation, table, _ = automation_ctx
+    workflow, trigger = create_workflow(ctx.user, automation, "Flow", table)
+    mail = _email_node(ctx, workflow, trigger, "Mail")
+
+    result = update_nodes(ctx, workflow.id, [NodeUpdate(node_id=mail.id, text="Hi")])
+
+    assert result == {
+        "updated_nodes": [],
+        "errors": [
+            f"Node {mail.id} (Mail): A smtp_email node takes no text, so it was not "
+            "set."
+        ],
+    }
+
+
+@pytest.mark.django_db
+def test_update_nodes_lists_only_nodes_that_changed(automation_ctx):
+    ctx, automation, table, _ = automation_ctx
+    workflow, trigger = create_workflow(ctx.user, automation, "Flow", table)
+    mail = _email_node(ctx, workflow, trigger, "Mail")
+    other = _email_node(ctx, workflow, mail, "Other")
+
+    result = update_nodes(
+        ctx,
+        workflow.id,
+        [
+            NodeUpdate(node_id=mail.id, subject="concat("),
+            NodeUpdate(node_id=other.id, subject="New"),
+        ],
+    )
+
+    assert result["updated_nodes"] == [{"node_id": other.id, "label": "Other"}]
+    assert result["formula_errors"][0]["node_id"] == mail.id
+
+
+@pytest.mark.django_db
+def test_update_nodes_leaves_a_router_alone_when_no_condition_is_valid(
+    automation_ctx,
+):
+    ctx, automation, table, _ = automation_ctx
+    workflow, trigger = create_workflow(ctx.user, automation, "Flow", table)
+    router = create_node(
+        ctx.user,
+        workflow,
+        "router",
+        reference_node_id=trigger.id,
+        service={"edges": [{"uid": str(uuid4()), "label": "Big"}]},
+    )
+    actions = Action.objects.count()
+
+    result = update_nodes(
+        ctx,
+        workflow.id,
+        [NodeUpdate(node_id=router.id, edges=[{"label": "Big", "condition": "if("}])],
+    )
+
+    assert result["updated_nodes"] == []
+    assert result["formula_errors"][0]["edge_label"] == "Big"
+    assert Action.objects.count() == actions
+
+
+@pytest.mark.django_db
+def test_list_nodes_names_the_container_of_a_child(automation_ctx, data_fixture):
+    ctx, automation, table, _ = automation_ctx
+    workflow, trigger = create_workflow(ctx.user, automation, "Flow", table)
+    iterator = data_fixture.create_core_iterator_action_node(
+        workflow=workflow, reference_node=trigger
+    )
+    child = data_fixture.create_automation_node(
+        workflow=workflow, reference_node=iterator, position="child"
+    )
+
+    nodes = {node["id"]: node for node in list_nodes(ctx, workflow.id)["nodes"]}
+
+    assert nodes[child.id]["parent_node_id"] == iterator.id
+    assert "previous_node_ref" not in nodes[child.id]
+    assert nodes[iterator.id]["previous_node_ref"] == str(trigger.id)

@@ -274,7 +274,9 @@ def _refuses(message: str, error: dict[str, Any]) -> bool:
     """
 
     if "edge_label" in error:
-        return f"'{error['edge_label']}'" in message
+        # A branch refusal starts with its label; the branches it lists after it
+        # are not refused.
+        return message.startswith(f"'{error['edge_label']}' ")
     field = _REFUSED_FIELD_RE.match(message)
     if field is None:
         return True
@@ -311,7 +313,7 @@ def _repair_node(
     remaining = [e for e in node_errors if _request_key(e) not in generated]
     if repaired:
         with transaction.atomic():
-            node, values = shared_nodes.update_node(
+            node, values, _changed = shared_nodes.update_node(
                 tool_context,
                 node.workflow,
                 _formula_update(node_id, repaired, generated),

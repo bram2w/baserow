@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 import pytest
 
 from baserow.contrib.automation.nodes.models import AutomationNode
-from baserow.contrib.automation.tools.types import WorkflowCreate
+from baserow.contrib.automation.tools.types import ActionNodeCreate, WorkflowCreate
 from baserow.contrib.automation.tools.workflows import create_workflows
 from baserow.contrib.automation.workflows.actions import (
     CreateAutomationWorkflowActionType,
@@ -426,3 +426,19 @@ def test_a_path_the_trigger_does_not_output_is_a_formula_error(automation_ctx):
     )
     route = _nodes(created["id"])["Route"]
     assert route.service.specific.edges.get().condition["formula"] == ""
+
+
+@pytest.mark.django_db
+def test_a_branch_of_a_node_that_is_not_a_router_writes_nothing(automation_ctx):
+    ctx, automation, table, _ = automation_ctx
+    workflow = _workflow(table, _email(router_edge_label="Big"))
+
+    with pytest.raises(DjangoValidationError, match="node 'trigger' is not a router"):
+        create_workflows(ctx, automation.id, [workflow])
+
+    assert not AutomationWorkflow.objects.filter(automation=automation).exists()
+
+
+def test_a_router_needs_a_branch():
+    with pytest.raises(ValueError, match="router requires at least one branch"):
+        ActionNodeCreate(ref="r", type="router", previous_node_ref="t", edges=[])

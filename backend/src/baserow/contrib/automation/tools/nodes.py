@@ -6,7 +6,6 @@ from dataclasses import dataclass, field
 from typing import Annotated, Any, Callable
 
 from django.contrib.auth.models import AbstractUser
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from django.utils.translation import gettext as _
@@ -44,7 +43,6 @@ from baserow.core.exceptions import PermissionException
 from baserow.core.handler import CoreHandler
 from baserow.core.mcp.exceptions import (
     INTERNAL_ERROR_MESSAGE,
-    NOT_FOUND_MESSAGE,
     to_mcp_error,
 )
 from baserow.core.tools import ToolContext
@@ -81,6 +79,11 @@ def _child_ids(info: dict[str, Any]) -> list[int]:
     return list(children) if isinstance(children, list) else []
 
 
+# The output a container's child is listed under: it runs inside the container,
+# not after it.
+CHILD_OUTPUT = "child"
+
+
 def nodes_in_order(
     user: AbstractUser, workflow: AutomationWorkflow
 ) -> list[tuple[AutomationNode, AutomationNode | None, str]]:
@@ -107,7 +110,7 @@ def nodes_in_order(
         ordered.append((node, previous, output))
         info = graph.get(str(node_id), {})
         for child_id in _child_ids(info):
-            walk(child_id, node, "")
+            walk(child_id, node, CHILD_OUTPUT)
         # A router's branches in their order, the default one last, as the editor
         # shows them.
         branch_order = [edge["uid"] for edge in router_edges(node)] + [""]
@@ -200,7 +203,9 @@ def describe_node(
         "label": node.label,
         "type": node.get_type().type,
     }
-    if previous is not None:
+    if previous is not None and output == CHILD_OUTPUT:
+        description["parent_node_id"] = previous.id
+    elif previous is not None:
         description["previous_node_ref"] = str(previous.id)
         if output:
             labels = {edge["uid"]: edge["label"] for edge in router_edges(previous)}
@@ -240,7 +245,9 @@ def list_nodes(
     """
     List the nodes of a workflow in execution order, the trigger first. Each node
     has its id, label and type, the node it follows (previous_node_ref) and, on a
-    router branch, the branch label. A router lists its branches. output_schema
+    router branch, the branch label. A node that runs inside a container node has
+    the container's id as parent_node_id instead. A router lists its branches.
+    output_schema
     says what a node outputs: a later node's formula reads a property with
     get('<formula_path>.<property key>').
     """
@@ -260,13 +267,14 @@ def item_error_message(exc: Exception) -> str:
     """
 
     message = to_mcp_error(exc)
-    if message is None and not isinstance(exc, AttributeError):
-        if isinstance(exc, ObjectDoesNotExist):
-            message = NOT_FOUND_MESSAGE
-        elif type(exc).__module__.startswith("baserow"):
-            # Baserow's own errors (AutomationNodeNotDeletable, ...) say what the
-            # caller did wrong.
-            message = str(exc) or type(exc).__name__
+    if (
+        message is None
+        and not isinstance(exc, AttributeError)
+        and type(exc).__module__.startswith("baserow")
+    ):
+        # Baserow's own errors (AutomationNodeNotDeletable, ...) say what the
+        # caller did wrong.
+        message = str(exc) or type(exc).__name__
     if message is None:
         logger.exception("Unexpected error in an automation tool item: {}", exc)
         return INTERNAL_ERROR_MESSAGE
@@ -406,12 +414,20 @@ def create_node(
     return node
 
 
+# The action nodes that act on a table.
+ROW_ACTION_TYPES = {"create_row", "update_row", "delete_row"}
+
+
 def node_table_ids(nodes: list[TriggerNodeCreate | ActionNodeCreate]) -> set[int]:
+    """The tables the row triggers and row actions act on."""
+
     table_ids = set()
     for node in nodes:
-        table_id = (
-            node.table_id() if isinstance(node, TriggerNodeCreate) else node.table_id
-        )
+        if isinstance(node, TriggerNodeCreate):
+            table_id = node.table_id()
+        else:
+            # Another node's table_id is reported as unused, not looked up.
+            table_id = node.table_id if node.type in ROW_ACTION_TYPES else None
         if table_id is not None:
             table_ids.add(table_id)
     return table_ids
@@ -483,7 +499,8 @@ def update_node(
     :param refs: The ID of nodes by the ref they were created under, for
         formulas that name them by ref.
 
-    :returns: The node as it is now, and the values that could not be set.
+    :returns: The node as it is now, the values that could not be set, and
+        whether anything was written.
     :raises AutomationNodeDoesNotExist: When the node is not in the workflow.
     """
 
@@ -512,7 +529,7 @@ def update_node(
         data["service"] = service
     if data:
         node = UpdateAutomationNodeActionType.do(ctx.user, node.id, data)
-    return node, values
+    return node, values, bool(data)
 
 
 def _lock_nodes(workflow: AutomationWorkflow, node_ids: list[int]) -> None:
@@ -547,8 +564,8 @@ def update_nodes(
     a trigger's settings cannot change. Values not given keep theirs. Formulas
     work as in add_nodes, except that a value with an invalid formula keeps what
     it had; the formula is returned in formula_errors. A node that fails is
-    reported in errors and the others are still updated. If the user may not
-    change a node, nothing is changed.
+    reported in errors and the others are still updated; updated_nodes lists the
+    nodes that changed. If the user may not change a node, nothing is changed.
     """
 
     if not nodes:
@@ -569,7 +586,9 @@ def update_nodes(
             try:
                 # A savepoint, so a failed node leaves the transaction usable.
                 with transaction.atomic():
-                    node, values = update_node(ctx, workflow, node_update, field_ids)
+                    node, values, changed = update_node(
+                        ctx, workflow, node_update, field_ids
+                    )
             except PermissionException:
                 raise
             except Exception as exc:
@@ -578,7 +597,8 @@ def update_nodes(
                     f"{item_error_message(exc)}"
                 )
                 continue
-            updated.append({"node_id": node.id, "label": node.label})
+            if changed:
+                updated.append({"node_id": node.id, "label": node.label})
             creation = NodeCreation()
             creation.add_values(node, values)
             errors.extend(creation.errors)
