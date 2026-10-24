@@ -65,6 +65,80 @@ describe('LocalBaserowTableServiceConditionalForm', () => {
 
   const fields = [{ id: 1, name: 'Name', type: 'text', primary: true }]
 
+  test.each(['empty', 'not_empty'])(
+    'preserves the %s controller when changing its target field',
+    async (operator) => {
+      const wrapper = await mountComponent(
+        {
+          fields: [...fields, { id: 2, name: 'Country', type: 'text' }],
+          modelValue: [
+            {
+              id: 'filter-1',
+              field: 1,
+              type: 'equal',
+              value: { formula: "get('dashboard_filter.1')", mode: 'simple' },
+            },
+          ],
+        },
+        {
+          provide: {
+            resolveServiceFilterOperator: () => ({
+              type: operator,
+              help: 'Set in Country',
+            }),
+            formulaComponent: FormulaInputStub,
+          },
+        }
+      )
+      expect(wrapper.get('.filters__type .dropdown__selected').text()).toBe(
+        operator === 'empty' ? 'viewFilter.isEmpty' : 'viewFilter.isNotEmpty'
+      )
+      expect(wrapper.get('.filters__type .dropdown').classes()).toContain(
+        'dropdown--disabled'
+      )
+      expect(wrapper.find('.formula-input-field__mode-toggle').exists()).toBe(
+        true
+      )
+      expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+      await wrapper.get('.filters__type').trigger('focus')
+      expect(document.body.querySelector('.tooltip').textContent).toBe(
+        'Set in Country'
+      )
+      await wrapper.get('.filters__type').trigger('blur')
+      await wrapper.get('.filters__field .dropdown__selected').trigger('click')
+      await wrapper
+        .get('.filters__field .select__item-name-text[title="Country"]')
+        .trigger('click')
+      expect(wrapper.emitted('update:modelValue').at(-1)[0]).toEqual([
+        {
+          id: 'filter-1',
+          field: 2,
+          type: 'equal',
+          value: { formula: "get('dashboard_filter.1')", mode: 'simple' },
+        },
+      ])
+    }
+  )
+
+  test('keeps ordinary source operators editable without a controller', async () => {
+    const wrapper = await mountComponent({
+      modelValue: [
+        {
+          id: 'filter-1',
+          field: 1,
+          type: 'equal',
+          value: { formula: 'France', mode: 'raw' },
+        },
+      ],
+    })
+    expect(wrapper.get('.filters__type .dropdown__selected').text()).toBe(
+      'viewFilter.is'
+    )
+    expect(wrapper.get('.filters__type .dropdown').classes()).not.toContain(
+      'dropdown--disabled'
+    )
+  })
+
   async function mountComponent(props = {}, global = {}) {
     return await testApp.mount(LocalBaserowTableServiceConditionalForm, {
       props: {

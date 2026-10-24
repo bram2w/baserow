@@ -57,6 +57,17 @@ const applyCommit = (dashboardState) => {
   })
 }
 
+const dispatchSourceWidgets = (app, context, request) =>
+  actions.dispatchDataSource.call(
+    app,
+    {
+      ...context,
+      dispatch: (action, payload) =>
+        actions[action].call(app, context, payload),
+    },
+    request
+  )
+
 describe('Dashboard application store', () => {
   afterEach(() => {
     vi.clearAllMocks()
@@ -116,6 +127,7 @@ describe('Dashboard application store', () => {
     const dataSourceRequest = deferred()
     const commit = applyCommit(dashboardState)
     const dispatch = vi.fn((action) => {
+      if (action === 'fetchFilters') return Promise.resolve([])
       if (action === 'fetchWidgets') return widgetRequest.promise
       if (action === 'fetchNewDataSources') return dataSourceRequest.promise
       throw new Error(`Unexpected action: ${action}`)
@@ -174,9 +186,9 @@ describe('Dashboard application store', () => {
   test('prioritizes data sources by their first widget position', () => {
     const dataSources = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }]
     const widgets = [
-      { data_source_id: 2, grid_x: 1, grid_y: 1 },
-      { data_source_id: 3, grid_x: 2, grid_y: 0 },
-      { data_source_id: 2, grid_x: 0, grid_y: 0 },
+      { id: 2, data_source_id: 2, grid_x: 1, grid_y: 1 },
+      { id: 3, data_source_id: 3, grid_x: 2, grid_y: 0 },
+      { id: 2, data_source_id: 2, grid_x: 0, grid_y: 0 },
     ]
 
     expect(prioritizeDataSources(dataSources, widgets)).toEqual([
@@ -190,9 +202,9 @@ describe('Dashboard application store', () => {
   test('limits concurrent data source dispatches using runtime config', async () => {
     const dashboardState = createDashboardState()
     dashboardState.widgets = [
-      { data_source_id: 3, grid_x: 0, grid_y: 0 },
-      { data_source_id: 2, grid_x: 0, grid_y: 1 },
-      { data_source_id: 1, grid_x: 0, grid_y: 2 },
+      { id: 3, data_source_id: 3, grid_x: 0, grid_y: 0 },
+      { id: 2, data_source_id: 2, grid_x: 0, grid_y: 1 },
+      { id: 1, data_source_id: 1, grid_x: 0, grid_y: 2 },
     ]
     const dataSources = [{ id: 1 }, { id: 2 }, { id: 3 }]
     const requests = Object.fromEntries(
@@ -207,6 +219,7 @@ describe('Dashboard application store', () => {
       getAllDataSources: vi.fn().mockResolvedValue({ data: dataSources }),
       dispatch: dispatchDataSource,
     })
+    WidgetService.mockReturnValue({ dispatch: dispatchDataSource })
     const commit = applyCommit(dashboardState)
     const actionContext = {
       state: dashboardState,
@@ -217,7 +230,7 @@ describe('Dashboard application store', () => {
       if (action !== 'dispatchDataSource') {
         throw new Error(`Unexpected action: ${action}`)
       }
-      return actions.dispatchDataSource.call(
+      return dispatchSourceWidgets(
         {
           $client: {},
           $config: {
@@ -375,6 +388,7 @@ describe('Dashboard application store', () => {
 
   test('dispatches data for the latest concurrent data source fetch', async () => {
     const dashboardState = createDashboardState()
+    dashboardState.widgets = [{ id: 7, data_source_id: 7 }]
     const firstDispatch = deferred()
     const dataSource = { id: 7, name: 'Source' }
     const getAllDataSources = vi.fn().mockResolvedValue({ data: [dataSource] })
@@ -386,13 +400,13 @@ describe('Dashboard application store', () => {
         dispatchCount += 1
         if (dispatchCount === 1) {
           mutations.UPDATE_DATA(dashboardState, {
-            dataSourceId: request.dataSourceId,
+            widgetId: request.dataSourceId,
             values: null,
           })
           return firstDispatch.promise
         }
         mutations.UPDATE_DATA(dashboardState, {
-          dataSourceId: request.dataSourceId,
+          widgetId: request.dataSourceId,
           values: { count: 1 },
         })
       }
@@ -430,16 +444,21 @@ describe('Dashboard application store', () => {
   test('keeps concurrent dispatches for different data sources independent', async () => {
     const dashboardState = createDashboardState()
     dashboardState.dataSources = [{ id: 1 }, { id: 2 }]
+    dashboardState.widgets = dashboardState.dataSources.map(({ id }) => ({
+      id,
+      data_source_id: id,
+    }))
     const firstRequest = deferred()
     const secondRequest = deferred()
     const dispatchDataSource = vi.fn((dataSourceId) => {
       return dataSourceId === 1 ? firstRequest.promise : secondRequest.promise
     })
     DataSourceService.mockReturnValue({ dispatch: dispatchDataSource })
+    WidgetService.mockReturnValue({ dispatch: dispatchDataSource })
     const commit = applyCommit(dashboardState)
     const dispatch = vi.fn((action, payload) => {
       if (action === 'dispatchDataSource') {
-        return actions.dispatchDataSource.call(
+        return dispatchSourceWidgets(
           { $client: {} },
           { state: dashboardState, commit },
           payload
@@ -472,6 +491,10 @@ describe('Dashboard application store', () => {
   test('ignores an obsolete dispatch response for the same data source', async () => {
     const dashboardState = createDashboardState()
     dashboardState.dataSources = [{ id: 1 }]
+    dashboardState.widgets = dashboardState.dataSources.map(({ id }) => ({
+      id,
+      data_source_id: id,
+    }))
     const firstRequest = deferred()
     const secondRequest = deferred()
     const dispatchDataSource = vi
@@ -479,20 +502,13 @@ describe('Dashboard application store', () => {
       .mockReturnValueOnce(firstRequest.promise)
       .mockReturnValueOnce(secondRequest.promise)
     DataSourceService.mockReturnValue({ dispatch: dispatchDataSource })
+    WidgetService.mockReturnValue({ dispatch: dispatchDataSource })
     const commit = applyCommit(dashboardState)
     const context = { state: dashboardState, commit }
 
-    const firstDispatch = actions.dispatchDataSource.call(
-      { $client: {} },
-      context,
-      1
-    )
+    const firstDispatch = dispatchSourceWidgets({ $client: {} }, context, 1)
     await vi.waitFor(() => expect(dispatchDataSource).toHaveBeenCalledOnce())
-    const secondDispatch = actions.dispatchDataSource.call(
-      { $client: {} },
-      context,
-      1
-    )
+    const secondDispatch = dispatchSourceWidgets({ $client: {} }, context, 1)
 
     secondRequest.resolve({ data: { result: 'newest' } })
     await secondDispatch
@@ -507,6 +523,10 @@ describe('Dashboard application store', () => {
     try {
       const dashboardState = createDashboardState()
       dashboardState.dataSources = [{ id: 1 }]
+      dashboardState.widgets = dashboardState.dataSources.map(({ id }) => ({
+        id,
+        data_source_id: id,
+      }))
       const throttled = {
         response: { status: 429, headers: { 'retry-after': '1' } },
       }
@@ -515,9 +535,10 @@ describe('Dashboard application store', () => {
         .mockRejectedValueOnce(throttled)
         .mockResolvedValueOnce({ data: { result: 'retried' } })
       DataSourceService.mockReturnValue({ dispatch: dispatchDataSource })
+      WidgetService.mockReturnValue({ dispatch: dispatchDataSource })
       const commit = applyCommit(dashboardState)
 
-      const dispatch = actions.dispatchDataSource.call(
+      const dispatch = dispatchSourceWidgets(
         { $client: {} },
         { state: dashboardState, commit },
         1
@@ -540,14 +561,19 @@ describe('Dashboard application store', () => {
     try {
       const dashboardState = createDashboardState()
       dashboardState.dataSources = [{ id: 1 }]
+      dashboardState.widgets = dashboardState.dataSources.map(({ id }) => ({
+        id,
+        data_source_id: id,
+      }))
       const throttled = {
         response: { status: 429, headers: { 'retry-after': '1' } },
       }
       const dispatchDataSource = vi.fn().mockRejectedValue(throttled)
       DataSourceService.mockReturnValue({ dispatch: dispatchDataSource })
+      WidgetService.mockReturnValue({ dispatch: dispatchDataSource })
       const commit = applyCommit(dashboardState)
 
-      const dispatch = actions.dispatchDataSource.call(
+      const dispatch = dispatchSourceWidgets(
         { $client: {} },
         { state: dashboardState, commit },
         1
@@ -568,9 +594,14 @@ describe('Dashboard application store', () => {
   test('cancels unstarted dispatches after the dashboard changes', async () => {
     const dashboardState = createDashboardState()
     dashboardState.dataSources = [{ id: 1 }, { id: 2 }, { id: 3 }]
+    dashboardState.widgets = dashboardState.dataSources.map(({ id }) => ({
+      id,
+      data_source_id: id,
+    }))
     const activeRequest = deferred()
     const dispatchDataSource = vi.fn().mockReturnValue(activeRequest.promise)
     DataSourceService.mockReturnValue({ dispatch: dispatchDataSource })
+    WidgetService.mockReturnValue({ dispatch: dispatchDataSource })
     const commit = applyCommit(dashboardState)
     const context = { state: dashboardState, commit }
     const app = {
@@ -581,7 +612,7 @@ describe('Dashboard application store', () => {
     }
 
     const dispatches = [1, 2, 3].map((dataSourceId) =>
-      actions.dispatchDataSource.call(app, context, dataSourceId)
+      dispatchSourceWidgets(app, context, dataSourceId)
     )
     await vi.waitFor(() => expect(dispatchDataSource).toHaveBeenCalledOnce())
 
@@ -599,14 +630,19 @@ describe('Dashboard application store', () => {
     try {
       const dashboardState = createDashboardState()
       dashboardState.dataSources = [{ id: 1 }]
+      dashboardState.widgets = dashboardState.dataSources.map(({ id }) => ({
+        id,
+        data_source_id: id,
+      }))
       const throttled = {
         response: { status: 429, headers: { 'retry-after': '0' } },
       }
       const dispatchDataSource = vi.fn().mockRejectedValue(throttled)
       DataSourceService.mockReturnValue({ dispatch: dispatchDataSource })
+      WidgetService.mockReturnValue({ dispatch: dispatchDataSource })
       const commit = applyCommit(dashboardState)
 
-      const dispatch = actions.dispatchDataSource.call(
+      const dispatch = dispatchSourceWidgets(
         { $client: {} },
         { state: dashboardState, commit },
         1
@@ -624,6 +660,10 @@ describe('Dashboard application store', () => {
   test('does not restore data from a dispatch completed after source removal', async () => {
     const dashboardState = createDashboardState()
     dashboardState.dataSources = [{ id: 1 }]
+    dashboardState.widgets = dashboardState.dataSources.map(({ id }) => ({
+      id,
+      data_source_id: id,
+    }))
     dashboardState.data = { 1: { result: 'existing' } }
     const dispatchRequest = deferred()
     DataSourceService.mockReturnValue({
@@ -632,7 +672,7 @@ describe('Dashboard application store', () => {
     })
     const commit = applyCommit(dashboardState)
 
-    const pendingDispatch = actions.dispatchDataSource.call(
+    const pendingDispatch = dispatchSourceWidgets(
       { $client: {} },
       { state: dashboardState, commit },
       1
@@ -666,6 +706,10 @@ describe('Dashboard application store', () => {
     const collectionDataSource = { id: dataSourceId, name: 'Before update' }
     const updatedDataSource = { id: dataSourceId, name: 'After update' }
     dashboardState.dataSources = [collectionDataSource]
+    dashboardState.widgets = dashboardState.dataSources.map(({ id }) => ({
+      id,
+      data_source_id: id,
+    }))
     dashboardState.data = { [dataSourceId]: previousData }
 
     const updateRequest = deferred()
@@ -688,6 +732,7 @@ describe('Dashboard application store', () => {
     const $registry = {
       get: vi.fn().mockReturnValue({ dataSourceUpdated }),
     }
+    WidgetService.mockReturnValue({ dispatch: dispatchDataSource })
     const commit = applyCommit(dashboardState)
     const getters = {
       getDataSourceById: (id) =>
@@ -695,7 +740,7 @@ describe('Dashboard application store', () => {
     }
     const dispatch = vi.fn((action, payload) => {
       if (action === 'dispatchDataSource') {
-        return actions.dispatchDataSource.call(
+        return dispatchSourceWidgets(
           { $client: {} },
           { state: dashboardState, commit },
           payload
@@ -742,16 +787,21 @@ describe('Dashboard application store', () => {
     const localUpdateRequest = deferred()
     const realtimeDataSource = { id: dataSourceId, name: 'Remote update' }
     dashboardState.dataSources = [{ id: dataSourceId, name: 'Initial' }]
+    dashboardState.widgets = dashboardState.dataSources.map(({ id }) => ({
+      id,
+      data_source_id: id,
+    }))
     dashboardState.data = { [dataSourceId]: { result: 'initial' } }
     const update = vi.fn().mockReturnValue(localUpdateRequest.promise)
     const dispatchDataSource = vi
       .fn()
       .mockResolvedValue({ data: { result: 'remote' } })
     DataSourceService.mockReturnValue({ update, dispatch: dispatchDataSource })
+    WidgetService.mockReturnValue({ dispatch: dispatchDataSource })
     const commit = applyCommit(dashboardState)
     const dispatch = vi.fn((action, payload) => {
       if (action === 'dispatchDataSource') {
-        return actions.dispatchDataSource.call(
+        return dispatchSourceWidgets(
           { $client: {} },
           { state: dashboardState, commit },
           payload
@@ -788,15 +838,22 @@ describe('Dashboard application store', () => {
     const updateError = new Error('Stale local failure')
     const realtimeDataSource = { id: dataSourceId, name: 'Remote update' }
     dashboardState.dataSources = [{ id: dataSourceId, name: 'Initial' }]
+    dashboardState.widgets = dashboardState.dataSources.map(({ id }) => ({
+      id,
+      data_source_id: id,
+    }))
     dashboardState.data = { [dataSourceId]: { result: 'initial' } }
     DataSourceService.mockReturnValue({
       update: vi.fn().mockReturnValue(localUpdateRequest.promise),
       dispatch: vi.fn().mockResolvedValue({ data: { result: 'remote' } }),
     })
+    WidgetService.mockReturnValue({
+      dispatch: vi.fn().mockResolvedValue({ data: { result: 'remote' } }),
+    })
     const commit = applyCommit(dashboardState)
     const dispatch = vi.fn((action, payload) => {
       if (action === 'dispatchDataSource') {
-        return actions.dispatchDataSource.call(
+        return dispatchSourceWidgets(
           { $client: {} },
           { state: dashboardState, commit },
           payload
@@ -828,6 +885,10 @@ describe('Dashboard application store', () => {
     const previousData = { result: 'previous' }
     const updateError = new Error('Update failed')
     dashboardState.dataSources = [{ id: dataSourceId }]
+    dashboardState.widgets = dashboardState.dataSources.map(({ id }) => ({
+      id,
+      data_source_id: id,
+    }))
     dashboardState.data = { [dataSourceId]: previousData }
     DataSourceService.mockReturnValue({
       update: vi.fn().mockRejectedValue(updateError),
@@ -852,6 +913,10 @@ describe('Dashboard application store', () => {
     const dataSourceId = 7
     const updateError = new Error('Update failed')
     dashboardState.dataSources = [{ id: dataSourceId }]
+    dashboardState.widgets = dashboardState.dataSources.map(({ id }) => ({
+      id,
+      data_source_id: id,
+    }))
     DataSourceService.mockReturnValue({
       update: vi.fn().mockRejectedValue(updateError),
     })
@@ -1126,14 +1191,16 @@ describe('Dashboard application store public mode', () => {
   test('dispatchDataSource uses the public endpoint of the slug', async () => {
     const dashboardState = createState()
     const commit = openPublicDashboard(dashboardState, {
+      widgets: [{ id: 1, data_source_id: 7 }],
       dataSources: [{ id: 7 }],
     })
     const publicDispatch = vi.fn().mockResolvedValue({ data: { result: '60' } })
     PublicDashboardService.mockReturnValue({ dispatch: publicDispatch })
     const privateDispatch = vi.fn()
     DataSourceService.mockReturnValue({ dispatch: privateDispatch })
+    WidgetService.mockReturnValue({ dispatch: privateDispatch })
 
-    await actions.dispatchDataSource.call(
+    await dispatchSourceWidgets(
       { $client: {} },
       { state: dashboardState, commit },
       { dataSourceId: 7 }
@@ -1145,7 +1212,7 @@ describe('Dashboard application store public mode', () => {
       'public-token'
     )
     expect(privateDispatch).not.toHaveBeenCalled()
-    expect(dashboardState.data).toEqual({ 7: { result: '60' } })
+    expect(dashboardState.data).toEqual({ 1: { result: '60' } })
   })
 
   test('fetchInitial leaves the public mode', async () => {

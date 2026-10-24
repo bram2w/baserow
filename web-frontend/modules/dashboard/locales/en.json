@@ -7,6 +7,13 @@
   "dashboardHeader": {
     "doneEditing": "Done editing"
   },
+  "dashboardAddElement": {
+    "addNew": "Add new…",
+    "widget": "Widget",
+    "widgetDescription": "Visualize your data and metrics with charts, tables or graphs.",
+    "filter": "Filter",
+    "filterDescription": "Display content that applies to your conditions."
+  },
   "emptyDashboard": {
     "title": "This dashboard doesn't have any widgets",
     "subtitle": "Get started by adding one.",
@@ -14,6 +21,102 @@
   },
   "dashboardHeaderMenuItems": {
     "editMode": "Edit mode"
+  },
+  "createWidgetModal": {
+    "title": "Add new widget"
+  },
+  "widget": {
+    "fixConfiguration": "Fix configuration",
+    "filtered": "This widget content is filtered"
+  },
+  "summaryWidget": {
+    "name": "Summary"
+  },
+  "emptyDashboardSidebar": {
+    "title": "No element selected",
+    "message": "Click on one of the elements to see details."
+  },
+  "widgetSettings": {
+    "title": "Title",
+    "description": "Description"
+  },
+  "aggregateRowsDataSourceForm": {
+    "data": "Data",
+    "sourceFieldLabel": "Source",
+    "viewFieldLabel": "View",
+    "notSelected": "Not selected",
+    "aggregationFieldLabel": "Field",
+    "aggregationTypeLabel": "Summary"
+  },
+  "widgetContext": {
+    "delete": "Delete"
+  },
+  "trashType": {
+    "widget": "widget"
+  },
+  "lastViewedItemType": {
+    "dashboard": "Dashboard"
+  },
+  "dashboardFilter": {
+    "label": "Label",
+    "type": "Type",
+    "text": "Text",
+    "defaultLabel": "Filter",
+    "operator": "Filter operator",
+    "operatorControlledBy": "Set in the “{filter}” dashboard filter.",
+    "active": "Active",
+    "inactive": "Inactive",
+    "equal": "Is",
+    "not_equal": "Is not",
+    "contains": "Contains",
+    "contains_not": "Does not contain",
+    "mode": "Filter type",
+    "dropdown": "Dropdown",
+    "input": "Input",
+    "usersCanPick": "Users can pick",
+    "multiple": "Multiple values",
+    "single": "A single value",
+    "choose": "Choose...",
+    "selections": "{count} selections",
+    "inputPlaceholder": "Filter...",
+    "apply": "Apply filter",
+    "update": "Update filter",
+    "clear": "Clear filter",
+    "delete": "Delete filter",
+    "actions": "Filter actions",
+    "confirmDropdownTitle": "Use a dropdown?",
+    "confirmDropdown": "Use dropdown",
+    "confirmInputTitle": "Use a text input?",
+    "confirmInput": "Use text input",
+    "confirmSingleTitle": "Allow a single value?",
+    "confirmSingle": "Use single value",
+    "confirmMultipleTitle": "Allow multiple values?",
+    "confirmMultiple": "Use multiple values",
+    "confirmOperatorTitle": "Change filter operator?",
+    "confirmOperator": "Change operator",
+    "confirmResetMessage": "This will clear your selection for “{filter}” and update the dashboard.",
+    "confirmResetInputMessage": "This will clear the text entered in “{filter}” and update the dashboard.",
+    "settings": "Filter settings",
+    "refresh": "Refresh",
+    "loading": "Loading choices...",
+    "noOptions": "No choices found.",
+    "optionsError": "Unable to load choices.",
+    "more": "Load more",
+    "unavailable": "No longer available",
+    "unavailableHelp": "This value is no longer present in the available data. It remains applied until you remove it.",
+    "bindingHelp": "Choose which fields to filter across your dashboard.",
+    "tableFields": "Fields to filter",
+    "chooseField": "Choose a field",
+    "missingFieldHelp": "Choose a field to filter all widgets using this table.",
+    "fieldsError": "Unable to load this table’s fields. Reopen the filter settings to try again.",
+    "noTables": "Connect a widget to a table to choose a field here.",
+    "tableFallback": "Table {id}",
+    "invalidField": "Field unavailable",
+    "invalidFieldHelp": "Choose a compatible text field for this table.",
+    "providerName": "Dashboard filters",
+    "options": "Options",
+    "optionValue": "Filter values",
+    "sourceOptionsHelp": "Choose values from a data source or enter them separated by commas."
   },
   "shareDashboardLink": {
     "shareDashboard": "Share dashboard",
@@ -61,39 +164,5 @@
     "continue": "Continue",
     "incorrectPasswordTitle": "Incorrect password",
     "incorrectPasswordText": "The provided password is incorrect."
-  },
-  "createWidgetModal": {
-    "title": "Add new widget"
-  },
-  "widget": {
-    "fixConfiguration": "Fix configuration"
-  },
-  "summaryWidget": {
-    "name": "Summary"
-  },
-  "emptyDashboardSidebar": {
-    "title": "No element selected",
-    "message": "Click on one of the elements to see details."
-  },
-  "widgetSettings": {
-    "title": "Title",
-    "description": "Description"
-  },
-  "aggregateRowsDataSourceForm": {
-    "data": "Data",
-    "sourceFieldLabel": "Source",
-    "viewFieldLabel": "View",
-    "notSelected": "Not selected",
-    "aggregationFieldLabel": "Field",
-    "aggregationTypeLabel": "Summary"
-  },
-  "widgetContext": {
-    "delete": "Delete"
-  },
-  "trashType": {
-    "widget": "widget"
-  },
-  "lastViewedItemType": {
-    "dashboard": "Dashboard"
   }
 }

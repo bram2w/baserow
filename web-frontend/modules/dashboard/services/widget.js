@@ -16,6 +16,11 @@ export default (client) => {
         widgets,
       })
     },
+    dispatch(widgetId, filters = []) {
+      return client.post(`/dashboard/widgets/${widgetId}/dispatch/`, {
+        filters,
+      })
+    },
     delete(widgetId) {
       return client.delete(`/dashboard/widgets/${widgetId}/`)
     },

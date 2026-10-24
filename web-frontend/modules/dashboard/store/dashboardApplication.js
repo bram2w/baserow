@@ -6,8 +6,17 @@ import IntegrationService from '@baserow/modules/core/services/integration'
 import { getToken, setToken } from '@baserow/modules/core/utils/auth'
 import { ConcurrentPriorityTaskQueue } from '@baserow/modules/core/utils/queue'
 import debounce from 'lodash/debounce'
+import { filterHasOptions } from '@baserow/modules/dashboard/utils/filter'
+import {
+  filterState,
+  filterActions,
+  filterMutations,
+  filterGetters,
+} from '@baserow/modules/dashboard/store/dashboardFilters'
 
 export const state = () => ({
+  ...filterState(),
+  widgetDispatchGenerations: {},
   dashboardId: null,
   dashboardGeneration: 0,
   widgetFetchGeneration: 0,
@@ -22,7 +31,7 @@ export const state = () => ({
   integrations: [],
   // A cache for data that has been
   // returned as a result of dispatching
-  // a data source. The keys are data source ids.
+  // a widget. Source conditions resolve the current dashboard filter values.
   data: {},
   // Set while a publicly shared dashboard is shown. Its data sources are then
   // dispatched through the public endpoint of the slug, with the token of a
@@ -193,6 +202,11 @@ const isDataSourceDispatchCurrent = (state, request) => {
   )
 }
 
+const isWidgetDispatchCurrent = (state, request) =>
+  isDataSourceDispatchCurrent(state, request) &&
+  state.widgets.some((w) => w.id === request.widgetId) &&
+  state.widgetDispatchGenerations[request.widgetId] === request.widgetGeneration
+
 const isDataSourceMutationCurrent = (state, request) => {
   return (
     isDashboardRequestCurrent(state, request) &&
@@ -222,8 +236,24 @@ const refreshAfterWidgetCreation = async (dispatch, dashboard) => {
 }
 
 export const mutations = {
+  ...filterMutations,
+  INVALIDATE_WIDGET_DISPATCH(state, widgetId) {
+    state.widgetDispatchGenerations[widgetId] =
+      (state.widgetDispatchGenerations[widgetId] ?? 0) + 1
+  },
+  UPDATE_DATA_FOR_SOURCE(state, { dataSourceId, values, previousData }) {
+    for (const widget of state.widgets.filter(
+      (w) => w.data_source_id === dataSourceId
+    )) {
+      const cached = previousData?.[widget.id]
+      state.data[widget.id] =
+        cached && Object.keys(cached).length ? cached : { ...values }
+    }
+  },
   RESET(state) {
     dataSourceDispatchQueues.get(state)?.cancelPending()
+    Object.assign(state, filterState())
+    state.widgetDispatchGenerations = {}
     state.dashboardId = null
     state.dashboardGeneration += 1
     state.widgetFetchGeneration += 1
@@ -282,6 +312,13 @@ export const mutations = {
     }
   },
   SET_WIDGETS(state, widgets) {
+    for (const old of state.widgets) {
+      if (!widgets.some((w) => w.id === old.id)) {
+        delete state.data[old.id]
+        state.widgetDispatchGenerations[old.id] =
+          (state.widgetDispatchGenerations[old.id] ?? 0) + 1
+      }
+    }
     state.widgets = widgets
     if (!widgets.some((widget) => widget.id === state.selectedWidgetId)) {
       state.selectedWidgetId = null
@@ -306,7 +343,11 @@ export const mutations = {
           getDataSourceDispatchGeneration(state, existingDataSource.id) + 1
         state.dataSourceMutationGenerations[existingDataSource.id] =
           getDataSourceMutationGeneration(state, existingDataSource.id) + 1
-        delete state.data[existingDataSource.id]
+        state.widgets
+          .filter((w) => w.data_source_id === existingDataSource.id)
+          .forEach((w) => {
+            delete state.data[w.id]
+          })
       }
     }
 
@@ -332,20 +373,15 @@ export const mutations = {
       state.dataSources.push({ id: dataSourceId, ...values })
     }
   },
-  UPDATE_DATA(state, { dataSourceId, values }) {
-    if (state.data[dataSourceId] === undefined) {
-      state.data[dataSourceId] = {}
-    }
-    state.data = {
-      ...state.data,
-      [dataSourceId]: { ...values },
-    }
+  UPDATE_DATA(state, { widgetId, values }) {
+    state.data[widgetId] = { ...values }
   },
   ADD_INTEGRATION(state, integration) {
     state.integrations.push(integration)
   },
   SELECT_WIDGET(state, widgetId) {
     state.selectedWidgetId = widgetId
+    state.selectedFilterId = null
   },
   UPDATE_WIDGET(state, { widgetId, values }) {
     const widget = state.widgets.find((widget) => widget.id === widgetId)
@@ -370,6 +406,9 @@ export const mutations = {
     })
   },
   DELETE_WIDGET(state, widgetId) {
+    delete state.data[widgetId]
+    state.widgetDispatchGenerations[widgetId] =
+      (state.widgetDispatchGenerations[widgetId] ?? 0) + 1
     const index = state.widgets.findIndex((widget) => widget.id === widgetId)
     if (index !== -1) {
       state.widgets.splice(index, 1)
@@ -384,6 +423,7 @@ export const mutations = {
 }
 
 export const actions = {
+  ...filterActions,
   reset({ commit }) {
     commit('RESET')
   },
@@ -461,12 +501,17 @@ export const actions = {
     { dataSourceId, values, widget }
   ) {
     const { $client, $registry } = this
-    const previousData = state.data[dataSourceId]
+    const previousData = Object.fromEntries(
+      state.widgets
+        .filter((w) => w.data_source_id === dataSourceId)
+        .map((w) => [w.id, state.data[w.id]])
+    )
     commit('INVALIDATE_DATA_SOURCE_COLLECTION_FETCH')
     commit('INVALIDATE_DATA_SOURCE_DISPATCH', dataSourceId)
     commit('INVALIDATE_DATA_SOURCE_MUTATION', dataSourceId)
     const request = getDataSourceMutationRequest({ dataSourceId }, state)
-    commit('UPDATE_DATA', { dataSourceId, values: null })
+    const filterGeneration = state.filterFetchGeneration
+    commit('UPDATE_DATA_FOR_SOURCE', { dataSourceId, values: null })
 
     let data
     try {
@@ -479,9 +524,10 @@ export const actions = {
       if (isDataSourceMutationCurrent(state, request)) {
         const hasPreviousData =
           previousData && Object.keys(previousData).length > 0
-        commit('UPDATE_DATA', {
+        commit('UPDATE_DATA_FOR_SOURCE', {
           dataSourceId,
-          values: hasPreviousData ? previousData : { _error: true },
+          previousData: hasPreviousData ? previousData : undefined,
+          values: { _error: true },
         })
       }
       throw error
@@ -489,6 +535,16 @@ export const actions = {
 
     if (!isDataSourceMutationCurrent(state, request)) {
       return
+    }
+
+    if (filterGeneration !== state.filterFetchGeneration) {
+      // A control deletion or restoration can change conditions while saving.
+      // Read the current source instead of reapplying the earlier PATCH response.
+      const sources = await dispatch('fetchNewDataSources', request.dashboardId)
+      data = sources?.find((source) => source.id === dataSourceId)
+      if (!data || !isDataSourceMutationCurrent(state, request)) {
+        return
+      }
     }
 
     commit('INVALIDATE_DATA_SOURCE_COLLECTION_FETCH')
@@ -512,7 +568,7 @@ export const actions = {
       })
     } catch (error) {
       if (isDataSourceMutationCurrent(state, request)) {
-        commit('UPDATE_DATA', {
+        commit('UPDATE_DATA_FOR_SOURCE', {
           dataSourceId,
           values: { _error: true },
         })
@@ -610,15 +666,49 @@ export const actions = {
       return
     }
 
-    // Render widgets while their data sources are still loading.
-    commit('SET_LOADING', false)
-    let dataSources
-    do {
-      dataSources = await dispatch('fetchNewDataSources', dashboardId)
-    } while (
-      dataSources === undefined &&
-      isDashboardRequestCurrent(state, request)
-    )
+    const fetchCurrentFilters = async () => {
+      let filters
+      do {
+        filters = await dispatch('fetchFilters')
+      } while (
+        filters === undefined &&
+        isDashboardRequestCurrent(state, request)
+      )
+    }
+    await fetchCurrentFilters()
+    if (!isDashboardRequestCurrent(state, request)) return
+
+    const loadOptions = async () => {
+      while (isDashboardRequestCurrent(state, request)) {
+        const generation = state.filterFetchGeneration
+        await Promise.all(
+          state.filters.filter(filterHasOptions).map((filter) =>
+            dispatch('fetchFilterOptions', {
+              filterId: filter.id,
+              useCache: true,
+            })
+          )
+        )
+        if (!isDashboardRequestCurrent(state, request)) return
+        if (generation === state.filterFetchGeneration) {
+          // Choices are ready at first click; widgets can still finish loading.
+          commit('SET_LOADING', false)
+          return
+        }
+        // A concurrent configuration change invalidated the choices.
+        await fetchCurrentFilters()
+      }
+    }
+    const loadDataSources = async () => {
+      let dataSources
+      do {
+        dataSources = await dispatch('fetchNewDataSources', dashboardId)
+      } while (
+        dataSources === undefined &&
+        isDashboardRequestCurrent(state, request)
+      )
+    }
+    await Promise.all([loadOptions(), loadDataSources()])
     if (!isDashboardRequestCurrent(state, request)) {
       return
     }
@@ -692,11 +782,12 @@ export const actions = {
     const dataSourceIdsToDispatch = new Set(
       dataSourcesData.flatMap((dataSource) => {
         const existingDataSource = getters.getDataSourceById(dataSource.id)
-        const existingData = state.data[dataSource.id]
-        const shouldDispatch =
-          !existingDataSource ||
-          !existingData ||
-          Object.keys(existingData).length === 0
+        const existingData = state.widgets
+          .filter((w) => w.data_source_id === dataSource.id)
+          .every(
+            (w) => state.data[w.id] && Object.keys(state.data[w.id]).length > 0
+          )
+        const shouldDispatch = !existingDataSource || !existingData
         return shouldDispatch ? [dataSource.id] : []
       })
     )
@@ -759,10 +850,37 @@ export const actions = {
     commit('ADD_WIDGET', widget)
     return widget
   },
-  async dispatchDataSource({ state, commit }, requestValues) {
+  async dispatchDataSource({ state, commit, dispatch }, requestValues) {
+    const request = normalizeDataSourceRequestContext(requestValues, state)
+    if (!isDashboardRequestCurrent(state, request)) return
+    commit('INVALIDATE_DATA_SOURCE_DISPATCH', request.dataSourceId)
+    await Promise.allSettled(
+      state.widgets
+        .filter((w) => w.data_source_id === request.dataSourceId)
+        .map((widget) =>
+          dispatch('dispatchWidget', {
+            ...request,
+            widgetId: widget.id,
+            priority: requestValues?.priority ?? 0,
+          })
+        )
+    )
+  },
+  async refreshWidgets({ state, dispatch, getters }) {
+    await Promise.allSettled(
+      getters.getWidgets.map((widget, priority) =>
+        dispatch('dispatchWidget', { widgetId: widget.id, priority })
+      )
+    )
+  },
+  async dispatchWidget({ state, commit }, requestValues) {
+    const widgetId =
+      typeof requestValues === 'object' ? requestValues.widgetId : requestValues
+    const widget = state.widgets.find((w) => w.id === widgetId)
+    if (!widget) return
     const { $client, $config } = this
     const requestContext = normalizeDataSourceRequestContext(
-      requestValues,
+      { ...requestValues, dataSourceId: widget.data_source_id },
       state
     )
     if (
@@ -774,9 +892,19 @@ export const actions = {
       return
     }
 
-    commit('INVALIDATE_DATA_SOURCE_DISPATCH', requestContext.dataSourceId)
-    const request = getDataSourceDispatchRequest(requestContext, state)
-    commit('UPDATE_DATA', { dataSourceId: request.dataSourceId, values: null })
+    commit('INVALIDATE_WIDGET_DISPATCH', widgetId)
+    const request = {
+      ...getDataSourceDispatchRequest(requestContext, state),
+      widgetId,
+      widgetGeneration: state.widgetDispatchGenerations[widgetId],
+    }
+    const filters = Object.entries(state.appliedFilters).map(
+      ([filterId, values]) => ({
+        filter_id: Number(filterId),
+        values: [...values],
+      })
+    )
+    commit('UPDATE_DATA', { widgetId, values: null })
     const queue = getDataSourceDispatchQueue(
       state,
       getDataSourceDispatchConcurrency($config)
@@ -786,7 +914,7 @@ export const actions = {
     try {
       const response = await queue.add(
         () => {
-          if (!isDataSourceDispatchCurrent(state, request)) {
+          if (!isWidgetDispatchCurrent(state, request)) {
             return undefined
           }
           if (state.publicSlug !== null) {
@@ -796,33 +924,30 @@ export const actions = {
               state.publicAuthToken
             )
           }
-          return DataSourceService($client).dispatch(request.dataSourceId)
+          return WidgetService($client).dispatch(widgetId, filters)
         },
         priority,
         {
           maxRetries: DATA_SOURCE_DISPATCH_MAX_RETRIES,
           shouldRetry: (error) =>
-            isDataSourceDispatchCurrent(state, request) &&
+            isWidgetDispatchCurrent(state, request) &&
             isTooManyRequestsError(error),
           retryDelay: getRetryAfterMs,
         }
       )
-      if (
-        response === undefined ||
-        !isDataSourceDispatchCurrent(state, request)
-      ) {
+      if (response === undefined || !isWidgetDispatchCurrent(state, request)) {
         return
       }
       commit('UPDATE_DATA', {
-        dataSourceId: request.dataSourceId,
+        widgetId,
         values: response.data,
       })
     } catch (error) {
-      if (!isDataSourceDispatchCurrent(state, request)) {
+      if (!isWidgetDispatchCurrent(state, request)) {
         return
       }
       commit('UPDATE_DATA', {
-        dataSourceId: request.dataSourceId,
+        widgetId,
         values: { _error: true },
       })
     }
@@ -879,6 +1004,7 @@ export const actions = {
 }
 
 export const getters = {
+  ...filterGetters,
   getDashboardId(state) {
     return state.dashboardId
   },
@@ -915,6 +1041,7 @@ export const getters = {
   getSelectedWidget(state) {
     return state.widgets.find((widget) => widget.id === state.selectedWidgetId)
   },
+  getDataSources: (state) => state.dataSources,
   getDataSourceById: (state, getters) => (dataSourceId) => {
     return state.dataSources.find(
       (dataSource) => dataSource.id === dataSourceId
@@ -923,8 +1050,8 @@ export const getters = {
   getData(state) {
     return state.data
   },
-  getDataForDataSource: (state, getters) => (dataSourceId) => {
-    return state.data[dataSourceId]
+  getDataForWidget: (state, getters) => (widgetId) => {
+    return state.data[widgetId]
   },
   isPublic(state) {
     return state.publicSlug !== null

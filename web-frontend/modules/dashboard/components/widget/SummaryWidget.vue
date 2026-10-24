@@ -41,8 +41,8 @@ export default {
     },
     dataForDataSource() {
       return this.$store.getters[
-        `${this.storePrefix}dashboardApplication/getDataForDataSource`
-      ](this.dataSource?.id)
+        `${this.storePrefix}dashboardApplication/getDataForWidget`
+      ](this.widget.id)
     },
     result() {
       if (this.dataSource) {

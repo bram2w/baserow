@@ -5,7 +5,10 @@
     :value="modelValue.formula"
     :mode="localMode"
     :nodes-hierarchy="nodesHierarchy"
-    :validation-context="{ dataProviderRegistry: [] }"
+    :validation-context="{
+      dataProviderRegistry: dataProviders,
+      applicationContext,
+    }"
     context-position="left"
     @update:mode="localMode = $event"
     @input="updatedFormulaStr"
@@ -18,6 +21,7 @@
 
 <script setup>
 import FormulaInputField from '@baserow/modules/core/components/formula/FormulaInputField'
+import { getDataNodesFromDataProvider } from '@baserow/modules/core/utils/dataProviders'
 import { buildFormulaFunctionNodes } from '@baserow/modules/core/formula'
 
 const props = defineProps({
@@ -27,8 +31,34 @@ const props = defineProps({
 
 const emit = defineEmits(['input'])
 const app = useNuxtApp()
-// Dashboard has no data providers; only the shared runtime functions are available.
-const nodesHierarchy = computed(() => buildFormulaFunctionNodes(app))
+const applicationContext = inject(
+  'dashboardApplicationContext',
+  computed(() => ({}))
+)
+const dataProviders = computed(() =>
+  props.dataProvidersAllowed.map((name) =>
+    app.$registry.get('dashboardDataProvider', name)
+  )
+)
+const nodesHierarchy = computed(() => {
+  const nodes = getDataNodesFromDataProvider(
+    dataProviders.value,
+    unref(applicationContext)
+  )
+  return [
+    ...(nodes.length
+      ? [
+          {
+            name: app.$i18n.t('runtimeFormulaTypes.formulaTypeData'),
+            type: 'data',
+            icon: 'iconoir-database',
+            nodes,
+          },
+        ]
+      : []),
+    ...buildFormulaFunctionNodes(app),
+  ]
+})
 const localMode = ref(props.modelValue.mode || 'simple')
 
 watch(

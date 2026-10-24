@@ -25,7 +25,7 @@ describe.each([
       type: 'local_baserow_grouped_aggregate_rows',
     })
     testApp.store.commit('dashboardApplication/UPDATE_DATA', {
-      dataSourceId: 12,
+      widgetId: 10,
       values: {
         results: [{ result: 1 }],
       },
