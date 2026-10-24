@@ -30,7 +30,7 @@
           @focus="open = true"
           @blur="blur"
           @keydown.enter.prevent="pickEmails(query)"
-          @keydown.escape="open = false"
+          @keyup.escape="escape"
           @keydown.delete="removeLastWhenEmpty"
           @paste="paste"
         />
@@ -449,6 +449,17 @@ export default {
     },
     focus() {
       this.$refs.input.focus()
+    },
+    /**
+     * Escape closes the results when they are open, and only them: the modal
+     * around the input closes on the key going up as well, so it must not
+     * reach it then.
+     */
+    escape(event) {
+      if (this.showResults) {
+        event.stopPropagation()
+        this.close()
+      }
     },
     /**
      * Closes the results and leaves the input, so that they open again once it

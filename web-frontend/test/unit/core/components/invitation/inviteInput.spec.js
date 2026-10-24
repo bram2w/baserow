@@ -1,6 +1,6 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { flushPromises } from '@vue/test-utils'
-import { expect, test } from 'vitest'
+import { expect, test, vi } from 'vitest'
 
 import InviteInput from '@baserow/modules/core/components/invitation/InviteInput'
 
@@ -48,8 +48,9 @@ const pickable = {
   color: 'blue',
 }
 
-async function mountInput(props = {}, batchLimit, slots = {}) {
+async function mountInput(props = {}, batchLimit, slots = {}, options = {}) {
   return await mountSuspended(InviteInput, {
+    ...options,
     slots,
     props: {
       workspace,
@@ -314,6 +315,38 @@ test('closes the results with the button next to the tabs', async () => {
     await input.trigger('focus')
     expect(resultsOpen(wrapper)).toBe(true)
   } finally {
+    wrapper.unmount()
+  }
+})
+
+test('closes only the results on escape while they are open', async () => {
+  // Attached, so that the key events bubble up to the window.
+  const wrapper = await mountInput(
+    {
+      options: [pickable],
+      tabs: [{ value: 'auth.User', label: 'Members' }],
+    },
+    undefined,
+    {},
+    { attachTo: document.body }
+  )
+  const reachedWindow = vi.fn()
+  window.addEventListener('keyup', reachedWindow)
+  try {
+    const input = wrapper.find('input')
+    await input.trigger('focus')
+    expect(resultsOpen(wrapper)).toBe(true)
+
+    // The modal around it listens for the key going up on the window.
+    await input.trigger('keyup', { key: 'Escape' })
+    expect(resultsOpen(wrapper)).toBe(false)
+    expect(reachedWindow).not.toHaveBeenCalled()
+
+    // Without results open, escape is left to the modal.
+    await input.trigger('keyup', { key: 'Escape' })
+    expect(reachedWindow).toHaveBeenCalledTimes(1)
+  } finally {
+    window.removeEventListener('keyup', reachedWindow)
     wrapper.unmount()
   }
 })
