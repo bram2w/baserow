@@ -364,6 +364,8 @@
     "alreadyInvited": "An invitation is already pending on this {type}.\nYou can change its role in the list below instead of inviting again.",
     "alreadyAssigned": "Already has a role on this {type}.\nYou can change it in the list below.",
     "alreadyAdmin": "Admin of the {level}: already has full access to this {type}.\nTo restrict them, lower their {level} role first.",
+    "roleHere": "{role} here",
+    "adminHint": "Admin",
     "noResults": "No {subjects} match. Type a full email address to invite someone new.",
     "noSubjectResults": "No {subjects} match.",
     "directAccess": "Direct access on this {type}",

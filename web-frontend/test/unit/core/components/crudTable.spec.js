@@ -374,6 +374,31 @@ describe('CrudTable component', () => {
     expect(table.find('.data-table__expanded-rows').exists()).toBe(false)
   })
 
+  test('a silent refresh keeps the rows on screen until the new ones arrive', async () => {
+    let resolveRefresh
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(aPage([{ id: 1, name: 'Before' }]))
+      .mockImplementation(
+        () => new Promise((resolve) => (resolveRefresh = resolve))
+      )
+    const table = await mountCrudTable(aService(fetch))
+    await flushPromises()
+
+    table.vm.refresh({ silent: true })
+    await flushPromises()
+    expect(table.find('table').attributes('aria-busy')).toBe('false')
+    expect(table.find('tbody').text()).toContain('Before')
+
+    resolveRefresh(aPage([{ id: 1, name: 'After' }]))
+    await flushPromises()
+    expect(table.find('tbody').text()).toContain('After')
+
+    table.vm.refresh()
+    await flushPromises()
+    expect(table.find('table').attributes('aria-busy')).toBe('true')
+  })
+
   test('pagination and filters clear expansion without remembering previous pages', async () => {
     const table = await mountCrudTable(
       aService(vi.fn().mockResolvedValue(aPage(expandableRows, 200))),

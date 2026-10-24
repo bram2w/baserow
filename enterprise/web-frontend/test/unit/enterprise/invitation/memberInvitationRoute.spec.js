@@ -205,7 +205,7 @@ async function mountRoute(
           props: [
             'subjects',
             'pendingEmails',
-            'assignedKeys',
+            'assignedRoles',
             'roles',
             'emailRoleUids',
             'emailDisabledReason',
@@ -219,10 +219,12 @@ async function mountRoute(
             '{{ (subjects["core.Agent"] || []).map((a) => a.name).join(",") }}' +
             '</div>' +
             '<div class="picker-pending">{{ pendingEmails.join(",") }}</div>' +
-            '<div class="picker-assigned">{{ assignedKeys.join(",") }}</div>' +
+            '<div class="picker-assigned">{{ JSON.stringify(assignedRoles) }}</div>' +
             '<div class="picker-admins">{{ JSON.stringify(inheritedAdmins) }}</div>' +
             '<div class="picker-roles">{{ roles.map((r) => r.uid).join(",") }}' +
-            '|{{ emailRoleUids.join(",") }}</div>',
+            '|{{ emailRoleUids.join(",") }}</div>' +
+            // What the dialog shows below the input.
+            '<slot />',
           methods: {
             reset() {
               picker.resets += 1
@@ -263,7 +265,9 @@ test('lists pending invitations first and tells the picker who already has a rol
     // with a role on the table as such.
     expect(wrapper.find('.picker').text()).toBe('Mark Delgado,Jane Roe')
     expect(wrapper.find('.picker-pending').text()).toBe('olga@x.com')
-    expect(wrapper.find('.picker-assigned').text()).toBe('auth.User:8')
+    expect(wrapper.find('.picker-assigned').text()).toBe(
+      '{"auth.User:8":"VIEWER"}'
+    )
     expect(wrapper.find('.picker-agents').text()).toBe('')
     expect(wrapper.find('.picker-agents').attributes('data-enabled')).toBe(
       'true'

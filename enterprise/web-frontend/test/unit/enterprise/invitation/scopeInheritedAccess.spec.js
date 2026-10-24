@@ -44,3 +44,30 @@ test('summarises normalized workspace roles without counting no-access users', a
     wrapper.unmount()
   }
 })
+
+test('asks to close the dialog when leaving for the members page', async () => {
+  const workspace = { id: 12, name: 'Widelab', users: [], _: { roles } }
+  const wrapper = await mountSuspended(ScopeInheritedAccess, {
+    props: { workspace, scopeTypeName: 'table' },
+    global: {
+      mocks: { $t: (key) => key },
+      stubs: {
+        Avatar: true,
+        Context: {
+          template: '<div><slot /></div>',
+          methods: { toggle() {}, hide() {} },
+        },
+        'nuxt-link': {
+          emits: ['click'],
+          template: '<a class="manage" @click="$emit(\'click\')"><slot /></a>',
+        },
+      },
+    },
+  })
+  try {
+    await wrapper.find('.manage').trigger('click')
+    expect(wrapper.emitted('close')).toHaveLength(1)
+  } finally {
+    wrapper.unmount()
+  }
+})

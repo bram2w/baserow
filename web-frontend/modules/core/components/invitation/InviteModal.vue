@@ -26,6 +26,7 @@
         :target="target"
         :target-type="targetType"
         @submitted="submitted"
+        @close="close"
       ></component>
     </template>
   </Modal>
@@ -40,7 +41,9 @@ import modal from '@baserow/modules/core/mixins/modal'
  * come from the `invitationRoute` registry and the behaviour of the target from
  * the `invitationTarget` registry, so other modules can add their own without
  * changing this component. A route emits `submitted` with the created
- * invitations to close the modal once they were sent.
+ * invitations to close the modal once they were sent, or `close` when it leads
+ * somewhere else. `close` is passed on, so that a modal opened from within
+ * another one closes that one as well.
  */
 export default {
   name: 'InviteModal',
@@ -60,7 +63,7 @@ export default {
       default: () => ({ type: 'workspace' }),
     },
   },
-  emits: ['invite-submitted'],
+  emits: ['invite-submitted', 'close'],
   data() {
     return {
       activeRouteType: null,
@@ -96,6 +99,10 @@ export default {
     submitted(invitations) {
       this.$emit('invite-submitted', invitations)
       this.hide()
+    },
+    close() {
+      this.hide()
+      this.$emit('close')
     },
   },
 }
