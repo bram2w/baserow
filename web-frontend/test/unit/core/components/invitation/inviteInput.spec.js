@@ -287,6 +287,37 @@ test('lists every option on focus in place of what is below the input', async ()
   }
 })
 
+test('closes the results with the button next to the tabs', async () => {
+  const wrapper = await mountInput(
+    {
+      options: [pickable],
+      tabs: [{ value: 'auth.User', label: 'Members' }],
+    },
+    undefined,
+    { default: '<p class="below">Direct access</p>' }
+  )
+  try {
+    const belowShown = () =>
+      wrapper.find('.below').element.parentElement.style.display !== 'none'
+    const input = wrapper.find('input')
+    await input.trigger('focus')
+    await wrapper.find('.invite-input__item').trigger('click')
+    await input.setValue('foo')
+
+    await wrapper.find('.invite-input__close').trigger('click')
+    expect(resultsOpen(wrapper)).toBe(false)
+    expect(belowShown()).toBe(true)
+    // What was picked and typed stays.
+    expect(chips(wrapper)).toEqual(['Foo Bar Viewer'])
+    expect(input.element.value).toBe('foo')
+
+    await input.trigger('focus')
+    expect(resultsOpen(wrapper)).toBe(true)
+  } finally {
+    wrapper.unmount()
+  }
+})
+
 test('keeps the results open when a checkbox takes the focus', async () => {
   const wrapper = await mountInput({
     options: [pickable],

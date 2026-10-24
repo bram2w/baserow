@@ -130,6 +130,20 @@
   }
 }
 
+// Brings back what the results took the place of.
+.invite-input__close {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  font-size: 16px;
+  color: $palette-neutral-700;
+
+  &:hover {
+    color: $palette-neutral-1200;
+    text-decoration: none;
+  }
+}
+
 .invite-input__list {
   margin: 12px 0 0 0;
   padding: 0;

@@ -91,6 +91,14 @@
         >
           {{ tab.label }}
         </a>
+        <a
+          role="button"
+          :title="$t('action.close')"
+          class="invite-input__close"
+          @click="close"
+        >
+          <i class="iconoir-cancel"></i>
+        </a>
       </div>
       <ul class="invite-input__list">
         <li
@@ -221,7 +229,8 @@ export function extractEmails(text) {
  * except for the native input of a checkbox, which gets the focus when its
  * label is clicked and hands it straight back. It
  * opens right below the input and takes the place of the default slot, which
- * holds whatever the parent shows below the input otherwise.
+ * holds whatever the parent shows below the input otherwise. With tabs, a close
+ * button next to them brings that back, keeping the picks and the search.
  */
 export default {
   name: 'InviteInput',
@@ -440,6 +449,15 @@ export default {
     },
     focus() {
       this.$refs.input.focus()
+    },
+    /**
+     * Closes the results and leaves the input, so that they open again once it
+     * is focused. The input is left first, as leaving it keeps the results of a
+     * search open.
+     */
+    close() {
+      this.$refs.input.blur()
+      this.open = false
     },
     /**
      * Closes the results, unless the focus went to something inside them, like
