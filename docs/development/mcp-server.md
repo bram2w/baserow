@@ -137,7 +137,7 @@ list_databases
             └─ delete_rows(table_id, [1, 2])
 ```
 
-The automation tools are in their own groups (`automation_read`, `automation_edit`, `automation_delete`) and are not part of the "Read only" preset, so a user turns them on at consent or later under Settings. A value that takes a formula is stored as written when it is a valid formula and quoted when it is a literal. An invalid formula comes back in `formula_errors` for the client to fix with `update_nodes`: on a new node the value is left empty, on an update it keeps what it had. A formula can name a node created earlier in the same call by its ref, as in `get('previous_node.trigger.0.id')`. Over MCP no model is called; Kuma repairs those values with its formula generator after the nodes are committed.
+The automation tools are in their own groups (`automation_read`, `automation_edit`, `automation_delete`) and are not part of the "Read only" preset, so a user turns them on at consent or later under Settings. A value that takes a formula is stored as written when it is a valid formula and quoted when it is a literal. A formula is invalid when it doesn't parse, or reads a `previous_node` path the node doesn't output (the paths `list_nodes` shows). An invalid formula comes back in `formula_errors` for the client to fix with `update_nodes`: on a new node the value is left empty, on an update it keeps what it had. A formula can name a node created earlier in the same call by its ref, as in `get('previous_node.trigger.0.id')`. Over MCP no model is called; Kuma repairs those values with its formula generator after the nodes are committed.
 
 ## Adding a new tool
 

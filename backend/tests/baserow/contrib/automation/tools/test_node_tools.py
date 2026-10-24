@@ -223,7 +223,7 @@ def test_update_nodes_checks_formulas(automation_ctx):
         [
             NodeUpdate(
                 node_id=mail.id,
-                subject="get('previous_node.1.0.id')",
+                subject=f"get('previous_node.{trigger.id}.0.id')",
                 body="$formula: the name",
             )
         ],
@@ -233,7 +233,7 @@ def test_update_nodes_checks_formulas(automation_ctx):
     assert (error["node_id"], error["field"]) == (mail.id, "body")
     service = mail.service.specific
     service.refresh_from_db()
-    assert service.subject["formula"] == "get('previous_node.1.0.id')"
+    assert service.subject["formula"] == f"get('previous_node.{trigger.id}.0.id')"
     assert service.body["formula"] == ""
 
 

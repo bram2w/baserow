@@ -1,10 +1,13 @@
 """Tests for telling automation formulas from literals and checking them."""
 
+import re
+
 import pytest
 
 from baserow.contrib.automation.tools.formulas import (
     InvalidAutomationFormula,
     check_automation_formula,
+    check_output_paths,
     needs_formula,
     wrap_static_string,
 )
@@ -110,3 +113,79 @@ def test_a_previous_node_path_needs_a_node_id():
     resolved = resolve_node_refs("get('previous_node.trigger.0.id')", {"trigger": 7})
     assert resolved == "get('previous_node.7.0.id')"
     check_automation_formula("row_id", resolved)
+
+
+# A rows trigger's output, as output_schema gives it.
+ROWS_OUTPUT = {
+    "formula_path": "previous_node.7.0",
+    "properties": {
+        "id": {"title": "Id", "type": "number"},
+        "field_3": {
+            "title": "Priority",
+            "type": "object",
+            "properties": {
+                "id": {"title": "id", "type": "number"},
+                "value": {"title": "value", "type": "string"},
+            },
+        },
+        "field_4": {
+            "title": "Tags",
+            "type": "array",
+            "items": {
+                "value": {"title": "value", "type": "string"},
+            },
+        },
+    },
+}
+
+
+def _outputs(node_id):
+    return ROWS_OUTPUT if node_id == 7 else None
+
+
+@pytest.mark.parametrize(
+    "formula",
+    [
+        "get('previous_node.7')",
+        "get('previous_node.7.0')",
+        "get('previous_node.7.0.id')",
+        "get('previous_node.7.*.field_3.value')",
+        "equal(get('previous_node.7.0.field_3.value'), 'High')",
+        "get('previous_node.7.0.field_4.0.value')",
+        "get('previous_node.7.0.field_4.*')",
+    ],
+)
+def test_a_path_the_node_outputs_passes(formula):
+    check_output_paths("condition", formula, _outputs)
+
+
+@pytest.mark.parametrize(
+    "formula,message",
+    [
+        (
+            "get('previous_node.7.Priority') = 'High'",
+            "'previous_node.7.Priority' is not an output of node 7. Its outputs: "
+            "previous_node.7.0.id (Id), previous_node.7.0.field_3 (Priority), "
+            "previous_node.7.0.field_4 (Tags).",
+        ),
+        ("get('previous_node.7.field_3')", "is not an output of node 7"),
+        ("get('previous_node.7.0.Priority')", "is not an output of node 7"),
+        ("get('previous_node.7.0.id.value')", "is not an output of node 7"),
+        ("get('previous_node.7.0.field_4.value')", "is not an output of node 7"),
+        (
+            "get('previous_node.8.0.id')",
+            "Node 8 is not in this workflow, so 'previous_node.8.0.id' can't be read.",
+        ),
+    ],
+)
+def test_a_path_the_node_does_not_output_fails(formula, message):
+    with pytest.raises(InvalidAutomationFormula, match=re.escape(message)):
+        check_output_paths("condition", formula, _outputs)
+
+
+def test_a_node_with_an_unknown_output_takes_any_path():
+    check_output_paths(
+        "subject",
+        "get('previous_node.9.anything')",
+        lambda node_id: {"formula_path": "previous_node.9", "properties": {}},
+    )

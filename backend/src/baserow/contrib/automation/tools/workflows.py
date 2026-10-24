@@ -329,10 +329,11 @@ def create_workflows(
     a formula, send it as a quoted string such as 'Call now()'. Read an earlier
     node's output with get('previous_node.<node>...'), where <node> is the ref of
     a node earlier in the same workflow or a node ID: list_nodes shows each node's
-    output paths. A router condition is always a formula. A valid formula is stored as
-    written. An invalid one leaves that value empty and is returned in
-    formula_errors with the node and the parser's message: fix it with
-    update_nodes.
+    output paths, and a path a node doesn't output is invalid. A row trigger's
+    fields are read as get('previous_node.<trigger>.0.field_<id>'). A router
+    condition is always a formula. A valid formula is stored as written. An
+    invalid one leaves that value empty and is returned in formula_errors with
+    the node and the reason: fix it with update_nodes.
 
     A workflow whose name already exists is not created again nor changed: it is
     returned in reused_workflows with its nodes. Nothing is written when two

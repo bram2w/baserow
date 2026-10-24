@@ -511,7 +511,7 @@ def test_router_edge_conditions_stay_valid_formulas(
         "get_generate_formulas_tool",
         lambda model_profile: (
             lambda formulas, context: {
-                "Do this": "get('previous_node.1.field')",
+                "Do this": f"get('previous_node.{trigger['id']}.triggered_at')",
                 "Do that": "Managers' pick",  # unparsable: unterminated string literal
             }
         ),
@@ -538,7 +538,9 @@ def test_router_edge_conditions_stay_valid_formulas(
     router = AutomationNode.objects.get(id=result["created_nodes"][0]["id"])
     edges = router.service.specific.edges
     valid_edge = edges.get(label="Do this")
-    assert valid_edge.condition["formula"] == "get('previous_node.1.field')"
+    assert valid_edge.condition["formula"] == (
+        f"get('previous_node.{trigger['id']}.triggered_at')"
+    )
     assert valid_edge.condition["mode"] == BASEROW_FORMULA_MODE_ADVANCED
     assert edges.get(label="Do that").condition["formula"] == ""
     (error,) = result["formula_errors"]
@@ -1282,7 +1284,7 @@ def test_a_repaired_formula_can_name_a_node_by_its_ref(
         "get_generate_formulas_tool",
         lambda profile: (
             lambda formulas, context: {
-                key: "get('previous_node.trigger.0.id')" for key in formulas
+                key: "get('previous_node.trigger.triggered_at')" for key in formulas
             }
         ),
     )
@@ -1321,7 +1323,7 @@ def test_a_repaired_formula_can_name_a_node_by_its_ref(
     mail = workflow.automation_workflow_nodes.get(label="Mail").specific
     trigger_id = workflow.get_trigger().id
     assert mail.service.specific.subject["formula"] == (
-        f"get('previous_node.{trigger_id}.0.id')"
+        f"get('previous_node.{trigger_id}.triggered_at')"
     )
 
 

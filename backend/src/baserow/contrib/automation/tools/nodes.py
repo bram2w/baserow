@@ -169,6 +169,25 @@ def output_schema(node: AutomationNode) -> dict[str, Any]:
     return {"formula_path": path, "properties": _compact_properties(schema)}
 
 
+def node_outputs(
+    workflow: AutomationWorkflow,
+) -> Callable[[int], dict[str, Any] | None]:
+    """
+    Returns the output schema of a node of the workflow by its ID, or None when
+    the workflow has no such node, reading each node once.
+    """
+
+    cache: dict[int, dict[str, Any] | None] = {}
+
+    def outputs(node_id: int) -> dict[str, Any] | None:
+        if node_id not in cache:
+            node = AutomationNode.objects.filter(workflow=workflow, id=node_id).first()
+            cache[node_id] = None if node is None else output_schema(node)
+        return cache[node_id]
+
+    return outputs
+
+
 def describe_node(
     node: AutomationNode,
     previous: AutomationNode | None = None,
@@ -368,7 +387,7 @@ def create_node(
     """
 
     ctx.update_status(_("Creating node %(label)s...") % {"label": spec.label})
-    values = ServiceValues(field_ids, refs=refs.ids())
+    values = ServiceValues(field_ids, refs=refs.ids(), outputs=node_outputs(workflow))
     data: dict[str, Any] = {"label": spec.label}
     if isinstance(spec, TriggerNodeCreate):
         data["service"] = spec.to_orm_service_dict()
@@ -419,10 +438,10 @@ def add_nodes(
     is a formula when it looks like one (get(...), concat(...), ...), otherwise a
     literal; to store text that looks like a formula, send it as a quoted string
     such as 'Call now()'. A formula reads an earlier node with
-    get('previous_node.<node id>...'), and a node defined earlier in the call can
-    be named by its ref there. A valid formula is stored as written. An invalid
-    one leaves that value empty and is returned in formula_errors with the
-    parser's message: fix it with update_nodes. Nothing is written when a
+    get('previous_node.<node id>...'), with a path list_nodes shows for that
+    node, and a node defined earlier in the call can be named by its ref there.
+    A valid formula is stored as written. An invalid one leaves that value empty
+    and is returned in formula_errors with the reason: fix it with update_nodes. Nothing is written when a
     previous_node_ref or branch is unknown, or a ref is used twice.
     """
 
@@ -478,7 +497,13 @@ def update_node(
     if node_update.table_id is not None:
         check_tables_in_workspace(ctx, {node_update.table_id})
 
-    values = ServiceValues(field_ids, as_formulas, refs=refs, updating=True)
+    values = ServiceValues(
+        field_ids,
+        as_formulas,
+        refs=refs,
+        updating=True,
+        outputs=node_outputs(workflow),
+    )
     data: dict[str, Any] = {}
     if node_update.label is not None:
         data["label"] = node_update.label

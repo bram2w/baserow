@@ -54,7 +54,8 @@ def _nodes(workflow_id):
 @pytest.mark.django_db
 def test_create_workflows_stores_literals_and_raw_formulas(automation_ctx):
     ctx, automation, table, name = automation_ctx
-    condition = f"greater_than(get('previous_node.1.0.field_{name.id}'), 10)"
+    condition = "greater_than(get('previous_node.trigger.0.field_{}'), 10)"
+    subject = "concat('Order ', get('previous_node.trigger.0.id'))"
     workflow = _workflow(
         table,
         {
@@ -62,13 +63,13 @@ def test_create_workflows_stores_literals_and_raw_formulas(automation_ctx):
             "type": "router",
             "label": "Route",
             "previous_node_ref": "trigger",
-            "edges": [{"label": "Big", "condition": condition}],
+            "edges": [{"label": "Big", "condition": condition.format(name.id)}],
         },
         _email(
             previous="router",
             router_edge_label="Big",
             label="Mail",
-            subject="concat('Order ', get('previous_node.1.0.id'))",
+            subject=subject,
         ),
     )
 
@@ -78,13 +79,16 @@ def test_create_workflows_stores_literals_and_raw_formulas(automation_ctx):
     assert "formula_errors" not in result
     assert [node["ref"] for node in created["nodes"]] == ["trigger", "router", "mail"]
     nodes = _nodes(created["id"])
+    trigger = f"previous_node.{created['nodes'][0]['id']}"
     edge = nodes["Route"].service.specific.edges.get()
     assert edge.label == "Big"
-    assert edge.condition["formula"] == condition
+    assert edge.condition["formula"] == condition.replace(
+        "previous_node.trigger", trigger
+    ).format(name.id)
     assert edge.condition["mode"] == BASEROW_FORMULA_MODE_ADVANCED
     mail = nodes["Mail"].service.specific
     assert mail.to_emails["formula"] == "'team@example.com'"
-    assert mail.subject["formula"] == "concat('Order ', get('previous_node.1.0.id'))"
+    assert mail.subject["formula"] == subject.replace("previous_node.trigger", trigger)
     assert mail.body["formula"] == "'Hello'"
     graph = AutomationWorkflow.objects.get(id=created["id"]).get_graph().graph
     assert graph[str(nodes["Route"].id)]["next"][str(edge.uid)] == [nodes["Mail"].id]
@@ -233,7 +237,7 @@ def test_a_field_of_another_table_is_not_mapped(data_fixture, automation_ctx):
             "previous_node_ref": "trigger",
             "table_id": table.id,
             "values": [
-                {"field_id": name.id, "value": "get('previous_node.1.0.id')"},
+                {"field_id": name.id, "value": "get('previous_node.trigger.0.id')"},
                 {"field_id": other.id, "value": "x"},
             ],
         },
@@ -241,10 +245,11 @@ def test_a_field_of_another_table_is_not_mapped(data_fixture, automation_ctx):
 
     result = create_workflows(ctx, automation.id, [workflow])
 
-    store = _nodes(result["created_workflows"][0]["id"])["Store"]
+    created = result["created_workflows"][0]
+    store = _nodes(created["id"])["Store"]
     mappings = list(store.service.specific.field_mappings.all())
     assert [(m.field_id, m.value["formula"]) for m in mappings] == [
-        (name.id, "get('previous_node.1.0.id')")
+        (name.id, f"get('previous_node.{created['nodes'][0]['id']}.0.id')")
     ]
     assert result["errors"] == [
         f"Node {store.id} (Store): Field {other.id} is not in table {table.id}, "
@@ -387,3 +392,37 @@ def test_the_email_body_type_is_stored_as_a_choice(automation_ctx):
 
     mail = _nodes(result["created_workflows"][0]["id"])["Mail"].service.specific
     assert mail.body_type == "html"
+
+
+@pytest.mark.django_db
+def test_a_path_the_trigger_does_not_output_is_a_formula_error(automation_ctx):
+    ctx, automation, table, name = automation_ctx
+    workflow = _workflow(
+        table,
+        {
+            "ref": "router",
+            "type": "router",
+            "label": "Route",
+            "previous_node_ref": "trigger",
+            "edges": [
+                {
+                    "label": "High",
+                    "condition": "get('previous_node.trigger.Name') = 'High'",
+                }
+            ],
+        },
+    )
+
+    result = create_workflows(ctx, automation.id, [workflow])
+
+    created = result["created_workflows"][0]
+    trigger_id = created["nodes"][0]["id"]
+    (error,) = result["formula_errors"]
+    assert (error["field"], error["edge_label"]) == ("condition", "High")
+    assert error["error"] == (
+        f"'previous_node.{trigger_id}.Name' is not an output of node "
+        f"{trigger_id}. Its outputs: previous_node.{trigger_id}.0.id (Id), "
+        f"previous_node.{trigger_id}.0.field_{name.id} (Name)."
+    )
+    route = _nodes(created["id"])["Route"]
+    assert route.service.specific.edges.get().condition["formula"] == ""

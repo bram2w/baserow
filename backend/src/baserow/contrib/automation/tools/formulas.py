@@ -6,7 +6,7 @@ stored as a quoted string.
 """
 
 import re
-from typing import Any
+from typing import Any, Callable
 
 from baserow.core.exceptions import InstanceTypeDoesNotExist
 from baserow.core.formula.exceptions import InvalidRuntimeFormula
@@ -41,6 +41,14 @@ RAW_FORMULA_RE = re.compile(
 
 # The node part of a previous_node path: previous_node.<node>.…
 PREVIOUS_NODE_RE = re.compile(r"(previous_node\.)([^.'\"\s)]+)")
+
+# A get() of a literal previous_node path: get('previous_node.12.0.field_3').
+GET_PREVIOUS_NODE_RE = re.compile(
+    r"\bget\(\s*(['\"])(previous_node\.\d+(?:\.[^'\"]*)?)\1\s*\)"
+)
+
+# The most output paths an error lists.
+MAX_LISTED_PATHS = 30
 
 
 class InvalidAutomationFormula(Exception):
@@ -119,8 +127,8 @@ def resolve_node_refs(formula: str, refs: dict[str, int]) -> str:
 def check_automation_formula(field: str, formula: str) -> None:
     """
     Check that a formula is valid in an automation: it parses, and its functions,
-    arguments and data providers exist. Whether a ``previous_node`` it reads exists
-    is only known when the workflow runs.
+    arguments and data providers exist. ``check_output_paths`` checks the
+    ``previous_node`` paths it reads against the workflow.
 
     :param field: The name of the value, for the error message.
     :param formula: The formula to check.
@@ -167,6 +175,88 @@ def check_automation_formula(field: str, formula: str) -> None:
         raise InvalidAutomationFormula(
             field, formula, "The formula is nested too deeply."
         ) from exc
+
+
+def _is_index(segment: str) -> bool:
+    return segment.isdigit() or segment == "*"
+
+
+def _matches_properties(segments: list[str], properties: dict[str, Any]) -> bool:
+    if not segments:
+        return True
+    prop = properties.get(segments[0])
+    if prop is None:
+        return False
+    rest = segments[1:]
+    if not rest:
+        return True
+    if prop.get("properties"):
+        return _matches_properties(rest, prop["properties"])
+    if prop.get("type") == "array":
+        if not _is_index(rest[0]):
+            return False
+        items = prop.get("items")
+        return _matches_properties(rest[1:], items) if items else True
+    # An object of unknown shape can hold anything; a plain value holds nothing.
+    return prop.get("type") == "object"
+
+
+def _matches_output(segments: list[str], output: dict[str, Any]) -> bool:
+    if not output["properties"]:
+        # The node's output isn't known, so any path is accepted.
+        return True
+    if output["formula_path"].count(".") > 1:
+        # A node that outputs a list is read one item at a time.
+        if not segments:
+            return True
+        if not _is_index(segments[0]):
+            return False
+        segments = segments[1:]
+    return _matches_properties(segments, output["properties"])
+
+
+def _listed_paths(output: dict[str, Any]) -> str:
+    paths = [
+        f"{output['formula_path']}.{key} ({prop['title']})"
+        for key, prop in output["properties"].items()
+    ]
+    if len(paths) > MAX_LISTED_PATHS:
+        paths = paths[:MAX_LISTED_PATHS] + ["..."]
+    return ", ".join(paths)
+
+
+def check_output_paths(
+    field: str,
+    formula: str,
+    outputs: Callable[[int], dict[str, Any] | None],
+) -> None:
+    """
+    Check that each ``get('previous_node.<id>...')`` of a formula reads a node of
+    the workflow, and a path that node outputs.
+
+    :param outputs: The output schema of a node of the workflow by its ID, as
+        ``output_schema`` gives it, or None when the workflow has no such node.
+    :raises InvalidAutomationFormula: Naming the paths the node outputs.
+    """
+
+    for match in GET_PREVIOUS_NODE_RE.finditer(formula):
+        path = match.group(2)
+        _, node_id, *segments = path.split(".")
+        output = outputs(int(node_id))
+        if output is None:
+            raise InvalidAutomationFormula(
+                field,
+                formula,
+                f"Node {node_id} is not in this workflow, so '{path}' can't be "
+                "read. list_nodes gives the nodes and their output paths.",
+            )
+        if not _matches_output(segments, output):
+            raise InvalidAutomationFormula(
+                field,
+                formula,
+                f"'{path}' is not an output of node {node_id}. Its outputs: "
+                f"{_listed_paths(output)}.",
+            )
 
 
 def formula_object(

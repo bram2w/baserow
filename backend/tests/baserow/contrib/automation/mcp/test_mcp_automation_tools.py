@@ -148,7 +148,7 @@ def test_write_tools_over_mcp(data_fixture):
             .text
         )
         workflow = created["created_workflows"][0]
-        mail_id = workflow["nodes"][1]["id"]
+        trigger_id, mail_id = (node["id"] for node in workflow["nodes"])
         added = json.loads(
             (
                 await client.call_tool(
@@ -174,7 +174,7 @@ def test_write_tools_over_mcp(data_fixture):
                         "nodes": [
                             {
                                 "node_id": second_id,
-                                "subject": "get('previous_node.1.0.id')",
+                                "subject": f"get('previous_node.{trigger_id}.0.id')",
                             }
                         ],
                     },

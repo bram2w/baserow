@@ -19,6 +19,7 @@ from baserow.contrib.automation.tools.formulas import (
     EMPTY_FORMULA,
     InvalidAutomationFormula,
     check_automation_formula,
+    check_output_paths,
     formula_object,
     needs_formula,
     resolve_node_refs,
@@ -64,6 +65,7 @@ class ServiceValues:
         as_formulas: bool = False,
         refs: dict[str, int] | None = None,
         updating: bool = False,
+        outputs: Callable[[int], dict[str, Any] | None] | None = None,
     ):
         """
         :param table_field_ids: Returns the ids of the fields of a table.
@@ -72,11 +74,14 @@ class ServiceValues:
         :param refs: The ID of each node defined earlier in the call, by ref.
         :param updating: Whether the values update a node. An invalid formula
             then returns ``UNCHANGED``.
+        :param outputs: The output schema of a node of the workflow by its ID, to
+            check the previous_node paths a formula reads.
         """
 
         self.as_formulas = as_formulas
         self.refs = refs or {}
         self.updating = updating
+        self.outputs = outputs
         self.invalid: list[tuple[InvalidAutomationFormula, dict[str, Any]]] = []
         self.errors: list[str] = []
         self._table_field_ids = table_field_ids
@@ -98,6 +103,8 @@ class ServiceValues:
         value = resolve_node_refs(value, self.refs)
         try:
             check_automation_formula(field, value)
+            if self.outputs is not None:
+                check_output_paths(field, value, self.outputs)
         except InvalidAutomationFormula as exc:
             self.invalid.append((exc, target))
             return UNCHANGED if self.updating else formula_object("", mode)
